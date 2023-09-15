@@ -198,6 +198,11 @@ static void *fileWatcher(void *arg) {
   }
 }
 
+void welcome() {
+  printf("🚲 \033[32mbialet\033[0m is riding on \033[34m%s://%s:%d\033[0m\n",
+         "http", "localhost", 8080);
+}
+
 int main() {
 
   struct mg_mgr mgr;
@@ -207,7 +212,9 @@ int main() {
   wrenConfig.errorFn = &errorFn;
   wrenConfig.loadModuleFn = &loadModuleFn;
 
+  welcome();
   initConfig();
+
   mg_mgr_init(&mgr);
   // TODO Add host and port from params
   mg_http_listen(&mgr, "http://0.0.0.0:8080", httpHandler, NULL);
