@@ -10,7 +10,14 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
+struct BialetResponse {
+  int status;
+  char *header;
+  char *body;
+};
+
 char *wrenBuffer = 0;
+WrenConfiguration wrenConfig;
 
 /*
  ** Allocate memory safely
@@ -112,18 +119,10 @@ void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
-WrenConfiguration config;
-
-struct BialetResponse {
-  int status;
-  char *header;
-  char *body;
-};
-
 struct BialetResponse runCode(char *code) {
   const char *module = "main";
   WrenVM *vm = 0;
-  vm = wrenNewVM(&config);
+  vm = wrenNewVM(&wrenConfig);
   WrenInterpretResult result = wrenInterpret(vm, module, code);
   wrenFreeVM(vm);
 
@@ -203,10 +202,10 @@ int main() {
 
   struct mg_mgr mgr;
 
-  wrenInitConfiguration(&config);
-  config.writeFn = &writeFn;
-  config.errorFn = &errorFn;
-  config.loadModuleFn = &loadModuleFn;
+  wrenInitConfiguration(&wrenConfig);
+  wrenConfig.writeFn = &writeFn;
+  wrenConfig.errorFn = &errorFn;
+  wrenConfig.loadModuleFn = &loadModuleFn;
 
   initConfig();
   mg_mgr_init(&mgr);
