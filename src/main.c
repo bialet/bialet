@@ -114,40 +114,55 @@ void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
 
 WrenConfiguration config;
 
+struct BialetResponse {
+  int status;
+  char *header;
+  char *body;
+};
+
+struct BialetResponse runCode(char *code) {
+  const char *module = "main";
+  WrenVM *vm = 0;
+  vm = wrenNewVM(&config);
+  WrenInterpretResult result = wrenInterpret(vm, module, code);
+  wrenFreeVM(vm);
+
+  struct BialetResponse r;
+  r.header = "Content-type: text/html\r\n";
+  switch (result) {
+  case WREN_RESULT_SUCCESS: {
+    r.status = 200;
+    r.body = wrenBuffer;
+    wrenBuffer = 0;
+  } break;
+  case WREN_RESULT_COMPILE_ERROR:
+  case WREN_RESULT_RUNTIME_ERROR:
+  default: {
+    r.status = 500;
+    r.body = "Internal Server Error";
+  } break;
+  }
+  return r;
+}
+
 static void httpHandler(struct mg_connection *c, int ev, void *ev_data,
                         void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
-    if (mg_http_match_uri(hm, "/api/hello")) { // On /api/hello requests,
-      const char *module = "main";
-      WrenVM *vm = 0;
-      vm = wrenNewVM(&config);
-      WrenInterpretResult result = wrenInterpret(
-          vm, module,
-          "var name = \"Albo\"\nSystem.print(\"Hello, %( name )!\")");
-      wrenFreeVM(vm);
-
-      switch (result) {
-      case WREN_RESULT_SUCCESS: {
-        mg_http_reply(c, 200, "Content-type: text/html\r\n", wrenBuffer,
-                      MG_ESC("status")); // Send dynamic JSON response
-        wrenBuffer = 0;
-      } break;
-      case WREN_RESULT_COMPILE_ERROR:
-      case WREN_RESULT_RUNTIME_ERROR:
-      default: {
-        mg_http_reply(c, 500, "Content-type: text/html\r\n", "Internal Server Error\n",
-                      MG_ESC("status")); // Send dynamic JSON response
-      } break;
-      }
-    } else {                                              // For all other URIs,
-      struct mg_http_serve_opts opts = {.root_dir = "."}; // Serve files
-      mg_http_serve_dir(c, hm, &opts);                    // From root_dir
+    // TODO Add routing
+    if (mg_http_match_uri(hm, "/api/hello")) {
+      // TODO Read code from routing
+      char *code = "System.print(\"Test code\")";
+      struct BialetResponse r = runCode(code);
+      mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
+    } else {
+      struct mg_http_serve_opts opts = {.root_dir = "."};
+      mg_http_serve_dir(c, hm, &opts);
     }
   }
 }
 
-static void initConfig() { printf("Reload config.\n"); }
+static void initConfig() { printf("Reload config\n"); }
 
 static void *fileWatcher(void *arg) {
   int length, i = 0;
@@ -192,6 +207,7 @@ int main() {
   config.writeFn = &writeFn;
   config.errorFn = &errorFn;
   config.loadModuleFn = &loadModuleFn;
+
   initConfig();
   mg_mgr_init(&mgr);
   // TODO Add host and port from params
