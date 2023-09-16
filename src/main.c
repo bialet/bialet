@@ -1,3 +1,4 @@
+#include "bialet_wren.h"
 #include "mongoose.h"
 #include "wren_vm.h"
 #include <errno.h>
@@ -10,20 +11,11 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
-struct BialetResponse {
-  int status;
-  char *header;
-  char *body;
-};
-
 /* Configs */
 int color = 1;
 int output = 1;
 int debug = 0;
-
-/* Wren */
-char *wrenBuffer = 0;
-WrenConfiguration wrenConfig;
+char *rootDir = ".";
 
 char *colorize(char *str, int color) {
   if (!color) {
@@ -62,146 +54,29 @@ void message_internal(int num, ...) {
 #define message_5(v, w, x, y, z) message_internal(5, v, w, x, y, z)
 #define message_6(u, v, w, x, y, z) message_internal(6, u, v, w, x, y, z)
 #define message_7(t, u, v, w, x, y, z) message_internal(7, t, u, v, w, x, y, z)
-#define message_8(s, t, u, v, w, x, y, z) message_internal(8, s, t, u, v, w, x, y, z)
-#define message_9(r, s, t, u, v, w, x, y, z) message_internal(9, r, s, t, u, v, w, x, y, z)
+#define message_8(s, t, u, v, w, x, y, z)                                      \
+  message_internal(8, s, t, u, v, w, x, y, z)
+#define message_9(r, s, t, u, v, w, x, y, z)                                   \
+  message_internal(9, r, s, t, u, v, w, x, y, z)
 
 #define GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, NAME, ...) NAME
-#define message(...) GET_MACRO(__VA_ARGS__, message_9, message_8, message_7, message_6, message_5, message_4, message_3, message_2, message_1)(__VA_ARGS__)
+#define message(...)                                                           \
+  GET_MACRO(__VA_ARGS__, message_9, message_8, message_7, message_6,           \
+            message_5, message_4, message_3, message_2, message_1)             \
+  (__VA_ARGS__)
 
-static char *SafeMalloc(size_t size) {
-  char *p;
-
-  p = (char *)malloc(size);
-  if (p == 0) {
-    exit(1);
-  }
-  return p;
-}
-
-static char *StrDup(const char *zSrc) {
-  char *zDest;
-  size_t size;
-
-  if (zSrc == 0)
-    return 0;
-  size = strlen(zSrc) + 1;
-  zDest = (char *)SafeMalloc(size);
-  strcpy(zDest, zSrc);
-  return zDest;
-}
-
-static char *StrAppend(char *zPrior, const char *zSep, const char *zSrc) {
-  char *zDest;
-  size_t size;
-  size_t n0, n1, n2;
-
-  if (zSrc == 0)
-    return 0;
-  if (zPrior == 0)
-    return StrDup(zSrc);
-  n0 = strlen(zPrior);
-  n1 = strlen(zSep);
-  n2 = strlen(zSrc);
-  size = n0 + n1 + n2 + 1;
-  zDest = (char *)SafeMalloc(size);
-  memcpy(zDest, zPrior, n0);
-  free(zPrior);
-  memcpy(&zDest[n0], zSep, n1);
-  memcpy(&zDest[n0 + n1], zSrc, n2 + 1);
-  return zDest;
-}
-
-/*
- * WrenVM
- */
-static void writeFn(WrenVM *vm, const char *text) {
-  wrenBuffer = StrAppend(wrenBuffer, "\n", text);
-}
-
-static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
-
-  char module[100];
-  /* strcpy(module, zDir); */
-  /* strcat(module, "/"); */
-  strcat(module, name);
-  strcat(module, ".wren");
-  char *buffer = 0;
-  long length;
-  FILE *f = fopen(module, "rb");
-  if (f) {
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    buffer = malloc(length + 1);
-    if (buffer) {
-      fread(buffer, 1, length, f);
-    }
-    fclose(f);
-  }
-
-  WrenLoadModuleResult result = {0};
-  result.source = NULL;
-
-  if (buffer) {
-    buffer[length] = '\0';
-    result.source = buffer;
-  }
-
-  return result;
-}
-
-void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
-             const int line, const char *msg) {
-  switch (errorType) {
-  case WREN_ERROR_COMPILE: {
-    printf("[%s line %d] [Error] %s\n", module, line, msg);
-  } break;
-  case WREN_ERROR_STACK_TRACE: {
-    printf("[%s line %d] in %s\n", module, line, msg);
-  } break;
-  case WREN_ERROR_RUNTIME: {
-    printf("[Runtime Error] %s\n", msg);
-  } break;
-  }
-}
-
-struct BialetResponse runCode(char *code) {
-  const char *module = "main";
-  WrenVM *vm = 0;
-  vm = wrenNewVM(&wrenConfig);
-  WrenInterpretResult result = wrenInterpret(vm, module, code);
-  wrenFreeVM(vm);
-
-  struct BialetResponse r;
-  r.header = "Content-type: text/html\r\n";
-  switch (result) {
-  case WREN_RESULT_SUCCESS: {
-    r.status = 200;
-    r.body = wrenBuffer;
-    wrenBuffer = 0;
-  } break;
-  case WREN_RESULT_COMPILE_ERROR:
-  case WREN_RESULT_RUNTIME_ERROR:
-  default: {
-    r.status = 500;
-    r.body = "Internal Server Error";
-  } break;
-  }
-  return r;
-}
 
 static void httpHandler(struct mg_connection *c, int ev, void *ev_data,
                         void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
     // TODO Add routing
-    if (mg_http_match_uri(hm, "/api/hello")) {
+    if (false) {
+      /* if (mg_http_match_uri(hm, "/*.wren")) { */
       // TODO Read code from routing
-      char *code = "System.print(\"Test code\")";
-      struct BialetResponse r = runCode(code);
-      mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
     } else {
-      struct mg_http_serve_opts opts = {.root_dir = "."};
+      struct mg_http_serve_opts opts = {.root_dir = ".",
+                                        .ssi_pattern = "#.wren"};
       mg_http_serve_dir(c, hm, &opts);
     }
   }
@@ -252,14 +127,11 @@ int main() {
 
   struct mg_mgr mgr;
 
-  wrenInitConfiguration(&wrenConfig);
-  wrenConfig.writeFn = &writeFn;
-  wrenConfig.errorFn = &errorFn;
-  wrenConfig.loadModuleFn = &loadModuleFn;
-
+  bialetWrenInit();
   welcome();
   initConfig();
 
+  mg_log_set(MG_LL_DEBUG);
   mg_mgr_init(&mgr);
   // TODO Add host and port from params
   mg_http_listen(&mgr, "http://0.0.0.0:8080", httpHandler, NULL);
