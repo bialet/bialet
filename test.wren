@@ -1,1 +1,2 @@
-System.print("Test code 2")
+var name = "World"
+System.print("<p>Hello, <strong>%(name)</strong>!")

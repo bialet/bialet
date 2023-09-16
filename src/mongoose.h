@@ -20,6 +20,8 @@
 #ifndef MONGOOSE_H
 #define MONGOOSE_H
 
+#define MG_ENABLE_DIRLIST 0
+
 #define MG_VERSION "7.11"
 
 #ifdef __cplusplus

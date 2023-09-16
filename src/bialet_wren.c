@@ -55,16 +55,10 @@ static void writeFn(WrenVM *vm, const char *text) {
   wrenBuffer = StrAppend(wrenBuffer, "\n", text);
 }
 
-static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
-
-  char module[100];
-  /* strcpy(module, zDir); */
-  /* strcat(module, "/"); */
-  strcat(module, name);
-  strcat(module, ".wren");
+char *readFile(const char *path) {
   char *buffer = 0;
   long length;
-  FILE *f = fopen(module, "rb");
+  FILE *f = fopen(path, "rb");
   if (f) {
     fseek(f, 0, SEEK_END);
     length = ftell(f);
@@ -72,18 +66,28 @@ static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
     buffer = malloc(length + 1);
     if (buffer) {
       fread(buffer, 1, length, f);
+      buffer[length] = '\0';
     }
     fclose(f);
   }
+  return buffer;
+}
+
+static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
+
+  char module[100];
+  /* strcpy(module, zDir); */
+  /* strcat(module, "/"); */
+  strcat(module, name);
+  strcat(module, ".wren");
+  char *buffer = readFile(module);
 
   WrenLoadModuleResult result = {0};
   result.source = NULL;
 
   if (buffer) {
-    buffer[length] = '\0';
     result.source = buffer;
   }
-
   return result;
 }
 
@@ -115,7 +119,6 @@ struct BialetResponse runCode(char *code) {
   case WREN_RESULT_SUCCESS: {
     r.status = 200;
     r.body = wrenBuffer;
-    wrenBuffer = 0;
   } break;
   case WREN_RESULT_COMPILE_ERROR:
   case WREN_RESULT_RUNTIME_ERROR:
@@ -124,6 +127,7 @@ struct BialetResponse runCode(char *code) {
     r.body = "Internal Server Error";
   } break;
   }
+  wrenBuffer = 0;
   return r;
 }
 

@@ -16,6 +16,7 @@
 // license, as set out in https://www.mongoose.ws/licensing/
 //
 // SPDX-License-Identifier: GPL-2.0-only or commercial
+#define MG_ENABLE_DIRLIST 0
 
 #include "mongoose.h"
 #include "bialet_wren.h"
@@ -2140,7 +2141,7 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
   } else if (flags & MG_FS_DIR) {
     if (((mg_snprintf(path + n, path_size - n, "/" MG_HTTP_INDEX) > 0 &&
           (tmp = fs->st(path, NULL, NULL)) != 0) ||
-         (mg_snprintf(path + n, path_size - n, "/index.shtml") > 0 &&
+         (mg_snprintf(path + n, path_size - n, "/index.wren") > 0 &&
           (tmp = fs->st(path, NULL, NULL)) != 0))) {
       flags = tmp;
     } else if ((mg_snprintf(path + n, path_size - n, "/" MG_HTTP_INDEX ".gz") >
@@ -2186,7 +2187,7 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
 #if MG_ENABLE_DIRLIST
     listdir(c, hm, opts, path);
 #else
-    mg_http_reply(c, 403, "", "Forbidden\n");
+    mg_http_reply(c, 404, "", "Not Found\n");
 #endif
   } else if (flags && sp != NULL &&
              mg_globmatch(sp, strlen(sp), path, strlen(path))) {
@@ -6836,26 +6837,12 @@ void mg_http_serve_ssi(struct mg_connection *c, const char *root,
 #else
 void mg_http_serve_ssi(struct mg_connection *c, const char *root,
                        const char *fullpath) {
-  char *code = NULL;
-  long length;
-  FILE *fp = fopen(fullpath, "rb");
-  FILE *f = fopen(fullpath, "rb");
-  if (f) {
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    code = malloc(length);
-    if (code) {
-      fread(code, 1, length, f);
-    }
-    fclose(f);
-  }
+  char *code = readFile(fullpath);
   if (code) {
-      printf("Code: %s", code);
-      struct BialetResponse r = runCode(code);
-      mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
+    struct BialetResponse r = runCode(code);
+    mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
   } else {
-          MG_ERROR(("Error reading file: %s", fullpath));
+    MG_ERROR(("Error reading file: %s", fullpath));
   }
   (void)root, (void)fullpath;
 }

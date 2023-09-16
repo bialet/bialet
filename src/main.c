@@ -1,3 +1,5 @@
+#define MG_ENABLE_DIRLIST 0
+
 #include "bialet_wren.h"
 #include "mongoose.h"
 #include "wren_vm.h"

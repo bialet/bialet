@@ -11,4 +11,6 @@ void bialetWrenInit();
 
 struct BialetResponse runCode(char *code);
 
+char* readFile(const char* path);
+
 #endif
