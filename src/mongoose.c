@@ -6838,7 +6838,7 @@ void mg_http_serve_ssi(struct mg_connection *c, const char *root,
                        const char *fullpath) {
   char *code = readFile(fullpath);
   if (code) {
-    struct BialetResponse r = runCode(code);
+    struct BialetResponse r = runCode((char*) fullpath, code);
     mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
   } else {
     MG_ERROR(("Error reading file: %s", fullpath));

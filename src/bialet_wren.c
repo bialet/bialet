@@ -1,7 +1,10 @@
 #include "bialet_wren.h"
+#include "messages.h"
 #include "wren_vm.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#define MAX_LINE_ERROR_LEN 100
 
 char *wrenBuffer = 0;
 WrenConfiguration wrenConfig;
@@ -94,21 +97,22 @@ static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
 
 void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
              const int line, const char *msg) {
+  char lineMessage[MAX_LINE_ERROR_LEN];
+  sprintf(lineMessage, "%s line %d", module, line);
   switch (errorType) {
   case WREN_ERROR_COMPILE: {
-    printf("[%s line %d] [Error] %s\n", module, line, msg);
+    message(red("Compilation Error"), lineMessage, (char *)msg);
   } break;
   case WREN_ERROR_STACK_TRACE: {
-    printf("[%s line %d] in %s\n", module, line, msg);
+    message(red("Stack Error"), lineMessage, (char *)msg);
   } break;
   case WREN_ERROR_RUNTIME: {
-    printf("[Runtime Error] %s\n", msg);
+    message(red("Runtime Error"), (char *)msg);
   } break;
   }
 }
 
-struct BialetResponse runCode(char *code) {
-  const char *module = "main";
+struct BialetResponse runCode(char *module, char *code) {
   WrenVM *vm = 0;
   vm = wrenNewVM(&wrenConfig);
   WrenInterpretResult result = wrenInterpret(vm, module, code);

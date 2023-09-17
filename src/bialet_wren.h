@@ -9,7 +9,7 @@ struct BialetResponse {
 
 void bialetWrenInit();
 
-struct BialetResponse runCode(char *code);
+struct BialetResponse runCode(char *module, char *code);
 
 char* readFile(const char* path);
 
