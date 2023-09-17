@@ -76,8 +76,9 @@ char *readFile(const char *path) {
 static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
 
   char module[100];
-  /* strcpy(module, zDir); */
-  /* strcat(module, "/"); */
+  // TODO Read path from config
+  strcpy(module, ".");
+  strcat(module, "/");
   strcat(module, name);
   strcat(module, ".wren");
   char *buffer = readFile(module);
@@ -115,6 +116,9 @@ struct BialetResponse runCode(char *code) {
 
   struct BialetResponse r;
   r.header = "Content-type: text/html\r\n";
+  if (!wrenBuffer) {
+    wrenBuffer = "";
+  }
   switch (result) {
   case WREN_RESULT_SUCCESS: {
     r.status = 200;
