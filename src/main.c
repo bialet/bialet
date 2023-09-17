@@ -25,15 +25,9 @@ static void httpHandler(struct mg_connection *c, int ev, void *ev_data,
                         void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
-    // TODO Add routing
-    if (false) {
-      /* if (mg_http_match_uri(hm, "/*.wren")) { */
-      // TODO Read code from routing
-    } else {
-      struct mg_http_serve_opts opts = {.root_dir = ".",
-                                        .ssi_pattern = "#.wren"};
-      mg_http_serve_dir(c, hm, &opts);
-    }
+    struct mg_http_serve_opts opts = {.root_dir = rootDir,
+                                      .ssi_pattern = "#.wren"};
+    mg_http_serve_dir(c, hm, &opts);
   }
 }
 
@@ -46,10 +40,8 @@ static void *fileWatcher(void *arg) {
   if (fd < 0) {
     perror("inotify_init");
   }
-  // TODO Remove hardcoded path
   // TODO Add watcher for new folders
-  int wd =
-      inotify_add_watch(fd, "/home/albo/hobby/bialet/bialet/build", IN_MODIFY);
+  int wd = inotify_add_watch(fd, rootDir, IN_MODIFY);
   if (wd < 0) {
     perror("inotify_add_watch");
   }
@@ -65,7 +57,6 @@ static void *fileWatcher(void *arg) {
       if (event->len) {
         if (event->mask & IN_MODIFY) {
           initConfig();
-          printf("File %s was modified.\n", event->name);
         }
       }
       i += EVENT_SIZE + event->len;
@@ -89,11 +80,11 @@ int main() {
   struct mg_mgr mgr;
 
   bialetWrenInit();
+  mg_mgr_init(&mgr);
+
   welcome();
   initConfig();
 
-  mg_mgr_init(&mgr);
-  // TODO Add host and port from params
   mg_http_listen(&mgr, serverUrl(), httpHandler, NULL);
 
   pthread_t thread_id;
