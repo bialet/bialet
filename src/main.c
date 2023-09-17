@@ -12,8 +12,11 @@
 
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
+#define MAX_URL_LEN 200
 
 /* Configs */
+int port = 8080;
+char *host = "localhost";
 int output = 1;
 int debug = 0;
 char *rootDir = ".";
@@ -71,8 +74,14 @@ static void *fileWatcher(void *arg) {
   }
 }
 
+char *serverUrl() {
+  char *url = malloc(MAX_URL_LEN);
+  sprintf(url, "http://%s:%d", host, port);
+  return url;
+}
+
 void welcome() {
-  message("🚲", green("bialet"), "is riding on", blue("http://localhost:8080"));
+  message("🚲", green("bialet"), "is riding on", blue(serverUrl()));
 }
 
 int main() {
@@ -85,7 +94,7 @@ int main() {
 
   mg_mgr_init(&mgr);
   // TODO Add host and port from params
-  mg_http_listen(&mgr, "http://0.0.0.0:8080", httpHandler, NULL);
+  mg_http_listen(&mgr, serverUrl(), httpHandler, NULL);
 
   pthread_t thread_id;
   pthread_create(&thread_id, NULL, fileWatcher, NULL);
