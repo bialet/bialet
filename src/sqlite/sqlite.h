@@ -21,7 +21,7 @@
 /*
 ** The version of the SQLite library.
 */
-#define SQLITE_VERSION         "--VERS--"
+#define SQLITE_VERSION         "2.5"
 
 /*
 ** Make sure we can call this stuff from C++.
@@ -42,7 +42,7 @@ extern const char sqlite_version[];
 ** UTF-8 encoded data.  The SQLITE_ISO8859 macro is defined if the
 ** iso8859 encoded should be used.
 */
-#define SQLITE_--ENCODING-- 1
+#define SQLITE_UTF8 1
 
 /*
 ** The following constant holds one of two strings, "UTF-8" or "iso8859",
