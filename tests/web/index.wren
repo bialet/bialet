@@ -1,6 +1,14 @@
 import "bialet" for Response
 import "layout" for Layout
 
-Response.out(Layout.render("Welcome to Bialet", "
-  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-"))
+var title = "Welcome to Bialet"
+var content = "
+  <p>Create a file called <strong>index.wren</strong></p>
+  <code>
+    Response.out(\"Hello World!\")
+  </code>
+  <p>Then cd to the folder of the web and run</p>
+  <code>bialet</code>
+"
+
+Response.out(Layout.render(title, content))
