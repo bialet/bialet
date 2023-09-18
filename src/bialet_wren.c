@@ -1,5 +1,6 @@
 #include "bialet_wren.h"
 #include "messages.h"
+#include "wren.h"
 #include "wren_vm.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +56,7 @@ static char *StrAppend(char *zPrior, const char *zSep, const char *zSrc) {
  * WrenVM
  */
 static void writeFn(WrenVM *vm, const char *text) {
-  wrenBuffer = StrAppend(wrenBuffer, "\n", text);
+  message(yellow("Log"), text);
 }
 
 char *readFile(const char *path) {
@@ -112,6 +113,23 @@ void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
+static void responseOut(WrenVM *vm) {
+  const char *buffer = wrenGetSlotString(vm, 1);
+  wrenBuffer = StrAppend(wrenBuffer, "\n", buffer);
+}
+
+WrenForeignMethodFn bindForeignMethod(WrenVM *vm, const char *module,
+                                      const char *className, bool isStatic,
+                                      const char *signature) {
+  if (strcmp(module, "bialet") == 0) {
+    if (strcmp(className, "Response") == 0) {
+      if (isStatic && strcmp(signature, "out(_)") == 0) {
+        return responseOut;
+      }
+    }
+  }
+}
+
 struct BialetResponse runCode(char *module, char *code) {
   WrenVM *vm = 0;
   vm = wrenNewVM(&wrenConfig);
@@ -144,4 +162,5 @@ void bialetWrenInit() {
   wrenConfig.writeFn = &writeFn;
   wrenConfig.errorFn = &errorFn;
   wrenConfig.loadModuleFn = &loadModuleFn;
+  wrenConfig.bindForeignMethodFn = &bindForeignMethod;
 }

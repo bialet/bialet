@@ -1,6 +1,8 @@
 import "bialet" for Response
 import "layout" for Layout
 
+System.write("Run index")
+
 var title = "Welcome to Bialet"
 var content = "
   <p>Create a file called <strong>index.wren</strong></p>
