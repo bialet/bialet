@@ -126,6 +126,7 @@ class MapSequence is Sequence {
 
   iterate(iterator) { _sequence.iterate(iterator) }
   iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  toString { join("") }
 }
 
 class SkipSequence is Sequence {

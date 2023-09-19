@@ -128,6 +128,7 @@ static const char* coreModuleSource =
 "\n"
 "  iterate(iterator) { _sequence.iterate(iterator) }\n"
 "  iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }\n"
+"  toString { join(\"\") }\n"
 "}\n"
 "\n"
 "class SkipSequence is Sequence {\n"

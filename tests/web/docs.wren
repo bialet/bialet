@@ -14,13 +14,13 @@ var content = "
     <tr>
       %( users[0].keys.map { |col| "
         <th>%(col)</th>
-      " }.join() )
+      " } )
     </tr>
     %( users.map { |row| "
       <tr>%(row.values.map { |val| "
         <td>%(val)</td>
-        " }.join())
-      </tr>" }.join() )
+        " })
+      </tr>" } )
   </table>
 "
 
