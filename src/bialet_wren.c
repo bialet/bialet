@@ -8,9 +8,9 @@
 
 #define MAX_LINE_ERROR_LEN 100
 
-WrenConfiguration wrenConfig;
+WrenConfiguration wren_config;
 
-static char *SafeMalloc(size_t size) {
+static char *safe_malloc(size_t size) {
   char *p;
 
   p = (char *)malloc(size);
@@ -20,19 +20,19 @@ static char *SafeMalloc(size_t size) {
   return p;
 }
 
-static char *StrDup(const char *zSrc) {
+static char *string_safe_copy(const char *zSrc) {
   char *zDest;
   size_t size;
 
   if (zSrc == 0)
     return 0;
   size = strlen(zSrc) + 1;
-  zDest = (char *)SafeMalloc(size);
+  zDest = (char *)safe_malloc(size);
   strcpy(zDest, zSrc);
   return zDest;
 }
 
-static char *StrAppend(char *zPrior, const char *zSep, const char *zSrc) {
+static char *string_append(char *zPrior, const char *zSep, const char *zSrc) {
   char *zDest;
   size_t size;
   size_t n0, n1, n2;
@@ -40,12 +40,12 @@ static char *StrAppend(char *zPrior, const char *zSep, const char *zSrc) {
   if (zSrc == 0)
     return 0;
   if (zPrior == 0)
-    return StrDup(zSrc);
+    return string_safe_copy(zSrc);
   n0 = strlen(zPrior);
   n1 = strlen(zSep);
   n2 = strlen(zSrc);
   size = n0 + n1 + n2 + 1;
-  zDest = (char *)SafeMalloc(size);
+  zDest = (char *)safe_malloc(size);
   memcpy(zDest, zPrior, n0);
   free(zPrior);
   memcpy(&zDest[n0], zSep, n1);
@@ -55,11 +55,11 @@ static char *StrAppend(char *zPrior, const char *zSep, const char *zSrc) {
 /*
  * WrenVM
  */
-static void writeFn(WrenVM *vm, const char *text) {
+static void wren_write(WrenVM *vm, const char *text) {
   message(yellow("Log"), text);
 }
 
-char *readFile(const char *path) {
+char *bialet_read_file(const char *path) {
   char *buffer = 0;
   long length;
   FILE *f = fopen(path, "rb");
@@ -77,7 +77,7 @@ char *readFile(const char *path) {
   return buffer;
 }
 
-static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
+static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[100];
   // TODO Read path from config
@@ -85,7 +85,7 @@ static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
   strcat(module, "/");
   strcat(module, name);
   strcat(module, ".wren");
-  char *buffer = readFile(module);
+  char *buffer = bialet_read_file(module);
 
   WrenLoadModuleResult result = {0};
   result.source = NULL;
@@ -96,7 +96,7 @@ static WrenLoadModuleResult loadModuleFn(WrenVM *vm, const char *name) {
   return result;
 }
 
-void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
+void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
              const int line, const char *msg) {
   char lineMessage[MAX_LINE_ERROR_LEN];
   sprintf(lineMessage, "%s line %d", module, line);
@@ -118,7 +118,7 @@ static void exampleMethod(WrenVM *vm) {
   // TODO This will be needed later!
 }
 
-WrenForeignMethodFn bindForeignMethod(WrenVM *vm, const char *module,
+WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                       const char *className, bool isStatic,
                                       const char *signature) {
   if (strcmp(module, "bialet") == 0) {
@@ -130,11 +130,11 @@ WrenForeignMethodFn bindForeignMethod(WrenVM *vm, const char *module,
   }
 }
 
-struct BialetResponse runCode(char *module, char *code) {
+struct BialetResponse bialet_run(char *module, char *code) {
   struct BialetResponse r;
   WrenVM *vm = 0;
 
-  vm = wrenNewVM(&wrenConfig);
+  vm = wrenNewVM(&wren_config);
   wrenInterpret(vm, "bialet", bialetModuleSource);
   WrenInterpretResult result = wrenInterpret(vm, module, code);
 
@@ -147,7 +147,7 @@ struct BialetResponse runCode(char *module, char *code) {
   wrenSetSlotHandle(vm, 0, responseClass);
   if (wrenCall(vm, outMethod) == WREN_RESULT_SUCCESS) {
     const char *body = wrenGetSlotString(vm, 0);
-    r.body = StrDup(body);
+    r.body = string_safe_copy(body);
   } else {
     r.body = "";
   }
@@ -156,7 +156,7 @@ struct BialetResponse runCode(char *module, char *code) {
   wrenSetSlotHandle(vm, 0, responseClass);
   if (wrenCall(vm, headersMethod) == WREN_RESULT_SUCCESS) {
     const char *headersString = wrenGetSlotString(vm, 0);
-    r.header = StrDup(headersString);
+    r.header = string_safe_copy(headersString);
   } else {
     r.header = "Content-type: text/html\r\n";
   }
@@ -189,10 +189,10 @@ struct BialetResponse runCode(char *module, char *code) {
   return r;
 }
 
-void bialetWrenInit() {
-  wrenInitConfiguration(&wrenConfig);
-  wrenConfig.writeFn = &writeFn;
-  wrenConfig.errorFn = &errorFn;
-  wrenConfig.loadModuleFn = &loadModuleFn;
-  wrenConfig.bindForeignMethodFn = &bindForeignMethod;
+void bialet_init() {
+  wrenInitConfiguration(&wren_config);
+  wren_config.writeFn = &wren_write;
+  wren_config.errorFn = &wren_error;
+  wren_config.loadModuleFn = &wren_load_module;
+  wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
 }

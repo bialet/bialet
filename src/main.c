@@ -24,21 +24,22 @@ int port = 8080;
 char *host = "localhost";
 int output = 1;
 int debug = 0;
-char *rootDir = ".";
+char *root_dir = ".";
 
-static void httpHandler(struct mg_connection *c, int ev, void *ev_data,
+static void http_handler(struct mg_connection *c, int ev, void *ev_data,
                         void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
-    struct mg_http_serve_opts opts = {.root_dir = rootDir,
+    struct mg_http_serve_opts opts = {.root_dir = root_dir,
                                       .ssi_pattern = "#.wren"};
     mg_http_serve_dir(c, hm, &opts);
   }
 }
 
-static void initConfig() { message(green("Reload config")); }
+/* Reload files */
+static void trigger_reload_files() {}
 
-static void *fileWatcher(void *arg) {
+static void *file_watcher(void *arg) {
   int length, i = 0;
   char buffer[BUF_LEN];
   int fd = inotify_init();
@@ -46,7 +47,7 @@ static void *fileWatcher(void *arg) {
     perror("inotify_init");
   }
   // TODO Add watcher for new folders
-  int wd = inotify_add_watch(fd, rootDir, IN_MODIFY);
+  int wd = inotify_add_watch(fd, root_dir, IN_MODIFY);
   if (wd < 0) {
     perror("inotify_add_watch");
   }
@@ -61,7 +62,7 @@ static void *fileWatcher(void *arg) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
         if (event->mask & IN_MODIFY) {
-          initConfig();
+          trigger_reload_files();
         }
       }
       i += EVENT_SIZE + event->len;
@@ -70,14 +71,14 @@ static void *fileWatcher(void *arg) {
   }
 }
 
-char *serverUrl() {
+char *server_url() {
   char *url = malloc(MAX_URL_LEN);
   sprintf(url, "http://%s:%d", host, port);
   return url;
 }
 
 void welcome() {
-  message("🚲", green("bialet"), "is riding on", blue(serverUrl()));
+  message("🚲", green("bialet"), "is riding on", blue(server_url()));
 }
 
 int main(int argc, char *argv[]) {
@@ -92,16 +93,16 @@ int main(int argc, char *argv[]) {
 
   struct mg_mgr mgr;
 
-  bialetWrenInit();
+  bialet_init();
   mg_mgr_init(&mgr);
 
   welcome();
-  initConfig();
+  trigger_reload_files();
 
-  mg_http_listen(&mgr, serverUrl(), httpHandler, NULL);
+  mg_http_listen(&mgr, server_url(), http_handler, NULL);
 
   pthread_t thread_id;
-  pthread_create(&thread_id, NULL, fileWatcher, NULL);
+  pthread_create(&thread_id, NULL, file_watcher, NULL);
 
   for (;;) {
     pid = fork();

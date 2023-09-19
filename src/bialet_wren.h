@@ -7,10 +7,10 @@ struct BialetResponse {
   char *body;
 };
 
-void bialetWrenInit();
+void bialet_init();
 
-struct BialetResponse runCode(char *module, char *code);
+struct BialetResponse bialet_run(char *module, char *code);
 
-char* readFile(const char* path);
+char* bialet_read_file(const char* path);
 
 #endif
