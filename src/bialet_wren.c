@@ -1,4 +1,5 @@
 #include "bialet_wren.h"
+#include "bialet.wren.inc"
 #include "messages.h"
 #include "wren.h"
 #include "wren_vm.h"
@@ -134,6 +135,7 @@ struct BialetResponse runCode(char *module, char *code) {
   WrenVM *vm = 0;
 
   vm = wrenNewVM(&wrenConfig);
+  wrenInterpret(vm, "bialet", bialetModuleSource);
   WrenInterpretResult result = wrenInterpret(vm, module, code);
 
   wrenEnsureSlots(vm, 4);
