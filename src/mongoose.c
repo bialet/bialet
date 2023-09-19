@@ -1628,9 +1628,8 @@ int mg_http_parse(const char *s, size_t len, struct mg_http_message *hm) {
   // So, if it is HTTP request, and Content-Length is not set,
   // and method is not (PUT or POST) then reset body length to zero.
   is_response = mg_ncasecmp(hm->method.ptr, "HTTP/", 5) == 0;
-  if (hm->body.len == (size_t)~0 && !is_response &&
-      mg_vcasecmp(&hm->method, "PUT") != 0 &&
-      mg_vcasecmp(&hm->method, "POST") != 0) {
+  if (hm->body.len == (size_t)~0 && !is_response) {
+      printf("Reset body length to 0\n");
     hm->body.len = 0;
     hm->message.len = (size_t)req_len;
   }

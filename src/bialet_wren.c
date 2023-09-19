@@ -195,10 +195,29 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
   }
 }
 
-struct BialetResponse bialet_run(char *module, char *code, struct mg_http_message *hm) {
+void print_mg_str(char *name, struct mg_str str) {
+  char *val = NULL;
+  int method_len = (int)(str.len);
+  val = malloc(method_len + 1);
+  if (val) {
+    strncpy(val, str.ptr, method_len);
+    val[method_len] = '\0';
+  }
+  printf("%s: %s\n", name , val);
+  free(val);
+}
+
+struct BialetResponse bialet_run(char *module, char *code,
+                                 struct mg_http_message *hm) {
   struct BialetResponse r;
   int error = 0;
   WrenVM *vm = 0;
+
+  // TODO Add vars to wren Request
+  print_mg_str("Method", hm->method);
+  print_mg_str("URI", hm->uri);
+  print_mg_str("Query", hm->query);
+  print_mg_str("Body", hm->body);
 
   // TODO Move to config
   char *db_path = ".db.sqlite3";
@@ -227,6 +246,7 @@ struct BialetResponse bialet_run(char *module, char *code, struct mg_http_messag
       const char *body = wrenGetSlotString(vm, 0);
       r.body = string_safe_copy(body);
     } else {
+      message(red("Runtime Error"), "Failed to get body");
       error = 1;
     }
     /* Get headers from response */
@@ -236,6 +256,7 @@ struct BialetResponse bialet_run(char *module, char *code, struct mg_http_messag
       const char *headersString = wrenGetSlotString(vm, 0);
       r.header = string_safe_copy(headersString);
     } else {
+      message(red("Runtime Error"), "Failed to get headers");
       error = 1;
     }
     /* Get status from response */
@@ -245,6 +266,7 @@ struct BialetResponse bialet_run(char *module, char *code, struct mg_http_messag
       const double status = wrenGetSlotDouble(vm, 0);
       r.status = (int)status;
     } else {
+      message(red("Runtime Error"), "Failed to get status");
       error = 1;
     }
     /* Clean Wren vm */
