@@ -16,11 +16,14 @@ class Response {
   }
 }
 
+Response.init()
+
 class Request {
-  foreign static url()
-  foreign static headers()
-  foreign static get(key)
-  foreign static post(key)
+  static init(message) {
+    // TODO Parse message!
+    __message = message
+  }
+  static header(name, value) { __headers[name] = value }
 }
 
 class Cookie {
@@ -56,4 +59,3 @@ class Db {
   }
 }
 
-Response.init()

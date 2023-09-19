@@ -214,7 +214,6 @@ struct BialetResponse bialet_run(char *module, char *code,
 
   message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
           get_mg_str(hm->query), get_mg_str(hm->body));
-  /* print_mg_str("Message", hm->message); */
 
   // TODO Move to config
   char *db_path = ".db.sqlite3";
@@ -225,15 +224,21 @@ struct BialetResponse bialet_run(char *module, char *code,
   }
 
   vm = wrenNewVM(&wren_config);
-  /* Load bialet framework */
-  wrenInterpret(vm, "bialet", bialetModuleSource);
-  // TODO Load hm to Request class
+  /* Load bialet framework with Request appended */
+  char *bialetCompleteCode;
+  // TODO Escape "
+  char *message = get_mg_str(hm->message);
+  bialetCompleteCode =
+      string_append(string_safe_copy(bialetModuleSource), "\nRequest.init(\"",
+                    string_append(message, "\")", "\n"));
+  wrenInterpret(vm, "bialet", bialetCompleteCode);
   /* Run user code */
-  WrenInterpretResult result = wrenInterpret(vm, module, code);
-  error = result != WREN_RESULT_SUCCESS;
-
   if (!error) {
-    wrenEnsureSlots(vm, 4);
+    WrenInterpretResult result = wrenInterpret(vm, module, code);
+    error = result != WREN_RESULT_SUCCESS;
+  }
+  wrenEnsureSlots(vm, 4);
+  if (!error) {
     wrenGetVariable(vm, "bialet", "Response", 0);
     WrenHandle *response_class = wrenGetSlotHandle(vm, 0);
     /* Get body from response */
@@ -276,6 +281,7 @@ struct BialetResponse bialet_run(char *module, char *code,
   sqlite3_close(db);
 
   if (error) {
+    message(red("Error"), "Internal Server Error");
     r.status = 500;
     r.header = "Content-type: text/html\r\n";
     r.body = "Internal Server Error";
