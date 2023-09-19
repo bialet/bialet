@@ -5,7 +5,7 @@ class Response {
     __out = ""
   }
   static out(out) { __out = __out + "\r\n" + out }
-  static out() { __out }
+  static out() { __out.trim() }
   static status(status) { __status = status }
   static status() { __status }
   static headers() { __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }

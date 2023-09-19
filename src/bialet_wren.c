@@ -145,7 +145,7 @@ struct BialetResponse runCode(char *module, char *code) {
   wrenSetSlotHandle(vm, 0, responseClass);
   if (wrenCall(vm, outMethod) == WREN_RESULT_SUCCESS) {
     const char *body = wrenGetSlotString(vm, 0);
-    r.body = (char *)body;
+    r.body = StrDup(body);
   } else {
     r.body = "";
   }
@@ -154,7 +154,7 @@ struct BialetResponse runCode(char *module, char *code) {
   wrenSetSlotHandle(vm, 0, responseClass);
   if (wrenCall(vm, headersMethod) == WREN_RESULT_SUCCESS) {
     const char *headersString = wrenGetSlotString(vm, 0);
-    r.header = (char *)headersString;
+    r.header = StrDup(headersString);
   } else {
     r.header = "Content-type: text/html\r\n";
   }
