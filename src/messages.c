@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+// TODO Move to config
 int color = 1;
 
 char *colorize(char *str, int color) {
