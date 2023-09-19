@@ -6983,8 +6983,8 @@ bool mg_path_is_sane(const char *path) {
   const char *s = path;
   for (; s[0] != '\0'; s++) {
     if (s == path || s[0] == '/' || s[0] == '\\') { // Subdir?
-      if (s[1] == '.' && s[2] == '.')
-        return false; // Starts with ..
+      if (s[1] == '.' || s[1] == '_')
+        return false; // Starts with . or _
     }
   }
   return true;
