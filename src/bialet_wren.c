@@ -116,10 +116,10 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
 }
 
 static void db_query(WrenVM *vm) {
-  wrenEnsureSlots(vm, 100);
+  wrenEnsureSlots(vm, 10);
   const char *query = wrenGetSlotString(vm, 1);
   if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
-    // TODO Error!
+    message(red("Runtime Error"), "Argument for parameters in Db should be type list");
   } else {
     sqlite3_stmt *stmt;
     int result, i_bind, map_slot;
@@ -185,10 +185,10 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              const char *signature) {
   if (strcmp(module, "bialet") == 0) {
     if (strcmp(className, "Db") == 0) {
-      if (strcmp(signature, "query(_,_)") == 0) {
+      if (strcmp(signature, "intQuery(_,_)") == 0) {
         return db_query;
       }
-      if (strcmp(signature, "lastInsertId()") == 0) {
+      if (strcmp(signature, "intLastInsertId()") == 0) {
         return db_last_insert_id;
       }
     }
@@ -226,8 +226,10 @@ struct BialetResponse bialet_run(char *module, char *code,
   int error = 0;
   WrenVM *vm = 0;
 
-  message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
+  if (hm) {
+      message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
           get_mg_str(hm->query), get_mg_str(hm->body));
+    }
 
   // TODO Move to config
   char *db_path = ".db.sqlite3";
@@ -240,10 +242,12 @@ struct BialetResponse bialet_run(char *module, char *code,
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework with Request appended */
   char *bialetCompleteCode;
-  char *message = escape_special_chars(get_mg_str(hm->message));
-  bialetCompleteCode =
-      string_append(string_safe_copy(bialetModuleSource), "\nRequest.init(\"",
-                    string_append(message, "\")", "\n"));
+  bialetCompleteCode = string_safe_copy(bialetModuleSource);
+  if (hm) {
+      char *message = escape_special_chars(get_mg_str(hm->message));
+      bialetCompleteCode =    string_append(bialetCompleteCode, "\nRequest.init(\"",
+                        string_append(message, "\")", "\n"));
+  }
   wrenInterpret(vm, "bialet", bialetCompleteCode);
   /* Run user code */
   if (!error) {

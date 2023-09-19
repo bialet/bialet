@@ -38,7 +38,14 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
 }
 
 /* Reload files */
-static void trigger_reload_files() {}
+static void trigger_reload_files() {
+    // Migration
+    char *code;
+    if ((code = bialet_read_file("_migration.wren"))) {
+        message(yellow("Migration"));
+        bialet_run("migration", code, 0);
+    }
+}
 
 static void *file_watcher(void *arg) {
   int length, i = 0;

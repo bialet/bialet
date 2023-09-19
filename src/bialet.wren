@@ -78,20 +78,32 @@ class Session {
 }
 
 class Db {
-  foreign static query(query, params)
-  foreign static lastInsertId()
+  foreign static intQuery(query, params)
+  foreign static intLastInsertId()
+  static query(query, params){
+    var res = Db.intQuery(query, params)
+    return res ? res : List.new
+  }
+  static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
-    if (!Db.one("SELECT version FROM _BIALET_MIGRATIONS WHERE version = ?", version)) {
+    Db.query("CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
+    if (!Db.one("SELECT version FROM BIALET_MIGRATIONS WHERE version = ?", [version])) {
       if (Db.query(schema)) {
-        Db.query("INSERT INTO _BIALET_MIGRATIONS (version) VALUES (?)", [version])
+        Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
       }
     }
   }
-  static query(query) { Db.query(query, []) }
-  static all(query) { Db.query(query, []) }
+  static query(query) { Db.query(query, List.new()) }
+  static all(query) { Db.query(query, List.new()) }
   static all(query, params) { Db.query(query, params) }
-  static one(query, params) { Db.all(query + " limit 1", params)[0] }
-  static one(query) { Db.one(query, []) }
+  static one(query, params) {
+    var res = Db.all(query + " limit 1", params)
+    if (res && res.count > 0) {
+      return res[0]
+    }
+    return null
+  }
+  static one(query) { Db.one(query, List.new()) }
   static save(table, values) {
     Db.all("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList)
     return Db.lastInsertId()
