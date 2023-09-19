@@ -10,6 +10,10 @@ class Response {
   static status() { __status }
   static headers() { __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
   static header(header, value) { __headers[header.trim()] = value.trim() }
+  static redirect(url) {
+    Response.status(302)
+    Response.header("Location", url)
+  }
 }
 
 class Request {
