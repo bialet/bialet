@@ -140,40 +140,40 @@ struct BialetResponse bialet_run(char *module, char *code) {
 
   wrenEnsureSlots(vm, 4);
   wrenGetVariable(vm, "bialet", "Response", 0);
-  WrenHandle *responseClass = wrenGetSlotHandle(vm, 0);
+  WrenHandle *response_class = wrenGetSlotHandle(vm, 0);
 
   /* Get body from response */
-  WrenHandle *outMethod = wrenMakeCallHandle(vm, "out()");
-  wrenSetSlotHandle(vm, 0, responseClass);
-  if (wrenCall(vm, outMethod) == WREN_RESULT_SUCCESS) {
+  WrenHandle *out_method = wrenMakeCallHandle(vm, "out()");
+  wrenSetSlotHandle(vm, 0, response_class);
+  if (wrenCall(vm, out_method) == WREN_RESULT_SUCCESS) {
     const char *body = wrenGetSlotString(vm, 0);
     r.body = string_safe_copy(body);
   } else {
     r.body = "";
   }
   /* Get headers from response */
-  WrenHandle *headersMethod = wrenMakeCallHandle(vm, "headers()");
-  wrenSetSlotHandle(vm, 0, responseClass);
-  if (wrenCall(vm, headersMethod) == WREN_RESULT_SUCCESS) {
+  WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers()");
+  wrenSetSlotHandle(vm, 0, response_class);
+  if (wrenCall(vm, headers_method) == WREN_RESULT_SUCCESS) {
     const char *headersString = wrenGetSlotString(vm, 0);
     r.header = string_safe_copy(headersString);
   } else {
     r.header = "Content-type: text/html\r\n";
   }
   /* Get status from response */
-  WrenHandle *statusMethod = wrenMakeCallHandle(vm, "status()");
-  wrenSetSlotHandle(vm, 0, responseClass);
-  if (wrenCall(vm, statusMethod) == WREN_RESULT_SUCCESS) {
+  WrenHandle *status_method = wrenMakeCallHandle(vm, "status()");
+  wrenSetSlotHandle(vm, 0, response_class);
+  if (wrenCall(vm, status_method) == WREN_RESULT_SUCCESS) {
     const double status = wrenGetSlotDouble(vm, 0);
     r.status = (int)status;
   } else {
     r.status = 200;
   }
   /* Clean Wren vm */
-  wrenReleaseHandle(vm, responseClass);
-  wrenReleaseHandle(vm, outMethod);
-  wrenReleaseHandle(vm, headersMethod);
-  wrenReleaseHandle(vm, statusMethod);
+  wrenReleaseHandle(vm, response_class);
+  wrenReleaseHandle(vm, out_method);
+  wrenReleaseHandle(vm, headers_method);
+  wrenReleaseHandle(vm, status_method);
   wrenFreeVM(vm);
 
   switch (result) {
