@@ -7,7 +7,7 @@ struct BialetResponse {
   char *body;
 };
 
-void bialet_init();
+void bialet_init(char *db_path);
 
 struct BialetResponse bialet_run(char *module, char *code);
 

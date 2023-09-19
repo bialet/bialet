@@ -3,12 +3,15 @@
 #include "messages.h"
 #include "wren.h"
 #include "wren_vm.h"
+#include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX_LINE_ERROR_LEN 100
 
 WrenConfiguration wren_config;
+sqlite3 *db;
 
 static char *safe_malloc(size_t size) {
   char *p;
@@ -52,9 +55,7 @@ static char *string_append(char *zPrior, const char *zSep, const char *zSrc) {
   memcpy(&zDest[n0 + n1], zSrc, n2 + 1);
   return zDest;
 }
-/*
- * WrenVM
- */
+
 static void wren_write(WrenVM *vm, const char *text) {
   message(yellow("Log"), text);
 }
@@ -113,9 +114,68 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
-static void exampleMethod(WrenVM *vm) {
-  const char *buffer = wrenGetSlotString(vm, 1);
-  // TODO This will be needed later!
+static void db_query(WrenVM *vm) {
+  wrenEnsureSlots(vm, 100);
+  const char *query = wrenGetSlotString(vm, 1);
+  if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
+    // TODO Error!
+  } else {
+    sqlite3_stmt *stmt;
+    int result, i_bind, map_slot;
+
+    result = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
+    if (result != SQLITE_OK) {
+      fprintf(stderr, "SQL error (%d): %s\n", result, sqlite3_errmsg(db));
+      // TODO Error!
+    }
+
+    /* Binding values */
+    for (int i = 0; i < wrenGetListCount(vm, 2); ++i) {
+      i_bind = i + 1;
+      wrenGetListElement(vm, 2, i, 3);
+      int type = wrenGetSlotType(vm, 3);
+      switch (type) {
+      case WREN_TYPE_STRING:
+        sqlite3_bind_text(stmt, i_bind, wrenGetSlotString(vm, 3), -1,
+                          SQLITE_STATIC);
+        break;
+      case WREN_TYPE_NUM:
+        sqlite3_bind_double(stmt, i_bind, wrenGetSlotDouble(vm, 3));
+        break;
+      case WREN_TYPE_BOOL:
+        sqlite3_bind_int(stmt, i_bind, wrenGetSlotBool(vm, 3));
+        break;
+      default:
+        // TODO Error!
+        break;
+      }
+    }
+
+    int col_count = sqlite3_column_count(stmt);
+    wrenSetSlotNewList(vm, 0);
+    /* Execute statement and fetch results */
+    while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+      map_slot = 1;
+      wrenSetSlotNewMap(vm, map_slot);
+      for (int i = 0; i < col_count; i++) {
+        const char *col_name = sqlite3_column_name(stmt, i);
+        const char *col_data = (const char *)sqlite3_column_text(stmt, i);
+        wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_name));
+        wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
+        wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
+      }
+      wrenInsertInList(vm, 0, -1, 1);
+    }
+    if (result != SQLITE_DONE) {
+      fprintf(stderr, "Execution failed: %s\n", sqlite3_errmsg(db));
+      // TODO Error!
+    }
+
+    sqlite3_finalize(stmt);
+  }
+}
+static void db_last_insert_id(WrenVM *vm) {
+  wrenSetSlotDouble(vm, 0, (int)sqlite3_last_insert_rowid(db));
 }
 
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
@@ -123,9 +183,12 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              bool isStatic,
                                              const char *signature) {
   if (strcmp(module, "bialet") == 0) {
-    if (strcmp(className, "Example") == 0) {
-      if (isStatic && strcmp(signature, "someMethod(_)") == 0) {
-        return exampleMethod;
+    if (strcmp(className, "Db") == 0) {
+      if (strcmp(signature, "query(_,_)") == 0) {
+        return db_query;
+      }
+      if (strcmp(signature, "lastInsertId()") == 0) {
+        return db_last_insert_id;
       }
     }
   }
@@ -135,6 +198,14 @@ struct BialetResponse bialet_run(char *module, char *code) {
   struct BialetResponse r;
   int error = 0;
   WrenVM *vm = 0;
+
+  // TODO Move to config
+  char *db_path = ".db.sqlite3";
+
+  if (!sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                       NULL)) {
+    // TODO Error!
+  }
 
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework */
@@ -181,6 +252,7 @@ struct BialetResponse bialet_run(char *module, char *code) {
     wrenReleaseHandle(vm, status_method);
   }
   wrenFreeVM(vm);
+  sqlite3_close(db);
 
   if (error) {
     r.status = 500;
@@ -191,7 +263,7 @@ struct BialetResponse bialet_run(char *module, char *code) {
   return r;
 }
 
-void bialet_init() {
+void bialet_init(char *db_path) {
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
   wren_config.errorFn = &wren_error;

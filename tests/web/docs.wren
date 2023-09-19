@@ -1,11 +1,27 @@
-import "bialet" for Response
+import "bialet" for Response, Db
 import "layout" for Layout
 
 System.write("Run docs")
 
+var id = Db.save("users", {"name":"Albo", "age":30})
+var users = Db.all("SELECT * FROM users")
+
 var title = "Documentation"
 var content = "
-  <p>TODO This will have the API class</p>
+  <p>Saved user id: %( id )</p>
+  <h2>Users</h2>
+  <table>
+    <tr>
+      %( users[0].keys.map { |col| "
+        <th>%(col)</th>
+      " }.join() )
+    </tr>
+    %( users.map { |row| "
+      <tr>%(row.values.map { |val| "
+        <td>%(val)</td>
+        " }.join())
+      </tr>" }.join() )
+  </table>
 "
 
 Response.out(Layout.render(title, content))

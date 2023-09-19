@@ -25,6 +25,7 @@ char *host = "localhost";
 int output = 1;
 int debug = 0;
 char *root_dir = ".";
+char *db_path = ".db.sqlite3";
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
                         void *fn_data) {
@@ -93,7 +94,7 @@ int main(int argc, char *argv[]) {
 
   struct mg_mgr mgr;
 
-  bialet_init();
+  bialet_init(db_path);
   mg_mgr_init(&mgr);
 
   welcome();

@@ -49,7 +49,7 @@ static const char* bialetModuleSource =
 "  static one(query, params) { Db.all(query + \" limit 1\", params)[0] }\n"
 "  static one(query) { Db.one(query, []) }\n"
 "  static save(table, values) {\n"
-"    Db.all(\"REPLACE INTO \" + table + \"(\" + values.keys.join(\", \") + \") VALUES (\" + values.map{|v| \"? \"}.join() + \")\", values)\n"
+"    Db.all(\"REPLACE INTO \" + table + \"(\" + values.keys.join(\", \") + \") VALUES (\" + values.map{|v| \"?\"}.join(\", \") + \")\", values.values.toList)\n"
 "    return Db.lastInsertId()\n"
 "  }\n"
 "}\n"

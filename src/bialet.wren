@@ -47,7 +47,7 @@ class Db {
   static one(query, params) { Db.all(query + " limit 1", params)[0] }
   static one(query) { Db.one(query, []) }
   static save(table, values) {
-    Db.all("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "? "}.join() + ")", values)
+    Db.all("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList)
     return Db.lastInsertId()
   }
 }
