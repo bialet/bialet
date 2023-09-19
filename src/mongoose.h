@@ -1324,7 +1324,8 @@ int mg_http_status(const struct mg_http_message *hm);
 void mg_hello(const char *url);
 
 
-void mg_http_serve_ssi(struct mg_connection *c, const char *root,
+void mg_http_serve_ssi(struct mg_connection *c, struct mg_http_message *hm,
+const char *root,
                        const char *fullpath);
 
 

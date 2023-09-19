@@ -1,6 +1,7 @@
 #include "bialet_wren.h"
 #include "bialet.wren.inc"
 #include "messages.h"
+#include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
 #include <sqlite3.h>
@@ -194,7 +195,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
   }
 }
 
-struct BialetResponse bialet_run(char *module, char *code) {
+struct BialetResponse bialet_run(char *module, char *code, struct mg_http_message *hm) {
   struct BialetResponse r;
   int error = 0;
   WrenVM *vm = 0;
@@ -210,6 +211,7 @@ struct BialetResponse bialet_run(char *module, char *code) {
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework */
   wrenInterpret(vm, "bialet", bialetModuleSource);
+  // TODO Load hm to Request class
   /* Run user code */
   WrenInterpretResult result = wrenInterpret(vm, module, code);
   error = result != WREN_RESULT_SUCCESS;
