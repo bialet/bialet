@@ -194,6 +194,20 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
     }
   }
 }
+char *escape_special_chars(const char *input) {
+  int i, j = 0, len = strlen(input);
+  char *output = malloc(len * 2 + 1); // Worst case: all characters need escaping
+  if (output == NULL) return NULL;
+
+  for (i = 0; i < len; i++) {
+    if (input[i] == '"' || input[i] == '\\' || input[i] == '%') {
+      output[j++] = '\\';
+    }
+    output[j++] = input[i];
+  }
+  output[j] = '\0';
+  return output;
+}
 
 char *get_mg_str(struct mg_str str) {
   char *val = NULL;
@@ -226,8 +240,7 @@ struct BialetResponse bialet_run(char *module, char *code,
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework with Request appended */
   char *bialetCompleteCode;
-  // TODO Escape "
-  char *message = get_mg_str(hm->message);
+  char *message = escape_special_chars(get_mg_str(hm->message));
   bialetCompleteCode =
       string_append(string_safe_copy(bialetModuleSource), "\nRequest.init(\"",
                     string_append(message, "\")", "\n"));
