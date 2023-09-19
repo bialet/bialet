@@ -195,7 +195,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
   }
 }
 
-void print_mg_str(char *name, struct mg_str str) {
+char *get_mg_str(struct mg_str str) {
   char *val = NULL;
   int method_len = (int)(str.len);
   val = malloc(method_len + 1);
@@ -203,8 +203,7 @@ void print_mg_str(char *name, struct mg_str str) {
     strncpy(val, str.ptr, method_len);
     val[method_len] = '\0';
   }
-  printf("%s: %s\n", name , val);
-  free(val);
+  return val;
 }
 
 struct BialetResponse bialet_run(char *module, char *code,
@@ -213,11 +212,9 @@ struct BialetResponse bialet_run(char *module, char *code,
   int error = 0;
   WrenVM *vm = 0;
 
-  // TODO Add vars to wren Request
-  print_mg_str("Method", hm->method);
-  print_mg_str("URI", hm->uri);
-  print_mg_str("Query", hm->query);
-  print_mg_str("Body", hm->body);
+  message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
+          get_mg_str(hm->query), get_mg_str(hm->body));
+  /* print_mg_str("Message", hm->message); */
 
   // TODO Move to config
   char *db_path = ".db.sqlite3";
