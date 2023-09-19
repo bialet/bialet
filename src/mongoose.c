@@ -2126,6 +2126,10 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
       ("%lu %.*s -> %s %d", c->id, (int)hm->uri.len, hm->uri.ptr, path, flags));
   if (flags == 0) {
     // Do nothing - let's caller decide
+    if ((mg_snprintf(path + n, path_size - n, ".wren") > 0 &&
+        (tmp = fs->st(path, NULL, NULL)) != 0)) {
+      flags = tmp;
+    }
   } else if ((flags & MG_FS_DIR) && hm->uri.len > 0 &&
              hm->uri.ptr[hm->uri.len - 1] != '/') {
     mg_printf(c,
@@ -2142,10 +2146,11 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
          (mg_snprintf(path + n, path_size - n, "/index.wren") > 0 &&
           (tmp = fs->st(path, NULL, NULL)) != 0))) {
       flags = tmp;
-    } else if ((mg_snprintf(path + n, path_size - n, "/" MG_HTTP_INDEX ".gz") >
-                    0 &&
+    } else if ((mg_snprintf(path + n, path_size - n,
+                            "/" MG_HTTP_INDEX ".wren") > 0 &&
                 (tmp = fs->st(path, NULL, NULL)) !=
                     0)) { // check for gzipped index
+      printf("Ahora? %s", path);
       flags = tmp;
       path[n + 1 + strlen(MG_HTTP_INDEX)] =
           '\0'; // Remove appended .gz in index file name
@@ -2178,13 +2183,15 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
   char path[MG_PATH_MAX];
   const char *sp = opts->ssi_pattern;
   int flags = uri_to_path(c, hm, opts, path, sizeof(path));
+  printf("Flags: %d", flags);
   if (flags < 0) {
     // Do nothing: the response has already been sent by uri_to_path()
   } else if (flags & MG_FS_DIR) {
 #if MG_ENABLE_DIRLIST
     listdir(c, hm, opts, path);
 #else
-    mg_http_reply(c, 404, "", "Not Found\n");
+    char ssi_path[MG_PATH_MAX] = "docs.wren";
+    mg_http_serve_ssi(c, hm, opts->root_dir, ssi_path);
 #endif
   } else if (flags && sp != NULL &&
              mg_globmatch(sp, strlen(sp), path, strlen(path))) {
@@ -6749,11 +6756,10 @@ void mg_mgr_poll(struct mg_mgr *mgr, int ms) {
 #endif
 
 void mg_http_serve_ssi(struct mg_connection *c, struct mg_http_message *hm,
-const char *root,
-                       const char *fullpath) {
+                       const char *root, const char *fullpath) {
   char *code = bialet_read_file(fullpath);
   if (code) {
-    struct BialetResponse r = bialet_run((char*) fullpath, code, hm);
+    struct BialetResponse r = bialet_run((char *)fullpath, code, hm);
     mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
   } else {
     MG_ERROR(("Error reading file: %s", fullpath));
