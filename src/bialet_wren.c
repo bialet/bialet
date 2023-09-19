@@ -7,7 +7,6 @@
 
 #define MAX_LINE_ERROR_LEN 100
 
-char *wrenBuffer = 0;
 WrenConfiguration wrenConfig;
 
 static char *SafeMalloc(size_t size) {
@@ -113,38 +112,70 @@ void errorFn(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
-static void responseOut(WrenVM *vm) {
+static void exampleMethod(WrenVM *vm) {
   const char *buffer = wrenGetSlotString(vm, 1);
-  wrenBuffer = StrAppend(wrenBuffer, "\n", buffer);
+  // TODO This will be needed later!
 }
 
 WrenForeignMethodFn bindForeignMethod(WrenVM *vm, const char *module,
                                       const char *className, bool isStatic,
                                       const char *signature) {
   if (strcmp(module, "bialet") == 0) {
-    if (strcmp(className, "Response") == 0) {
-      if (isStatic && strcmp(signature, "out(_)") == 0) {
-        return responseOut;
+    if (strcmp(className, "Example") == 0) {
+      if (isStatic && strcmp(signature, "someMethod(_)") == 0) {
+        return exampleMethod;
       }
     }
   }
 }
 
 struct BialetResponse runCode(char *module, char *code) {
+  struct BialetResponse r;
   WrenVM *vm = 0;
+
   vm = wrenNewVM(&wrenConfig);
   WrenInterpretResult result = wrenInterpret(vm, module, code);
+
+  wrenEnsureSlots(vm, 4);
+  wrenGetVariable(vm, "bialet", "Response", 0);
+  WrenHandle *responseClass = wrenGetSlotHandle(vm, 0);
+
+  /* Get body from response */
+  WrenHandle *outMethod = wrenMakeCallHandle(vm, "out()");
+  wrenSetSlotHandle(vm, 0, responseClass);
+  if (wrenCall(vm, outMethod) == WREN_RESULT_SUCCESS) {
+    const char *body = wrenGetSlotString(vm, 0);
+    r.body = (char *)body;
+  } else {
+    r.body = "";
+  }
+  /* Get headers from response */
+  WrenHandle *headersMethod = wrenMakeCallHandle(vm, "headers()");
+  wrenSetSlotHandle(vm, 0, responseClass);
+  if (wrenCall(vm, headersMethod) == WREN_RESULT_SUCCESS) {
+    const char *headersString = wrenGetSlotString(vm, 0);
+    r.header = (char *)headersString;
+  } else {
+    r.header = "Content-type: text/html\r\n";
+  }
+  /* Get status from response */
+  WrenHandle *statusMethod = wrenMakeCallHandle(vm, "status()");
+  wrenSetSlotHandle(vm, 0, responseClass);
+  if (wrenCall(vm, statusMethod) == WREN_RESULT_SUCCESS) {
+    const double status = wrenGetSlotDouble(vm, 0);
+    r.status = (int)status;
+  } else {
+    r.status = 200;
+  }
+  /* Clean Wren vm */
+  wrenReleaseHandle(vm, responseClass);
+  wrenReleaseHandle(vm, outMethod);
+  wrenReleaseHandle(vm, headersMethod);
+  wrenReleaseHandle(vm, statusMethod);
   wrenFreeVM(vm);
 
-  struct BialetResponse r;
-  r.header = "Content-type: text/html\r\n";
-  if (!wrenBuffer) {
-    wrenBuffer = "";
-  }
   switch (result) {
   case WREN_RESULT_SUCCESS: {
-    r.status = 200;
-    r.body = wrenBuffer;
   } break;
   case WREN_RESULT_COMPILE_ERROR:
   case WREN_RESULT_RUNTIME_ERROR:
@@ -153,7 +184,6 @@ struct BialetResponse runCode(char *module, char *code) {
     r.body = "Internal Server Error";
   } break;
   }
-  wrenBuffer = 0;
   return r;
 }
 
