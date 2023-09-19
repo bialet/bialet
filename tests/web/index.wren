@@ -1,7 +1,8 @@
-import "bialet" for Response
+import "bialet" for Response, Request
 import "layout" for Layout
 
 System.write("Run index")
+System.write(Request.get("nombre"))
 
 var title = "Welcome to Bialet"
 var content = "

@@ -20,10 +20,49 @@ Response.init()
 
 class Request {
   static init(message) {
-    // TODO Parse message!
     __message = message
+    __headers = {}
+    __get = {}
+    __post = {}
+    var lines = message.split("\n")
+    var tmp = lines.removeAt(0).split(" ")
+    __method = tmp[0]
+    __fullUri = tmp[1]
+    __body = ""
+    var uriSeparator = __fullUri.indexOf("?")
+    if (uriSeparator > 0) {
+      __uri = __fullUri[0...uriSeparator]
+      __get = parseQuery(__fullUri[uriSeparator+1...__fullUri.count])
+    }
+    var startBody = false
+    for (line in lines) {
+      if (line.trim() == "") {
+        startBody = true
+        continue
+      }
+      if (!startBody) {
+        tmp = line.split(":")
+        __headers[tmp.removeAt(0).trim()] = tmp.join(":").trim()
+      } else {
+        __body = __body + line
+      }
+    }
+    if (__method == "POST") {
+      __post = parseQuery(__body)
+    }
   }
-  static header(name, value) { __headers[name] = value }
+  static parseQuery(query) {
+    var all = {}
+    // TODO URL decode
+    query.split("&").each{|q| all[q.split("=")[0]] = q.split("=")[1]}
+    return all
+  }
+  static header(name) { __headers[name] ? __headers[name]:"" }
+  static get(name) { __get[name] ? __get[name]:"" }
+  static post(name) { __post[name] ? __post[name]:"" }
+  static method() { __method }
+  static uri() { __uri }
+  static body() { __body }
 }
 
 class Cookie {
@@ -58,4 +97,3 @@ class Db {
     return Db.lastInsertId()
   }
 }
-
