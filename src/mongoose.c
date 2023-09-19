@@ -2125,7 +2125,7 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
   MG_VERBOSE(
       ("%lu %.*s -> %s %d", c->id, (int)hm->uri.len, hm->uri.ptr, path, flags));
   if (flags == 0) {
-    // Do nothing - let's caller decide
+    // Check routing wren files without extension
     if ((mg_snprintf(path + n, path_size - n, ".wren") > 0 &&
         (tmp = fs->st(path, NULL, NULL)) != 0)) {
       flags = tmp;
@@ -2147,10 +2147,9 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
           (tmp = fs->st(path, NULL, NULL)) != 0))) {
       flags = tmp;
     } else if ((mg_snprintf(path + n, path_size - n,
-                            "/" MG_HTTP_INDEX ".wren") > 0 &&
+                            "/" MG_HTTP_INDEX ".gz") > 0 &&
                 (tmp = fs->st(path, NULL, NULL)) !=
                     0)) { // check for gzipped index
-      printf("Ahora? %s", path);
       flags = tmp;
       path[n + 1 + strlen(MG_HTTP_INDEX)] =
           '\0'; // Remove appended .gz in index file name
@@ -2183,15 +2182,13 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
   char path[MG_PATH_MAX];
   const char *sp = opts->ssi_pattern;
   int flags = uri_to_path(c, hm, opts, path, sizeof(path));
-  printf("Flags: %d", flags);
   if (flags < 0) {
     // Do nothing: the response has already been sent by uri_to_path()
   } else if (flags & MG_FS_DIR) {
 #if MG_ENABLE_DIRLIST
     listdir(c, hm, opts, path);
 #else
-    char ssi_path[MG_PATH_MAX] = "docs.wren";
-    mg_http_serve_ssi(c, hm, opts->root_dir, ssi_path);
+    mg_http_reply(c, 404, "", "Not Found\n");
 #endif
   } else if (flags && sp != NULL &&
              mg_globmatch(sp, strlen(sp), path, strlen(path))) {
