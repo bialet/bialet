@@ -9,9 +9,10 @@ li.finished_1::before { content: '✅ ' }
 li.finished_1{ font-weight: bold }
 input, button {
   padding:.5em;
-  margin:.5em 0;
+  margin:.5em 0 0 0;
   border-radius: 10px;
   box-shadow:0 0 15px 4px rgba(0,0,0,0.08);
   font: inherit;
+  width: 100%;
 }
 button { background-color: #ffbbb8; cursor: pointer }
