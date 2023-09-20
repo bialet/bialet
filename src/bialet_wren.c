@@ -83,6 +83,7 @@ static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[100];
   // TODO Read path from config
+  // TODO prevent load modules from parent directories
   strcpy(module, ".");
   strcat(module, "/");
   strcat(module, name);
