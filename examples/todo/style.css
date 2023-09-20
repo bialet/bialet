@@ -1,5 +1,5 @@
 *, *:before, *:after { box-sizing: border-box }
-body{ font: 2em system-ui; width: 20em; margin: 2em auto }
+body{ font: 2em system-ui; width:90%; max-width: 20em; margin: 2em auto }
 h1, form, .no-tasks{ text-align: center }
 .no-tasks{ opacity: 0.7 }
 a{ color: #e52ca8; text-decoration: none }
