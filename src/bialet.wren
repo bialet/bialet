@@ -16,7 +16,48 @@ class Response {
   }
 }
 
-Response.init()
+class Util {
+
+  static hexToDec(hexStr) {
+    var decimal = 0
+    var length = hexStr.count
+    var base = 1 // Initialize base value to 1, i.e., 16^0
+    for (i in (length - 1)..0) {
+        var char = hexStr[i].bytes[0]
+      var value = 0
+      if (char >= "0".bytes[0] && char <= "9".bytes[0]) {
+        value = char - "0".bytes[0]
+      } else if (char >= "A".bytes[0] && char <= "F".bytes[0]) {
+        value = char - "A".bytes[0] + 10
+      } else if (char >= "a".bytes[0] && char <= "f".bytes[0]) {
+        value = char - "a".bytes[0] + 10
+      }
+      decimal = decimal + value * base
+      base = base * 16
+    }
+    return decimal
+   }
+
+  static urlDecode(str) {
+    var decoded = ""
+    var i = 0
+    while (i < str.count) {
+      if (str[i] == "\%") {
+        var hex = str[i + 1..i + 2]
+        var charCode = hexToDec(hex)
+        decoded = decoded + String.fromByte(charCode)
+        i = i + 3
+      } else if (str[i] == "+") {
+        decoded = decoded + " "
+        i = i + 1
+      } else {
+        decoded = decoded + str[i]
+        i = i + 1
+      }
+    }
+    return decoded
+  }
+}
 
 class Request {
   static init(message) {
@@ -53,8 +94,7 @@ class Request {
   }
   static parseQuery(query) {
     var all = {}
-    // TODO URL decode
-    query.split("&").each{|q| all[q.split("=")[0]] = q.split("=")[1]}
+    query.split("&").each{|q| all[q.split("=")[0]] = Util.urlDecode(q.split("=")[1])}
     return all
   }
   static header(name) { __headers[name] ? __headers[name]:"" }
@@ -111,3 +151,5 @@ class Db {
     return Db.lastInsertId()
   }
 }
+
+Response.init()
