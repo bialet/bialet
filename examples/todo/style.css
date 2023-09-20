@@ -1,0 +1,17 @@
+*, *:before, *:after { box-sizing: border-box }
+body{ font: 2em system-ui; width: 20em; margin: 2em auto }
+h1, form, .no-tasks{ text-align: center }
+.no-tasks{ opacity: 0.7 }
+a{ color: #e52ca8; text-decoration: none }
+li{ margin: .25em; list-style: none; }
+li.finished_0::before { content: '📝 ' }
+li.finished_1::before { content: '✅ ' }
+li.finished_1{ font-weight: bold }
+input, button {
+  padding:.5em;
+  margin:.5em 0;
+  border-radius: 10px;
+  box-shadow:0 0 15px 4px rgba(0,0,0,0.08);
+  font: inherit;
+}
+button { background-color: #ffbbb8; cursor: pointer }
