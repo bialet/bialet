@@ -119,21 +119,19 @@ static void db_query(WrenVM *vm) {
   wrenEnsureSlots(vm, 1000);
   const char *query = wrenGetSlotString(vm, 1);
   if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
-    message(red("Runtime Error"), "Argument for parameters in Db should be type list");
+    message(red("Runtime Error"),
+            "Argument for parameters in Db should be type list");
   } else {
     sqlite3_stmt *stmt;
     int result, i_bind, map_slot;
-    message("Other query?", query);
 
     result = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
-    printf("Result: %d", result);
     if (result != SQLITE_OK) {
-        message(red("SQL Error"), sqlite3_errmsg(db));
+      message(red("SQL Error"), sqlite3_errmsg(db));
       return;
     }
 
     /* Binding values */
-    printf("List count: %d", wrenGetListCount(vm, 2));
     for (int i = 0; i < wrenGetListCount(vm, 2); ++i) {
       i_bind = i + 1;
       wrenGetListElement(vm, 2, i, 3);
@@ -149,19 +147,19 @@ static void db_query(WrenVM *vm) {
       case WREN_TYPE_BOOL:
         sqlite3_bind_int(stmt, i_bind, wrenGetSlotBool(vm, 3));
         break;
+      // TODO Bind null values
       default:
-        // TODO Error!
+        message(red("Error"), "Uknown type on binding");
         break;
       }
     }
 
-    char* columns[100];
+    char *columns[100];
     const char *col_name;
     int col_count = sqlite3_column_count(stmt);
     for (int i = 0; i < col_count; i++) {
       col_name = sqlite3_column_name(stmt, i);
       columns[i] = string_safe_copy(col_name);
-      printf("Col: %d %s", i, col_name);
     }
     wrenSetSlotNewList(vm, 0);
     /* Execute statement and fetch results */
@@ -178,8 +176,7 @@ static void db_query(WrenVM *vm) {
       wrenInsertInList(vm, 0, -1, 1);
     }
     if (result != SQLITE_DONE) {
-      fprintf(stderr, "Execution failed: %s\n", sqlite3_errmsg(db));
-      // TODO Error!
+      message(red("SQL Error"), sqlite3_errmsg(db));
     }
 
     sqlite3_finalize(stmt);
@@ -206,8 +203,10 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
 }
 char *escape_special_chars(const char *input) {
   int i, j = 0, len = strlen(input);
-  char *output = malloc(len * 2 + 1); // Worst case: all characters need escaping
-  if (output == NULL) return NULL;
+  char *output =
+      malloc(len * 2 + 1); // Worst case: all characters need escaping
+  if (output == NULL)
+    return NULL;
 
   for (i = 0; i < len; i++) {
     if (input[i] == '"' || input[i] == '\\' || input[i] == '%') {
@@ -237,18 +236,18 @@ struct BialetResponse bialet_run(char *module, char *code,
   WrenVM *vm = 0;
 
   if (hm) {
-      message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
-          get_mg_str(hm->query), get_mg_str(hm->body));
-    }
+    message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
+            get_mg_str(hm->query), get_mg_str(hm->body));
+  }
 
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework with Request appended */
   char *bialetCompleteCode;
   bialetCompleteCode = string_safe_copy(bialetModuleSource);
   if (hm) {
-      char *message = escape_special_chars(get_mg_str(hm->message));
-      bialetCompleteCode =    string_append(bialetCompleteCode, "\nRequest.init(\"",
-                        string_append(message, "\")", "\n"));
+    char *message = escape_special_chars(get_mg_str(hm->message));
+    bialetCompleteCode = string_append(bialetCompleteCode, "\nRequest.init(\"",
+                                       string_append(message, "\")", "\n"));
   }
   wrenInterpret(vm, "bialet", bialetCompleteCode);
   /* Run user code */
@@ -312,7 +311,7 @@ void bialet_init(char *db_path) {
   // TODO Move to config
   if (!sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                        NULL)) {
-      message(red("SQL Error"), "Can't open database in", db_path);
+    message(red("SQL Error"), "Can't open database in", db_path);
   }
 
   wrenInitConfiguration(&wren_config);

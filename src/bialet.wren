@@ -121,9 +121,7 @@ class Db {
   foreign static intQuery(query, params)
   foreign static intLastInsertId()
   static query(query, params){
-    System.write("Query: %(query) - Params: %(params)")
     var res = Db.intQuery(query, params)
-    System.write("Res: %(res)")
     return res ? res : []
   }
   static lastInsertId(){ intLastInsertId() }

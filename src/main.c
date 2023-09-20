@@ -28,7 +28,7 @@ char *root_dir = ".";
 char *db_path = ".db.sqlite3";
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
-                        void *fn_data) {
+                         void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
     struct mg_http_serve_opts opts = {.root_dir = root_dir,
@@ -39,12 +39,13 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
 
 /* Reload files */
 static void trigger_reload_files() {
-    // Migration
-    char *code;
-    if ((code = bialet_read_file("_migration.wren"))) {
-        message(yellow("Migration"));
-        bialet_run("migration", code, 0);
-    }
+  // Migration
+  char *code;
+  if ((code = bialet_read_file("_migration.wren"))) {
+    message(yellow("Running migration"));
+    bialet_run("migration", code, 0);
+    // TODO wait to run migration again
+  }
 }
 
 static void *file_watcher(void *arg) {
@@ -70,8 +71,8 @@ static void *file_watcher(void *arg) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
         if (event->mask & IN_MODIFY) {
-            if (event->name[0] != '.')
-              trigger_reload_files();
+          if (event->name[0] != '.')
+            trigger_reload_files();
         }
       }
       i += EVENT_SIZE + event->len;
