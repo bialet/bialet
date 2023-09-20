@@ -1,5 +1,5 @@
 import "bialet" for Response, Request, Db
-import "_templates" for TodoTemplate
+import "_template" for Template
 
 if (Request.method() == "POST") {
   Db.save("tasks", {
@@ -8,6 +8,7 @@ if (Request.method() == "POST") {
   })
 }
 
-TodoTemplate.list = Db.all("SELECT * FROM tasks")
+var tasks = Db.all("SELECT * FROM tasks")
+var template = Template.new()
 
-Response.out(TodoTemplate.layout)
+Response.out(template.home(tasks))
