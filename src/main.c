@@ -70,7 +70,8 @@ static void *file_watcher(void *arg) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
         if (event->mask & IN_MODIFY) {
-          trigger_reload_files();
+            if (event->name[0] != '.')
+              trigger_reload_files();
         }
       }
       i += EVENT_SIZE + event->len;

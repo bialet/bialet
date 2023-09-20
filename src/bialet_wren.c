@@ -116,21 +116,24 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
 }
 
 static void db_query(WrenVM *vm) {
-  wrenEnsureSlots(vm, 10);
+  wrenEnsureSlots(vm, 1000);
   const char *query = wrenGetSlotString(vm, 1);
   if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
     message(red("Runtime Error"), "Argument for parameters in Db should be type list");
   } else {
     sqlite3_stmt *stmt;
     int result, i_bind, map_slot;
+    message("Other query?", query);
 
     result = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
+    printf("Result: %d", result);
     if (result != SQLITE_OK) {
-      fprintf(stderr, "SQL error (%d): %s\n", result, sqlite3_errmsg(db));
-      // TODO Error!
+        message(red("SQL Error"), sqlite3_errmsg(db));
+      return;
     }
 
     /* Binding values */
+    printf("List count: %d", wrenGetListCount(vm, 2));
     for (int i = 0; i < wrenGetListCount(vm, 2); ++i) {
       i_bind = i + 1;
       wrenGetListElement(vm, 2, i, 3);
@@ -152,16 +155,23 @@ static void db_query(WrenVM *vm) {
       }
     }
 
+    char* columns[100];
+    const char *col_name;
     int col_count = sqlite3_column_count(stmt);
+    for (int i = 0; i < col_count; i++) {
+      col_name = sqlite3_column_name(stmt, i);
+      columns[i] = string_safe_copy(col_name);
+      printf("Col: %d %s", i, col_name);
+    }
     wrenSetSlotNewList(vm, 0);
     /* Execute statement and fetch results */
     while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
       map_slot = 1;
       wrenSetSlotNewMap(vm, map_slot);
       for (int i = 0; i < col_count; i++) {
-        const char *col_name = sqlite3_column_name(stmt, i);
         const char *col_data = (const char *)sqlite3_column_text(stmt, i);
-        wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_name));
+        wrenSetSlotString(vm, ++map_slot, string_safe_copy(columns[i]));
+        // TODO Fix error when data is empty
         wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
         wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
       }
@@ -231,14 +241,6 @@ struct BialetResponse bialet_run(char *module, char *code,
           get_mg_str(hm->query), get_mg_str(hm->body));
     }
 
-  // TODO Move to config
-  char *db_path = ".db.sqlite3";
-
-  if (!sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                       NULL)) {
-    // TODO Error!
-  }
-
   vm = wrenNewVM(&wren_config);
   /* Load bialet framework with Request appended */
   char *bialetCompleteCode;
@@ -295,7 +297,6 @@ struct BialetResponse bialet_run(char *module, char *code,
     wrenReleaseHandle(vm, status_method);
   }
   wrenFreeVM(vm);
-  sqlite3_close(db);
 
   if (error) {
     message(red("Error"), "Internal Server Error");
@@ -308,6 +309,12 @@ struct BialetResponse bialet_run(char *module, char *code,
 }
 
 void bialet_init(char *db_path) {
+  // TODO Move to config
+  if (!sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                       NULL)) {
+      message(red("SQL Error"), "Can't open database in", db_path);
+  }
+
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
   wren_config.errorFn = &wren_error;
