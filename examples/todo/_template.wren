@@ -1,3 +1,5 @@
+import "bialet" for Html
+
 class Template {
   construct new(){ _title = "TODO tasks" }
   home(tasks) { "
@@ -14,7 +16,9 @@ class Template {
           <ul>
             %( tasks.map{ |task| "
               <li class='finished_%( task["finished"] )'>
-                <a href='/toggle?id=%( task["id"] )'>%( task["description"] )</a>
+                <a href='/toggle?id=%( task["id"] )'>
+                  %( Html.escape(task["description"]) )
+                </a>
               </li>
             "})
           </ul>

@@ -23,7 +23,7 @@ class Util {
     var length = hexStr.count
     var base = 1 // Initialize base value to 1, i.e., 16^0
     for (i in (length - 1)..0) {
-        var char = hexStr[i].bytes[0]
+      var char = hexStr[i].bytes[0]
       var value = 0
       if (char >= "0".bytes[0] && char <= "9".bytes[0]) {
         value = char - "0".bytes[0]
@@ -56,6 +56,12 @@ class Util {
       }
     }
     return decoded
+  }
+}
+
+class Html {
+  static escape(str) {
+    return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
   }
 }
 
@@ -94,6 +100,10 @@ class Request {
   }
   static parseQuery(query) {
     var all = {}
+    query = query.trim()
+    if (query == "") {
+      return all
+    }
     query.split("&").each{|q|
       var value = ""
       var tmp = q.split("=")
@@ -130,7 +140,13 @@ class Db {
   foreign static intLastInsertId()
   static query(query, params){
     var res = Db.intQuery(query, params)
-    return res ? res : []
+    if (res is Num) {
+      return res > 0
+    }
+    if (!res is List) {
+      res = [res]
+    }
+    return res
   }
   static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
