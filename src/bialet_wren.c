@@ -148,7 +148,9 @@ static void db_query(WrenVM *vm) {
       case WREN_TYPE_BOOL:
         sqlite3_bind_int(stmt, i_bind, wrenGetSlotBool(vm, 3));
         break;
-      // TODO Bind null values
+      case WREN_TYPE_NULL:
+        sqlite3_bind_null(stmt, i_bind);
+        break;
       default:
         message(red("Error"), "Uknown type on binding");
         break;
