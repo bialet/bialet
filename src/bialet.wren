@@ -94,7 +94,15 @@ class Request {
   }
   static parseQuery(query) {
     var all = {}
-    query.split("&").each{|q| all[q.split("=")[0]] = Util.urlDecode(q.split("=")[1])}
+    query.split("&").each{|q|
+      var value = ""
+      var tmp = q.split("=")
+      var key = Util.urlDecode(tmp[0])
+      if (tmp.count > 0) {
+        value = Util.urlDecode(tmp[1])
+      }
+      all[key] = value
+    }
     return all
   }
   static header(name) { __headers[name] ? __headers[name]:"" }
