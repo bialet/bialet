@@ -1,2 +1,6 @@
+# Build generated files
 build/
+src/*.wren.inc
+
+# Bialet generated files
 **/.db.sqlite3
