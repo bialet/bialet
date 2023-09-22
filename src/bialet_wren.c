@@ -4,6 +4,7 @@
 #include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
+#include <signal.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,14 @@
 
 WrenConfiguration wren_config;
 sqlite3 *db;
+
+/* Signal handler */
+void handle_sigint(int sig) {
+  printf("Caught signal %d\n", sig);
+  sqlite3_close(db);
+  // Perform cleanup or other actions here
+  exit(0);
+}
 
 static char *safe_malloc(size_t size) {
   char *p;
@@ -312,10 +321,12 @@ struct BialetResponse bialet_run(char *module, char *code,
 
 void bialet_init(char *db_path) {
   // TODO Move to config
-  if (!sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                       NULL)) {
+  if (sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                      NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", db_path);
   }
+
+  signal(SIGINT, handle_sigint);
 
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
