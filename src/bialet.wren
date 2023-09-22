@@ -121,6 +121,7 @@ class Request {
   static method() { __method }
   static uri() { __uri }
   static body() { __body }
+  static isPost() { __method == "POST" }
 }
 
 class Cookie {
@@ -144,7 +145,7 @@ class Db {
       return res > 0
     }
     if (!res is List) {
-      res = [res]
+      res = []
     }
     return res
   }
