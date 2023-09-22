@@ -1,5 +1,6 @@
 #define MG_ENABLE_DIRLIST 0
 
+#include "bialet.h"
 #include "bialet_wren.h"
 #include "messages.h"
 #include "mongoose.h"
@@ -19,19 +20,13 @@
 #define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
 
-/* Configs */
-int port = 8080;
-char *host = "localhost";
-int output = 1;
-int debug = 0;
-char *root_dir = ".";
-char *db_path = ".db.sqlite3";
+struct BialetConfig bialet_config;
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
                          void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
-    struct mg_http_serve_opts opts = {.root_dir = root_dir,
+    struct mg_http_serve_opts opts = {.root_dir = bialet_config.root_dir,
                                       .ssi_pattern = "#.wren"};
     mg_http_serve_dir(c, hm, &opts);
   }
@@ -56,7 +51,7 @@ static void *file_watcher(void *arg) {
     perror("inotify_init");
   }
   // TODO Add watcher for new folders
-  int wd = inotify_add_watch(fd, root_dir, IN_MODIFY);
+  int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
   if (wd < 0) {
     perror("inotify_add_watch");
   }
@@ -83,7 +78,7 @@ static void *file_watcher(void *arg) {
 
 char *server_url() {
   char *url = malloc(MAX_URL_LEN);
-  sprintf(url, "http://%s:%d", host, port);
+  sprintf(url, "http://%s:%d", bialet_config.host, bialet_config.port);
   return url;
 }
 
@@ -95,15 +90,23 @@ int main(int argc, char *argv[]) {
   pid_t pid;
   int status;
   struct rlimit mem_limit;
-  mem_limit.rlim_cur = 50 * MEGABYTE;  // 50 MB soft limit
-  mem_limit.rlim_max = 100 * MEGABYTE; // 100 MB hard limit
   struct rlimit cpu_limit;
-  cpu_limit.rlim_cur = 15;
-  cpu_limit.rlim_max = 30;
 
   struct mg_mgr mgr;
 
-  bialet_init(db_path);
+  /* Default config values */
+  bialet_config.root_dir = ".";
+  bialet_config.host = "localhost";
+  bialet_config.port = 8080;
+  bialet_config.log_file = stdout;
+  bialet_config.debug = 0;
+  bialet_config.db_path = ".db.sqlite3";
+  bialet_config.mem_soft_limit = 50;
+  bialet_config.mem_hard_limit = 100;
+  bialet_config.cpu_soft_limit = 15;
+  bialet_config.cpu_hard_limit = 30;
+
+  bialet_init(&bialet_config);
   mg_mgr_init(&mgr);
 
   welcome();
@@ -113,6 +116,11 @@ int main(int argc, char *argv[]) {
 
   pthread_t thread_id;
   pthread_create(&thread_id, NULL, file_watcher, NULL);
+
+  mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
+  mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;
+  cpu_limit.rlim_cur = bialet_config.cpu_soft_limit;
+  cpu_limit.rlim_max = bialet_config.cpu_hard_limit;
 
   for (;;) {
     pid = fork();

@@ -1,6 +1,8 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
+#include "bialet.h"
+
 char *colorize(char *str, int color);
 char *green(char *str);
 char *red(char *str);

@@ -3,22 +3,25 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-// TODO Move to config
-int color = 1;
+#define COLORIZE_MAX 100
+#define GREEN_COLOR 32
+#define RED_COLOR 31
+#define YELLOW_COLOR 33
+#define BLUE_COLOR 34
 
 char *colorize(char *str, int color) {
   if (!color) {
     return str;
   }
-  char *output = malloc(100);
+  char *output = malloc(COLORIZE_MAX);
   sprintf(output, "\033[%dm%s\033[0m", color, str);
   return output;
 }
 
-char *green(char *str) { return colorize(str, 32); }
-char *red(char *str) { return colorize(str, 31); }
-char *blue(char *str) { return colorize(str, 34); }
-char *yellow(char *str) { return colorize(str, 33); }
+char *green(char *str) { return colorize(str, GREEN_COLOR); }
+char *red(char *str) { return colorize(str, RED_COLOR); }
+char *blue(char *str) { return colorize(str, BLUE_COLOR); }
+char *yellow(char *str) { return colorize(str, YELLOW_COLOR); }
 
 void message_internal(int num, ...) {
   va_list args;

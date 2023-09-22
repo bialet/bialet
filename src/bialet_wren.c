@@ -1,4 +1,5 @@
 #include "bialet_wren.h"
+#include "bialet.h"
 #include "bialet.wren.inc"
 #include "messages.h"
 #include "mongoose.h"
@@ -319,11 +320,11 @@ struct BialetResponse bialet_run(char *module, char *code,
   return r;
 }
 
-void bialet_init(char *db_path) {
-  // TODO Move to config
-  if (sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+void bialet_init(struct BialetConfig *config) {
+  if (sqlite3_open_v2(config->db_path, &db,
+                      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                       NULL) != SQLITE_OK) {
-    message(red("SQL Error"), "Can't open database in", db_path);
+    message(red("SQL Error"), "Can't open database in", config->db_path);
   }
 
   signal(SIGINT, handle_sigint);
