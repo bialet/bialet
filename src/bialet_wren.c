@@ -176,16 +176,15 @@ static void db_query(WrenVM *vm) {
         case SQLITE_TEXT:
         case SQLITE_INTEGER:
         case SQLITE_FLOAT: {
-            const char *col_data = (const char *)sqlite3_column_text(stmt, i);
-            wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
-                           } break;
+          const char *col_data = (const char *)sqlite3_column_text(stmt, i);
+          wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
+        } break;
         case SQLITE_NULL:
-                wrenSetSlotNull(vm, ++map_slot);
-                break;
+          wrenSetSlotNull(vm, ++map_slot);
+          break;
         default:
-                message(red("Error"), "Uknown type on binding");
-                break;
-
+          message(red("Error"), "Uknown type on binding");
+          break;
         }
 
         // TODO Fix error when data is empty
