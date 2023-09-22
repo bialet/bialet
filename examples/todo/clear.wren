@@ -1,4 +1,5 @@
 import "bialet" for Response, Db
+import "_domain" for Task
 
-Db.query("DELETE FROM tasks WHERE finished = 1")
+Task.new().clearFinished()
 Response.redirect("/")

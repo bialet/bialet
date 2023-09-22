@@ -1,6 +1,5 @@
 import "bialet" for Response, Request, Db
+import "_domain" for Task
 
-Db.query("UPDATE tasks
-    SET finished = ((finished | 1) - (finished & 1))
-    WHERE id = ?", [Request.get("id")])
+Task.new().toggleFinished(Request.get("id"))
 Response.redirect("/")

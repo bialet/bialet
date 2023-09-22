@@ -1,22 +1,16 @@
-import "bialet" for Response, Request, Db
+import "bialet" for Response, Request
 import "_template" for Template
 import "_domain" for Task
 
+
+var task = Task.new()
+
 if (Request.isPost()) {
-  var description = Request.post("task").trim()
-  Db.save("tasks", {
-    "description": description,
-    "finished": false
-  })
+  task.save(Request.post("task"))
   return Response.redirect("/")
 }
 
-var tasks = Db.all("
-  SELECT * FROM tasks
-  ORDER BY createdAt ASC
-")
-tasks.map{ Task.normalizedDescription }
 
 var template = Template.new()
-
+var tasks = task.list()
 Response.out(template.home(tasks))
