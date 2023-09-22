@@ -18,11 +18,11 @@ wren_to_c_string:
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	mkdir -p $(BUILD_DIR)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) -Wall -g $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) -c $< -o $@
+	$(CC) -Wall -g -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
