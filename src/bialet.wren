@@ -61,6 +61,7 @@ class Util {
 
 class Html {
   static escape(str) {
+    if (!str) return ""
     return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
   }
 }
@@ -141,10 +142,7 @@ class Db {
   foreign static intLastInsertId()
   static query(query, params){
     var res = Db.intQuery(query, params)
-    if (res is Num) {
-      return res > 0
-    }
-    if (!res is List) {
+    if (res.type != List) {
       res = []
     }
     return res

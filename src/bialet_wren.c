@@ -5,7 +5,6 @@
 #include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
-#include <signal.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,14 +14,6 @@
 
 WrenConfiguration wren_config;
 sqlite3 *db;
-
-/* Signal handler */
-void handle_sigint(int sig) {
-  printf("Caught signal %d\n", sig);
-  sqlite3_close(db);
-  // Perform cleanup or other actions here
-  exit(0);
-}
 
 static char *safe_malloc(size_t size) {
   char *p;
@@ -180,10 +171,24 @@ static void db_query(WrenVM *vm) {
       map_slot = 1;
       wrenSetSlotNewMap(vm, map_slot);
       for (int i = 0; i < col_count; i++) {
-        const char *col_data = (const char *)sqlite3_column_text(stmt, i);
         wrenSetSlotString(vm, ++map_slot, string_safe_copy(columns[i]));
+        switch (sqlite3_column_type(stmt, i)) {
+        case SQLITE_TEXT:
+        case SQLITE_INTEGER:
+        case SQLITE_FLOAT: {
+            const char *col_data = (const char *)sqlite3_column_text(stmt, i);
+            wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
+                           } break;
+        case SQLITE_NULL:
+                wrenSetSlotNull(vm, ++map_slot);
+                break;
+        default:
+                message(red("Error"), "Uknown type on binding");
+                break;
+
+        }
+
         // TODO Fix error when data is empty
-        wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
         wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
       }
       wrenInsertInList(vm, 0, -1, 1);
@@ -326,8 +331,6 @@ void bialet_init(struct BialetConfig *config) {
                       NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
   }
-
-  signal(SIGINT, handle_sigint);
 
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
