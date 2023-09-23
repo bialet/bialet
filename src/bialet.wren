@@ -1,6 +1,7 @@
 class Response {
   static init() {
     __headers = {"Content-Type": "text/html"}
+    __cookies = []
     __status = 200
     __out = ""
   }
@@ -8,7 +9,8 @@ class Response {
   static out() { __out.trim() }
   static status(status) { __status = status }
   static status() { __status }
-  static headers() { __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+  static headers() { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+  static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
   static header(header, value) { __headers[header.trim()] = value.trim() }
   static redirect(url) {
     Response.status(302)
@@ -83,6 +85,8 @@ class Request {
       __get = parseQuery(__fullUri[uriSeparator+1...__fullUri.count])
     }
     var startBody = false
+    var headerName
+    var headerValue
     for (line in lines) {
       if (line.trim() == "") {
         startBody = true
@@ -90,7 +94,12 @@ class Request {
       }
       if (!startBody) {
         tmp = line.split(":")
-        __headers[tmp.removeAt(0).trim()] = tmp.join(":").trim()
+        headerName = tmp.removeAt(0).trim()
+        headerValue = tmp.join(":").trim()
+        if (headerName == "Cookie") {
+          Cookie.init(headerValue)
+        }
+        __headers[headerName] = headerValue
       } else {
         __body = __body + line
       }
@@ -126,11 +135,23 @@ class Request {
 }
 
 class Cookie {
+  static init(cookieLine) {
+    var cookies = cookieLine.split(";")
+    __cookies = {}
+    for (cookie in cookies) {
+      var tmp = cookie.split("=")
+      var name = tmp[0].trim()
+      var value = tmp[1].trim()
+      __cookies[name] = value
+    }
+  }
   static set(name, value, options) {
-      // TODO Add multiple cookies!
-    Request.header("Set-Cookie", name + "=" + value + "; " + options.map{|k, v| k + "=" + v}.join("; "))
+    Response.addCookieHeader("%(name)=%(value); %( options.map{|k, v| k + "=" + v}.join("; ") )")
+    __cookies[name] = value
   }
   static set(name, value){ set(name, value, {}) }
+  static delete(name){ set(name, "", {"expires": "Thu, 01 Jan 1970 00:00:00 GMT"}) }
+  static get(name){  __cookies[name] ? __cookies[name]: "" }
 }
 
 // TODO: Sessions
