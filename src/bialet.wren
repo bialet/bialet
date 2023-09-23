@@ -163,10 +163,14 @@ class Db {
   foreign static intLastInsertId()
   static query(query, params){
     var res = Db.intQuery(query, params)
-    if (res.type != List) {
-      res = []
+    // TODO This is working only when an output is calling
+    System.write("Query: %( query ) - Params: %( params ) - Res: %( res )")
+    if (res is List) {
+      return res
+    } else {
+      System.write("Res is not List (%( res.type ))")
+      return []
     }
-    return res
   }
   static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
