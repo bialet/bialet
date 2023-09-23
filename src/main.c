@@ -37,13 +37,14 @@ static void trigger_reload_files() {
   // Migration
   char *code;
   if ((code = bialet_read_file("_migration.wren"))) {
-    message(yellow("Running migration"));
-    bialet_run("migration", code, 0);
+    struct BialetResponse r = bialet_run("migration", code, 0);
+    message(yellow("Running migration"), r.body);
     // TODO wait to run migration again
   }
 }
 
 static void *file_watcher(void *arg) {
+  pthread_detach(pthread_self());
   int length, i = 0;
   char buffer[BUF_LEN];
   int fd = inotify_init();
@@ -74,6 +75,7 @@ static void *file_watcher(void *arg) {
     }
     i = 0;
   }
+  pthread_exit(NULL);
 }
 
 char *server_url() {

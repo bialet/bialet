@@ -11,6 +11,10 @@
 #include <string.h>
 
 #define MAX_LINE_ERROR_LEN 100
+#define MAX_COLUMNS 100
+#define MAX_MODULE_LEN 50
+#define HTTP_ERROR 500
+#define QUERY_INITIAL_SLOT 4
 
 WrenConfiguration wren_config;
 sqlite3 *db;
@@ -82,7 +86,7 @@ char *bialet_read_file(const char *path) {
 
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
-  char module[100];
+  char module[MAX_MODULE_LEN];
   // TODO Read path from config
   // TODO prevent load modules from parent directories
   strcpy(module, ".");
@@ -118,14 +122,20 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
 }
 
 static void db_query(WrenVM *vm) {
-  wrenEnsureSlots(vm, 1000);
   const char *query = wrenGetSlotString(vm, 1);
+  sqlite3_stmt *stmt;
+  int result, i_bind, map_slot = 0;
+
+  char *columns[100];
+  const char *col_name;
+  const char *value;
+  int col_type;
+
+  wrenEnsureSlots(vm, QUERY_INITIAL_SLOT);
   if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
     message(red("Runtime Error"),
             "Argument for parameters in Db should be type list");
   } else {
-    sqlite3_stmt *stmt;
-    int result, i_bind, map_slot;
 
     result = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
     if (result != SQLITE_OK) {
@@ -158,8 +168,6 @@ static void db_query(WrenVM *vm) {
       }
     }
 
-    char *columns[100];
-    const char *col_name;
     int col_count = sqlite3_column_count(stmt);
     for (int i = 0; i < col_count; i++) {
       col_name = sqlite3_column_name(stmt, i);
@@ -172,13 +180,14 @@ static void db_query(WrenVM *vm) {
       wrenSetSlotNewMap(vm, map_slot);
       for (int i = 0; i < col_count; i++) {
         wrenSetSlotString(vm, ++map_slot, string_safe_copy(columns[i]));
-        switch (sqlite3_column_type(stmt, i)) {
+        col_type = sqlite3_column_type(stmt, i);
+        switch (col_type) {
         case SQLITE_TEXT:
         case SQLITE_INTEGER:
-        case SQLITE_FLOAT: {
-          const char *col_data = (const char *)sqlite3_column_text(stmt, i);
-          wrenSetSlotString(vm, ++map_slot, string_safe_copy(col_data));
-        } break;
+        case SQLITE_FLOAT:
+          value = (const char *)sqlite3_column_text(stmt, i);
+          wrenSetSlotString(vm, ++map_slot, string_safe_copy(value));
+          break;
         case SQLITE_NULL:
           wrenSetSlotNull(vm, ++map_slot);
           break;
@@ -188,6 +197,7 @@ static void db_query(WrenVM *vm) {
         }
 
         // TODO Fix error when data is empty
+        wrenEnsureSlots(vm, QUERY_INITIAL_SLOT + col_count * i);
         wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
       }
       wrenInsertInList(vm, 0, -1, 1);
@@ -217,6 +227,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
       }
     }
   }
+  return NULL;
 }
 char *escape_special_chars(const char *input) {
   int i, j = 0, len = strlen(input);
@@ -286,16 +297,6 @@ struct BialetResponse bialet_run(char *module, char *code,
       message(red("Runtime Error"), "Failed to get body");
       error = 1;
     }
-    /* Get headers from response */
-    WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers()");
-    wrenSetSlotHandle(vm, 0, response_class);
-    if (wrenCall(vm, headers_method) == WREN_RESULT_SUCCESS) {
-      const char *headersString = wrenGetSlotString(vm, 0);
-      r.header = string_safe_copy(headersString);
-    } else {
-      message(red("Runtime Error"), "Failed to get headers");
-      error = 1;
-    }
     /* Get status from response */
     WrenHandle *status_method = wrenMakeCallHandle(vm, "status()");
     wrenSetSlotHandle(vm, 0, response_class);
@@ -306,20 +307,35 @@ struct BialetResponse bialet_run(char *module, char *code,
       message(red("Runtime Error"), "Failed to get status");
       error = 1;
     }
+    /* Get headers from response */
+    if (hm) {
+      WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers()");
+      wrenSetSlotHandle(vm, 0, response_class);
+      if (wrenCall(vm, headers_method) == WREN_RESULT_SUCCESS) {
+        const char *headersString = wrenGetSlotString(vm, 0);
+        r.header = string_safe_copy(headersString);
+      } else {
+        message(red("Runtime Error"), "Failed to get headers");
+        error = 1;
+      }
+      wrenReleaseHandle(vm, headers_method);
+    }
     /* Clean Wren vm */
     wrenReleaseHandle(vm, response_class);
     wrenReleaseHandle(vm, out_method);
-    wrenReleaseHandle(vm, headers_method);
     wrenReleaseHandle(vm, status_method);
   }
   wrenFreeVM(vm);
 
   if (error) {
     message(red("Error"), "Internal Server Error");
-    r.status = 500;
+    r.status = HTTP_ERROR;
     r.header = "Content-type: text/html\r\n";
     r.body = "Internal Server Error";
   }
+
+  if (!hm)
+    r.header = NULL;
 
   return r;
 }
