@@ -440,18 +440,15 @@ class Range is Sequence {}
 
 class System {
   static print() {
-    writeString_("\n")
   }
 
   static print(obj) {
     writeObject_(obj)
-    writeString_("\n")
     return obj
   }
 
   static printAll(sequence) {
     for (object in sequence) writeObject_(object)
-    writeString_("\n")
   }
 
   static write(obj) {
