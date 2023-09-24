@@ -18,7 +18,7 @@
 #define QUERY_INITIAL_SLOT 4
 
 WrenConfiguration wren_config;
-struct BialetConfig bialet_config;
+static struct BialetConfig bialet_config;
 sqlite3 *db;
 
 static char *safe_malloc(size_t size) {
