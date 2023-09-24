@@ -20,6 +20,8 @@ class Response {
 
 class Util {
 
+  foreign static randomString(length)
+
   static hexToDec(hexStr) {
     var decimal = 0
     var length = hexStr.count
@@ -135,6 +137,7 @@ class Request {
 }
 
 class Cookie {
+  static init() { __cookies = {} }
   static init(cookieLine) {
     var cookies = cookieLine.split(";")
     __cookies = {}
@@ -146,16 +149,39 @@ class Cookie {
     }
   }
   static set(name, value, options) {
-    Response.addCookieHeader("%(name)=%(value); %( options.map{|k, v| k + "=" + v}.join("; ") )")
+    Response.addCookieHeader("%(name)=%(value); %( options.map{|k, v| "%(k)=%(v)"}.join("; ") )")
     __cookies[name] = value
   }
   static set(name, value){ set(name, value, {}) }
   static delete(name){ set(name, "", {"expires": "Thu, 01 Jan 1970 00:00:00 GMT"}) }
-  static get(name){  __cookies[name] ? __cookies[name]: "" }
+  static get(name, default){ __cookies != null && __cookies[name] ? __cookies[name]: default }
+  static get(name){ get(name, null) }
 }
 
-// TODO: Sessions
 class Session {
+  static name { __name ? __name : "BIALETSESSID" }
+  static name=(n) { __name = n }
+  construct new() {
+    _id = Cookie.get(Session.name)
+    if (!_id) {
+      _id = Util.randomString(40)
+      Cookie.set(Session.name, _id)
+    }
+    __values = {}
+    var res = Db.one("SELECT val FROM BIALET_SESSION WHERE id = ?", [_id])
+    if (res) {
+      __values = res.values
+      // TODO Parse values
+      __values = {}
+    }
+  }
+  id { _id }
+  get(key) { __values[key] ? __values[key] : null }
+  set(key, value) {
+    __values[key] = value
+    // TODO Save only once, at the end of the script
+    Db.query("REPLACE INTO BIALET_SESSION (id, val) VALUES (?, ?)", [_id, "%(__values)"])
+  }
 }
 
 class Db {
@@ -175,6 +201,7 @@ class Db {
   static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
     Db.query("CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
+    Db.query("CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, val TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
     if (!Db.one("SELECT version FROM BIALET_MIGRATIONS WHERE version = ?", [version])) {
       if (Db.query(schema)) {
         Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
@@ -198,4 +225,5 @@ class Db {
   }
 }
 
+Cookie.init()
 Response.init()

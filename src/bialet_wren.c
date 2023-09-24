@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
@@ -213,6 +214,20 @@ static void db_last_insert_id(WrenVM *vm) {
   wrenSetSlotDouble(vm, 0, (int)sqlite3_last_insert_rowid(db));
 }
 
+static void random_string(WrenVM *vm) {
+  const int len = wrenGetSlotDouble(vm, 1);
+  char randomStr[len + 1];
+  char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    srand(time(0));
+    for (int i = 0; i < len; i++) {
+        int randomIndex = rand() % (sizeof(charset) - 1);
+        randomStr[i] = charset[randomIndex];
+    }
+
+    randomStr[len] = '\0';
+  wrenSetSlotString(vm, 0, randomStr);
+}
+
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              const char *className,
                                              bool isStatic,
@@ -224,6 +239,11 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
       }
       if (strcmp(signature, "intLastInsertId()") == 0) {
         return db_last_insert_id;
+      }
+    }
+    if (strcmp(className, "Util") == 0) {
+      if (strcmp(signature, "randomString(_)") == 0) {
+          return random_string;
       }
     }
   }
