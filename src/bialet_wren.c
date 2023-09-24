@@ -18,6 +18,7 @@
 #define QUERY_INITIAL_SLOT 4
 
 WrenConfiguration wren_config;
+struct BialetConfig bialet_config;
 sqlite3 *db;
 
 static char *safe_malloc(size_t size) {
@@ -88,9 +89,8 @@ char *bialet_read_file(const char *path) {
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
-  // TODO Read path from config
   // TODO prevent load modules from parent directories
-  strcpy(module, ".");
+  strcpy(module, bialet_config.root_dir);
   strcat(module, "/");
   strcat(module, name);
   strcat(module, ".wren");
@@ -367,6 +367,7 @@ void bialet_init(struct BialetConfig *config) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
   }
 
+  bialet_config = *config;
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
   wren_config.errorFn = &wren_error;

@@ -90,23 +90,58 @@ void welcome() {
 
 int main(int argc, char *argv[]) {
   pid_t pid;
-  int status;
+  int status, opt;
   struct rlimit mem_limit;
   struct rlimit cpu_limit;
-
   struct mg_mgr mgr;
+  pthread_t thread_id;
 
   /* Default config values */
+  /* Arg config values */
   bialet_config.root_dir = ".";
   bialet_config.host = "localhost";
-  bialet_config.port = 8080;
+  bialet_config.port = 7000;
   bialet_config.log_file = stdout;
-  bialet_config.debug = 0;
-  bialet_config.db_path = ".db.sqlite3";
   bialet_config.mem_soft_limit = 50;
   bialet_config.mem_hard_limit = 100;
   bialet_config.cpu_soft_limit = 15;
   bialet_config.cpu_hard_limit = 30;
+  /* Env config values */
+  bialet_config.debug = 0;
+  bialet_config.db_path = ".db.sqlite3";
+
+  /* Parse args */
+  while ((opt = getopt(argc, argv, "h:p:l:m:M:c:C:")) != -1) {
+    switch (opt) {
+    case 'h':
+      bialet_config.host = optarg;
+      break;
+    case 'p':
+      bialet_config.port = atoi(optarg);
+      break;
+    case 'l':
+      bialet_config.log_file = fopen(optarg, "rwb");
+      break;
+    case 'm':
+      bialet_config.mem_soft_limit = atoi(optarg);
+      break;
+    case 'M':
+      bialet_config.mem_hard_limit = atoi(optarg);
+      break;
+    case 'c':
+      bialet_config.cpu_soft_limit = atoi(optarg);
+      break;
+    case 'C':
+      bialet_config.cpu_hard_limit = atoi(optarg);
+      break;
+    default:
+      fprintf(stderr, "🚲 bialet\nUsage: %s [-h host] [-p port] [-l log] root_dir\n", argv[0]);
+      exit(EXIT_FAILURE);
+    }
+  }
+  if (optind < argc) {
+    bialet_config.root_dir = argv[optind];
+  }
 
   bialet_init(&bialet_config);
   mg_mgr_init(&mgr);
@@ -116,7 +151,6 @@ int main(int argc, char *argv[]) {
 
   mg_http_listen(&mgr, server_url(), http_handler, NULL);
 
-  pthread_t thread_id;
   pthread_create(&thread_id, NULL, file_watcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
