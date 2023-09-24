@@ -89,7 +89,7 @@ char *bialet_read_file(const char *path) {
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
-  // TODO prevent load modules from parent directories
+  // TODO Security: prevent load modules from parent directories
   strcpy(module, bialet_config.root_dir);
   strcat(module, "/");
   strcat(module, name);
@@ -196,8 +196,6 @@ static void db_query(WrenVM *vm) {
           message(red("Error"), "Uknown type on binding");
           break;
         }
-
-        // TODO Fix error when data is empty
         wrenEnsureSlots(vm, QUERY_INITIAL_SLOT + col_count * i);
         wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
       }

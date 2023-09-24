@@ -171,7 +171,7 @@ class Session {
     var res = Db.one("SELECT val FROM BIALET_SESSION WHERE id = ?", [_id])
     if (res) {
       __values = res.values
-      // TODO Parse values
+      // TODO Session: Parse values
       __values = {}
     }
   }
@@ -179,7 +179,7 @@ class Session {
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
     __values[key] = value
-    // TODO Save only once, at the end of the script
+    // TODO Session: Save only once, at the end of the script
     Db.query("REPLACE INTO BIALET_SESSION (id, val) VALUES (?, ?)", [_id, "%(__values)"])
   }
 }
@@ -189,8 +189,6 @@ class Db {
   foreign static intLastInsertId()
   static query(query, params){
     var res = Db.intQuery(query, params)
-    // TODO This is working only when an output is calling
-    System.write("Query: %( query ) - Params: %( params ) - Res: %( res )")
     if (res is List) {
       return res
     } else {
