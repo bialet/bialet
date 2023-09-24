@@ -19,6 +19,7 @@
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 #define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
+#define MAX_PATH_LEN 100
 
 struct BialetConfig bialet_config;
 
@@ -32,14 +33,22 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
   }
 }
 
+#define WAIT_FOR_RELOAD 3
+time_t last_reload = 0;
+
 /* Reload files */
 static void trigger_reload_files() {
-  // Migration
-  char *code;
-  if ((code = bialet_read_file("_migration.wren"))) {
-    struct BialetResponse r = bialet_run("migration", code, 0);
-    message(yellow("Running migration"), r.body);
-    // TODO wait to run migration again
+  time_t current_time = time(NULL);
+  if (current_time - last_reload > WAIT_FOR_RELOAD) {
+    last_reload = current_time;
+    char *code;
+    char path[MAX_PATH_LEN];
+    strcpy(path, bialet_config.root_dir);
+    strcat(path, "/_migration.wren");
+    if ((code = bialet_read_file(path))) {
+      struct BialetResponse r = bialet_run("migration", code, 0);
+      message(yellow("Running migration"), r.body);
+    }
   }
 }
 
@@ -67,8 +76,7 @@ static void *file_watcher(void *arg) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
         if (event->mask & IN_MODIFY) {
-          if (event->name[0] != '.')
-            trigger_reload_files();
+          trigger_reload_files();
         }
       }
       i += EVENT_SIZE + event->len;
