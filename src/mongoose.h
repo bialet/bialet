@@ -668,7 +668,7 @@ struct timeval {
 
 
 #ifndef MG_ENABLE_LOG
-#define MG_ENABLE_LOG 1
+#define MG_ENABLE_LOG 0
 #endif
 
 #ifndef MG_ENABLE_TCPIP
