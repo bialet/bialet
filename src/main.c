@@ -143,7 +143,9 @@ int main(int argc, char *argv[]) {
       bialet_config.cpu_hard_limit = atoi(optarg);
       break;
     default:
-      fprintf(stderr, "🚲 bialet\nUsage: %s [-h host] [-p port] [-l log] root_dir\n", argv[0]);
+      fprintf(stderr,
+              "🚲 bialet\nUsage: %s [-h host] [-p port] [-l log] root_dir\n",
+              argv[0]);
       exit(EXIT_FAILURE);
     }
   }

@@ -2127,7 +2127,7 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
   if (flags == 0) {
     // Check routing wren files without extension
     if ((mg_snprintf(path + n, path_size - n, ".wren") > 0 &&
-        (tmp = fs->st(path, NULL, NULL)) != 0)) {
+         (tmp = fs->st(path, NULL, NULL)) != 0)) {
       flags = tmp;
     }
   } else if ((flags & MG_FS_DIR) && hm->uri.len > 0 &&
@@ -2146,8 +2146,8 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
          (mg_snprintf(path + n, path_size - n, "/index.wren") > 0 &&
           (tmp = fs->st(path, NULL, NULL)) != 0))) {
       flags = tmp;
-    } else if ((mg_snprintf(path + n, path_size - n,
-                            "/" MG_HTTP_INDEX ".gz") > 0 &&
+    } else if ((mg_snprintf(path + n, path_size - n, "/" MG_HTTP_INDEX ".gz") >
+                    0 &&
                 (tmp = fs->st(path, NULL, NULL)) !=
                     0)) { // check for gzipped index
       flags = tmp;

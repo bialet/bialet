@@ -214,16 +214,17 @@ static void db_last_insert_id(WrenVM *vm) {
 
 static void random_string(WrenVM *vm) {
   const int len = wrenGetSlotDouble(vm, 1);
-  char randomStr[len + 1];
-  char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    srand(time(0));
-    for (int i = 0; i < len; i++) {
-        int randomIndex = rand() % (sizeof(charset) - 1);
-        randomStr[i] = charset[randomIndex];
-    }
+  char random_str[len + 1];
+  char charset[] =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  srand(time(0));
+  for (int i = 0; i < len; i++) {
+    int random_index = rand() % (sizeof(charset) - 1);
+    random_str[i] = charset[random_index];
+  }
 
-    randomStr[len] = '\0';
-  wrenSetSlotString(vm, 0, randomStr);
+  random_str[len] = '\0';
+  wrenSetSlotString(vm, 0, random_str);
 }
 
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
@@ -241,7 +242,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
     }
     if (strcmp(className, "Util") == 0) {
       if (strcmp(signature, "randomString(_)") == 0) {
-          return random_string;
+        return random_string;
       }
     }
   }
