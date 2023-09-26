@@ -168,19 +168,17 @@ class Session {
       Cookie.set(Session.name, _id)
     }
     __values = {}
-    var res = Db.one("SELECT val FROM BIALET_SESSION WHERE id = ?", [_id])
-    if (res) {
-      __values = res.values
-      // TODO Session: Parse values
-      __values = {}
+    var res = Db.all("SELECT key, val FROM BIALET_SESSION WHERE id = ?", [_id])
+    if (res && res.count > 0) {
+      System.print(res)
+      res.each{|r| __values[r["key"]] = r["val"] }
     }
   }
   id { _id }
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
     __values[key] = value
-    // TODO Session: Save only once, at the end of the script
-    Db.query("REPLACE INTO BIALET_SESSION (id, val) VALUES (?, ?)", [_id, "%(__values)"])
+    Db.query("REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", [_id, key, "%(value)"])
   }
 }
 
@@ -199,7 +197,7 @@ class Db {
   static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
     Db.query("CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
-    Db.query("CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, val TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
+    Db.query("CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)")
     if (!Db.one("SELECT version FROM BIALET_MIGRATIONS WHERE version = ?", [version])) {
       if (Db.query(schema)) {
         Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
