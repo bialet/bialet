@@ -76,7 +76,6 @@ static void *file_watcher(void *arg) {
     while (i < length) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
-          printf("Event: %s\n", event->name);
         if (event->mask & IN_MODIFY && event->name[0] != '.') {
           trigger_reload_files();
         }
