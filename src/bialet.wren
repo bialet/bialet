@@ -187,6 +187,9 @@ class Db {
   foreign static intLastInsertId()
   static query(query, params){
     var res = Db.intQuery(query, params)
+    // If I remove this print, res is always a Number
+    // It does not matter what I print
+    System.print("Query: " + query)
     if (res is List) {
       return res
     } else {
