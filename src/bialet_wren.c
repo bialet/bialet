@@ -360,8 +360,12 @@ struct BialetResponse bialet_run(char *module, char *code,
 }
 
 void bialet_init(struct BialetConfig *config) {
-  if (sqlite3_open_v2(config->db_path, &db,
-                      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+  char db_path[MAX_MODULE_LEN];
+  // TODO Security: prevent load modules from parent directories
+  strcpy(db_path, config->root_dir);
+  strcat(db_path, "/");
+  strcat(db_path, config->db_path);
+  if (sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                       NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
   }

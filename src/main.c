@@ -20,6 +20,7 @@
 #define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
+#define MIGRATION_FILE "/_migration.wren"
 
 struct BialetConfig bialet_config;
 
@@ -44,7 +45,7 @@ static void trigger_reload_files() {
     char *code;
     char path[MAX_PATH_LEN];
     strcpy(path, bialet_config.root_dir);
-    strcat(path, "/_migration.wren");
+    strcat(path, MIGRATION_FILE);
     if ((code = bialet_read_file(path))) {
       struct BialetResponse r = bialet_run("migration", code, 0);
       message(yellow("Running migration"), r.body);
@@ -75,7 +76,8 @@ static void *file_watcher(void *arg) {
     while (i < length) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
-        if (event->mask & IN_MODIFY) {
+          printf("Event: %s\n", event->name);
+        if (event->mask & IN_MODIFY && event->name[0] != '.') {
           trigger_reload_files();
         }
       }
