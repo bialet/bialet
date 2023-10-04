@@ -266,8 +266,6 @@ static void verify_password(WrenVM *vm) {
   int result = 0;
   const char *password = wrenGetSlotString(vm, 1);
   const char *hash_and_salt = wrenGetSlotString(vm, 2);
-  printf("Password: %s\n", password);
-  printf("Hash: %s\n", hash_and_salt);
 
   char stored_hash[65], stored_salt[33];
   strncpy(stored_hash, hash_and_salt, 64);
