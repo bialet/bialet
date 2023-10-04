@@ -7,7 +7,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-LDFLAGS := -lm -lpthread -lsqlite3
+LDFLAGS := -lm -lpthread -lsqlite3 -lssl -lcrypto
 
 all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
 

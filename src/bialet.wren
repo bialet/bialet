@@ -18,6 +18,11 @@ class Response {
   }
 }
 
+class User {
+  foreign static hash(password)
+  foreign static verify(password, hash)
+}
+
 class Util {
 
   foreign static randomString(length)

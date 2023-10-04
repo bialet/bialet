@@ -8,6 +8,8 @@
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <openssl/sha.h>
+#include <openssl/rand.h>
 #include <string.h>
 #include <time.h>
 
@@ -227,6 +229,41 @@ static void random_string(WrenVM *vm) {
   wrenSetSlotString(vm, 0, random_str);
 }
 
+static void hash_password(WrenVM *vm) {
+  const char *password = wrenGetSlotString(vm, 1);
+  unsigned char salt[32];
+  unsigned char hash[SHA256_DIGEST_LENGTH];
+  char hashString[65];
+  char saltedPassword[100];
+  if (RAND_bytes(salt, sizeof(salt)) != 1) {
+  printf("Error generating random salt.\n");
+  }
+
+  sprintf(saltedPassword, "%s%.*s", password, (int) sizeof(salt), salt);
+
+  SHA256_CTX sha256;
+  SHA256_Init(&sha256);
+  SHA256_Update(&sha256, saltedPassword, strlen(saltedPassword));
+  SHA256_Final(hash, &sha256);
+
+  for(int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    sprintf(hashString + (i * 2), "%02x", hash[i]);
+  }
+  for (int i = 0; i < sizeof(salt); i++) {
+    sprintf(hashString + (i * 2), "%02x", salt[i]);
+  }
+  hashString[64] = 0;
+
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotString(vm, 0, hashString);
+  printf("Password: %s\n", hashString);
+}
+
+static void verify_password(WrenVM *vm) {
+  wrenEnsureSlots(vm, 2);
+  wrenSetSlotBool(vm, 0, 0);
+}
+
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              const char *className,
                                              bool isStatic,
@@ -243,6 +280,14 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
     if (strcmp(className, "Util") == 0) {
       if (strcmp(signature, "randomString(_)") == 0) {
         return random_string;
+      }
+    }
+    if (strcmp(className, "User") == 0) {
+      if (strcmp(signature, "hash(_)") == 0) {
+        return hash_password;
+      }
+      if (strcmp(signature, "verify(_,_)") == 0) {
+        return verify_password;
       }
     }
   }
