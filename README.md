@@ -22,10 +22,23 @@ Available Configuration
 
 ## Building
 
-Install SQLite3 dev dependencies and run the build.
+Install SQLite3 and OpenSSL dev dependencies and run the build.
+
+In Debian based
 
 ```bash
-apt install libsqlite3-dev
+sudo apt install libsqlite3-dev libssl-dev
+```
+
+In MacOS
+
+```bash
+brew install sqlite3 openssl
+```
+
+Then run the build
+
+```bash
 make clean
 make
 ```
