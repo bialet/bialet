@@ -1,6 +1,7 @@
 #include "bialet_wren.h"
 #include "bialet.h"
 #include "bialet.wren.inc"
+#include <curl/curl.h>
 #include "messages.h"
 #include "mongoose.h"
 #include "wren.h"
@@ -21,6 +22,7 @@
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
 sqlite3 *db;
+char response_buffer[2048];
 
 static char *safe_malloc(size_t size) {
   char *p;
@@ -302,7 +304,16 @@ static void verify_password(WrenVM *vm) {
 #endif
 }
 
+static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t total_size = size * nmemb;
+    strncat((char*)userp, contents, total_size);
+    return total_size;
+}
+
 static void curl_call(WrenVM *vm) {
+  CURL *handle;
+  CURLcode res;
+  struct curl_slist *headers = NULL;
   const char *url = wrenGetSlotString(vm, 1);
   const char *method = wrenGetSlotString(vm, 2);
   // TODO How to get headers list?
@@ -310,11 +321,49 @@ static void curl_call(WrenVM *vm) {
   const char *postData = wrenGetSlotString(vm, 4);
   printf("url: %s, method: %s, postData: %s\n", url, method, postData);
 
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+  handle = curl_easy_init();
+  if (handle) {
+    curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
+    curl_easy_setopt(handle, CURLOPT_URL, url);
+    /* Headers */
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+    if (strlen(postData) > 0) {
+        curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData); 
+    }
+    /* For completeness */
+    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
+    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
+    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
+    /* only allow redirects to HTTP and HTTPS URLs */
+    curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
+    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
+    /* each transfer needs to be done within 20 seconds! */
+    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
+    /* connect fast or fail */
+    curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
+
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
+    res = curl_easy_perform(handle);
+    /* Check for errors */
+    if(res != CURLE_OK)
+    fprintf(stderr, "curl_easy_perform() failed: %s\n",
+          curl_easy_strerror(res));
+
+    /* always cleanup */
+    curl_easy_cleanup(handle);
+    curl_slist_free_all(headers);
+  }
+  curl_global_cleanup();
+  printf("Response: %s\n", response_buffer);
+  // TODO Handle errors!!
   wrenEnsureSlots(vm, 4);
   wrenSetSlotNewList(vm, 0);
   wrenSetSlotDouble(vm, 5, 200);
   wrenSetSlotString(vm, 6, "Content-Type: application/json");
-  wrenSetSlotString(vm, 7, "{\"message\":\"Hello World\"}");
+  wrenSetSlotString(vm, 7, string_safe_copy(response_buffer));
   wrenInsertInList(vm, 0, 0, 5);
   wrenInsertInList(vm, 0, 1, 6);
   wrenInsertInList(vm, 0, 2, 7);
