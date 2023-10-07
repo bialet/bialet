@@ -229,6 +229,7 @@ static void random_string(WrenVM *vm) {
 }
 
 static void hash_password(WrenVM *vm) {
+#if OPENSSL_VERSION_NUMBER > 0x102031af
   const char *password = wrenGetSlotString(vm, 1);
   unsigned char salt[16];
   if (!RAND_bytes(salt, sizeof(salt))) {
@@ -259,9 +260,11 @@ static void hash_password(WrenVM *vm) {
 
   wrenEnsureSlots(vm, 2);
   wrenSetSlotString(vm, 0, result);
+#endif
 }
 
 static void verify_password(WrenVM *vm) {
+#if OPENSSL_VERSION_NUMBER > 0x102031af
   int result = 0;
   const char *password = wrenGetSlotString(vm, 1);
   const char *hash_and_salt = wrenGetSlotString(vm, 2);
@@ -296,6 +299,25 @@ static void verify_password(WrenVM *vm) {
   result = strcmp(new_hash_str, stored_hash) == 0;
   wrenEnsureSlots(vm, 2);
   wrenSetSlotBool(vm, 0, result);
+#endif
+}
+
+static void curl_call(WrenVM *vm) {
+  const char *url = wrenGetSlotString(vm, 1);
+  const char *method = wrenGetSlotString(vm, 2);
+  // TODO How to get headers list?
+  // const char *headers = wrenGetSlotString(vm, 3);
+  const char *postData = wrenGetSlotString(vm, 4);
+  printf("url: %s, method: %s, postData: %s\n", url, method, postData);
+
+  wrenEnsureSlots(vm, 4);
+  wrenSetSlotNewList(vm, 0);
+  wrenSetSlotDouble(vm, 5, 200);
+  wrenSetSlotString(vm, 6, "Content-Type: application/json");
+  wrenSetSlotString(vm, 7, "{\"message\":\"Hello World\"}");
+  wrenInsertInList(vm, 0, 0, 5);
+  wrenInsertInList(vm, 0, 1, 6);
+  wrenInsertInList(vm, 0, 2, 7);
 }
 
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
@@ -314,6 +336,11 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
     if (strcmp(className, "Util") == 0) {
       if (strcmp(signature, "randomString(_)") == 0) {
         return random_string;
+      }
+    }
+    if (strcmp(className, "Http") == 0) {
+      if (strcmp(signature, "intCall(_,_,_,_)") == 0) {
+        return curl_call;
       }
     }
     if (strcmp(className, "User") == 0) {
