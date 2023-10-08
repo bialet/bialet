@@ -321,7 +321,6 @@ static void curl_call(WrenVM *vm) {
   const char *postData = wrenGetSlotString(vm, 4);
   printf("url: %s, method: %s, postData: %s\n", url, method, postData);
 
-  curl_global_init(CURL_GLOBAL_DEFAULT);
   handle = curl_easy_init();
   if (handle) {
     curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
@@ -343,6 +342,8 @@ static void curl_call(WrenVM *vm) {
     curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
     /* connect fast or fail */
     curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
+    /* Speed up the connection using IPv4 only */
+    curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
@@ -356,7 +357,6 @@ static void curl_call(WrenVM *vm) {
     curl_easy_cleanup(handle);
     curl_slist_free_all(headers);
   }
-  curl_global_cleanup();
   printf("Response: %s\n", response_buffer);
   // TODO Handle errors!!
   wrenEnsureSlots(vm, 4);
@@ -533,4 +533,6 @@ void bialet_init(struct BialetConfig *config) {
   wren_config.errorFn = &wren_error;
   wren_config.loadModuleFn = &wren_load_module;
   wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
+
+  curl_global_init(CURL_GLOBAL_DEFAULT);
 }
