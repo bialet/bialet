@@ -21,6 +21,7 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define MIGRATION_FILE "/_migration.wren"
+#define ROUTE_FILE "/_route.wren"
 
 struct BialetConfig bialet_config;
 
@@ -37,21 +38,31 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
 #define WAIT_FOR_RELOAD 3
 time_t last_reload = 0;
 
+static void migrate() {
+  char *code;
+  char path[MAX_PATH_LEN];
+  strcpy(path, bialet_config.root_dir);
+  strcat(path, MIGRATION_FILE);
+  if ((code = bialet_read_file(path))) {
+    struct BialetResponse r = bialet_run("migration", code, 0);
+    message(yellow("Running migration"), r.body);
+  }
+}
+
+static void parse_routes() {
+    
+}
+
 /* Reload files */
 static void trigger_reload_files() {
   time_t current_time = time(NULL);
   if (current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
-    char *code;
-    char path[MAX_PATH_LEN];
-    strcpy(path, bialet_config.root_dir);
-    strcat(path, MIGRATION_FILE);
-    if ((code = bialet_read_file(path))) {
-      struct BialetResponse r = bialet_run("migration", code, 0);
-      message(yellow("Running migration"), r.body);
-    }
+    migrate();
+    parse_routes();
   }
 }
+
 
 static void *file_watcher(void *arg) {
   pthread_detach(pthread_self());
