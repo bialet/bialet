@@ -1274,6 +1274,7 @@ struct mg_http_message {
   struct mg_str head;                                  // Request + headers
   struct mg_str chunk;    // Chunk for chunked encoding,  or partial body
   struct mg_str message;  // Request + headers + body
+  char *bialet_routes;
 };
 
 // Parameter for mg_http_serve_dir()

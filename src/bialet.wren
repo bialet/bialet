@@ -76,7 +76,7 @@ class Html {
 }
 
 class Request {
-  static init(message) {
+  static init(message, route) {
     __message = message
     __headers = {}
     __get = {}
@@ -86,6 +86,7 @@ class Request {
     __method = tmp[0]
     __fullUri = tmp[1]
     __body = ""
+    __route = __fullUri.trimStart(route.trimEnd("#")).split("/")
     var uriSeparator = __fullUri.indexOf("?")
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
@@ -135,6 +136,7 @@ class Request {
   static header(name) { __headers[name] ? __headers[name]:"" }
   static get(name) { __get[name] ? __get[name]:"" }
   static post(name) { __post[name] ? __post[name]:"" }
+  static route(pos) { __route.count > pos ? __route[pos]:"" }
   static method() { __method }
   static uri() { __uri }
   static body() { __body }
@@ -191,10 +193,13 @@ class Db {
   foreign static intQuery(query, params)
   foreign static intLastInsertId()
   static query(query, params){
+    if (!query || query.trim() == "") {
+      return []
+    }
     var res = Db.intQuery(query, params)
     // If I remove this print, res is always a Number
     // It does not matter what I print
-    System.print("Query: " + query)
+    System.print("Query: %(query)")
     if (res is List) {
       return res
     } else {
@@ -207,9 +212,8 @@ class Db {
     Db.query("CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
     Db.query("CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)")
     if (!Db.one("SELECT version FROM BIALET_MIGRATIONS WHERE version = ?", [version])) {
-      if (Db.query(schema)) {
-        Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
-      }
+      schema.split(";").each{|q| Db.query(q) }
+      Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
     }
   }
   static query(query) { Db.query(query, []) }

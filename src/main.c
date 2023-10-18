@@ -6,6 +6,7 @@
 #include "mongoose.h"
 #include "wren_vm.h"
 #include <errno.h>
+#include <ftw.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,8 +22,13 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define MIGRATION_FILE "/_migration.wren"
+#define MAX_ROUTES 100
+#define ROUTE_FILE "_route.wren"
 
 struct BialetConfig bialet_config;
+char *routes_list[MAX_ROUTES];
+char *routes_files[MAX_ROUTES];
+int routes_index = 0;
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
                          void *fn_data) {
@@ -30,6 +36,14 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
     struct mg_http_serve_opts opts = {.root_dir = bialet_config.root_dir,
                                       .ssi_pattern = "#.wren"};
+    for (int i = 0; i < routes_index; i++) {
+      if (mg_http_match_uri(hm, routes_list[i])) {
+        hm->bialet_routes = strdup(routes_list[i]);
+        mg_http_serve_ssi(c, hm, bialet_config.root_dir, routes_files[i]);
+        return;
+      }
+    }
+    hm->bialet_routes = "";
     mg_http_serve_dir(c, hm, &opts);
   }
 }
@@ -37,19 +51,46 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
 #define WAIT_FOR_RELOAD 3
 time_t last_reload = 0;
 
+static void migrate() {
+  char *code;
+  char path[MAX_PATH_LEN];
+  strcpy(path, bialet_config.root_dir);
+  strcat(path, MIGRATION_FILE);
+  if ((code = bialet_read_file(path))) {
+    struct BialetResponse r = bialet_run("migration", code, 0);
+    message(yellow("Running migration"), r.body);
+  }
+}
+
+static int parse_routes_callback(const char *fpath, const struct stat *sb,
+                                 int typeflag) {
+  if (typeflag == FTW_F && strstr(fpath, ROUTE_FILE)) {
+    routes_files[routes_index] = strdup(fpath);
+    char *relative_path = strstr(fpath, bialet_config.root_dir) +
+                          strlen(bialet_config.root_dir) + 1;
+    char *last_slash = strrchr(relative_path, '/');
+    *last_slash = '\0';
+
+    char *route_with_hash = malloc(strlen(relative_path) + 3);
+    sprintf(route_with_hash, "/%s#", relative_path);
+    routes_list[routes_index] = route_with_hash;
+    routes_index++;
+  }
+  return 0;
+}
+
+static void parse_routes() {
+  routes_index = 0;
+  ftw(bialet_config.root_dir, parse_routes_callback, 16);
+}
+
 /* Reload files */
 static void trigger_reload_files() {
   time_t current_time = time(NULL);
   if (current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
-    char *code;
-    char path[MAX_PATH_LEN];
-    strcpy(path, bialet_config.root_dir);
-    strcat(path, MIGRATION_FILE);
-    if ((code = bialet_read_file(path))) {
-      struct BialetResponse r = bialet_run("migration", code, 0);
-      message(yellow("Running migration"), r.body);
-    }
+    migrate();
+    parse_routes();
   }
 }
 

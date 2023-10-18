@@ -373,8 +373,10 @@ struct BialetResponse bialet_run(char *module, char *code,
   bialetCompleteCode = string_safe_copy(bialetModuleSource);
   if (hm) {
     char *message = escape_special_chars(get_mg_str(hm->message));
-    bialetCompleteCode = string_append(bialetCompleteCode, "\nRequest.init(\"",
-                                       string_append(message, "\")", "\n"));
+    bialetCompleteCode =
+        string_append(bialetCompleteCode, "\nRequest.init(\"",
+                      string_append(message, "\",\"", hm->bialet_routes));
+    bialetCompleteCode = string_append(bialetCompleteCode, "\")", "\n");
   }
   wrenInterpret(vm, "bialet", bialetCompleteCode);
   /* Run user code */
