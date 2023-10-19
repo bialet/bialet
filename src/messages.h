@@ -3,6 +3,8 @@
 
 #include "bialet.h"
 
+void message_init(struct BialetConfig *config);
+
 char *colorize(char *str, int color);
 char *green(char *str);
 char *red(char *str);

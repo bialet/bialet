@@ -157,6 +157,7 @@ int main(int argc, char *argv[]) {
   bialet_config.cpu_hard_limit = 30;
   /* Env config values */
   bialet_config.debug = 0;
+  bialet_config.output_color = 1;
   bialet_config.db_path = ".db.sqlite3";
 
   /* Parse args */
@@ -169,7 +170,8 @@ int main(int argc, char *argv[]) {
       bialet_config.port = atoi(optarg);
       break;
     case 'l':
-      bialet_config.log_file = fopen(optarg, "rwb");
+      bialet_config.log_file = fopen(optarg, "a");
+      bialet_config.output_color = 0;
       break;
     case 'm':
       bialet_config.mem_soft_limit = atoi(optarg);
@@ -194,6 +196,7 @@ int main(int argc, char *argv[]) {
     bialet_config.root_dir = argv[optind];
   }
 
+  message_init(&bialet_config);
   bialet_init(&bialet_config);
   mg_mgr_init(&mgr);
 

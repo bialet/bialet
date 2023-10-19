@@ -8,8 +8,9 @@ struct BialetConfig {
   char *host;
   int port;
 
-  FILE* log_file;
+  FILE *log_file;
   int debug;
+  int output_color;
 
   int mem_soft_limit, mem_hard_limit, cpu_soft_limit, cpu_hard_limit;
 

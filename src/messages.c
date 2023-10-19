@@ -1,3 +1,4 @@
+#include "bialet.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,8 +11,18 @@
 #define YELLOW_COLOR 33
 #define BLUE_COLOR 34
 
+FILE *log_file;
+int apply_color = 0;
+
+void message_init(struct BialetConfig *config) {
+  log_file = config->log_file;
+  apply_color = config->output_color;
+  if (!isatty(1))
+    apply_color = 0;
+}
+
 char *colorize(char *str, int color) {
-  if (!color || !isatty(1)) {
+  if (!apply_color || !color) {
     return str;
   }
   char *output = malloc(COLORIZE_MAX);
@@ -30,14 +41,14 @@ void message_internal(int num, ...) {
 
   for (int i = 0; i < num; ++i) {
     char *str = va_arg(args, char *);
-    printf("%s", str);
+    fprintf(log_file, "%s", str);
     if (i < num - 1) {
-      printf(" ");
+      fprintf(log_file, " ");
     }
   }
 
-  printf("\n");
-  fflush(stdout);
+  fprintf(log_file, "\n");
+  fflush(log_file);
   va_end(args);
 }
 
