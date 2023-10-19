@@ -196,16 +196,7 @@ class Db {
     if (!query || query.trim() == "") {
       return []
     }
-    var res = Db.intQuery(query, params)
-    // If I remove this print, res is always a Number
-    // It does not matter what I print
-    System.print("Query: %(query)")
-    if (res is List) {
-      return res
-    } else {
-      System.write("Res is not List (%( res.type ))")
-      return []
-    }
+    return Db.intQuery(query, params)
   }
   static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {

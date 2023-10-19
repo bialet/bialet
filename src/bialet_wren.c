@@ -17,7 +17,6 @@
 #define MAX_COLUMNS 100
 #define MAX_MODULE_LEN 50
 #define HTTP_ERROR 500
-#define QUERY_INITIAL_SLOT 4
 
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
@@ -129,12 +128,11 @@ static void db_query(WrenVM *vm) {
   sqlite3_stmt *stmt;
   int result, i_bind, map_slot = 0;
 
-  char *columns[100];
+  char *columns[MAX_COLUMNS];
   const char *col_name;
   const char *value;
   int col_type;
 
-  wrenEnsureSlots(vm, QUERY_INITIAL_SLOT);
   if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
     message(red("Runtime Error"),
             "Argument for parameters in Db should be type list");
@@ -176,6 +174,7 @@ static void db_query(WrenVM *vm) {
       col_name = sqlite3_column_name(stmt, i);
       columns[i] = string_safe_copy(col_name);
     }
+    wrenEnsureSlots(vm, 2 + col_count * 2);
     wrenSetSlotNewList(vm, 0);
     /* Execute statement and fetch results */
     while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -188,6 +187,7 @@ static void db_query(WrenVM *vm) {
         case SQLITE_TEXT:
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
+        case SQLITE_BLOB:
           value = (const char *)sqlite3_column_text(stmt, i);
           wrenSetSlotString(vm, ++map_slot, string_safe_copy(value));
           break;
@@ -198,7 +198,6 @@ static void db_query(WrenVM *vm) {
           message(red("Error"), "Uknown type on binding");
           break;
         }
-        wrenEnsureSlots(vm, QUERY_INITIAL_SLOT + col_count * i);
         wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
       }
       wrenInsertInList(vm, 0, -1, 1);
