@@ -4,8 +4,6 @@ import "_domain" for Task
 
 var task = Task.new()
 
-System.print(Http.get("https://dummyjson.com/products/1"))
-
 if (Request.isPost()) {
   task.save(Request.post("task"))
   return Response.redirect("/")
