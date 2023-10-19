@@ -28,4 +28,5 @@ class Template {
 class Posts {
   static home() { Db.all("SELECT * FROM posts ORDER BY createdAt DESC") }
   static page(slug) { Db.one("SELECT title, content FROM posts WHERE slug = ?", [slug]) }
+  static id(id) { Db.one("SELECT * FROM posts WHERE id = ?", [id]) }
 }

@@ -16,6 +16,10 @@ class Response {
     Response.status(302)
     Response.header("Location", url)
   }
+  static json(data) {
+    Response.header("Content-Type", "application/json")
+    Response.out(JSON.stringify(data))
+  }
 }
 
 class User {
