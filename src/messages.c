@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define COLORIZE_MAX 100
 #define GREEN_COLOR 32
@@ -9,8 +10,9 @@
 #define YELLOW_COLOR 33
 #define BLUE_COLOR 34
 
+
 char *colorize(char *str, int color) {
-  if (!color) {
+  if (!color || !isatty(1)) {
     return str;
   }
   char *output = malloc(COLORIZE_MAX);
@@ -36,6 +38,7 @@ void message_internal(int num, ...) {
   }
 
   printf("\n");
+  fflush(stdout);
   va_end(args);
 }
 
