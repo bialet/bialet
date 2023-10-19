@@ -1,11 +1,11 @@
 #include "bialet_wren.h"
 #include "bialet.h"
 #include "bialet.wren.inc"
-#include <curl/curl.h>
 #include "messages.h"
 #include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
+#include <curl/curl.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <sqlite3.h>
@@ -304,10 +304,11 @@ static void verify_password(WrenVM *vm) {
 #endif
 }
 
-static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
-    size_t total_size = size * nmemb;
-    strncat((char*)userp, contents, total_size);
-    return total_size;
+static size_t write_callback(void *contents, size_t size, size_t nmemb,
+                             void *userp) {
+  size_t total_size = size * nmemb;
+  strncat((char *)userp, contents, total_size);
+  return total_size;
 }
 
 static void curl_call(WrenVM *vm) {
@@ -329,7 +330,7 @@ static void curl_call(WrenVM *vm) {
     headers = curl_slist_append(headers, "Content-Type: application/json");
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
     if (strlen(postData) > 0) {
-        curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData); 
+      curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData);
     }
     /* For completeness */
     curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
@@ -349,9 +350,9 @@ static void curl_call(WrenVM *vm) {
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
     res = curl_easy_perform(handle);
     /* Check for errors */
-    if(res != CURLE_OK)
-    fprintf(stderr, "curl_easy_perform() failed: %s\n",
-          curl_easy_strerror(res));
+    if (res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
 
     /* always cleanup */
     curl_easy_cleanup(handle);
