@@ -10,7 +10,6 @@
 #define YELLOW_COLOR 33
 #define BLUE_COLOR 34
 
-
 char *colorize(char *str, int color) {
   if (!color || !isatty(1)) {
     return str;

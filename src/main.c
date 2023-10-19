@@ -24,11 +24,13 @@
 #define MIGRATION_FILE "/_migration.wren"
 #define MAX_ROUTES 100
 #define ROUTE_FILE "_route.wren"
+#define WAIT_FOR_RELOAD 3
 
 struct BialetConfig bialet_config;
 char *routes_list[MAX_ROUTES];
 char *routes_files[MAX_ROUTES];
 int routes_index = 0;
+time_t last_reload = 0;
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
                          void *fn_data) {
@@ -47,9 +49,6 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
     mg_http_serve_dir(c, hm, &opts);
   }
 }
-
-#define WAIT_FOR_RELOAD 3
-time_t last_reload = 0;
 
 static void migrate() {
   char *code;
