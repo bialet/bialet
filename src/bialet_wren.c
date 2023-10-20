@@ -92,7 +92,7 @@ char *bialet_read_file(const char *path) {
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
-  // TODO Security: prevent load modules from parent directories
+  /* @TODO Security: prevent load modules from parent directories */
   strcpy(module, bialet_config.root_dir);
   strcat(module, "/");
   strcat(module, name);
@@ -231,11 +231,12 @@ static void random_string(WrenVM *vm) {
 }
 
 static void hash_password(WrenVM *vm) {
+/* @TODO OpenSSL 3 only */
 #if OPENSSL_VERSION_NUMBER > 0x102031af
   const char *password = wrenGetSlotString(vm, 1);
   unsigned char salt[16];
   if (!RAND_bytes(salt, sizeof(salt))) {
-    // TODO Error!
+    /* @TODO Handle error for password hashing */
   }
 
   unsigned char hash[EVP_MAX_MD_SIZE];
@@ -317,8 +318,8 @@ static void curl_call(WrenVM *vm) {
   struct curl_slist *headers = NULL;
   const char *url = wrenGetSlotString(vm, 1);
   const char *method = wrenGetSlotString(vm, 2);
-  // TODO How to get headers list?
-  // const char *headers = wrenGetSlotString(vm, 3);
+  /* @TODO Get headers list for curl */
+  /* const char *headers = wrenGetSlotString(vm, 3); */
   const char *postData = wrenGetSlotString(vm, 4);
   printf("url: %s, method: %s, postData: %s\n", url, method, postData);
 
@@ -359,7 +360,7 @@ static void curl_call(WrenVM *vm) {
     curl_slist_free_all(headers);
   }
   printf("Response: %s\n", response_buffer);
-  // TODO Handle errors!!
+  /* @TODO Handle curl errors */
   wrenEnsureSlots(vm, 4);
   wrenSetSlotNewList(vm, 0);
   wrenSetSlotDouble(vm, 5, 200);
@@ -519,7 +520,6 @@ struct BialetResponse bialet_run(char *module, char *code,
 
 void bialet_init(struct BialetConfig *config) {
   char db_path[MAX_MODULE_LEN];
-  // TODO Security: prevent load modules from parent directories
   strcpy(db_path, config->root_dir);
   strcat(db_path, "/");
   strcat(db_path, config->db_path);

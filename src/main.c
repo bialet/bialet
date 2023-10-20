@@ -101,7 +101,7 @@ static void *file_watcher(void *arg) {
   if (fd < 0) {
     perror("inotify_init");
   }
-  // TODO Add watcher for new folders
+  /* @TODO File watchers not work when a new folder is created */
   int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
   if (wd < 0) {
     perror("inotify_add_watch");
@@ -171,6 +171,7 @@ int main(int argc, char *argv[]) {
       break;
     case 'l':
       bialet_config.log_file = fopen(optarg, "a");
+      /* @TODO Error handling config log file */
       bialet_config.output_color = 0;
       break;
     case 'm':
@@ -194,6 +195,7 @@ int main(int argc, char *argv[]) {
   }
   if (optind < argc) {
     bialet_config.root_dir = argv[optind];
+    /* @TODO Error handling root dir exists */
   }
 
   message_init(&bialet_config);
@@ -204,6 +206,7 @@ int main(int argc, char *argv[]) {
   trigger_reload_files();
 
   if (mg_http_listen(&mgr, server_url(), http_handler, NULL) == NULL) {
+    /* @TODO Improve error handling when port is used */
     perror("Could not start server");
     exit(1);
   }
