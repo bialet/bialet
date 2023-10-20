@@ -16,6 +16,7 @@
 // license, as set out in https://www.mongoose.ws/licensing/
 //
 // SPDX-License-Identifier: GPL-2.0-only or commercial
+#include "bialet.h"
 #define MG_ENABLE_DIRLIST 0
 
 #include "mongoose.h"
@@ -1919,7 +1920,7 @@ void mg_http_serve_file(struct mg_connection *c, struct mg_http_message *hm,
   }
 
   if (fd == NULL || fs->st(path, &size, &mtime) == 0) {
-    mg_http_reply(c, 404, opts->extra_headers, "Not found\n");
+    mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
     mg_fs_close(fd);
     // NOTE: mg_http_etag() call should go first!
   } else if (mg_http_etag(etag, sizeof(etag), size, mtime) != NULL &&
@@ -2188,7 +2189,12 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
 #if MG_ENABLE_DIRLIST
     listdir(c, hm, opts, path);
 #else
-    mg_http_reply(c, 404, "", "Not Found\n");
+    /* If the home not exists, show Bialet welcome page */
+    if (mg_vcmp(&hm->uri, "/") == 0) {
+        mg_http_reply(c, 200, BIALET_HEADERS, BIALET_WELCOME_PAGE);
+    } else {
+        mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
+    }
 #endif
   } else if (flags && sp != NULL &&
              mg_globmatch(sp, strlen(sp), path, strlen(path))) {

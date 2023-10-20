@@ -507,8 +507,8 @@ struct BialetResponse bialet_run(char *module, char *code,
   if (error) {
     message(red("Error"), "Internal Server Error");
     r.status = HTTP_ERROR;
-    r.header = "Content-type: text/html\r\n";
-    r.body = "Internal Server Error";
+    r.header = BIALET_HEADERS;
+    r.body = BIALET_ERROR_PAGE;
   }
 
   if (!hm)
