@@ -18,7 +18,7 @@ class Response {
   }
   static json(data) {
     Response.header("Content-Type", "application/json")
-    Response.out(JSON.stringify(data))
+    Response.out(Json.stringify(data))
   }
 }
 
@@ -303,7 +303,7 @@ class Http {
     http.method = method
     http.postData = data
     var response = http.call(url, options)
-    return JSON.parse(response["body"])
+    return Json.parse(response["body"])
   }
   static get(url, options) { request(url, "GET", null, options) }
   static post(url, data, options) { request(url, "POST", data, options) }
@@ -317,23 +317,23 @@ class Http {
   static delete(url) { delete(url, {}) }
 }
 
-// JSON library and Util functions are from Matthew Brandly
+// Json library and Util functions are from Matthew Brandly
 // https://github.com/brandly/wren-json
-class JSON {
+class Json {
   static parse(string) {
-    return JSONParser.new(string).parse
+    return JsonParser.new(string).parse
   }
 
   static stringify(object) {
-    return JSONStringifier.new(object).toString
+    return JsonStringifier.new(object).toString
   }
 
   static tokenize(string) {
-    return JSONScanner.new(string).tokenize
+    return JsonScanner.new(string).tokenize
   }
 }
 
-class JSONStringifier {
+class JsonStringifier {
   construct new(object) {
     _object = object
   }
@@ -385,7 +385,7 @@ class JSONStringifier {
   }
 }
 
-class JSONParser {
+class JsonParser {
   construct new(input) {
     _input = input
     _tokens = []
@@ -393,7 +393,7 @@ class JSONParser {
 
   valueTypes { [Token.String, Token.Number, Token.Bool, Token.Null] }
 
-  parse { nest(JSONScanner.new(_input).tokenize) }
+  parse { nest(JsonScanner.new(_input).tokenize) }
 
   nest(tokens) {
     if (tokens.count == 0) { parsingError }
@@ -450,20 +450,20 @@ class JSONParser {
 
   parsingError (token) {
     var position = Util.getPositionForIndex(_input, token.index)
-    invalidJSON("Unexpected \"%(token)\" at line %(position["line"]), column %(position["column"])")
+    invalidJson("Unexpected \"%(token)\" at line %(position["line"]), column %(position["column"])")
   }
 
   parsingError {
-    invalidJSON("")
+    invalidJson("")
   }
 
-  invalidJSON(message) {
-    var base = "Invalid JSON"
+  invalidJson(message) {
+    var base = "Invalid Json"
     Fiber.abort(message.count > 0 ? "%(base): %(message)" : base)
   }
 }
 
-class JSONScanner {
+class JsonScanner {
   construct new(input) {
     _input = input
     _tokens = []
