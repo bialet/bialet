@@ -237,7 +237,6 @@ class Session {
     __values = {}
     var res = Db.all("SELECT key, val FROM BIALET_SESSION WHERE id = ?", [_id])
     if (res && res.count > 0) {
-      System.print(res)
       res.each{|r| __values[r["key"]] = r["val"] }
     }
   }
@@ -250,6 +249,10 @@ class Session {
 }
 
 class Db {
+
+  static count{ 0 }
+  static map(callback){ }
+
   foreign static intQuery(query, params)
   foreign static intLastInsertId()
   static query(query, params){
