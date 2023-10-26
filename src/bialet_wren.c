@@ -93,12 +93,17 @@ static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
   /* @TODO Security: prevent load modules from parent directories */
-  strcpy(module, bialet_config.root_dir);
+  /* @TODO Create an object for the user data */
+  char* user_data = wrenGetUserData(vm);
+  char *called_module = string_safe_copy(user_data);
+  char* last_slash = strrchr(called_module, '/');
+  if (last_slash)
+    *last_slash = '\0';
+  strcpy(module, called_module);
   strcat(module, "/");
   strcat(module, name);
-  strcat(module, ".wren");
+  strcat(module, BIALET_EXTENSION);
   char *buffer = bialet_read_file(module);
-
   WrenLoadModuleResult result = {0};
   result.source = NULL;
 
@@ -445,6 +450,7 @@ struct BialetResponse bialet_run(char *module, char *code,
   }
 
   vm = wrenNewVM(&wren_config);
+  wrenSetUserData(vm, module);
   /* Load bialet framework with Request appended */
   char *bialetCompleteCode;
   bialetCompleteCode = string_safe_copy(bialetModuleSource);
