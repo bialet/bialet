@@ -141,6 +141,7 @@ class Request {
     __headers = {}
     __get = {}
     __post = {}
+    __files = {}
     var lines = message.split("\n")
     var tmp = lines.removeAt(0).split(" ")
     __method = tmp[0]
@@ -168,6 +169,12 @@ class Request {
           Cookie.init(headerValue)
         }
         __headers[headerName] = headerValue
+        if (headerName == "Content-Type") {
+          var values = headerValue.split(";")
+          if (values[0] == "multipart/form-data") {
+            System.write("File uploaded! %(values)")
+          }
+        }
       } else {
         __body = __body + line
       }
@@ -175,6 +182,8 @@ class Request {
     if (__method == "POST") {
       __post = parseQuery(__body)
     }
+    System.write("Message: %(message)")
+    System.write("Post: %(__post)")
   }
   static parseQuery(query) {
     var all = {}
@@ -196,6 +205,7 @@ class Request {
   static header(name) { __headers[name] ? __headers[name]:"" }
   static get(name) { __get[name] ? __get[name]:"" }
   static post(name) { __post[name] ? __post[name]:"" }
+  static file(name) { __files[name] ? __files[name]:false }
   static route(pos) { __route.count > pos ? __route[pos]:"" }
   static method() { __method }
   static uri() { __uri }
@@ -282,6 +292,7 @@ class Db {
     Db.all("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList)
     return Db.lastInsertId()
   }
+  static byId(table, id){ Db.one("SELECT * FROM %(table) WHERE id = ?", [id]) }
 }
 
 class Http {
