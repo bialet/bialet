@@ -1,6 +1,9 @@
 # 🚲 bialet
 
-Build lightweight dynamic web apps effortlessly with [Wren](https://wren.io/) and integrated database.
+Build lightweight dynamic web apps effortlessly with [Wren](https://wren.io/) and
+integrated database.
+
+See [examples](examples/run.md) for usage.
 
 ## Running
 
@@ -39,6 +42,5 @@ brew install sqlite3 openssl curl
 Then run the build
 
 ```bash
-make clean
-make
+make clean && make
 ```
