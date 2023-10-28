@@ -1,5 +1,5 @@
 import "bialet" for Response, Request
-import "_app" for Template, Posts
+import "/_app" for Template, Posts
 var slug = Request.route(0)
 
 if (slug == "") {

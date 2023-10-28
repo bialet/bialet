@@ -1,4 +1,4 @@
-import "bialet" for Response, Request
+import "bialet" for Response
 import "_app" for Template, Posts
 
 Response.out(Template.layout("Blog Sample", "

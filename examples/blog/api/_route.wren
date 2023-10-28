@@ -1,5 +1,5 @@
 import "bialet" for Response, Request
-import "_app" for Posts
+import "../_app" for Posts
 var id = Request.route(0)
 
 if (id == "") {

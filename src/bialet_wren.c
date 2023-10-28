@@ -92,15 +92,19 @@ char *bialet_read_file(const char *path) {
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
-  /* @TODO Security: prevent load modules from parent directories */
-  /* @TODO Create an object for the user data */
-  char* user_data = wrenGetUserData(vm);
-  char *called_module = string_safe_copy(user_data);
-  char* last_slash = strrchr(called_module, '/');
-  if (last_slash)
-    *last_slash = '\0';
-  strcpy(module, called_module);
-  strcat(module, "/");
+  if (name[0] == '/') {
+    strcpy(module, bialet_config.root_dir);
+  } else {
+    /* @TODO Security: prevent load modules from parent directories */
+    /* @TODO Create an object for the user data */
+    char *user_data = wrenGetUserData(vm);
+    char *called_module = string_safe_copy(user_data);
+    char *last_slash = strrchr(called_module, '/');
+    if (last_slash)
+      *last_slash = '\0';
+    strcpy(module, called_module);
+    strcat(module, "/");
+  }
   strcat(module, name);
   strcat(module, BIALET_EXTENSION);
   char *buffer = bialet_read_file(module);
