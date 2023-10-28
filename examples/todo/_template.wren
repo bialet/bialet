@@ -1,7 +1,9 @@
 import "bialet" for Html
 
 class Template {
+
   construct new(){ _title = "TODO tasks" }
+
   home(tasks) { "
     <html>
       <head>
@@ -30,6 +32,7 @@ class Template {
       </body>
     </html>
   " }
+
   newItemForm { "
     <form method='post'>
       <p>
@@ -38,6 +41,7 @@ class Template {
       </p>
     </form>
   " }
+
   clearForm { "
     <form method='post' action='/clear'>
       <p><button>Clear finished tasks</button></p>

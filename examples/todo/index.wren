@@ -1,4 +1,4 @@
-import "bialet" for Response, Request, Http
+import "bialet" for Response, Request
 import "_template" for Template
 import "_domain" for Task
 
