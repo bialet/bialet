@@ -1,6 +1,7 @@
 TARGET_EXEC := bialet
 BUILD_DIR := ./build
 SRC_DIRS := ./src
+INSTALL_DIR := ~/.local/bin
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.c')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
@@ -23,6 +24,10 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) -Wall -g -c $< -o $@
+
+install: $(BUILD_DIR)/$(TARGET_EXEC)
+	mkdir -p $(INSTALL_DIR)
+	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)
