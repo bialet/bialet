@@ -1,5 +1,3 @@
-#define MG_ENABLE_DIRLIST 0
-
 #include "bialet.h"
 #include "bialet_wren.h"
 #include "messages.h"
@@ -16,6 +14,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#define BIALET_VERSION "0.1"
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 #define MAX_URL_LEN 200
@@ -161,7 +160,7 @@ int main(int argc, char *argv[]) {
   bialet_config.db_path = ".db.sqlite3";
 
   /* Parse args */
-  while ((opt = getopt(argc, argv, "h:p:l:m:M:c:C:")) != -1) {
+  while ((opt = getopt(argc, argv, "h:p:l:m:M:c:C:v")) != -1) {
     switch (opt) {
     case 'h':
       bialet_config.host = optarg;
@@ -185,6 +184,10 @@ int main(int argc, char *argv[]) {
       break;
     case 'C':
       bialet_config.cpu_hard_limit = atoi(optarg);
+      break;
+    case 'v':
+      printf("bialet %s\n", BIALET_VERSION);
+      exit(0);
       break;
     default:
       fprintf(stderr,
