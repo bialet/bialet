@@ -24,13 +24,12 @@ extern const size_t favicon_data_len;
 
 #define MG_ENABLE_DIRLIST 0
 
-#include "mongoose.h"
 #include "bialet_wren.h"
+#include "mongoose.h"
 
 #ifdef MG_ENABLE_LINES
 #line 1 "src/base64.c"
 #endif
-
 
 static int mg_base64_encode_single(int c) {
   if (c < 26) {
@@ -1928,8 +1927,10 @@ void mg_http_serve_file(struct mg_connection *c, struct mg_http_message *hm,
   if (fd == NULL || fs->st(path, &size, &mtime) == 0) {
     if (mg_vcmp(&hm->uri, "/favicon.ico") == 0) {
       /* Send default favicon */
-      mg_printf(c, "HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nContent-Length: %d\r\n\r\n",
-        (int) favicon_data_len);
+      mg_printf(c,
+                "HTTP/1.1 200 OK\r\nContent-Type: "
+                "image/x-icon\r\nContent-Length: %d\r\n\r\n",
+                (int)favicon_data_len);
       mg_send(c, favicon_data, favicon_data_len);
     } else {
       mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
@@ -2204,9 +2205,9 @@ void mg_http_serve_dir(struct mg_connection *c, struct mg_http_message *hm,
 #else
     /* If the home not exists, show Bialet welcome page */
     if (mg_vcmp(&hm->uri, "/") == 0) {
-        mg_http_reply(c, 200, BIALET_HEADERS, BIALET_WELCOME_PAGE);
+      mg_http_reply(c, 200, BIALET_HEADERS, BIALET_WELCOME_PAGE);
     } else {
-        mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
+      mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
     }
 #endif
   } else if (flags && sp != NULL &&
