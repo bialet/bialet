@@ -182,11 +182,12 @@ class Request {
     if (query == "") {
       return all
     }
+    /* @TODO Support arrays in URL and POST query */
     query.split("&").each{|q|
       var value = ""
       var tmp = q.split("=")
       var key = Util.urlDecode(tmp[0])
-      if (tmp.count > 0) {
+      if (tmp.count > 1) {
         value = Util.urlDecode(tmp[1])
       }
       all[key] = value
