@@ -14,6 +14,7 @@
 #include <string.h>
 #include <time.h>
 
+#define MAX_URL_LEN 200
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
 #define MAX_MODULE_LEN 50
@@ -449,8 +450,13 @@ struct BialetResponse bialet_run(char *module, char *code,
   WrenVM *vm = 0;
 
   if (hm) {
-    message("Request", get_mg_str(hm->method), get_mg_str(hm->uri),
-            get_mg_str(hm->query), get_mg_str(hm->body));
+    char url[MAX_URL_LEN];
+    strcpy(url, get_mg_str(hm->uri));
+    if (hm->query.len > 0) {
+      strcat(url, "?");
+      strcat(url, get_mg_str(hm->query));
+    }
+    message("Request", get_mg_str(hm->method), url);
   }
 
   vm = wrenNewVM(&wren_config);
