@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #define COLORIZE_MAX 100
@@ -38,6 +39,11 @@ char *yellow(char *str) { return colorize(str, YELLOW_COLOR); }
 void message_internal(int num, ...) {
   va_list args;
   va_start(args, num);
+
+  time_t now = time(NULL);
+  struct tm *tm = localtime(&now);
+  fprintf(log_file, "%d-%02d-%02d %02d:%02d:%02d ", (tm->tm_year + 1900),
+          (tm->tm_mon + 1), tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
   for (int i = 0; i < num; ++i) {
     char *str = va_arg(args, char *);
