@@ -322,24 +322,49 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb,
   return total_size;
 }
 
+static size_t header_callback(char *buffer, size_t size, size_t nitems,
+                              void *userdata) {
+  /* received header is nitems * size long in 'buffer' NOT ZERO TERMINATED */
+  /* 'userdata' is set with CURLOPT_HEADERDATA */
+  /* @TODO Get response headers and HTTP status */
+  printf("CURL Response Header: %s\n", buffer);
+  return nitems * size;
+}
+
 static void curl_call(WrenVM *vm) {
   CURL *handle;
   CURLcode res;
   struct curl_slist *headers = NULL;
+
   const char *url = wrenGetSlotString(vm, 1);
   const char *method = wrenGetSlotString(vm, 2);
-  /* @TODO Get headers list for curl */
-  /* const char *headers = wrenGetSlotString(vm, 3); */
+  const char *raw_headers = wrenGetSlotString(vm, 3);
   const char *postData = wrenGetSlotString(vm, 4);
-  printf("url: %s, method: %s, postData: %s\n", url, method, postData);
+  const char *basicAuth = wrenGetSlotString(vm, 5);
+  printf("URL: %s - Method: %s - Headers: %s - PostData: %s\n", url, method, raw_headers, postData);
+
+  response_buffer[0] = '\0';
 
   handle = curl_easy_init();
   if (handle) {
     curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
     curl_easy_setopt(handle, CURLOPT_URL, url);
     /* Headers */
-    headers = curl_slist_append(headers, "Content-Type: application/json");
+    char *header_string = strdup(raw_headers);
+    char *header_line = strtok(header_string, "\n");
+    while (header_line != NULL) {
+      // Add each header line to the slist
+      headers = curl_slist_append(headers, header_line);
+      header_line = strtok(NULL, "\n");
+    }
+    free(header_string);
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+
+    if (basicAuth) {
+      curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+      curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
+    }
+
     if (strlen(postData) > 0) {
       curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData);
     }
@@ -359,6 +384,8 @@ static void curl_call(WrenVM *vm) {
 
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
+    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
+
     res = curl_easy_perform(handle);
     /* Check for errors */
     if (res != CURLE_OK)
@@ -400,7 +427,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
       }
     }
     if (strcmp(className, "Http") == 0) {
-      if (strcmp(signature, "intCall(_,_,_,_)") == 0) {
+      if (strcmp(signature, "intCall(_,_,_,_,_)") == 0) {
         return curl_call;
       }
     }

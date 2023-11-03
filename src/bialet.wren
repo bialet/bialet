@@ -289,25 +289,47 @@ class Db {
 }
 
 class Http {
-  construct new() { _headers = {"Content-Type": "application/json"} }
+  construct new() {
+    _method = false
+    _basicAuth = ""
+  }
   method { _method }
   method=(m) { _method = m }
-  postData=(data) { _postData = data ? data : "" }
-  header(name, value) { _headers[name] = value }
-  call(url, options) {
-    if (options["headers"] != null) {
-      options["headers"].each{|k, v| _headers[k] = v}
+  postData=(data) {
+    if (!_method) {
+      _method = "POST"
     }
-    var response = intCall(url, _method, _headers, _postData)
+    _postData = data ? (data is String ? data : Json.stringify(data)) : ""
+  }
+  call(url, options) {
+    if (!_method) {
+      _method = "GET"
+    }
+    if (!options.containsKey("headers")) {
+      options["headers"] = {}
+    }
+    if (!options["headers"].containsKey("Content-Type")) {
+      options["headers"]["Content-Type"] = "application/json"
+    }
+    System.print("Request: %(url) %(options)")
+    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (options["basicAuth"] != null) {
+      _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+    }
+    var response = intCall(url, _method, headers, _postData, _basicAuth)
     return {"status": response[0], "headers": response[1], "body": response[2]}
   }
-  foreign intCall(url, method, headers, postData)
+  foreign intCall(url, method, headers, postData, basicAuth)
   static request(url, method, data, options) {
-    var http = Http.new()
-    http.method = method
-    http.postData = data
-    var response = http.call(url, options)
-    return Json.parse(response["body"])
+    __http = Http.new()
+    __http.method = method
+    __http.postData = data
+    var response = __http.call(url, options)
+    System.print("Response: %(response)")
+    if (response["body"] != "") {
+      return Json.parse(response["body"])
+    }
+    return false
   }
   static get(url, options) { request(url, "GET", null, options) }
   static post(url, data, options) { request(url, "POST", data, options) }
