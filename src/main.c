@@ -205,14 +205,14 @@ int main(int argc, char *argv[]) {
   bialet_init(&bialet_config);
   mg_mgr_init(&mgr);
 
+  if (mg_http_listen(&mgr, server_url(), http_handler, NULL) == NULL) {
+    perror("Error starting bialet");
+    exit(1);
+  }
+
   welcome();
   trigger_reload_files();
 
-  if (mg_http_listen(&mgr, server_url(), http_handler, NULL) == NULL) {
-    /* @TODO Improve error handling when port is used */
-    perror("Could not start server");
-    exit(1);
-  }
 
   pthread_create(&thread_id, NULL, file_watcher, NULL);
 
