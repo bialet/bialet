@@ -217,7 +217,7 @@ class Cookie {
     }
   }
   static set(name, value, options) {
-    Response.addCookieHeader("%(name)=%(value); %( options.map{|k, v| "%(k)=%(v)"}.join("; ") )")
+    Response.addCookieHeader("%(name)=%(value); %( options.keys.map{|k| "%(k)=%(options[k])"}.join("; ") )")
     __cookies[name] = value
   }
   static set(name, value){ set(name, value, {}) }
@@ -229,6 +229,11 @@ class Cookie {
 class Session {
   static name { __name ? __name : "BIALETSESSID" }
   static name=(n) { __name = n }
+  static destroy() {
+    var id = Cookie.get(Session.name)
+    Cookie.delete(Session.name)
+    Db.query("DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')", [id])
+  }
   construct new() {
     _id = Cookie.get(Session.name)
     if (!_id) {
