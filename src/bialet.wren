@@ -164,7 +164,7 @@ class Request {
         tmp = line.split(":")
         headerName = tmp.removeAt(0).trim()
         headerValue = tmp.join(":").trim()
-        if (headerName == "Cookie") {
+        if (headerName.lower == "cookie") {
           Cookie.init(headerValue)
         }
         __headers[headerName] = headerValue
@@ -172,7 +172,7 @@ class Request {
         __body = __body + line
       }
     }
-    if (__method == "POST") {
+    if (__method.upper == "POST") {
       __post = parseQuery(__body)
     }
   }

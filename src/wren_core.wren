@@ -290,6 +290,28 @@ class String is Sequence {
     }
     return result
   }
+
+  // Add lower and upper case from https://github.com/wren-lang/wren/issues/1134
+  lower {
+    var output = ""
+    for (c in codePoints) {
+        if ((c >= 65 && c <= 90) || (c >= 192 && c <= 214) || (c >= 216 && c <= 222)) {
+            c = c + 32
+        }
+        output = output + String.fromCodePoint(c)
+    }
+    return output
+  }
+  upper {
+    var output = ""
+    for (c in codePoints) {
+        if ((c >= 97 && c <= 122) || (c >= 224 && c <= 246) || (c >= 248 && c <= 254)) {
+            c = c - 32
+        }
+        output = output + String.fromCodePoint(c)
+    }
+    return output
+  }
 }
 
 class StringByteSequence is Sequence {
@@ -346,7 +368,7 @@ class List is Sequence {
     var p = this[high]
     var i = low - 1
     for (j in low..(high-1)) {
-      if (comparer.call(this[j], p)) {  
+      if (comparer.call(this[j], p)) {
         i = i + 1
         var t = this[i]
         this[i] = this[j]
