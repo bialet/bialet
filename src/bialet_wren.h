@@ -1,3 +1,13 @@
+/*
+ * This file is part of Bialet, which is licensed under the
+ * GNU General Public License, version 2 (GPL-2.0).
+ *
+ * Copyright (c) 2023 Rodrigo Arce
+ *
+ * SPDX-License-Identifier: GPL-2.0-only
+ *
+ * For full license text, see LICENSE.md.
+ */
 #ifndef BIALET_WREN_H
 #define BIALET_WREN_H
 
