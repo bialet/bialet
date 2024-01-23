@@ -22,11 +22,13 @@ static const char* {1}ModuleSource =
 def wren_to_c_string(input_path, wren_source_lines, module):
   wren_source = ""
   for line in wren_source_lines:
-    line = line.replace("\\", "\\\\")
-    line = line.replace('"', "\\\"")
-    line = line.replace("\n", "\\n\"")
-    if wren_source: wren_source += "\n"
-    wren_source += '"' + line
+    line = re.sub(r'//.*', '', line)
+    if line != "\n":
+      line = line.replace("\\", "\\\\")
+      line = line.replace('"', "\\\"")
+      line = line.replace("\n", "\\n\"")
+      if wren_source: wren_source += "\n"
+      wren_source += '"' + line
 
   return PREAMBLE.format(input_path, module, wren_source)
 
