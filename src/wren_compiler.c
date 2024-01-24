@@ -194,6 +194,7 @@ typedef struct {
   // level of current interpolation nesting. Each value is the number of
   // unmatched "(" that are waiting to be closed.
   int parens[MAX_INTERPOLATION_NESTING];
+  int quotes[MAX_INTERPOLATION_NESTING];
   int numParens;
 
   // Whether compile errors should be printed to stderr or discarded.
@@ -911,14 +912,14 @@ static void readRawString(Parser *parser) {
 }
 
 // Finishes lexing a string literal.
-static void readString(Parser *parser) {
+static void readString(Parser *parser, char quote) {
   ByteBuffer string;
   TokenType type = TOKEN_STRING;
   wrenByteBufferInit(&string);
 
   for (;;) {
     char c = nextChar(parser);
-    if (c == '"')
+    if (c == quote)
       break;
     if (c == '\r')
       continue;
@@ -938,6 +939,7 @@ static void readString(Parser *parser) {
         if (nextChar(parser) != '(')
           lexError(parser, "Expect '(' after '%%'.");
 
+        parser->quotes[parser->numParens] = quote;
         parser->parens[parser->numParens++] = 1;
         type = TOKEN_INTERPOLATION;
         break;
@@ -951,6 +953,9 @@ static void readString(Parser *parser) {
       switch (nextChar(parser)) {
       case '"':
         wrenByteBufferWrite(parser->vm, &string, '"');
+        break;
+      case '\'':
+        wrenByteBufferWrite(parser->vm, &string, '\'');
         break;
       case '\\':
         wrenByteBufferWrite(parser->vm, &string, '\\');
@@ -1045,7 +1050,7 @@ static void nextToken(Parser *parser) {
         // This is the final ")", so the interpolation expression has ended.
         // This ")" now begins the next section of the template string.
         parser->numParens--;
-        readString(parser);
+        readString(parser, parser->quotes[parser->numParens]);
         return;
       }
 
@@ -1174,9 +1179,12 @@ static void nextToken(Parser *parser) {
         readRawString(parser);
         return;
       }
-      readString(parser);
+      readString(parser, '"');
       return;
     }
+    case '\'':
+      readString(parser, '\'');
+      return;
     case '_':
       readName(parser,
                peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD, c);
