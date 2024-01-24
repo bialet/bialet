@@ -1018,6 +1018,50 @@ static void readString(Parser *parser, char quote) {
   makeToken(parser, type);
 }
 
+static void readTagString(Parser *parser) {
+  ByteBuffer string;
+  TokenType type = TOKEN_STRING;
+  wrenByteBufferInit(&string);
+  wrenByteBufferWrite(parser->vm, &string, '<');
+  printf("Read tag string\n");
+
+  for (;;) {
+    char c = nextChar(parser);
+    printf("%c", c);
+    if (c == '\r' || c == '\n')
+      break;
+
+    if (c == '\0') {
+      lexError(parser, "Unterminated string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
+    if (c == '%' && nextChar(parser) != '(') {
+      if (parser->numParens < MAX_INTERPOLATION_NESTING) {
+        parser->quotes[parser->numParens] = '\r';
+        parser->parens[parser->numParens++] = 1;
+        type = TOKEN_INTERPOLATION;
+        break;
+      }
+
+      lexError(parser, "Interpolation may only nest %d levels deep.",
+               MAX_INTERPOLATION_NESTING);
+    }
+
+    wrenByteBufferWrite(parser->vm, &string, c);
+  }
+
+  parser->next.value =
+      wrenNewStringLength(parser->vm, (char *)string.data, string.count);
+
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 // Lex the next token and store it in [parser.next].
 static void nextToken(Parser *parser) {
   parser->previous = parser->current;
@@ -1145,6 +1189,10 @@ static void nextToken(Parser *parser) {
       return;
 
     case '<':
+      if (parser->next.type == TOKEN_LINE || parser->next.type == TOKEN_STRING) {
+        readTagString(parser);
+        return;
+      }
       if (matchChar(parser, '<')) {
         makeToken(parser, TOKEN_LTLT);
       } else {

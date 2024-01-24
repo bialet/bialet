@@ -1,7 +1,7 @@
 import "bialet" for Db
 
 class Template {
-  static layout(title, content) { '
+  static layout(title, content) {
     <html>
       <head>
         <title>%( title )</title>
@@ -22,7 +22,7 @@ class Template {
         <p style="margin-top:3em; font-size: .7em">Copyright &copy; 2023 Bialet</p>
       </body>
     </html>
-  ' }
+  }
 }
 
 class Posts {
