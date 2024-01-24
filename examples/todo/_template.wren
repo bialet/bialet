@@ -1,4 +1,4 @@
-import 'bialet' for Html
+import "bialet" for Html
 
 class Template {
 

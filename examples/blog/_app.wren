@@ -1,15 +1,15 @@
 import "bialet" for Db
 
 class Template {
-  static layout(title, content) { "
+  static layout(title, content) { '
     <html>
       <head>
         <title>%( title )</title>
-        <meta charset='utf-8' />
-        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
           body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif;
             font-size: 1.2em;
             margin: 2em;
           }
@@ -19,10 +19,10 @@ class Template {
       </head>
       <body>
         %( content )
-        <p style='margin-top:3em; font-size: .7em'>Copyright &copy; 2023 Bialet</p>
+        <p style="margin-top:3em; font-size: .7em">Copyright &copy; 2023 Bialet</p>
       </body>
     </html>
-  " }
+  ' }
 }
 
 class Posts {
