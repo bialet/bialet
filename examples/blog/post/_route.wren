@@ -8,8 +8,8 @@ if (slug == "") {
 
 var post = Posts.page(slug)
 
-Response.out(Template.layout(post["title"], "
-  <p><a href='/'>Back to home</a></p>
+Response.out(Template.layout(post["title"], '
+  <p><a href="/">Back to home</a></p>
   <h1>%( post["title"] )</h1>
   %( post["content"] )
-"))
+'))
