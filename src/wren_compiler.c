@@ -130,6 +130,7 @@ typedef enum {
   //     TOKEN_NAME          d
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
+  TOKEN_QUERY,
 
   TOKEN_LINE,
 
@@ -911,6 +912,36 @@ static void readRawString(Parser *parser) {
   makeToken(parser, type);
 }
 
+static void readQueryString(Parser *parser) {
+  ByteBuffer string;
+  wrenByteBufferInit(&string);
+  TokenType type = TOKEN_QUERY;
+
+  for (;;) {
+    char c = nextChar(parser);
+
+    if (c == '`')
+      break;
+
+    if (c == '\0') {
+      lexError(parser, "Unterminated query string.");
+
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
+    wrenByteBufferWrite(parser->vm, &string, c);
+  }
+
+  parser->next.value =
+      wrenNewQueryLength(parser->vm, (char *)string.data, string.count);
+
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 // Finishes lexing a string literal.
 static void readString(Parser *parser, char quote) {
   ByteBuffer string;
@@ -1182,9 +1213,15 @@ static void nextToken(Parser *parser) {
       readString(parser, '"');
       return;
     }
+
     case '\'':
       readString(parser, '\'');
       return;
+
+    case '`':
+      readQueryString(parser);
+      return;
+
     case '_':
       readName(parser,
                peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD, c);
@@ -2661,6 +2698,7 @@ GrammarRule rules[] = {
     /* TOKEN_NUMBER        */ PREFIX(literal),
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
+    /* TOKEN_QUERY         */ PREFIX(literal),
     /* TOKEN_LINE          */ UNUSED,
     /* TOKEN_ERROR         */ UNUSED,
     /* TOKEN_EOF           */ UNUSED};
@@ -3149,6 +3187,8 @@ static Value consumeLiteral(Compiler *compiler, const char *message) {
     return compiler->parser->previous.value;
   if (match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
+  if (match(compiler, TOKEN_QUERY))
+    return compiler->parser->previous.value;
   if (match(compiler, TOKEN_NAME))
     return compiler->parser->previous.value;
 
@@ -3187,7 +3227,7 @@ static bool matchAttribute(Compiler *compiler) {
             Value value = NULL_VAL;
             if (match(compiler, TOKEN_EQ)) {
               value = consumeLiteral(compiler,
-                                     "Expect a Bool, Num, String or Identifier "
+                                     "Expect a Bool, Num, String, Query or Identifier "
                                      "literal for an attribute value.");
             }
             if (runtimeAccess)

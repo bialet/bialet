@@ -99,6 +99,7 @@ typedef enum {
   OBJ_MODULE,
   OBJ_RANGE,
   OBJ_STRING,
+  OBJ_QUERY,
   OBJ_UPVALUE
 } ObjType;
 
@@ -728,6 +729,16 @@ Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length);
 // [step].
 Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
                              uint32_t count, int step);
+
+// Creates a new string object and copies [text] into it.
+//
+// [text] must be non-NULL.
+Value wrenNewQuery(WrenVM* vm, const char* text);
+
+// Creates a new string object of [length] and copies [text] into it.
+//
+// [text] may be NULL if [length] is zero.
+Value wrenNewQueryLength(WrenVM* vm, const char* text, size_t length);
 
 // Produces a string representation of [value].
 Value wrenNumToString(WrenVM* vm, double value);

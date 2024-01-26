@@ -585,6 +585,7 @@ void bialet_init(struct BialetConfig *config) {
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
   wren_config.errorFn = &wren_error;
+  wren_config.queryFn = &db_query;
   wren_config.loadModuleFn = &wren_load_module;
   wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
 

@@ -1,7 +1,7 @@
 # 🚲 bialet
 
-Build lightweight dynamic web apps effortlessly with [Wren](https://wren.io/) and
-integrated database.
+Build lightweight dynamic web apps effortlessly with a custom flavor of [Wren](https://wren.io/)
+and an integrated SQLite database.
 
 See [examples](examples/run.md) for usage.
 
