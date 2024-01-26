@@ -4,34 +4,27 @@ class Task {
 
   construct new() { _session = Session.new().id }
 
-  list() {
-    var tasks = Db.all("
+  list() { `
       SELECT * FROM tasks
       WHERE session = ?
       ORDER BY createdAt ASC
-    ", [_session])
-    tasks.map{ normalize }
-    return tasks
+    `.set(_session).map{ normalize }
   }
 
   save(description) {
-    Db.save("tasks", {
-      "description": description.trim(),
-      "finished": false,
-      "session": _session
-    })
+    `INSERT INTO tasks (description, finished, session) VALUES (?, ?, ?)`.set(description.trim(), false, _session).lastInsertedId
   }
 
-  toggleFinished(id) {
-    Db.query("UPDATE tasks
+  toggleFinished(id) { `
+    UPDATE tasks
         SET finished = ((finished | 1) - (finished & 1))
-        WHERE id = ? AND session = ?", [id, _session])
+        WHERE id = ? AND session = ?`.call(id, _session)
   }
 
-  clearFinished() { Db.query("
+  clearFinished() { `
     DELETE FROM tasks
     WHERE finished = 1 AND session = ?
-  ", [_session]) }
+  `.call(_session) }
 
   normalize(task) {
     task["description"] = task["description"].trim()

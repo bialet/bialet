@@ -508,12 +508,17 @@ class Query is Sequence {
   // TODO: Add iterator for Query
   iterate(iterator) {
   }
-  // TODO: Add binding method
-  bind(positionOrName, value) {}
+  // TODO: Add binding method by position
+  // TODO: Add binding method by name
+  bind(position, value) {}
   // TODO: Add method to setting multiple binding in an easy way
   set() {}
   // TODO: Add method to run the query
   call() {}
+  // TODO: Add last inserted id value
+  lastInsertedId {}
   // TODO: Add limit one and call
   first() {}
+  // TODO: Create query from String
+  construct string() {}
 }
