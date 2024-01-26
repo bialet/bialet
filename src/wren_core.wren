@@ -505,20 +505,20 @@ class ClassAttributes {
 }
 
 class Query is Sequence {
-  // TODO: Add iterator for Query
+  // @TODO Add iterator for Query
   iterate(iterator) {
   }
-  // TODO: Add binding method by position
-  // TODO: Add binding method by name
+  // @TODO Add binding method by position
+  // @TODO Add binding method by name
   bind(position, value) {}
-  // TODO: Add method to setting multiple binding in an easy way
+  // @TODO Add method to setting multiple binding in an easy way
   set() {}
-  // TODO: Add method to run the query
+  // @TODO Add method to run the query
   call() {}
-  // TODO: Add last inserted id value
+  // @TODO Add last inserted id value
   lastInsertedId {}
-  // TODO: Add limit one and call
+  // @TODO Add limit one and call
   first() {}
-  // TODO: Create query from String
+  // @TODO Create query from String
   construct string() {}
 }

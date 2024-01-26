@@ -1305,7 +1305,7 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
-  // TODO: Add query call method (vm->queryFn)
+  // @TODO Add query call method (vm->queryFn)
   /* PRIMITIVE(vm->queryClass, "[_]", query_query); */
   /* PRIMITIVE(vm->queryClass, "[_]", query_last_insert_id); */
 
