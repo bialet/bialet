@@ -1234,7 +1234,7 @@ void wrenFreeObj(WrenVM *vm, Obj *obj) {
   case OBJ_UPVALUE:
     break;
 
-  // TODO: Query free should close the connection
+  // @TODO Query free should close the connection
   case OBJ_QUERY:
     break;
   }
