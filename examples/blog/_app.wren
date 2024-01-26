@@ -1,5 +1,3 @@
-import "bialet" for Db
-
 class Template {
   static layout(title, content) { '
     <html>
@@ -26,7 +24,7 @@ class Template {
 }
 
 class Posts {
-  static home() { Db.all("SELECT * FROM posts ORDER BY createdAt DESC") }
-  static page(slug) { Db.one("SELECT title, content FROM posts WHERE slug = ?", [slug]) }
-  static id(id) { Db.one("SELECT * FROM posts WHERE id = ?", [id]) }
+  static home() { `SELECT * FROM posts ORDER BY createdAt DESC` }
+  static page(slug) { `SELECT title, content FROM posts WHERE slug = ?`.set(slug).first }
+  static id(id) { `SELECT * FROM posts WHERE id = ?`.set(id).first }
 }

@@ -1304,6 +1304,11 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
+  vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
+  // TODO: Add query call method (vm->queryFn)
+  /* PRIMITIVE(vm->queryClass, "[_]", query_query); */
+  /* PRIMITIVE(vm->queryClass, "[_]", query_last_insert_id); */
+
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);
   PRIMITIVE(vm->listClass->obj.classObj, "new()", list_new);

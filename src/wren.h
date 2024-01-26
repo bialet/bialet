@@ -106,6 +106,9 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM *vm,
 // Displays a string of text to the user.
 typedef void (*WrenWriteFn)(WrenVM *vm, const char *text);
 
+// Bialet integrated query
+typedef void (*WrenQueryFn)(WrenVM *vm);
+
 typedef enum {
   // A syntax or resolution error detected at compile time.
   WREN_ERROR_COMPILE,
@@ -231,6 +234,9 @@ typedef struct {
   // number, and an error message. If this is `NULL`, Wren doesn't report any
   // errors.
   WrenErrorFn errorFn;
+
+  // Callback for integrated Bialet query
+  WrenQueryFn queryFn;
 
   // The number of bytes Wren will allocate before triggering the first garbage
   // collection.

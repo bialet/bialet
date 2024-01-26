@@ -384,6 +384,9 @@ static uint32_t hashObject(Obj *object) {
   case OBJ_STRING:
     return ((ObjString *)object)->hash;
 
+  case OBJ_QUERY:
+    return ((ObjString *)object)->hash;
+
   default:
     ASSERT(false, "Only immutable objects can be hashed.");
     return 0;
@@ -670,6 +673,28 @@ Value wrenNewStringLength(WrenVM *vm, const char *text, size_t length) {
 
   hashString(string);
   return OBJ_VAL(string);
+}
+
+Value wrenNewQuery(WrenVM *vm, const char *text) {
+  return wrenNewQueryLength(vm, text, strlen(text));
+}
+
+Value wrenNewQueryLength(WrenVM *vm, const char *text, size_t length) {
+  // Allow NULL if the string is empty since byte buffers don't allocate any
+  // characters for a zero-length string.
+  ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
+
+  ObjString *query = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
+  initObj(vm, &query->obj, OBJ_QUERY, vm->queryClass);
+  query->length = (int)length;
+  query->value[length] = '\0';
+
+  // Copy the string (if given one).
+  if (length > 0 && text != NULL)
+    memcpy(query->value, text, length);
+
+  hashString(query);
+  return OBJ_VAL(query);
 }
 
 Value wrenNewStringFromRange(WrenVM *vm, ObjString *source, int start,
@@ -1083,6 +1108,12 @@ static void blackenString(WrenVM *vm, ObjString *string) {
   vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
+static void blackenQuery(WrenVM *vm, ObjString *string) {
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
+}
+
+
 static void blackenUpvalue(WrenVM *vm, ObjUpvalue *upvalue) {
   // Mark the closed-over object (in case it is closed).
   wrenGrayValue(vm, upvalue->closed);
@@ -1132,6 +1163,9 @@ static void blackenObject(WrenVM *vm, Obj *obj) {
     break;
   case OBJ_STRING:
     blackenString(vm, (ObjString *)obj);
+    break;
+  case OBJ_QUERY:
+    blackenQuery(vm, (ObjString *)obj);
     break;
   case OBJ_UPVALUE:
     blackenUpvalue(vm, (ObjUpvalue *)obj);
@@ -1198,6 +1232,10 @@ void wrenFreeObj(WrenVM *vm, Obj *obj) {
   case OBJ_RANGE:
   case OBJ_STRING:
   case OBJ_UPVALUE:
+    break;
+
+  // TODO: Query free should close the connection
+  case OBJ_QUERY:
     break;
   }
 

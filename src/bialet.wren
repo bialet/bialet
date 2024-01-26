@@ -264,6 +264,7 @@ class Session {
   }
 }
 
+// TODO: Use integrated query and query object. Keep this object only for migration.
 class Db {
 
   static count{ 0 }
