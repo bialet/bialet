@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
   /* Env config values */
   bialet_config.debug = 0;
   bialet_config.output_color = 1;
-  bialet_config.db_path = ".db.sqlite3";
+  bialet_config.db_path = "_db.sqlite3";
 
   /* Parse args */
   while ((opt = getopt(argc, argv, "h:p:l:m:M:c:C:v")) != -1) {

@@ -3,4 +3,4 @@ build/
 src/*.wren.inc
 
 # Bialet generated files
-**/.db.sqlite3
+**/_db.sqlite3
