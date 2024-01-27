@@ -27,6 +27,45 @@ struct BialetConfig {
   char *db_path;
 };
 
+typedef enum {
+  BIALETQUERYTYPE_NULL,
+  BIALETQUERYTYPE_NUMBER,
+  BIALETQUERYTYPE_STRING,
+  BIALETQUERYTYPE_BOOLEAN
+} BialetQueryType;
+
+typedef struct {
+  char *name;
+  char *value;
+  BialetQueryType type;
+} BialetQueryRow;
+
+typedef struct {
+  BialetQueryRow *rows;
+  int rowCount;
+} BialetQueryResult;
+
+typedef struct {
+  char *value;
+  BialetQueryType type;
+} BialetQueryParameter;
+
+typedef struct {
+  BialetQueryResult *results;
+  int resultsCount;
+  BialetQueryParameter *parameters;
+  int parametersCount;
+  char *queryString;
+  char *lastInsertId;
+} BialetQuery;
+
+BialetQuery *createBialetQuery();
+void addResultRow(BialetQuery *query, int resultIndex, const char *name,
+                  const char *value, BialetQueryType type);
+void addResult(BialetQuery *query);
+void addParameter(BialetQuery *query, const char *value, BialetQueryType type);
+void freeBialetQuery(BialetQuery *query);
+
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
 #define BIALET_HEADER_PAGE                                                     \

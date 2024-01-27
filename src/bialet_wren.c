@@ -145,94 +145,85 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
-static void db_query(WrenVM *vm) {
-  const char *query = wrenGetSlotString(vm, 1);
+static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   sqlite3_stmt *stmt;
-  int result, i_bind, map_slot = 0;
-
   char *columns[MAX_COLUMNS];
-  const char *col_name;
   const char *value;
-  int col_type;
+  int colType, type, rowCount = 0, bindCounter = 0;
 
-  if (wrenGetSlotType(vm, 2) != WREN_TYPE_LIST) {
-    message(red("Runtime Error"),
-            "Argument for parameters in Db should be type list");
-  } else {
+  /* Prepare the query */
+  printf("Query: %s\n", query->queryString);
+  int result = sqlite3_prepare_v2(db, query->queryString, -1, &stmt, 0);
+  if (result != SQLITE_OK) {
+    message(red("Query Error"), sqlite3_errmsg(db));
+    return;
+  }
 
-    result = sqlite3_prepare_v2(db, query, -1, &stmt, 0);
-    if (result != SQLITE_OK) {
-      message(red("SQL Error"), sqlite3_errmsg(db));
-      return;
+  /* Bind parameters */
+  for (int i = 0; i < query->parametersCount; i++) {
+    bindCounter = i + 1;
+    printf("Parameter #%d [type %d] %s\n", bindCounter,
+           query->parameters[i].type, query->parameters[i].value);
+    switch (query->parameters[i].type) {
+    case BIALETQUERYTYPE_STRING:
+      sqlite3_bind_text(stmt, bindCounter, query->parameters[i].value, -1,
+                        NULL);
+    case BIALETQUERYTYPE_NUMBER:
+      sqlite3_bind_double(stmt, bindCounter, atof(query->parameters[i].value));
+      break;
+    case BIALETQUERYTYPE_BOOLEAN:
+      sqlite3_bind_int(stmt, bindCounter, atoi(query->parameters[i].value));
+      break;
+    case BIALETQUERYTYPE_NULL:
+      sqlite3_bind_null(stmt, bindCounter);
+      break;
+    default:
+      message(red("Query Error"), "Uknown type on binding parameters");
+      break;
     }
+  }
 
-    /* Binding values */
-    for (int i = 0; i < wrenGetListCount(vm, 2); ++i) {
-      i_bind = i + 1;
-      wrenGetListElement(vm, 2, i, 3);
-      int type = wrenGetSlotType(vm, 3);
-      switch (type) {
-      case WREN_TYPE_STRING:
-        sqlite3_bind_text(stmt, i_bind, wrenGetSlotString(vm, 3), -1,
-                          SQLITE_STATIC);
+  /* Get column names */
+  int colCount = sqlite3_column_count(stmt);
+  for (int i = 0; i < colCount; i++) {
+    columns[i] = string_safe_copy(sqlite3_column_name(stmt, i));
+  }
+
+  /* Execute statement and fetch results */
+  while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+    addResult(query);
+    for (int i = 0; i < colCount; i++) {
+      colType = sqlite3_column_type(stmt, i);
+      switch (colType) {
+      case SQLITE_INTEGER:
+      case SQLITE_FLOAT:
+        type = BIALETQUERYTYPE_NUMBER;
+        value = (const char *)sqlite3_column_text(stmt, i);
         break;
-      case WREN_TYPE_NUM:
-        sqlite3_bind_double(stmt, i_bind, wrenGetSlotDouble(vm, 3));
+      case SQLITE_TEXT:
+      case SQLITE_BLOB:
+        type = BIALETQUERYTYPE_STRING;
+        value = (const char *)sqlite3_column_text(stmt, i);
         break;
-      case WREN_TYPE_BOOL:
-        sqlite3_bind_int(stmt, i_bind, wrenGetSlotBool(vm, 3));
-        break;
-      case WREN_TYPE_NULL:
-        sqlite3_bind_null(stmt, i_bind);
+      case SQLITE_NULL:
+        type = BIALETQUERYTYPE_NULL;
+        value = NULL;
         break;
       default:
-        message(red("Error"), "Uknown type on binding");
+        message(red("Query Error"), "Uknown type on binding result");
         break;
       }
+      addResultRow(query, rowCount, columns[i], value, type);
     }
-
-    int col_count = sqlite3_column_count(stmt);
-    for (int i = 0; i < col_count; i++) {
-      col_name = sqlite3_column_name(stmt, i);
-      columns[i] = string_safe_copy(col_name);
-    }
-    wrenEnsureSlots(vm, 2 + col_count * 2);
-    wrenSetSlotNewList(vm, 0);
-    /* Execute statement and fetch results */
-    while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
-      map_slot = 1;
-      wrenSetSlotNewMap(vm, map_slot);
-      for (int i = 0; i < col_count; i++) {
-        wrenSetSlotString(vm, ++map_slot, string_safe_copy(columns[i]));
-        col_type = sqlite3_column_type(stmt, i);
-        switch (col_type) {
-        case SQLITE_TEXT:
-        case SQLITE_INTEGER:
-        case SQLITE_FLOAT:
-        case SQLITE_BLOB:
-          value = (const char *)sqlite3_column_text(stmt, i);
-          wrenSetSlotString(vm, ++map_slot, string_safe_copy(value));
-          break;
-        case SQLITE_NULL:
-          wrenSetSlotNull(vm, ++map_slot);
-          break;
-        default:
-          message(red("Error"), "Uknown type on binding");
-          break;
-        }
-        wrenSetMapValue(vm, 1, map_slot - 1, map_slot);
-      }
-      wrenInsertInList(vm, 0, -1, 1);
-    }
-    if (result != SQLITE_DONE) {
-      message(red("SQL Error"), sqlite3_errmsg(db));
-    }
-
-    sqlite3_finalize(stmt);
+    rowCount++;
   }
-}
-static void db_last_insert_id(WrenVM *vm) {
-  wrenSetSlotDouble(vm, 0, (int)sqlite3_last_insert_rowid(db));
+
+  if (result != SQLITE_DONE) {
+    message(red("SQL Error"), sqlite3_errmsg(db));
+  }
+  query->lastInsertId = (char *)sqlite3_last_insert_rowid(db);
+  printf("Last insert id: %s\n", query->lastInsertId);
+  sqlite3_finalize(stmt);
 }
 
 static void random_string(WrenVM *vm) {
@@ -351,7 +342,8 @@ static void curl_call(WrenVM *vm) {
   const char *raw_headers = wrenGetSlotString(vm, 3);
   const char *postData = wrenGetSlotString(vm, 4);
   const char *basicAuth = wrenGetSlotString(vm, 5);
-  printf("URL: %s - Method: %s - Headers: %s - PostData: %s\n", url, method, raw_headers, postData);
+  printf("URL: %s - Method: %s - Headers: %s - PostData: %s\n", url, method,
+         raw_headers, postData);
 
   response_buffer[0] = '\0';
 
@@ -423,21 +415,13 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              bool isStatic,
                                              const char *signature) {
   if (strcmp(module, "bialet") == 0) {
-    if (strcmp(className, "Db") == 0) {
-      if (strcmp(signature, "intQuery(_,_)") == 0) {
-        return db_query;
-      }
-      if (strcmp(signature, "intLastInsertId()") == 0) {
-        return db_last_insert_id;
-      }
-    }
     if (strcmp(className, "Util") == 0) {
       if (strcmp(signature, "randomString(_)") == 0) {
         return random_string;
       }
     }
     if (strcmp(className, "Http") == 0) {
-      if (strcmp(signature, "intCall(_,_,_,_,_)") == 0) {
+      if (strcmp(signature, "call_(_,_,_,_,_)") == 0) {
         return curl_call;
       }
     }
@@ -585,9 +569,93 @@ void bialet_init(struct BialetConfig *config) {
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &wren_write;
   wren_config.errorFn = &wren_error;
-  wren_config.queryFn = &db_query;
+  wren_config.queryFn = &query_sqlite_execute;
   wren_config.loadModuleFn = &wren_load_module;
   wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
 
   curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+BialetQuery *createBialetQuery() {
+  BialetQuery *query = (BialetQuery *)malloc(sizeof(BialetQuery));
+  query->results = NULL;
+  query->resultsCount = 0;
+  query->parameters = NULL;
+  query->parametersCount = 0;
+  return query;
+}
+
+void addResult(BialetQuery *query) {
+  query->resultsCount++;
+  query->results = (BialetQueryResult *)realloc(
+      query->results, query->resultsCount * sizeof(BialetQueryResult));
+  BialetQueryResult *newResult = &query->results[query->resultsCount - 1];
+  newResult->rows = NULL;
+  newResult->rowCount = 0;
+}
+
+void addResultRow(BialetQuery *query, int resultIndex, const char *name,
+                  const char *value, BialetQueryType type) {
+  if (resultIndex < 0 || resultIndex >= query->resultsCount)
+    return;
+
+  BialetQueryResult *result = &query->results[resultIndex];
+  result->rowCount++;
+  result->rows = (BialetQueryRow *)realloc(
+      result->rows, result->rowCount * sizeof(BialetQueryRow));
+  BialetQueryRow *newRow = &result->rows[result->rowCount - 1];
+  newRow->name = strdup(name);
+  newRow->value = strdup(value);
+  newRow->type = type;
+}
+
+void addParameter(BialetQuery *query, const char *value, BialetQueryType type) {
+  query->parametersCount++;
+  query->parameters = (BialetQueryParameter *)realloc(
+      query->parameters, query->parametersCount * sizeof(BialetQueryParameter));
+  BialetQueryParameter *newParameter =
+      &query->parameters[query->parametersCount - 1];
+  newParameter->value = strdup(value);
+  newParameter->type = type;
+}
+
+void freeBialetQuery(BialetQuery *query) {
+  if (!query)
+    return; // Guard clause to prevent dereferencing a NULL pointer
+
+  // Free each row in each result
+  for (int i = 0; i < query->resultsCount; i++) {
+    for (int j = 0; j < query->results[i].rowCount; j++) {
+      free(query->results[i].rows[j].name); // Free row name
+      query->results[i].rows[j].name = NULL;
+
+      free(query->results[i].rows[j].value); // Free row value
+      query->results[i].rows[j].value = NULL;
+    }
+    free(query->results[i].rows); // Free the rows array itself
+    query->results[i].rows = NULL;
+  }
+  free(query->results); // Free the results array
+  query->results = NULL;
+
+  // Free each parameter value
+  for (int i = 0; i < query->parametersCount; i++) {
+    free(query->parameters[i].value);
+    query->parameters[i].value = NULL;
+  }
+  free(query->parameters); // Free the parameters array
+  query->parameters = NULL;
+
+  // Free queryString and lastInsertId if they exist
+  if (query->queryString) {
+    free(query->queryString);
+    query->queryString = NULL;
+  }
+  if (query->lastInsertId) {
+    free(query->lastInsertId);
+    query->lastInsertId = NULL;
+  }
+
+  // Finally, free the BialetQuery structure itself
+  free(query);
 }

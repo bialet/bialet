@@ -504,21 +504,28 @@ class ClassAttributes {
   toString { "attributes:%(_attributes) methods:%(_methods)" }
 }
 
-class Query is Sequence {
-  // @TODO Add iterator for Query
-  iterate(iterator) {
+class Query {
+  construct new() {}
+  static queryFromString(string, params) { Query.new().query_(string, params) }
+  static fetchFromString(string, params) { Query.new().fetch_(string, params) }
+  // Query methods, return last inserted ID
+  query() { query_(this, []) }
+  query(param) { query_(this, param is List ? param : [param]) }
+  query(p1, p2) { query_(this, [p1, p2]) }
+  query(p1, p2, p3) { query_(this, [p1, p2, p3]) }
+  // Fetch methods, return result as List
+  fetch() { fetch_(this, []) }
+  fetch(param) { fetch_(this, param is List ? param : [param]) }
+  fetch(p1, p2) { fetch_(this, [p1, p2]) }
+  fetch(p1, p2, p3) { fetch_(this, [p1, p2, p3]) }
+  // First methods, return first result as Object
+  first_(params) {
+    var res = fetch_("%(this) LIMIT 1", params)
+    System.print("First: %(this) %(params) - %(res.type) %(res)")
+    return res is List && res.count > 0 ? res[0] : {}
   }
-  // @TODO Add binding method by position
-  // @TODO Add binding method by name
-  bind(position, value) {}
-  // @TODO Add method to setting multiple binding in an easy way
-  set() {}
-  // @TODO Add method to run the query
-  call() {}
-  // @TODO Add last inserted id value
-  lastInsertedId {}
-  // @TODO Add limit one and call
-  first() {}
-  // @TODO Create query from String
-  construct string() {}
+  first() { first_([]) }
+  first(param) { first_(param is List ? param : [param]) }
+  first(p1, p2) { first_([p1, p2]) }
+  first(p1, p2, p3) { first_([p1, p2, p3]) }
 }

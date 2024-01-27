@@ -5,10 +5,12 @@
 #include <string.h>
 #include <time.h>
 
+#include "bialet.h"
 #include "wren_common.h"
 #include "wren_core.h"
 #include "wren_math.h"
 #include "wren_primitive.h"
+#include "wren_utils.h"
 #include "wren_value.h"
 
 #include "wren_core.wren.inc"
@@ -534,7 +536,9 @@ DEF_PRIMITIVE(map_valueIteratorValue) {
 
 DEF_PRIMITIVE(null_not) { RETURN_VAL(TRUE_VAL); }
 
-DEF_PRIMITIVE(null_toString) { RETURN_VAL(CONST_STRING(vm, "null")); }
+// @TODO This should return empty string in interpolation but NULL when
+// debugging
+DEF_PRIMITIVE(null_toString) { RETURN_VAL(CONST_STRING(vm, "")); }
 
 DEF_PRIMITIVE(num_fromString) {
   if (!validateString(vm, args[1], "Argument"))
@@ -1094,6 +1098,52 @@ DEF_PRIMITIVE(system_writeString) {
   RETURN_VAL(args[1]);
 }
 
+static void queryPrepare(WrenVM *vm, BialetQuery *query, ObjList *params) {
+  if (vm->config.writeFn != NULL) {
+    for (int i = 0; i < params->elements.count; i++) {
+      addParameter(query, AS_CSTRING(params->elements.data[i]),
+                   BIALETQUERYTYPE_STRING);
+    }
+    vm->config.queryFn(vm, query);
+  }
+}
+
+DEF_PRIMITIVE(query_fetch) {
+  BialetQuery query = *createBialetQuery();
+  query.queryString = AS_CSTRING(args[1]);
+  queryPrepare(vm, &query, AS_LIST(args[2]));
+  ObjList *list = wrenNewList(vm, query.resultsCount);
+  printf("Results: %d\n", query.resultsCount);
+  for (int i = 0; i < query.resultsCount; i++) {
+    ObjMap *row = wrenNewMap(vm);
+    for (int j = 0; j < query.results[i].rowCount; j++) {
+      // @TODO Add support for other types
+      wrenMapSet(vm, row, wrenNewString(vm, query.results[i].rows[j].name),
+                 wrenNewString(vm, query.results[i].rows[j].value));
+    }
+    list->elements.data[i] = OBJ_VAL(row);
+  }
+  RETURN_OBJ(list);
+}
+
+DEF_PRIMITIVE(query_execute) {
+  BialetQuery query = *createBialetQuery();
+  query.queryString = AS_CSTRING(args[1]);
+  queryPrepare(vm, &query, AS_LIST(args[2]));
+  printf("Last insert id: %s\n", query.lastInsertId);
+  if (query.lastInsertId) {
+    Value lastInsertId = wrenNewString(vm, query.lastInsertId);
+    RETURN_VAL(lastInsertId);
+  } else {
+    RETURN_NULL;
+  }
+}
+
+DEF_PRIMITIVE(query_toString) {
+  const char *queryString = AS_CSTRING(args[0]);
+  RETURN_VAL(wrenNewString(vm, queryString));
+}
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass *defineClass(WrenVM *vm, ObjModule *module, const char *name) {
   ObjString *nameString = AS_STRING(wrenNewString(vm, name));
@@ -1305,9 +1355,9 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
-  // @TODO Add query call method (vm->queryFn)
-  /* PRIMITIVE(vm->queryClass, "[_]", query_query); */
-  /* PRIMITIVE(vm->queryClass, "[_]", query_last_insert_id); */
+  PRIMITIVE(vm->queryClass, "toString", query_toString);
+  PRIMITIVE(vm->queryClass, "query_(_,_)", query_execute);
+  PRIMITIVE(vm->queryClass, "fetch_(_,_)", query_fetch);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);

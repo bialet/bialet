@@ -1,6 +1,7 @@
 #ifndef wren_h
 #define wren_h
 
+#include "bialet.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -107,7 +108,7 @@ typedef WrenForeignMethodFn (*WrenBindForeignMethodFn)(WrenVM *vm,
 typedef void (*WrenWriteFn)(WrenVM *vm, const char *text);
 
 // Bialet integrated query
-typedef void (*WrenQueryFn)(WrenVM *vm);
+typedef void (*WrenQueryFn)(WrenVM *vm, BialetQuery *query);
 
 typedef enum {
   // A syntax or resolution error detected at compile time.
