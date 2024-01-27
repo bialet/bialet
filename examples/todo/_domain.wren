@@ -8,7 +8,15 @@ class Task {
       SELECT * FROM tasks
       WHERE session = ?
       ORDER BY createdAt ASC
-    `.fetch(_session).map{ normalize } }
+    `.fetch(_session).map{ |task| normalize_(task) } }
+
+  normalize_(task) {
+    task["description"] = task["description"].trim()
+    if (task["description"] == "") {
+      task["description"] = "No description"
+    }
+    return task
+  }
 
   save(description) { `
     INSERT
@@ -27,11 +35,4 @@ class Task {
     WHERE finished = 1 AND session = ?
     `.query(_session) }
 
-  normalize(task) {
-    task["description"] = task["description"].trim()
-    if (task["description"] == "") {
-      task["description"] = "No description"
-    }
-    return task
-  }
 }

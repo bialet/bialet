@@ -270,7 +270,7 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
-      schema.split(";").each{|q| Query.queryFromString(q, []) }
+      schema.toString.split(";").each{|q| Query.queryFromString(q, []) }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
     }
   }

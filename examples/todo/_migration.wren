@@ -1,6 +1,6 @@
 import "bialet" for Db
 
-Db.migrate("Tasks Table", "
+Db.migrate("Tasks Table", `
   CREATE TABLE tasks (
     id INTEGER PRIMARY KEY,
     description TEXT,
@@ -8,4 +8,4 @@ Db.migrate("Tasks Table", "
     session TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
-")
+`)
