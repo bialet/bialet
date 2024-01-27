@@ -145,6 +145,14 @@ void wren_error(WrenVM *vm, WrenErrorType errorType, const char *module,
   }
 }
 
+static char *sqlite3Int64ToString(sqlite3_int64 value) {
+  char *str = (char *)malloc(21 * sizeof(char));
+  if (str == NULL)
+    return NULL;
+  sprintf(str, "%lld", value);
+  return str;
+}
+
 static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   sqlite3_stmt *stmt;
   char *columns[MAX_COLUMNS];
@@ -152,7 +160,6 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   int colType, colCount = 0, type, rowCount = 0, bindCounter = 0;
 
   /* Prepare the query */
-  printf("Query: %s\n", query->queryString);
   int result = sqlite3_prepare_v2(db, query->queryString, -1, &stmt, 0);
   if (result != SQLITE_OK) {
     message(red("Query Error"), sqlite3_errmsg(db));
@@ -160,15 +167,12 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   }
 
   /* Bind parameters */
-  printf("Parameters: %d\n", query->parametersCount);
   for (int i = 0; i < query->parametersCount; i++) {
     bindCounter = i + 1;
-    printf("Parameter #%d [type %d] %s\n", bindCounter,
-           query->parameters[i].type, query->parameters[i].value);
     switch (query->parameters[i].type) {
     case BIALETQUERYTYPE_STRING:
       sqlite3_bind_text(stmt, bindCounter, query->parameters[i].value, -1,
-                        SQLITE_TRANSIENT);
+                        SQLITE_STATIC);
       break;
     case BIALETQUERYTYPE_NUMBER:
       sqlite3_bind_double(stmt, bindCounter, atof(query->parameters[i].value));
@@ -225,8 +229,7 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   if (result != SQLITE_DONE) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
-  query->lastInsertId = (char *)sqlite3_last_insert_rowid(db);
-  printf("Last insert id: %s\n", query->lastInsertId);
+  query->lastInsertId = sqlite3Int64ToString(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);
 }
 

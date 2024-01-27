@@ -521,8 +521,7 @@ class Query {
   // First methods, return first result as Object
   first_(params) {
     var res = fetch_("%(this) LIMIT 1", params)
-    System.print("First: %(this) %(params) - %(res.type) %(res)")
-    return res is List && res.count > 0 ? res[0] : {}
+    return res is List && res.count > 0 ? res[0] : null
   }
   first() { first_([]) }
   first(param) { first_(param is List ? param : [param]) }

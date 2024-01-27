@@ -1099,10 +1099,19 @@ DEF_PRIMITIVE(system_writeString) {
 }
 
 static void queryPrepare(WrenVM *vm, BialetQuery *query, ObjList *params) {
+  Value val;
   if (vm->config.writeFn != NULL) {
     for (int i = 0; i < params->elements.count; i++) {
-      addParameter(query, AS_CSTRING(params->elements.data[i]),
-                   BIALETQUERYTYPE_STRING);
+      val = params->elements.data[i];
+      if (IS_NULL(val)) {
+        addParameter(query, 0, BIALETQUERYTYPE_NULL);
+      } else if (IS_BOOL(val)) {
+        addParameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
+      } else if (IS_NUM(val)) {
+        addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_NUMBER);
+      } else {
+        addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
+      }
     }
     vm->config.queryFn(vm, query);
   }
@@ -1113,7 +1122,6 @@ DEF_PRIMITIVE(query_fetch) {
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
   ObjList *list = wrenNewList(vm, query.resultsCount);
-  printf("Results: %d\n", query.resultsCount);
   for (int i = 0; i < query.resultsCount; i++) {
     ObjMap *row = wrenNewMap(vm);
     for (int j = 0; j < query.results[i].rowCount; j++) {
@@ -1130,7 +1138,6 @@ DEF_PRIMITIVE(query_execute) {
   BialetQuery query = *createBialetQuery();
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
-  printf("Last insert id: %s\n", query.lastInsertId);
   if (query.lastInsertId) {
     Value lastInsertId = wrenNewString(vm, query.lastInsertId);
     RETURN_VAL(lastInsertId);
