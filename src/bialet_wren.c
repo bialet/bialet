@@ -149,7 +149,7 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   sqlite3_stmt *stmt;
   char *columns[MAX_COLUMNS];
   const char *value;
-  int colType, type, rowCount = 0, bindCounter = 0;
+  int colType, colCount = 0, type, rowCount = 0, bindCounter = 0;
 
   /* Prepare the query */
   printf("Query: %s\n", query->queryString);
@@ -160,6 +160,7 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   }
 
   /* Bind parameters */
+  printf("Parameters: %d\n", query->parametersCount);
   for (int i = 0; i < query->parametersCount; i++) {
     bindCounter = i + 1;
     printf("Parameter #%d [type %d] %s\n", bindCounter,
@@ -167,7 +168,8 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
     switch (query->parameters[i].type) {
     case BIALETQUERYTYPE_STRING:
       sqlite3_bind_text(stmt, bindCounter, query->parameters[i].value, -1,
-                        NULL);
+                        SQLITE_TRANSIENT);
+      break;
     case BIALETQUERYTYPE_NUMBER:
       sqlite3_bind_double(stmt, bindCounter, atof(query->parameters[i].value));
       break;
@@ -183,14 +185,16 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
     }
   }
 
-  /* Get column names */
-  int colCount = sqlite3_column_count(stmt);
-  for (int i = 0; i < colCount; i++) {
-    columns[i] = string_safe_copy(sqlite3_column_name(stmt, i));
-  }
-
   /* Execute statement and fetch results */
   while ((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+    if (!colCount) {
+      /* Get column names */
+      colCount = sqlite3_column_count(stmt);
+      for (int i = 0; i < colCount; i++) {
+        columns[i] = string_safe_copy(sqlite3_column_name(stmt, i));
+      }
+    }
+
     addResult(query);
     for (int i = 0; i < colCount; i++) {
       colType = sqlite3_column_type(stmt, i);
