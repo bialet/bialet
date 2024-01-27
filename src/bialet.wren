@@ -242,7 +242,7 @@ class Session {
   static destroy() {
     var id = Cookie.get(Session.name)
     Cookie.delete(Session.name)
-    Db.query("DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')", [id])
+    `DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')`.query([id])
   }
   construct new() {
     _id = Cookie.get(Session.name)
@@ -251,7 +251,7 @@ class Session {
       Cookie.set(Session.name, _id)
     }
     __values = {}
-    var res = Db.all("SELECT key, val FROM BIALET_SESSION WHERE id = ?", [_id])
+    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ?`.fetch([_id])
     if (res && res.count > 0) {
       res.each{|r| __values[r["key"]] = r["val"] }
     }
@@ -260,48 +260,21 @@ class Session {
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
     __values[key] = value
-    Db.query("REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", [_id, key, "%(value)"])
+    `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query([_id, key, "%(value)"])
   }
 }
 
-// @TODO Use integrated query and query object. Keep this object only for migration.
 class Db {
 
-  static count{ 0 }
-  static map(callback){ }
-
-  foreign static intQuery(query, params)
-  foreign static intLastInsertId()
-  static query(query, params){
-    if (!query || query.trim() == "") {
-      return []
-    }
-    return Db.intQuery(query, params)
-  }
-  static lastInsertId(){ intLastInsertId() }
   static migrate(version, schema) {
-    Db.query("CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)")
-    Db.query("CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)")
-    if (!Db.one("SELECT version FROM BIALET_MIGRATIONS WHERE version = ?", [version])) {
-      schema.split(";").each{|q| Db.query(q) }
-      Db.query("INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)", [version])
+    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
+    if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
+      schema.split(";").each{|q| Query.queryFromString(q, []) }
+      `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
     }
   }
-  static query(query) { Db.query(query, []) }
-  static all(query) { Db.query(query, []) }
-  static all(query, params) { Db.query(query, params) }
-  static one(query, params) {
-    var res = Db.all(query + " limit 1", params)
-    if (res && res.count > 0) {
-      return res[0]
-    }
-    return null
-  }
-  static one(query) { Db.one(query, []) }
-  static save(table, values) {
-    Db.all("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList)
-    return Db.lastInsertId()
-  }
+  static save(table, values) { Query.queryFromString("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList) }
 }
 
 class Http {
@@ -332,10 +305,10 @@ class Http {
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
-    var response = intCall(url, _method, headers, _postData, _basicAuth)
+    var response = call_(url, _method, headers, _postData, _basicAuth)
     return {"status": response[0], "headers": response[1], "body": response[2]}
   }
-  foreign intCall(url, method, headers, postData, basicAuth)
+  foreign call_(url, method, headers, postData, basicAuth)
   static request(url, method, data, options) {
     __http = Http.new()
     __http.method = method
