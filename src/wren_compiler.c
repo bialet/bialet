@@ -932,7 +932,44 @@ static void readQueryString(Parser *parser) {
       break;
     }
 
-    wrenByteBufferWrite(parser->vm, &string, c);
+    if (c == '\\') {
+      switch (nextChar(parser)) {
+      case '`':
+        wrenByteBufferWrite(parser->vm, &string, '`');
+        break;
+      case '\'':
+        wrenByteBufferWrite(parser->vm, &string, '\\');
+        break;
+      case 'n':
+        wrenByteBufferWrite(parser->vm, &string, '\n');
+        break;
+      case 'r':
+        wrenByteBufferWrite(parser->vm, &string, '\r');
+        break;
+      case 't':
+        wrenByteBufferWrite(parser->vm, &string, '\t');
+        break;
+      case 'u':
+        readUnicodeEscape(parser, &string, 4);
+        break;
+      case 'U':
+        readUnicodeEscape(parser, &string, 8);
+        break;
+      case 'v':
+        wrenByteBufferWrite(parser->vm, &string, '\v');
+        break;
+      case 'x':
+        wrenByteBufferWrite(parser->vm, &string,
+                            (uint8_t)readHexEscape(parser, 2, "byte"));
+        break;
+      default:
+        lexError(parser, "Invalid escape character '%c'.",
+                 *(parser->currentChar - 1));
+        break;
+      }
+    } else {
+      wrenByteBufferWrite(parser->vm, &string, c);
+    }
   }
 
   parser->next.value =
@@ -3226,9 +3263,9 @@ static bool matchAttribute(Compiler *compiler) {
             Value key = compiler->parser->previous.value;
             Value value = NULL_VAL;
             if (match(compiler, TOKEN_EQ)) {
-              value = consumeLiteral(compiler,
-                                     "Expect a Bool, Num, String, Query or Identifier "
-                                     "literal for an attribute value.");
+              value = consumeLiteral(
+                  compiler, "Expect a Bool, Num, String, Query or Identifier "
+                            "literal for an attribute value.");
             }
             if (runtimeAccess)
               addToAttributeGroup(compiler, group, key, value);
