@@ -1,6 +1,6 @@
-// This line imports the Response and Request classes for managing HTTP interactions.
+// This line imports the Response class for managing HTTP interactions.
 // The import lines are write at the top of the script.
-import "bialet" for Response, Request
+import "bialet" for Response
 
 // We use the `query()` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.
