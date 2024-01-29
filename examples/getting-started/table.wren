@@ -18,7 +18,6 @@ var counters = `SELECT * FROM counter ORDER BY name ASC`.fetch()
 // That's the way to have an IF statement in the interpolated string.
 //
 // The `map` method is used to iterate over the `counters` array.
-// Then the `join()` method is used to join the `map` result with an empty string.
 // That's the way to have a FOR statement in the interpolated string.
 Response.out('
 <!DOCTYPE html>
@@ -43,7 +42,7 @@ Response.out('
             <td>%(counter["name"])</td>
             <td>%(counter["value"])</td>
           </tr>
-        '}.join())
+        '})
       </table>
       ' : /* If there are no counters */ '
         <p>No counters found</p>
