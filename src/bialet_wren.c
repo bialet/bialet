@@ -339,7 +339,7 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems,
   return nitems * size;
 }
 
-static void curl_call(WrenVM *vm) {
+static void http_call(WrenVM *vm) {
   CURL *handle;
   CURLcode res;
   struct curl_slist *headers = NULL;
@@ -426,18 +426,16 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
       if (strcmp(signature, "randomString(_)") == 0) {
         return random_string;
       }
-    }
-    if (strcmp(className, "Http") == 0) {
-      if (strcmp(signature, "call_(_,_,_,_,_)") == 0) {
-        return curl_call;
-      }
-    }
-    if (strcmp(className, "User") == 0) {
       if (strcmp(signature, "hash(_)") == 0) {
         return hash_password;
       }
       if (strcmp(signature, "verify(_,_)") == 0) {
         return verify_password;
+      }
+    }
+    if (strcmp(className, "Http") == 0) {
+      if (strcmp(signature, "call_(_,_,_,_,_)") == 0) {
+        return http_call;
       }
     }
   }

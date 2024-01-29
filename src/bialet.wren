@@ -102,12 +102,6 @@ class Response {
   }
 }
 
-class User {
-  foreign static hash(password)
-  foreign static verify(password, hash)
-}
-
-
 class Cookie {
   static init() { __cookies = {} }
   static init(cookieLine) {
@@ -383,7 +377,7 @@ class JsonScanner {
         } else if (char == "u") { // unicode char!
           var charsToPull = 4
           var start = _cursor
-          var hexString = Util.slice(_input, start, start + charsToPull).join("")
+          var hexString = _input.slice(start, start + charsToPull).join("")
 
           var decimal = Util.hexToDec(hexString)
           if (decimal == null) scanningError
@@ -420,7 +414,7 @@ class JsonScanner {
       advance()
     }
 
-    var number = Num.fromString(Util.slice(_input, _start, _cursor).join(""))
+    var number = Num.fromString(_input.slice(_start, _cursor).join(""))
 
     if (number == null) {
       scanningError
@@ -434,7 +428,7 @@ class JsonScanner {
       advance()
     }
 
-    var value = Util.slice(_input, _start, _cursor).join("")
+    var value = _input.slice(_start, _cursor).join("")
     if (value == "true") {
       addToken(JsonToken.Bool, true)
     } else if (value == "false") {
@@ -470,7 +464,7 @@ class JsonScanner {
   addToken(type, value) { _tokens.add(JsonToken.new(type, value, _cursor)) }
 
   scanningError {
-    var value = Util.slice(_input, _start, _cursor).join("")
+    var value = _input.slice(_start, _cursor).join("")
     var position = Util.getPositionForIndex(_input, _start)
     Fiber.abort("Invalid JSON: Unexpected \"%(value)\" at line %(position["line"]), column %(position["column"])")
   }
@@ -511,6 +505,8 @@ var HEX_CHARS = [
 class Util {
 
   foreign static randomString(length)
+  foreign static hash(password)
+  foreign static verify(password, hash)
 
   static hexToDec(hexStr) {
     var decimal = 0
@@ -530,7 +526,17 @@ class Util {
       base = base * 16
     }
     return decimal
-   }
+  }
+
+  static toHex(byte) {
+    var hex = ""
+    while (byte > 0) {
+      var c = byte % 16
+      hex = HEX_CHARS[c] + hex
+      byte = byte >> 4
+    }
+    return hex
+  }
 
   static urlDecode(str) {
     var decoded = ""
@@ -552,40 +558,23 @@ class Util {
     return decoded
   }
 
-  static slice(list, start) {
-    return slice(list, start, list.count)
-  }
-  static slice(list, start, end) {
-    var result = []
-    for (index in start...end) {
-      result.add(list[index])
-    }
-    return result
-  }
-  static toHex(byte) {
-    var hex = ""
-    while (byte > 0) {
-      var c = byte % 16
-      hex = HEX_CHARS[c] + hex
-      byte = byte >> 4
-    }
-    return hex
-  }
   static lpad(s, count, with) {
     while (s.count < count) {
       s = "%(with)%(s)"
     }
     return s
   }
-  static reverse (str) {
+
+  static reverse(str) {
     var result = ""
     for (char in str) {
       result = char + result
     }
     return result
   }
-  static getPositionForIndex (text, index) {
-    var precedingText = Util.slice(text, 0, index)
+
+  static getPositionForIndex(text, index) {
+    var precedingText = text.slice(0, index)
     var linebreaks = precedingText.where {|char| char == "\n"}
 
     var reversedPreceding = Util.reverse(precedingText)
@@ -654,6 +643,7 @@ class Http {
     return {"status": response[0], "headers": response[1], "body": response[2]}
   }
   foreign call_(url, method, headers, postData, basicAuth)
+
   static request(url, method, data, options) {
     __http = Http.new()
     __http.method = method
@@ -665,6 +655,7 @@ class Http {
     }
     return false
   }
+  // Shortcuts for common HTTP methods
   static get(url, options) { request(url, "GET", null, options) }
   static post(url, data, options) { request(url, "POST", data, options) }
   static put(url, data, options) { request(url, "PUT", data, options) }
