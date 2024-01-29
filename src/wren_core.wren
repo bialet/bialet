@@ -109,6 +109,16 @@ class Sequence {
     return result
   }
 
+  slice(start) { slice(start, list.count) }
+  slice(start, end) {
+    list = toList
+    var result = []
+    for (index in start...end) {
+      result.add(list[index])
+    }
+    return result
+  }
+
   toList {
     var result = List.new()
     for (element in this) {
