@@ -194,7 +194,7 @@ class Request {
     }
     /* @TODO Support arrays in URL and POST query */
     query.split("&").each{|q|
-      var value = ""
+      var value = true
       var tmp = q.split("=")
       var key = Util.urlDecode(tmp[0])
       if (tmp.count > 1) {
@@ -204,10 +204,10 @@ class Request {
     }
     return all
   }
-  static header(name) { __headers[name] ? __headers[name]:"" }
-  static get(name) { __get[name] ? __get[name]:"" }
-  static post(name) { __post[name] ? __post[name]:"" }
-  static route(pos) { __route.count > pos ? __route[pos]:"" }
+  static header(name) { __headers[name] ? __headers[name]:null }
+  static get(name) { __get[name] ? __get[name]:null }
+  static post(name) { __post[name] ? __post[name]:null }
+  static route(pos) { __route.count > pos ? __route[pos]:null }
   static method() { __method }
   static uri() { __uri }
   static body() { __body }
