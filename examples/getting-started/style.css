@@ -1,0 +1,35 @@
+body {
+  font: 24px system-ui;
+  line-height: 1.5;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+h1 {
+  font-size: 36px;
+}
+
+h1 strong {
+  color: #b00;
+}
+
+a {
+  color: #40A2D8;
+}
+
+input, button {
+  font: inherit;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid #ccc;
+  padding: .5em;
+  text-align: left;
+}
