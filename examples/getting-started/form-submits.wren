@@ -31,6 +31,7 @@ var total = `SELECT value FROM counter WHERE name = "form"`.first()["value"]
 // We use the `out()` method to send the response to the client.
 // The `%( ... )` syntax is used to interpolate the value of the `total` variable.
 // and the `value` variable.
+// Apart from the interpolation, the string is regular HTML.
 Response.out('
 <!DOCTYPE html>
 <html>
