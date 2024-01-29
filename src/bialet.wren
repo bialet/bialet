@@ -71,7 +71,7 @@ class Request {
   static header(name) { __headers[name] ? __headers[name]:null }
   static get(name) { __get[name] ? __get[name]:null }
   static post(name) { __post[name] ? __post[name]:null }
-  static route(pos) { __route.count > pos ? __route[pos]:null }
+  static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static method() { __method }
   static uri() { __uri }
   static body() { __body }

@@ -2,7 +2,7 @@ import "bialet" for Response, Request
 import "/_app" for Template, Posts
 var slug = Request.route(0)
 
-if (slug == "") {
+if (!slug) {
   return Response.redirect("/")
 }
 
