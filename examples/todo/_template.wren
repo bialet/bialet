@@ -1,4 +1,4 @@
-import "bialet" for Html
+import "bialet" for Util
 
 class Template {
 
@@ -19,7 +19,7 @@ class Template {
             %( tasks.map{ |task| '
               <li class="finished_%( task["finished"] )">
                 <a href="/toggle?id=%( task["id"] )">
-                  %( Html.escape(task["description"]) )
+                  %( Util.htmlEscape(task["description"]) )
                 </a>
               </li>
             '})
