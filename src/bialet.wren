@@ -232,7 +232,7 @@ class JsonParser {
     _tokens = []
   }
 
-  valueTypes { [Token.String, Token.Number, Token.Bool, Token.Null] }
+  valueTypes { [JsonToken.String, JsonToken.Number, JsonToken.Bool, JsonToken.Null] }
 
   parse { nest(JsonScanner.new(_input).tokenize) }
 
@@ -241,44 +241,44 @@ class JsonParser {
 
     var token = tokens.removeAt(0)
 
-    if (token.type == Token.LeftBrace) {
+    if (token.type == JsonToken.LeftBrace) {
       // Making a Map
       var map = {}
 
-      while (tokens[0].type != Token.RightBrace) {
+      while (tokens[0].type != JsonToken.RightBrace) {
         var key = tokens.removeAt(0)
-        if (key.type != Token.String) { parsingError(key) }
+        if (key.type != JsonToken.String) { parsingError(key) }
 
         var next = tokens.removeAt(0)
-        if (next.type != Token.Colon) { parsingError(next) }
+        if (next.type != JsonToken.Colon) { parsingError(next) }
 
         var value = nest(tokens)
         map[key.value] = value
 
         if (tokens.count >= 2 &&
-            tokens[0].type == Token.Comma &&
-            tokens[1].type != Token.RightBrace) {
+            tokens[0].type == JsonToken.Comma &&
+            tokens[1].type != JsonToken.RightBrace) {
           tokens.removeAt(0)
         }
       }
 
-      // Remove Token.RightBrace
+      // Remove JsonToken.RightBrace
       tokens.removeAt(0)
 
       return map
 
-    } else if (token.type == Token.LeftBracket) {
+    } else if (token.type == JsonToken.LeftBracket) {
       // Making a List
       var list = []
-      while (tokens[0].type != Token.RightBracket) {
+      while (tokens[0].type != JsonToken.RightBracket) {
         list.add(nest(tokens))
 
-        if (tokens[0].type == Token.Comma) {
+        if (tokens[0].type == JsonToken.Comma) {
           tokens.removeAt(0)
         }
       }
 
-      // Remove Token.RightBracket
+      // Remove JsonToken.RightBracket
       tokens.removeAt(0)
 
       return list
@@ -334,7 +334,7 @@ class JsonScanner {
       scanToken()
     }
 
-    addToken(Token.End)
+    addToken(JsonToken.End)
 
     return _tokens
   }
@@ -343,17 +343,17 @@ class JsonScanner {
     var char = advance()
 
     if (char == "{") {
-      addToken(Token.LeftBrace)
+      addToken(JsonToken.LeftBrace)
     } else if (char == "}") {
-      addToken(Token.RightBrace)
+      addToken(JsonToken.RightBrace)
     } else if (char == "[") {
-      addToken(Token.LeftBracket)
+      addToken(JsonToken.LeftBracket)
     } else if (char == "]") {
-      addToken(Token.RightBracket)
+      addToken(JsonToken.RightBracket)
     } else if (char == ":") {
-      addToken(Token.Colon)
+      addToken(JsonToken.Colon)
     } else if (char == ",") {
-      addToken(Token.Comma)
+      addToken(JsonToken.Comma)
     } else if (char == "/") {
       // Don't allow comments
       scanningError
@@ -412,7 +412,7 @@ class JsonScanner {
     // consume closing "
     advance()
 
-    addToken(Token.String, valueInProgress.join(""))
+    addToken(JsonToken.String, valueInProgress.join(""))
   }
 
   scanNumber () {
@@ -425,7 +425,7 @@ class JsonScanner {
     if (number == null) {
       scanningError
     } else {
-      addToken(Token.Number, number)
+      addToken(JsonToken.Number, number)
     }
   }
 
@@ -436,11 +436,11 @@ class JsonScanner {
 
     var value = Util.slice(_input, _start, _cursor).join("")
     if (value == "true") {
-      addToken(Token.Bool, true)
+      addToken(JsonToken.Bool, true)
     } else if (value == "false") {
-      addToken(Token.Bool, false)
+      addToken(JsonToken.Bool, false)
     } else if (value == "null") {
-      addToken(Token.Null, null)
+      addToken(JsonToken.Null, null)
     } else {
       scanningError
     }
@@ -467,7 +467,7 @@ class JsonScanner {
   }
 
   addToken(type) { addToken(type, null) }
-  addToken(type, value) { _tokens.add(Token.new(type, value, _cursor)) }
+  addToken(type, value) { _tokens.add(JsonToken.new(type, value, _cursor)) }
 
   scanningError {
     var value = Util.slice(_input, _start, _cursor).join("")
@@ -476,7 +476,7 @@ class JsonScanner {
   }
 }
 
-class Token {
+class JsonToken {
   static LeftBracket { "LEFT_BRACKET" }
   static RightBracket { "RIGHT_BRACKET" }
   static LeftBrace { "LEFT_BRACE" }
