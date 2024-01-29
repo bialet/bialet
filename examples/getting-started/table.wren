@@ -19,6 +19,8 @@ var counters = `SELECT * FROM counter ORDER BY name ASC`.fetch()
 //
 // The `map` method is used to iterate over the `counters` array.
 // That's the way to have a FOR statement in the interpolated string.
+//
+// Apart from the interpolation, the strings are regular HTML.
 Response.out('
 <!DOCTYPE html>
 <html>

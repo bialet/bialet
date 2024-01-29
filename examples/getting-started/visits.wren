@@ -10,10 +10,16 @@ import "bialet" for Response, Request
 `CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query()
 `INSERT OR IGNORE INTO counter (name, value) VALUES ("visits", 0)`.query()
 
+// We increment the value of the row with the name `visits` by 1.
 `UPDATE counter SET value = value + 1 WHERE name = "visits"`.query()
 
+// We use the `first()` method to get the first row in the query result.
+// We use the `["value"]` property to get the value of the `value` column.
 var visits = `SELECT value FROM counter WHERE name = "visits"`.first()["value"]
 
+// We use the `out()` method to send the response to the client.
+// The `%( ... )` syntax is used to interpolate the value of the `visits` variable.
+// Apart from the interpolation, the string is regular HTML.
 Response.out('
 <!DOCTYPE html>
 <html>

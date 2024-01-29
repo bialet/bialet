@@ -27,6 +27,7 @@ var clicks = `SELECT value FROM counter WHERE name = "clicks"`.first()["value"]
 
 // We use the `out()` method to send the response to the client.
 // The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.
+// Apart from the interpolation, the string is regular HTML.
 Response.out('
 <!DOCTYPE html>
 <html>
