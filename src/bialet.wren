@@ -8,142 +8,6 @@
 //
 //  For full license text, see LICENSE.md.
 //
-class Response {
-  static init() {
-    __headers = {"Content-Type": "text/html"}
-    __cookies = []
-    __status = 200
-    __out = ""
-  }
-  static out(out) { __out = __out + "\r\n" + out }
-  static out() { __out.trim() }
-  static status(status) { __status = status }
-  static status() { __status }
-  static headers() { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
-  static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
-  static header(header, value) { __headers[header.trim()] = value.trim() }
-  static redirect(url) {
-    Response.status(302)
-    Response.header("Location", url)
-  }
-  static json(data) {
-    Response.header("Content-Type", "application/json")
-    Response.out(Json.stringify(data))
-  }
-}
-
-class User {
-  foreign static hash(password)
-  foreign static verify(password, hash)
-}
-
-var HEX_CHARS = [
-  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
-]
-
-class Util {
-
-  foreign static randomString(length)
-
-  static hexToDec(hexStr) {
-    var decimal = 0
-    var length = hexStr.count
-    var base = 1 // Initialize base value to 1, i.e., 16^0
-    for (i in (length - 1)..0) {
-      var char = hexStr[i].bytes[0]
-      var value = 0
-      if (char >= "0".bytes[0] && char <= "9".bytes[0]) {
-        value = char - "0".bytes[0]
-      } else if (char >= "A".bytes[0] && char <= "F".bytes[0]) {
-        value = char - "A".bytes[0] + 10
-      } else if (char >= "a".bytes[0] && char <= "f".bytes[0]) {
-        value = char - "a".bytes[0] + 10
-      }
-      decimal = decimal + value * base
-      base = base * 16
-    }
-    return decimal
-   }
-
-  static urlDecode(str) {
-    var decoded = ""
-    var i = 0
-    while (i < str.count) {
-      if (str[i] == "\%") {
-        var hex = str[i + 1..i + 2]
-        var charCode = hexToDec(hex)
-        decoded = decoded + String.fromByte(charCode)
-        i = i + 3
-      } else if (str[i] == "+") {
-        decoded = decoded + " "
-        i = i + 1
-      } else {
-        decoded = decoded + str[i]
-        i = i + 1
-      }
-    }
-    return decoded
-  }
-
-  static slice(list, start) {
-    return slice(list, start, list.count)
-  }
-  static slice(list, start, end) {
-    var result = []
-    for (index in start...end) {
-      result.add(list[index])
-    }
-    return result
-  }
-  static toHex(byte) {
-    var hex = ""
-    while (byte > 0) {
-      var c = byte % 16
-      hex = HEX_CHARS[c] + hex
-      byte = byte >> 4
-    }
-    return hex
-  }
-  static lpad(s, count, with) {
-    while (s.count < count) {
-      s = "%(with)%(s)"
-    }
-    return s
-  }
-  static reverse (str) {
-    var result = ""
-    for (char in str) {
-      result = char + result
-    }
-    return result
-  }
-  static getPositionForIndex (text, index) {
-    var precedingText = Util.slice(text, 0, index)
-    var linebreaks = precedingText.where {|char| char == "\n"}
-
-    var reversedPreceding = Util.reverse(precedingText)
-    var hasSeenLinebreak = false
-    var i = 0
-    while (i < reversedPreceding.count && !hasSeenLinebreak) {
-      if (reversedPreceding[i] == "\n") {
-        hasSeenLinebreak = true
-      }
-      i = i + 1
-    }
-
-    return {
-      "line": linebreaks.count,
-      "column": i
-    }
-  }
-}
-
-class Html {
-  static escape(str) {
-    if (!str) return ""
-    return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
-  }
-}
 
 class Request {
   static init(message, route) {
@@ -214,6 +78,36 @@ class Request {
   static isPost() { __method == "POST" }
 }
 
+class Response {
+  static init() {
+    __headers = {"Content-Type": "text/html"}
+    __cookies = []
+    __status = 200
+    __out = ""
+  }
+  static out(out) { __out = __out + "\r\n" + out }
+  static out() { __out.trim() }
+  static status(status) { __status = status }
+  static status() { __status }
+  static headers() { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+  static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
+  static header(header, value) { __headers[header.trim()] = value.trim() }
+  static redirect(url) {
+    Response.status(302)
+    Response.header("Location", url)
+  }
+  static json(data) {
+    Response.header("Content-Type", "application/json")
+    Response.out(Json.stringify(data))
+  }
+}
+
+class User {
+  foreign static hash(password)
+  foreign static verify(password, hash)
+}
+
+
 class Cookie {
   static init() { __cookies = {} }
   static init(cookieLine) {
@@ -262,74 +156,6 @@ class Session {
     __values[key] = value
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query([_id, key, "%(value)"])
   }
-}
-
-class Db {
-
-  static migrate(version, schema) {
-    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
-    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
-    if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
-      schema.toString.split(";").each{|q| Query.queryFromString(q, []) }
-      `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
-    }
-  }
-  static save(table, values) { Query.queryFromString("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList) }
-}
-
-class Http {
-  construct new() {
-    _method = false
-    _basicAuth = ""
-  }
-  method { _method }
-  method=(m) { _method = m }
-  postData=(data) {
-    if (!_method) {
-      _method = "POST"
-    }
-    _postData = data ? (data is String ? data : Json.stringify(data)) : ""
-  }
-  call(url, options) {
-    if (!_method) {
-      _method = "GET"
-    }
-    if (!options.containsKey("headers")) {
-      options["headers"] = {}
-    }
-    if (!options["headers"].containsKey("Content-Type")) {
-      options["headers"]["Content-Type"] = "application/json"
-    }
-    System.print("Request: %(url) %(options)")
-    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
-    if (options["basicAuth"] != null) {
-      _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
-    }
-    var response = call_(url, _method, headers, _postData, _basicAuth)
-    return {"status": response[0], "headers": response[1], "body": response[2]}
-  }
-  foreign call_(url, method, headers, postData, basicAuth)
-  static request(url, method, data, options) {
-    __http = Http.new()
-    __http.method = method
-    __http.postData = data
-    var response = __http.call(url, options)
-    System.print("Response: %(response)")
-    if (response["body"] != "") {
-      return Json.parse(response["body"])
-    }
-    return false
-  }
-  static get(url, options) { request(url, "GET", null, options) }
-  static post(url, data, options) { request(url, "POST", data, options) }
-  static put(url, data, options) { request(url, "PUT", data, options) }
-  static delete(url, options) { request(url, "DELETE", null, options) }
-  static get(url) { get(url, {}) }
-  static post(url, data) { post(url, data, {}) }
-  static post(url) { post(url, "", {}) }
-  static put(url, data) { put(url, data, {}) }
-  static put(url) { put(url, "", {}) }
-  static delete(url) { delete(url, {}) }
 }
 
 // Json library and Util functions are from Matthew Brandly
@@ -678,5 +504,179 @@ class Token {
   index { _index }
 }
 
-Cookie.init()
+var HEX_CHARS = [
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
+]
+
+class Util {
+
+  foreign static randomString(length)
+
+  static hexToDec(hexStr) {
+    var decimal = 0
+    var length = hexStr.count
+    var base = 1 // Initialize base value to 1, i.e., 16^0
+    for (i in (length - 1)..0) {
+      var char = hexStr[i].bytes[0]
+      var value = 0
+      if (char >= "0".bytes[0] && char <= "9".bytes[0]) {
+        value = char - "0".bytes[0]
+      } else if (char >= "A".bytes[0] && char <= "F".bytes[0]) {
+        value = char - "A".bytes[0] + 10
+      } else if (char >= "a".bytes[0] && char <= "f".bytes[0]) {
+        value = char - "a".bytes[0] + 10
+      }
+      decimal = decimal + value * base
+      base = base * 16
+    }
+    return decimal
+   }
+
+  static urlDecode(str) {
+    var decoded = ""
+    var i = 0
+    while (i < str.count) {
+      if (str[i] == "\%") {
+        var hex = str[i + 1..i + 2]
+        var charCode = hexToDec(hex)
+        decoded = decoded + String.fromByte(charCode)
+        i = i + 3
+      } else if (str[i] == "+") {
+        decoded = decoded + " "
+        i = i + 1
+      } else {
+        decoded = decoded + str[i]
+        i = i + 1
+      }
+    }
+    return decoded
+  }
+
+  static slice(list, start) {
+    return slice(list, start, list.count)
+  }
+  static slice(list, start, end) {
+    var result = []
+    for (index in start...end) {
+      result.add(list[index])
+    }
+    return result
+  }
+  static toHex(byte) {
+    var hex = ""
+    while (byte > 0) {
+      var c = byte % 16
+      hex = HEX_CHARS[c] + hex
+      byte = byte >> 4
+    }
+    return hex
+  }
+  static lpad(s, count, with) {
+    while (s.count < count) {
+      s = "%(with)%(s)"
+    }
+    return s
+  }
+  static reverse (str) {
+    var result = ""
+    for (char in str) {
+      result = char + result
+    }
+    return result
+  }
+  static getPositionForIndex (text, index) {
+    var precedingText = Util.slice(text, 0, index)
+    var linebreaks = precedingText.where {|char| char == "\n"}
+
+    var reversedPreceding = Util.reverse(precedingText)
+    var hasSeenLinebreak = false
+    var i = 0
+    while (i < reversedPreceding.count && !hasSeenLinebreak) {
+      if (reversedPreceding[i] == "\n") {
+        hasSeenLinebreak = true
+      }
+      i = i + 1
+    }
+
+    return {
+      "line": linebreaks.count,
+      "column": i
+    }
+  }
+
+  static htmlEscape(str) {
+    if (!str) return ""
+    return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+  }
+}
+
+class Db {
+  static migrate(version, schema) {
+    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
+    if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
+      schema.toString.split(";").each{|q| Query.queryFromString(q, []) }
+      `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
+    }
+  }
+  static save(table, values) { Query.queryFromString("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList) }
+}
+
+class Http {
+  construct new() {
+    _method = false
+    _basicAuth = ""
+  }
+  method { _method }
+  method=(m) { _method = m }
+  postData=(data) {
+    if (!_method) {
+      _method = "POST"
+    }
+    _postData = data ? (data is String ? data : Json.stringify(data)) : ""
+  }
+  call(url, options) {
+    if (!_method) {
+      _method = "GET"
+    }
+    if (!options.containsKey("headers")) {
+      options["headers"] = {}
+    }
+    if (!options["headers"].containsKey("Content-Type")) {
+      options["headers"]["Content-Type"] = "application/json"
+    }
+    System.print("Request: %(url) %(options)")
+    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (options["basicAuth"] != null) {
+      _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+    }
+    var response = call_(url, _method, headers, _postData, _basicAuth)
+    return {"status": response[0], "headers": response[1], "body": response[2]}
+  }
+  foreign call_(url, method, headers, postData, basicAuth)
+  static request(url, method, data, options) {
+    __http = Http.new()
+    __http.method = method
+    __http.postData = data
+    var response = __http.call(url, options)
+    System.print("Response: %(response)")
+    if (response["body"] != "") {
+      return Json.parse(response["body"])
+    }
+    return false
+  }
+  static get(url, options) { request(url, "GET", null, options) }
+  static post(url, data, options) { request(url, "POST", data, options) }
+  static put(url, data, options) { request(url, "PUT", data, options) }
+  static delete(url, options) { request(url, "DELETE", null, options) }
+  static get(url) { get(url, {}) }
+  static post(url, data) { post(url, data, {}) }
+  static post(url) { post(url, "", {}) }
+  static put(url, data) { put(url, data, {}) }
+  static put(url) { put(url, "", {}) }
+  static delete(url) { delete(url, {}) }
+}
+
+// Setup
 Response.init()
+Cookie.init()
