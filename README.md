@@ -52,7 +52,7 @@ Response.out('
 ')
 ```
 
-See [more examples](examples/run.md) for usage.
+This was written in [Wren programming language](https://wren.io), though a custom heavily modified version. See [more examples](examples/run.md) for usage.
 
 ## Installation
 
@@ -87,7 +87,7 @@ Then run the build
 make clean && make
 ```
 
-## Running with binary
+### Running with binary
 
 ```bash
 bialet -p 7000 /path/to/root
@@ -104,3 +104,21 @@ Available Configuration
 | Hard memory limit | -M | 100 (in Megabytes) |
 | CPU limit | -c | 15 |
 | Hard CPU limit | -C | 30 |
+
+## License
+
+Bialet is released under the GPL 2 license, ensuring that it remains free and open-source, allowing users to modify and share the software under the same license terms.
+
+## Credits
+
+~I copy a lot of code from all over the web~
+
+Bialet incorporates the work of several open-source projects and contributors. We extend our gratitude to:
+
+- The [Wren programming language](https://wren.io), for its lightweight, flexible, and high-performance capabilities.
+- The [Mongoose library](https://github.com/expressjs/mongoose), for providing an easy-to-use web server solution.
+- Matthew Brandly, for his invaluable contributions to JSON parsing and utility functions in Wren. Check out his work at [Matthew Brandly's GitHub](https://github.com/brandly/wren-json).
+- @PureFox48 for the upper and lower functions.
+- [Codeium](https://github.com/codeium) for the [Codeium](https://codeium.com) plugin, ChatGPT and a lot of coffee.
+
+We encourage users to explore these projects and recognize the efforts of their creators.
