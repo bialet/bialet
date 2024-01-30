@@ -12,7 +12,8 @@ Bialet is the [worst](https://en.wikipedia.org/wiki/Worse_is_better) web
 development framework ever.
 
 Would you like a strongly typed programming language with strong unit testing support?
-Well, this is not the framework you are looking for, here we want to **ship features**.
+Well, this is not the framework you are looking for, here we want to write bad
+code and **ship features**.
 
 ```wren
 import "bialet" for Response
@@ -52,19 +53,21 @@ Response.out('
 ')
 ```
 
-This was written in [Wren programming language](https://wren.io), though a custom heavily modified version. See [more examples](examples/run.md) for usage.
+The code is written in [Wren](https://wren.io), though a custom heavily modified
+version. See [more examples](examples/run.md) for usage.
 
-### Project Structure and Routing
+## Project Structure and Routing
 
-The scripts will be load as if they were HTML files, so the file `contact-us.wren` can be open with the URL `localhost:7000/contact-us.wren` or even without the wren suffix `localhost:7000/contact-us`.
+The scripts will be load as if they were HTML files, so the file `contact-us.wren` can be open with the URL [localhost:7000/contact-us.wren](http://localhost:7000/contact-us.wren) or even without the wren suffix [localhost:7000/contact-us](http://localhost:7000/contact-us).
 
-This will work with each folder, for example the URL `localhost:7000/landing/newsletter/cool-campaign` will run the script `landing/newsletter/cool-campaign.wren`. Like if there was an HMTL file.
+This will work with each folder, for example the URL [localhost:7000/landing/newsletter/cool-campaign](http://localhost:7000/landing/newsletter/cool-campaign) will run the script `landing/newsletter/cool-campaign.wren`. Like if there was an HMTL file.
 
-**The best way to think a project with Bialet is do it first like static old school HTML, then replace the logic and template duplication with Wren code.**
+**The best way to think a project with Bialet is do it first like static old school HTML,
+then replace the logic and template duplication with Wren code.**
 
 This way allows you prototype and see the results quickly before implementing it.
 
-That mean that each file is public and will be executed **except** when it start with a `_` or `.`. The `_app.wren` file won't be load with the URL `localhost:7000/_app` or with any other URL. Any file or any file under a folder that start with `_` or `.` won't be open.
+That mean that each file is public and will be executed **except** when it start with a `_` or `.`. The `_app.wren` file won't be load with the URL [localhost:7000/_app](http://localhost:7000/_app) or with any other URL. Any file or any file under a folder that start with `_` or `.` won't be open.
 
 For dynamic routing, add a `_route.wren` file in the folder and use the `Request.route(N)` function to get the value. **N** is the position of the route parameter. For the file `api/_route.wren` when called from `localhost:7000/api/users/1?fields=name,email&sortType=ASC` those will be the values:
 
@@ -77,58 +80,22 @@ Request.param("fields") // name,email
 Request.param("sortType") // ASC
 ```
 
-⚠️ Adding a single `_route.wren` file and handling all the routing with code is highly discourage.
+⚠️ There is no need to add a single `_route.wren` file to handle all the routing.
 
 ## Installation
 
-The best way to use it is with Docker. In the root of the project run:
+The easiest way to use it is with [Docker Compose](https://docs.docker.com/compose/).
+Clone the repository and run:
 
 ```bash
-docker compose up
+BIALET_DIR=/path/to/app docker compose up
 ```
 
-Use the environment variables **BIALET_DIR** and **BIALET_PORT** to change the
-default values.
+The default port is 7000. Use the environment variable **BIALET_PORT** to change the port value.
 
 ## Building
 
-Install SQLite3, OpenSSL 3 and curl for dev dependencies and run the build.
-
-In Debian based
-
-```bash
-sudo apt install -y libsqlite3-dev libssl-dev libcurl4-openssl-dev
-```
-
-In MacOS
-
-```bash
-brew install sqlite3 openssl curl
-```
-
-Then run the build
-
-```bash
-make clean && make
-```
-
-### Running with binary
-
-```bash
-bialet -p 7000 /path/to/root
-```
-
-Available Configuration
-
-| Description | Argument | Default value |
-| --- | --- | --- |
-| Port | -p | 7000 |
-| Host | -h | localhost |
-| Log file | -l | stdout |
-| Memory limit | -m | 50 (in Megabytes) |
-| Hard memory limit | -M | 100 (in Megabytes) |
-| CPU limit | -c | 15 |
-| Hard CPU limit | -C | 30 |
+Install the dependencies and run make. See the details in the [build](BUILD.md) file.
 
 ## License
 
@@ -137,7 +104,6 @@ Bialet is released under the GPL 2 license, ensuring that it remains free and op
 ## Credits
 
 ~I copy a lot of code from all over the web~
-
 Bialet incorporates the work of several open-source projects and contributors. We extend our gratitude to:
 
 - The [Wren programming language](https://wren.io), for its lightweight, flexible, and high-performance capabilities.
