@@ -1,8 +1,16 @@
 class Bool {}
 class Fiber {}
 class Fn {}
-class Null {}
 class Num {}
+
+// Null is widely used in Bialet in the templates.
+// This way allow calling methods on null like a List or a Map
+// and don't crash the program.
+class Null {
+  [key] { null }
+  map(f) { List.new() }
+  count { 0 }
+}
 
 class Sequence {
   all(f) {
