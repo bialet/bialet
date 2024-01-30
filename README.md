@@ -1,6 +1,12 @@
 # 🚲 bialet
 
-Make Web Development Great Again
+<p align="center">
+  <img src="https://github.com/bialet/bialet/assets/142173/af827692-0e0d-4805-a478-77d07bd62e18" alt="Make Web Development Great Again hat" width="200" />
+</p>
+<p align="center">
+  <strong>Make Web Development Great Again</strong>
+</p>
+
 
 Bialet is the [worst](https://en.wikipedia.org/wiki/Worse_is_better) web
 development framework ever.
