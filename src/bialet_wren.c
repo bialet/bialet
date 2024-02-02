@@ -609,8 +609,8 @@ void addResultRow(BialetQuery *query, int resultIndex, const char *name,
   result->rows = (BialetQueryRow *)realloc(
       result->rows, result->rowCount * sizeof(BialetQueryRow));
   BialetQueryRow *newRow = &result->rows[result->rowCount - 1];
-  newRow->name = strdup(name);
-  newRow->value = strdup(value);
+  newRow->name = name != NULL ? strdup(name) : "";
+  newRow->value = value != NULL ? strdup(value) : "";
   newRow->type = type;
 }
 
@@ -620,7 +620,7 @@ void addParameter(BialetQuery *query, const char *value, BialetQueryType type) {
       query->parameters, query->parametersCount * sizeof(BialetQueryParameter));
   BialetQueryParameter *newParameter =
       &query->parameters[query->parametersCount - 1];
-  newParameter->value = strdup(value);
+  newParameter->value = value != NULL ? strdup(value) : NULL;
   newParameter->type = type;
 }
 

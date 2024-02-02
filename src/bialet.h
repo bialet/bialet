@@ -13,6 +13,8 @@
 
 #include <stdio.h>
 
+#define MAX_NUMBER_LENGTH 100
+
 struct BialetConfig {
   char *root_dir;
   char *host;

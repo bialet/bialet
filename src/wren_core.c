@@ -1108,7 +1108,9 @@ static void queryPrepare(WrenVM *vm, BialetQuery *query, ObjList *params) {
       } else if (IS_BOOL(val)) {
         addParameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
       } else if (IS_NUM(val)) {
-        addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_NUMBER);
+        char num[MAX_NUMBER_LENGTH];
+        sprintf(num, "%f", AS_NUM(val));
+        addParameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else {
         addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       }
