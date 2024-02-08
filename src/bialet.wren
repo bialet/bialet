@@ -50,13 +50,14 @@ class Request {
       __post = parseQuery(__body)
     }
   }
+
   static parseQuery(query) {
     var all = {}
     query = query.trim()
     if (query == "") {
       return all
     }
-    /* @TODO Support arrays in URL and POST query */
+    // @TODO Support arrays in URL and POST query
     query.split("&").each{|q|
       var value = true
       var tmp = q.split("=")
@@ -68,14 +69,17 @@ class Request {
     }
     return all
   }
+
+  // Getters
+  static method { __method }
+  static uri { __uri }
+  static body { __body }
+  static isPost { __method == "POST" }
   static header(name) { __headers[name] ? __headers[name]:null }
   static get(name) { __get[name] ? __get[name]:null }
   static post(name) { __post[name] ? __post[name]:null }
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
-  static method() { __method }
-  static uri() { __uri }
-  static body() { __body }
-  static isPost() { __method == "POST" }
+
 }
 
 class Response {
@@ -85,11 +89,14 @@ class Response {
     __status = 200
     __out = ""
   }
+
+  // Getters
+  static out { __out.trim() }
+  static status { __status }
+  static headers { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+
   static out(out) { __out = __out + "\r\n" + out }
-  static out() { __out.trim() }
   static status(status) { __status = status }
-  static status() { __status }
-  static headers() { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
   static header(header, value) { __headers[header.trim()] = value.trim() }
   static redirect(url) {

@@ -508,7 +508,7 @@ struct BialetResponse bialet_run(char *module, char *code,
     wrenGetVariable(vm, "bialet", "Response", 0);
     WrenHandle *response_class = wrenGetSlotHandle(vm, 0);
     /* Get body from response */
-    WrenHandle *out_method = wrenMakeCallHandle(vm, "out()");
+    WrenHandle *out_method = wrenMakeCallHandle(vm, "out");
     wrenSetSlotHandle(vm, 0, response_class);
     if (wrenCall(vm, out_method) == WREN_RESULT_SUCCESS) {
       const char *body = wrenGetSlotString(vm, 0);
@@ -518,7 +518,7 @@ struct BialetResponse bialet_run(char *module, char *code,
       error = 1;
     }
     /* Get status from response */
-    WrenHandle *status_method = wrenMakeCallHandle(vm, "status()");
+    WrenHandle *status_method = wrenMakeCallHandle(vm, "status");
     wrenSetSlotHandle(vm, 0, response_class);
     if (wrenCall(vm, status_method) == WREN_RESULT_SUCCESS) {
       const double status = wrenGetSlotDouble(vm, 0);
@@ -529,7 +529,7 @@ struct BialetResponse bialet_run(char *module, char *code,
     }
     /* Get headers from response */
     if (hm) {
-      WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers()");
+      WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers");
       wrenSetSlotHandle(vm, 0, response_class);
       if (wrenCall(vm, headers_method) == WREN_RESULT_SUCCESS) {
         const char *headersString = wrenGetSlotString(vm, 0);
