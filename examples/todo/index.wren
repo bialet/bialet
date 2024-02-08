@@ -4,7 +4,7 @@ import "_domain" for Task
 
 var task = Task.new()
 
-if (Request.isPost()) {
+if (Request.isPost) {
   task.save(Request.post("task"))
   return Response.redirect("/")
 }
