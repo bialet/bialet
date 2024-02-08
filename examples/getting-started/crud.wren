@@ -9,13 +9,23 @@ import "bialet/extra" for Resource, Auth
 `CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query()
 
 // Authentication, when the user is not authenticated, they are redirected to the login page.
-if (Auth.isGuest) return Auth.require()
+if (!Auth.user) return Auth.require()
 
-// When the user is not an admin, they are denied. A forbidden page is shown.
+// When the user is not an admin, a forbidden page is shown.
 if (!Auth.isAdmin) return Auth.deny()
+
+// You can also set the `Auth.denied` variable.
+Auth.denied = !Auth.isAdmin
+// then use the check method, it will redirect to a login or show a forbidden page
+// if the Auth denied variable is true.
+if (Auth.check) return
 
 // Creates a CRUD resource for the `counter` table.
 var counterResource = Resource.new('counter')
+
+// If the request is a JSON request, it will handle the CRUD operations on the `counter` table
+// using the proper HTTP verbs to do the operations and passing the ID of the resource via GET.
+if (counterResource.json) return
 
 Response.out('
 <!DOCTYPE html>
@@ -27,6 +37,7 @@ Response.out('
   </head>
   <body>
     <h1>A fully CRUD generator</h1>
+    <h2>Hi %(Auth.user.name)!</h2>
     %( counterResource.html )
     <p><a href=".">Back ↩️</a></p>
   </body>
