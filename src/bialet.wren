@@ -36,9 +36,9 @@ class Request {
       }
       if (!startBody) {
         tmp = line.split(":")
-        headerName = tmp.removeAt(0).trim()
+        headerName = tmp.removeAt(0).trim().lower
         headerValue = tmp.join(":").trim()
-        if (headerName.lower == "cookie") {
+        if (headerName == "cookie") {
           Cookie.init(headerValue)
         }
         __headers[headerName] = headerValue
@@ -75,6 +75,7 @@ class Request {
   static uri { __uri }
   static body { __body }
   static isPost { __method == "POST" }
+  static isJson { header("content-type") == "application/json" }
   static header(name) { __headers[name] ? __headers[name]:null }
   static get(name) { __get[name] ? __get[name]:null }
   static post(name) { __post[name] ? __post[name]:null }
