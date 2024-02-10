@@ -11,6 +11,7 @@
 #include "bialet_wren.h"
 #include "bialet.h"
 #include "bialet.wren.inc"
+#include "bialet_extra.wren.inc"
 #include "messages.h"
 #include "mongoose.h"
 #include "wren.h"
@@ -103,6 +104,14 @@ char *bialet_read_file(const char *path) {
 static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
 
   char module[MAX_MODULE_LEN];
+  WrenLoadModuleResult result = {0};
+
+  /* Load Bialet modules */
+  if (strcmp(name, "bialet/extra") == 0) {
+    result.source = bialet_extraModuleSource;
+    return result;
+  }
+
   if (name[0] == '/') {
     strcpy(module, bialet_config.root_dir);
   } else {
@@ -119,7 +128,6 @@ static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
   strcat(module, name);
   strcat(module, BIALET_EXTENSION);
   char *buffer = bialet_read_file(module);
-  WrenLoadModuleResult result = {0};
   result.source = NULL;
 
   if (buffer) {

@@ -12,10 +12,10 @@ import "bialet/extra" for Resource, Auth
 if (!Auth.user) return Auth.require()
 
 // When the user is not an admin, a forbidden page is shown.
-if (!Auth.isAdmin) return Auth.deny()
+if (!Auth.user.isAdmin) return Auth.deny()
 
 // You can also set the `Auth.denied` variable.
-Auth.denied = !Auth.isAdmin
+Auth.denied = !Auth.user.isAdmin
 // then use the check method, it will redirect to a login or show a forbidden page
 // if the Auth denied variable is true.
 if (Auth.check) return
