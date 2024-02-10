@@ -22,7 +22,7 @@ static const char* {1}ModuleSource =
 def wren_to_c_string(input_path, wren_source_lines, module):
   wren_source = ""
   for line in wren_source_lines:
-    line = re.sub(r'//.*', '', line)
+    line = re.sub(r'^\s*//.*', '', line)
     if line != "\n":
       line = line.replace("\\", "\\\\")
       line = line.replace('"', "\\\"")
