@@ -85,7 +85,7 @@ class Request {
 
 class Response {
   static init() {
-    __headers = {"Content-Type": "text/html"}
+    __headers = {"Content-Type": "text/html; charset=UTF-8"}
     __cookies = []
     __status = 200
     __out = ""
@@ -100,13 +100,23 @@ class Response {
   static status(status) { __status = status }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
   static header(header, value) { __headers[header.trim()] = value.trim() }
-  static redirect(url) {
-    Response.status(302)
-    Response.header("Location", url)
-  }
+
   static json(data) {
-    Response.header("Content-Type", "application/json")
-    Response.out(Json.stringify(data))
+    header("Content-Type", "application/json; charset=UTF-8")
+    out(Json.stringify(data))
+  }
+
+  static page(title, message) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( title )</h1><p>%( message )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.org" style="color:#0BF;text-decoration:0">bialet' }
+  static end(code, title, message) { status(code) && out(page(title, message)) }
+
+  static redirect(url) {
+    header("Location", url)
+    return end(302, "➡️ Redirect to", '<a href="%(url)">%(url)</a>')
+  }
+  static forbidden() { end(403, "🚫 Forbidden", "Sorry, you don't have permission to access this page") }
+  static login() {
+    header("WWW-Authenticate", 'Basic realm="Login required"')
+    return end(401, "🔒 Needs login", '<a href="javascript:location.reload()">Sign in</a> to access this page')
   }
 }
 

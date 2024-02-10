@@ -71,7 +71,7 @@ void freeBialetQuery(BialetQuery *query);
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
 #define BIALET_HEADER_PAGE                                                     \
-  "<!DOCTYPE html><body style=\"font:2em "                                     \
+  "<!DOCTYPE html><body style=\"font:2.3rem "                                     \
   "system-ui;text-align:center;margin:2em;color:#024\"><h1>"
 #define BIALET_FOOTER_PAGE                                                     \
   "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "      \
