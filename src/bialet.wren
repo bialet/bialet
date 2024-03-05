@@ -522,9 +522,21 @@ var HEX_CHARS = [
 
 class Util {
 
-  foreign static randomString(length)
-  foreign static hash(password)
-  foreign static verify(password, hash)
+  foreign static randomString_(length)
+  foreign static hash_(password)
+  foreign static verify_(password, hash)
+
+  static randomString(length) { randomString_(toNum(length)) }
+  static hash(password) { hash_("%( password )") }
+  static verify(password, hash) { verify_("%( password )", "%( hash )") }
+
+  static toNum(val) {
+    if (!val) return 0
+    if (val is Num) return val
+    val = Num.fromString("%(val)")
+    if (!val) return 0
+    return val
+  }
 
   static hexToDec(hexStr) {
     var decimal = 0
