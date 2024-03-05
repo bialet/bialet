@@ -93,7 +93,7 @@ The default port is 7000. Use the environment variable **BIALET_PORT** to change
 
 ## Building
 
-Install the dependencies and run make. See the details in the [build](BUILD.md) file.
+Install the dependencies and run make. See the details in the [build](docs/source/build.md#Building) file.
 
 ## License
 
