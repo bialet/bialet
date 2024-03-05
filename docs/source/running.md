@@ -1,26 +1,4 @@
-# Bialet build
-
-Install SQLite3, OpenSSL 3 and curl for dev dependencies and run the build.
-
-In Debian based
-
-```bash
-sudo apt install -y libsqlite3-dev libssl-dev libcurl4-openssl-dev
-```
-
-In MacOS
-
-```bash
-brew install sqlite3 openssl curl
-```
-
-Then run the build
-
-```bash
-make clean && make
-```
-
-## Running
+# Running
 
 ```bash
 bialet -p 7000 /path/to/app
@@ -37,4 +15,5 @@ Available Configuration
 | Hard memory limit | -M | 100 (in Megabytes) |
 | CPU limit | -c | 15 |
 | Hard CPU limit | -C | 30 |
+
 
