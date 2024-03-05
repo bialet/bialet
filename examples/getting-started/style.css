@@ -33,3 +33,13 @@ td {
   padding: .5em;
   text-align: left;
 }
+
+code {
+  background: #433;
+  color: #ddd;
+  padding: .5em;
+  display: block;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  width: 100%;
+}

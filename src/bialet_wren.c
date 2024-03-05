@@ -431,13 +431,13 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              const char *signature) {
   if (strcmp(module, "bialet") == 0) {
     if (strcmp(className, "Util") == 0) {
-      if (strcmp(signature, "randomString(_)") == 0) {
+      if (strcmp(signature, "randomString_(_)") == 0) {
         return random_string;
       }
-      if (strcmp(signature, "hash(_)") == 0) {
+      if (strcmp(signature, "hash_(_)") == 0) {
         return hash_password;
       }
-      if (strcmp(signature, "verify(_,_)") == 0) {
+      if (strcmp(signature, "verify_(_,_)") == 0) {
         return verify_password;
       }
     }
