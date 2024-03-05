@@ -6,8 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Bialet  documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Project Structure and Routing &#8212; Bialet  documentation</title>
   
   
   
@@ -39,9 +40,11 @@
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
-    <link rel="index" title="Index" href="#" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'structure';</script>
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running" href="running.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -103,8 +106,6 @@
       
       
       
-        
-      
       <div class="bd-sidebar-primary bd-sidebar">
         
 
@@ -144,9 +145,9 @@
  </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 </ul>
 
@@ -189,6 +190,54 @@
         <div class="header-article-item">
 
 <div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/structure.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
 
 
 
@@ -236,7 +285,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1></h1>
+    <h1>Project Structure and Routing</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -250,12 +299,24 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
+  <section id="project-structure-and-routing">
+<h1>Project Structure and Routing<a class="headerlink" href="#project-structure-and-routing" title="Link to this heading">#</a></h1>
+<p><strong>The best way to think a project with Bialet is do it first like static old school HTML,
+then replace the logic and template duplication with Wren code.</strong></p>
+<p>The scripts will be load as if they were HTML files, so the file <code class="docutils literal notranslate"><span class="pre">contact-us.wren</span></code> can be open with the URL <a class="reference external" href="http://localhost:7000/contact-us.wren">localhost:7000/contact-us.wren</a> or even without the wren suffix <a class="reference external" href="http://localhost:7000/contact-us">localhost:7000/contact-us</a>.</p>
+<p>This will work with each folder, for example the URL <a class="reference external" href="http://localhost:7000/landing/newsletter/cool-campaign">localhost:7000/landing/newsletter/cool-campaign</a> will run the script <code class="docutils literal notranslate"><span class="pre">landing/newsletter/cool-campaign.wren</span></code>. Like if there was an HMTL file.</p>
+<p>That mean that each file is public and will be executed <strong>except</strong> when it start with a <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>. The <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> file won’t be load with the URL <a class="reference external" href="http://localhost:7000/_app">localhost:7000/_app</a> or with any other URL. Any file or any file under a folder that start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> won’t be open.</p>
+<p>For dynamic routing, add a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file in the folder and use the <code class="docutils literal notranslate"><span class="pre">Request.route(N)</span></code> function to get the value. <strong>N</strong> is the position of the route parameter. For the file <code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code> when called from <a class="reference external" href="http://localhost:7000/api/users/1?fields=name,email&amp;amp;sortType=ASC">localhost:7000/api/users/1?fields=name,email&amp;sortType=ASC</a> those will be the values:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span>
 
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+<span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="c1">// users</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="c1">// 1</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;fields&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// name,email</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s">&quot;sortType&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// ASC</span>
+</pre></div>
 </div>
+<p>⚠️ There is no need to add a single <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file to handle all the routing.</p>
+</section>
 
 
                 </article>
@@ -268,6 +329,24 @@ document.write(`
                 <footer class="prev-next-footer">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="running.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Running</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
