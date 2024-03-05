@@ -1,11 +1,10 @@
-name: Documentation
+name: Build and publish documentation website
 
 on:
   push:
     branches:
       - main
       - docs
-  pull_request:
 
 jobs:
   deploy:
@@ -24,7 +23,6 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          # install pip=>20.1 to use "pip cache dir"
           python3 -m pip install --upgrade pip
 
       - name: Get pip cache dir
@@ -42,11 +40,11 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install -r ./docs/requirements.txt
 
-      - run: sphinx-build -M html docs/source/ docs/build/
+      - name: Sphinx build
+        run: sphinx-build -M html docs/source/ docs/build/
 
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        # if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/build/html
