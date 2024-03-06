@@ -20,8 +20,6 @@ Quickstart
 
 2. Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
 
-This will load the `examples </examples>` project.
-
 See :doc:`installation </installation>` for details on building and running the project.
 
 Hello World
