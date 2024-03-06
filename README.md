@@ -1,6 +1,6 @@
 # 🚲 bialet
 
-**Bialet is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
+**[Bialet](https://bialet.org) is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
 
 <p align="center">
   <img src="https://github.com/bialet/bialet/assets/142173/af827692-0e0d-4805-a478-77d07bd62e18" alt="Make Web Development Great Again hat" width="200" />
@@ -28,6 +28,7 @@ See [installation](docs/source/installation.md) for details on building and runn
 ## A single file web application example
 
 This example shows how to build a simple Poll web application using Bialet.
+
 
 ```sql
 CREATE TABLE poll (answer TEXT PRIMARY KEY, votes INT);
@@ -78,6 +79,7 @@ Response.out('
 
     %( !showResults ? '
 
+      <!-- Form for voting -->
       <form method="post">
         %( poll.options.map{ |opt| '
           <p>
@@ -92,6 +94,7 @@ Response.out('
 
     ' : '
 
+      <!-- Show results -->
       <p>Thank you for voting!</p>
       <ul>
         %( poll.options.map{|opt| '<li>%(opt["answer"]) - %(opt["votes"]) votes</li>' })
@@ -99,11 +102,14 @@ Response.out('
       <p>Total votes: <strong>%( poll.totalVotes )</strong></p>
 
     ')
-    <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
 ')
 ```
+
+The [`style.css`](examples/getting-started/style.css) is plain CSS. You can integrate with Tailwind or other CSS frameworks.
+
+See more examples in the [documentation](https://bialet.org).
 
 ## License
 
