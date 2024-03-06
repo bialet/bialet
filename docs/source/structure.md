@@ -1,4 +1,4 @@
-## Project Structure and Routing
+# Project Structure and Routing
 
 **The best way to think a project with Bialet is do it first like static old school HTML,
 then replace the logic and template duplication with Wren code.**
