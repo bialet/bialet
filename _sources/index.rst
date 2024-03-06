@@ -1,59 +1,50 @@
-🚲 Bialet
-=========
+Bialet
+======
 
-Bialet is the `worst <https://en.wikipedia.org/wiki/Worse_is_better>`_ web
-development framework ever.
+**Bialet is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
 
-Would you like a strongly typed programming language with strong unit testing support?
-Well, this is not the framework you are looking for, here we want to write bad
-code and **ship features**.
+.. figure:: _static/make-web-dev-great-again.png
 
-Here is an example of how to use Bialet:
+  Make Web Development Great Again
 
-.. code-block::
+Quickstart
+----------
 
-  import "bialet" for Response
+1. Install Bialet using Docker Compose.
 
-  // Look how short and sweet it is
-  class Config {
-    static get(key){ `SELECT val FROM config WHERE key = ?`.first(key)["val"] }
-  }
+.. code-block:: bash
 
-  // Or maybe you need other functions to interact with the values,
-  // so it makes sense to create the good ol' class that makes objects.
-  class ConfigValue {
-    construct new(key) {
-      _config = `SELECT * FROM config WHERE key = ?`.first(key)
-    }
-    key { _config["key"].upper }
-    val { _config["val"] }
-    toString { val }
-  }
+  git clone https://github.com/bialet/bialet.git
+  cd bialet
+  docker compose up
 
-  var title = Config.get("title") // This is a string
-  var description = ConfigValue.new("description") // This is a ConfigValue
-  // ...they are both objects though 🤔
+2. Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
 
-  // Let's log the values in the server output
-  System.print("🔍 TITLE: %(title)")
-  System.print("🔍 %(description.key): %(description.val)")
+This will load the `examples </examples>` project.
 
-  // Remember the times were you write actual HTML?
-  Response.out('
-  <!DOCTYPE html>
-    <body>
-      <h1>%( title )</h1>
-      <p>%( description )</p>
-    </body>
-  </html>
-  ')
+See :doc:`installation </installation>` for details on building and running the project.
+
+Hello World
+-----------
 
 The code is written in `Wren <https://wren.io>`_, though a custom heavily modified
-version. See `more examples <https://github.com/bialet/bialet/tree/master/examples/run.md>`_ for usage.
+version.
+
+.. code-block:: wren
+
+   import "bialet" for Request, Response
+
+   var name = Request.get("name")
+
+   Response.out('<p>Hello %( name || "World" )!</p>')
+
+See more
+--------
 
 .. toctree::
    :maxdepth: 2
 
+   self
+   tutorial
    installation
    structure
-   running
