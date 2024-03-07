@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 
+#define BIALET_SQLITE_ERROR 11
 #define MAX_URL_LEN 200
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
@@ -570,12 +571,21 @@ struct BialetResponse bialet_run(char *module, char *code,
 
 void bialet_init(struct BialetConfig *config) {
   char db_path[MAX_MODULE_LEN];
-  strcpy(db_path, config->root_dir);
-  strcat(db_path, "/");
-  strcat(db_path, config->db_path);
+  int lastChar = (int)strlen(config->db_path) - 1;
+  if (config->db_path[0] == '/') {
+    strcpy(db_path, config->db_path);
+  } else {
+      if (config->db_path[lastChar] == '/') {
+        config->db_path[lastChar] = '\0';
+      }
+    strcpy(db_path, config->root_dir);
+    strcat(db_path, "/");
+    strcat(db_path, config->db_path);
+  }
   if (sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                       NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
+    exit(BIALET_SQLITE_ERROR);
   }
 
   bialet_config = *config;

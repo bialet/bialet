@@ -104,6 +104,7 @@ The table below summarizes the available command-line parameters for the Bialet 
 | `-p` | Port number | `7000` |
 | `-h` | Host name | `localhost` |
 | `-l` | Log file location | `stdout` |
+| `-d` | SQLite database file location | `_db.sqlite` |
 | `-m` | Memory limit (MB) | `50` |
 | `-M` | Hard memory limit (MB) | `100` |
 | `-c` | CPU limit (%) | `15` |
