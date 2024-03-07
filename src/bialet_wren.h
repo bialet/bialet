@@ -27,6 +27,8 @@ struct BialetResponse bialet_run(char *module, char *code,
 
 char *bialet_read_file(const char *path);
 
+int bialet_run_cli(char *code);
+
 #define BIALET_EXTENSION ".wren"
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 

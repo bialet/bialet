@@ -574,6 +574,20 @@ struct BialetResponse bialet_run(char *module, char *code,
   return r;
 }
 
+int bialet_run_cli(char *code) {
+  int error = 0;
+  WrenVM *vm = 0;
+  char *fullCode;
+
+  fullCode = string_safe_copy(bialetModuleSource);
+  fullCode = string_append(fullCode, "\n", code);
+  vm = wrenNewVM(&wren_config);
+  WrenInterpretResult result = wrenInterpret(vm, "bialet", fullCode);
+  error = result != WREN_RESULT_SUCCESS;
+  wrenFreeVM(vm);
+  return error;
+}
+
 void bialet_init(struct BialetConfig *config) {
   char db_path[MAX_MODULE_LEN];
   int lastChar = (int)strlen(config->db_path) - 1;

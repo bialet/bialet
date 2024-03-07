@@ -144,6 +144,7 @@ int main(int argc, char *argv[]) {
   struct rlimit cpu_limit;
   struct mg_mgr mgr;
   pthread_t thread_id;
+  char *code = "";
 
   /* Default config values */
   /* Arg config values */
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
   bialet_config.db_path = DB_FILE;
 
   /* Parse args */
-  while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:v")) != -1) {
+  while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:v")) != -1) {
     switch (opt) {
     case 'h':
       bialet_config.host = optarg;
@@ -191,6 +192,9 @@ int main(int argc, char *argv[]) {
     case 'C':
       bialet_config.cpu_hard_limit = atoi(optarg);
       break;
+    case 'r':
+      code = optarg;
+      break;
     case 'v':
       printf("bialet %s\n", BIALET_VERSION);
       exit(0);
@@ -209,6 +213,9 @@ int main(int argc, char *argv[]) {
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);
+  if (strcmp(code, "") != 0) {
+      exit(bialet_run_cli(code));
+  }
   mg_mgr_init(&mgr);
 
   if (mg_http_listen(&mgr, server_url(), http_handler, NULL) == NULL) {
