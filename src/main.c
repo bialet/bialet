@@ -21,8 +21,9 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define MIGRATION_FILE "/_migration.wren"
-#define MAX_ROUTES 100
+#define DB_FILE "_db.sqlite"
 #define ROUTE_FILE "_route.wren"
+#define MAX_ROUTES 100
 #define WAIT_FOR_RELOAD 3
 
 struct BialetConfig bialet_config;
@@ -157,10 +158,10 @@ int main(int argc, char *argv[]) {
   /* Env config values */
   bialet_config.debug = 0;
   bialet_config.output_color = 1;
-  bialet_config.db_path = "_db.sqlite3";
+  bialet_config.db_path = DB_FILE;
 
   /* Parse args */
-  while ((opt = getopt(argc, argv, "h:p:l:m:M:c:C:v")) != -1) {
+  while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:v")) != -1) {
     switch (opt) {
     case 'h':
       bialet_config.host = optarg;
@@ -172,6 +173,9 @@ int main(int argc, char *argv[]) {
       bialet_config.log_file = fopen(optarg, "a");
       /* @TODO Error handling config log file */
       bialet_config.output_color = 0;
+      break;
+    case 'd':
+      bialet_config.db_path = optarg;
       break;
     case 'm':
       bialet_config.mem_soft_limit = atoi(optarg);
