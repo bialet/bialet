@@ -79,7 +79,7 @@ void freeBialetQuery(BialetQuery *query);
 #define BIALET_WELCOME_PAGE                                                    \
   BIALET_HEADER_PAGE                                                           \
   "👋 Welcome to Bialet</h1><p>You're in! What's next? Check the <a "        \
-  "href=\"https://bialet.org/getting-started\">documentation</"                \
+  "href=\"https://bialet.org\">documentation</"                \
   "a>" BIALET_FOOTER_PAGE
 #define BIALET_NOT_FOUND_PAGE                                                  \
   BIALET_HEADER_PAGE                                                           \
