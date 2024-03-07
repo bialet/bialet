@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>🚲 Bialet &#8212; Bialet  documentation</title>
+    <title>Bialet &#8212; Bialet  documentation</title>
   
   
   
@@ -43,7 +43,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="next" title="Quickstart" href="tutorial.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -146,10 +146,11 @@
  </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 </ul>
 
     </div>
@@ -275,7 +276,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -286,11 +289,21 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>🚲 Bialet</h1>
+    <h1>Bialet</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hello-world">Hello World</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-more">See more</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -301,62 +314,58 @@ document.write(`
                 <article class="bd-article">
                   
   <section id="bialet">
-<h1>🚲 Bialet<a class="headerlink" href="#bialet" title="Link to this heading">#</a></h1>
-<p>Bialet is the <a class="reference external" href="https://en.wikipedia.org/wiki/Worse_is_better">worst</a> web
-development framework ever.</p>
-<p>Would you like a strongly typed programming language with strong unit testing support?
-Well, this is not the framework you are looking for, here we want to write bad
-code and <strong>ship features</strong>.</p>
-<p>Here is an example of how to use Bialet:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>import &quot;bialet&quot; for Response
-
-// Look how short and sweet it is
-class Config {
-  static get(key){ `SELECT val FROM config WHERE key = ?`.first(key)[&quot;val&quot;] }
-}
-
-// Or maybe you need other functions to interact with the values,
-// so it makes sense to create the good ol&#39; class that makes objects.
-class ConfigValue {
-  construct new(key) {
-    _config = `SELECT * FROM config WHERE key = ?`.first(key)
-  }
-  key { _config[&quot;key&quot;].upper }
-  val { _config[&quot;val&quot;] }
-  toString { val }
-}
-
-var title = Config.get(&quot;title&quot;) // This is a string
-var description = ConfigValue.new(&quot;description&quot;) // This is a ConfigValue
-// ...they are both objects though 🤔
-
-// Let&#39;s log the values in the server output
-System.print(&quot;🔍 TITLE: %(title)&quot;)
-System.print(&quot;🔍 %(description.key): %(description.val)&quot;)
-
-// Remember the times were you write actual HTML?
-Response.out(&#39;
-&lt;!DOCTYPE html&gt;
-  &lt;body&gt;
-    &lt;h1&gt;%( title )&lt;/h1&gt;
-    &lt;p&gt;%( description )&lt;/p&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
-&#39;)
+<h1>Bialet<a class="headerlink" href="#bialet" title="Link to this heading">#</a></h1>
+<p><strong>Bialet is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development</strong></p>
+<figure class="align-default" id="id1">
+<img alt="_images/make-web-dev-great-again.png" src="_images/make-web-dev-great-again.png" />
+<figcaption>
+<p><span class="caption-text">Make Web Development Great Again</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Install Bialet using Docker Compose.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bialet/bialet.git
+<span class="nb">cd</span><span class="w"> </span>bialet
+docker<span class="w"> </span>compose<span class="w"> </span>up
 </pre></div>
 </div>
+<ol class="arabic simple" start="2">
+<li><p>Visit <a class="reference external" href="http://localhost:7000">localhost:7000</a> in your browser.</p></li>
+</ol>
+<p>See <a class="reference internal" href="installation.html"><span class="doc">installation</span></a> for details on building and running the project.</p>
+</section>
+<section id="hello-world">
+<h2>Hello World<a class="headerlink" href="#hello-world" title="Link to this heading">#</a></h2>
 <p>The code is written in <a class="reference external" href="https://wren.io">Wren</a>, though a custom heavily modified
-version. See <a class="reference external" href="https://github.com/bialet/bialet/tree/master/examples/run.md">more examples</a> for usage.</p>
+version.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&quot;World&quot;</span><span class="w"> </span><span class="p">)</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="err">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="see-more">
+<h2>See more<a class="headerlink" href="#see-more" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
-<ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#building">Building</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#quick-start-with-docker-compose">Quick Start with Docker Compose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#configuring-the-docker-compose-setup">Configuring the Docker Compose Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#building-from-source">Building from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-the-bialet-cli">Using the Bialet CLI</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 </ul>
 </div>
+</section>
 </section>
 
 
@@ -371,11 +380,11 @@ version. See <a class="reference external" href="https://github.com/bialet/biale
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="installation.html"
+       href="tutorial.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">Quickstart</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -386,7 +395,22 @@ version. See <a class="reference external" href="https://github.com/bialet/biale
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"></div>
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hello-world">Hello World</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-more">See more</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
