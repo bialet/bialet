@@ -524,7 +524,7 @@ class ClassAttributes {
 
 class Query {
   construct new() {}
-  static queryFromString(string, params) { Query.new().query_(string, params) }
+  static fromString(string, params) { Query.new().query_(string, params) }
   static fetchFromString(string, params) { Query.new().fetch_(string, params) }
   // Query methods, return last inserted ID
   query() { query_(this, []) }
