@@ -21,8 +21,6 @@ docker compose up
 
 2. Visit [localhost:7000](http://localhost:7000) in your browser.
 
-This will load the [example](examples/getting-started.md) project.
-
 See [installation](docs/source/installation.md) for details on building and running the project.
 
 ## A single file web application example
@@ -106,8 +104,6 @@ Response.out('
 </html>
 ')
 ```
-
-The [`style.css`](examples/getting-started/style.css) is plain CSS. You can integrate with Tailwind or other CSS frameworks.
 
 See more examples in the [documentation](https://bialet.org).
 
