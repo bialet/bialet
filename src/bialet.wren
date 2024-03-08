@@ -634,11 +634,24 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
-      schema.toString.split(";").each{|q| Query.queryFromString(q, []) }
+      schema.toString.split(";").each{|q| Query.fromString(q, []) }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
     }
   }
-  static save(table, values) { Query.queryFromString("REPLACE INTO " + table + "(" + values.keys.join(", ") + ") VALUES (" + values.map{|v| "?"}.join(", ") + ")", values.values.toList) }
+  static save(table, values) {
+    var bind = []
+    var params = []
+    for (v in values) {
+      if (v.value is Query) {
+        // add raw query string
+        bind.add(v.value.toString)
+      } else {
+        bind.add("?")
+        params.add(v.value)
+      }
+    }
+    return Query.fromString("REPLACE INTO `%(table)` (%(values.keys.join(','))) VALUES (%(bind.join(',')))", params)
+  }
 }
 
 class Http {
