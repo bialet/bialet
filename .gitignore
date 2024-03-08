@@ -7,4 +7,3 @@ src/*.wren.inc
 
 # Docs files
 .venv/
-docs/build/
