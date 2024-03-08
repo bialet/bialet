@@ -7,4 +7,4 @@ services:
     ports:
       - ${BIALET_PORT:-7000}:7000
     volumes:
-      - ${BIALET_DIR:-./examples/getting-started}:/var/www
+      - ${BIALET_DIR:-./docs/quickstart}:/var/www
