@@ -33,10 +33,13 @@ install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
 	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)
 
+uninstall:
+	rm -f $(INSTALL_DIR)/$(TARGET_EXEC)
+
 clean:
 	rm -rf $(BUILD_DIR)
 
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: all clean wren_to_c_string install html
+.PHONY: all clean wren_to_c_string install uninstall html
