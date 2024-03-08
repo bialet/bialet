@@ -1,7 +1,11 @@
 TARGET_EXEC := bialet
 BUILD_DIR := ./build
 SRC_DIRS := ./src
+DOCS_DIRS := ./docs
 INSTALL_DIR := ~/.local/bin
+
+SPHINXBUILD ?= sphinx-build
+SPHINXOPTS ?=
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.c')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
@@ -32,4 +36,7 @@ install: $(BUILD_DIR)/$(TARGET_EXEC)
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean wren_to_c_string
+html:
+	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
+
+.PHONY: all clean wren_to_c_string install html
