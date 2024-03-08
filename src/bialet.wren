@@ -39,7 +39,7 @@ class Request {
         headerName = tmp.removeAt(0).trim().lower
         headerValue = tmp.join(":").trim()
         if (headerName == "cookie") {
-          Cookie.init(headerValue)
+          Cookie.parseHeader(headerValue)
         }
         __headers[headerName] = headerValue
       } else {
@@ -122,14 +122,13 @@ class Response {
 
 class Cookie {
   static init() { __cookies = {} }
-  static init(cookieLine) {
-    var cookies = cookieLine.split(";")
+  static parseHeader(headerValue) {
     __cookies = {}
-    for (cookie in cookies) {
-      var tmp = cookie.split("=")
-      var name = tmp[0].trim()
-      var value = tmp[1].trim()
-      __cookies[name] = value
+    for (cookieStr in headerValue.split(";")) {
+      var cookie = cookieStr.split("=")
+      if (cookie.count > 1) {
+        __cookies[cookie[0].trim()] = cookie[1].trim()
+      }
     }
   }
   static set(name, value, options) {
