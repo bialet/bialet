@@ -170,8 +170,10 @@ int main(int argc, char *argv[]) {
       bialet_config.port = atoi(optarg);
       break;
     case 'l':
-      bialet_config.log_file = fopen(optarg, "a");
-      /* @TODO Error handling config log file */
+      if ((bialet_config.log_file = fopen(optarg, "a")) == NULL) {
+        perror("Error opening log file");
+        exit(EXIT_FAILURE);
+      }
       bialet_config.output_color = 0;
       break;
     case 'd':
@@ -216,7 +218,6 @@ int main(int argc, char *argv[]) {
 
   welcome();
   trigger_reload_files();
-
 
   pthread_create(&thread_id, NULL, file_watcher, NULL);
 
