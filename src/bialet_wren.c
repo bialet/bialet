@@ -258,12 +258,12 @@ static void random_string(WrenVM *vm) {
 }
 
 static void hash_password(WrenVM *vm) {
-/* @TODO OpenSSL 3 only */
 #if OPENSSL_VERSION_NUMBER > 0x102031af
   const char *password = wrenGetSlotString(vm, 1);
   unsigned char salt[16];
   if (!RAND_bytes(salt, sizeof(salt))) {
-    /* @TODO Handle error for password hashing */
+    perror("Failed to generate salt");
+    return;
   }
 
   unsigned char hash[EVP_MAX_MD_SIZE];
@@ -575,9 +575,9 @@ void bialet_init(struct BialetConfig *config) {
   if (config->db_path[0] == '/') {
     strcpy(db_path, config->db_path);
   } else {
-      if (config->db_path[lastChar] == '/') {
-        config->db_path[lastChar] = '\0';
-      }
+    if (config->db_path[lastChar] == '/') {
+      config->db_path[lastChar] = '\0';
+    }
     strcpy(db_path, config->root_dir);
     strcat(db_path, "/");
     strcat(db_path, config->db_path);
