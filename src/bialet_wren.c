@@ -235,7 +235,7 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
     rowCount++;
   }
 
-  if (result != SQLITE_DONE) {
+  if (result != SQLITE_DONE && result != SQLITE_OK && result != SQLITE_EMPTY) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
   query->lastInsertId = sqlite3Int64ToString(sqlite3_last_insert_rowid(db));
