@@ -21,7 +21,7 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define MIGRATION_FILE "/_migration.wren"
-#define DB_FILE "_db.sqlite"
+#define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route.wren"
 #define MAX_ROUTES 100
 #define WAIT_FOR_RELOAD 3
