@@ -80,6 +80,8 @@
 #define IS_MAP(value) (wrenIsObjType(value, OBJ_MAP))           // ObjMap
 #define IS_RANGE(value) (wrenIsObjType(value, OBJ_RANGE))       // ObjRange
 #define IS_STRING(value) (wrenIsObjType(value, OBJ_STRING))     // ObjString
+#define IS_QUERY(value) (wrenIsObjType(value, OBJ_QUERY))     // ObjString
+#define IS_HTML(value) (wrenIsObjType(value, OBJ_HTML))     // ObjString
 
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
@@ -100,6 +102,7 @@ typedef enum {
   OBJ_RANGE,
   OBJ_STRING,
   OBJ_QUERY,
+  OBJ_HTML,
   OBJ_UPVALUE
 } ObjType;
 
@@ -739,6 +742,16 @@ Value wrenNewQuery(WrenVM* vm, const char* text);
 //
 // [text] may be NULL if [length] is zero.
 Value wrenNewQueryLength(WrenVM* vm, const char* text, size_t length);
+
+// Creates a new string object and copies [text] into it.
+//
+// [text] must be non-NULL.
+Value wrenNewHtml(WrenVM* vm, const char* text);
+
+// Creates a new string object of [length] and copies [text] into it.
+//
+// [text] may be NULL if [length] is zero.
+Value wrenNewHtmlLength(WrenVM* vm, const char* text, size_t length);
 
 // Produces a string representation of [value].
 Value wrenNumToString(WrenVM* vm, double value);

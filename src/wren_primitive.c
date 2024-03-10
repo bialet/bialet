@@ -62,7 +62,7 @@ uint32_t validateIndex(WrenVM *vm, Value arg, uint32_t count,
 }
 
 bool validateString(WrenVM *vm, Value arg, const char *argName) {
-  if (IS_STRING(arg))
+  if (IS_STRING(arg) || IS_HTML(arg))
     return true;
   RETURN_ERROR_FMT("$ must be a string.", argName);
 }

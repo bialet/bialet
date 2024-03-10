@@ -387,6 +387,9 @@ static uint32_t hashObject(Obj *object) {
   case OBJ_QUERY:
     return ((ObjString *)object)->hash;
 
+  case OBJ_HTML:
+    return ((ObjString *)object)->hash;
+
   default:
     ASSERT(false, "Only immutable objects can be hashed.");
     return 0;
@@ -695,6 +698,28 @@ Value wrenNewQueryLength(WrenVM *vm, const char *text, size_t length) {
 
   hashString(query);
   return OBJ_VAL(query);
+}
+
+Value wrenNewHtml(WrenVM *vm, const char *text) {
+  return wrenNewHtmlLength(vm, text, strlen(text));
+}
+
+Value wrenNewHtmlLength(WrenVM *vm, const char *text, size_t length) {
+  // Allow NULL if the string is empty since byte buffers don't allocate any
+  // characters for a zero-length string.
+  ASSERT(length == 0 || text != NULL, "Unexpected NULL string.");
+
+  ObjString *html = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
+  initObj(vm, &html->obj, OBJ_HTML, vm->stringClass);
+  html->length = (int)length;
+  html->value[length] = '\0';
+
+  // Copy the string (if given one).
+  if (length > 0 && text != NULL)
+    memcpy(html->value, text, length);
+
+  hashString(html);
+  return OBJ_VAL(html);
 }
 
 Value wrenNewStringFromRange(WrenVM *vm, ObjString *source, int start,
@@ -1113,6 +1138,10 @@ static void blackenQuery(WrenVM *vm, ObjString *string) {
   vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
 }
 
+static void blackenHtml(WrenVM *vm, ObjString *string) {
+  // Keep track of how much memory is still in use.
+  vm->bytesAllocated += sizeof(ObjString) + string->length + 1;
+}
 
 static void blackenUpvalue(WrenVM *vm, ObjUpvalue *upvalue) {
   // Mark the closed-over object (in case it is closed).
@@ -1166,6 +1195,9 @@ static void blackenObject(WrenVM *vm, Obj *obj) {
     break;
   case OBJ_QUERY:
     blackenQuery(vm, (ObjString *)obj);
+    break;
+  case OBJ_HTML:
+    blackenHtml(vm, (ObjString *)obj);
     break;
   case OBJ_UPVALUE:
     blackenUpvalue(vm, (ObjUpvalue *)obj);
@@ -1231,6 +1263,7 @@ void wrenFreeObj(WrenVM *vm, Obj *obj) {
   case OBJ_INSTANCE:
   case OBJ_RANGE:
   case OBJ_STRING:
+  case OBJ_HTML:
   case OBJ_UPVALUE:
     break;
 

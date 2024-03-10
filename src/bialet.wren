@@ -92,7 +92,7 @@ class Response {
   }
 
   // Getters
-  static out { __out.trim() }
+  static out { HtmlOutput.out ? HtmlOutput.out.trim() : __out.trim() }
   static status { __status }
   static headers { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
 

@@ -131,6 +131,7 @@ typedef enum {
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
   TOKEN_QUERY,
+  TOKEN_HTML,
 
   TOKEN_LINE,
 
@@ -1086,6 +1087,44 @@ static void readString(Parser *parser, char quote) {
   makeToken(parser, type);
 }
 
+// Finishes lexing a string literal.
+static void readHtml(Parser *parser) {
+  ByteBuffer string;
+  TokenType type = TOKEN_HTML;
+  wrenByteBufferInit(&string);
+
+  for (;;) {
+    char c = nextChar(parser);
+    if (c == '\r')
+      continue;
+
+    if (c == '\0') {
+      parser->currentChar--;
+      break;
+    }
+
+    if (c == '%' && nextChar(parser) == '(') {
+      if (parser->numParens < MAX_INTERPOLATION_NESTING) {
+        parser->quotes[parser->numParens] = '<';
+        parser->parens[parser->numParens++] = 1;
+        type = TOKEN_INTERPOLATION;
+        break;
+      }
+
+      lexError(parser, "Interpolation may only nest %d levels deep.",
+               MAX_INTERPOLATION_NESTING);
+    }
+
+    wrenByteBufferWrite(parser->vm, &string, c);
+  }
+
+  parser->next.value =
+      wrenNewHtmlLength(parser->vm, (char *)string.data, string.count);
+
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 // Lex the next token and store it in [parser.next].
 static void nextToken(Parser *parser) {
   parser->previous = parser->current;
@@ -1118,7 +1157,11 @@ static void nextToken(Parser *parser) {
         // This is the final ")", so the interpolation expression has ended.
         // This ")" now begins the next section of the template string.
         parser->numParens--;
-        readString(parser, parser->quotes[parser->numParens]);
+        if (parser->quotes[parser->numParens] != '<') {
+          readString(parser, parser->quotes[parser->numParens]);
+        } else {
+          readHtml(parser);
+        }
         return;
       }
 
@@ -1213,6 +1256,11 @@ static void nextToken(Parser *parser) {
       return;
 
     case '<':
+      if (parser->previous.type == TOKEN_LINE) {
+        readHtml(parser);
+        return;
+      }
+
       if (matchChar(parser, '<')) {
         makeToken(parser, TOKEN_LTLT);
       } else {
@@ -1256,9 +1304,11 @@ static void nextToken(Parser *parser) {
       return;
 
     case '`':
-      // If we are inside an interpolated expression, fail. DON'T MIX SQL WITH HTML!
+      // If we are inside an interpolated expression, fail. DON'T MIX SQL WITH
+      // HTML!
       if (parser->numParens > 0)
-          lexError(parser, "Query are not allowed inside interpolated expressions.");
+        lexError(parser,
+                 "Query are not allowed inside interpolated expressions.");
       readQueryString(parser);
       return;
 
@@ -2397,13 +2447,22 @@ static void stringInterpolation(Compiler *compiler, bool canAssign) {
     ignoreNewlines(compiler);
   } while (match(compiler, TOKEN_INTERPOLATION));
 
-  // The trailing string part.
-  consume(compiler, TOKEN_STRING, "Expect end of string interpolation.");
-  literal(compiler, false);
-  callMethod(compiler, 1, "addCore_(_)", 11);
+  if (match(compiler, TOKEN_STRING)) {
+    literal(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
 
-  // The list of interpolated parts.
-  callMethod(compiler, 0, "join()", 6);
+    // The list of interpolated parts.
+    callMethod(compiler, 0, "join()", 6);
+  } else if (match(compiler, TOKEN_HTML)) {
+    literal(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+
+    // Set up all the HTML objects.
+    callMethod(compiler, 0, "html()", 6);
+  } else {
+    error(compiler, "Expected string or interpolation.");
+  }
+  // The trailing string part.
 }
 
 static void super_(Compiler *compiler, bool canAssign) {
@@ -2739,6 +2798,7 @@ GrammarRule rules[] = {
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
     /* TOKEN_QUERY         */ PREFIX(literal),
+    /* TOKEN_HTML          */ PREFIX(literal),
     /* TOKEN_LINE          */ UNUSED,
     /* TOKEN_ERROR         */ UNUSED,
     /* TOKEN_EOF           */ UNUSED};
@@ -3228,6 +3288,8 @@ static Value consumeLiteral(Compiler *compiler, const char *message) {
   if (match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
   if (match(compiler, TOKEN_QUERY))
+    return compiler->parser->previous.value;
+  if (match(compiler, TOKEN_HTML))
     return compiler->parser->previous.value;
   if (match(compiler, TOKEN_NAME))
     return compiler->parser->previous.value;

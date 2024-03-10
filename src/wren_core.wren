@@ -117,6 +117,8 @@ class Sequence {
     return result
   }
 
+  html() { HtmlOutput.out("<" + join("")) }
+
   slice(start) { slice(start, list.count) }
   slice(start, end) {
     list = toList
@@ -545,4 +547,9 @@ class Query {
   first(param) { first_(param is List ? param : [param]) }
   first(p1, p2) { first_([p1, p2]) }
   first(p1, p2, p3) { first_([p1, p2, p3]) }
+}
+
+class HtmlOutput {
+  static out{ __out }
+  static out(val){ __out = val }
 }

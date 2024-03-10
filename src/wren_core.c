@@ -1153,6 +1153,11 @@ DEF_PRIMITIVE(query_toString) {
   RETURN_VAL(wrenNewString(vm, queryString));
 }
 
+DEF_PRIMITIVE(html_toString) {
+  const char *htmlString = AS_CSTRING(args[0]);
+  RETURN_VAL(wrenNewString(vm, htmlString));
+}
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass *defineClass(WrenVM *vm, ObjModule *module, const char *name) {
   ObjString *nameString = AS_STRING(wrenNewString(vm, name));
@@ -1367,6 +1372,9 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->queryClass, "toString", query_toString);
   PRIMITIVE(vm->queryClass, "query_(_,_)", query_execute);
   PRIMITIVE(vm->queryClass, "fetch_(_,_)", query_fetch);
+
+  vm->htmlClass = AS_CLASS(wrenFindVariable(vm, coreModule, "HtmlOutput"));
+  PRIMITIVE(vm->htmlClass, "toString", html_toString);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);

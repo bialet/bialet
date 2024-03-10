@@ -42,6 +42,7 @@ struct WrenVM
   ObjClass* rangeClass;
   ObjClass* stringClass;
   ObjClass* queryClass;
+  ObjClass* htmlClass;
 
   // The fiber that is currently running.
   ObjFiber* fiber;
