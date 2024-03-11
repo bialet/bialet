@@ -631,6 +631,8 @@ class Util {
 class Config {
   static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"].toString }
   static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
+  static bool(key) { get(key) != "0" }
+  static num(key) { Num.fromString(get(key)) }
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
   static json(key) { set(key, Json.parse(get(key))) }
   static json(key, val) { set(key, Json.stringify(val)) }
