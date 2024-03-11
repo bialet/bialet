@@ -32,6 +32,9 @@
 #define MAX_MODULE_LEN 50
 #define HTTP_ERROR 500
 
+#define RUN_CODE_PREFIX "System.print(\"%("
+#define RUN_CODE_SUFFIX ")\")"
+
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
 sqlite3 *db;
@@ -236,10 +239,13 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   }
 
   /* @TODO @FIXME Getting SQLITE_MISUSED */
-  /* If SQLite ever returns SQLITE_MISUSE from any interface, that means that the application */
-  /* is incorrectly coded and needs to be fixed. Do not ship an application that sometimes returns */
-  /* SQLITE_MISUSE from a standard SQLite interface because that application contains potentially */
-  /* serious bugs. */ 
+  /* If SQLite ever returns SQLITE_MISUSE from any interface, that means that
+   * the application */
+  /* is incorrectly coded and needs to be fixed. Do not ship an application that
+   * sometimes returns */
+  /* SQLITE_MISUSE from a standard SQLite interface because that application
+   * contains potentially */
+  /* serious bugs. */
   if (result != SQLITE_DONE && result != SQLITE_OK && result != SQLITE_EMPTY) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
@@ -578,6 +584,36 @@ int bialet_run_cli(char *code) {
   int error = 0;
   WrenVM *vm = 0;
   char *fullCode;
+
+  // Add print to the last line of code
+  char *lastLine = strrchr(code, '\n');
+  if (lastLine == NULL) {
+    lastLine = code;
+  } else {
+    lastLine++;
+  }
+  int modifiedLength =
+      strlen(lastLine) + strlen(RUN_CODE_PREFIX) + strlen(RUN_CODE_SUFFIX) + 1;
+  for (char *ptr = lastLine; *ptr; ptr++) {
+    if (*ptr == '\"')
+      modifiedLength++;
+  }
+  char *modifiedLastLine = malloc(modifiedLength * sizeof(char));
+  char *dest = modifiedLastLine;
+  strcpy(dest, RUN_CODE_PREFIX);
+  dest += strlen(RUN_CODE_PREFIX);
+  // Escape quotes
+  for (char *ptr = lastLine; *ptr; ptr++, dest++) {
+    if (*ptr == '\"') {
+      *dest = '\\';
+      dest++;
+    }
+    *dest = *ptr;
+  }
+  strcpy(dest, RUN_CODE_SUFFIX);
+  strncpy(lastLine, modifiedLastLine, modifiedLength - 1);
+  lastLine[modifiedLength - 1] = '\0';
+  free(modifiedLastLine);
 
   fullCode = string_safe_copy(bialetModuleSource);
   fullCode = string_append(fullCode, "\n", code);
