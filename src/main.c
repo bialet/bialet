@@ -58,6 +58,8 @@ static void migrate() {
   if ((code = bialet_read_file(path))) {
     struct BialetResponse r = bialet_run("migration", code, 0);
     message(yellow("Running migration"), r.body);
+  } else {
+    bialet_run("migration", "import \"bialet\" for Db\nDb.init", 0);
   }
 }
 
@@ -212,6 +214,7 @@ int main(int argc, char *argv[]) {
   message_init(&bialet_config);
   bialet_init(&bialet_config);
   if (strcmp(code, "") != 0) {
+    migrate();
     exit(bialet_run_cli(code));
   }
   mg_mgr_init(&mgr);

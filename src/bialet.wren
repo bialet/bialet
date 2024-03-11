@@ -637,10 +637,14 @@ class Config {
 }
 
 class Db {
-  static migrate(version, schema) {
+  static init {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
+  }
+
+  static migrate(version, schema) {
+    Db.init
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
       schema.toString.split(";").each{|q| Query.fromString(q, []) }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
