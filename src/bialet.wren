@@ -165,7 +165,7 @@ class Session {
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
     __values[key] = value
-    `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query([_id, key, "%(value)"])
+    `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
 }
 
@@ -628,10 +628,19 @@ class Util {
   }
 }
 
+class Config {
+  static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"].toString }
+  static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
+  static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
+  static json(key) { set(key, Json.parse(get(key))) }
+  static json(key, val) { set(key, Json.stringify(val)) }
+}
+
 class Db {
   static migrate(version, schema) {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
       schema.toString.split(";").each{|q| Query.fromString(q, []) }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
