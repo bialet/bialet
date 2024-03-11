@@ -200,9 +200,7 @@ int main(int argc, char *argv[]) {
       exit(0);
       break;
     default:
-      fprintf(stderr,
-              "🚲 bialet\nUsage: %s [-h host] [-p port] [-l log] root_dir\n",
-              argv[0]);
+      fprintf(stderr, BIALET_USAGE, argv[0]);
       exit(EXIT_FAILURE);
     }
   }
@@ -214,7 +212,7 @@ int main(int argc, char *argv[]) {
   message_init(&bialet_config);
   bialet_init(&bialet_config);
   if (strcmp(code, "") != 0) {
-      exit(bialet_run_cli(code));
+    exit(bialet_run_cli(code));
   }
   mg_mgr_init(&mgr);
 
