@@ -235,6 +235,11 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
     rowCount++;
   }
 
+  /* @TODO @FIXME Getting SQLITE_MISUSED */
+  /* If SQLite ever returns SQLITE_MISUSE from any interface, that means that the application */
+  /* is incorrectly coded and needs to be fixed. Do not ship an application that sometimes returns */
+  /* SQLITE_MISUSE from a standard SQLite interface because that application contains potentially */
+  /* serious bugs. */ 
   if (result != SQLITE_DONE && result != SQLITE_OK && result != SQLITE_EMPTY) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
