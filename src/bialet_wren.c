@@ -32,8 +32,8 @@
 #define MAX_MODULE_LEN 50
 #define HTTP_ERROR 500
 
-#define RUN_CODE_PREFIX "System.print(\"%("
-#define RUN_CODE_SUFFIX ")\")"
+#define RUN_CODE_PREFIX "var bialet_run_output = "
+#define RUN_CODE_SUFFIX "\nSystem.print(bialet_run_output)"
 
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
