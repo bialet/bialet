@@ -167,6 +167,12 @@ class Session {
     __values[key] = value
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
+  csrf {
+    var token = Util.randomString(60)
+    set("_bialet_csrf", token)
+    return '<input type="hidden" name="_bialet_csrf" value="%( token )">'
+  }
+  csrfOk { get("_bialet_csrf") == Request.post("_bialet_csrf") }
 }
 
 // Json library and Util functions are from Matthew Brandly
