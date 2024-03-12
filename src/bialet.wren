@@ -521,9 +521,7 @@ class JsonToken {
   index { _index }
 }
 
-var HEX_CHARS = [
-  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"
-]
+var HEX_CHARS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
 var BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 class Util {
@@ -639,28 +637,31 @@ class Util {
     var i = 0
 
     while (i < input.count) {
-      var b1 = input.byteAt(i++) & 0xFF
+      i = i + 1
+      var b1 = input.byteAt(i) & 0xFF
       if (i == input.count) {
-        encoded += BASE64_CHARS[b1 >> 2]
-        encoded += BASE64_CHARS[(b1 & 0x3) << 4]
-        encoded += "=="
+        encoded = encoded + BASE64_CHARS[b1 >> 2]
+        encoded = encoded + BASE64_CHARS[(b1 & 0x3) << 4]
+        encoded = encoded + "=="
         break
       }
 
-      var b2 = input.byteAt(i++) & 0xFF
+      i = i + 1
+      var b2 = input.byteAt(i) & 0xFF
       if (i == input.count) {
-        encoded += BASE64_CHARS[b1 >> 2]
-        encoded += BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
-        encoded += BASE64_CHARS[(b2 & 0xF) << 2]
-        encoded += "="
+        encoded = encoded + BASE64_CHARS[b1 >> 2]
+        encoded = encoded + BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
+        encoded = encoded + BASE64_CHARS[(b2 & 0xF) << 2]
+        encoded = encoded + "="
         break
       }
 
-      var b3 = input.byteAt(i++) & 0xFF
-      encoded += BASE64_CHARS[b1 >> 2]
-      encoded += BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
-      encoded += BASE64_CHARS[((b2 & 0xF) << 2) | ((b3 & 0xC0) >> 6)]
-      encoded += BASE64_CHARS[b3 & 0x3F]
+      i = i + 1
+      var b3 = input.byteAt(i) & 0xFF
+      encoded = encoded + BASE64_CHARS[b1 >> 2]
+      encoded = encoded + BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
+      encoded = encoded + BASE64_CHARS[((b2 & 0xF) << 2) | ((b3 & 0xC0) >> 6)]
+      encoded = encoded + BASE64_CHARS[b3 & 0x3F]
     }
 
     return encoded
@@ -671,16 +672,20 @@ class Util {
     var i = 0
 
     while (i < input.count) {
-      var b1 = BASE64_CHARS.indexOf(input[i++])
-      var b2 = BASE64_CHARS.indexOf(input[i++])
-      var b3 = BASE64_CHARS.indexOf(input[i++])
-      var b4 = BASE64_CHARS.indexOf(input[i++])
+      var b1 = BASE64_CHARS.indexOf(input[i])
+      i = i + 1
+      var b2 = BASE64_CHARS.indexOf(input[i])
+      i = i + 1
+      var b3 = BASE64_CHARS.indexOf(input[i])
+      i = i + 1
+      var b4 = BASE64_CHARS.indexOf(input[i])
+      i = i + 1
 
-      decoded += String.fromByte((b1 << 2) | (b2 >> 4))
+      decoded = decoded + String.fromByte((b1 << 2) | (b2 >> 4))
       if (b3 != -1) {
-        decoded += String.fromByte(((b2 & 0xF) << 4) | (b3 >> 2))
+        decoded = decoded + String.fromByte(((b2 & 0xF) << 4) | (b3 >> 2))
         if (b4 != -1) {
-          decoded += String.fromByte(((b3 & 0x3) << 6) | b4)
+          decoded = decoded + String.fromByte(((b3 & 0x3) << 6) | b4)
         }
       }
     }
