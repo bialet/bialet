@@ -1,12 +1,16 @@
 // This line imports the Response class for managing HTTP interactions.
 // The import lines are write at the top of the script.
-import "bialet" for Response
-import "bialet/extra" for Resource, Auth
+import "bialet" for Request, Response, Util
+import "bialet/extra" for Resource, Auth, User
 
-// We use the `query()` method to execute SQL statements.
-// In this case we create a table named `counter` with two columns: `name` and `value`.
-// This should be do it with migrations, here it is added to the script to be self-contained.
-`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query()
+var user = User.new()
+user.id = 1
+user.name = "admin"
+user.password = "admin"
+user.isAdmin = true
+user.save()
+
+System.print(Request.header("authorization"))
 
 // Authentication, when the user is not authenticated, they are redirected to the login page.
 if (!Auth.user) return Auth.require()
