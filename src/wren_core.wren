@@ -117,9 +117,12 @@ class Sequence {
     return result
   }
 
-  slice(start) { slice(start, list.count) }
+  slice(start) { slice(start, -1) }
   slice(start, end) {
     list = toList
+    if (end < 0) {
+      end = list.count
+    }
     var result = []
     for (index in start...end) {
       result.add(list[index])
