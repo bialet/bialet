@@ -24,12 +24,16 @@
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route.wren"
 #define MAX_ROUTES 100
+#define MAX_IGNORED_FILES 20
+#define IGNORED_FILES "README*,LICENSE*,package.*"
 #define WAIT_FOR_RELOAD 3
 
 struct BialetConfig bialet_config;
 char *routes_list[MAX_ROUTES];
 char *routes_files[MAX_ROUTES];
+char *ignored_list[MAX_IGNORED_FILES];
 int routes_index = 0;
+int ignored_files_index = 0;
 time_t last_reload = 0;
 
 static void http_handler(struct mg_connection *c, int ev, void *ev_data,
@@ -42,6 +46,12 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
       if (mg_http_match_uri(hm, routes_list[i])) {
         hm->bialet_routes = strdup(routes_list[i]);
         mg_http_serve_ssi(c, hm, bialet_config.root_dir, routes_files[i]);
+        return;
+      }
+    }
+    for (int i = 0; i < ignored_files_index; i++) {
+      if (mg_http_match_uri(hm, ignored_list[i])) {
+        mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
         return;
       }
     }
@@ -83,6 +93,22 @@ static int parse_routes_callback(const char *fpath, const struct stat *sb,
 static void parse_routes() {
   routes_index = 0;
   ftw(bialet_config.root_dir, parse_routes_callback, 16);
+}
+
+static void parse_ignore(char *ignored_files_str) {
+  char *token;
+  ignored_files_index = 0;
+  char *str = strdup(ignored_files_str);
+  char file[MAX_PATH_LEN];
+  token = strtok(str, ",");
+  while (token != NULL) {
+    // Append / to ignore files
+    strcpy(file, "/");
+    strcat(file, token);
+    ignored_list[ignored_files_index] = strdup(file);
+    ignored_files_index++;
+    token = strtok(NULL, ",");
+  }
 }
 
 /* Reload files */
@@ -147,6 +173,7 @@ int main(int argc, char *argv[]) {
   struct mg_mgr mgr;
   pthread_t thread_id;
   char *code = "";
+  char *ignored_files_str = IGNORED_FILES;
 
   /* Default config values */
   /* Arg config values */
@@ -164,7 +191,7 @@ int main(int argc, char *argv[]) {
   bialet_config.db_path = DB_FILE;
 
   /* Parse args */
-  while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:v")) != -1) {
+  while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:v")) != -1) {
     switch (opt) {
     case 'h':
       bialet_config.host = optarg;
@@ -181,6 +208,9 @@ int main(int argc, char *argv[]) {
       break;
     case 'd':
       bialet_config.db_path = optarg;
+      break;
+    case 'i':
+      ignored_files_str = optarg;
       break;
     case 'm':
       bialet_config.mem_soft_limit = atoi(optarg);
@@ -225,6 +255,7 @@ int main(int argc, char *argv[]) {
   }
 
   welcome();
+  parse_ignore(ignored_files_str);
   trigger_reload_files();
 
   pthread_create(&thread_id, NULL, file_watcher, NULL);
