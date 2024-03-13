@@ -199,7 +199,10 @@ class JsonStringifier {
   toString { stringify(_object) }
 
   stringify(obj) {
-    if (obj is Num || obj is Bool || obj is Null) {
+    if (obj is Null) {
+      return "null"
+    }
+    if (obj is Num || obj is Bool) {
       return obj.toString
     } else if (obj is String) {
       var substrings = []
@@ -390,10 +393,8 @@ class JsonScanner {
   scanString () {
     var isEscaping = false
     var valueInProgress = []
-
     while ((peek() != "\"" || isEscaping) && !isAtEnd()) {
       var char = advance()
-
       if (isEscaping) {
         if (escapedCharMap.containsKey(char)) {
           valueInProgress.add(escapedCharMap[char])
@@ -405,16 +406,13 @@ class JsonScanner {
           var decimal = Util.hexToDec(hexString)
           if (decimal == null) scanningError
           valueInProgress.add(String.fromCodePoint(decimal))
-
           _cursor = _cursor + charsToPull
         } else {
           scanningError
         }
-
         isEscaping = false
       } else if (char == "\\") {
         isEscaping = true
-
       } else {
         valueInProgress.add(char)
       }
@@ -425,10 +423,8 @@ class JsonScanner {
       scanningError
       return
     }
-
     // consume closing "
     advance()
-
     addToken(JsonToken.String, valueInProgress.join(""))
   }
 
@@ -436,9 +432,7 @@ class JsonScanner {
     while (numberChars.contains(peek())) {
       advance()
     }
-
     var number = Num.fromString(_input.slice(_start, _cursor).join(""))
-
     if (number == null) {
       scanningError
     } else {
@@ -759,7 +753,7 @@ class Http {
     if (!options["headers"].containsKey("Content-Type")) {
       options["headers"]["Content-Type"] = "application/json"
     }
-    System.print("Request: %(url) %(options)")
+    System.print("Http Request: %(url) %(options)")
     var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
@@ -774,7 +768,7 @@ class Http {
     __http.method = method
     __http.postData = data
     var response = __http.call(url, options)
-    System.print("Response: %(response)")
+    System.print("Http Response: %(response)")
     if (response["body"] != "") {
       return Json.parse(response["body"])
     }
