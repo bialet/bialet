@@ -3,6 +3,7 @@ BUILD_DIR := ./build
 SRC_DIRS := ./src
 DOCS_DIRS := ./docs
 INSTALL_DIR := ~/.local/bin
+DB_FILE := ./_db.sqlite3
 
 SPHINXBUILD ?= sphinx-build
 SPHINXOPTS ?=
@@ -38,6 +39,7 @@ uninstall:
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -f $(DB_FILE)
 
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
