@@ -18,7 +18,7 @@ all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
 
 wren_to_c_string:
 	@for file in $(WREN_FILES); do \
-		python3 util/wren_to_c_string.py $$file.inc $$file; \
+		python3 tools/wren_to_c_string.py $$file.inc $$file; \
 	done
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
