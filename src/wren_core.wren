@@ -119,7 +119,7 @@ class Sequence {
 
   slice(start) { slice(start, -1) }
   slice(start, end) {
-    list = toList
+    var list = toList
     if (end < 0) {
       end = list.count
     }
