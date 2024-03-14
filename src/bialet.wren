@@ -106,7 +106,7 @@ class Response {
     out(Json.stringify(data))
   }
 
-  static page(title, message) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( title )</h1><p>%( message )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.org" style="color:#0BF;text-decoration:0">bialet' }
+  static page(title, message) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( title )</h1><p>%( message )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.org" style="color:#007FAD" >Bialet' }
   static end(code, title, message) { status(code) && out(page(title, message)) }
 
   static redirect(url) {
@@ -625,7 +625,7 @@ class Util {
     if (!str) return ""
     return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
   }
-  
+
   static encodeBase64(input) {
     var encoded = ""
     var i = 0
@@ -703,7 +703,7 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
-    `CREATE TABLE IF NOT EXISTS BIALET_USERS (id INTEGER PRIMARY KEY, email TEXT, password TEXT, 
+    `CREATE TABLE IF NOT EXISTS BIALET_USERS (id INTEGER PRIMARY KEY, email TEXT, password TEXT,
     name TEXT, isAdmin INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
   }
 
