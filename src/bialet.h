@@ -86,7 +86,7 @@ void freeBialetQuery(BialetQuery *query);
   "href=\"https://bialet.org/quickstart.html\" "                                 \
   "style=\"color:#007FAD\">Quickstart "                                          \
   "guide</a></b>." BIALET_FOOTER_PAGE
-#define BIALET_NOT_FOUND_PAGE                                                  \
+#define BIALET_NOT_FOUND_PAGE BIALET_HEADER_PAGE                               \
   "⚠️ Not found</h1><p>Uh-oh! No route found." BIALET_FOOTER_PAGE
 #define BIALET_ERROR_PAGE                                                      \
   BIALET_HEADER_PAGE                                                           \
