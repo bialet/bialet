@@ -355,7 +355,6 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems,
   /* received header is nitems * size long in 'buffer' NOT ZERO TERMINATED */
   /* 'userdata' is set with CURLOPT_HEADERDATA */
   /* @TODO Get response headers and HTTP status */
-  printf("CURL Response Header: %s\n", buffer);
   return nitems * size;
 }
 
@@ -369,8 +368,6 @@ static void http_call(WrenVM *vm) {
   const char *raw_headers = wrenGetSlotString(vm, 3);
   const char *postData = wrenGetSlotString(vm, 4);
   const char *basicAuth = wrenGetSlotString(vm, 5);
-  printf("URL: %s - Method: %s - Headers: %s - PostData: %s\n", url, method,
-         raw_headers, postData);
 
   response_buffer[0] = '\0';
 
@@ -378,6 +375,7 @@ static void http_call(WrenVM *vm) {
   if (handle) {
     curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
     curl_easy_setopt(handle, CURLOPT_URL, url);
+    curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
     /* Headers */
     char *header_string = strdup(raw_headers);
     char *header_line = strtok(header_string, "\n");
@@ -425,7 +423,6 @@ static void http_call(WrenVM *vm) {
     curl_easy_cleanup(handle);
     curl_slist_free_all(headers);
   }
-  printf("Response: %s\n", response_buffer);
   /* @TODO Handle curl errors */
   wrenEnsureSlots(vm, 4);
   wrenSetSlotNewList(vm, 0);
