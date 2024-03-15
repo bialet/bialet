@@ -171,6 +171,20 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   const char *value;
   int colType, colCount = 0, type, rowCount = 0, bindCounter = 0;
 
+  // Check if the query string contains only whitespace
+  const char *str = query->queryString;
+  int isEmpty = 1; // Assume the string is empty or contains only whitespaces
+  while (*str) {
+    if (!isspace((unsigned char)*str)) {
+      isEmpty = 0; // Found a non-whitespace character
+      break;
+    }
+    str++;
+  }
+  // Ignore empty queries
+  if (isEmpty)
+    return;
+
   /* Prepare the query */
   int result = sqlite3_prepare_v2(db, query->queryString, -1, &stmt, 0);
   if (result != SQLITE_OK) {
