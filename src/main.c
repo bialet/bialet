@@ -25,7 +25,7 @@
 #define ROUTE_FILE "_route.wren"
 #define MAX_ROUTES 100
 #define MAX_IGNORED_FILES 20
-#define IGNORED_FILES "README*,LICENSE*,package.*,Dockerfile,docker-compose.*,.gitignore"
+#define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
 
 struct BialetConfig bialet_config;
