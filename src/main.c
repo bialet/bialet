@@ -21,6 +21,7 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define MIGRATION_FILE "/_migration.wren"
+#define MIGRATION_FILE_ALT "/_app/migration.wren"
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route.wren"
 #define MAX_ROUTES 100
@@ -63,9 +64,12 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
 static void migrate() {
   char *code;
   char path[MAX_PATH_LEN];
+  char altPath[MAX_PATH_LEN];
   strcpy(path, bialet_config.root_dir);
   strcat(path, MIGRATION_FILE);
-  if ((code = bialet_read_file(path))) {
+  strcpy(altPath, bialet_config.root_dir);
+  strcat(altPath, MIGRATION_FILE_ALT);
+  if ((code = bialet_read_file(path)) || (code = bialet_read_file(altPath))) {
     struct BialetResponse r = bialet_run("migration", code, 0);
     message(yellow("Running migration"), r.body);
   } else {
