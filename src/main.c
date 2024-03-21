@@ -20,10 +20,11 @@
 #define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
-#define MIGRATION_FILE "/_migration.wren"
-#define MIGRATION_FILE_ALT "/_app/migration.wren"
+#define EXTENSION ".wren"
+#define MIGRATION_FILE "/_migration" EXTENSION
+#define MIGRATION_FILE_ALT "/_app/migration" EXTENSION
 #define DB_FILE "_db.sqlite3"
-#define ROUTE_FILE "_route.wren"
+#define ROUTE_FILE "_route" EXTENSION
 #define MAX_ROUTES 100
 #define MAX_IGNORED_FILES 20
 #define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
@@ -42,7 +43,7 @@ static void http_handler(struct mg_connection *c, int ev, void *ev_data,
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
     struct mg_http_serve_opts opts = {.root_dir = bialet_config.root_dir,
-                                      .ssi_pattern = "#.wren"};
+                                      .ssi_pattern = "#" EXTENSION};
     for (int i = 0; i < routes_index; i++) {
       if (mg_http_match_uri(hm, routes_list[i])) {
         hm->bialet_routes = strdup(routes_list[i]);
@@ -130,6 +131,7 @@ static void *file_watcher(void *arg) {
   int length, i = 0;
   char buffer[BUF_LEN];
   int fd = inotify_init();
+  char *ext;
   if (fd < 0) {
     perror("inotify_init");
   }
@@ -148,7 +150,9 @@ static void *file_watcher(void *arg) {
     while (i < length) {
       struct inotify_event *event = (struct inotify_event *)&buffer[i];
       if (event->len) {
-        if (event->mask & IN_MODIFY && event->name[0] != '.') {
+        ext = strrchr(event->name, '.');
+        // Only reload .wren files
+        if (ext && !strcmp(ext, EXTENSION)) {
           trigger_reload_files();
         }
       }
