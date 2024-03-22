@@ -20,6 +20,7 @@
 
 #include <ftw.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
@@ -205,6 +206,8 @@ void welcome() {
   message("🚲", green("bialet"), "is riding on", blue(server_url()));
 }
 
+void sigint_handler(int signum) { _exit(0); }
+
 int main(int argc, char *argv[]) {
   char *code = "";
   char *ignored_files_str = IGNORED_FILES;
@@ -301,6 +304,9 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  signal(SIGINT, sigint_handler);
+  signal(SIGABRT, sigint_handler);
+  signal(SIGTERM, sigint_handler);
   welcome();
   parse_ignore(ignored_files_str);
   trigger_reload_files();
