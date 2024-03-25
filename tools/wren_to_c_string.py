@@ -41,7 +41,7 @@ def main():
 
   args = parser.parse_args()
 
-  with open(args.input, "r") as f:
+  with open(args.input, "r", errors="ignore") as f:
     wren_source_lines = f.readlines()
 
   module = os.path.splitext(os.path.basename(args.input))[0]
