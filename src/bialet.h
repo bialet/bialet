@@ -11,7 +11,16 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
+#ifdef _WIN64
+
+#include <windows.h>
 #include <stdio.h>
+
+#else
+
+#include <stdio.h>
+
+#endif
 
 #define MAX_NUMBER_LENGTH 100
 

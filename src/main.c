@@ -1,22 +1,49 @@
+#ifdef _WIN32
+#define IS_WIN 1
+#else
+#define IS_UNIX 1
+#endif
+
+#ifdef IS_WIN
+
+#include <winsock2.h>
+#include <windows.h>
+#include <stdio.h>
+#include <tchar.h>
+
+#define DIV 1048576 
+#define WIDTH 7
+#define BUF_LEN 1024
+#define FTW_F 1
+
+#else
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/inotify.h>
+#include <sys/resource.h>
+#include <sys/wat.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <ftw.h>
+
+
+#define EVENT_SIZE (sizeof(struct inotify_event))
+#define BUF_LEN (1024 * (EVENT_SIZE + 16))
+
+#endif
+
+#include <errno.h>
+#include <sys/types.h>
+
+
 #include "bialet.h"
 #include "bialet_wren.h"
 #include "messages.h"
 #include "mongoose.h"
 #include "wren_vm.h"
-#include <errno.h>
-#include <ftw.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/inotify.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 #define BIALET_VERSION "0.4"
-#define EVENT_SIZE (sizeof(struct inotify_event))
-#define BUF_LEN (1024 * (EVENT_SIZE + 16))
 #define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
@@ -97,7 +124,9 @@ static int parse_routes_callback(const char *fpath, const struct stat *sb,
 
 static void parse_routes() {
   routes_index = 0;
+  #ifdef IS_UNIX
   ftw(bialet_config.root_dir, parse_routes_callback, 16);
+  #endif
 }
 
 static void parse_ignore(char *ignored_files_str) {
@@ -127,6 +156,7 @@ static void trigger_reload_files() {
 }
 
 static void *file_watcher(void *arg) {
+  #ifdef IS_UNIX
   pthread_detach(pthread_self());
   int length, i = 0;
   char buffer[BUF_LEN];
@@ -161,6 +191,7 @@ static void *file_watcher(void *arg) {
     i = 0;
   }
   pthread_exit(NULL);
+  #endif
 }
 
 char *server_url() {
@@ -174,15 +205,19 @@ void welcome() {
 }
 
 int main(int argc, char *argv[]) {
-  pid_t pid;
   int status, opt;
-  struct rlimit mem_limit;
-  struct rlimit cpu_limit;
-  struct mg_mgr mgr;
-  pthread_t thread_id;
   char *code = "";
   char *ignored_files_str = IGNORED_FILES;
+ 
+  #ifdef IS_UNIX
+  pid_t pid;
+  struct rlimit mem_limit;
+  struct rlimit cpu_limit;
+  pthread_t thread_id;
 
+  #endif
+  struct mg_mgr mgr;
+  
   /* Default config values */
   /* Arg config values */
   bialet_config.root_dir = ".";
@@ -199,6 +234,8 @@ int main(int argc, char *argv[]) {
   bialet_config.db_path = DB_FILE;
 
   /* Parse args */
+  
+  #ifdef IS_UNIX
   while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:v")) != -1) {
     switch (opt) {
     case 'h':
@@ -248,6 +285,7 @@ int main(int argc, char *argv[]) {
     bialet_config.root_dir = argv[optind];
     /* @TODO Error handling root dir exists */
   }
+  #endif
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);
@@ -266,6 +304,7 @@ int main(int argc, char *argv[]) {
   parse_ignore(ignored_files_str);
   trigger_reload_files();
 
+  #ifdef IS_UNIX
   pthread_create(&thread_id, NULL, file_watcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
@@ -298,6 +337,13 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
+  #endif
+
+  #ifdef IS_WIN
+      for (;;) {
+        mg_mgr_poll(&mgr, 1000);
+      }
+  #endif
 
   return 0;
 }
