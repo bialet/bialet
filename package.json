@@ -1,5 +1,31 @@
 {
+  "name": "bialet-gui",
+  "version": "0.1.0",
+  "description": "Bialet GUI is a graphical user interface for Bialet.",
+  "main": "gui/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bialet",
+    "gui"
+  ],
+  "author": "Jane Doe",
+  "license": "GPL-2.0",
+  "homepage": "https://bialet.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bialet/bialet"
+  },
+  "bugs": {
+    "url": "https://github.com/bialet/bialet/issues"
+  },
+  "type": "module",
   "dependencies": {
     "tree-kill": "^1.2.2"
+  },
+  "devDependencies": {
+    "electron": "^29.1.5"
   }
 }

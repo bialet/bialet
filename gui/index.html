@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <title>Bialet</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <p>🚲 Bialet is running</p>
+    <p>Close this window to stop Bialet</p>
+    <a href="http://localhost:7000" target="_blank">Open Bialet</a>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

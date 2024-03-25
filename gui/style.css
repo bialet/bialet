@@ -1,0 +1,13 @@
+body {
+  font-size: 24pt;
+  font-family: system-ui;
+  flex-direction: column;
+  display: flex;
+  min-height: 90vh;
+  justify-content: center;
+  align-items: center;
+  background-color: #240A34;
+  color: #FFF;
+}
+
+a{ color: #40A2D8; }
