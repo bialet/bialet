@@ -10,3 +10,6 @@ src/*.wren.inc
 
 # Editor files
 .vscode/
+
+# NPM cache
+node_modules/
