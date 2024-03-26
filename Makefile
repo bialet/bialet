@@ -10,6 +10,7 @@ SPHINXOPTS ?=
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.c')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
@@ -28,12 +29,13 @@ wren_to_c_string:
 	done
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	mkdir -p $(BUILD_DIR)
 	$(CC) -Wall -g $(OBJS) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: %.c
-	mkdir -p $(dir $@)
+$(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
 	$(CC) -Wall -g -c $< -o $@
+
+$(OBJ_DIRS):
+	@mkdir -p $@
 
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
