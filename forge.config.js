@@ -1,28 +1,29 @@
-import { FusesPlugin } from '@electron-forge/plugin-fuses'
-import { FuseV1Options, FuseVersion } from '@electron/fuses'
+const FusesPlugin = require('@electron-forge/plugin-fuses').FusesPlugin;
+const FuseV1Options = require('@electron/fuses').FuseV1Options;
+const FuseVersion = require('@electron/fuses').FuseVersion;
 
-export const packagerConfig = {
+exports.packagerConfig = {
   asar: true,
   extraResource: [
     './build/bialet',
   ],
 };
-export const rebuildConfig = {};
-export const makers = [
-  {
-    name: '@electron-forge/maker-squirrel',
-    config: {},
-  },
-  {
-    name: '@electron-forge/maker-zip',
-    platforms: ['darwin'],
-  },
-  {
-    name: '@electron-forge/maker-deb',
-    config: {},
-  }
-];
-export const plugins = [
+  exports.rebuildConfig = {};
+  exports.makers = [
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: {},
+    },
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['darwin'],
+    },
+    {
+      name: '@electron-forge/maker-deb',
+      config: {},
+    }
+  ];
+exports.plugins = [
   {
     name: '@electron-forge/plugin-auto-unpack-natives',
     config: {},
