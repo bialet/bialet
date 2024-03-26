@@ -15,6 +15,11 @@ WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
 LDFLAGS := -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
 
+ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
+    # If it does, append -lws2_32 to LDFLAGS
+    LDFLAGS += -lws2_32
+endif
+
 all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
 
 wren_to_c_string:
