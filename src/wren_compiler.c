@@ -130,16 +130,16 @@ typedef enum {
   //     TOKEN_NAME          d
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
-  TOKEN_QUERY,
+  TOKEN_SQL,
 
   TOKEN_LINE,
 
   TOKEN_ERROR,
-  TOKEN_EOF
-} TokenType;
+  TOKEN_EOF,
+} WrenTokenType;
 
 typedef struct {
-  TokenType type;
+  WrenTokenType type;
 
   // The beginning of the token, pointing directly into the source.
   const char *start;
@@ -567,7 +567,7 @@ static void initCompiler(Compiler *compiler, Parser *parser, Compiler *parent,
 typedef struct {
   const char *identifier;
   size_t length;
-  TokenType tokenType;
+  WrenTokenType tokenType;
 } Keyword;
 
 // The table of reserved words and their associated token types.
@@ -634,7 +634,7 @@ static bool matchChar(Parser *parser, char c) {
 
 // Sets the parser's current token to the given [type] and current character
 // range.
-static void makeToken(Parser *parser, TokenType type) {
+static void makeToken(Parser *parser, WrenTokenType type) {
   parser->next.type = type;
   parser->next.start = parser->tokenStart;
   parser->next.length = (int)(parser->currentChar - parser->tokenStart);
@@ -647,7 +647,7 @@ static void makeToken(Parser *parser, TokenType type) {
 
 // If the current character is [c], then consumes it and makes a token of type
 // [two]. Otherwise makes a token of type [one].
-static void twoCharToken(Parser *parser, char c, TokenType two, TokenType one) {
+static void twoCharToken(Parser *parser, char c, WrenTokenType two, WrenTokenType one) {
   makeToken(parser, matchChar(parser, c) ? two : one);
 }
 
@@ -768,7 +768,7 @@ static void readNumber(Parser *parser) {
 }
 
 // Finishes lexing an identifier. Handles reserved words.
-static void readName(Parser *parser, TokenType type, char firstChar) {
+static void readName(Parser *parser, WrenTokenType type, char firstChar) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   wrenByteBufferWrite(parser->vm, &string, firstChar);
@@ -835,7 +835,7 @@ static void readUnicodeEscape(Parser *parser, ByteBuffer *string, int length) {
 static void readRawString(Parser *parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  TokenType type = TOKEN_STRING;
+  WrenTokenType type = TOKEN_STRING;
 
   // consume the second and third "
   nextChar(parser);
@@ -915,7 +915,7 @@ static void readRawString(Parser *parser) {
 static void readQueryString(Parser *parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  TokenType type = TOKEN_QUERY;
+  WrenTokenType type = TOKEN_SQL;
 
   for (;;) {
     char c = nextChar(parser);
@@ -982,7 +982,7 @@ static void readQueryString(Parser *parser) {
 // Finishes lexing a string literal.
 static void readString(Parser *parser, char quote) {
   ByteBuffer string;
-  TokenType type = TOKEN_STRING;
+  WrenTokenType type = TOKEN_STRING;
   wrenByteBufferInit(&string);
 
   for (;;) {
@@ -1306,18 +1306,18 @@ static void nextToken(Parser *parser) {
 // Parsing ---------------------------------------------------------------------
 
 // Returns the type of the current token.
-static TokenType peek(Compiler *compiler) {
+static WrenTokenType peek(Compiler *compiler) {
   return compiler->parser->current.type;
 }
 
 // Returns the type of the current token.
-static TokenType peekNext(Compiler *compiler) {
+static WrenTokenType peekNext(Compiler *compiler) {
   return compiler->parser->next.type;
 }
 
 // Consumes the current token if its type is [expected]. Returns true if a
 // token was consumed.
-static bool match(Compiler *compiler, TokenType expected) {
+static bool match(Compiler *compiler, WrenTokenType expected) {
   if (peek(compiler) != expected)
     return false;
 
@@ -1326,7 +1326,7 @@ static bool match(Compiler *compiler, TokenType expected) {
 }
 
 // Consumes the current token. Emits an error if its type is not [expected].
-static void consume(Compiler *compiler, TokenType expected,
+static void consume(Compiler *compiler, WrenTokenType expected,
                     const char *errorMessage) {
   nextToken(compiler->parser);
   if (compiler->parser->previous.type != expected) {
@@ -1762,7 +1762,7 @@ typedef struct {
 } GrammarRule;
 
 // Forward declarations since the grammar is recursive.
-static GrammarRule *getRule(TokenType type);
+static GrammarRule *getRule(WrenTokenType type);
 static void expression(Compiler *compiler);
 static void statement(Compiler *compiler);
 static void definition(Compiler *compiler);
@@ -2188,7 +2188,7 @@ static void unaryOp(Compiler *compiler, bool canAssign) {
   callMethod(compiler, 0, rule->name, 1);
 }
 
-static void boolean(Compiler *compiler, bool canAssign) {
+static void wrenBoolean(Compiler *compiler, bool canAssign) {
   emitOp(compiler, compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE
                                                                   : CODE_TRUE);
 }
@@ -2716,7 +2716,7 @@ GrammarRule rules[] = {
     /* TOKEN_CONSTRUCT     */
     {NULL, NULL, constructorSignature, PREC_NONE, NULL},
     /* TOKEN_ELSE          */ UNUSED,
-    /* TOKEN_FALSE         */ PREFIX(boolean),
+    /* TOKEN_FALSE         */ PREFIX(wrenBoolean),
     /* TOKEN_FOR           */ UNUSED,
     /* TOKEN_FOREIGN       */ UNUSED,
     /* TOKEN_IF            */ UNUSED,
@@ -2729,7 +2729,7 @@ GrammarRule rules[] = {
     /* TOKEN_STATIC        */ UNUSED,
     /* TOKEN_SUPER         */ PREFIX(super_),
     /* TOKEN_THIS          */ PREFIX(this_),
-    /* TOKEN_TRUE          */ PREFIX(boolean),
+    /* TOKEN_TRUE          */ PREFIX(wrenBoolean),
     /* TOKEN_VAR           */ UNUSED,
     /* TOKEN_WHILE         */ UNUSED,
     /* TOKEN_FIELD         */ PREFIX(field),
@@ -2744,7 +2744,7 @@ GrammarRule rules[] = {
     /* TOKEN_EOF           */ UNUSED};
 
 // Gets the [GrammarRule] associated with tokens of [type].
-static GrammarRule *getRule(TokenType type) { return &rules[type]; }
+static GrammarRule *getRule(WrenTokenType type) { return &rules[type]; }
 
 // The main entrypoint for the top-down operator precedence parser.
 void parsePrecedence(Compiler *compiler, Precedence precedence) {
@@ -3227,7 +3227,7 @@ static Value consumeLiteral(Compiler *compiler, const char *message) {
     return compiler->parser->previous.value;
   if (match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
-  if (match(compiler, TOKEN_QUERY))
+  if (match(compiler, TOKEN_SQL))
     return compiler->parser->previous.value;
   if (match(compiler, TOKEN_NAME))
     return compiler->parser->previous.value;
@@ -3244,7 +3244,7 @@ static bool matchAttribute(Compiler *compiler) {
     bool runtimeAccess = match(compiler, TOKEN_BANG);
     if (match(compiler, TOKEN_NAME)) {
       Value group = compiler->parser->previous.value;
-      TokenType ahead = peek(compiler);
+      WrenTokenType ahead = peek(compiler);
       if (ahead == TOKEN_EQ || ahead == TOKEN_LINE) {
         Value key = group;
         Value value = NULL_VAL;
