@@ -13,8 +13,9 @@
 
 #ifdef _WIN64
 
-#include <windows.h>
 #include <stdio.h>
+#include <winsock2.h>
+#include <windows.h>
 
 #else
 
@@ -95,7 +96,8 @@ void freeBialetQuery(BialetQuery *query);
   "href=\"https://bialet.org/quickstart.html\" "                                 \
   "style=\"color:#007FAD\">Quickstart "                                          \
   "guide</a></b>." BIALET_FOOTER_PAGE
-#define BIALET_NOT_FOUND_PAGE BIALET_HEADER_PAGE                               \
+#define BIALET_NOT_FOUND_PAGE                                                  \
+  BIALET_HEADER_PAGE                                                           \
   "⚠️ Not found</h1><p>Uh-oh! No route found." BIALET_FOOTER_PAGE
 #define BIALET_ERROR_PAGE                                                      \
   BIALET_HEADER_PAGE                                                           \
