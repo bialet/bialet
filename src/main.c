@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <sys/inotify.h>
 #include <sys/resource.h>
-#include <sys/wat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <ftw.h>
