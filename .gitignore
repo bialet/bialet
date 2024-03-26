@@ -13,3 +13,5 @@ src/*.wren.inc
 
 # NPM cache
 node_modules/
+
+out/

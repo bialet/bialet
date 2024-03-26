@@ -41,7 +41,7 @@ const start = (port, path, logCallback, statusChanged) => {
     logCallback = () => {}
   }
   console.log(`Starting Bialet on port ${port} and serving ${path}`)
-  const bialet = spawn('./build/bialet', ['-p', port, path], {
+  const bialet = spawn(process.resourcesPath + '/bialet', ['-p', port, path], {
   })
   bialet.stdout.on('data', (data) => {
     logCallback(data.toString())
