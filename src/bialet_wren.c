@@ -16,14 +16,17 @@
 #include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
-#include <curl/curl.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#if IS_UNIX
+#include <curl/curl.h>
+#include <openssl/rand.h>
+#include <openssl/sha.h>
+#endif
 
 #define BIALET_SQLITE_ERROR 11
 #define MAX_URL_LEN 200
@@ -373,6 +376,10 @@ static size_t header_callback(char *buffer, size_t size, size_t nitems,
 }
 
 static void http_call(WrenVM *vm) {
+
+  response_buffer[0] = '\0';
+
+#if IS_UNIX
   CURL *handle;
   CURLcode res;
   struct curl_slist *headers = NULL;
@@ -382,8 +389,6 @@ static void http_call(WrenVM *vm) {
   const char *raw_headers = wrenGetSlotString(vm, 3);
   const char *postData = wrenGetSlotString(vm, 4);
   const char *basicAuth = wrenGetSlotString(vm, 5);
-
-  response_buffer[0] = '\0';
 
   handle = curl_easy_init();
   if (handle) {
@@ -437,6 +442,7 @@ static void http_call(WrenVM *vm) {
     curl_easy_cleanup(handle);
     curl_slist_free_all(headers);
   }
+#endif
   /* @TODO Handle curl errors */
   wrenEnsureSlots(vm, 4);
   wrenSetSlotNewList(vm, 0);
@@ -662,7 +668,9 @@ void bialet_init(struct BialetConfig *config) {
   wren_config.loadModuleFn = &wren_load_module;
   wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
 
+#if IS_UNIX
   curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
 }
 
 BialetQuery *createBialetQuery() {
