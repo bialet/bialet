@@ -9,7 +9,7 @@ const WAITING_TIME = 2000
 const SIGINT = 'SIGINT'
 
 const processes = []
-const stopAll = () => {
+const stopAll = (exit = true) => {
   console.log('Ending all Bialet processes...')
   const length = processes.length
   let count = 0
@@ -17,13 +17,15 @@ const stopAll = () => {
     kill(bialet.pid, SIGINT, () => {
       console.log('Kill bialet process', bialet.pid)
       count++
-      if (count >= length) {
+      if (count >= length && exit) {
         process.exit(0)
       }
     })
   })
   setTimeout(() => {
-    process.exit(0)
+    if (exit) {
+      process.exit(0)
+    }
   }, WAITING_TIME)
 }
 
