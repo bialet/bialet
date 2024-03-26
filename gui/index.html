@@ -14,18 +14,26 @@
     <title>Bialet</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
-  <body>
-    <p>🚲 Bialet is running</p>
-    <p>Close this window to stop Bialet</p>
-    <p id="log"></p>
-    <p id="status"></p>
-    <input id="port" value="7000" />
-    <p id="rootPath"></p>
-    <button id="select-folder">Select Folder</button>
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-    <button id="restart">Restart</button>
-    <a href="http://localhost:7000" target="_blank">Open Bialet</a>
+  <body class="stopped">
+    <textarea id="log"></textarea>
+    <p>
+      <button id="status">Status</button>
+      <button id="start">Start</button>
+      <button id="stop" disabled>Stop</button>
+      <button id="open" disabled>Launch</button>
+    </p>
+    <p>
+      <label for="port">Port</label>
+      <input id="port" type="number" value="7000" />
+      <button id="select-folder">Select Folder</button>
+    </p>
+    <p>
+      <span>Root Path:</span>
+      <span id="rootPath"></span>
+    </p>
+    <p>
+      <a href="https://bialet.dev" target="_blank">Documentation</a>
+    </p>
     <script src="./renderer.js"></script>
   </body>
 </html>

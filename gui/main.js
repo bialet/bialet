@@ -28,6 +28,15 @@ const createWindow = () => {
     })
     return (canceled) ? null : filePaths[0]
   })
+  ipcMain.handle('start', (_, port, path) => {
+    const bialet = start(port,  path, (log) => {
+      win.webContents.send('log', log)
+    }, (statusChanged) => {
+      win.webContents.send('status', statusChanged)
+    })
+    console.log(`Bialet started pid: ${bialet.pid}`)
+  })
+  ipcMain.handle('stop', (_) => stopAll(false))
 }
 
 app.whenReady().then(() => {
@@ -38,10 +47,5 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
-  ipcMain.handle('start', (_, port, path) => {
-    const bialet = start(port,  path)
-    console.log(`Bialet started pid: ${bialet.pid}`)
-  })
-  ipcMain.handle('stop', (_) => stopAll(false))
 })
 app.on('window-all-closed', () => stopAll(true))

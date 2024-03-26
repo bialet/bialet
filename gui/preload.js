@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld('bialet', {
   stop: () => ipcRenderer.invoke('stop'),
   openExternal: (href) => ipcRenderer.invoke('openExternal', href),
   selectFolder: () => ipcRenderer.invoke('dialog:openDirectory'),
+  onUpdateLog: (callback) => ipcRenderer.on('log', (_event, value) => callback(value)),
+  onUpdateStatus: (callback) => ipcRenderer.on('status', (_event, value) => callback(value)),
 })
