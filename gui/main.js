@@ -1,9 +1,14 @@
-import {app, BrowserWindow, shell, ipcMain} from 'electron'
-import {start, stopAll} from './bialet.mjs'
-import path from 'path'
-import { URL } from 'url'
+const electron = require('electron');
+const app = electron.app;
+const BrowserWindow = electron.BrowserWindow;
+const shell = electron.shell;
+const ipcMain = electron.ipcMain;
 
-const __dirname = new URL('.', import.meta.url).pathname
+const bialet = require('./bialet.js'); // Assuming you've converted your MJS to common JS as well.
+const start = bialet.start;
+const stopAll = bialet.stopAll;
+
+const path = require('path');
 
 const createWindow = () => {
   const win = new BrowserWindow({

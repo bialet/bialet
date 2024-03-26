@@ -1,7 +1,7 @@
-import { spawn } from 'node:child_process'
-import readline from 'node:readline'
-import kill from 'tree-kill'
-import { stdout } from 'node:process'
+const { spawn } = require('node:child_process');
+const readline = require('node:readline');
+const kill = require('tree-kill');
+const { stdout } = require('node:process');
 
 // Run Bialet through Node
 //
@@ -67,4 +67,6 @@ const stop = (bialet) => {
   kill(bialet.pid, SIGINT)
 }
 
-export { start, stop, stopAll }
+exports.start = start
+exports.stop = stop
+exports.stopAll = stopAll
