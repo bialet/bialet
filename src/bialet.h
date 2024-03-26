@@ -11,6 +11,12 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
+#ifdef _WIN32
+#define IS_WIN 1
+#else
+#define IS_UNIX 1
+#endif
+
 #ifdef _WIN64
 
 #include <stdio.h>

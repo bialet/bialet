@@ -1,8 +1,4 @@
-#ifdef _WIN32
-#define IS_WIN 1
-#else
-#define IS_UNIX 1
-#endif
+#include "bialet.h"
 
 #ifdef IS_WIN
 
@@ -36,7 +32,6 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "bialet.h"
 #include "bialet_wren.h"
 #include "messages.h"
 #include "mongoose.h"
