@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer, shell } = require('electron')
+  const { contextBridge, ipcRenderer, app } = require('electron')
 
 contextBridge.exposeInMainWorld('bialet', {
   start: (port, path) => ipcRenderer.invoke('start', port, path),
@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('bialet', {
   selectFolder: () => ipcRenderer.invoke('dialog:openDirectory'),
   onUpdateLog: (callback) => ipcRenderer.on('log', (_event, value) => callback(value)),
   onUpdateStatus: (callback) => ipcRenderer.on('status', (_event, value) => callback(value)),
+  userPath: () => ipcRenderer.invoke('userPath'),
 })

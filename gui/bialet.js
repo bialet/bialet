@@ -1,7 +1,5 @@
-const { spawn } = require('node:child_process');
-const readline = require('node:readline');
-const kill = require('tree-kill');
-const { stdout } = require('node:process');
+const { spawn } = require('node:child_process')
+const kill = require('tree-kill')
 
 // Run Bialet through Node
 //
@@ -29,12 +27,6 @@ const stopAll = (exit = true) => {
   }, WAITING_TIME)
 }
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-rl.on('close', stopAll)
-
 const start = (port, path, logCallback, statusChanged) => {
   if (!statusChanged) {
     statusChanged = () => {}
@@ -48,11 +40,9 @@ const start = (port, path, logCallback, statusChanged) => {
   statusChanged(bialet.pid > 0)
   bialet.stdout.on('data', (data) => {
     logCallback(data.toString())
-    stdout.write(data)
   })
   bialet.stderr.on('data', (data) => {
     logCallback(data.toString())
-    stdout.write(data)
   })
   bialet.on('close', (code) => {
     statusChanged(false)

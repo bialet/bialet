@@ -1,7 +1,7 @@
 {
-  "name": "bialet",
+  "name": "bialet-desktop",
   "version": "0.1.0",
-  "description": "Bialet GUI is a graphical user interface for Bialet.",
+  "description": "Bialet Desktop is a graphical user interface for Bialet.",
   "main": "gui/main.js",
   "scripts": {
     "start": "electron-forge start",
