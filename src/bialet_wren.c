@@ -16,6 +16,8 @@
 #include "mongoose.h"
 #include "wren.h"
 #include "wren_vm.h"
+#include <openssl/rand.h>
+#include <openssl/sha.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,8 +26,6 @@
 
 #if IS_UNIX
 #include <curl/curl.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #endif
 
 #define BIALET_SQLITE_ERROR 11
