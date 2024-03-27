@@ -44,7 +44,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Project Structure and Routing" href="structure.html" />
-    <link rel="prev" title="Quickstart" href="tutorial.html" />
+    <link rel="prev" title="Bialet" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -147,7 +147,6 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Quickstart</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 </ul>
@@ -439,13 +438,21 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
 <td><p>Host name</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">localhost</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<td><p>Run the code passed as argument</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
 <td><p>Log file location</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stdout</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
 <td><p>SQLite database file location</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Ignored files, comma separated list of glob expressions</p></td>
+<td><p>README*,LICENSE*,package.*</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Memory limit (MB)</p></td>
@@ -481,12 +488,12 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="tutorial.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Quickstart</p>
+        <p class="prev-next-title">Bialet</p>
       </div>
     </a>
     <a class="right-next"
