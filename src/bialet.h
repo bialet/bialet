@@ -95,11 +95,11 @@ void freeBialetQuery(BialetQuery *query);
   "system-ui;text-align:center;margin:2em;color:#024\"><h1>"
 #define BIALET_FOOTER_PAGE                                                     \
   "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "      \
-  "href=\"https://bialet.org\" style=\"color:#007FAD\" >Bialet"
+  "href=\"https://bialet.dev\" style=\"color:#007FAD\" >Bialet"
 #define BIALET_WELCOME_PAGE                                                      \
   BIALET_HEADER_PAGE                                                             \
   "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a " \
-  "href=\"https://bialet.org/quickstart.html\" "                                 \
+  "href=\"https://bialet.dev/quickstart.html\" "                                 \
   "style=\"color:#007FAD\">Quickstart "                                          \
   "guide</a></b>." BIALET_FOOTER_PAGE
 #define BIALET_NOT_FOUND_PAGE                                                  \

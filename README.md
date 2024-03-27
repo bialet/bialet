@@ -1,6 +1,6 @@
 # 🚲 bialet
 
-**[Bialet](https://bialet.org) is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
+**[Bialet](https://bialet.dev) is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
 
 <p align="center">
   <img src="https://github.com/bialet/bialet/assets/142173/af827692-0e0d-4805-a478-77d07bd62e18" alt="Make Web Development Great Again hat" width="200" />
@@ -105,7 +105,7 @@ Response.out('
 ')
 ```
 
-See more examples in the [documentation](https://bialet.org).
+See more examples in the [documentation](https://bialet.dev).
 
 ## License
 
