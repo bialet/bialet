@@ -7,6 +7,7 @@ exports.packagerConfig = {
   extraResource: [
     './build/bialet',
   ],
+  'icon': './gui/icon',
 };
   exports.rebuildConfig = {};
   exports.makers = [
@@ -20,7 +21,11 @@ exports.packagerConfig = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        options: {
+          icon: './gui/icon.png',
+        },
+      },
     }
   ];
 exports.plugins = [

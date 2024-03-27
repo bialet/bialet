@@ -19,7 +19,8 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, './preload.js'),
       enableRemoteModule: true,
-    }
+    },
+    'icon': './gui/icon.png',
   })
   win.loadFile('gui/index.html')
   ipcMain.handle('dialog:openDirectory', async () => {
@@ -40,6 +41,7 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
+  ipcMain.handle('userPath', () => app.getPath('userData'))
   ipcMain.handle('openExternal', (_, href) => shell.openExternal(href))
   createWindow()
   app.on('activate', () => {
@@ -48,4 +50,5 @@ app.whenReady().then(() => {
     }
   })
 })
+
 app.on('window-all-closed', () => stopAll(true))

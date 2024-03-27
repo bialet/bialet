@@ -1,9 +1,15 @@
 const host = 'localhost'
+
+const d = document
 let rootPath = ''
-let outputLog = ''
+d.querySelector('#rootPath').innerText = rootPath
+
+bialet.userPath().then(path => {
+  rootPath = path
+  d.querySelector('#rootPath').innerText = rootPath
+})
 
 const url = (host, post) => `http://${host}:${post}`
-const d = document
 
 d.body.addEventListener('click', event => {
   if (event.target.tagName.toLowerCase() === 'a') {
@@ -24,7 +30,6 @@ d.querySelector('#stop').addEventListener('click', async (_) => bialet.stop())
 d.querySelector('#open').addEventListener('click', async (_) => bialet.openExternal(url(host, d.querySelector('#port').value)))
 
 bialet.onUpdateLog(log => {
-  outputLog += log
   const logElement = d.querySelector('#log')
   logElement.scrollTop = logElement.scrollHeight
   logElement.value += log
