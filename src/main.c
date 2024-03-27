@@ -37,7 +37,7 @@
 #include "mongoose.h"
 #include "wren_vm.h"
 
-#define BIALET_VERSION "0.4"
+#define BIALET_VERSION "0.5"
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
 #define MAX_PATH_LEN 100
