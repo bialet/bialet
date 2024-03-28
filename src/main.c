@@ -35,6 +35,10 @@
 
 #endif
 
+#ifdef IS_WIN
+#include "getopt.h"
+#endif
+
 #define BIALET_VERSION "0.5"
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
@@ -254,7 +258,6 @@ int main(int argc, char *argv[]) {
 
   /* Parse args */
 
-#ifdef IS_UNIX
   int opt;
   while ((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:v")) != -1) {
     switch (opt) {
@@ -305,7 +308,6 @@ int main(int argc, char *argv[]) {
     bialet_config.root_dir = argv[optind];
     /* @TODO Error handling root dir exists */
   }
-#endif
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);
