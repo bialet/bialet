@@ -86,6 +86,7 @@ Bialet incorporates the work of several open-source projects and contributors. W
 - The [Mongoose library](https://github.com/expressjs/mongoose), for providing an easy-to-use web server solution.
 - Matthew Brandly, for his invaluable contributions to JSON parsing and utility functions in Wren. Check out his work at [Matthew Brandly's GitHub](https://github.com/brandly/wren-json).
 - @PureFox48 for the upper and lower functions.
+- @superwills for providing the `getopt` source.
 - [Codeium](https://github.com/codeium) for the [Codeium](https://codeium.com) plugin, ChatGPT and a lot of coffee.
 
 We encourage users to explore these projects and recognize the efforts of their creators.
