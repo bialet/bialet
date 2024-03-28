@@ -15,6 +15,7 @@ struct HttpRequest {
 
 struct HttpResponse {
   int status;
+  int error;
   char *headers;
   char *body;
 };
