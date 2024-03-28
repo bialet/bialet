@@ -12,6 +12,7 @@
 #include "bialet.h"
 #include "bialet.wren.inc"
 #include "bialet_extra.wren.inc"
+#include "http_call.h"
 #include "messages.h"
 #include "mongoose.h"
 #include "wren.h"
@@ -19,14 +20,8 @@
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <sqlite3.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#if IS_UNIX
-#include <curl/curl.h>
-#endif
 
 #define BIALET_SQLITE_ERROR 11
 #define MAX_URL_LEN 1024
@@ -41,7 +36,6 @@
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
 sqlite3 *db;
-char response_buffer[2048];
 
 static char *safe_malloc(size_t size) {
   char *p;
@@ -372,29 +366,7 @@ static void verify_password(WrenVM *vm) {
 #endif
 }
 
-static size_t write_callback(void *contents, size_t size, size_t nmemb,
-                             void *userp) {
-  size_t total_size = size * nmemb;
-  strncat((char *)userp, contents, total_size);
-  return total_size;
-}
-
-static size_t header_callback(char *buffer, size_t size, size_t nitems,
-                              void *userdata) {
-  /* received header is nitems * size long in 'buffer' NOT ZERO TERMINATED */
-  /* 'userdata' is set with CURLOPT_HEADERDATA */
-  /* @TODO Get response headers and HTTP status */
-  return nitems * size;
-}
-
 static void http_call(WrenVM *vm) {
-
-  response_buffer[0] = '\0';
-
-#if IS_UNIX
-  CURL *handle;
-  CURLcode res;
-  struct curl_slist *headers = NULL;
 
   const char *url = wrenGetSlotString(vm, 1);
   const char *method = wrenGetSlotString(vm, 2);
@@ -402,65 +374,21 @@ static void http_call(WrenVM *vm) {
   const char *postData = wrenGetSlotString(vm, 4);
   const char *basicAuth = wrenGetSlotString(vm, 5);
 
-  handle = curl_easy_init();
-  if (handle) {
-    curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
-    curl_easy_setopt(handle, CURLOPT_URL, url);
-    curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
-    /* Headers */
-    char *header_string = strdup(raw_headers);
-    char *header_line = strtok(header_string, "\n");
-    while (header_line != NULL) {
-      // Add each header line to the slist
-      headers = curl_slist_append(headers, header_line);
-      header_line = strtok(NULL, "\n");
-    }
-    free(header_string);
-    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+  struct HttpRequest request;
+  request.url = string_safe_copy(url);
+  request.method = string_safe_copy(method);
+  request.raw_headers = string_safe_copy(raw_headers);
+  request.postData = string_safe_copy(postData);
+  request.basicAuth = string_safe_copy(basicAuth);
 
-    if (basicAuth) {
-      curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-      curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
-    }
+  struct HttpResponse response = http_call_perform(request);
 
-    if (strlen(postData) > 0) {
-      curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData);
-    }
-    /* For completeness */
-    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
-    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
-    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
-    /* only allow redirects to HTTP and HTTPS URLs */
-    curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
-    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
-    /* each transfer needs to be done within 20 seconds! */
-    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
-    /* connect fast or fail */
-    curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
-    /* Speed up the connection using IPv4 only */
-    curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
-    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
-
-    res = curl_easy_perform(handle);
-    /* Check for errors */
-    if (res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
-
-    /* always cleanup */
-    curl_easy_cleanup(handle);
-    curl_slist_free_all(headers);
-  }
-#endif
   /* @TODO Handle curl errors */
   wrenEnsureSlots(vm, 4);
   wrenSetSlotNewList(vm, 0);
-  wrenSetSlotDouble(vm, 5, 200);
-  wrenSetSlotString(vm, 6, "Content-Type: application/json");
-  wrenSetSlotString(vm, 7, string_safe_copy(response_buffer));
+  wrenSetSlotDouble(vm, 5, response.status);
+  wrenSetSlotString(vm, 6, string_safe_copy(response.headers));
+  wrenSetSlotString(vm, 7, string_safe_copy(response.body));
   wrenInsertInList(vm, 0, 0, 5);
   wrenInsertInList(vm, 0, 1, 6);
   wrenInsertInList(vm, 0, 2, 7);
@@ -680,9 +608,7 @@ void bialet_init(struct BialetConfig *config) {
   wren_config.loadModuleFn = &wren_load_module;
   wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
 
-#if IS_UNIX
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-#endif
+  http_call_init(&bialet_config);
 }
 
 BialetQuery *createBialetQuery() {
