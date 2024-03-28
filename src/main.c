@@ -1,5 +1,11 @@
 #include "bialet.h"
+#include "bialet_wren.h"
+#include "messages.h"
+#include "mongoose.h"
+#include "wren_vm.h"
+#include <sys/types.h>
 
+<<<<<<< HEAD
 #ifdef IS_WIN
 
 #include <stdio.h>
@@ -13,29 +19,21 @@
 #define FTW_F 1
 
 #else
+=======
+#ifdef IS_UNIX
+>>>>>>> 9538500 (Remove unused includes)
 
 #include <ftw.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/inotify.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
 #endif
-
-#include <errno.h>
-#include <sys/types.h>
-
-#include "bialet_wren.h"
-#include "messages.h"
-#include "mongoose.h"
-#include "wren_vm.h"
 
 #define BIALET_VERSION "0.5"
 #define MEGABYTE (1024 * 1024)

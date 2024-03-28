@@ -10,8 +10,6 @@
  */
 #include "bialet_wren.h"
 #include "bialet.h"
-#include "bialet.wren.inc"
-#include "bialet_extra.wren.inc"
 #include "http_call.h"
 #include "messages.h"
 #include "mongoose.h"
@@ -23,6 +21,10 @@
 #include <sqlite3.h>
 #include <string.h>
 #include <time.h>
+
+// Wren generated code
+#include "bialet.wren.inc"
+#include "bialet_extra.wren.inc"
 
 #define BIALET_SQLITE_ERROR 11
 #define MAX_URL_LEN 1024
