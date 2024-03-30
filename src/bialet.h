@@ -108,5 +108,8 @@ void freeBialetQuery(BialetQuery *query);
 #define BIALET_ERROR_PAGE                                                      \
   BIALET_HEADER_PAGE                                                           \
   "🚨 Internal Server Error</h1><p>Oops! Something broke." BIALET_FOOTER_PAGE
+#define BIALET_FORBIDDEN_PAGE                                                     \
+  BIALET_HEADER_PAGE "🚫 Forbidden</h1><p>Sorry, you don't have permission to " \
+                     "access this page." BIALET_FOOTER_PAGE
 
 #endif

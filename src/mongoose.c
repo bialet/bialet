@@ -2130,7 +2130,7 @@ static int uri_to_path2(struct mg_connection *c, struct mg_http_message *hm,
   }
   path[path_size - 1] = '\0'; // Double-check
   if (!mg_path_is_sane(path)) {
-    mg_http_reply(c, 400, "", "Invalid path");
+    mg_http_reply(c, 403, BIALET_HEADERS, BIALET_FORBIDDEN_PAGE);
     return -1;
   }
   n = strlen(path);
