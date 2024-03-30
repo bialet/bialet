@@ -324,12 +324,14 @@ static void verify_password(WrenVM *vm) {
 
 static void http_call(WrenVM *vm) {
 
+  // Get data from Wren
   const char *url = wrenGetSlotString(vm, 1);
   const char *method = wrenGetSlotString(vm, 2);
   const char *raw_headers = wrenGetSlotString(vm, 3);
   const char *postData = wrenGetSlotString(vm, 4);
   const char *basicAuth = wrenGetSlotString(vm, 5);
 
+  // Set request
   struct HttpRequest request;
   request.url = string_safe_copy(url);
   request.method = string_safe_copy(method);
@@ -337,17 +339,33 @@ static void http_call(WrenVM *vm) {
   request.postData = string_safe_copy(postData);
   request.basicAuth = string_safe_copy(basicAuth);
 
-  struct HttpResponse response = http_call_perform(request);
+  // Initialize response
+  struct HttpResponse response;
+  response.error = 0;
+  response.status = 200;
+  response.headers = "Content-Type: text/json";
+  response.body = "{}";
 
-  /* @TODO Handle curl errors */
-  wrenEnsureSlots(vm, 4);
+  // Perform request
+  http_call_perform(&request, &response);
+
+  // Set response to Wren
+  wrenEnsureSlots(vm, 6);
   wrenSetSlotNewList(vm, 0);
   wrenSetSlotDouble(vm, 5, response.status);
   wrenSetSlotString(vm, 6, string_safe_copy(response.headers));
   wrenSetSlotString(vm, 7, string_safe_copy(response.body));
+  wrenSetSlotDouble(vm, 8, response.error);
   wrenInsertInList(vm, 0, 0, 5);
   wrenInsertInList(vm, 0, 1, 6);
   wrenInsertInList(vm, 0, 2, 7);
+  wrenInsertInList(vm, 0, 3, 8);
+
+  free(request.url);
+  free(request.method);
+  free(request.raw_headers);
+  free(request.postData);
+  free(request.basicAuth);
 }
 
 WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,

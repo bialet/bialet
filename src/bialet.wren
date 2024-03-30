@@ -736,7 +736,18 @@ class Http {
   construct new() {
     _method = false
     _basicAuth = ""
+    _status = 0
+    _headers = {}
+    _body = ""
+    _error = 0
+    _fullHeaders = ""
+    _postData = ""
   }
+  body { _body }
+  status { _status }
+  headers { _headers }
+  headers(name) { _headers.containsKey(name) ? _headers[name] : null }
+  error { _error }
   method { _method }
   method=(m) { _method = m }
   postData=(data) {
@@ -755,26 +766,48 @@ class Http {
     if (!options["headers"].containsKey("Content-Type")) {
       options["headers"]["Content-Type"] = "application/json"
     }
-    System.print("Http Request: %(url) %(options)")
     var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
     var response = call_(url, _method, headers, _postData, _basicAuth)
-    return {"status": response[0], "headers": response[1], "body": response[2]}
+
+    if (response[1]) {
+      var lines = response[1].split("\n")
+      var tmp
+      var headerName
+      var headerValue
+      for (line in lines) {
+        tmp = line.split(":")
+        headerName = tmp.removeAt(0).trim().lower
+        headerValue = tmp.join(":").trim()
+        _headers[headerName] = headerValue
+      }
+    }
+    _status = response[0]
+    _fullHeaders = response[1]
+    _body = response[2]
+    _error = response[3]
+
+    return _error == 0
   }
+
   foreign call_(url, method, headers, postData, basicAuth)
 
   static request(url, method, data, options) {
     __http = Http.new()
     __http.method = method
     __http.postData = data
-    var response = __http.call(url, options)
-    System.print("Http Response: %(response)")
-    if (response["body"] != "") {
-      return Json.parse(response["body"])
+    if (!__http.call(url, options)) {
+      return false
     }
-    return false
+    if (__http.status >= 200 && __http.status < 300) {
+      if (__http.headers("content-type") == "text/json") {
+        return Json.parse(__http.body)
+      } else {
+        return __http.body
+      }
+    }
   }
   // Shortcuts for common HTTP methods
   static get(url, options) { request(url, "GET", null, options) }
