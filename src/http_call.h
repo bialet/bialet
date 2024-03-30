@@ -21,6 +21,6 @@ struct HttpResponse {
 };
 
 void http_call_init(struct BialetConfig *config);
-struct HttpResponse http_call_perform(struct HttpRequest req);
+void http_call_perform(struct HttpRequest *req, struct HttpResponse *resp);
 
 #endif

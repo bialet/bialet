@@ -16,14 +16,27 @@
 
 #endif
 
-char response_buffer[MAX_RESPONSE_SIZE];
+struct memory {
+  char *response;
+  size_t size;
+};
 
 #if IS_UNIX
-static size_t write_callback(void *contents, size_t size, size_t nmemb,
-                             void *userp) {
-  size_t total_size = size * nmemb;
-  strncat((char *)userp, contents, total_size);
-  return total_size;
+static size_t write_callback(void *data, size_t size, size_t nmemb,
+                             void *clientp) {
+  size_t realsize = size * nmemb;
+  struct memory *mem = (struct memory *)clientp;
+
+  char *ptr = realloc(mem->response, mem->size + realsize + 1);
+  if (!ptr)
+    return 0; /* out of memory! */
+
+  mem->response = ptr;
+  memcpy(&(mem->response[mem->size]), data, realsize);
+  mem->size += realsize;
+  mem->response[mem->size] = 0;
+
+  return realsize;
 }
 
 static size_t header_callback(char *buffer, size_t size, size_t nitems,
@@ -62,84 +75,86 @@ SSL_CTX *create_context() {
 #endif
 
 void http_call_init(struct BialetConfig *config) {
-
 #if IS_UNIX
   curl_global_init(CURL_GLOBAL_ALL);
 #endif
 }
 
-struct HttpResponse http_call_perform(struct HttpRequest request) {
-  response_buffer[0] = '\0';
-
-  struct HttpResponse response;
-  response.error = 0;
-  response.status = 200;
-  response.headers = "Content-Type: text/json\r\n";
-  response.body = "{}";
-
+void http_call_perform(struct HttpRequest *request,
+                       struct HttpResponse *response) {
 #if IS_UNIX
+  struct memory chunk = {0};
   CURL *handle;
   CURLcode res;
   struct curl_slist *headers = NULL;
 
-  const char *url = request.url;
-  const char *method = request.method;
-  const char *raw_headers = request.raw_headers;
-  const char *postData = request.postData;
-  const char *basicAuth = request.basicAuth;
+  const char *url = request->url;
+  const char *method = request->method;
+  const char *raw_headers = request->raw_headers;
+  const char *postData = request->postData;
+  const char *basicAuth = request->basicAuth;
 
   handle = curl_easy_init();
-  if (handle) {
-    curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
-    curl_easy_setopt(handle, CURLOPT_URL, url);
-    curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
-    /* Headers */
-    char *header_string = strdup(raw_headers);
-    char *header_line = strtok(header_string, "\n");
-    while (header_line != NULL) {
-      // Add each header line to the slist
-      headers = curl_slist_append(headers, header_line);
-      header_line = strtok(NULL, "\n");
-    }
-    free(header_string);
-    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-
-    if (basicAuth) {
-      curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-      curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
-    }
-
-    if (strlen(postData) > 0) {
-      curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData);
-    }
-    /* For completeness */
-    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
-    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
-    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
-    /* only allow redirects to HTTP and HTTPS URLs */
-    curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
-    curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
-    /* each transfer needs to be done within 20 seconds! */
-    curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
-    /* connect fast or fail */
-    curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
-    /* Speed up the connection using IPv4 only */
-    curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, &response_buffer);
-    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
-
-    res = curl_easy_perform(handle);
-    /* Check for errors */
-    if (res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
-
-    /* always cleanup */
-    curl_easy_cleanup(handle);
-    curl_slist_free_all(headers);
+  if (!handle) {
+    response->error = 1;
+    return;
   }
+  curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
+  curl_easy_setopt(handle, CURLOPT_URL, url);
+  curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
+  /* Headers */
+  char *header_string = strdup(raw_headers);
+  char *header_line = strtok(header_string, "\n");
+  while (header_line != NULL) {
+    // Add each header line to the slist
+    headers = curl_slist_append(headers, header_line);
+    header_line = strtok(NULL, "\n");
+  }
+  free(header_string);
+  curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+
+  if (basicAuth) {
+    curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
+  }
+
+  if (strlen(postData) > 0) {
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDS, postData);
+  }
+  /* For completeness */
+  curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
+  curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
+  curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
+  /* only allow redirects to HTTP and HTTPS URLs */
+  curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
+  curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
+  /* each transfer needs to be done within 20 seconds! */
+  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
+  /* connect fast or fail */
+  curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
+  /* Speed up the connection using IPv4 only */
+  curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+  curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
+  curl_easy_setopt(handle, CURLOPT_WRITEDATA, &chunk);
+  curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
+
+  res = curl_easy_perform(handle);
+
+  response->body = string_safe_copy(chunk.response);
+
+  /* Check for errors */
+  if (res != CURLE_OK) {
+    fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            curl_easy_strerror(res));
+    response->error = 1;
+  }
+
+  /* always cleanup */
+  free(chunk.response);
+  curl_easy_cleanup(handle);
+  curl_slist_free_all(headers);
+
 #endif
 
 #if IS_WIN
@@ -170,8 +185,8 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
   if ((rv = getaddrinfo(host, "443", &hints, &servinfo)) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
     WSACleanup();
-    response.error = 1;
-    return response;
+    resp->error = 1;
+    return;
   }
 
   // Loop through all the results and connect to the first we can
@@ -193,8 +208,8 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
 
   if (p == NULL) {
     fprintf(stderr, "client: failed to connect\n");
-    response.error = 2;
-    return response;
+    resp->error = 2;
+    return;
   }
 
   // Create an SSL connection and attach it to the socket
@@ -206,8 +221,8 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
     SSL_CTX_free(ctx);
     cleanup_openssl();
     WSACleanup();
-    response.error = 3;
-    return response;
+    resp->error = 3;
+    return;
   }
 
   // Construct the HTTPS POST request
@@ -224,8 +239,8 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
     SSL_CTX_free(ctx);
     cleanup_openssl();
     WSACleanup();
-    response.error = 4;
-    return response;
+    resp->error = 4;
+    return;
   }
 
   // Receive the response
@@ -234,7 +249,7 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
     ERR_print_errors_fp(stderr);
   } else {
     // copy the response_buffer in the response struct
-    response.body = string_safe_copy(res);
+    resp->body = string_safe_copy(res);
   }
 
   // Clean up
@@ -246,6 +261,4 @@ struct HttpResponse http_call_perform(struct HttpRequest request) {
   WSACleanup(); //
 
 #endif
-
-  return response;
 }
