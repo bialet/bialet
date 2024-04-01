@@ -1,4 +1,8 @@
-class Bool {}
+class Bool {
+  [key] { null }
+  map(f) { List.new() }
+  count { 0 }
+}
 class Fiber {}
 class Fn {}
 class Num {}

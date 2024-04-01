@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,3 +47,24 @@ char *string_append(char *zPrior, const char *zSep, const char *zSrc) {
   return zDest;
 }
 
+void trim(char *str) {
+  char *end;
+
+  // Trim leading space
+  while (isspace((unsigned char)*str))
+    str++;
+
+  // All spaces?
+  if (*str == 0) {
+    *str = '\0'; // If the string only had spaces, set it to an empty string
+    return;
+  }
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while (end > str && isspace((unsigned char)*end))
+    end--;
+
+  // Write new null terminator character
+  end[1] = '\0';
+}
