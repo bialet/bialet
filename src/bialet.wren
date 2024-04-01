@@ -778,13 +778,13 @@ class Http {
       for (line in lines) {
         tmp = line.split(":")
         headerName = tmp.removeAt(0).trim().lower
-        headerValue = tmp.join(":").trim()
+        headerValue = tmp.join(":").trim().lower
         _headers[headerName] = headerValue
       }
     }
     _status = response[0]
-    _fullHeaders = response[1]
-    _body = response[2]
+    _fullHeaders = response[1].trim()
+    _body = response[2].trim()
     _error = response[3]
 
     return _error == 0
@@ -800,7 +800,7 @@ class Http {
       return false
     }
     if (__http.status >= 200 && __http.status < 300) {
-      if (__http.headers("content-type") == "text/json") {
+      if (__http.headers("content-type").contains("text/json") || __http.headers("content-type").contains("application/json")) {
         return Json.parse(__http.body)
       } else {
         return __http.body
