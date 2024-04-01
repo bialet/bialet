@@ -2,7 +2,8 @@
 // The import lines are write at the top of the script.
 import "bialet" for Response, Http
 
-var users = Http.get('https://jsonplaceholder.typicode.com/users/')
+var users = Http.get('https://dummyjson.com/users?limit=5&select=username,email')['users']
+System.print("Users: %(users)")
 
 Response.out('
 <!DOCTYPE html>
@@ -24,7 +25,7 @@ Response.out('
         %( /* List all the users */
           users.map{|user| '
           <tr>
-            <td>%(user["name"])</td>
+            <td>%(user["username"])</td>
             <td>%(user["email"])</td>
           </tr>
         '})

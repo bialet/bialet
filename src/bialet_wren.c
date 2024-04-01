@@ -348,6 +348,10 @@ static void http_call(WrenVM *vm) {
 
   // Perform request
   http_call_perform(&request, &response);
+  printf("Response: %s\n", response.body);
+  printf("Status: %d\n", response.status);
+  printf("Headers: %s\n", response.headers);
+  printf("Error: %d\n", response.error);
 
   // Set response to Wren
   wrenEnsureSlots(vm, 6);

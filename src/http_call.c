@@ -1,4 +1,5 @@
 #include "http_call.h"
+#include "messages.h"
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
@@ -71,6 +72,74 @@ SSL_CTX *create_context() {
   }
 
   return ctx;
+}
+
+int parse_url(char *url, char **hostname, char **port, char **path) {
+  char *p;
+  *hostname = url;
+
+  // Check for https:// or http:// prefix
+  if (strncmp(url, "https://", 8) == 0) {
+    *port = "443";
+    *hostname += 8;
+  } else if (strncmp(url, "http://", 7) == 0) {
+    *port = "80";
+    *hostname += 7;
+  } else {
+    return -1; // Unsupported protocol
+  }
+
+  p = strchr(*hostname, '/');
+  if (p) {
+    *p = '\0'; // Null-terminate hostname and set path
+    *path = p + 1;
+  } else {
+    *path = "";
+  }
+
+  // Check for port in hostname
+  p = strchr(*hostname, ':');
+  if (p) {
+    *p = '\0'; // Null-terminate hostname
+    *port = p + 1;
+  }
+
+  return 0;
+}
+
+void parse_http_response(struct HttpResponse *res, char *fullResponse) {
+  char *line;
+  int isBody = 0;
+  char *headers = calloc(1, 1); // Allocate a single byte for null termination
+  char *body = calloc(1, 1);    // Allocate a single byte for null termination
+
+  // Use strtok to split the response by newlines
+  line = strtok(fullResponse, "\n");
+  while (line != NULL) {
+    if (!isBody) {
+      // Parse status line
+      if (strstr(line, "HTTP") == line) { // This is the status line
+        sscanf(line, "HTTP/1.1 %d", &res->status);
+      } else if (strlen(line) <= 1) { // Empty line: headers end, body begins
+        isBody = 1;
+      } else { // Header line
+        trim(line);
+        headers = realloc(headers, strlen(headers) + strlen(line) +
+                                       2); // +2 for newline and null terminator
+        strcat(headers, line);
+        strcat(headers, "\n");
+      }
+    } else {
+      // Parse body
+      body = realloc(body, strlen(body) + strlen(line) +
+                               2); // +2 for newline and null terminator
+      strcat(body, line);
+      strcat(body, "\n");
+    }
+    line = strtok(NULL, "\n");
+  }
+  res->headers = headers;
+  res->body = body;
 }
 #endif
 
@@ -158,107 +227,144 @@ void http_call_perform(struct HttpRequest *request,
 #endif
 
 #if IS_WIN
-  WSADATA wsaData;
-  SOCKET sockfd;
-  struct addrinfo hints, *servinfo, *p;
-  SSL_CTX *ctx;
-  SSL *ssl;
-  int rv;
-  char *host = "example.com";
-  char *path = "/postdata";
-  char *message = "name=Albo&project=HTTP_Request";
-  char req[1024], res[4096];
+  char *hostname, *port, *path;
+  if (parse_url(request->url, &hostname, &port, &path) != 0) {
+    response->error = 1; // Error parsing URL
+    return;
+  }
+
+  int use_ssl = strcmp(port, "443") == 0;
 
   // Initialize Winsock
+  WSADATA wsaData;
   WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-  // Initialize OpenSSL
-  init_openssl();
-  ctx = create_context();
+  // Create a SOCKET for connecting to server
+  SOCKET sockfd = INVALID_SOCKET;
+  struct addrinfo hints, *result = NULL, *ptr = NULL;
 
-  // Set up hints structure
   ZeroMemory(&hints, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
+  hints.ai_protocol = IPPROTO_TCP;
 
-  // Get server info
-  if ((rv = getaddrinfo(host, "443", &hints, &servinfo)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+  // Resolve the server address and port
+  int iResult = getaddrinfo(hostname, port, &hints, &result);
+  if (iResult != 0) {
+    response->error = 2; // Error resolving hostname
     WSACleanup();
-    resp->error = 1;
     return;
   }
 
-  // Loop through all the results and connect to the first we can
-  for (p = servinfo; p != NULL; p = p->ai_next) {
-    if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) ==
-        INVALID_SOCKET) {
-      perror("client: socket");
-      continue;
-    }
+  // Attempt to connect to the first address returned by
+  // the call to getaddrinfo
+  ptr = result;
 
-    if (connect(sockfd, p->ai_addr, p->ai_addrlen) == SOCKET_ERROR) {
+  // Create a SOCKET for connecting to server
+  sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+  if (sockfd == INVALID_SOCKET) {
+    response->error = 3; // Socket creation failed
+    freeaddrinfo(result);
+    WSACleanup();
+    return;
+  }
+
+  // Connect to server.
+  iResult = connect(sockfd, ptr->ai_addr, (int)ptr->ai_addrlen);
+  if (iResult == SOCKET_ERROR) {
+    closesocket(sockfd);
+    sockfd = INVALID_SOCKET;
+    response->error = 4; // Connection failed
+    freeaddrinfo(result);
+    WSACleanup();
+    return;
+  }
+
+  freeaddrinfo(result);
+
+  SSL_CTX *ctx = NULL;
+  SSL *ssl = NULL;
+
+  if (use_ssl) {
+    // Initialize OpenSSL
+    init_openssl();
+    ctx = create_context();
+
+    // Create an SSL connection and attach it to the socket
+    ssl = SSL_new(ctx);
+    if (ssl == NULL) {
+      printf("SSL_new failed\n");
+      response->error = 5; // SSL creation failed
+      SSL_CTX_free(ctx);
+      cleanup_openssl();
+      WSACleanup();
+      return;
+    }
+    SSL_set_fd(ssl, sockfd);
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+    int result = SSL_connect(ssl);
+    if (result != 1) {
+      int ssl_err = errno;
+      printf("SSL_connect failed with error code: %d\n",
+             SSL_get_error(ssl, result));
+      printf("Captured errno: %d\n", ssl_err);
+      response->error = 5; // SSL connection failed
+      SSL_free(ssl);
       closesocket(sockfd);
-      perror("client: connect");
-      continue;
+      SSL_CTX_free(ctx);
+      cleanup_openssl();
+      WSACleanup();
+      return;
     }
-
-    break; // if we get here, we must have connected successfully
   }
 
-  if (p == NULL) {
-    fprintf(stderr, "client: failed to connect\n");
-    resp->error = 2;
-    return;
-  }
-
-  // Create an SSL connection and attach it to the socket
-  ssl = SSL_new(ctx);
-  SSL_set_fd(ssl, sockfd);
-  if (SSL_connect(ssl) != 1) {
-    ERR_print_errors_fp(stderr);
-    closesocket(sockfd);
-    SSL_CTX_free(ctx);
-    cleanup_openssl();
-    WSACleanup();
-    resp->error = 3;
-    return;
-  }
-
-  // Construct the HTTPS POST request
+  // Send an initial buffer
+  char req[1024];
   sprintf(req,
-          "POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: "
-          "application/x-www-form-urlencoded\r\nContent-Length: %ld\r\n\r\n%s",
-          path, host, (long)strlen(message), message);
+          "%s /%s HTTP/1.1\r\nHost: %s\r\n%s\r\nContent-Length: %d\r\n\r\n%s",
+          request->method, path, hostname,
+          request->raw_headers ? request->raw_headers : "",
+          request->postData ? (int)strlen(request->postData) : 0,
+          request->postData ? request->postData : "");
 
-  // Send the request through SSL
-  if (SSL_write(ssl, req, strlen(req)) <= 0) {
-    ERR_print_errors_fp(stderr);
+  if (use_ssl) {
+    if (SSL_write(ssl, req, strlen(req)) <= 0) {
+      ERR_print_errors_fp(stderr);
+      response->error = 6; // SSL write failed
+    }
+  } else {
+    if (send(sockfd, req, (int)strlen(req), 0) == SOCKET_ERROR) {
+      response->error = 7; // Send failed
+    }
+  }
+
+  char res[4096 * 2];
+  int bytes_received;
+
+  if (use_ssl) {
+    bytes_received = SSL_read(ssl, res, sizeof(res) - 1);
+  } else {
+    bytes_received = recv(sockfd, res, sizeof(res) - 1, 0);
+  }
+
+  if (bytes_received < 0) {
+    perror("recv failed");
+    response->error = 8; // Receive failed
+  } else {
+    // Null-terminate the response
+    res[bytes_received] = '\0';
+    parse_http_response(response, res);
+  }
+
+  // Shutdown the connection since no more data will be sent
+  if (use_ssl) {
+    SSL_shutdown(ssl);
     SSL_free(ssl);
-    closesocket(sockfd);
     SSL_CTX_free(ctx);
     cleanup_openssl();
-    WSACleanup();
-    resp->error = 4;
-    return;
   }
 
-  // Receive the response
-  ZeroMemory(res, sizeof(res));
-  if (SSL_read(ssl, res, sizeof(res)) <= 0) {
-    ERR_print_errors_fp(stderr);
-  } else {
-    // copy the response_buffer in the response struct
-    resp->body = string_safe_copy(res);
-  }
-
-  // Clean up
-  SSL_free(ssl);
   closesocket(sockfd);
-  freeaddrinfo(servinfo);
-  SSL_CTX_free(ctx);
-  cleanup_openssl();
-  WSACleanup(); //
-
+  WSACleanup();
 #endif
 }
