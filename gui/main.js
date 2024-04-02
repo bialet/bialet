@@ -1,5 +1,10 @@
 const electron = require('electron')
 const app = electron.app
+
+if (require('electron-squirrel-startup')) {
+  app.quit()
+}
+
 const BrowserWindow = electron.BrowserWindow
 const shell = electron.shell
 const ipcMain = electron.ipcMain
@@ -35,7 +40,9 @@ const createWindow = () => {
     }, (statusChanged) => {
       win.webContents.send('status', statusChanged)
     })
-    console.log(`Bialet started pid: ${bialet.pid}`)
+    if (bialet) {
+      console.log(`Bialet started pid: ${bialet.pid}`)
+    }
   })
   ipcMain.handle('stop', (_) => stopAll(false))
 }
