@@ -12,7 +12,7 @@ import "bialet" for Response
 // String for the template
 var title = "Welcome to Bialet"
 // Query object, not a string
-var user = `SELECT * FROM users WHERE id = 1`.first
+var user = `SELECT * FROM users WHERE id = 1`.first()
 // Output the template
 Response.out('
   <html>
