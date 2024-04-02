@@ -1,5 +1,6 @@
 const { spawn } = require('node:child_process')
 const kill = require('tree-kill')
+const path = require('path')
 
 // Run Bialet through Node
 //
@@ -27,17 +28,22 @@ const stopAll = (exit = true) => {
   }, WAITING_TIME)
 }
 
-const start = (port, path, logCallback, statusChanged) => {
+const start = (port, rootPath, logCallback, statusChanged) => {
   if (!statusChanged) {
     statusChanged = () => {}
   }
   if (!logCallback) {
     logCallback = () => {}
   }
-  console.log(`Starting Bialet on port ${port} and serving ${path}`)
-  const bialet = spawn(process.resourcesPath + '/bialet', ['-p', port, path], {
-  })
+  console.log(`Starting Bialet on port ${port} and serving ${rootPath}`)
+  const binaryFileName = process.platform == 'win32' ? 'bialet.exe' : 'bialet'
+  const bialet = spawn(path.join(process.resourcesPath, binaryFileName), ['-p', port, rootPath])
+  console.log(bialet)
   statusChanged(bialet.pid > 0)
+  if (!bialet.pid) {
+    logCallback('Failed to start Bialet, please reinstall the Desktop application.\n')
+    return null
+  }
   bialet.stdout.on('data', (data) => {
     logCallback(data.toString())
   })
