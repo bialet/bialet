@@ -1,7 +1,36 @@
 Bialet
 ======
 
-**Bialet is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
+.. image:: _static/logo.png
+    :alt: Bialet logo
+    :width: 25%
+    :align: center
+
+.. raw:: html
+
+   <p style="text-align: center; font-size: 1.5em; margin: 1em 0">Enhance HTML with a native integration to a persistent database</p>
+
+.. code-block::
+
+   import "bialet" for Response
+   // String for the template
+   var title = "Welcome to Bialet"
+   // Query object, not a string
+   var user = `SELECT * FROM users WHERE id = 1`.first
+   // Output the template
+   Response.out('
+     <html>
+       <head>
+         <title>%( title )</title>
+       </head>
+       <body>
+         <h1>%( title )</h1>
+         <p>Hello <em>%( user["name"] )</em></p>
+       </body>
+     </html>
+   ')
+
+Bialet is a full-stack web framework that integrates the object-oriented `Wren <https://wren.io/>`_ language with a HTTP server and a built-in database **in a single binary**, creating a unified environment for web development.
 
 .. grid:: 2
 
@@ -23,45 +52,20 @@ Bialet
 
         Download source
         +++++++++++++++
-        *Use with Docker or compile it*
+        *use it with Docker or compile it*
 
-.. figure:: _static/bialet-desktop.png
 
-Quickstart
-----------
 
-1. Install Bialet using Docker Compose.
+.. button-link:: https://github.com/bialet/bialet
+   :align: center
 
-.. code-block:: bash
-
-  git clone https://github.com/bialet/bialet.git
-  cd bialet
-  docker compose up
-
-2. Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
-
-See :doc:`installation </installation>` for details on building and running the project.
-
-Hello World
------------
-
-The code is written in `Wren <https://wren.io>`_, though a custom heavily modified
-version.
-
-.. code-block:: wren
-
-   import "bialet" for Request, Response
-
-   var name = Request.get("name")
-
-   Response.out('<p>Hello %( name || "World" )!</p>')
-
-See more
---------
+    :octicon:`mark-github;2em;sd-text-info` View repository in GitHub
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
    self
+   quickstart
    installation
    structure
