@@ -41,7 +41,12 @@ exports.packagerConfig = {
         options: {
           icon: './gui/icon.png',
           mantainer: 'Rodrigo Arce',
-          homepage: 'https://bialet.dev'
+          homepage: 'https://bialet.dev',
+          genericName: 'Web Application Builder',
+          productName: 'Bialet Desktop',
+          depends: ["libssl3", "libcurl4", "libsqlite3-dev"],
+          categories: ["Development", "Utility"],
+          description: 'Bialet Desktop is a graphical user interface for Bialet.',
         },
       },
     }
