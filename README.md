@@ -1,7 +1,9 @@
-# 🚲 Bialet
+# 🚲 [Bialet](https://bialet.dev)
 
 <p align="center">
-  <img src="docs/_static/logo.png" alt="" width="200" />
+  <a href="https://bialet.dev">
+    <img src="docs/_static/logo.png" alt="" width="200" />
+  </a>
 </p>
 <p align="center">
   <strong>Enhance HTML with a native integration to a persistent database</strong>
@@ -27,7 +29,7 @@ Response.out('
 ')
 ```
 
-[Bialet](https://bialet.dev) is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development
+Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in database, creating a unified environment for web development
 
 ## Quickstart
 
@@ -47,10 +49,6 @@ To build Bialet from source, you'll need to install certain dependencies and run
 
 ### Dependencies
 
-- **SQLite3**
-- **OpenSSL 3**
-- **curl**
-
 #### Debian/Ubuntu
 
 ```bash
@@ -62,6 +60,12 @@ sudo apt install -y libsqlite3-dev libssl-dev libcurl4-openssl-dev
 ```bash
 brew install sqlite3 openssl curl
 ```
+### Windows
+
+* libcrypto-3-x64.dll
+* libsqlite3-0.dll
+* libssl-3-x64.dll
+
 ### Building the Project
 
 After installing the dependencies, compile the project and install it:
