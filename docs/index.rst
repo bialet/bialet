@@ -25,7 +25,7 @@ Bialet
      </html>
    ')
 
-Bialet is a full-stack web framework that integrates the object-oriented `Wren <https://wren.io/>`_ language with a HTTP server and a built-in database **in a single binary**, creating a unified environment for web development.
+Bialet is a full-stack web framework that integrates the object-oriented `Wren language <https://wren.io/>`_ with a HTTP server and a built-in database **in a single binary**, creating a unified environment for web development.
 
 .. grid:: 2
 
