@@ -1,11 +1,6 @@
 Bialet
 ======
 
-.. image:: _static/logo.png
-    :alt: Bialet logo
-    :width: 25%
-    :align: center
-
 .. raw:: html
 
    <p style="text-align: center; font-size: 1.5em; margin: 1em 0">Enhance HTML with a native integration to a persistent database</p>

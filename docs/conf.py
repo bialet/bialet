@@ -30,6 +30,13 @@ highlight_options = {'guess_lang': False}
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_favicon = '../src/favicon.ico'
+html_theme_options = {
+    "logo": {
+        "text": "Bialet documentation",
+        "image_light": "_static/logo.png",
+        "image_dark": "_static/logo.png",
+    }
+}
 
 source_suffix = {
     '.rst': 'restructuredtext',
