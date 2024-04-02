@@ -35,8 +35,14 @@ html_theme_options = {
         "text": "Bialet documentation",
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
-    }
+    },
+    "repository_url": "https://github.com/bialet/bialet",
+    "path_to_docs": "docs",
+    "use_edit_page_button": True,
+    "use_repository_button": True,
+    "use_issues_button": True,
 }
+html_show_copyright = False
 
 source_suffix = {
     '.rst': 'restructuredtext',
