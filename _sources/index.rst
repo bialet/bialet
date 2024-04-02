@@ -1,11 +1,6 @@
 Bialet
 ======
 
-.. image:: _static/logo.png
-    :alt: Bialet logo
-    :width: 25%
-    :align: center
-
 .. raw:: html
 
    <p style="text-align: center; font-size: 1.5em; margin: 1em 0">Enhance HTML with a native integration to a persistent database</p>
@@ -59,7 +54,8 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren <
 .. button-link:: https://github.com/bialet/bialet
    :align: center
 
-    :octicon:`mark-github;2em;sd-text-info` View repository in GitHub
+    :octicon:`mark-github;2em;sd-text-info`
+    View repository in GitHub
 
 .. toctree::
    :hidden:
