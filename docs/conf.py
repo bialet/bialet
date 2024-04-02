@@ -9,6 +9,7 @@
 project = 'Bialet'
 copyright = '2024, Rodrigo Arce'
 author = 'Rodrigo Arce'
+version = '0.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -16,7 +17,10 @@ author = 'Rodrigo Arce'
 extensions = ['myst_parser', 'sphinx_design']
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['requirements.txt']
+
+highlight_language = 'wren'
+highlight_options = {'guess_lang': False}
 
 
 
@@ -25,6 +29,7 @@ exclude_patterns = []
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
+html_favicon = '../src/favicon.ico'
 
 source_suffix = {
     '.rst': 'restructuredtext',
