@@ -8,6 +8,9 @@
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
+  "config": {
+    "forge": "./gui/forge.config.js"
+  },
   "keywords": [
     "bialet",
     "gui"
