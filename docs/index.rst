@@ -9,12 +9,11 @@ Bialet
         :text-align: center
         :link: https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb
 
-         :octicon:`desktop-download;2em;sd-text-info`
+        :octicon:`desktop-download;2em;sd-text-info`
 
-         Download Bialet Desktop
-
-         (for Ubuntu/Debian)
-
+        Download Bialet Desktop
+        +++++++++++++++++++++++
+        *for Ubuntu/Debian*
 
     .. grid-item-card::
         :text-align: center
@@ -23,8 +22,8 @@ Bialet
         :octicon:`file-zip;2em;sd-text-info`
 
         Download source
-
-        (Use with Docker or compile it)
+        +++++++++++++++
+        *Use with Docker or compile it*
 
 .. figure:: _static/bialet-desktop.png
 
