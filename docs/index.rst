@@ -3,9 +3,30 @@ Bialet
 
 **Bialet is a full-stack web framework that integrates the object-oriented Wren language with a single HTTP server and a built-in database, creating a unified environment for web development**
 
-.. figure:: _static/make-web-dev-great-again.png
+.. grid:: 2
 
-  Make Web Development Great Again
+    .. grid-item-card::
+        :text-align: center
+        :link: https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb
+
+         :octicon:`desktop-download;2em;sd-text-info`
+
+         Download Bialet Desktop
+
+         (for Ubuntu/Debian)
+
+
+    .. grid-item-card::
+        :text-align: center
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.4.zip
+
+        :octicon:`file-zip;2em;sd-text-info`
+
+        Download source
+
+        (Use with Docker or compile it)
+
+.. figure:: _static/bialet-desktop.png
 
 Quickstart
 ----------
@@ -43,6 +64,5 @@ See more
    :maxdepth: 2
 
    self
-   tutorial
    installation
    structure
