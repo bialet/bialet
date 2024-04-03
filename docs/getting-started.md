@@ -1,14 +1,14 @@
-# Quickstart
+# Getting Started
 
-We've got the HTML ready for a basic poll app. This quickstart will guide you through making it functional with Bialet, emphasizing how to work with pre-existing HTML structures and add dynamic content.
+We've got the HTML ready for a basic poll app. This getting-started will guide you through making it functional with Bialet, emphasizing how to work with pre-existing HTML structures and add dynamic content.
 
 They are built with [Flowbite](https://flowbite.com/) and [Tailwind](https://tailwindcss.com/) and they consists on two HTML pages, the first one with a form to vote and the results.
 
 Check them and download the HTML files to a new folder for the project.
 
-* [vote.html](quickstart/1-html/vote.html)
+* [vote.html](getting-started/1-html/vote.html)
   ![Poll Vote](_static/poll-vote.png)
-* [results.html](quickstart/1-html/results.html)
+* [results.html](getting-started/1-html/results.html)
   ![Poll Results](_static/poll-results.png)
 
 Our project could have other files like JavaScript, CSS, images, etc, like any other [HTML project (see in MDN)](https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/Dealing_with_files).
@@ -122,9 +122,9 @@ Now it's time to copy the `vote.html` file to our project. Also, try to create a
 
 Here are the files:
 
-* [_app.wren](quickstart/2-no-logic/_app.wren)
-* [index.wren](quickstart/2-no-logic/index.wren)
-* [results.wren](quickstart/2-no-logic/results.wren)
+* [_app.wren](getting-started/2-no-logic/_app.wren)
+* [index.wren](getting-started/2-no-logic/index.wren)
+* [results.wren](getting-started/2-no-logic/results.wren)
 
 We manage to replicate the HTML static content in Bialet. Now let's make it actually work.
 
@@ -465,8 +465,8 @@ class Poll {
 
 Here are the final files:
 
-* [_app.wren](quickstart/3-final/_app.wren)
-* [_migration.wren](quickstart/3-final/_migration.wren)
-* [index.wren](quickstart/3-final/index.wren)
-* [results.wren](quickstart/3-final/results.wren)
+* [_app.wren](getting-started/3-final/_app.wren)
+* [_migration.wren](getting-started/3-final/_migration.wren)
+* [index.wren](getting-started/3-final/index.wren)
+* [results.wren](getting-started/3-final/results.wren)
 

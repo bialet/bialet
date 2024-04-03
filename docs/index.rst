@@ -62,6 +62,6 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
    :maxdepth: 2
 
    self
-   quickstart
+   getting-started
    installation
    structure
