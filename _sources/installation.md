@@ -1,25 +1,9 @@
 # Installation
 
-This guide provides instructions on how to set up the Bialet project using Docker Compose, as well as details on building the project from source and using the Bialet CLI.
+## With Docker Compose
 
-## Quick Start with Docker Compose
-
-The quickest way to get Bialet up and running is by using Docker Compose.
-
-1. First, clone the Bialet repository:
-
-    ```bash
-    git clone https://github.com/bialet/bialet.git
-    ```
-
-2. Navigate to the cloned directory and start the application:
-
-    ```bash
-    cd bialet
-    docker compose up
-    ```
-
-## Configuring the Docker Compose Setup
+Use the [Bialet Skeleton](https://github.com/bialet/skeleton) repository or the [framework repository](https://github.com/bialet/bialet)
+to start [Docker Compose](https://docs.docker.com/compose/) the application.
 
 ### Customizing the Application Directory
 
@@ -37,15 +21,19 @@ The default application port is `7000`. To use a different port, set the `BIALET
 BIALET_PORT=7001 docker compose up
 ```
 
+## With the Desktop Application
+
+Currently, the Bialet Desktop is only available for Ubuntu/Debian.
+
+Download the [Bialet Desktop](https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb) application.
+
+![Bialet Desktop in Ubuntu](_static/bialet-desktop.png)
+
 ## Building from Source
 
 To build Bialet from source, you'll need to install certain dependencies and run the build process.
 
 ### Dependencies
-
-- **SQLite3**
-- **OpenSSL 3**
-- **curl**
 
 #### Debian/Ubuntu
 
@@ -58,8 +46,13 @@ sudo apt install -y libsqlite3-dev libssl-dev libcurl4-openssl-dev
 ```bash
 brew install sqlite3 openssl curl
 ```
+### Windows
 
-### Building the Project
+* libcrypto-3-x64.dll
+* libsqlite3-0.dll
+* libssl-3-x64.dll
+
+## Building the Project
 
 After installing the dependencies, compile the project:
 

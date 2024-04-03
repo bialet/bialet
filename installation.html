@@ -140,7 +140,7 @@
     <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt=""/>`);</script>
   
   
-    <p class="title logo__title">Bialet documentation</p>
+    <p class="title logo__title">Bialet Documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -373,21 +373,22 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-with-docker-compose">Quick Start with Docker Compose</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-the-docker-compose-setup">Configuring the Docker Compose Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-desktop-application">With the Desktop Application</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-ubuntu">Debian/Ubuntu</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#macos">MacOS</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-bialet-cli">Using the Bialet CLI</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-startup-options">Customizing Startup Options</a></li>
@@ -407,26 +408,10 @@ document.write(`
                   
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>This guide provides instructions on how to set up the Bialet project using Docker Compose, as well as details on building the project from source and using the Bialet CLI.</p>
-<section id="quick-start-with-docker-compose">
-<h2>Quick Start with Docker Compose<a class="headerlink" href="#quick-start-with-docker-compose" title="Link to this heading">#</a></h2>
-<p>The quickest way to get Bialet up and running is by using Docker Compose.</p>
-<ol class="arabic">
-<li><p>First, clone the Bialet repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bialet/bialet.git
-</pre></div>
-</div>
-</li>
-<li><p>Navigate to the cloned directory and start the application:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>bialet
-docker<span class="w"> </span>compose<span class="w"> </span>up
-</pre></div>
-</div>
-</li>
-</ol>
-</section>
-<section id="configuring-the-docker-compose-setup">
-<h2>Configuring the Docker Compose Setup<a class="headerlink" href="#configuring-the-docker-compose-setup" title="Link to this heading">#</a></h2>
+<section id="with-docker-compose">
+<h2>With Docker Compose<a class="headerlink" href="#with-docker-compose" title="Link to this heading">#</a></h2>
+<p>Use the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository or the <a class="reference external" href="https://github.com/bialet/bialet">framework repository</a>
+to start <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a> the application.</p>
 <section id="customizing-the-application-directory">
 <h3>Customizing the Application Directory<a class="headerlink" href="#customizing-the-application-directory" title="Link to this heading">#</a></h3>
 <p>To specify a custom directory for the Bialet project, set the <code class="docutils literal notranslate"><span class="pre">BIALET_DIR</span></code> environment variable:</p>
@@ -442,16 +427,17 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
 </div>
 </section>
 </section>
+<section id="with-the-desktop-application">
+<h2>With the Desktop Application<a class="headerlink" href="#with-the-desktop-application" title="Link to this heading">#</a></h2>
+<p>Currently, the Bialet Desktop is only available for Ubuntu/Debian.</p>
+<p>Download the <a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb">Bialet Desktop</a> application.</p>
+<p><img alt="Bialet Desktop in Ubuntu" src="_images/bialet-desktop.png" /></p>
+</section>
 <section id="building-from-source">
 <h2>Building from Source<a class="headerlink" href="#building-from-source" title="Link to this heading">#</a></h2>
 <p>To build Bialet from source, you’ll need to install certain dependencies and run the build process.</p>
 <section id="dependencies">
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
-<ul class="simple">
-<li><p><strong>SQLite3</strong></p></li>
-<li><p><strong>OpenSSL 3</strong></p></li>
-<li><p><strong>curl</strong></p></li>
-</ul>
 <section id="debian-ubuntu">
 <h4>Debian/Ubuntu<a class="headerlink" href="#debian-ubuntu" title="Link to this heading">#</a></h4>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libssl-dev<span class="w"> </span>libcurl4-openssl-dev
@@ -465,8 +451,17 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
 </div>
 </section>
 </section>
+<section id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>libcrypto-3-x64.dll</p></li>
+<li><p>libsqlite3-0.dll</p></li>
+<li><p>libssl-3-x64.dll</p></li>
+</ul>
+</section>
+</section>
 <section id="building-the-project">
-<h3>Building the Project<a class="headerlink" href="#building-the-project" title="Link to this heading">#</a></h3>
+<h2>Building the Project<a class="headerlink" href="#building-the-project" title="Link to this heading">#</a></h2>
 <p>After installing the dependencies, compile the project:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make
 </pre></div>
@@ -475,7 +470,6 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install
 </pre></div>
 </div>
-</section>
 </section>
 <section id="using-the-bialet-cli">
 <h2>Using the Bialet CLI<a class="headerlink" href="#using-the-bialet-cli" title="Link to this heading">#</a></h2>
@@ -597,21 +591,22 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-with-docker-compose">Quick Start with Docker Compose</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuring-the-docker-compose-setup">Configuring the Docker Compose Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-desktop-application">With the Desktop Application</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-ubuntu">Debian/Ubuntu</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#macos">MacOS</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-bialet-cli">Using the Bialet CLI</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-startup-options">Customizing Startup Options</a></li>
