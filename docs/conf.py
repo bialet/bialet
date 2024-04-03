@@ -32,7 +32,7 @@ html_static_path = ['_static']
 html_favicon = '../src/favicon.ico'
 html_theme_options = {
     "logo": {
-        "text": "Bialet documentation",
+        "text": "Bialet Documentation",
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     },
@@ -43,6 +43,7 @@ html_theme_options = {
     "use_issues_button": True,
 }
 html_show_copyright = False
+html_show_sphinx = False
 
 source_suffix = {
     '.rst': 'restructuredtext',

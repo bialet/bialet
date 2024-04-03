@@ -29,7 +29,7 @@ Response.out('
 ')
 ```
 
-Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in database, creating a unified environment for web development
+Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development
 
 ## Quickstart
 
