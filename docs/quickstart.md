@@ -466,6 +466,7 @@ class Poll {
 Here are the final files:
 
 * [_app.wren](quickstart/3-final/_app.wren)
+* [_migration.wren](quickstart/3-final/_migration.wren)
 * [index.wren](quickstart/3-final/index.wren)
 * [results.wren](quickstart/3-final/results.wren)
 
