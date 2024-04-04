@@ -22,6 +22,7 @@ exclude_patterns = ['requirements.txt']
 highlight_language = 'wren'
 highlight_options = {'guess_lang': False}
 
+suppress_warnings = ['misc.highlighting_failure']
 
 
 # -- Options for HTML output -------------------------------------------------
