@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Database &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Project Structure and Routing" href="structure.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/database.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fdatabase.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/database.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Database</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="database">
+<h1>Database<a class="headerlink" href="#database" title="Link to this heading">#</a></h1>
+<p>Bialet includes the <a class="reference external" href="https://www.sqlite.org/">SQLite</a> library for its database.</p>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<p>There is no configuration other than naming the database file.</p>
+<p>The default database name is <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> placed in the root directory.</p>
+<p>To change the name of the database, set the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option.</p>
+<p><strong>There is no integration with other databases at the moment.</strong></p>
+</section>
+<section id="query-object">
+<h2>Query Object<a class="headerlink" href="#query-object" title="Link to this heading">#</a></h2>
+<p>Use backticks to surround SQL statements <code class="docutils literal notranslate"><span class="pre">`</span> <span class="pre">`</span></code>.</p>
+<p>The Query object have 3 main methods all accept the same parameters.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">query()</span></code>: Returns the last inserted id if the query was a <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> statement.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code>: Returns the result of the query as an array (List object).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first()</span></code>: Returns the first result of the query as an object (Map object).</p></li>
+</ul>
+<p><strong>First will add a LIMIT clause automatically.</strong></p>
+<p>You can’t concatenate strings or use interpolations with the Query object.
+When you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the method.</p>
+<p>All methods receive the following parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">()</span></code>: No parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(params)</span></code>: An array of parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(param1)</span></code>: Any non array parameter is converted to String.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2)</span></code>: Convert all parameters to String.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2,</span> <span class="pre">param3)</span></code>: Convert all parameters to String.</p></li>
+</ul>
+<p>If you need more parameters, use the array syntax (<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
+<span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1">// This is the correct way</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
+<span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1">// Also works</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
+<span class="k">var</span><span class="w"> </span><span class="n">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">id</span><span class="p">]</span>
+<span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="insert-and-update">
+<h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
+<p>You can use a regular SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statement.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;john@example.com&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">INSERT</span><span class="w"> </span><span class="nc">INTO</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">email</span><span class="p">)</span><span class="w"> </span><span class="nc">VALUES</span><span class="w"> </span><span class="p">(</span><span class="o">?</span><span class="p">,</span><span class="w"> </span><span class="o">?</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">userParams</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>But you can also use the <code class="docutils literal notranslate"><span class="pre">Db.save</span></code> method, sending the table name and the a Map object with the values.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;john@example.com&quot;</span><span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same method also work for updating the row.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s">&quot;john@example.com&quot;</span><span class="p">}</span>
+<span class="n">user</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
+<span class="c1">// This will update the row</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="migrations">
+<h2>Migrations<a class="headerlink" href="#migrations" title="Link to this heading">#</a></h2>
+<p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
+<p>This script will be run every time the application starts and also when a Wren file is updated.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
+
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Name of the migration&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span><span class="nc">SOME</span><span class="w"> </span><span class="nc">QUERY</span><span class="err">`</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The name of the migration is used to avoid repeating migrations. Use a descriptive name.</p>
+<p>You can have multiples queries separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>.</p>
+<p>Use migration to insert non-transactional data. You can interact with the <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code> tables.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Add default title&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span><span class="nc">INSERT</span><span class="w"> </span><span class="nc">INTO</span><span class="w"> </span><span class="nc">BIALET_CONFIG</span><span class="w"> </span><span class="nc">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;title&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bialet example page&quot;</span><span class="p">)</span><span class="err">`</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="bialet-tables">
+<h2>Bialet tables<a class="headerlink" href="#bialet-tables" title="Link to this heading">#</a></h2>
+<p>Bialet tables are prefixed with <code class="docutils literal notranslate"><span class="pre">BIALET_</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>: The configuration table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_MIGRATIONS</span></code>: The migration history table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_SESSIONS</span></code>: The session table.</p></li>
+</ul>
+<p>If you delete or alter any of this tables your application will not work correctly.</p>
+<p>You may insert, update or delete rows, however do it with caution.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="structure.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Project Structure and Routing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
