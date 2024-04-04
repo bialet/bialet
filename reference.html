@@ -1,0 +1,1180 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Reference &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Database" href="database.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/reference.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Freference.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/reference.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route">init(message, route)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parsequery-query">parseQuery(query)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ispost">isPost</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#isjson">isJson</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name">header(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response">Response</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#out">out</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#out-out">out(out)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status-status">status(status)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addcookieheader-value">addCookieHeader(value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-header-value">header(header, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-data">json(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-title-message">page(title, message)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forbidden">forbidden()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login">login()</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cookie">Cookie</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parseheader-headervalue">parseHeader(headerValue)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value-options">set(name, value, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value">set(name, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-name">delete(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">get(name)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#session">Session</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#name">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#name-n">name=(n)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#destroy">destroy()</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json">Json</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-string">parse(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stringify-object">stringify(object)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util">Util</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#randomstring-length">randomString(length)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hash-password">hash(password)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-password-hash">verify(password, hash)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tonum-val">toNum(val)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hextodec-hexstr">hexToDec(hexStr)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tohex-byte">toHex(byte)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#urldecode-str">urlDecode(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lpad-s-count-with">lpad(s, count, with)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-str">reverse(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#getpositionforindex-text-index">getPositionForIndex(text, index)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlescape-str">htmlEscape(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-key">get(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-key-value">set(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http">Http</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-url-method-data-options">request(url, method, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url-options">get(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data-options">post(url, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data-options">put(url, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url-options">delete(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url">get(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="reference">
+<h1>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h1>
+<section id="request">
+<h2>Request<a class="headerlink" href="#request" title="Link to this heading">#</a></h2>
+<p>A class to handle incoming HTTP requests, parsing their content, and providing convenient access to their components.</p>
+<section id="init-message-route">
+<h3>init(message, route)<a class="headerlink" href="#init-message-route" title="Link to this heading">#</a></h3>
+<p>Initializes a new Request object with a given message and route.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The raw HTTP request message.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">route</span></code>: The route the request is targeting.</p></li>
+</ul>
+</section>
+<section id="parsequery-query">
+<h3>parseQuery(query)<a class="headerlink" href="#parsequery-query" title="Link to this heading">#</a></h3>
+<p>Parses the query string of the request.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">query</span></code>: The query string part of the URL.</p></li>
+</ul>
+</section>
+<section id="method">
+<h3>method<a class="headerlink" href="#method" title="Link to this heading">#</a></h3>
+<p>Returns the HTTP method of the request.</p>
+</section>
+<section id="uri">
+<h3>uri<a class="headerlink" href="#uri" title="Link to this heading">#</a></h3>
+<p>Returns the URI of the request.</p>
+</section>
+<section id="body">
+<h3>body<a class="headerlink" href="#body" title="Link to this heading">#</a></h3>
+<p>Returns the body content of the request.</p>
+</section>
+<section id="ispost">
+<h3>isPost<a class="headerlink" href="#ispost" title="Link to this heading">#</a></h3>
+<p>Checks if the request method is POST.</p>
+</section>
+<section id="isjson">
+<h3>isJson<a class="headerlink" href="#isjson" title="Link to this heading">#</a></h3>
+<p>Checks if the request’s content type is JSON.</p>
+</section>
+<section id="header-name">
+<h3>header(name)<a class="headerlink" href="#header-name" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified request header.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the header.</p></li>
+</ul>
+</section>
+<section id="get-name">
+<h3>get(name)<a class="headerlink" href="#get-name" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified query parameter.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the query parameter.</p></li>
+</ul>
+</section>
+<section id="post-name">
+<h3>post(name)<a class="headerlink" href="#post-name" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified POST parameter.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the POST parameter.</p></li>
+</ul>
+</section>
+<section id="route-pos">
+<h3>route(pos)<a class="headerlink" href="#route-pos" title="Link to this heading">#</a></h3>
+<p>Returns a specific part of the request route.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code>: The position of the route segment.</p></li>
+</ul>
+</section>
+</section>
+<section id="response">
+<h2>Response<a class="headerlink" href="#response" title="Link to this heading">#</a></h2>
+<p>A class to construct and manage HTTP responses, including setting headers, cookies, and the response body.</p>
+<section id="init">
+<h3>init()<a class="headerlink" href="#init" title="Link to this heading">#</a></h3>
+<p>Initializes a new Response object.</p>
+</section>
+<section id="out">
+<h3>out<a class="headerlink" href="#out" title="Link to this heading">#</a></h3>
+<p>Returns the current output buffer, trimmed.</p>
+</section>
+<section id="status">
+<h3>status<a class="headerlink" href="#status" title="Link to this heading">#</a></h3>
+<p>Returns the current HTTP status code.</p>
+</section>
+<section id="headers">
+<h3>headers<a class="headerlink" href="#headers" title="Link to this heading">#</a></h3>
+<p>Returns the formatted response headers as a string.</p>
+</section>
+<section id="out-out">
+<h3>out(out)<a class="headerlink" href="#out-out" title="Link to this heading">#</a></h3>
+<p>Appends a string to the response body.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">out</span></code>: The string to append.</p></li>
+</ul>
+</section>
+<section id="status-status">
+<h3>status(status)<a class="headerlink" href="#status-status" title="Link to this heading">#</a></h3>
+<p>Sets the HTTP status code for the response.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code>: The HTTP status code.</p></li>
+</ul>
+</section>
+<section id="addcookieheader-value">
+<h3>addCookieHeader(value)<a class="headerlink" href="#addcookieheader-value" title="Link to this heading">#</a></h3>
+<p>Adds a ‘Set-Cookie’ header to the response.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The cookie value.</p></li>
+</ul>
+</section>
+<section id="header-header-value">
+<h3>header(header, value)<a class="headerlink" href="#header-header-value" title="Link to this heading">#</a></h3>
+<p>Sets a response header.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">header</span></code>: The name of the header.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value of the header.</p></li>
+</ul>
+</section>
+<section id="json-data">
+<h3>json(data)<a class="headerlink" href="#json-data" title="Link to this heading">#</a></h3>
+<p>Sends a JSON response.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to be JSON-encoded.</p></li>
+</ul>
+</section>
+<section id="page-title-message">
+<h3>page(title, message)<a class="headerlink" href="#page-title-message" title="Link to this heading">#</a></h3>
+<p>Generates a simple HTML page response.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code>: The title of the page.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The message to display on the page.</p></li>
+</ul>
+</section>
+<section id="end-code-title-message">
+<h3>end(code, title, message)<a class="headerlink" href="#end-code-title-message" title="Link to this heading">#</a></h3>
+<p>Ends the response with a specific status code and a simple HTML page.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">code</span></code>: The HTTP status code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code>: The title for the HTML page.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The message for the HTML page.</p></li>
+</ul>
+</section>
+<section id="redirect-url">
+<h3>redirect(url)<a class="headerlink" href="#redirect-url" title="Link to this heading">#</a></h3>
+<p>Redirects the client to a specified URL.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The target URL.</p></li>
+</ul>
+</section>
+<section id="forbidden">
+<h3>forbidden()<a class="headerlink" href="#forbidden" title="Link to this heading">#</a></h3>
+<p>Sends a 403 Forbidden response.</p>
+</section>
+<section id="login">
+<h3>login()<a class="headerlink" href="#login" title="Link to this heading">#</a></h3>
+<p>Generates a login page response.</p>
+</section>
+</section>
+<section id="cookie">
+<h2>Cookie<a class="headerlink" href="#cookie" title="Link to this heading">#</a></h2>
+<p>A class for managing cookies, including parsing, setting, and deleting them.</p>
+<section id="id1">
+<h3>init()<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>Initializes a new Cookie object.</p>
+</section>
+<section id="parseheader-headervalue">
+<h3>parseHeader(headerValue)<a class="headerlink" href="#parseheader-headervalue" title="Link to this heading">#</a></h3>
+<p>Parses a ‘Set-Cookie’ header value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">headerValue</span></code>: The ‘Set-Cookie’ header value.</p></li>
+</ul>
+</section>
+<section id="set-name-value-options">
+<h3>set(name, value, options)<a class="headerlink" href="#set-name-value-options" title="Link to this heading">#</a></h3>
+<p>Sets a cookie with options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value of the cookie.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional options for the cookie (e.g., path, domain, secure).</p></li>
+</ul>
+</section>
+<section id="set-name-value">
+<h3>set(name, value)<a class="headerlink" href="#set-name-value" title="Link to this heading">#</a></h3>
+<p>Sets a cookie without options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value of the cookie.</p></li>
+</ul>
+</section>
+<section id="delete-name">
+<h3>delete(name)<a class="headerlink" href="#delete-name" title="Link to this heading">#</a></h3>
+<p>Deletes a cookie.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie to delete.</p></li>
+</ul>
+</section>
+<section id="get-name-default">
+<h3>get(name, default)<a class="headerlink" href="#get-name-default" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified cookie, or a default value if the cookie is not found.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The default value to return if the cookie is not found.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>get(name)<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified cookie.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie.</p></li>
+</ul>
+</section>
+</section>
+<section id="session">
+<h2>Session<a class="headerlink" href="#session" title="Link to this heading">#</a></h2>
+<p>A class for managing session data, including setting and destroying sessions.</p>
+<section id="name">
+<h3>name<a class="headerlink" href="#name" title="Link to this heading">#</a></h3>
+<p>Returns the name of the session cookie.</p>
+</section>
+<section id="name-n">
+<h3>name=(n)<a class="headerlink" href="#name-n" title="Link to this heading">#</a></h3>
+<p>Sets the name of the session cookie.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code>: The new name for the session cookie.</p></li>
+</ul>
+</section>
+<section id="destroy">
+<h3>destroy()<a class="headerlink" href="#destroy" title="Link to this heading">#</a></h3>
+<p>Destroys the current session.</p>
+</section>
+</section>
+<section id="json">
+<h2>Json<a class="headerlink" href="#json" title="Link to this heading">#</a></h2>
+<p>A class for handling JSON data, including parsing and stringifying.</p>
+<section id="parse-string">
+<h3>parse(string)<a class="headerlink" href="#parse-string" title="Link to this heading">#</a></h3>
+<p>Parses a JSON string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">string</span></code>: The JSON string to parse.</p></li>
+</ul>
+</section>
+<section id="stringify-object">
+<h3>stringify(object)<a class="headerlink" href="#stringify-object" title="Link to this heading">#</a></h3>
+<p>Converts an object to a JSON string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">object</span></code>: The object to stringify.</p></li>
+</ul>
+</section>
+</section>
+<section id="util">
+<h2>Util<a class="headerlink" href="#util" title="Link to this heading">#</a></h2>
+<p>A utility class providing various static helper methods.</p>
+<section id="randomstring-length">
+<h3>randomString(length)<a class="headerlink" href="#randomstring-length" title="Link to this heading">#</a></h3>
+<p>Generates a random string of a specified length.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">length</span></code>: The desired length of the random string.</p></li>
+</ul>
+</section>
+<section id="hash-password">
+<h3>hash(password)<a class="headerlink" href="#hash-password" title="Link to this heading">#</a></h3>
+<p>Generates a hash for the given password.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">password</span></code>: The password to hash.</p></li>
+</ul>
+</section>
+<section id="verify-password-hash">
+<h3>verify(password, hash)<a class="headerlink" href="#verify-password-hash" title="Link to this heading">#</a></h3>
+<p>Verifies if a given password matches a hash.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">password</span></code>: The password to verify.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hash</span></code>: The hash to compare against the password.</p></li>
+</ul>
+</section>
+<section id="tonum-val">
+<h3>toNum(val)<a class="headerlink" href="#tonum-val" title="Link to this heading">#</a></h3>
+<p>Converts a given value to a numeric type.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: The value to convert.</p></li>
+</ul>
+</section>
+<section id="hextodec-hexstr">
+<h3>hexToDec(hexStr)<a class="headerlink" href="#hextodec-hexstr" title="Link to this heading">#</a></h3>
+<p>Converts a hexadecimal string to its decimal equivalent.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hexStr</span></code>: The hexadecimal string to convert.</p></li>
+</ul>
+</section>
+<section id="tohex-byte">
+<h3>toHex(byte)<a class="headerlink" href="#tohex-byte" title="Link to this heading">#</a></h3>
+<p>Converts a byte to its hexadecimal string representation.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">byte</span></code>: The byte to convert.</p></li>
+</ul>
+</section>
+<section id="urldecode-str">
+<h3>urlDecode(str)<a class="headerlink" href="#urldecode-str" title="Link to this heading">#</a></h3>
+<p>Decodes a URL-encoded string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: The URL-encoded string to decode.</p></li>
+</ul>
+</section>
+<section id="lpad-s-count-with">
+<h3>lpad(s, count, with)<a class="headerlink" href="#lpad-s-count-with" title="Link to this heading">#</a></h3>
+<p>Left-pads a string with a specified character to a specified length.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: The string to pad.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">count</span></code>: The desired length of the string after padding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with</span></code>: The character to pad the string with.</p></li>
+</ul>
+</section>
+<section id="reverse-str">
+<h3>reverse(str)<a class="headerlink" href="#reverse-str" title="Link to this heading">#</a></h3>
+<p>Reverses a given string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: The string to reverse.</p></li>
+</ul>
+</section>
+<section id="getpositionforindex-text-index">
+<h3>getPositionForIndex(text, index)<a class="headerlink" href="#getpositionforindex-text-index" title="Link to this heading">#</a></h3>
+<p>Finds the line and column position in a text for a specified index.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">text</span></code>: The text to search.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code>: The index in the text.</p></li>
+</ul>
+</section>
+<section id="htmlescape-str">
+<h3>htmlEscape(str)<a class="headerlink" href="#htmlescape-str" title="Link to this heading">#</a></h3>
+<p>Escapes special HTML characters in a string to prevent XSS attacks.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: The string to escape.</p></li>
+</ul>
+</section>
+<section id="encodebase64-input">
+<h3>encodeBase64(input)<a class="headerlink" href="#encodebase64-input" title="Link to this heading">#</a></h3>
+<p>Encodes a given input string to Base64.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The string to encode.</p></li>
+</ul>
+</section>
+<section id="decodebase64-input">
+<h3>decodeBase64(input)<a class="headerlink" href="#decodebase64-input" title="Link to this heading">#</a></h3>
+<p>Decodes a Base64 encoded string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The Base64 encoded string to decode.</p></li>
+</ul>
+</section>
+</section>
+<section id="config">
+<h2>Config<a class="headerlink" href="#config" title="Link to this heading">#</a></h2>
+<p>A class for managing configuration settings, with methods to get, set, and delete configuration options.</p>
+<section id="get-key">
+<h3>get(key)<a class="headerlink" href="#get-key" title="Link to this heading">#</a></h3>
+<p>Retrieves a configuration value by its key.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+</ul>
+</section>
+<section id="set-key-value">
+<h3>set(key, value)<a class="headerlink" href="#set-key-value" title="Link to this heading">#</a></h3>
+<p>Sets a configuration option to a given value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The value to set.</p></li>
+</ul>
+</section>
+<section id="bool-key">
+<h3>bool(key)<a class="headerlink" href="#bool-key" title="Link to this heading">#</a></h3>
+<p>Retrieves a boolean configuration value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+</ul>
+</section>
+<section id="num-key">
+<h3>num(key)<a class="headerlink" href="#num-key" title="Link to this heading">#</a></h3>
+<p>Retrieves a numeric configuration value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+</ul>
+</section>
+<section id="delete-key">
+<h3>delete(key)<a class="headerlink" href="#delete-key" title="Link to this heading">#</a></h3>
+<p>Deletes a configuration option.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option to delete.</p></li>
+</ul>
+</section>
+<section id="json-key">
+<h3>json(key)<a class="headerlink" href="#json-key" title="Link to this heading">#</a></h3>
+<p>Retrieves a configuration value as JSON.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+</ul>
+</section>
+<section id="json-key-val">
+<h3>json(key, val)<a class="headerlink" href="#json-key-val" title="Link to this heading">#</a></h3>
+<p>Sets a configuration option to a JSON value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: The JSON value to set.</p></li>
+</ul>
+</section>
+</section>
+<section id="db">
+<h2>Db<a class="headerlink" href="#db" title="Link to this heading">#</a></h2>
+<p>A class for database interactions, providing basic methods for migrations and data manipulation.</p>
+<section id="id3">
+<h3>init()<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<p>Initializes the database connection.</p>
+</section>
+<section id="migrate-version-schema">
+<h3>migrate(version, schema)<a class="headerlink" href="#migrate-version-schema" title="Link to this heading">#</a></h3>
+<p>Performs database migrations to a specified version using the given schema.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code>: The target version of the database schema.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schema</span></code>: The schema to use for the migration.</p></li>
+</ul>
+</section>
+<section id="save-table-values">
+<h3>save(table, values)<a class="headerlink" href="#save-table-values" title="Link to this heading">#</a></h3>
+<p>Saves data to a specified table.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">table</span></code>: The name of the table to save data to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">values</span></code>: The data to save, typically as a key-value pair object.</p></li>
+</ul>
+</section>
+</section>
+<section id="http">
+<h2>Http<a class="headerlink" href="#http" title="Link to this heading">#</a></h2>
+<p>A class for handling HTTP requests and responses, with methods to perform various types of HTTP requests.</p>
+<section id="request-url-method-data-options">
+<h3>request(url, method, data, options)<a class="headerlink" href="#request-url-method-data-options" title="Link to this heading">#</a></h3>
+<p>Performs an HTTP request with the specified options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: The HTTP method (e.g., GET, POST).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="get-url-options">
+<h3>get(url, options)<a class="headerlink" href="#get-url-options" title="Link to this heading">#</a></h3>
+<p>Performs a GET request to the specified URL with the given options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="post-url-data-options">
+<h3>post(url, data, options)<a class="headerlink" href="#post-url-data-options" title="Link to this heading">#</a></h3>
+<p>Performs a POST request to the specified URL with the given data and options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="put-url-data-options">
+<h3>put(url, data, options)<a class="headerlink" href="#put-url-data-options" title="Link to this heading">#</a></h3>
+<p>Performs a PUT request to the specified URL with the given data and options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="delete-url-options">
+<h3>delete(url, options)<a class="headerlink" href="#delete-url-options" title="Link to this heading">#</a></h3>
+<p>Performs a DELETE request to the specified URL with the given options.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="get-url">
+<h3>get(url)<a class="headerlink" href="#get-url" title="Link to this heading">#</a></h3>
+<p>Performs a simple GET request to the specified URL.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+</ul>
+</section>
+<section id="post-url-data">
+<h3>post(url, data)<a class="headerlink" href="#post-url-data" title="Link to this heading">#</a></h3>
+<p>Performs a simple POST request to the specified URL with the given data.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
+</ul>
+</section>
+<section id="put-url-data">
+<h3>put(url, data)<a class="headerlink" href="#put-url-data" title="Link to this heading">#</a></h3>
+<p>Performs a simple PUT request to the specified URL with the given data.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
+</ul>
+</section>
+<section id="delete-url">
+<h3>delete(url)<a class="headerlink" href="#delete-url" title="Link to this heading">#</a></h3>
+<p>Performs a simple DELETE request to the specified URL.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="database.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Database</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route">init(message, route)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parsequery-query">parseQuery(query)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ispost">isPost</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#isjson">isJson</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name">header(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response">Response</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#out">out</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#out-out">out(out)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status-status">status(status)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addcookieheader-value">addCookieHeader(value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-header-value">header(header, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-data">json(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-title-message">page(title, message)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forbidden">forbidden()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login">login()</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cookie">Cookie</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parseheader-headervalue">parseHeader(headerValue)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value-options">set(name, value, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value">set(name, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-name">delete(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">get(name)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#session">Session</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#name">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#name-n">name=(n)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#destroy">destroy()</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json">Json</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-string">parse(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stringify-object">stringify(object)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util">Util</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#randomstring-length">randomString(length)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hash-password">hash(password)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-password-hash">verify(password, hash)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tonum-val">toNum(val)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hextodec-hexstr">hexToDec(hexStr)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tohex-byte">toHex(byte)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#urldecode-str">urlDecode(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lpad-s-count-with">lpad(s, count, with)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-str">reverse(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#getpositionforindex-text-index">getPositionForIndex(text, index)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlescape-str">htmlEscape(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-key">get(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-key-value">set(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http">Http</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-url-method-data-options">request(url, method, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url-options">get(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data-options">post(url, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data-options">put(url, data, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url-options">delete(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url">get(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
