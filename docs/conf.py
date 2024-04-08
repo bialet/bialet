@@ -14,7 +14,7 @@ version = '0.4'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx_design']
+extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph']
 
 templates_path = ['_templates']
 exclude_patterns = ['requirements.txt']
@@ -45,6 +45,9 @@ html_theme_options = {
 }
 html_show_copyright = False
 html_show_sphinx = False
+
+ogp_site_url = "https://bialet.dev/"
+ogp_image = "https://bialet.dev/_static/og-image.png"
 
 source_suffix = {
     '.rst': 'restructuredtext',
