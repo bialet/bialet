@@ -1,6 +1,9 @@
 Bialet
 ======
 
+.. meta::
+    :description: Bialet is a full-stack web framework made to enhance HTML with a native integration to a persistent database
+
 .. raw:: html
 
    <p style="text-align: center; font-size: 1.5em; margin: 1em 0">Enhance HTML with a native integration to a persistent database</p>
