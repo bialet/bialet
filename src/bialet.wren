@@ -429,10 +429,11 @@ class JsonScanner {
   }
 
   scanNumber () {
+    var value = String.fromCodePoint(_input.codePoints[_cursor - 1])
     while (numberChars.contains(peek())) {
-      advance()
+      value = "%( value )%( advance() )"
     }
-    var number = Num.fromString(_input.slice(_start, _cursor).join(""))
+    var number = Num.fromString(value)
     if (number == null) {
       scanningError
     } else {
@@ -441,11 +442,11 @@ class JsonScanner {
   }
 
   scanIdentifier () {
+    var value = String.fromCodePoint(_input.codePoints[_cursor - 1])
     while (isAlpha(peek())) {
-      advance()
+      value = "%( value )%( advance() )"
     }
 
-    var value = _input.slice(_start, _cursor).join("")
     if (value == "true") {
       addToken(JsonToken.Bool, true)
     } else if (value == "false") {
@@ -459,7 +460,7 @@ class JsonScanner {
 
   advance () {
     _cursor = _cursor + 1
-    return _input[_cursor - 1]
+    return String.fromCodePoint(_input.codePoints[_cursor - 1])
   }
 
   isAlpha (char) {
@@ -469,12 +470,13 @@ class JsonScanner {
   }
 
   isAtEnd () {
-    return _cursor >= _input.count
+    return _cursor >= _input.bytes.count
   }
 
   peek () {
+    if (_input.codePoints[_cursor] < 0) { _cursor = _cursor + 1 }
     if (isAtEnd()) return "\0"
-    return _input[_cursor]
+    return String.fromCodePoint(_input.codePoints[_cursor])
   }
 
   addToken(type) { addToken(type, null) }
