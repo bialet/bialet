@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 #include <tchar.h>
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 
 #define DIV 1048576
 #define WIDTH 7
@@ -103,14 +103,29 @@ static void migrate() {
 static int parse_routes_callback(const char *fpath, const struct stat *sb,
                                  int typeflag) {
   if (typeflag == FTW_F && strstr(fpath, ROUTE_FILE)) {
+    if (routes_index >= MAX_ROUTES) {
+      message(red("Error"), "Too many routes.");
+      return 1;
+    }
     routes_files[routes_index] = strdup(fpath);
+    if (!routes_files[routes_index]) {
+      message(red("Error"), "Memory allocation failed.");
+      return 1;
+    }
     char *relative_path = strstr(fpath, bialet_config.root_dir) +
                           strlen(bialet_config.root_dir) + 1;
     char *last_slash = strrchr(relative_path, '/');
-    *last_slash = '\0';
-
-    char *route_with_hash = malloc(strlen(relative_path) + 3);
-    sprintf(route_with_hash, "/%s#", relative_path);
+    if (last_slash) {
+      *last_slash = '\0';
+    }
+    size_t route_len = strlen(relative_path) + 3;
+    char *route_with_hash = malloc(route_len);
+    if (!route_with_hash) {
+      message(red("Error"), "Memory allocation failed.");
+      free(routes_files[routes_index]);
+      return 1;
+    }
+    snprintf(route_with_hash, route_len, "/%s#", relative_path);
     routes_list[routes_index] = route_with_hash;
     routes_index++;
   }
@@ -132,15 +147,21 @@ static void parse_ignore(char *ignored_files_str) {
   char file[MAX_PATH_LEN];
   token = strtok(str, ",");
   while (token != NULL) {
-    // Append / to ignore files
-    strcpy(file, "/");
-    strcat(file, token);
+    if (ignored_files_index >= MAX_IGNORED_FILES) {
+      message(red("Too many ignored files"));
+      break;
+    }
+    if (strlen(token) + 1 >= MAX_PATH_LEN) {
+      message(red("File path too long to ignore"));
+      break;
+    }
+    snprintf(file, MAX_PATH_LEN, "/%s", token);
     ignored_list[ignored_files_index] = strdup(file);
     ignored_files_index++;
     token = strtok(NULL, ",");
   }
+  free(str);
 }
-
 /* Reload files */
 static void trigger_reload_files() {
   time_t current_time = time(NULL);
