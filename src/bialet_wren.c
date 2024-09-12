@@ -120,20 +120,32 @@ static WrenLoadModuleResult wren_load_module(WrenVM *vm, const char *name) {
   }
 
   if (name[0] == '/') {
-    strcpy(module, bialet_config.root_dir);
+    if (strlen(name) + strlen(bialet_config.root_dir) +
+            strlen(BIALET_EXTENSION) + 1 >
+        MAX_MODULE_LEN) {
+      message(red("Error"), "Module name too long.");
+      return result;
+    }
+    snprintf(module, MAX_MODULE_LEN, "%s", bialet_config.root_dir);
   } else {
     /* @TODO Security: prevent load modules from parent directories */
     /* @TODO Create an object for the user data */
     char *user_data = wrenGetUserData(vm);
     char *called_module = string_safe_copy(user_data);
     char *last_slash = strrchr(called_module, '/');
+    if (strlen(name) + strlen(called_module) + strlen(BIALET_EXTENSION) + 2 >
+        MAX_MODULE_LEN) {
+      message(red("Error"), "Module name too long.");
+      return result;
+    }
     if (last_slash)
       *last_slash = '\0';
-    strcpy(module, called_module);
-    strcat(module, "/");
+    snprintf(module, MAX_MODULE_LEN, "%s/", called_module);
   }
-  strcat(module, name);
-  strcat(module, BIALET_EXTENSION);
+
+  strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
+  strncat(module, BIALET_EXTENSION, MAX_MODULE_LEN - strlen(module) - 1);
+
   char *buffer = bialet_read_file(module);
   result.source = NULL;
 
