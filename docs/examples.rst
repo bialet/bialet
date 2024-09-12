@@ -25,10 +25,16 @@ Form submission
 .. include:: examples/form-submits.wren
    :code: wren
 
-JSON
-----
+JSON Response
+-------------
 
 .. include:: examples/json.wren
+   :code: wren
+
+HTTP API Call
+--------------
+
+.. include:: examples/http.wren
    :code: wren
 
 Password utilities
