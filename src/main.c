@@ -38,7 +38,6 @@
 #include "wren_vm.h"
 
 #define BIALET_VERSION "0.4"
-#define MAX_URL_LEN 200
 #define MEGABYTE (1024 * 1024)
 #define MAX_PATH_LEN 100
 #define EXTENSION ".wren"
@@ -192,7 +191,7 @@ static void *file_watcher(void *arg) {
 #endif
 
 char *server_url() {
-  char *url = malloc(MAX_URL_LEN);
+  char *url = malloc(strlen(bialet_config.host) + 15);
   sprintf(url, "http://%s:%d", bialet_config.host, bialet_config.port);
   return url;
 }
