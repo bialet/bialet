@@ -529,8 +529,8 @@ document.write(`
 <span class="c1">// Set the initial value to 1</span>
 <span class="k">var</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
 
-<span class="c1">// We use the `isPost()` method to check if the request method is POST.</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="c1">// We use the `isPost` property to check if the request method is POST.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// We use the `post()` method to get a parameter from the form.</span>
 <span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s">&quot;value&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="c1">// We use the `query()` method to execute SQL statements.</span>
