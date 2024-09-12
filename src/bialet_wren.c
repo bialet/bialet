@@ -29,7 +29,7 @@
 #endif
 
 #define BIALET_SQLITE_ERROR 11
-#define MAX_URL_LEN 200
+#define MAX_URL_LEN 1024
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
 #define MAX_MODULE_LEN 50
@@ -514,10 +514,10 @@ struct BialetResponse bialet_run(char *module, char *code,
 
   if (hm) {
     char url[MAX_URL_LEN];
-    strcpy(url, get_mg_str(hm->uri));
+    snprintf(url, MAX_URL_LEN, "%s", get_mg_str(hm->uri));
     if (hm->query.len > 0) {
-      strcat(url, "?");
-      strcat(url, get_mg_str(hm->query));
+      strncat(url, "?", MAX_URL_LEN - strlen(url) - 1);
+      strncat(url, get_mg_str(hm->query), MAX_URL_LEN - strlen(url) - 1);
     }
     message("Request", get_mg_str(hm->method), url);
   }
