@@ -16,13 +16,15 @@ To change the name of the database, set the `-d` option.
 
 Use backticks to surround SQL statements `` ` ` ``.
 
-The Query object have 3 main methods all accept the same parameters.
+The Query object have 5 methods. All the methods accept the same parameters.
 
 * `query()`: Returns the last inserted id if the query was a `INSERT` statement.
 * `fetch()`: Returns the result of the query as an array (List object).
 * `first()`: Returns the first result of the query as an object (Map object).
+* `val()`: Returns the value of the first result.
+* `toNumber()`: Returns the value of the first result as a number.
 
-**First will add a LIMIT clause automatically.**
+**First will add a LIMIT clause automatically in first(), val and toNumber.**
 
 You can't concatenate strings or use interpolations with the Query object.
 When you need to add parameters, use placeholders `?` and send the parameters to the method.
@@ -34,6 +36,8 @@ All methods receive the following parameters:
 * `(param1)`: Any non array parameter is converted to String.
 * `(param1, param2)`: Convert all parameters to String.
 * `(param1, param2, param3)`: Convert all parameters to String.
+
+They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and `.toNumber`.
 
 If you need more parameters, use the array syntax (`([param1, param2, param3, param4, param5, ...])`).
 
@@ -50,6 +54,12 @@ var id = 1
 var id = 1
 var params = [id]
 `SELECT * FROM users WHERE id = ?`.first(params)
+
+// Give me the name only
+var name = `SELECT name FROM users WHERE id = ?`.val(id)
+
+// Give the current day of the year
+var day = `SELECT strftime('%j', 'now')`.toNumber
 ```
 
 ## Insert and update
