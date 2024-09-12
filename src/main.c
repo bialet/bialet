@@ -39,6 +39,7 @@
 
 #define BIALET_VERSION "0.4"
 #define MEGABYTE (1024 * 1024)
+#define MAX_URL 256
 #define MAX_PATH_LEN 100
 #define EXTENSION ".wren"
 #define MIGRATION_FILE "/_migration" EXTENSION
@@ -127,6 +128,7 @@ static int parse_routes_callback(const char *fpath, const struct stat *sb,
     }
     snprintf(route_with_hash, route_len, "/%s#", relative_path);
     routes_list[routes_index] = route_with_hash;
+    free(route_with_hash);
     routes_index++;
   }
   return 0;
@@ -212,8 +214,9 @@ static void *file_watcher(void *arg) {
 #endif
 
 char *server_url() {
-  char *url = malloc(strlen(bialet_config.host) + 15);
-  sprintf(url, "http://%s:%d", bialet_config.host, bialet_config.port);
+  static char url[MAX_URL];
+  snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host,
+           bialet_config.port);
   return url;
 }
 
