@@ -10,30 +10,45 @@ Bialet
 
 .. code-block::
 
-   import "bialet" for Response
-   // String for the template
-   var title = "Welcome to Bialet"
-   // Query object, not a string
-   var user = `SELECT * FROM users WHERE id = 1`.first()
-   // Output the template
-   Response.out('
-     <html>
-       <head>
-         <title>%( title )</title>
-       </head>
-       <body>
-         <h1>%( title )</h1>
-         <p>Hello <em>%( user["name"] )</em></p>
-       </body>
-     </html>
-   ')
+  import "bialet" for Request, Response
+
+  class App {
+    construct new() {
+      _title = "Welcome to Bialet"
+      _default = "World"
+    }
+    // Get the user ID from the URL
+    idUrlParam() { Request.get("id") }
+    // Fetch the user from the database using plain SQL
+    getUser(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
+    // Get the name from the current user if it exists or the default
+    name() {
+      var user = getUser(idUrlParam())
+      return user ? user["name"] : _default
+    }
+    // Build the HTML
+    html() { '
+      <html>
+        <head>
+          <title>%( _title )</title>
+        </head>
+        <body>
+          <h1>%( _title )</h1>
+          <p>Hello, <em>%( name() )</em>!</p>
+        </body>
+      </html>
+    ' }
+  }
+
+  var app = App.new()
+  Response.out(app.html()) // Serve the HTML
+
 
 Bialet is a full-stack web framework that integrates the object-oriented `Wren language <https://wren.io/>`_ with a HTTP server and a built-in SQLite database **in a single app**, creating a unified environment for web development.
 
 .. grid:: 2
 
     .. grid-item-card::
-    .. button-link:: https://github.com/bialet/bialet
         :text-align: center
         :link: https://github.com/bialet/bialet/
 

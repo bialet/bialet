@@ -10,23 +10,30 @@
 </p>
 
 ```wren
-import "bialet" for Response
-// String for the template
-var title = "Welcome to Bialet"
-// Query object, not a string
-var user = `SELECT * FROM users WHERE id = 1`.first()
-// Output the template
-Response.out('
-  <html>
-    <head>
-      <title>%( title )</title>
-    </head>
-    <body>
-      <h1>%( title )</h1>
-      <p>Hello <em>%( user["name"] )</em></p>
-    </body>
-  </html>
-')
+import "bialet" for Request, Response
+
+class App {
+  construct new() {
+    _title = "Welcome to Bialet"
+    _default = "World"
+  }
+  idUrlParam() { Request.get("id") }
+  getUser(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
+  name() { getUser(idUrlParam())["name"] || _default }
+  html() { '
+    <html>
+      <head>
+        <title>%( _title )</title>
+      </head>
+      <body>
+        <h1>%( _title )</h1>
+        <p>Hello, <em>%( name() )</em>!</p>
+      </body>
+    </html>
+  ' }
+}
+
+Response.out(App.new().html()) // Serve the HTML
 ```
 
 Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development
