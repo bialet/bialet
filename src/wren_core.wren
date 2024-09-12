@@ -534,11 +534,13 @@ class Query {
   static fromString(string, params) { Query.new().query_(string, params) }
   static fetchFromString(string, params) { Query.new().fetch_(string, params) }
   // Query methods, return last inserted ID
+  query { query_(this, []) }
   query() { query_(this, []) }
   query(param) { query_(this, param is List ? param : [param]) }
   query(p1, p2) { query_(this, [p1, p2]) }
   query(p1, p2, p3) { query_(this, [p1, p2, p3]) }
   // Fetch methods, return result as List
+  fetch { fetch_(this, []) }
   fetch() { fetch_(this, []) }
   fetch(param) { fetch_(this, param is List ? param : [param]) }
   fetch(p1, p2) { fetch_(this, [p1, p2]) }
@@ -548,8 +550,18 @@ class Query {
     var res = fetch_("%(this) LIMIT 1", params)
     return res is List && res.count > 0 ? res[0] : null
   }
+  first { first_([]) }
   first() { first_([]) }
   first(param) { first_(param is List ? param : [param]) }
   first(p1, p2) { first_([p1, p2]) }
   first(p1, p2, p3) { first_([p1, p2, p3]) }
+  val { val([]) }
+  val() { val([]) }
+  val(param) { first_(param is List ? param : [param]).values.join() }
+  val(p1, p2) { first_([p1, p2]).values.join() }
+  val(p1, p2, p3) { first_([p1, p2, p3]).values.join() }
+  toNumber { Num.fromString(val) }
+  toNumber(param) { Num.fromString(val(param)) }
+  toNumber(p1, p2) { Num.fromString(val(p1, p2)) }
+  toNumber(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }
 }
