@@ -33,32 +33,25 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
 .. grid:: 2
 
     .. grid-item-card::
+    .. button-link:: https://github.com/bialet/bialet
         :text-align: center
-        :link: https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb
+        :link: https://github.com/bialet/bialet/
 
-        :octicon:`desktop-download;2em;sd-text-info`
+        :octicon:`mark-github;2em;sd-text-info`
 
-        Download Bialet Desktop
+        View repository
         +++++++++++++++++++++++
-        *for Ubuntu/Debian*
+        *In GitHub*
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.4.zip
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.5.zip
 
         :octicon:`file-zip;2em;sd-text-info`
 
         Download source
         +++++++++++++++
         *use it with Docker or compile it*
-
-
-
-.. button-link:: https://github.com/bialet/bialet
-   :align: center
-
-    :octicon:`mark-github;2em;sd-text-info`
-    View repository in GitHub
 
 .. toctree::
    :hidden:
