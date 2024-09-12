@@ -13,8 +13,8 @@ import "bialet" for Response, Request
 // Set the initial value to 1
 var value = 1
 
-// We use the `isPost()` method to check if the request method is POST.
-if (Request.isPost()) {
+// We use the `isPost` property to check if the request method is POST.
+if (Request.isPost) {
   // We use the `post()` method to get a parameter from the form.
   value = Request.post("value")
   // We use the `query()` method to execute SQL statements.
