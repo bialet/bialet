@@ -5,13 +5,13 @@
 #include "wren_vm.h"
 #include <sys/types.h>
 
-<<<<<<< HEAD
 #ifdef IS_WIN
 
 #include <stdio.h>
 #include <tchar.h>
 #include <windows.h>
 #include <winsock2.h>
+#include "getopt.h"
 
 #define DIV 1048576
 #define WIDTH 7
@@ -19,9 +19,6 @@
 #define FTW_F 1
 
 #else
-=======
-#ifdef IS_UNIX
->>>>>>> 9538500 (Remove unused includes)
 
 #include <ftw.h>
 #include <pthread.h>
@@ -33,10 +30,6 @@
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
-#endif
-
-#ifdef IS_WIN
-#include "getopt.h"
 #endif
 
 #define BIALET_VERSION "0.5"
