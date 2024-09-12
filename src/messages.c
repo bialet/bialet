@@ -11,6 +11,8 @@
 #define RED_COLOR 31
 #define YELLOW_COLOR 33
 #define BLUE_COLOR 34
+#define MAGENTA_COLOR 35
+#define CYAN_COLOR 36
 
 FILE *log_file;
 int apply_color = 0;
@@ -35,6 +37,8 @@ char *green(char *str) { return colorize(str, GREEN_COLOR); }
 char *red(char *str) { return colorize(str, RED_COLOR); }
 char *blue(char *str) { return colorize(str, BLUE_COLOR); }
 char *yellow(char *str) { return colorize(str, YELLOW_COLOR); }
+char *magenta(char *str) { return colorize(str, MAGENTA_COLOR); }
+char *cyan(char *str) { return colorize(str, CYAN_COLOR); }
 
 void message_internal(int num, ...) {
   va_list args;
@@ -45,17 +49,23 @@ void message_internal(int num, ...) {
   fprintf(log_file, "%d-%02d-%02d %02d:%02d:%02d ", (tm->tm_year + 1900),
           (tm->tm_mon + 1), tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
+  char *to_free[num];
+  int free_count = 0;
+
   for (int i = 0; i < num; ++i) {
     char *str = va_arg(args, char *);
     fprintf(log_file, "%s", str);
-    if (i < num - 1) {
+    if (str != NULL && (str[0] == '\033'))
+      to_free[free_count++] = str;
+    if (i < num - 1)
       fprintf(log_file, " ");
-    }
   }
-
   fprintf(log_file, "\n");
   fflush(log_file);
   va_end(args);
+  for (int i = 0; i < free_count; ++i) {
+    free(to_free[i]);
+  }
 }
 
 #define message_1(x) message_internal(1, x)

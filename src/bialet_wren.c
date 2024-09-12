@@ -531,7 +531,7 @@ struct BialetResponse bialet_run(char *module, char *code,
       strncat(url, "?", MAX_URL_LEN - strlen(url) - 1);
       strncat(url, get_mg_str(hm->query), MAX_URL_LEN - strlen(url) - 1);
     }
-    message("Request", get_mg_str(hm->method), url);
+    message(magenta("Request"), get_mg_str(hm->method), url);
   }
 
   vm = wrenNewVM(&wren_config);
