@@ -38,6 +38,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -48,6 +49,8 @@
     <script src="_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
@@ -412,29 +415,27 @@ document.write(`
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
+<span class="c1">// We create a class that that contains the logic and template.</span>
+<span class="c1">// This is not required by Bialet, but it is a good practice.</span>
+<span class="c1">// Once the logic and template become too big, you should split it</span>
+<span class="c1">// in multiple classes.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Welcome to Bialet&quot;</span>
-<span class="w">    </span><span class="vi">_default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;World&quot;</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;🚲 Welcome to Bialet&quot;</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Get the user ID from the URL</span>
-<span class="w">  </span><span class="n">idUrlParam</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Fetch the user from the database using plain SQL</span>
-<span class="w">  </span><span class="n">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Get the name from the current user if it exists or the default</span>
-<span class="w">  </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getUser</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">())</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="vi">_default</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Build the HTML</span>
-<span class="w">  </span><span class="n">html</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">)</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
@@ -447,8 +448,15 @@ document.write(`
 <span class="c1">// Also, we ensure that we have some data in the table.</span>
 <span class="err">`</span><span class="nc">REPLACE</span><span class="w"> </span><span class="nc">INTO</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="nc">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Charlie&quot;</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
 
+<span class="c1">// We use the `get()` method to get the `id` parameter from the URL.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">idUrlParam</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
+<span class="c1">// Create an instance of the `App` class.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">())</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
+<span class="c1">// Generate the HTML, with the name of the user.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">👋</span><span class="w"> </span><span class="nc">Hello</span><span class="w"> </span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="err">&#39;</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
 </pre></div>
 </div>
 </section>

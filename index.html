@@ -38,6 +38,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -48,6 +49,8 @@
     <script src="_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
@@ -366,7 +369,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -382,6 +387,14 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -397,37 +410,41 @@ document.write(`
 
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Welcome to Bialet&quot;</span>
-<span class="w">    </span><span class="vi">_default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;World&quot;</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;🚲 Welcome to Bialet&quot;</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Get the user ID from the URL</span>
-<span class="w">  </span><span class="n">idUrlParam</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Fetch the user from the database using plain SQL</span>
-<span class="w">  </span><span class="n">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Get the name from the current user if it exists or the default</span>
-<span class="w">  </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getUser</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">())</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="vi">_default</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Build the HTML</span>
-<span class="w">  </span><span class="n">html</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">  </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">)</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="k">var</span><span class="w"> </span><span class="n">idUrlParam</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">())</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">👋</span><span class="w"> </span><span class="nc">Hello</span><span class="w"> </span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="err">&#39;</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
 </pre></div>
 </div>
 <p>Bialet is a full-stack web framework that integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with a HTTP server and a built-in SQLite database <strong>in a single app</strong>, creating a unified environment for web development.</p>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h2>
+<p>Clone or download the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository and use <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a> to start the app.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>mywebapp
+<span class="nb">cd</span><span class="w"> </span>mywebapp
+docker<span class="w"> </span>compose<span class="w"> </span>up
+</pre></div>
+</div>
+<p>Visit <a class="reference external" href="http://localhost:7000">localhost:7000</a> in your browser.</p>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
 <div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
@@ -457,6 +474,7 @@ document.write(`
 <div class="toctree-wrapper compound">
 </div>
 </section>
+</section>
 
 
                 </article>
@@ -484,6 +502,21 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
