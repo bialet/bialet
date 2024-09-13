@@ -14,37 +14,46 @@ Bialet
 
   class App {
     construct new() {
-      _title = "Welcome to Bialet"
-      _default = "World"
+      _title = "🚲 Welcome to Bialet"
     }
-    // Get the user ID from the URL
-    idUrlParam() { Request.get("id") }
-    // Fetch the user from the database using plain SQL
-    getUser(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
-    // Get the name from the current user if it exists or the default
-    name() {
-      var user = getUser(idUrlParam())
-      return user ? user["name"] : _default
-    }
-    // Build the HTML
-    html() { '
+    user(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
+    name(id) { user(id)["name"] || "World" }
+    html(content) { '
       <html>
         <head>
           <title>%( _title )</title>
         </head>
         <body>
           <h1>%( _title )</h1>
-          <p>Hello, <em>%( name() )</em>!</p>
+          %( content )
         </body>
       </html>
     ' }
   }
 
+  var idUrlParam = Request.get("id")
   var app = App.new()
-  Response.out(app.html()) // Serve the HTML
+  var html = app.html('
+    <p>👋 Hello <b>%( app.name(idUrlParam) )</b></p>
+  ')
+  Response.out(html) // Serve the HTML
 
 
 Bialet is a full-stack web framework that integrates the object-oriented `Wren language <https://wren.io/>`_ with a HTTP server and a built-in SQLite database **in a single app**, creating a unified environment for web development.
+
+----------
+Quickstart
+----------
+
+Clone or download the `Bialet Skeleton <https://github.com/bialet/skeleton>`_ repository and use `Docker Compose <https://docs.docker.com/compose/>`_ to start the app.
+
+.. code-block:: shell
+
+  git clone --depth 1 https://github.com/bialet/skeleton.git mywebapp
+  cd mywebapp
+  docker compose up
+
+Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
 
 .. grid:: 2
 

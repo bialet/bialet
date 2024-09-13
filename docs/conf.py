@@ -14,7 +14,7 @@ version = '0.4'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph']
+extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton']
 
 templates_path = ['_templates']
 exclude_patterns = ['requirements.txt']
