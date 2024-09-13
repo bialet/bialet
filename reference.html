@@ -55,7 +55,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
-    <link rel="prev" title="Database" href="database.html" />
+    <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -173,6 +173,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -481,6 +482,36 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-utc">new(date, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second-utc">new(year, month, day, hour, minute, second, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day">new(year, month, day)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-utc">new(year, month, day, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utc-utc">utc=(utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utc">utc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-format">format(format)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#year">year</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weekday">weekday</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">date</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
 </ul>
 </li>
 </ul>
@@ -998,6 +1029,168 @@ document.write(`
 </ul>
 </section>
 </section>
+<section id="date">
+<span id="date-reference"></span><h2>Date<a class="headerlink" href="#date" title="Link to this heading">#</a></h2>
+<p>A class for managing date and time operations, supporting multiple constructors and methods for formatting, comparing, and manipulating dates relative to UTC.</p>
+<section id="new">
+<h3>new()<a class="headerlink" href="#new" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in UTC.</p>
+</section>
+<section id="new-date">
+<h3>new(date)<a class="headerlink" href="#new-date" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided date string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: The date string to initialize the <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p></li>
+</ul>
+</section>
+<section id="new-date-utc">
+<h3>new(date, utc)<a class="headerlink" href="#new-date-utc" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided date string and a specified UTC offset.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: The date string to initialize the <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utc</span></code>: The UTC offset to apply.</p></li>
+</ul>
+</section>
+<section id="new-year-month-day-hour-minute-second">
+<h3>new(year, month, day, hour, minute, second)<a class="headerlink" href="#new-year-month-day-hour-minute-second" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object with the provided date and time components.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code>: The year component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">month</span></code>: The month component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">day</span></code>: The day component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hour</span></code>: The hour component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minute</span></code>: The minute component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">second</span></code>: The second component.</p></li>
+</ul>
+</section>
+<section id="new-year-month-day-hour-minute-second-utc">
+<h3>new(year, month, day, hour, minute, second, utc)<a class="headerlink" href="#new-year-month-day-hour-minute-second-utc" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object with the provided date and time components and a specified UTC offset.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code>: The year component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">month</span></code>: The month component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">day</span></code>: The day component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hour</span></code>: The hour component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minute</span></code>: The minute component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">second</span></code>: The second component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utc</span></code>: The UTC offset to apply.</p></li>
+</ul>
+</section>
+<section id="new-year-month-day">
+<h3>new(year, month, day)<a class="headerlink" href="#new-year-month-day" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object with the provided date, setting the time to <code class="docutils literal notranslate"><span class="pre">00:00:00</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code>: The year component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">month</span></code>: The month component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">day</span></code>: The day component.</p></li>
+</ul>
+</section>
+<section id="new-year-month-day-utc">
+<h3>new(year, month, day, utc)<a class="headerlink" href="#new-year-month-day-utc" title="Link to this heading">#</a></h3>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object with the provided date and a specified UTC offset, setting the time to <code class="docutils literal notranslate"><span class="pre">00:00:00</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code>: The year component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">month</span></code>: The month component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">day</span></code>: The day component.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utc</span></code>: The UTC offset to apply.</p></li>
+</ul>
+</section>
+<section id="utc-utc">
+<h3>utc=(utc)<a class="headerlink" href="#utc-utc" title="Link to this heading">#</a></h3>
+<p>Sets the UTC offset for the current <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">utc</span></code>: The UTC offset to apply.</p></li>
+</ul>
+</section>
+<section id="utc">
+<h3>utc<a class="headerlink" href="#utc" title="Link to this heading">#</a></h3>
+<p>Returns the UTC offset for the current <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p>
+</section>
+<section id="format-format">
+<h3>format(format)<a class="headerlink" href="#format-format" title="Link to this heading">#</a></h3>
+<p>Formats the date according to the provided format string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">format</span></code>: The format string to apply.</p></li>
+</ul>
+</section>
+<section id="year">
+<h3>year<a class="headerlink" href="#year" title="Link to this heading">#</a></h3>
+<p>Returns the year component of the date.</p>
+</section>
+<section id="month">
+<h3>month<a class="headerlink" href="#month" title="Link to this heading">#</a></h3>
+<p>Returns the month component of the date.</p>
+</section>
+<section id="day">
+<h3>day<a class="headerlink" href="#day" title="Link to this heading">#</a></h3>
+<p>Returns the day component of the date.</p>
+</section>
+<section id="hour">
+<h3>hour<a class="headerlink" href="#hour" title="Link to this heading">#</a></h3>
+<p>Returns the hour component of the date.</p>
+</section>
+<section id="minute">
+<h3>minute<a class="headerlink" href="#minute" title="Link to this heading">#</a></h3>
+<p>Returns the minute component of the date.</p>
+</section>
+<section id="second">
+<h3>second<a class="headerlink" href="#second" title="Link to this heading">#</a></h3>
+<p>Returns the second component of the date.</p>
+</section>
+<section id="weekday">
+<h3>weekday<a class="headerlink" href="#weekday" title="Link to this heading">#</a></h3>
+<p>Returns the weekday number (0 for Sunday, 6 for Saturday).</p>
+</section>
+<section id="dayofyear">
+<h3>dayOfYear<a class="headerlink" href="#dayofyear" title="Link to this heading">#</a></h3>
+<p>Returns the day of the year (1-365).</p>
+</section>
+<section id="id4">
+<h3>date<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<p>Returns the date in <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code> format.</p>
+</section>
+<section id="time">
+<h3>time<a class="headerlink" href="#time" title="Link to this heading">#</a></h3>
+<p>Returns the time in <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code> format.</p>
+</section>
+<section id="unix">
+<h3>unix<a class="headerlink" href="#unix" title="Link to this heading">#</a></h3>
+<p>Returns the Unix timestamp of the date.</p>
+</section>
+<section id="iso">
+<h3>iso<a class="headerlink" href="#iso" title="Link to this heading">#</a></h3>
+<p>Returns the ISO 8601 formatted date (<code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>).</p>
+</section>
+<section id="inutc">
+<h3>inUtc<a class="headerlink" href="#inutc" title="Link to this heading">#</a></h3>
+<p>Returns the date in UTC format.</p>
+</section>
+<section id="tostring">
+<h3>toString<a class="headerlink" href="#tostring" title="Link to this heading">#</a></h3>
+<p>Returns the date as an ISO 8601 string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SS</span></code>).</p>
+</section>
+<section id="plus">
+<h3>+(plus)<a class="headerlink" href="#plus" title="Link to this heading">#</a></h3>
+<p>Adds a date or time interval to the date.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">plus</span></code>: The date or time interval to add.</p></li>
+</ul>
+</section>
+<section id="minus">
+<h3>-(minus)<a class="headerlink" href="#minus" title="Link to this heading">#</a></h3>
+<p>Subtracts a date or time interval from the date.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">minus</span></code>: The date or time interval to subtract.</p></li>
+</ul>
+</section>
+<section id="diff-otherdate">
+<h3>diff(otherDate)<a class="headerlink" href="#diff-otherdate" title="Link to this heading">#</a></h3>
+<p>Returns the difference between the current date and <code class="docutils literal notranslate"><span class="pre">otherDate</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">otherDate</span></code>: The <code class="docutils literal notranslate"><span class="pre">Date</span></code> object to compare against.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
@@ -1012,12 +1205,12 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="database.html"
+       href="datetime.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Database</p>
+        <p class="prev-next-title">Date and Time Functions</p>
       </div>
     </a>
     <a class="right-next"
@@ -1139,6 +1332,36 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-utc">new(date, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second-utc">new(year, month, day, hour, minute, second, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day">new(year, month, day)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-utc">new(year, month, day, utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utc-utc">utc=(utc)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#utc">utc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-format">format(format)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#year">year</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weekday">weekday</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">date</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
 </ul>
 </li>
 </ul>

@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/examples.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON: Password utilities: Cross site request forgery:" />
+<meta property="og:description" content="Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON Response: HTTP API Call: Password utilities: Cross site request forgery:" />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON: Password utilities: Cross site request forgery:" />
+<meta name="description" content="Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON Response: HTTP API Call: Password utilities: Cross site request forgery:" />
 
     <title>Examples &#8212; Bialet  documentation</title>
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Examples</a></li>
 </ul>
@@ -390,7 +391,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-visitors-of-your-website">Count the visitors of your website</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-clicks">Count the clicks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-submission">Form submission</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json">JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http-api-call">HTTP API Call</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 </ul>
@@ -410,9 +412,43 @@ document.write(`
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Welcome to Bialet&quot;</span>
+<span class="w">    </span><span class="vi">_default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;World&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// Get the user ID from the URL</span>
+<span class="w">  </span><span class="n">idUrlParam</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// Fetch the user from the database using plain SQL</span>
+<span class="w">  </span><span class="n">getUser</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// Get the name from the current user if it exists or the default</span>
+<span class="w">  </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getUser</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">())</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="vi">_default</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// Build the HTML</span>
+<span class="w">  </span><span class="n">html</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&quot;World&quot;</span><span class="w"> </span><span class="p">)</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="err">&#39;</span><span class="p">)</span>
+<span class="c1">// We use the `query()` method to execute SQL statements.</span>
+<span class="c1">// In this case we create a table named `users` with two columns: `id` and `name`.</span>
+<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
+<span class="err">`</span><span class="nc">CREATE</span><span class="w"> </span><span class="nc">TABLE</span><span class="w"> </span><span class="nc">IF</span><span class="w"> </span><span class="nc">NOT</span><span class="w"> </span><span class="nc">EXISTS</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="nc">INTEGER</span><span class="w"> </span><span class="nc">PRIMARY</span><span class="w"> </span><span class="nc">KEY</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="nc">TEXT</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+<span class="c1">// Also, we ensure that we have some data in the table.</span>
+<span class="err">`</span><span class="nc">REPLACE</span><span class="w"> </span><span class="nc">INTO</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="nc">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Alice&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bob&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Charlie&quot;</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">())</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
 </pre></div>
 </div>
 </section>
@@ -569,8 +605,8 @@ document.write(`
 </pre></div>
 </div>
 </section>
-<section id="json">
-<h2>JSON<a class="headerlink" href="#json" title="Link to this heading">#</a></h2>
+<section id="json-response">
+<h2>JSON Response<a class="headerlink" href="#json-response" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
 <span class="c1">// The import lines are write at the top of the script.</span>
 <span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
@@ -586,6 +622,50 @@ document.write(`
 <span class="c1">// We use the `json()` method to send the query result as a JSON.</span>
 <span class="c1">// This will add the header `Content-Type: application/json`.</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">counters</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="http-api-call">
+<h2>HTTP API Call<a class="headerlink" href="#http-api-call" title="Link to this heading">#</a></h2>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
+<span class="c1">// The import lines are write at the top of the script.</span>
+<span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Http</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="err">&#39;</span><span class="n">https</span><span class="o">://</span><span class="n">dummyjson</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">users</span><span class="o">?</span><span class="n">limit</span><span class="o">=</span><span class="mf">5</span><span class="o">&amp;</span><span class="n">select</span><span class="o">=</span><span class="n">username</span><span class="p">,</span><span class="n">email</span><span class="err">&#39;</span><span class="p">)[</span><span class="err">&#39;</span><span class="n">users</span><span class="err">&#39;</span><span class="p">]</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Users: </span><span class="si">%(</span><span class="n">users</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="o">&lt;!</span><span class="nc">DOCTYPE</span><span class="w"> </span><span class="n">html</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">meta</span><span class="w"> </span><span class="n">charset</span><span class="o">=</span><span class="s">&quot;utf-8&quot;</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">meta</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span><span class="w"> </span><span class="n">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">link</span><span class="w"> </span><span class="n">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;style.css&quot;</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">JSONPlaceholder</span><span class="w"> </span><span class="nc">API</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="cm">/* The interpolated string can have comments on it */</span>
+<span class="w">      </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">table</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">th</span><span class="o">&gt;</span><span class="nc">Name</span><span class="o">&lt;/</span><span class="n">th</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">th</span><span class="o">&gt;</span><span class="nc">Email</span><span class="o">&lt;/</span><span class="n">th</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="cm">/* List all the users */</span>
+<span class="w">          </span><span class="n">users</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">user</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+<span class="w">            </span><span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;%</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s">&quot;username&quot;</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+<span class="w">            </span><span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;%</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s">&quot;email&quot;</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="err">&#39;</span><span class="p">})</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="err">&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="cm">/* If there are no users */</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="n">found</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="err">&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="err">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -746,7 +826,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-visitors-of-your-website">Count the visitors of your website</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-clicks">Count the clicks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-submission">Form submission</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json">JSON</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http-api-call">HTTP API Call</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 </ul>
