@@ -315,3 +315,116 @@ Performs a simple PUT request to the specified URL with the given data.
 ### delete(url)
 Performs a simple DELETE request to the specified URL.
 - `url`: The URL to send the request to.
+
+(date-reference)=
+## Date
+A class for managing date and time operations, supporting multiple constructors and methods for formatting, comparing, and manipulating dates relative to UTC.
+
+### new()
+Creates a new `Date` object representing the current date and time in UTC.
+
+### new(date)
+Creates a new `Date` object from a provided date string.
+- `date`: The date string to initialize the `Date` object.
+
+### new(date, utc)
+Creates a new `Date` object from a provided date string and a specified UTC offset.
+- `date`: The date string to initialize the `Date` object.
+- `utc`: The UTC offset to apply.
+
+### new(year, month, day, hour, minute, second)
+Creates a new `Date` object with the provided date and time components.
+- `year`: The year component.
+- `month`: The month component.
+- `day`: The day component.
+- `hour`: The hour component.
+- `minute`: The minute component.
+- `second`: The second component.
+
+### new(year, month, day, hour, minute, second, utc)
+Creates a new `Date` object with the provided date and time components and a specified UTC offset.
+- `year`: The year component.
+- `month`: The month component.
+- `day`: The day component.
+- `hour`: The hour component.
+- `minute`: The minute component.
+- `second`: The second component.
+- `utc`: The UTC offset to apply.
+
+### new(year, month, day)
+Creates a new `Date` object with the provided date, setting the time to `00:00:00`.
+- `year`: The year component.
+- `month`: The month component.
+- `day`: The day component.
+
+### new(year, month, day, utc)
+Creates a new `Date` object with the provided date and a specified UTC offset, setting the time to `00:00:00`.
+- `year`: The year component.
+- `month`: The month component.
+- `day`: The day component.
+- `utc`: The UTC offset to apply.
+
+### utc=(utc)
+Sets the UTC offset for the current `Date` object.
+- `utc`: The UTC offset to apply.
+
+### utc
+Returns the UTC offset for the current `Date` object.
+
+### format(format)
+Formats the date according to the provided format string.
+- `format`: The format string to apply.
+
+### year
+Returns the year component of the date.
+
+### month
+Returns the month component of the date.
+
+### day
+Returns the day component of the date.
+
+### hour
+Returns the hour component of the date.
+
+### minute
+Returns the minute component of the date.
+
+### second
+Returns the second component of the date.
+
+### weekday
+Returns the weekday number (0 for Sunday, 6 for Saturday).
+
+### dayOfYear
+Returns the day of the year (1-365).
+
+### date
+Returns the date in `YYYY-MM-DD` format.
+
+### time
+Returns the time in `HH:MM:SS` format.
+
+### unix
+Returns the Unix timestamp of the date.
+
+### iso
+Returns the ISO 8601 formatted date (`HH:MM:SS`).
+
+### inUtc
+Returns the date in UTC format.
+
+### toString
+Returns the date as an ISO 8601 string (`YYYY-MM-DDTHH:MM:SS`).
+
+### +(plus)
+Adds a date or time interval to the date.
+- `plus`: The date or time interval to add.
+
+### -(minus)
+Subtracts a date or time interval from the date.
+- `minus`: The date or time interval to subtract.
+
+### diff(otherDate)
+Returns the difference between the current date and `otherDate`.
+- `otherDate`: The `Date` object to compare against.
