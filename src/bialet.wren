@@ -822,6 +822,94 @@ class Http {
   static delete(url) { delete(url, {}) }
 }
 
+// @TODO Use a C library instead of calling to SQLite in the Date class
+class Date {
+  construct new() {
+    _utc = __utc
+    _date = Date.d2U_("now", _utc)
+  }
+  construct new(date) {
+    _utc = __utc
+    _date = Date.d2U_(date, _utc)
+  }
+  construct new(date, utc) {
+    _utc = utc
+    _date = Date.d2U_(date, _utc)
+  }
+  construct new(year, month, day, hour, minute, second) {
+    _utc = __utc
+    _date = Date.d2U_("%(year)-%(month)-%(day) %(hour):(minute):%(second)", _utc)
+  }
+  construct new(year, month, day, hour, minute, second, utc) {
+    _utc = utc
+    _date = Date.d2U_("%(year)-%(month)-%(day) %(hour):(minute):%(second)", _utc)
+  }
+  construct new(year, month, day) {
+    _utc = __utc
+    _date = Date.d2U_("%(year)-%(month)-%(day) 00:00:00", _utc)
+  }
+  construct new(year, month, day, utc) {
+    _utc = utc
+    _date = Date.d2U_("%(year)-%(month)-%(day) 00:00:00", _utc)
+  }
+  // Save the date in UTC
+  static d2U_(date, utc) {
+    if (utc == 0) return date
+    utc = utc * -1
+    var a = "%(utc):00"
+    if (utc > 0 && utc < 10) a = "+0%(utc):00"
+    if (utc > -10 && utc < 0) a = "-0%(utc.abs):00"
+    if (utc > 10) a = "+%(utc):00"
+    return `SELECT strftime('%Y-%m-%d %H:%M:%S', ?, ?)`.val(date, a)
+  }
+  static now { Date.new() }
+  static utc_(utc) { utc >= 0 ? "+%(utc)" : utc }
+  static utc=(utc) { utc is Num ? __utc = utc : __utc = Num.fromString(utc.upper.replace("UTC", "")) }
+  static utc { Date.utc_(__utc) }
+  utc=(utc) { utc is Num ? _utc = utc : _utc = Num.fromString(utc.upper.replace("UTC", "")) }
+  utc { Date.utc_(_utc) }
+  // Modifier to adjust the date relative to UTC
+  a {
+    if (_utc >= 0 && _utc < 10) return "+0%(_utc):00"
+    if (_utc > -10 && _utc < 0) return "-0%(_utc.abs):00"
+    if (_utc > 10) return "+%(_utc):00"
+    return "%(_utc):00"
+  }
+  format(format) { `SELECT strftime(?, ?, ?)`.val(format.replace("#", "\%"), _date, a) }
+  year { `SELECT strftime('%Y', ?, ?)`.toNumber(_date, a) }
+  month { `SELECT strftime('%m', ?, ?)`.toNumber(_date, a) }
+  day { `SELECT strftime('%e', ?, ?)`.toNumber(_date, a) }
+  hour { `SELECT strftime('%k', ?, ?)`.toNumber(_date, a) }
+  minute { `SELECT strftime('%M', ?, ?)`.toNumber(_date, a) }
+  second { `SELECT strftime('%S', ?, ?)`.toNumber(_date, a) }
+  weekday { `SELECT strftime('%w', ?, ?)`.toNumber(_date, a) }
+  dayOfYear { `SELECT strftime('%j', ?, ?)`.toNumber(_date, a) }
+  date { `SELECT strftime('%Y-%m-%d', ?, ?)`.val(_date, a) }
+  time { `SELECT strftime('%H:%M:%S', ?, ?)`.val(_date, a) }
+  unix { `SELECT strftime('%s', ?, ?)`.toNumber(_date, a) }
+  iso { `SELECT strftime('%T', ?, ?)`.toString(_date, a) }
+  inUtc { _date }
+  toString { `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, a) }
+  +(plus) { _date = `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, plus, a) }
+  -(minus) { _date = `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, "-%(minus)", a) }
+  diff(otherDate) { `SELECT timediff(?, ?)`.val(_date, otherDate.inUtc) }
+  cmp_(o) {
+    var diff = diff(o)
+    if (diff == "+0000-00-00 00:00:00.000") return 0
+    if (diff[0] == "-") return -1
+    if (diff[0] == "+") return 1
+    Fiber.abort("Unexpected date diff: %(diff)")
+  }
+  < (o) { cmp_(o) <  0 }
+  > (o) { cmp_(o) >  0 }
+  <=(o) { cmp_(o) <= 0 }
+  >=(o) { cmp_(o) >= 0 }
+  ==(o) { cmp_(o) == 0 }
+  !=(o) { cmp_(o) != 0 }
+}
+// Set the Global UTC to 0
+Date.utc = 0
+
 // Setup
 Response.init()
 Cookie.init()

@@ -77,5 +77,6 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
    installation
    structure
    database
+   datetime
    reference
    examples
