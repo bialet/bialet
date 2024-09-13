@@ -10,23 +10,39 @@ Bialet
 
 .. code-block::
 
-   import "bialet" for Response
-   // String for the template
-   var title = "Welcome to Bialet"
-   // Query object, not a string
-   var user = `SELECT * FROM users WHERE id = 1`.first()
-   // Output the template
-   Response.out('
-     <html>
-       <head>
-         <title>%( title )</title>
-       </head>
-       <body>
-         <h1>%( title )</h1>
-         <p>Hello <em>%( user["name"] )</em></p>
-       </body>
-     </html>
-   ')
+  import "bialet" for Request, Response
+
+  class App {
+    construct new() {
+      _title = "Welcome to Bialet"
+      _default = "World"
+    }
+    // Get the user ID from the URL
+    idUrlParam() { Request.get("id") }
+    // Fetch the user from the database using plain SQL
+    getUser(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
+    // Get the name from the current user if it exists or the default
+    name() {
+      var user = getUser(idUrlParam())
+      return user ? user["name"] : _default
+    }
+    // Build the HTML
+    html() { '
+      <html>
+        <head>
+          <title>%( _title )</title>
+        </head>
+        <body>
+          <h1>%( _title )</h1>
+          <p>Hello, <em>%( name() )</em>!</p>
+        </body>
+      </html>
+    ' }
+  }
+
+  var app = App.new()
+  Response.out(app.html()) // Serve the HTML
+
 
 Bialet is a full-stack web framework that integrates the object-oriented `Wren language <https://wren.io/>`_ with a HTTP server and a built-in SQLite database **in a single app**, creating a unified environment for web development.
 
@@ -34,31 +50,23 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb
+        :link: https://github.com/bialet/bialet/
 
-        :octicon:`desktop-download;2em;sd-text-info`
+        :octicon:`mark-github;2em;sd-text-info`
 
-        Download Bialet Desktop
+        View repository
         +++++++++++++++++++++++
-        *for Ubuntu/Debian*
+        *In GitHub*
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.4.zip
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.5.zip
 
         :octicon:`file-zip;2em;sd-text-info`
 
         Download source
         +++++++++++++++
         *use it with Docker or compile it*
-
-
-
-.. button-link:: https://github.com/bialet/bialet
-   :align: center
-
-    :octicon:`mark-github;2em;sd-text-info`
-    View repository in GitHub
 
 .. toctree::
    :hidden:
@@ -69,5 +77,6 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
    installation
    structure
    database
+   datetime
    reference
    examples

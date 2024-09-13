@@ -54,7 +54,7 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="next" title="Date and Time Functions" href="datetime.html" />
     <link rel="prev" title="Project Structure and Routing" href="structure.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -173,6 +173,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -416,13 +417,15 @@ document.write(`
 <section id="query-object">
 <h2>Query Object<a class="headerlink" href="#query-object" title="Link to this heading">#</a></h2>
 <p>Use backticks to surround SQL statements <code class="docutils literal notranslate"><span class="pre">`</span> <span class="pre">`</span></code>.</p>
-<p>The Query object have 3 main methods all accept the same parameters.</p>
+<p>The Query object have 5 methods. All the methods accept the same parameters.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">query()</span></code>: Returns the last inserted id if the query was a <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> statement.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code>: Returns the result of the query as an array (List object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">first()</span></code>: Returns the first result of the query as an object (Map object).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val()</span></code>: Returns the value of the first result.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toNumber()</span></code>: Returns the value of the first result as a number.</p></li>
 </ul>
-<p><strong>First will add a LIMIT clause automatically.</strong></p>
+<p><strong>First will add a LIMIT clause automatically in first(), val and toNumber.</strong></p>
 <p>You can’t concatenate strings or use interpolations with the Query object.
 When you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the method.</p>
 <p>All methods receive the following parameters:</p>
@@ -433,6 +436,7 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2)</span></code>: Convert all parameters to String.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2,</span> <span class="pre">param3)</span></code>: Convert all parameters to String.</p></li>
 </ul>
+<p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and <code class="docutils literal notranslate"><span class="pre">.toNumber</span></code>.</p>
 <p>If you need more parameters, use the array syntax (<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
@@ -446,6 +450,12 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
 <span class="k">var</span><span class="w"> </span><span class="n">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">id</span><span class="p">]</span>
 <span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+<span class="c1">// Give me the name only</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1">// Give the current day of the year</span>
+<span class="k">var</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="n">strftime</span><span class="p">(</span><span class="err">&#39;</span><span class="o">%</span><span class="n">j</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;</span><span class="n">now</span><span class="err">&#39;</span><span class="p">)</span><span class="err">`</span><span class="o">.</span><span class="n">toNumber</span>
 </pre></div>
 </div>
 </section>
@@ -521,11 +531,11 @@ When you need to add parameters, use placeholders <code class="docutils literal 
       </div>
     </a>
     <a class="right-next"
-       href="reference.html"
+       href="datetime.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Reference</p>
+        <p class="prev-next-title">Date and Time Functions</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

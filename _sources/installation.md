@@ -21,14 +21,6 @@ The default application port is `7000`. To use a different port, set the `BIALET
 BIALET_PORT=7001 docker compose up
 ```
 
-## With the Desktop Application
-
-Currently, the Bialet Desktop is only available for Ubuntu/Debian.
-
-Download the [Bialet Desktop](https://github.com/bialet/bialet/releases/download/v0.4/bialet-desktop_0.1.0_amd64.deb) application.
-
-![Bialet Desktop in Ubuntu](_static/bialet-desktop.png)
-
 ## Building from Source
 
 To build Bialet from source, you'll need to install certain dependencies and run the build process.
