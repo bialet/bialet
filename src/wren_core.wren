@@ -121,6 +121,15 @@ class Sequence {
     return result
   }
 
+
+  joinInt_() {
+    var res = ""
+    for (element in this) {
+      if (element.type != Bool || element) res = res + "" + element.toString
+    }
+    return res
+  }
+
   slice(start) { slice(start, -1) }
   slice(start, end) {
     var list = toList

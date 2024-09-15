@@ -197,6 +197,8 @@ typedef struct {
   int parens[MAX_INTERPOLATION_NESTING];
   int quotes[MAX_INTERPOLATION_NESTING];
   int numParens;
+  char handlebars[MAX_INTERPOLATION_NESTING][MAX_METHOD_NAME];
+  int numHandlebars;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -645,9 +647,12 @@ static void makeToken(Parser *parser, WrenTokenType type) {
     parser->next.line--;
 }
 
+static WrenTokenType lastTokenType(Parser *parser) { return parser->next.type; }
+
 // If the current character is [c], then consumes it and makes a token of type
 // [two]. Otherwise makes a token of type [one].
-static void twoCharToken(Parser *parser, char c, WrenTokenType two, WrenTokenType one) {
+static void twoCharToken(Parser *parser, char c, WrenTokenType two,
+                         WrenTokenType one) {
   makeToken(parser, matchChar(parser, c) ? two : one);
 }
 
@@ -912,6 +917,85 @@ static void readRawString(Parser *parser) {
   makeToken(parser, type);
 }
 
+static void readHtmlString(Parser *parser, char *previousTagName) {
+  // @FIXME Remove debug prints
+  printf("Start HTML string with previous tag name: %s\n", previousTagName);
+  ByteBuffer string;
+  wrenByteBufferInit(&string);
+  WrenTokenType type = TOKEN_STRING;
+
+  char *tagName = malloc(MAX_METHOD_NAME);
+  if (strlen(previousTagName) > 0) {
+    strcpy(tagName, previousTagName);
+  } else {
+    wrenByteBufferWrite(parser->vm, &string, '<');
+    int i = 0;
+    for (;;) {
+      char c = nextChar(parser);
+      if (c == '\0' || c == '\r' || c == '\n') {
+        lexError(parser, "Unterminated HTML string.");
+
+        // Don't consume it if it isn't expected. Keeps us from reading past the
+        // end of an unterminated string.
+        parser->currentChar--;
+        break;
+      }
+      wrenByteBufferWrite(parser->vm, &string, c);
+      if (c == '>' || c == ' ')
+        break;
+      tagName[i++] = c;
+    }
+    tagName[i] = '\0';
+  }
+
+  int closingTag = -1;
+  // @FIXME Remove debug prints
+  printf("Tag: %s\n", tagName);
+  for (;;) {
+    char c = nextChar(parser);
+    if (c == '\0') {
+      lexError(parser, "Unterminated HTML string.");
+      parser->currentChar--;
+      break;
+    }
+    if (c == '{' && peekChar(parser) == '{') {
+      type = TOKEN_INTERPOLATION;
+      strcpy(parser->handlebars[parser->numHandlebars], tagName);
+      // @FIXME Remove debug prints
+      printf("Interpolation with tag: %s\n", tagName);
+      printf("numHandlebars: %d\n", parser->numHandlebars);
+      printf("Handlebars tag: %s\n", parser->handlebars[parser->numHandlebars]);
+      parser->numHandlebars++;
+      nextChar(parser);
+      break;
+    }
+    wrenByteBufferWrite(parser->vm, &string, c);
+    if (c == '<' && peekChar(parser) == '/') {
+      closingTag = 0;
+    }
+    if (closingTag >= 0 && c >= 'a' && c <= 'z') {
+      if (tagName[closingTag] != c) {
+        closingTag = -1; // Different tag
+      } else {
+        closingTag++;
+      }
+      // @FIXME Remove debug prints
+      printf("Closing Tag: %d - %s\n", closingTag, tagName);
+    }
+    if (c == '>' && closingTag == strlen(tagName))
+      break;
+  }
+  free(tagName);
+
+  parser->next.value =
+      wrenNewStringLength(parser->vm, (char *)string.data, string.count);
+  // @FIXME Remove debug prints
+  printf("Value: %s\n", string.data);
+
+  wrenByteBufferClear(parser->vm, &string);
+  makeToken(parser, type);
+}
+
 static void readQueryString(Parser *parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
@@ -1135,6 +1219,17 @@ static void nextToken(Parser *parser) {
       makeToken(parser, TOKEN_LEFT_BRACE);
       return;
     case '}':
+      if (peekChar(parser) == '}') {
+        // @FIXME Remove debug prints
+        printf("Double brace: %d\n", parser->numHandlebars);
+        // Are we in an interpolated expression?
+        if (parser->numHandlebars > 0) {
+          parser->numHandlebars--;
+          nextChar(parser);
+          readHtmlString(parser, parser->handlebars[parser->numHandlebars]);
+          return;
+        }
+      }
       makeToken(parser, TOKEN_RIGHT_BRACE);
       return;
     case ':':
@@ -1213,6 +1308,28 @@ static void nextToken(Parser *parser) {
       return;
 
     case '<':
+      // @FIXME Remove debug prints
+      printf("\n----- HTML STRING ------\n\n");
+      printf("peekChar = %c\n", peekChar(parser));
+      printf("Last token = %d\n", lastTokenType(parser));
+      int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
+      if ((isDocType || (peekChar(parser) >= 'a' && peekChar(parser) <= 'z')) &&
+          (lastTokenType(parser) == TOKEN_LEFT_PAREN ||
+           lastTokenType(parser) == TOKEN_LEFT_BRACKET ||
+           lastTokenType(parser) == TOKEN_EQ ||
+           lastTokenType(parser) == TOKEN_PIPE ||
+           lastTokenType(parser) == TOKEN_COLON ||
+           lastTokenType(parser) == TOKEN_AMPAMP ||
+           lastTokenType(parser) == TOKEN_RETURN ||
+           lastTokenType(parser) == TOKEN_LINE)) {
+        if (!isDocType) {
+          readHtmlString(parser, "");
+        } else {
+          parser->currentChar--; // Need to consume again the "<"
+          readHtmlString(parser, "html");
+        }
+        return;
+      }
       if (matchChar(parser, '<')) {
         makeToken(parser, TOKEN_LTLT);
       } else {
@@ -1256,9 +1373,11 @@ static void nextToken(Parser *parser) {
       return;
 
     case '`':
-      // If we are inside an interpolated expression, fail. DON'T MIX SQL WITH HTML!
+      // If we are inside an interpolated expression, fail.
+      // DON'T MIX SQL WITH HTML!!
       if (parser->numParens > 0)
-          lexError(parser, "Query are not allowed inside interpolated expressions.");
+        lexError(parser,
+                 "Query are not allowed inside interpolated expressions.");
       readQueryString(parser);
       return;
 
@@ -2403,7 +2522,7 @@ static void stringInterpolation(Compiler *compiler, bool canAssign) {
   callMethod(compiler, 1, "addCore_(_)", 11);
 
   // The list of interpolated parts.
-  callMethod(compiler, 0, "join()", 6);
+  callMethod(compiler, 0, "joinInt_()", 10);
 }
 
 static void super_(Compiler *compiler, bool canAssign) {
@@ -2661,18 +2780,12 @@ void constructorSignature(Compiler *compiler, Signature *signature) {
 //
 // See:
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
-#define UNUSED                                                                 \
-  { NULL, NULL, NULL, PREC_NONE, NULL }
-#define PREFIX(fn)                                                             \
-  { fn, NULL, NULL, PREC_NONE, NULL }
-#define INFIX(prec, fn)                                                        \
-  { NULL, fn, NULL, prec, NULL }
-#define INFIX_OPERATOR(prec, name)                                             \
-  { NULL, infixOp, infixSignature, prec, name }
-#define PREFIX_OPERATOR(name)                                                  \
-  { unaryOp, NULL, unarySignature, PREC_NONE, name }
-#define OPERATOR(name)                                                         \
-  { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
+#define UNUSED {NULL, NULL, NULL, PREC_NONE, NULL}
+#define PREFIX(fn) {fn, NULL, NULL, PREC_NONE, NULL}
+#define INFIX(prec, fn) {NULL, fn, NULL, prec, NULL}
+#define INFIX_OPERATOR(prec, name) {NULL, infixOp, infixSignature, prec, name}
+#define PREFIX_OPERATOR(name) {unaryOp, NULL, unarySignature, PREC_NONE, name}
+#define OPERATOR(name) {unaryOp, infixOp, mixedSignature, PREC_TERM, name}
 
 GrammarRule rules[] = {
     /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
@@ -3607,6 +3720,77 @@ void definition(Compiler *compiler) {
 
 ObjFn *wrenCompile(WrenVM *vm, ObjModule *module, const char *source,
                    bool isExpression, bool printErrors) {
+  // @FIXME Remove debug prints
+  printf("Token LEFT_PAREN: %d\n", (int)TOKEN_LEFT_PAREN);
+  printf("Token RIGHT_PAREN: %d\n", (int)TOKEN_RIGHT_PAREN);
+  printf("Token LEFT_BRACKET: %d\n", (int)TOKEN_LEFT_BRACKET);
+  printf("Token RIGHT_BRACKET: %d\n", (int)TOKEN_RIGHT_BRACKET);
+  printf("Token LEFT_BRACE: %d\n", (int)TOKEN_LEFT_BRACE);
+  printf("Token RIGHT_BRACE: %d\n", (int)TOKEN_RIGHT_BRACE);
+  printf("Token COLON: %d\n", (int)TOKEN_COLON);
+  printf("Token DOT: %d\n", (int)TOKEN_DOT);
+  printf("Token DOTDOT: %d\n", (int)TOKEN_DOTDOT);
+  printf("Token DOTDOTDOT: %d\n", (int)TOKEN_DOTDOTDOT);
+  printf("Token COMMA: %d\n", (int)TOKEN_COMMA);
+  printf("Token STAR: %d\n", (int)TOKEN_STAR);
+  printf("Token SLASH: %d\n", (int)TOKEN_SLASH);
+  printf("Token PERCENT: %d\n", (int)TOKEN_PERCENT);
+  printf("Token HASH: %d\n", (int)TOKEN_HASH);
+  printf("Token PLUS: %d\n", (int)TOKEN_PLUS);
+  printf("Token MINUS: %d\n", (int)TOKEN_MINUS);
+  printf("Token LTLT: %d\n", (int)TOKEN_LTLT);
+  printf("Token GTGT: %d\n", (int)TOKEN_GTGT);
+  printf("Token PIPE: %d\n", (int)TOKEN_PIPE);
+  printf("Token PIPEPIPE: %d\n", (int)TOKEN_PIPEPIPE);
+  printf("Token CARET: %d\n", (int)TOKEN_CARET);
+  printf("Token AMP: %d\n", (int)TOKEN_AMP);
+  printf("Token AMPAMP: %d\n", (int)TOKEN_AMPAMP);
+  printf("Token BANG: %d\n", (int)TOKEN_BANG);
+  printf("Token TILDE: %d\n", (int)TOKEN_TILDE);
+  printf("Token QUESTION: %d\n", (int)TOKEN_QUESTION);
+  printf("Token EQ: %d\n", (int)TOKEN_EQ);
+  printf("Token LT: %d\n", (int)TOKEN_LT);
+  printf("Token GT: %d\n", (int)TOKEN_GT);
+  printf("Token LTEQ: %d\n", (int)TOKEN_LTEQ);
+  printf("Token GTEQ: %d\n", (int)TOKEN_GTEQ);
+  printf("Token EQEQ: %d\n", (int)TOKEN_EQEQ);
+  printf("Token BANGEQ: %d\n", (int)TOKEN_BANGEQ);
+
+  printf("Token BREAK: %d\n", (int)TOKEN_BREAK);
+  printf("Token CONTINUE: %d\n", (int)TOKEN_CONTINUE);
+  printf("Token CLASS: %d\n", (int)TOKEN_CLASS);
+  printf("Token CONSTRUCT: %d\n", (int)TOKEN_CONSTRUCT);
+  printf("Token ELSE: %d\n", (int)TOKEN_ELSE);
+  printf("Token FALSE: %d\n", (int)TOKEN_FALSE);
+  printf("Token FOR: %d\n", (int)TOKEN_FOR);
+  printf("Token FOREIGN: %d\n", (int)TOKEN_FOREIGN);
+  printf("Token IF: %d\n", (int)TOKEN_IF);
+  printf("Token IMPORT: %d\n", (int)TOKEN_IMPORT);
+  printf("Token AS: %d\n", (int)TOKEN_AS);
+  printf("Token IN: %d\n", (int)TOKEN_IN);
+  printf("Token IS: %d\n", (int)TOKEN_IS);
+  printf("Token NULL: %d\n", (int)TOKEN_NULL);
+  printf("Token RETURN: %d\n", (int)TOKEN_RETURN);
+  printf("Token STATIC: %d\n", (int)TOKEN_STATIC);
+  printf("Token SUPER: %d\n", (int)TOKEN_SUPER);
+  printf("Token THIS: %d\n", (int)TOKEN_THIS);
+  printf("Token TRUE: %d\n", (int)TOKEN_TRUE);
+  printf("Token VAR: %d\n", (int)TOKEN_VAR);
+  printf("Token WHILE: %d\n", (int)TOKEN_WHILE);
+
+  printf("Token FIELD: %d\n", (int)TOKEN_FIELD);
+  printf("Token STATIC_FIELD: %d\n", (int)TOKEN_STATIC_FIELD);
+  printf("Token NAME: %d\n", (int)TOKEN_NAME);
+  printf("Token NUMBER: %d\n", (int)TOKEN_NUMBER);
+
+  printf("Token STRING: %d\n", (int)TOKEN_STRING);
+  printf("Token INTERPOLATION: %d\n", (int)TOKEN_INTERPOLATION);
+  printf("Token SQL: %d\n", (int)TOKEN_SQL);
+
+  printf("Token LINE: %d\n", (int)TOKEN_LINE);
+  printf("Token ERROR: %d\n", (int)TOKEN_ERROR);
+  printf("Token EOF: %d\n", (int)TOKEN_EOF);
+
   // Skip the UTF-8 BOM if there is one.
   if (strncmp(source, "\xEF\xBB\xBF", 3) == 0)
     source += 3;
@@ -3620,6 +3804,7 @@ ObjFn *wrenCompile(WrenVM *vm, ObjModule *module, const char *source,
   parser.currentChar = source;
   parser.currentLine = 1;
   parser.numParens = 0;
+  parser.numHandlebars = 0;
 
   // Zero-init the current token. This will get copied to previous when
   // nextToken() is called below.
