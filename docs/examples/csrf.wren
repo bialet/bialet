@@ -16,9 +16,7 @@ if (Request.isPost) {
 // The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.
 // The `session.csrf` generates the hidden input field with the CSRF token.
 // Apart from the interpolation, the string is regular HTML.
-Response.out('
-<!DOCTYPE html>
-<html>
+Response.out(<html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,5 +37,4 @@ Response.out('
     </form>
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>
-')
+</html>)
