@@ -21,8 +21,7 @@ var counters = `SELECT * FROM counter ORDER BY name ASC`.fetch()
 // That's the way to have a FOR statement in the interpolated string.
 //
 // Apart from the interpolation, the strings are regular HTML.
-Response.out('
-<!DOCTYPE html>
+Response.out(<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -31,25 +30,17 @@ Response.out('
   </head>
   <body>
     <h1>Show all the counters saved in the database</h1>
-    %( /* The interpolated string can have comments on it */
-      counters.count > 0 ? '
-      <table>
+    {{ counters.count > 0 ? <table>
         <tr>
           <th>Name</th>
           <th>Value</th>
         </tr>
-        %( /* List all the counters */
-          counters.map{|counter| '
-          <tr>
+        {{ counters.map{|counter| <tr>
             <td>%(counter["name"])</td>
             <td>%(counter["value"])</td>
-          </tr>
-        '})
-      </table>
-      ' : /* If there are no counters */ '
-        <p>No counters found</p>
-      ')
+          </tr> } }}
+      </table> : <p>No counters found</p>
+    }}
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>
-')
+</html>)
