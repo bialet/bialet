@@ -1375,9 +1375,9 @@ static void nextToken(Parser *parser) {
     case '`':
       // If we are inside an interpolated expression, fail.
       // DON'T MIX SQL WITH HTML!!
-      if (parser->numParens > 0)
-        lexError(parser,
-                 "Query are not allowed inside interpolated expressions.");
+      if (parser->numParens > 0 || parser->numHandlebars > 0)
+        lexError(parser, "Query are not allowed inside handlebars or "
+                         "interpolated expressions.");
       readQueryString(parser);
       return;
 
