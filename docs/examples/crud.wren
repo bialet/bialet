@@ -31,8 +31,7 @@ var counterResource = Resource.new('counter')
 // using the proper HTTP verbs to do the operations and passing the ID of the resource via GET.
 if (counterResource.json) return
 
-Response.out('
-<!DOCTYPE html>
+Response.out(<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -41,9 +40,8 @@ Response.out('
   </head>
   <body>
     <h1>A fully CRUD generator</h1>
-    <h2>Hi %(Auth.user.name)!</h2>
-    %( counterResource.html )
+    <h2>Hi {{ Auth.user.name }}!</h2>
+    {{ counterResource.html }}
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>
-')
+</html>)

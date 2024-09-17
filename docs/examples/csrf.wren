@@ -16,7 +16,8 @@ if (Request.isPost) {
 // The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.
 // The `session.csrf` generates the hidden input field with the CSRF token.
 // Apart from the interpolation, the string is regular HTML.
-Response.out(<html>
+Response.out(<!doctype html>
+<html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,12 +26,11 @@ Response.out(<html>
   <body>
     <h1>Cross-Site Request Forgery</h1>
     <p>Use different tabs to verify the post is from the last window.</p>
-    %( Request.isPost ? '
-      <p><strong>%( verify ? 'The post is valid' : 'The post come from someone else' )</strong></p>
-      <hr />
-    ' : '' )
+    {{ Request.isPost &&
+      <p><strong>{{ verify ? 'The post is valid' : 'The post come from someone else' }}</strong></p>
+    }}
     <form method="POST">
-      %( session.csrf )
+      {{ session.csrf }}
       <p>
         <button>Submit</button>
       </p>
