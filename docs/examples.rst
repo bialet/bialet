@@ -1,6 +1,12 @@
 Examples
 ========
 
+Simple query list
+-----------------
+
+.. include:: examples/simple.wren
+  :code: wren
+
 Hello World
 -----------
 
