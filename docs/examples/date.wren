@@ -19,11 +19,10 @@ if (Request.isPost) {
 System.print("Date: %(date) - Current: %(current)")
 
 // We use the `out()` method to send the response to the client.
-// The `%( ... )` syntax is used to interpolate the properties of the date object
+// The `{{ ... )` syntax is used to interpolate the properties of the date object
 // and also any other string.
 // Apart from the interpolation, the string is regular HTML.
-Response.out('
-<!DOCTYPE html>
+Response.out(<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -32,43 +31,43 @@ Response.out('
   </head>
   <body>
     <h1>Date and Time functions</h1>
-    <p>Date and time: %(date)</p>
-    <p>Current date and time: %(current)</p>
-    <p>%( date > current ? "Date is greater than current" : "" )</p>
-    <p>%( date < current ? "Date is less than current" : "" )</p>
-    <p>%( date == current ? "Date is equal to current" : "" )</p>
-    <p>%( date != current ? "Date is not equal to current" : "" )</p>
-    <p>UTC: %(date.utc)</p>
-    <p>Year: %(date.year)</p>
-    <p>Month: %(date.month)</p>
-    <p>Day: %(date.day)</p>
-    <p>Hour: %(date.hour)</p>
-    <p>Minute: %(date.minute)</p>
-    <p>Second: %(date.second)</p>
-    <p>Timestamp: %(date.unix)</p>
-    <p>Date: %(date.date)</p>
-    <p>Time: %(date.time)</p>
-    <p>US Format: %(date.format('#m/#d/#Y'))</p>
+    <p>Date and time: {{date}}</p>
+    <p>Current date and time: {{current}}</p>
+    <p>{{ date > current ? "Date is greater than current" : "" }}</p>
+    <p>{{ date < current ? "Date is less than current" : "" }}</p>
+    <p>{{ date == current ? "Date is equal to current" : "" }}</p>
+    <p>{{ date != current ? "Date is not equal to current" : "" }}</p>
+    <p>UTC: {{date.utc}}</p>
+    <p>Year: {{date.year}}</p>
+    <p>Month: {{date.month}}</p>
+    <p>Day: {{date.day}}</p>
+    <p>Hour: {{date.hour}}</p>
+    <p>Minute: {{date.minute}}</p>
+    <p>Second: {{date.second}}</p>
+    <p>Timestamp: {{date.unix}}</p>
+    <p>Date: {{date.date}}</p>
+    <p>Time: {{date.time}}</p>
+    <p>US Format: {{date.format('#m/#d/#Y')}}</p>
     <h2>Change date</h2>
     <form method="POST">
       <p>
         <label>
           Date
-          <input type="date" name="date" value="%( date.format('#Y-#m-#d') )" />
+          <input type="date" name="date" value="{{ date.format('#Y-#m-#d') }}" />
         </label>
       </p>
       <p>
         <label>
           Time
-          <input type="input" name="time" value="%( date.format('#H:#M:#S') )" />
+          <input type="input" name="time" value="{{ date.format('#H:#M:#S') }}" />
         </label>
       </p>
       <p>
         <label>
           UTC
-          <input type="input" name="utc" value="%( date.utc )" />
+          <input type="input" name="utc" value="{{ date.utc }}" />
         </label>
-      </p>
+      </p
       <p>
         <button>Change</button>
       </p>
@@ -76,4 +75,4 @@ Response.out('
     <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
-')
+)

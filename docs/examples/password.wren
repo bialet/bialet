@@ -21,10 +21,9 @@ if (Request.isPost) {
 }
 
 // We use the `out()` method to send the response to the client.
-// The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.
+// The `{{ ... }}` syntax is used to interpolate the value inputs.
 // Apart from the interpolation, the string is regular HTML.
-Response.out('
-<!DOCTYPE html>
+Response.out(<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -33,24 +32,25 @@ Response.out('
   </head>
   <body>
     <h1>Password utilities</h1>
-    %( Request.isPost ? '
-      <p>Hash:</p>
-      <code>%( encrypted )</code>
-      <p><strong>%( verify ? 'The passwords are the same' : 'The passwords are different' )</strong></p>
-      <hr />
-    ' : '' )
+    {{ Request.isPost && <div>
+        <p>Hash:</p>
+        <code>{{ encrypted }}</code>
+        <p><strong>{{ verify ? 'The passwords are the same' : 'The passwords are different' }}</strong></p>
+        <hr>
+      </div>
+    }}
     <form method="POST">
       <p>
         <label for="password">Password</label>
       </p>
       <p>
-        <input type="text" name="password" value="%(password)" />
+        <input type="text" name="password" value="{{password}}" />
       </p>
       <p>
         <label for="password-check">Password to check</label>
       </p>
       <p>
-        <input type="text" name="password-check" value="%(passwordCheck)" />
+        <input type="text" name="password-check" value="{{passwordCheck}}" />
       </p>
       <p>
         <button>Submit</button>
@@ -58,5 +58,4 @@ Response.out('
     </form>
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>
-')
+</html>)

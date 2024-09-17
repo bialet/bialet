@@ -2,49 +2,44 @@ import "bialet" for Util
 
 class Template {
 
-  construct new(){ _title = "TODO tasks" }
+  construct new() {
+    _title = "TODO tasks"
+  }
 
-  home(tasks) { '
+  home(tasks) { <!doctype html>
     <html>
       <head>
-        <title>%( _title )</title>
+        <title>{{ _title }}</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="/style.css" />
       </head>
       <body>
-        <h1>%( _title )</h1>
-        %( tasks.count > 0 ? '
+        <h1>{{ _title }}</h1>
+        {{ tasks.count > 0 ?
           <ul>
-            %( tasks.map{ |task| '
-              <li class="finished_%( task["finished"] )">
-                <a href="/toggle?id=%( task["id"] )">
-                  %( Util.htmlEscape(task["description"]) )
+            {{ tasks.map{ |task| <li class="finished_{{ task["finished"] }}">
+                <a href="/toggle?id={{ task["id"] }}">
+                  {{ Util.htmlEscape(task["description"]) }}
                 </a>
               </li>
-            '})
-          </ul>
-        ' : '
+           } }}
+          </ul> :
           <p class="no-tasks">No tasks yet</p>
-        ' )
-        %( newItemForm )
-        %( clearForm )
+        }}
+        {{ newItemForm }}
+        {{ clearForm }}
       </body>
-    </html>
-  ' }
+    </html> }
 
-  newItemForm { '
-    <form method="post">
+  newItemForm { <form method="post">
       <p>
         <input name="task" placeholder="New task" required />
         <button>Create</button>
       </p>
-    </form>
-  ' }
+    </form> }
 
-  clearForm { '
-    <form method="post" action="/clear">
+  clearForm { <form method="post" action="/clear">
       <p><button>Clear finished tasks</button></p>
-    </form>
-  ' }
+    </form> }
 }
