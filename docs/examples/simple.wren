@@ -1,6 +1,6 @@
-import "bialet" for Response
+import "bialet" for Response, Util
 
-var users = `SELECT name FROM users`.fetch
+var users = `SELECT id, name FROM users`.fetch
 var title = "Users list"
 
 Response.out(
@@ -17,9 +17,13 @@ Response.out(
       <h1>{{ title }}</h1>
       {{ users.count > 0 ?
         <ul>
-          {{ users.map{|user| <li>{{ user["name"] }}</li> } }}
+          {{ users.map{|user| <li>
+            <a href="/hello?{{ Util.params({"id": user["id"]}) }}">
+              {{ Util.htmlEscape(user["name"]) }}
+            </a>
+          </li> } }}
         </ul> :
-        <p>No users.</p>
+        <p>No users, go to <a href="/hello">hello</a>.</p>
       }}
     </body>
   </html>
