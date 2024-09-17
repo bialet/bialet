@@ -30,7 +30,7 @@
 #define MAX_URL_LEN 1024
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
-#define MAX_MODULE_LEN 50
+#define MAX_MODULE_LEN 256
 #define HTTP_ERROR 500
 
 #define RUN_CODE_PREFIX "var bialet_run_output = "
