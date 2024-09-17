@@ -178,7 +178,8 @@ typedef struct {
   // The most recently lexed token.
   Token current;
 
-  // The most recently consumed/advanced token.
+  // The most recently
+  //    consumed/advanced token.
   Token previous;
 
   // Tracks the lexing state when tokenizing interpolated strings.
@@ -973,7 +974,9 @@ static void readHtmlString(Parser *parser, char *previousTagName) {
     if (c == '<' && peekChar(parser) == '/') {
       closingTag = 0;
     }
-    if (closingTag >= 0 && c >= 'a' && c <= 'z') {
+    // Tags should start with a letter, next characters can be letters or numbers
+    if ((closingTag >= 0 && c >= 'a' && c <= 'z') ||
+        (closingTag >= 1 && c >= '0' && c <= '9')) {
       if (tagName[closingTag] != c) {
         closingTag = -1; // Different tag
       } else {
@@ -1313,20 +1316,27 @@ static void nextToken(Parser *parser) {
       printf("peekChar = %c\n", peekChar(parser));
       printf("Last token = %d\n", lastTokenType(parser));
       int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
+      int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
+                                  lastTokenType(parser) == TOKEN_RETURN;
       if ((isDocType || (peekChar(parser) >= 'a' && peekChar(parser) <= 'z')) &&
-          (lastTokenType(parser) == TOKEN_LEFT_PAREN ||
+          (notIgnoreSpacesTokens || lastTokenType(parser) == TOKEN_LEFT_PAREN ||
            lastTokenType(parser) == TOKEN_LEFT_BRACKET ||
-           lastTokenType(parser) == TOKEN_EQ ||
+           lastTokenType(parser) == TOKEN_LEFT_BRACE ||
            lastTokenType(parser) == TOKEN_PIPE ||
            lastTokenType(parser) == TOKEN_COLON ||
            lastTokenType(parser) == TOKEN_AMPAMP ||
-           lastTokenType(parser) == TOKEN_RETURN ||
            lastTokenType(parser) == TOKEN_LINE)) {
         if (!isDocType) {
           readHtmlString(parser, "");
         } else {
           parser->currentChar--; // Need to consume again the "<"
           readHtmlString(parser, "html");
+        }
+        // Ignore white space after the end of the string
+        if (!notIgnoreSpacesTokens) {
+          while (peekChar(parser) == ' ' || peekChar(parser) == '\t' ||
+                 peekChar(parser) == '\r' || peekChar(parser) == '\n')
+            nextChar(parser);
         }
         return;
       }

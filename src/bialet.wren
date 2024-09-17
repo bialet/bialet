@@ -588,6 +588,40 @@ class Util {
     return decoded
   }
 
+  static urlEncode(str) {
+    var encoded = ""
+    str = "%(str)"
+    for (char in str) {
+      if (char == " ") {
+        encoded = encoded + "+"
+      } else if (char == "\%") {
+        encoded = encoded + "\%25"
+      } else if (char == "&") {
+        encoded = encoded + "\%26"
+      } else if (char == "=") {
+        encoded = encoded + "\%3D"
+      } else if (char == "?") {
+        encoded = encoded + "\%3F"
+      } else {
+        encoded = encoded + char
+      }
+    }
+    return encoded
+  }
+
+  static params(params) {
+    var result = ""
+    var first = true
+    for (entry in params) {
+      if (!first) {
+        result = result + "&"
+      }
+      result = result + urlEncode(entry.key) + "=" + urlEncode(entry.value)
+      first = false
+    }
+    return result
+  }
+
   static lpad(s, count, with) {
     while (s.count < count) {
       s = "%(with)%(s)"
