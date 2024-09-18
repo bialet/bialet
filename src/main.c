@@ -7,11 +7,11 @@
 
 #ifdef IS_WIN
 
+#include "getopt.h"
 #include <stdio.h>
 #include <tchar.h>
 #include <windows.h>
 #include <winsock2.h>
-#include "getopt.h"
 
 #define DIV 1048576
 #define WIDTH 7
@@ -45,6 +45,7 @@
 #define MAX_IGNORED_FILES 20
 #define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
+#define SERVER_POLL_DELAY 200
 
 struct BialetConfig bialet_config;
 char *routes_list[MAX_ROUTES];
@@ -341,7 +342,7 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
       for (;;) {
-        mg_mgr_poll(&mgr, 1000);
+        mg_mgr_poll(&mgr, SERVER_POLL_DELAY);
       }
     } else if (pid > 0) {
       // Parent: Wait for child to exit
