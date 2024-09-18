@@ -18,25 +18,25 @@ class App {
   }
   user(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
   name(id) { user(id)["name"] || "World" }
-  html(content) { '
+  html(content) {
+    return <!doctype html>
     <html>
       <head>
-        <title>%( _title )</title>
+        <title>{{ _title }}</title>
       </head>
       <body>
-        <h1>%( _title )</h1>
-        %( content )
+        <h1>{{ _title }}</h1>
+        {{ content }}
       </body>
     </html>
-  ' }
+  }
 }
 
 var idUrlParam = Request.get("id")
 var app = App.new()
-var html = app.html('
-  <p>👋 Hello <b>%( app.name(idUrlParam) )</b></p>
-')
-Response.out(html) // Serve the HTML
+var html = app.html(
+  <p>👋 Hello <b>{{ app.name(idUrlParam) }}</b></p>
+)
 ```
 
 Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development

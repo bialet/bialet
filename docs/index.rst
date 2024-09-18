@@ -18,24 +18,25 @@ Bialet
     }
     user(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
     name(id) { user(id)["name"] || "World" }
-    html(content) { '
+    html(content) {
+      return <!doctype html>
       <html>
         <head>
-          <title>%( _title )</title>
+          <title>{{ _title }}</title>
         </head>
         <body>
-          <h1>%( _title )</h1>
-          %( content )
+          <h1>{{ _title }}</h1>
+          {{ content }}
         </body>
       </html>
-    ' }
+    }
   }
 
   var idUrlParam = Request.get("id")
   var app = App.new()
-  var html = app.html('
-    <p>👋 Hello <b>%( app.name(idUrlParam) )</b></p>
-  ')
+  var html = app.html(
+    <p>👋 Hello <b>{{ app.name(idUrlParam) }}</b></p>
+  )
   Response.out(html) // Serve the HTML
 
 
@@ -85,6 +86,7 @@ Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
    getting-started
    installation
    structure
+   html-strings
    database
    datetime
    reference
