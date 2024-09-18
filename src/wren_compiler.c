@@ -919,8 +919,6 @@ static void readRawString(Parser *parser) {
 }
 
 static void readHtmlString(Parser *parser, char *previousTagName) {
-  // @FIXME Remove debug prints
-  printf("Start HTML string with previous tag name: %s\n", previousTagName);
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_STRING;
@@ -950,8 +948,6 @@ static void readHtmlString(Parser *parser, char *previousTagName) {
   }
 
   int closingTag = -1;
-  // @FIXME Remove debug prints
-  printf("Tag: %s\n", tagName);
   for (;;) {
     char c = nextChar(parser);
     if (c == '\0') {
@@ -962,10 +958,6 @@ static void readHtmlString(Parser *parser, char *previousTagName) {
     if (c == '{' && peekChar(parser) == '{') {
       type = TOKEN_INTERPOLATION;
       strcpy(parser->handlebars[parser->numHandlebars], tagName);
-      // @FIXME Remove debug prints
-      printf("Interpolation with tag: %s\n", tagName);
-      printf("numHandlebars: %d\n", parser->numHandlebars);
-      printf("Handlebars tag: %s\n", parser->handlebars[parser->numHandlebars]);
       parser->numHandlebars++;
       nextChar(parser);
       break;
@@ -982,8 +974,6 @@ static void readHtmlString(Parser *parser, char *previousTagName) {
       } else {
         closingTag++;
       }
-      // @FIXME Remove debug prints
-      printf("Closing Tag: %d - %s\n", closingTag, tagName);
     }
     if (c == '>' && closingTag == strlen(tagName))
       break;
@@ -992,8 +982,6 @@ static void readHtmlString(Parser *parser, char *previousTagName) {
 
   parser->next.value =
       wrenNewStringLength(parser->vm, (char *)string.data, string.count);
-  // @FIXME Remove debug prints
-  printf("Value: %s\n", string.data);
 
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
@@ -1223,8 +1211,6 @@ static void nextToken(Parser *parser) {
       return;
     case '}':
       if (peekChar(parser) == '}') {
-        // @FIXME Remove debug prints
-        printf("Double brace: %d\n", parser->numHandlebars);
         // Are we in an interpolated expression?
         if (parser->numHandlebars > 0) {
           parser->numHandlebars--;
@@ -1311,10 +1297,6 @@ static void nextToken(Parser *parser) {
       return;
 
     case '<':
-      // @FIXME Remove debug prints
-      printf("\n----- HTML STRING ------\n\n");
-      printf("peekChar = %c\n", peekChar(parser));
-      printf("Last token = %d\n", lastTokenType(parser));
       int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
       int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
                                   lastTokenType(parser) == TOKEN_RETURN;
@@ -3730,77 +3712,6 @@ void definition(Compiler *compiler) {
 
 ObjFn *wrenCompile(WrenVM *vm, ObjModule *module, const char *source,
                    bool isExpression, bool printErrors) {
-  // @FIXME Remove debug prints
-  printf("Token LEFT_PAREN: %d\n", (int)TOKEN_LEFT_PAREN);
-  printf("Token RIGHT_PAREN: %d\n", (int)TOKEN_RIGHT_PAREN);
-  printf("Token LEFT_BRACKET: %d\n", (int)TOKEN_LEFT_BRACKET);
-  printf("Token RIGHT_BRACKET: %d\n", (int)TOKEN_RIGHT_BRACKET);
-  printf("Token LEFT_BRACE: %d\n", (int)TOKEN_LEFT_BRACE);
-  printf("Token RIGHT_BRACE: %d\n", (int)TOKEN_RIGHT_BRACE);
-  printf("Token COLON: %d\n", (int)TOKEN_COLON);
-  printf("Token DOT: %d\n", (int)TOKEN_DOT);
-  printf("Token DOTDOT: %d\n", (int)TOKEN_DOTDOT);
-  printf("Token DOTDOTDOT: %d\n", (int)TOKEN_DOTDOTDOT);
-  printf("Token COMMA: %d\n", (int)TOKEN_COMMA);
-  printf("Token STAR: %d\n", (int)TOKEN_STAR);
-  printf("Token SLASH: %d\n", (int)TOKEN_SLASH);
-  printf("Token PERCENT: %d\n", (int)TOKEN_PERCENT);
-  printf("Token HASH: %d\n", (int)TOKEN_HASH);
-  printf("Token PLUS: %d\n", (int)TOKEN_PLUS);
-  printf("Token MINUS: %d\n", (int)TOKEN_MINUS);
-  printf("Token LTLT: %d\n", (int)TOKEN_LTLT);
-  printf("Token GTGT: %d\n", (int)TOKEN_GTGT);
-  printf("Token PIPE: %d\n", (int)TOKEN_PIPE);
-  printf("Token PIPEPIPE: %d\n", (int)TOKEN_PIPEPIPE);
-  printf("Token CARET: %d\n", (int)TOKEN_CARET);
-  printf("Token AMP: %d\n", (int)TOKEN_AMP);
-  printf("Token AMPAMP: %d\n", (int)TOKEN_AMPAMP);
-  printf("Token BANG: %d\n", (int)TOKEN_BANG);
-  printf("Token TILDE: %d\n", (int)TOKEN_TILDE);
-  printf("Token QUESTION: %d\n", (int)TOKEN_QUESTION);
-  printf("Token EQ: %d\n", (int)TOKEN_EQ);
-  printf("Token LT: %d\n", (int)TOKEN_LT);
-  printf("Token GT: %d\n", (int)TOKEN_GT);
-  printf("Token LTEQ: %d\n", (int)TOKEN_LTEQ);
-  printf("Token GTEQ: %d\n", (int)TOKEN_GTEQ);
-  printf("Token EQEQ: %d\n", (int)TOKEN_EQEQ);
-  printf("Token BANGEQ: %d\n", (int)TOKEN_BANGEQ);
-
-  printf("Token BREAK: %d\n", (int)TOKEN_BREAK);
-  printf("Token CONTINUE: %d\n", (int)TOKEN_CONTINUE);
-  printf("Token CLASS: %d\n", (int)TOKEN_CLASS);
-  printf("Token CONSTRUCT: %d\n", (int)TOKEN_CONSTRUCT);
-  printf("Token ELSE: %d\n", (int)TOKEN_ELSE);
-  printf("Token FALSE: %d\n", (int)TOKEN_FALSE);
-  printf("Token FOR: %d\n", (int)TOKEN_FOR);
-  printf("Token FOREIGN: %d\n", (int)TOKEN_FOREIGN);
-  printf("Token IF: %d\n", (int)TOKEN_IF);
-  printf("Token IMPORT: %d\n", (int)TOKEN_IMPORT);
-  printf("Token AS: %d\n", (int)TOKEN_AS);
-  printf("Token IN: %d\n", (int)TOKEN_IN);
-  printf("Token IS: %d\n", (int)TOKEN_IS);
-  printf("Token NULL: %d\n", (int)TOKEN_NULL);
-  printf("Token RETURN: %d\n", (int)TOKEN_RETURN);
-  printf("Token STATIC: %d\n", (int)TOKEN_STATIC);
-  printf("Token SUPER: %d\n", (int)TOKEN_SUPER);
-  printf("Token THIS: %d\n", (int)TOKEN_THIS);
-  printf("Token TRUE: %d\n", (int)TOKEN_TRUE);
-  printf("Token VAR: %d\n", (int)TOKEN_VAR);
-  printf("Token WHILE: %d\n", (int)TOKEN_WHILE);
-
-  printf("Token FIELD: %d\n", (int)TOKEN_FIELD);
-  printf("Token STATIC_FIELD: %d\n", (int)TOKEN_STATIC_FIELD);
-  printf("Token NAME: %d\n", (int)TOKEN_NAME);
-  printf("Token NUMBER: %d\n", (int)TOKEN_NUMBER);
-
-  printf("Token STRING: %d\n", (int)TOKEN_STRING);
-  printf("Token INTERPOLATION: %d\n", (int)TOKEN_INTERPOLATION);
-  printf("Token SQL: %d\n", (int)TOKEN_SQL);
-
-  printf("Token LINE: %d\n", (int)TOKEN_LINE);
-  printf("Token ERROR: %d\n", (int)TOKEN_ERROR);
-  printf("Token EOF: %d\n", (int)TOKEN_EOF);
-
   // Skip the UTF-8 BOM if there is one.
   if (strncmp(source, "\xEF\xBB\xBF", 3) == 0)
     source += 3;
