@@ -367,11 +367,11 @@ if (Request.isPost) {
 }
 
 // Remember to change the action attribute in the form!
-Response.out(Template.layout('
+Response.out(Template.layout(
   <form action="/" method="post">
   ...
   </form>
-'))
+))
 ```
 
 With `Request.isPost` we check if the request is a POST request.
