@@ -124,7 +124,6 @@ static int parse_routes_callback(const char *fpath, const struct stat *sb,
     }
     snprintf(route_with_hash, route_len, "/%s#", relative_path);
     routes_list[routes_index] = route_with_hash;
-    free(route_with_hash);
     routes_index++;
   }
   return 0;

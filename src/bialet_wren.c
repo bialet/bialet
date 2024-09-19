@@ -33,6 +33,7 @@
 #define MAX_MODULE_LEN 256
 #define HTTP_ERROR 500
 
+#define MAIN_MODULE_NAME "bialet"
 #define RUN_CODE_PREFIX "var bialet_run_output = "
 #define RUN_CODE_SUFFIX "\nSystem.print(bialet_run_output)"
 
@@ -376,7 +377,7 @@ WrenForeignMethodFn wren_bind_foreign_method(WrenVM *vm, const char *module,
                                              const char *className,
                                              bool isStatic,
                                              const char *signature) {
-  if (strcmp(module, "bialet") == 0) {
+  if (strcmp(module, MAIN_MODULE_NAME) == 0) {
     if (strcmp(className, "Util") == 0) {
       if (strcmp(signature, "randomString_(_)") == 0) {
         return random_string;
@@ -442,63 +443,64 @@ struct BialetResponse bialet_run(char *module, char *code,
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
-  /* Load bialet framework with Request appended */
-  char *bialetCompleteCode;
-  bialetCompleteCode = string_safe_copy(bialetModuleSource);
+  wrenInterpret(vm, MAIN_MODULE_NAME, bialetModuleSource);
   if (hm) {
-    char *message = escape_special_chars(get_mg_str(hm->message));
-    bialetCompleteCode =
-        string_append(bialetCompleteCode, "\nRequest.init(\"",
-                      string_append(message, "\",\"", hm->bialet_routes));
-    bialetCompleteCode = string_append(bialetCompleteCode, "\")", "\n");
+    /* Initialize request */
+    wrenEnsureSlots(vm, 3);
+    wrenGetVariable(vm, MAIN_MODULE_NAME, "Request", 0);
+    WrenHandle *requestClass = wrenGetSlotHandle(vm, 0);
+    WrenHandle *initMethod = wrenMakeCallHandle(vm, "init(_,_)");
+    wrenSetSlotHandle(vm, 0, requestClass);
+    wrenSetSlotString(vm, 1, get_mg_str(hm->message));
+    wrenSetSlotString(vm, 2, hm->bialet_routes);
+    if ((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
+      message(red("Runtime Error"), "Failed to initialize request");
+    wrenReleaseHandle(vm, requestClass);
+    wrenReleaseHandle(vm, initMethod);
   }
-  wrenInterpret(vm, "bialet", bialetCompleteCode);
   /* Run user code */
   if (!error) {
     WrenInterpretResult result = wrenInterpret(vm, module, code);
     error = result != WREN_RESULT_SUCCESS;
   }
-  wrenEnsureSlots(vm, 4);
+  wrenEnsureSlots(vm, 1);
   if (!error) {
-    wrenGetVariable(vm, "bialet", "Response", 0);
-    WrenHandle *response_class = wrenGetSlotHandle(vm, 0);
+    wrenGetVariable(vm, MAIN_MODULE_NAME, "Response", 0);
+    WrenHandle *responseClass = wrenGetSlotHandle(vm, 0);
     /* Get body from response */
-    WrenHandle *out_method = wrenMakeCallHandle(vm, "out");
-    wrenSetSlotHandle(vm, 0, response_class);
-    if (wrenCall(vm, out_method) == WREN_RESULT_SUCCESS) {
+    WrenHandle *outMethod = wrenMakeCallHandle(vm, "out");
+    wrenSetSlotHandle(vm, 0, responseClass);
+    if ((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
+      message(red("Runtime Error"), "Failed to get body");
+    } else {
       const char *body = wrenGetSlotString(vm, 0);
       r.body = string_safe_copy(body);
-    } else {
-      message(red("Runtime Error"), "Failed to get body");
-      error = 1;
     }
     /* Get status from response */
-    WrenHandle *status_method = wrenMakeCallHandle(vm, "status");
-    wrenSetSlotHandle(vm, 0, response_class);
-    if (wrenCall(vm, status_method) == WREN_RESULT_SUCCESS) {
+    WrenHandle *statusMethod = wrenMakeCallHandle(vm, "status");
+    wrenSetSlotHandle(vm, 0, responseClass);
+    if ((error = wrenCall(vm, statusMethod) != WREN_RESULT_SUCCESS)) {
+      message(red("Runtime Error"), "Failed to get status");
+    } else {
       const double status = wrenGetSlotDouble(vm, 0);
       r.status = (int)status;
-    } else {
-      message(red("Runtime Error"), "Failed to get status");
-      error = 1;
     }
     /* Get headers from response */
     if (hm) {
-      WrenHandle *headers_method = wrenMakeCallHandle(vm, "headers");
-      wrenSetSlotHandle(vm, 0, response_class);
-      if (wrenCall(vm, headers_method) == WREN_RESULT_SUCCESS) {
+      WrenHandle *headersMethod = wrenMakeCallHandle(vm, "headers");
+      wrenSetSlotHandle(vm, 0, responseClass);
+      if ((error = wrenCall(vm, headersMethod) != WREN_RESULT_SUCCESS)) {
+        message(red("Runtime Error"), "Failed to get headers");
+      } else {
         const char *headersString = wrenGetSlotString(vm, 0);
         r.header = string_safe_copy(headersString);
-      } else {
-        message(red("Runtime Error"), "Failed to get headers");
-        error = 1;
       }
-      wrenReleaseHandle(vm, headers_method);
+      wrenReleaseHandle(vm, headersMethod);
     }
     /* Clean Wren vm */
-    wrenReleaseHandle(vm, response_class);
-    wrenReleaseHandle(vm, out_method);
-    wrenReleaseHandle(vm, status_method);
+    wrenReleaseHandle(vm, responseClass);
+    wrenReleaseHandle(vm, outMethod);
+    wrenReleaseHandle(vm, statusMethod);
   }
   wrenFreeVM(vm);
 
@@ -553,7 +555,7 @@ int bialet_run_cli(char *code) {
   fullCode = string_safe_copy(bialetModuleSource);
   fullCode = string_append(fullCode, "\n", code);
   vm = wrenNewVM(&wren_config);
-  WrenInterpretResult result = wrenInterpret(vm, "bialet", fullCode);
+  WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, fullCode);
   error = result != WREN_RESULT_SUCCESS;
   wrenFreeVM(vm);
   return error;
