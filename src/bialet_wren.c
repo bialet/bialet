@@ -34,8 +34,7 @@
 #define HTTP_ERROR 500
 
 #define MAIN_MODULE_NAME "bialet"
-#define RUN_CODE_PREFIX "var bialet_run_output = "
-#define RUN_CODE_SUFFIX "\nSystem.print(bialet_run_output)"
+#define CLI_MODULE_NAME "bialet_cli"
 
 WrenConfiguration wren_config;
 static struct BialetConfig bialet_config;
@@ -505,7 +504,6 @@ struct BialetResponse bialet_run(char *module, char *code,
   wrenFreeVM(vm);
 
   if (error) {
-    message(red("Error"), "Internal Server Error");
     r.status = HTTP_ERROR;
     r.header = BIALET_HEADERS;
     r.body = BIALET_ERROR_PAGE;
@@ -518,47 +516,11 @@ struct BialetResponse bialet_run(char *module, char *code,
 }
 
 int bialet_run_cli(char *code) {
-  int error = 0;
-  WrenVM *vm = 0;
-  char *fullCode;
-
-  // Add print to the last line of code
-  char *lastLine = strrchr(code, '\n');
-  if (lastLine == NULL) {
-    lastLine = code;
-  } else {
-    lastLine++;
-  }
-  int modifiedLength =
-      strlen(lastLine) + strlen(RUN_CODE_PREFIX) + strlen(RUN_CODE_SUFFIX) + 1;
-  for (char *ptr = lastLine; *ptr; ptr++) {
-    if (*ptr == '\"')
-      modifiedLength++;
-  }
-  char *modifiedLastLine = malloc(modifiedLength * sizeof(char));
-  char *dest = modifiedLastLine;
-  strcpy(dest, RUN_CODE_PREFIX);
-  dest += strlen(RUN_CODE_PREFIX);
-  // Escape quotes
-  for (char *ptr = lastLine; *ptr; ptr++, dest++) {
-    if (*ptr == '\"') {
-      *dest = '\\';
-      dest++;
-    }
-    *dest = *ptr;
-  }
-  strcpy(dest, RUN_CODE_SUFFIX);
-  strncpy(lastLine, modifiedLastLine, modifiedLength - 1);
-  lastLine[modifiedLength - 1] = '\0';
-  free(modifiedLastLine);
-
-  fullCode = string_safe_copy(bialetModuleSource);
-  fullCode = string_append(fullCode, "\n", code);
-  vm = wrenNewVM(&wren_config);
-  WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, fullCode);
-  error = result != WREN_RESULT_SUCCESS;
-  wrenFreeVM(vm);
-  return error;
+  struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
+  if (response.status == HTTP_ERROR)
+    return 1;
+  printf("%s", response.body);
+  return 0;
 }
 
 void bialet_init(struct BialetConfig *config) {
