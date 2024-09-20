@@ -91,7 +91,7 @@ The table below summarizes the available command-line parameters for the Bialet 
 | `-r` | Run the code passed as argument | None |
 | `-l` | Log file location | `stdout` |
 | `-d` | SQLite database file location | `_db.sqlite` |
-| `-i` | Ignored files, comma separated list of glob expressions | README*,LICENSE*,package.* |
+| `-i` | Ignored files, comma separated list of glob expressions | README\*, LICENSE\* , \*.json, \*.yml, \*.yaml |
 | `-m` | Memory limit (MB) | `50` |
 | `-M` | Hard memory limit (MB) | `100` |
 | `-c` | CPU limit (%) | `15` |
