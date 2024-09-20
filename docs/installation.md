@@ -1,4 +1,4 @@
-# Installation
+# Installation and Usage
 
 ## With Docker Compose
 
@@ -96,3 +96,20 @@ The table below summarizes the available command-line parameters for the Bialet 
 | `-M` | Hard memory limit (MB) | `100` |
 | `-c` | CPU limit (%) | `15` |
 | `-C` | Hard CPU limit (%) | `30` |
+
+## Run code from the Command Line
+
+To run code from the command line, use the `-r` command:
+
+```bash
+bialet -r 'System.print("Hello, World!")'
+```
+
+The response will be printed directly.
+
+```bash
+bialet -r 'import "bialet" for Response
+Response.out("No log, plain response")'
+```
+
+You have to respect new lines in the code.
