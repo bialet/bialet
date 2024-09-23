@@ -1,32 +1,29 @@
 import "bialet" for Request, Response, Db
 
 if (Request.isPost) {
-  var picture = Request.file("picture")
-  System.print("File data: %(picture)")
-  if (picture["originalFileName"].split(".")[1] == "jpg") {
-    Response.header("Content-Type", "image/jpeg")
-    return Response.out(picture["file"])
-  }
-  if (picture["originalFileName"].split(".")[1] == "png") {
-    Response.header("Content-Type", "image/png")
-    return Response.out(picture["file"])
-  }
+  // Get the uploaded file
+  var uploadedFile = Request.file("form_file_name")
+  System.print("File: %(uploadedFile["originalFileName"])")
+  // Return the file to the browser
+  return Response.file(uploadedFile["id"])
 }
 
+var title = "Upload File"
 Response.out(
 <!doctype html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Upload image</title>
+    <title>{{ title }}</title>
     <style>body{ font: 1.3em system-ui; text-align: center }</style>
   </head>
   <body>
-    <h1>Uplad image</h1>
+    <h1>{{ title }}</h1>
     <form method="post" enctype="multipart/form-data">
-      <input type="file" name="picture">
-      <input type="submit" value="Upload image">
+      <input type="file" name="form_file_name">
+      <input type="submit" value="{{ title }}">
     </form>
+    <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
 )

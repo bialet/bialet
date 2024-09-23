@@ -31,7 +31,9 @@
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
 #define MAX_MODULE_LEN 256
+#define HTTP_OK 200
 #define HTTP_ERROR 500
+#define BIALET_FILE_CHAR 26
 
 #define MAIN_MODULE_NAME "bialet"
 #define CLI_MODULE_NAME "bialet_cli"
@@ -138,7 +140,7 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
   sqlite3_stmt *stmt;
   char *columns[MAX_COLUMNS];
   const char *value;
-  int colType, colCount = 0, type, rowCount = 0, bindCounter = 0;
+  int colType, colCount = 0, type, rowCount = 0, bindCounter = 0, size = 0;
 
   // Check if the query string contains only whitespace
   const char *str = query->queryString;
@@ -202,26 +204,30 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
       case SQLITE_FLOAT:
         type = BIALETQUERYTYPE_NUMBER;
         value = (const char *)sqlite3_column_text(stmt, i);
+        size = strlen(value);
         break;
       case SQLITE_TEXT:
         type = BIALETQUERYTYPE_STRING;
         value = (const char *)sqlite3_column_text(stmt, i);
+        size = strlen(value);
         break;
       case SQLITE_BLOB:
         type = BIALETQUERYTYPE_BLOB;
         // @FIXME This retrieving is working, but it is not passed correctly to
         // Wren
-        value = (const char *)sqlite3_column_blob(stmt, i);
+        value = sqlite3_column_blob(stmt, i);
+        size = sqlite3_column_bytes(stmt, i);
         break;
       case SQLITE_NULL:
         type = BIALETQUERYTYPE_NULL;
         value = NULL;
+        size = 1;
         break;
       default:
         message(red("Query Error"), "Uknown type on binding result");
         break;
       }
-      addResultRow(query, rowCount, columns[i], value, type);
+      addResultRow(query, rowCount, columns[i], value, size, type);
     }
     rowCount++;
   }
@@ -347,7 +353,7 @@ static void http_call(WrenVM *vm) {
   // Initialize response
   struct HttpResponse response;
   response.error = 0;
-  response.status = 200;
+  response.status = HTTP_OK;
   response.headers = "Content-Type: text/json";
   response.body = "{}";
 
@@ -439,15 +445,17 @@ int save_uploaded_files(struct mg_http_message *hm, char *filesIds) {
       // Prepare
       int result = sqlite3_prepare_v2(
           db,
-          "INSERT INTO BIALET_FILES (name, originalFileName, file, size) "
-          "VALUES (?, ?, ?, ?)",
+          "INSERT INTO BIALET_FILES (name, type, originalFileName, file, size) "
+          "VALUES (?, ?, ?, ?, ?)",
           -1, &stmt, 0);
       if (result == SQLITE_OK) {
+        struct mg_str mimeType = guess_content_type(part.filename, "");
         sqlite3_bind_text(stmt, 1, part.name.ptr, part.name.len, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, part.filename.ptr, part.filename.len,
+        sqlite3_bind_text(stmt, 2, mimeType.ptr, mimeType.len, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, part.filename.ptr, part.filename.len,
                           SQLITE_STATIC);
-        sqlite3_bind_blob(stmt, 3, part.body.ptr, part.body.len, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 4, part.body.len);
+        sqlite3_bind_blob(stmt, 4, part.body.ptr, part.body.len, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 5, part.body.len);
         sqlite3_step(stmt);
         if (first) {
           first = 0;
@@ -456,7 +464,6 @@ int save_uploaded_files(struct mg_http_message *hm, char *filesIds) {
         }
         strcat(filesIds, sqlite3Int64ToString(sqlite3_last_insert_rowid(db)));
         sqlite3_finalize(stmt);
-        printf("Files %s saved\n", filesIds);
       } else {
         message(red("Error on saving files"), sqlite3_errmsg(db));
         return 0;
@@ -469,6 +476,7 @@ int save_uploaded_files(struct mg_http_message *hm, char *filesIds) {
 struct BialetResponse bialet_run(char *module, char *code,
                                  struct mg_http_message *hm) {
   struct BialetResponse r;
+  r.length = 0;
   int error = 0;
   WrenVM *vm = 0;
   if (hm) {
@@ -519,7 +527,30 @@ struct BialetResponse bialet_run(char *module, char *code,
       message(red("Runtime Error"), "Failed to get body");
     } else {
       const char *body = wrenGetSlotString(vm, 0);
-      r.body = string_safe_copy(body);
+      if (body[0] != BIALET_FILE_CHAR) {
+        r.body = string_safe_copy(body);
+      } else {
+        // Use the BIALET_FILE_CHAR to request the file instead of send the
+        // actual body. It will search the file in the database.
+        sqlite3_stmt *stmt;
+        int result = sqlite3_prepare_v2(
+            db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
+        if (!(error = result != SQLITE_OK)) {
+          sqlite3_bind_text(stmt, 1, body + 1, -1, SQLITE_STATIC);
+          if (sqlite3_step(stmt) == SQLITE_ROW) {
+            int len = 0;
+            len = sqlite3_column_bytes(stmt, 0);
+            r.body = safe_malloc(len + 1);
+            memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
+            r.length = len;
+          } else {
+            // If the id is not found, we will send an internal server error.
+            message(red("Error file not found"), sqlite3_errmsg(db));
+            error = 1;
+          }
+          sqlite3_finalize(stmt);
+        }
+      }
     }
     wrenReleaseHandle(vm, outMethod);
     /* Get status from response */
@@ -620,7 +651,7 @@ void addResult(BialetQuery *query) {
 }
 
 void addResultRow(BialetQuery *query, int resultIndex, const char *name,
-                  const char *value, BialetQueryType type) {
+                  const char *value, int size, BialetQueryType type) {
   if (resultIndex < 0 || resultIndex >= query->resultsCount)
     return;
 
@@ -629,8 +660,14 @@ void addResultRow(BialetQuery *query, int resultIndex, const char *name,
   result->rows = (BialetQueryRow *)realloc(
       result->rows, result->rowCount * sizeof(BialetQueryRow));
   BialetQueryRow *newRow = &result->rows[result->rowCount - 1];
-  newRow->name = name != NULL ? strdup(name) : "";
-  newRow->value = value != NULL ? strdup(value) : "";
+  newRow->name = name != NULL ? string_safe_copy(name) : "";
+  if (value != NULL && size > 0) {
+    newRow->value = safe_malloc(size);
+    memcpy(newRow->value, value, size);
+  } else {
+    newRow->value = "";
+  }
+  newRow->size = size;
   newRow->type = type;
 }
 

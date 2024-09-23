@@ -20,8 +20,8 @@
 #ifdef _WIN64
 
 #include <stdio.h>
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 
 #else
 
@@ -56,6 +56,7 @@ typedef enum {
 typedef struct {
   char *name;
   char *value;
+  int size;
   BialetQueryType type;
 } BialetQueryRow;
 
@@ -80,7 +81,7 @@ typedef struct {
 
 BialetQuery *createBialetQuery();
 void addResultRow(BialetQuery *query, int resultIndex, const char *name,
-                  const char *value, BialetQueryType type);
+                  const char *value, int size, BialetQueryType type);
 void addResult(BialetQuery *query);
 void addParameter(BialetQuery *query, const char *value, BialetQueryType type);
 void freeBialetQuery(BialetQuery *query);
@@ -100,8 +101,8 @@ void freeBialetQuery(BialetQuery *query);
 #define BIALET_WELCOME_PAGE                                                      \
   BIALET_HEADER_PAGE                                                             \
   "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a " \
-  "href=\"https://bialet.dev/getting-started.html\" "                                 \
-  "style=\"color:#007FAD\">Getting Started "                                          \
+  "href=\"https://bialet.dev/getting-started.html\" "                            \
+  "style=\"color:#007FAD\">Getting Started "                                     \
   "guide</a></b>." BIALET_FOOTER_PAGE
 #define BIALET_NOT_FOUND_PAGE                                                  \
   BIALET_HEADER_PAGE                                                           \
@@ -109,8 +110,9 @@ void freeBialetQuery(BialetQuery *query);
 #define BIALET_ERROR_PAGE                                                      \
   BIALET_HEADER_PAGE                                                           \
   "🚨 Internal Server Error</h1><p>Oops! Something broke." BIALET_FOOTER_PAGE
-#define BIALET_FORBIDDEN_PAGE                                                     \
-  BIALET_HEADER_PAGE "🚫 Forbidden</h1><p>Sorry, you don't have permission to " \
-                     "access this page." BIALET_FOOTER_PAGE
+#define BIALET_FORBIDDEN_PAGE                                                  \
+  BIALET_HEADER_PAGE                                                           \
+  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                 \
+  "access this page." BIALET_FOOTER_PAGE
 
 #endif

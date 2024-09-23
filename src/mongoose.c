@@ -1846,7 +1846,7 @@ static struct mg_str s_known_types[] = {
 };
 // clang-format on
 
-static struct mg_str guess_content_type(struct mg_str path, const char *extra) {
+struct mg_str guess_content_type(struct mg_str path, const char *extra) {
   struct mg_str k, v, s = mg_str(extra);
   size_t i = 0;
 
@@ -6777,11 +6777,23 @@ void mg_http_serve_ssi(struct mg_connection *c, struct mg_http_message *hm,
   char *code = bialet_read_file(fullpath);
   if (code) {
     struct BialetResponse r = bialet_run((char *)fullpath, code, hm);
-    mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
+    // When there is a length, the response is a file
+    if (r.length > 0) {
+      mg_printf(c,
+                "HTTP/1.1 200 OK\r\n%sContent-Length: %d\r\n\r\n",
+                r.header,
+                (int)r.length);
+      mg_send(c, r.body, r.length);
+      c->is_resp = 0;
+      // Free the response
+      free(r.body);
+      r.body = NULL;
+    } else {
+      mg_http_reply(c, r.status, r.header, r.body, MG_ESC("status"));
+    }
   } else {
     MG_ERROR(("Error reading file: %s", fullpath));
   }
-  (void)root, (void)fullpath;
 }
 
 #ifdef MG_ENABLE_LINES
@@ -8481,12 +8493,10 @@ typedef struct enet_bd_struct_def {
 
 // Descriptor and buffer globals, in non-cached area, 64 bits aligned.
 
-__attribute__((section("NonCacheable,\"aw\",%nobits @")))
-enet_bd_struct_t rx_buffer_descriptor[(ENET_RXBD_NUM)]
-    __attribute__((aligned((64U))));
-__attribute__((section("NonCacheable,\"aw\",%nobits @")))
-enet_bd_struct_t tx_buffer_descriptor[(ENET_TXBD_NUM)]
-    __attribute__((aligned((64U))));
+__attribute__((section("NonCacheable,\"aw\",%nobits @"))) enet_bd_struct_t
+    rx_buffer_descriptor[(ENET_RXBD_NUM)] __attribute__((aligned((64U))));
+__attribute__((section("NonCacheable,\"aw\",%nobits @"))) enet_bd_struct_t
+    tx_buffer_descriptor[(ENET_TXBD_NUM)] __attribute__((aligned((64U))));
 
 uint8_t rx_data_buffer[(ENET_RXBD_NUM)]
                       [((unsigned int)(((ENET_RXBUFF_SIZE)) + (((64U)) - 1U)) &

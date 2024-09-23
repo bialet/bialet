@@ -18,6 +18,7 @@ struct BialetResponse {
   int status;
   char *header;
   char *body;
+  int length;
 };
 
 void bialet_init(struct BialetConfig *config);

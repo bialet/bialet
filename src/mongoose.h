@@ -1324,6 +1324,8 @@ size_t mg_http_next_multipart(struct mg_str, size_t, struct mg_http_part *);
 int mg_http_status(const struct mg_http_message *hm);
 void mg_hello(const char *url);
 
+// Publish guess content type function
+struct mg_str guess_content_type(struct mg_str path, const char *extra);
 
 void mg_http_serve_ssi(struct mg_connection *c, struct mg_http_message *hm,
 const char *root,
