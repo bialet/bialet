@@ -749,9 +749,20 @@ class Config {
 }
 
 class File {
-  construct new() { set_(false) }
   construct new(data) { set_(data) }
   construct get(id) { set_(`SELECT * FROM BIALET_FILES WHERE id = ? AND isTemp = 0`.first([id])) }
+  construct create(name, type, file, size) { create_(name, type, file, size) }
+  construct create(name, type, file) { create_(name, type, file, file.count) }
+  create_(name, type, file, size) {
+    var id = `INSERT INTO BIALET_FILES (name, originalFileName, type, file, size, isTemp) VALUES (?, ?, ?, ?, ?, 0)`.query([name, name, type, file, size])
+    _name = name
+    _id = id
+    _type = type
+    _size = size
+    _file = file
+    _isTemp = false
+    _createdAt = null
+  }
   set_(f) {
     if (!f) {
       _name = null
