@@ -566,7 +566,10 @@ class Query {
   first(p1, p2, p3) { first_([p1, p2, p3]) }
   val { val([]) }
   val() { val([]) }
-  val(param) { first_(param is List ? param : [param]).values.join() }
+  val(param) {
+    var res = first_(param is List ? param : [param])
+    return res is Map ? res.values.join() : null
+  }
   val(p1, p2) { first_([p1, p2]).values.join() }
   val(p1, p2, p3) { first_([p1, p2, p3]).values.join() }
   toNumber { Num.fromString(val) }

@@ -104,6 +104,15 @@ class Response {
   static status(status) { __status = status }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
   static header(header, value) { __headers[header.trim()] = value.trim() }
+  static file(id) {
+    var type = `SELECT type FROM BIALET_FILES WHERE id = ?`.val([id])
+    if (!type) return false
+    // To output the file, you send the char BELL and the image id.
+    // This will be replaced by the file.
+    __out = String.fromByte(26) + "%(id)"
+    header("Content-Type", type)
+    return true
+  }
 
   static json(data) {
     header("Content-Type", "application/json; charset=UTF-8")

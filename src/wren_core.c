@@ -1126,10 +1126,10 @@ DEF_PRIMITIVE(query_fetch) {
   ObjList *list = wrenNewList(vm, query.resultsCount);
   for (int i = 0; i < query.resultsCount; i++) {
     ObjMap *row = wrenNewMap(vm);
-    for (int j = 0; j < query.results[i].rowCount; j++) {
-      // @TODO Add support for other types
-      wrenMapSet(vm, row, wrenNewString(vm, query.results[i].rows[j].name),
-                 wrenNewString(vm, query.results[i].rows[j].value));
+    BialetQueryResult res = query.results[i];
+    for (int j = 0; j < res.rowCount; j++) {
+      wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name),
+                 wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size));
     }
     list->elements.data[i] = OBJ_VAL(row);
   }
