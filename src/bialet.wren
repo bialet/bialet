@@ -83,7 +83,8 @@ class Request {
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static file(name) {
     var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE name = ? AND id IN (%(__files))", [name])
-    return res.count > 0 ? res[0] : null
+    if (res.count == 0) return null
+    return File.new(res[0]).save
   }
 }
 
@@ -747,6 +748,50 @@ class Config {
   static json(key, val) { set(key, Json.stringify(val)) }
 }
 
+class File {
+  construct new() { set_(false) }
+  construct new(data) { set_(data) }
+  construct get(id) { set_(`SELECT * FROM BIALET_FILES WHERE id = ? AND isTemp = 0`.first([id])) }
+  set_(f) {
+    if (!f) {
+      _name = null
+      _id = null
+      _type = null
+      _size = null
+      _file = null
+      _isTemp = false
+      _createdAt = null
+      return
+    }
+    _name = f["originalFileName"]
+    _id = f["id"]
+    _type = f["type"]
+    _size = Num.fromString("%(f["size"])")
+    _createdAt = f["createdAt"]
+    _isTemp = f["isTemp"] == "0"
+  }
+  id { _id }
+  type { _type }
+  name { _name }
+  size { _size }
+  isTemp { _isTemp }
+  createdAt { _createdAt }
+  destroy { `DELETE FROM BIALET_FILES WHERE id = ? LIMIT 1`.query(_id) }
+  destroy() { destroy }
+  save {
+    _isTemp = false
+    `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ? LIMIT 1`.query(_id)
+    return this
+  }
+  save() { save }
+  temp {
+    _isTemp = true
+    `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ? LIMIT 1`.query(_id)
+    return this
+  }
+  temp() { temp }
+}
+
 class Db {
   static init {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
@@ -754,13 +799,13 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_USERS (id INTEGER PRIMARY KEY, email TEXT, password TEXT,
     name TEXT, isAdmin INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
-    `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
   }
 
   static clean {
     // TODO: Set expiration session and files date in config
     `DELETE FROM BIALET_SESSION WHERE updatedAt < date('now', '-1 year')`.query()
-    `DELETE FROM BIALET_FILES WHERE createdAt < date('now', '-1 day')`.query()
+    `DELETE FROM BIALET_FILES WHERE isTemp = 1 AND createdAt < date('now', '-1 day')`.query()
   }
 
   static migrate(version, schema) {
