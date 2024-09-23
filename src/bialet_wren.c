@@ -204,9 +204,14 @@ static void query_sqlite_execute(WrenVM *vm, BialetQuery *query) {
         value = (const char *)sqlite3_column_text(stmt, i);
         break;
       case SQLITE_TEXT:
-      case SQLITE_BLOB:
         type = BIALETQUERYTYPE_STRING;
         value = (const char *)sqlite3_column_text(stmt, i);
+        break;
+      case SQLITE_BLOB:
+        type = BIALETQUERYTYPE_BLOB;
+        // @FIXME This retrieving is working, but it is not passed correctly to
+        // Wren
+        value = (const char *)sqlite3_column_blob(stmt, i);
         break;
       case SQLITE_NULL:
         type = BIALETQUERYTYPE_NULL;
@@ -424,12 +429,48 @@ char *get_mg_str(struct mg_str str) {
   return val;
 }
 
+int save_uploaded_files(struct mg_http_message *hm, char *filesIds) {
+  struct mg_http_part part;
+  size_t ofs = 0;
+  int first = 1;
+  while ((ofs = mg_http_next_multipart(hm->body, ofs, &part)) > 0) {
+    if (part.body.len > 0) {
+      sqlite3_stmt *stmt;
+      // Prepare
+      int result = sqlite3_prepare_v2(
+          db,
+          "INSERT INTO BIALET_FILES (name, originalFileName, file, size) "
+          "VALUES (?, ?, ?, ?)",
+          -1, &stmt, 0);
+      if (result == SQLITE_OK) {
+        sqlite3_bind_text(stmt, 1, part.name.ptr, part.name.len, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, part.filename.ptr, part.filename.len,
+                          SQLITE_STATIC);
+        sqlite3_bind_blob(stmt, 3, part.body.ptr, part.body.len, SQLITE_STATIC);
+        sqlite3_bind_int(stmt, 4, part.body.len);
+        sqlite3_step(stmt);
+        if (first) {
+          first = 0;
+        } else {
+          strcat(filesIds, ",");
+        }
+        strcat(filesIds, sqlite3Int64ToString(sqlite3_last_insert_rowid(db)));
+        sqlite3_finalize(stmt);
+        printf("Files %s saved\n", filesIds);
+      } else {
+        message(red("Error on saving files"), sqlite3_errmsg(db));
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
 struct BialetResponse bialet_run(char *module, char *code,
                                  struct mg_http_message *hm) {
   struct BialetResponse r;
   int error = 0;
   WrenVM *vm = 0;
-
   if (hm) {
     char url[MAX_URL_LEN];
     snprintf(url, MAX_URL_LEN, "%s", get_mg_str(hm->uri));
@@ -445,13 +486,18 @@ struct BialetResponse bialet_run(char *module, char *code,
   wrenInterpret(vm, MAIN_MODULE_NAME, bialetModuleSource);
   if (hm) {
     /* Initialize request */
-    wrenEnsureSlots(vm, 3);
+    wrenEnsureSlots(vm, 4);
     wrenGetVariable(vm, MAIN_MODULE_NAME, "Request", 0);
     WrenHandle *requestClass = wrenGetSlotHandle(vm, 0);
-    WrenHandle *initMethod = wrenMakeCallHandle(vm, "init(_,_)");
+    WrenHandle *initMethod = wrenMakeCallHandle(vm, "init(_,_,_)");
     wrenSetSlotHandle(vm, 0, requestClass);
     wrenSetSlotString(vm, 1, get_mg_str(hm->message));
     wrenSetSlotString(vm, 2, hm->bialet_routes);
+
+    char filesIds[MAX_URL_LEN] = "";
+    save_uploaded_files(hm, filesIds);
+    wrenSetSlotString(vm, 3, filesIds);
+
     if ((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
       message(red("Runtime Error"), "Failed to initialize request");
     wrenReleaseHandle(vm, requestClass);
@@ -462,8 +508,8 @@ struct BialetResponse bialet_run(char *module, char *code,
     WrenInterpretResult result = wrenInterpret(vm, module, code);
     error = result != WREN_RESULT_SUCCESS;
   }
-  wrenEnsureSlots(vm, 1);
   if (!error) {
+    wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, MAIN_MODULE_NAME, "Response", 0);
     WrenHandle *responseClass = wrenGetSlotHandle(vm, 0);
     /* Get body from response */
@@ -475,7 +521,9 @@ struct BialetResponse bialet_run(char *module, char *code,
       const char *body = wrenGetSlotString(vm, 0);
       r.body = string_safe_copy(body);
     }
+    wrenReleaseHandle(vm, outMethod);
     /* Get status from response */
+    wrenEnsureSlots(vm, 1);
     WrenHandle *statusMethod = wrenMakeCallHandle(vm, "status");
     wrenSetSlotHandle(vm, 0, responseClass);
     if ((error = wrenCall(vm, statusMethod) != WREN_RESULT_SUCCESS)) {
@@ -484,8 +532,10 @@ struct BialetResponse bialet_run(char *module, char *code,
       const double status = wrenGetSlotDouble(vm, 0);
       r.status = (int)status;
     }
+    wrenReleaseHandle(vm, statusMethod);
     /* Get headers from response */
     if (hm) {
+      wrenEnsureSlots(vm, 1);
       WrenHandle *headersMethod = wrenMakeCallHandle(vm, "headers");
       wrenSetSlotHandle(vm, 0, responseClass);
       if ((error = wrenCall(vm, headersMethod) != WREN_RESULT_SUCCESS)) {
@@ -498,8 +548,6 @@ struct BialetResponse bialet_run(char *module, char *code,
     }
     /* Clean Wren vm */
     wrenReleaseHandle(vm, responseClass);
-    wrenReleaseHandle(vm, outMethod);
-    wrenReleaseHandle(vm, statusMethod);
   }
   wrenFreeVM(vm);
 

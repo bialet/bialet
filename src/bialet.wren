@@ -10,11 +10,12 @@
 //
 
 class Request {
-  static init(message, route) {
+  static init(message, route, files) {
     __message = message
     __headers = {}
     __get = {}
     __post = {}
+    __files = files
     var lines = message.split("\n")
     var tmp = lines.removeAt(0).split(" ")
     __method = tmp[0]
@@ -80,7 +81,10 @@ class Request {
   static get(name) { __get[name] ? __get[name]:null }
   static post(name) { __post[name] ? __post[name]:null }
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
-
+  static file(name) {
+    var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE name = ? AND id IN (%(__files))", [name])
+    return res.count > 0 ? res[0] : null
+  }
 }
 
 class Response {
@@ -741,6 +745,13 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_USERS (id INTEGER PRIMARY KEY, email TEXT, password TEXT,
     name TEXT, isAdmin INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+  }
+
+  static clean {
+    // TODO: Set expiration session and files date in config
+    `DELETE FROM BIALET_SESSION WHERE updatedAt < date('now', '-1 year')`.query()
+    `DELETE FROM BIALET_FILES WHERE createdAt < date('now', '-1 day')`.query()
   }
 
   static migrate(version, schema) {
@@ -749,6 +760,7 @@ class Db {
       schema.toString.split(";").each{|q| Query.fromString(q, []) }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
     }
+    Db.clean
   }
   static save(table, values) {
     var bind = []
