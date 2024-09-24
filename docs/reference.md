@@ -43,6 +43,10 @@ Returns the value of a specified POST parameter.
 Returns a specific part of the request route.
 - `pos`: The position of the route segment.
 
+### file(name)
+Fetches a file from the database based on its name and returns it as a `File` object if found. If the file is not found, returns `null`.
+- `name`: The name of the file to retrieve.
+
 ## Response
 A class to construct and manage HTTP responses, including setting headers, cookies, and the response body.
 
@@ -78,6 +82,10 @@ Sets a response header.
 ### json(data)
 Sends a JSON response.
 - `data`: The data to be JSON-encoded.
+
+### file(id)
+Fetches the file type based on its ID and output the file, setting the appropriate headers.
+- `id`: The ID of the file to fetch.
 
 ### page(title, message)
 Generates a simple HTML page response.
@@ -209,6 +217,14 @@ Finds the line and column position in a text for a specified index.
 Escapes special HTML characters in a string to prevent XSS attacks.
 - `str`: The string to escape.
 
+### urlEncode(str)
+Encodes a string for use in a URL by replacing certain characters with their URL-safe equivalents.
+- `str`: The string to encode.
+
+### params(params)
+Encodes a dictionary of parameters into a URL-encoded string.
+- `params`: A dictionary of key-value pairs to encode.
+
 ### encodeBase64(input)
 Encodes a given input string to Base64.
 - `input`: The string to encode.
@@ -260,6 +276,9 @@ Initializes the database connection.
 Performs database migrations to a specified version using the given schema.
 - `version`: The target version of the database schema.
 - `schema`: The schema to use for the migration.
+
+### clean
+Removes expired sessions and temporary files from the database.
 
 ### save(table, values)
 Saves data to a specified table.
@@ -428,3 +447,35 @@ Subtracts a date or time interval from the date.
 ### diff(otherDate)
 Returns the difference between the current date and `otherDate`.
 - `otherDate`: The `Date` object to compare against.
+
+## File
+
+### new(data)
+Constructor that sets the file data.
+- `data`: The data Map representing the file.
+
+### get(id)
+Fetches a file from the database by its ID if it is not temporary and sets the file attributes.
+- `id`: The ID of the file to retrieve.
+
+### create(name, type, file, size)
+Creates a new file in the database with the given name, type, content, and size.
+- `name`: The name of the file.
+- `type`: The MIME type of the file.
+- `file`: The file content.
+- `size`: The size of the file.
+
+### create(name, type, file)
+Creates a new file in the database with the given name, type, and content. The size is determined by the content.
+- `name`: The name of the file.
+- `type`: The MIME type of the file.
+- `file`: The file content.
+
+### destroy
+Deletes the file from the database based on its ID.
+
+### save
+Marks the file as permanent by setting `isTemp` to false in the database.
+
+### temp
+Marks the file as temporary by setting `isTemp` to true in the database.
