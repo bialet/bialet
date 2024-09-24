@@ -57,7 +57,7 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="next" title="Installation and Usage" href="installation.html" />
     <link rel="prev" title="Bialet" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -173,9 +173,11 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -432,7 +434,7 @@ document.write(`
 <p>Now let’s create the <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> file.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="nc">World</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="err">&#39;</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="nc">World</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The index.wren file is the main HTML file. It works the same as the index.html file.
@@ -440,8 +442,16 @@ Go to <a class="reference external" href="http://localhost:7000">localhost:7000<
 <p>Wren don’t use <code class="docutils literal notranslate"><span class="pre">;</span></code> to separate statements, it uses new lines instead.
 We import the <code class="docutils literal notranslate"><span class="pre">Response</span></code> class from the framework and then call the <code class="docutils literal notranslate"><span class="pre">out()</span></code> method
 to print the HTML.</p>
-<p>The HTML is a string. You can use <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">'</span></code> to define a string.
-When having HTML it is recommended to use the <code class="docutils literal notranslate"><span class="pre">'</span></code> to avoid escaping the <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> in the attributes.</p>
+<p>Inline HTML Strings allow you to write HTML directly in your Wren files,
+keeping your code clean and simple. This feature is similar to JSX in React but instead
+of creating objects, it generates plain strings. You can use interpolation with
+<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> to dynamically insert variables, conditions, or loops into your HTML.</p>
+<p>In the example above, <code class="docutils literal notranslate"><span class="pre">&lt;p&gt;Hello</span> <span class="pre">World!&lt;/p&gt;</span></code> is an Inline HTML String. It outputs
+the string exactly as you wrote it, which makes generating HTML content in your Wren
+application very intuitive. This approach ensures that the HTML you write looks the
+same as it would in any HTML document, but with the added flexibility of Wren’s
+powerful string interpolation.</p>
+<p>More details can be found in the <a class="reference internal" href="html-strings.html"><span class="std std-doc">Inline HTML Strings</span></a> section.</p>
 </section>
 <section id="template">
 <h2>Template<a class="headerlink" href="#template" title="Link to this heading">#</a></h2>
@@ -449,8 +459,7 @@ When having HTML it is recommended to use the <code class="docutils literal notr
 <p>In your project directory, create a file named <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>. This file will contain the Template class, where we’ll define a static layout method to render our HTML content dynamically. A static method means that we can call it directly from the class <code class="docutils literal notranslate"><span class="pre">Template.layout(&quot;...&quot;)</span></code>.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">          </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
@@ -459,17 +468,21 @@ When having HTML it is recommended to use the <code class="docutils literal notr
 <span class="w">            </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
 <span class="w">          </span><span class="o">&lt;/</span><span class="n">header</span><span class="o">&gt;</span>
 <span class="w">          </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">)</span>
+<span class="w">            </span><span class="p">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">          </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="err">&#39;</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">html</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p><strong>Inside a string we use the interpolations <code class="docutils literal notranslate"><span class="pre">%(</span> <span class="pre">...</span> <span class="pre">)</span></code>, this will execute the expression and return the result.</strong></p>
+<p><strong>Inside an inline HTML string we use the interpolations <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code>, this will execute the expression and return the result.</strong></p>
+<p>For the regular quotes strings the interpolation is defined as <code class="docutils literal notranslate"><span class="pre">%(</span> <span class="pre">...</span> <span class="pre">)</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Number: </span><span class="si">%(</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Let’s use the Template class to render our HTML content.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 <span class="k">import</span><span class="w"> </span><span class="s">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
@@ -492,25 +505,23 @@ A single expression inside a block with no new line will return the value.</p>
 <p>Before copying the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> code in our layout we will change it a little bit.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// But wait, if we start a string, we can have multilines as well</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">          </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">)</span>
+<span class="w">          </span><span class="p">{{</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">          </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">)</span>
+<span class="w">            </span><span class="p">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">          </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// both methods works the same, returning the string</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span><span class="o">&lt;</span><span class="n">header</span><span class="o">&gt;&lt;</span><span class="n">h1</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;&lt;/</span><span class="n">header</span><span class="o">&gt;</span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">&lt;</span><span class="n">header</span><span class="o">&gt;&lt;</span><span class="n">h1</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;&lt;/</span><span class="n">header</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Now it’s time to copy the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> file to our project. Also, try to create a <code class="docutils literal notranslate"><span class="pre">results.html</span></code> file in Wren, named <code class="docutils literal notranslate"><span class="pre">results.wren</span></code>. You have to escape the <code class="docutils literal notranslate"><span class="pre">%</span></code> with <code class="docutils literal notranslate"><span class="pre">\%</span></code> in order to work.</p>
+<p>Now it’s time to copy the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> file to our project. Also, try to create a <code class="docutils literal notranslate"><span class="pre">results.html</span></code> file in Wren, named <code class="docutils literal notranslate"><span class="pre">results.wren</span></code>.</p>
 <p>Here are the files:</p>
 <ul class="simple">
 <li><p><a class="reference download internal" download="" href="_downloads/3a2841946ca55592b06ad4127f276a81/_app.wren"><span class="xref download myst">_app.wren</span></a></p></li>
@@ -536,24 +547,22 @@ Let’s write a file called <code class="docutils literal notranslate"><span cla
 <span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">simple_poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
 <span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">            </span><span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="si">)</span><span class="s">&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">])</span>
+<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="o">&gt;</span>
+<span class="w">              </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">            </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Vote&quot;</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="err">&#39;</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>It looks like we have a string with <code class="docutils literal notranslate"><span class="pre">`SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">simple_poll`</span></code> but it’s actually a <strong>Query object</strong>. Query objects are used to execute SQL queries in Bialet.
@@ -595,41 +604,35 @@ You should use the <code class="docutils literal notranslate"><span class="pre">
 <span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">simple_poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
 <span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
 
-<span class="w">    </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="err">&#39;</span>
-
-<span class="w">      </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="p">{{</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">            </span><span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="si">)</span><span class="s">&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">])</span>
+<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="o">&gt;</span>
+<span class="w">              </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">            </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Vote&quot;</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
-
-<span class="w">    </span><span class="err">&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="err">&#39;</span>
-
-<span class="w">      </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="n">votes</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="err">&#39;</span><span class="w"> </span><span class="p">})</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="o">&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-
-<span class="w">    </span><span class="err">&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="n">votes</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">        </span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="o">&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="p">}}</span>
 <span class="w">  </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="err">&#39;</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Now we have the last interpolation trick, in order to show some code we use a ternary operator.</p>
-<p><code class="docutils literal notranslate"><span class="pre">%(</span> <span class="pre">someExpression</span> <span class="pre">?</span> <span class="pre">'When</span> <span class="pre">true'</span> <span class="pre">:</span> <span class="pre">'When</span> <span class="pre">false'</span> <span class="pre">)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">someExpression</span> <span class="pre">?</span> <span class="pre">'When</span> <span class="pre">true'</span> <span class="pre">:</span> <span class="pre">'When</span> <span class="pre">false'</span> <span class="pre">}}</span></code></p>
 <p>And once again we have interpolations inside another interpolation.</p>
 </section>
 <section id="put-it-all-together">
@@ -676,26 +679,24 @@ Let’s add a Poll class to the <code class="docutils literal notranslate"><span
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
 
 <span class="w">  </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">action</span><span class="o">=</span><span class="s">&quot;results&quot;</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">h2</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-6&quot;</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">ul</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;grid w-full gap-6 md:grid-cols-2&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%(</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">)</span><span class="s">&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%(</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;id&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">)</span><span class="s">&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;hidden peer&quot;</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="o">/&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">label</span><span class="w"> </span><span class="k">for</span><span class="o">=</span><span class="s">&quot;</span><span class="si">%(</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">)</span><span class="s">&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700&quot;</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">id</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;hidden peer&quot;</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="o">/&gt;</span>
+<span class="w">          </span><span class="o">&lt;</span><span class="n">label</span><span class="w"> </span><span class="k">for</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700&quot;</span><span class="o">&gt;</span>
 <span class="w">            </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full text-lg font-semibold&quot;</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full&quot;</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full text-lg font-semibold&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
 <span class="w">            </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
 <span class="w">            </span><span class="o">&lt;</span><span class="n">svg</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-5 h-5 ms-3 rtl:rotate-180&quot;</span><span class="w"> </span><span class="n">aria</span><span class="o">-</span><span class="n">hidden</span><span class="o">=</span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="n">xmlns</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2000/svg&quot;</span><span class="w"> </span><span class="n">fill</span><span class="o">=</span><span class="s">&quot;none&quot;</span><span class="w"> </span><span class="n">viewBox</span><span class="o">=</span><span class="s">&quot;0 0 14 10&quot;</span><span class="o">&gt;</span>
 <span class="w">              </span><span class="o">&lt;</span><span class="n">path</span><span class="w"> </span><span class="n">stroke</span><span class="o">=</span><span class="s">&quot;currentColor&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">linecap</span><span class="o">=</span><span class="s">&quot;round&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">linejoin</span><span class="o">=</span><span class="s">&quot;round&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">width</span><span class="o">=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="n">d</span><span class="o">=</span><span class="s">&quot;M1 5h12m0 0L9 1m4 4L9 9&quot;</span><span class="o">/&gt;</span>
 <span class="w">            </span><span class="o">&lt;/</span><span class="n">svg</span><span class="o">&gt;</span>
 <span class="w">          </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="err">&#39;</span><span class="w"> </span><span class="p">})</span>
+<span class="w">        </span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;pt-8 flex justify-center&quot;</span><span class="o">&gt;</span>
@@ -703,7 +704,7 @@ Let’s add a Poll class to the <code class="docutils literal notranslate"><span
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
 
-<span class="err">&#39;</span><span class="p">))</span>
+<span class="p">))</span>
 </pre></div>
 </div>
 <p>Wren does not have a <a class="reference external" href="https://wren.io/classes.html#constructors">default constructor</a>, we use the <code class="docutils literal notranslate"><span class="pre">constructor</span></code> keyword on any method and use that method to create the object.
@@ -726,11 +727,11 @@ Once we know the form was correctly validated we can redirect to the results pag
 <span class="p">}</span>
 
 <span class="c1">// Remember to change the action attribute in the form!</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="err">&#39;</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
 <span class="w">  </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">action</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">...</span>
 <span class="w">  </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
-<span class="err">&#39;</span><span class="p">))</span>
+<span class="p">))</span>
 </pre></div>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> we check if the request is a POST request.</p>
@@ -752,17 +753,18 @@ We need to convert them to numbers with the <code class="docutils literal notran
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="err">&#39;</span>
-
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="o">&lt;</span><span class="n">h2</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="err">&#39;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">h3</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">section</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">h3</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full bg-gray-200 h-8 mb-6 rounded-full dark:bg-gray-700&quot;</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full&quot;</span><span class="w"> </span><span class="n">style</span><span class="o">=</span><span class="s">&quot;width: </span><span class="si">%(</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="si">)</span><span class="se">\%</span><span class="s">&quot;</span><span class="o">&gt;</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">)\</span><span class="o">%&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full&quot;</span><span class="w"> </span><span class="n">style</span><span class="o">=</span><span class="s">&quot;width: {{ poll.percentage(opt) }}</span><span class="err">%</span><span class="s">&quot;</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}}</span><span class="o">%&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">p</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-md font-medium text-gray-700 dark:text-gray-400&quot;</span><span class="o">&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="nc">Votes</span><span class="o">:</span><span class="w"> </span><span class="o">%</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">])</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="err">&#39;</span><span class="w"> </span><span class="p">})</span>
-<span class="err">&#39;</span><span class="p">))</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="n">p</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-md font-medium text-gray-700 dark:text-gray-400&quot;</span><span class="o">&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="nc">Votes</span><span class="o">:</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="o">&lt;/</span><span class="n">section</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
+<span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
+<span class="p">))</span>
 </pre></div>
 </div>
 <p>We are almost done. Let’s list the problems we need to fix:</p>
@@ -849,7 +851,7 @@ We need to convert them to numbers with the <code class="docutils literal notran
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">Installation and Usage</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

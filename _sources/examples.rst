@@ -1,6 +1,12 @@
 Examples
 ========
 
+Simple query list
+-----------------
+
+.. include:: examples/simple.wren
+  :code: wren
+
 Hello World
 -----------
 
@@ -29,6 +35,18 @@ JSON Response
 -------------
 
 .. include:: examples/json.wren
+   :code: wren
+
+Form Upload
+------------
+
+.. include:: examples/upload.wren
+   :code: wren
+
+File Creation
+-------------
+
+.. include:: examples/random-emoji.wren
    :code: wren
 
 HTTP API Call

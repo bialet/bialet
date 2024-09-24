@@ -1,7 +1,7 @@
 import "bialet" for Response
 import "_app" for Template
 
-Response.out(Template.layout('
+Response.out(Template.layout(
 
   <form action="results" method="post">
     <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
@@ -40,4 +40,4 @@ Response.out(Template.layout('
     </div>
   </form>
 
-'))
+))

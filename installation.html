@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Installation" />
+<meta property="og:title" content="Installation and Usage" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
@@ -16,7 +16,7 @@
 <meta property="og:image:alt" content="Bialet" />
 <meta name="description" content="With Docker Compose: Use the Bialet Skeleton repository or the framework repository to start Docker Compose the application. Customizing the Application Directory: To specify a custom directory for..." />
 
-    <title>Installation &#8212; Bialet  documentation</title>
+    <title>Installation and Usage &#8212; Bialet  documentation</title>
   
   
   
@@ -173,9 +173,11 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -381,7 +383,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Installation</h1>
+    <h1>Installation and Usage</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -412,6 +414,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-parameters">CLI Parameters</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run code from the Command Line</a></li>
 </ul>
             </nav>
         </div>
@@ -423,8 +426,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+  <section id="installation-and-usage">
+<h1>Installation and Usage<a class="headerlink" href="#installation-and-usage" title="Link to this heading">#</a></h1>
 <section id="with-docker-compose">
 <h2>With Docker Compose<a class="headerlink" href="#with-docker-compose" title="Link to this heading">#</a></h2>
 <p>Use the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository or the <a class="reference external" href="https://github.com/bialet/bialet">framework repository</a>
@@ -533,7 +536,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
 <td><p>Ignored files, comma separated list of glob expressions</p></td>
-<td><p>README*,LICENSE*,package.*</p></td>
+<td><p>README*, LICENSE* , *.json, *.yml, *.yaml</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Memory limit (MB)</p></td>
@@ -555,6 +558,19 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 </table>
 </div>
 </section>
+</section>
+<section id="run-code-from-the-command-line">
+<h2>Run code from the Command Line<a class="headerlink" href="#run-code-from-the-command-line" title="Link to this heading">#</a></h2>
+<p>To run code from the command line, use the <code class="docutils literal notranslate"><span class="pre">-r</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;System.print(&quot;Hello, World!&quot;)&#39;</span>
+</pre></div>
+</div>
+<p>The response will be printed directly.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;import &quot;bialet&quot; for Response</span>
+<span class="s1">Response.out(&quot;No log, plain response&quot;)&#39;</span>
+</pre></div>
+</div>
+<p>You have to respect new lines in the code.</p>
 </section>
 </section>
 
@@ -624,6 +640,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-parameters">CLI Parameters</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run code from the Command Line</a></li>
 </ul>
   </nav></div>
 

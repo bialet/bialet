@@ -29,7 +29,7 @@ Now let's create the `index.wren` file.
 ```wren
 import "bialet" for Response
 
-Response.out('<p>Hello World!</p>')
+Response.out(<p>Hello World!</p>)
 ```
 
 The index.wren file is the main HTML file. It works the same as the index.html file.
@@ -39,8 +39,18 @@ Wren don't use `;` to separate statements, it uses new lines instead.
 We import the `Response` class from the framework and then call the `out()` method
 to print the HTML.
 
-The HTML is a string. You can use `"` or `'` to define a string.
-When having HTML it is recommended to use the `'` to avoid escaping the `"` in the attributes.
+Inline HTML Strings allow you to write HTML directly in your Wren files,
+keeping your code clean and simple. This feature is similar to JSX in React but instead
+of creating objects, it generates plain strings. You can use interpolation with
+`{{ }}` to dynamically insert variables, conditions, or loops into your HTML.
+
+In the example above, `<p>Hello World!</p>` is an Inline HTML String. It outputs
+the string exactly as you wrote it, which makes generating HTML content in your Wren
+application very intuitive. This approach ensures that the HTML you write looks the
+same as it would in any HTML document, but with the added flexibility of Wren's
+powerful string interpolation.
+
+More details can be found in the [Inline HTML Strings](html-strings.md) section.
 
 ## Template
 
@@ -51,8 +61,7 @@ In your project directory, create a file named `_app.wren`. This file will conta
 ```wren
 class Template {
   static layout(content) {
-    var html = '
-      <html>
+    var html = <html>
         <head>
           <title>Poll</title>
         </head>
@@ -61,16 +70,22 @@ class Template {
             <h1><a href=".">Poll</a></h1>
           </header>
           <main>
-            %( content )
+            {{ content }}
           </main>
         </body>
       </html>
-    '
     return html
   }
 }
 ```
-**Inside a string we use the interpolations `%( ... )`, this will execute the expression and return the result.**
+**Inside an inline HTML string we use the interpolations `{{ ... }}`, this will execute the expression and return the result.**
+
+For the regular quotes strings the interpolation is defined as `%( ... )`.
+
+```wren
+var number = 5
+System.print("Number: %( number )")
+```
 
 Let's use the Template class to render our HTML content.
 
@@ -100,25 +115,23 @@ Before copying the `vote.html` code in our layout we will change it a little bit
 ```wren
 class Template {
   // But wait, if we start a string, we can have multilines as well
-  static layout(content) { '
-      <html>
+  static layout(content) { <html>
         <head>
           <title>Poll</title>
         </head>
         <body>
-          %( header )
+          {{ header }}
           <main>
-            %( content )
+            {{ content }}
           </main>
         </body>
-      </html>
-    ' }
+      </html> }
   // both methods works the same, returning the string
-  static header { '<header><h1><a href=".">Poll</a></h1></header>' }
+  static header { <header><h1><a href=".">Poll</a></h1></header> }
 }
 ```
 
-Now it's time to copy the `vote.html` file to our project. Also, try to create a `results.html` file in Wren, named `results.wren`. You have to escape the `%` with `\%` in order to work.
+Now it's time to copy the `vote.html` file to our project. Also, try to create a `results.html` file in Wren, named `results.wren`.
 
 Here are the files:
 
@@ -150,24 +163,22 @@ import "bialet" for Response
 var options = `SELECT * FROM simple_poll`.fetch()
 System.print(options)
 
-Response.out('
+Response.out(
 <html>
   <body>
     <h1>Has web development become overly complex?</h1>
       <form method="post">
-        %( options.map{ |opt| '
-          <p>
+        {{ options.map{ |opt| <p>
             <label>
-              <input type="radio" name="vote" value="%(opt["answer"])">
-              %(opt["answer"])
+              <input type="radio" name="vote" value="{{ opt["answer"] }}">
+              {{ opt["answer"] }}
             </label>
-          </p>
-        ' } )
+          </p> } }}
         <p><input type="submit" value="Vote"></p>
       </form>
   </body>
 </html>
-')
+)
 ```
 
 It looks like we have a string with `` `SELECT * FROM simple_poll` `` but it's actually a **Query object**. Query objects are used to execute SQL queries in Bialet.
@@ -219,42 +230,36 @@ if (Request.isPost) {
 var options = `SELECT * FROM simple_poll`.fetch()
 System.print(options)
 
-Response.out('
+Response.out(
 <html>
   <body>
     <h1>Has web development become overly complex?</h1>
 
-    %( !vote ? '
-
-      <form method="post">
-        %( options.map{ |opt| '
-          <p>
+    {{ !vote ? <form method="post">
+        {{ options.map{ |opt| <p>
             <label>
-              <input type="radio" name="vote" value="%(opt["answer"])">
-              %(opt["answer"])
+              <input type="radio" name="vote" value="{{ opt["answer"] }}">
+              {{ opt["answer"] }}
             </label>
-          </p>
-        ' } )
+          </p> } }}
         <p><input type="submit" value="Vote"></p>
-      </form>
-
-    ' : '
-
-      <p>Thank you for voting!</p>
-      <ul>
-        %( options.map{|opt| '<li>%(opt["answer"]) - %(opt["votes"]) votes</li>' })
-      </ul>
-      <p><a href="">Vote again</a></p>
-
-    ')
+      </form> :
+      <main>
+        <p>Thank you for voting!</p>
+        <ul>
+          {{ options.map{|opt| <li>{{ opt["answer"] }} - {{ opt["votes"] }} votes</li> } }}
+        </ul>
+        <p><a href="">Vote again</a></p>
+      </main>
+    }}
   </body>
 </html>
-')
+)
 ```
 
 Now we have the last interpolation trick, in order to show some code we use a ternary operator.
 
-`%( someExpression ? 'When true' : 'When false' )`
+`{{ someExpression ? 'When true' : 'When false' }}`
 
 And once again we have interpolations inside another interpolation.
 
@@ -311,26 +316,24 @@ import "_app" for Template, Poll
 
 var poll = Poll.new()
 
-Response.out(Template.layout('
+Response.out(Template.layout(
 
   <form action="results" method="post">
     <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
     <div class="mb-6">
       <ul class="grid w-full gap-6 md:grid-cols-2">
-        %( poll.options.map { |opt| '
-        <li>
-          <input type="radio" id="%( opt["answer"] )" name="vote" value="%( opt["id"] )" class="hidden peer" required />
-          <label for="%( opt["answer"] )" class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+        {{ poll.options.map { |opt| <li>
+          <input type="radio" id="{{ opt["answer"] }}" name="vote" value="{{ opt["id"] }}" class="hidden peer" required />
+          <label for="{{ opt["answer"] }}" class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
             <div class="block">
-              <div class="w-full text-lg font-semibold">%( opt["answer"] )</div>
-              <div class="w-full">%( opt["comment"] )</div>
+              <div class="w-full text-lg font-semibold">{{ opt["answer"] }}</div>
+              <div class="w-full">{{ opt["comment"] }}</div>
             </div>
             <svg class="w-5 h-5 ms-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
             </svg>
           </label>
-        </li>
-        ' })
+        </li> } }}
       </ul>
     </div>
     <div class="pt-8 flex justify-center">
@@ -338,7 +341,7 @@ Response.out(Template.layout('
     </div>
   </form>
 
-'))
+))
 ```
 
 Wren does not have a [default constructor](https://wren.io/classes.html#constructors), we use the `constructor` keyword on any method and use that method to create the object.
@@ -364,11 +367,11 @@ if (Request.isPost) {
 }
 
 // Remember to change the action attribute in the form!
-Response.out(Template.layout('
+Response.out(Template.layout(
   <form action="/" method="post">
   ...
   </form>
-'))
+))
 ```
 
 With `Request.isPost` we check if the request is a POST request.
@@ -397,17 +400,18 @@ import "_app" for Template, Poll
 var poll = Poll.new()
 System.print(poll.options)
 
-Response.out(Template.layout('
-
+Response.out(Template.layout(
+<main>
   <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
-  %( poll.options.map{ |opt| '
-    <h3 class="mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white">%(opt["answer"])</h3>
+  {{ poll.options.map{ |opt| <section>
+    <h3 class="mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white">{{ opt["answer"] }}</h3>
     <div class="w-full bg-gray-200 h-8 mb-6 rounded-full dark:bg-gray-700">
-      <div class="bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full" style="width: %( poll.percentage(opt) )\%"> %( poll.percentage(opt) )\%</div>
+      <div class="bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full" style="width: {{ poll.percentage(opt) }}%"> {{ poll.percentage(opt) }}%</div>
     </div>
-    <p class="mb-5 text-md font-medium text-gray-700 dark:text-gray-400">Total Votes: %(opt["votes"])</p>
-  ' })
-'))
+    <p class="mb-5 text-md font-medium text-gray-700 dark:text-gray-400">Total Votes: {{ opt["votes"] }}</p>
+  </section> } }}
+</main>
+))
 ```
 
 We are almost done. Let's list the problems we need to fix:
@@ -469,4 +473,3 @@ Here are the final files:
 * [_migration.wren](getting-started/3-final/_migration.wren)
 * [index.wren](getting-started/3-final/index.wren)
 * [results.wren](getting-started/3-final/results.wren)
-
