@@ -405,6 +405,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-name">file(name)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response">Response</a><ul class="nav section-nav flex-column">
@@ -417,6 +418,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addcookieheader-value">addCookieHeader(value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-header-value">header(header, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-data">json(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-id">file(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-title-message">page(title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
@@ -457,6 +459,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-str">reverse(str)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#getpositionforindex-text-index">getPositionForIndex(text, index)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlescape-str">htmlEscape(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#urlencode-str">urlEncode(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#params-params">params(params)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
 </ul>
@@ -474,6 +478,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">init()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clean">clean</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
 </ul>
 </li>
@@ -517,6 +522,16 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-data">new(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
 </li>
 </ul>
@@ -598,6 +613,13 @@ document.write(`
 <li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code>: The position of the route segment.</p></li>
 </ul>
 </section>
+<section id="file-name">
+<h3>file(name)<a class="headerlink" href="#file-name" title="Link to this heading">#</a></h3>
+<p>Fetches a file from the database based on its name and returns it as a <code class="docutils literal notranslate"><span class="pre">File</span></code> object if found. If the file is not found, returns <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the file to retrieve.</p></li>
+</ul>
+</section>
 </section>
 <section id="response">
 <h2>Response<a class="headerlink" href="#response" title="Link to this heading">#</a></h2>
@@ -652,6 +674,13 @@ document.write(`
 <p>Sends a JSON response.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to be JSON-encoded.</p></li>
+</ul>
+</section>
+<section id="file-id">
+<h3>file(id)<a class="headerlink" href="#file-id" title="Link to this heading">#</a></h3>
+<p>Fetches the file type based on its ID and output the file, setting the appropriate headers.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: The ID of the file to fetch.</p></li>
 </ul>
 </section>
 <section id="page-title-message">
@@ -862,6 +891,20 @@ document.write(`
 <li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: The string to escape.</p></li>
 </ul>
 </section>
+<section id="urlencode-str">
+<h3>urlEncode(str)<a class="headerlink" href="#urlencode-str" title="Link to this heading">#</a></h3>
+<p>Encodes a string for use in a URL by replacing certain characters with their URL-safe equivalents.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">str</span></code>: The string to encode.</p></li>
+</ul>
+</section>
+<section id="params-params">
+<h3>params(params)<a class="headerlink" href="#params-params" title="Link to this heading">#</a></h3>
+<p>Encodes a dictionary of parameters into a URL-encoded string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: A dictionary of key-value pairs to encode.</p></li>
+</ul>
+</section>
 <section id="encodebase64-input">
 <h3>encodeBase64(input)<a class="headerlink" href="#encodebase64-input" title="Link to this heading">#</a></h3>
 <p>Encodes a given input string to Base64.</p>
@@ -946,6 +989,10 @@ document.write(`
 <li><p><code class="docutils literal notranslate"><span class="pre">version</span></code>: The target version of the database schema.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">schema</span></code>: The schema to use for the migration.</p></li>
 </ul>
+</section>
+<section id="clean">
+<h3>clean<a class="headerlink" href="#clean" title="Link to this heading">#</a></h3>
+<p>Removes expired sessions and temporary files from the database.</p>
 </section>
 <section id="save-table-values">
 <h3>save(table, values)<a class="headerlink" href="#save-table-values" title="Link to this heading">#</a></h3>
@@ -1196,6 +1243,54 @@ document.write(`
 </ul>
 </section>
 </section>
+<section id="file">
+<h2>File<a class="headerlink" href="#file" title="Link to this heading">#</a></h2>
+<section id="new-data">
+<h3>new(data)<a class="headerlink" href="#new-data" title="Link to this heading">#</a></h3>
+<p>Constructor that sets the file data.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data Map representing the file.</p></li>
+</ul>
+</section>
+<section id="get-id">
+<h3>get(id)<a class="headerlink" href="#get-id" title="Link to this heading">#</a></h3>
+<p>Fetches a file from the database by its ID if it is not temporary and sets the file attributes.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: The ID of the file to retrieve.</p></li>
+</ul>
+</section>
+<section id="create-name-type-file-size">
+<h3>create(name, type, file, size)<a class="headerlink" href="#create-name-type-file-size" title="Link to this heading">#</a></h3>
+<p>Creates a new file in the database with the given name, type, content, and size.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: The MIME type of the file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code>: The size of the file.</p></li>
+</ul>
+</section>
+<section id="create-name-type-file">
+<h3>create(name, type, file)<a class="headerlink" href="#create-name-type-file" title="Link to this heading">#</a></h3>
+<p>Creates a new file in the database with the given name, type, and content. The size is determined by the content.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code>: The MIME type of the file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
+</ul>
+</section>
+<section id="id5">
+<h3>destroy<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p>Deletes the file from the database based on its ID.</p>
+</section>
+<section id="save">
+<h3>save<a class="headerlink" href="#save" title="Link to this heading">#</a></h3>
+<p>Marks the file as permanent by setting <code class="docutils literal notranslate"><span class="pre">isTemp</span></code> to false in the database.</p>
+</section>
+<section id="temp">
+<h3>temp<a class="headerlink" href="#temp" title="Link to this heading">#</a></h3>
+<p>Marks the file as temporary by setting <code class="docutils literal notranslate"><span class="pre">isTemp</span></code> to true in the database.</p>
+</section>
+</section>
 </section>
 
 
@@ -1255,6 +1350,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-name">file(name)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response">Response</a><ul class="nav section-nav flex-column">
@@ -1267,6 +1363,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addcookieheader-value">addCookieHeader(value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-header-value">header(header, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-data">json(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-id">file(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#page-title-message">page(title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
@@ -1307,6 +1404,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-str">reverse(str)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#getpositionforindex-text-index">getPositionForIndex(text, index)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlescape-str">htmlEscape(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#urlencode-str">urlEncode(str)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#params-params">params(params)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
 </ul>
@@ -1324,6 +1423,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">init()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clean">clean</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
 </ul>
 </li>
@@ -1367,6 +1467,16 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-data">new(data)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
 </li>
 </ul>
