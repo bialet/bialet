@@ -174,9 +174,11 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -414,24 +416,25 @@ document.write(`
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)[</span><span class="s">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">&#39;</span>
+<span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&lt;!</span><span class="n">doctype</span><span class="w"> </span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">%</span><span class="p">(</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">)</span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">      </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="err">&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">idUrlParam</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="err">&#39;</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">👋</span><span class="w"> </span><span class="nc">Hello</span><span class="w"> </span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;%</span><span class="p">(</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="err">&#39;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span>
+<span class="w">  </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">👋</span><span class="w"> </span><span class="nc">Hello</span><span class="w"> </span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">)</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="p">)</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
 </pre></div>
 </div>
