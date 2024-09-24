@@ -70,7 +70,7 @@ Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.5.zip
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.6.zip
 
         :octicon:`file-zip;2em;sd-text-info`
 
