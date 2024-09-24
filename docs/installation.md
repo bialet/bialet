@@ -44,7 +44,7 @@ brew install sqlite3 openssl curl
 * libsqlite3-0.dll
 * libssl-3-x64.dll
 
-## Building the Project
+### Building the Project
 
 After installing the dependencies, compile the project:
 
@@ -57,6 +57,16 @@ To install the built application, run:
 ```bash
 make install
 ```
+
+## Syntax Highlighting
+
+You have available the [plugin for Vim/Neovim](https://github.com/bialet/bialet.vim).
+
+```bash
+Plug 'bialet/bialet.vim'
+```
+
+We are still working on supporting VSCode and other IDEs.
 
 ## Using the Bialet CLI
 
