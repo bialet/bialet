@@ -503,6 +503,7 @@ struct BialetResponse bialet_run(char *module, char *code,
     wrenSetSlotString(vm, 2, hm->bialet_routes);
 
     char filesIds[MAX_URL_LEN] = "";
+    // @TODO @FIXME This is called always and it can be abuse to fill the disk
     save_uploaded_files(hm, filesIds);
     wrenSetSlotString(vm, 3, filesIds);
 
