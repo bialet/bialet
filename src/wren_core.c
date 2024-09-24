@@ -1,3 +1,13 @@
+#include "wren_core.h"
+
+#include "bialet.h"
+#include "wren_common.h"
+#include "wren_core.wren.inc"
+#include "wren_math.h"
+#include "wren_primitive.h"
+#include "wren_utils.h"
+#include "wren_value.h"
+
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
@@ -5,48 +15,46 @@
 #include <string.h>
 #include <time.h>
 
-#include "bialet.h"
-#include "wren_common.h"
-#include "wren_core.h"
-#include "wren_math.h"
-#include "wren_primitive.h"
-#include "wren_utils.h"
-#include "wren_value.h"
-
-#include "wren_core.wren.inc"
-
-DEF_PRIMITIVE(bool_not) { RETURN_BOOL(!AS_BOOL(args[0])); }
+DEF_PRIMITIVE(bool_not) {
+  RETURN_BOOL(!AS_BOOL(args[0]));
+}
 
 DEF_PRIMITIVE(bool_toString) {
-  if (AS_BOOL(args[0])) {
+  if(AS_BOOL(args[0])) {
     RETURN_VAL(CONST_STRING(vm, "true"));
   } else {
     RETURN_VAL(CONST_STRING(vm, "false"));
   }
 }
 
-DEF_PRIMITIVE(class_name) { RETURN_OBJ(AS_CLASS(args[0])->name); }
+DEF_PRIMITIVE(class_name) {
+  RETURN_OBJ(AS_CLASS(args[0])->name);
+}
 
 DEF_PRIMITIVE(class_supertype) {
-  ObjClass *classObj = AS_CLASS(args[0]);
+  ObjClass* classObj = AS_CLASS(args[0]);
 
   // Object has no superclass.
-  if (classObj->superclass == NULL)
+  if(classObj->superclass == NULL)
     RETURN_NULL;
 
   RETURN_OBJ(classObj->superclass);
 }
 
-DEF_PRIMITIVE(class_toString) { RETURN_OBJ(AS_CLASS(args[0])->name); }
+DEF_PRIMITIVE(class_toString) {
+  RETURN_OBJ(AS_CLASS(args[0])->name);
+}
 
-DEF_PRIMITIVE(class_attributes) { RETURN_VAL(AS_CLASS(args[0])->attributes); }
+DEF_PRIMITIVE(class_attributes) {
+  RETURN_VAL(AS_CLASS(args[0])->attributes);
+}
 
 DEF_PRIMITIVE(fiber_new) {
-  if (!validateFn(vm, args[1], "Argument"))
+  if(!validateFn(vm, args[1], "Argument"))
     return false;
 
-  ObjClosure *closure = AS_CLOSURE(args[1]);
-  if (closure->fn->arity > 1) {
+  ObjClosure* closure = AS_CLOSURE(args[1]);
+  if(closure->fn->arity > 1) {
     RETURN_ERROR("Function cannot take more than one parameter.");
   }
 
@@ -67,43 +75,43 @@ DEF_PRIMITIVE(fiber_abort) {
 //
 // [hasValue] is true if a value in [args] is being passed to the new fiber.
 // Otherwise, `null` is implicitly being passed.
-static bool runFiber(WrenVM *vm, ObjFiber *fiber, Value *args, bool isCall,
-                     bool hasValue, const char *verb) {
+static bool runFiber(WrenVM* vm, ObjFiber* fiber, Value* args, bool isCall,
+                     bool hasValue, const char* verb) {
 
-  if (wrenHasError(fiber)) {
+  if(wrenHasError(fiber)) {
     RETURN_ERROR_FMT("Cannot $ an aborted fiber.", verb);
   }
 
-  if (isCall) {
+  if(isCall) {
     // You can't call a called fiber, but you can transfer directly to it,
     // which is why this check is gated on `isCall`. This way, after resuming a
     // suspended fiber, it will run and then return to the fiber that called it
     // and so on.
-    if (fiber->caller != NULL)
+    if(fiber->caller != NULL)
       RETURN_ERROR("Fiber has already been called.");
 
-    if (fiber->state == FIBER_ROOT)
+    if(fiber->state == FIBER_ROOT)
       RETURN_ERROR("Cannot call root fiber.");
 
     // Remember who ran it.
     fiber->caller = vm->fiber;
   }
 
-  if (fiber->numFrames == 0) {
+  if(fiber->numFrames == 0) {
     RETURN_ERROR_FMT("Cannot $ a finished fiber.", verb);
   }
 
   // When the calling fiber resumes, we'll store the result of the call in its
   // stack. If the call has two arguments (the fiber and the value), we only
   // need one slot for the result, so discard the other slot now.
-  if (hasValue)
+  if(hasValue)
     vm->fiber->stackTop--;
 
-  if (fiber->numFrames == 1 &&
-      fiber->frames[0].ip == fiber->frames[0].closure->fn->code.data) {
+  if(fiber->numFrames == 1 &&
+     fiber->frames[0].ip == fiber->frames[0].closure->fn->code.data) {
     // The fiber is being started for the first time. If its function takes a
     // parameter, bind an argument to it.
-    if (fiber->frames[0].closure->fn->arity == 1) {
+    if(fiber->frames[0].closure->fn->arity == 1) {
       fiber->stackTop[0] = hasValue ? args[1] : NULL_VAL;
       fiber->stackTop++;
     }
@@ -124,12 +132,16 @@ DEF_PRIMITIVE(fiber_call1) {
   return runFiber(vm, AS_FIBER(args[0]), args, true, true, "call");
 }
 
-DEF_PRIMITIVE(fiber_current) { RETURN_OBJ(vm->fiber); }
+DEF_PRIMITIVE(fiber_current) {
+  RETURN_OBJ(vm->fiber);
+}
 
-DEF_PRIMITIVE(fiber_error) { RETURN_VAL(AS_FIBER(args[0])->error); }
+DEF_PRIMITIVE(fiber_error) {
+  RETURN_VAL(AS_FIBER(args[0])->error);
+}
 
 DEF_PRIMITIVE(fiber_isDone) {
-  ObjFiber *runFiber = AS_FIBER(args[0]);
+  ObjFiber* runFiber = AS_FIBER(args[0]);
   RETURN_BOOL(runFiber->numFrames == 0 || wrenHasError(runFiber));
 }
 
@@ -158,7 +170,7 @@ DEF_PRIMITIVE(fiber_try) {
   runFiber(vm, AS_FIBER(args[0]), args, true, false, "try");
 
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (!wrenHasError(vm->fiber))
+  if(!wrenHasError(vm->fiber))
     vm->fiber->state = FIBER_TRY;
   return false;
 }
@@ -167,20 +179,20 @@ DEF_PRIMITIVE(fiber_try1) {
   runFiber(vm, AS_FIBER(args[0]), args, true, true, "try");
 
   // If we're switching to a valid fiber to try, remember that we're trying it.
-  if (!wrenHasError(vm->fiber))
+  if(!wrenHasError(vm->fiber))
     vm->fiber->state = FIBER_TRY;
   return false;
 }
 
 DEF_PRIMITIVE(fiber_yield) {
-  ObjFiber *current = vm->fiber;
+  ObjFiber* current = vm->fiber;
   vm->fiber = current->caller;
 
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
   current->state = FIBER_OTHER;
 
-  if (vm->fiber != NULL) {
+  if(vm->fiber != NULL) {
     // Make the caller's run method return null.
     vm->fiber->stackTop[-1] = NULL_VAL;
   }
@@ -189,14 +201,14 @@ DEF_PRIMITIVE(fiber_yield) {
 }
 
 DEF_PRIMITIVE(fiber_yield1) {
-  ObjFiber *current = vm->fiber;
+  ObjFiber* current = vm->fiber;
   vm->fiber = current->caller;
 
   // Unhook this fiber from the one that called it.
   current->caller = NULL;
   current->state = FIBER_OTHER;
 
-  if (vm->fiber != NULL) {
+  if(vm->fiber != NULL) {
     // Make the caller's run method return the argument passed to yield.
     vm->fiber->stackTop[-1] = args[1];
 
@@ -211,24 +223,26 @@ DEF_PRIMITIVE(fiber_yield1) {
 }
 
 DEF_PRIMITIVE(fn_new) {
-  if (!validateFn(vm, args[1], "Argument"))
+  if(!validateFn(vm, args[1], "Argument"))
     return false;
 
   // The block argument is already a function, so just return it.
   RETURN_VAL(args[1]);
 }
 
-DEF_PRIMITIVE(fn_arity) { RETURN_NUM(AS_CLOSURE(args[0])->fn->arity); }
+DEF_PRIMITIVE(fn_arity) {
+  RETURN_NUM(AS_CLOSURE(args[0])->fn->arity);
+}
 
-static void call_fn(WrenVM *vm, Value *args, int numArgs) {
+static void call_fn(WrenVM* vm, Value* args, int numArgs) {
   // +1 to include the function itself.
   wrenCallFunction(vm, vm->fiber, AS_CLOSURE(args[0]), numArgs + 1);
 }
 
-#define DEF_FN_CALL(numArgs)                                                   \
-  DEF_PRIMITIVE(fn_call##numArgs) {                                            \
-    call_fn(vm, args, numArgs);                                                \
-    return false;                                                              \
+#define DEF_FN_CALL(numArgs)                                                        \
+  DEF_PRIMITIVE(fn_call##numArgs) {                                                 \
+    call_fn(vm, args, numArgs);                                                     \
+    return false;                                                                   \
   }
 
 DEF_FN_CALL(0)
@@ -249,26 +263,30 @@ DEF_FN_CALL(14)
 DEF_FN_CALL(15)
 DEF_FN_CALL(16)
 
-DEF_PRIMITIVE(fn_toString) { RETURN_VAL(CONST_STRING(vm, "<fn>")); }
+DEF_PRIMITIVE(fn_toString) {
+  RETURN_VAL(CONST_STRING(vm, "<fn>"));
+}
 
 // Creates a new list of size args[1], with all elements initialized to args[2].
 DEF_PRIMITIVE(list_filled) {
-  if (!validateInt(vm, args[1], "Size"))
+  if(!validateInt(vm, args[1], "Size"))
     return false;
-  if (AS_NUM(args[1]) < 0)
+  if(AS_NUM(args[1]) < 0)
     RETURN_ERROR("Size cannot be negative.");
 
   uint32_t size = (uint32_t)AS_NUM(args[1]);
-  ObjList *list = wrenNewList(vm, size);
+  ObjList* list = wrenNewList(vm, size);
 
-  for (uint32_t i = 0; i < size; i++) {
+  for(uint32_t i = 0; i < size; i++) {
     list->elements.data[i] = args[2];
   }
 
   RETURN_OBJ(list);
 }
 
-DEF_PRIMITIVE(list_new) { RETURN_OBJ(wrenNewList(vm, 0)); }
+DEF_PRIMITIVE(list_new) {
+  RETURN_OBJ(wrenNewList(vm, 0));
+}
 
 DEF_PRIMITIVE(list_add) {
   wrenValueBufferWrite(vm, &AS_LIST(args[0])->elements, args[1]);
@@ -290,15 +308,16 @@ DEF_PRIMITIVE(list_clear) {
   RETURN_NULL;
 }
 
-DEF_PRIMITIVE(list_count) { RETURN_NUM(AS_LIST(args[0])->elements.count); }
+DEF_PRIMITIVE(list_count) {
+  RETURN_NUM(AS_LIST(args[0])->elements.count);
+}
 
 DEF_PRIMITIVE(list_insert) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
 
   // count + 1 here so you can "insert" at the very end.
-  uint32_t index =
-      validateIndex(vm, args[1], list->elements.count + 1, "Index");
-  if (index == UINT32_MAX)
+  uint32_t index = validateIndex(vm, args[1], list->elements.count + 1, "Index");
+  if(index == UINT32_MAX)
     return false;
 
   wrenListInsert(vm, list, args[2], index);
@@ -306,21 +325,21 @@ DEF_PRIMITIVE(list_insert) {
 }
 
 DEF_PRIMITIVE(list_iterate) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
 
   // If we're starting the iteration, return the first index.
-  if (IS_NULL(args[1])) {
-    if (list->elements.count == 0)
+  if(IS_NULL(args[1])) {
+    if(list->elements.count == 0)
       RETURN_FALSE;
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args[1], "Iterator"))
+  if(!validateInt(vm, args[1], "Iterator"))
     return false;
 
   // Stop if we're out of bounds.
   double index = AS_NUM(args[1]);
-  if (index < 0 || index >= list->elements.count - 1)
+  if(index < 0 || index >= list->elements.count - 1)
     RETURN_FALSE;
 
   // Otherwise, move to the next index.
@@ -328,43 +347,43 @@ DEF_PRIMITIVE(list_iterate) {
 }
 
 DEF_PRIMITIVE(list_iteratorValue) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(vm, args[1], list->elements.count, "Iterator");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
   RETURN_VAL(list->elements.data[index]);
 }
 
 DEF_PRIMITIVE(list_removeAt) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
   uint32_t index = validateIndex(vm, args[1], list->elements.count, "Index");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
 
 DEF_PRIMITIVE(list_removeValue) {
-  ObjList *list = AS_LIST(args[0]);
-  int index = wrenListIndexOf(vm, list, args[1]);
-  if (index == -1)
+  ObjList* list = AS_LIST(args[0]);
+  int      index = wrenListIndexOf(vm, list, args[1]);
+  if(index == -1)
     RETURN_NULL;
   RETURN_VAL(wrenListRemoveAt(vm, list, index));
 }
 
 DEF_PRIMITIVE(list_indexOf) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
   RETURN_NUM(wrenListIndexOf(vm, list, args[1]));
 }
 
 DEF_PRIMITIVE(list_swap) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
   uint32_t indexA = validateIndex(vm, args[1], list->elements.count, "Index 0");
-  if (indexA == UINT32_MAX)
+  if(indexA == UINT32_MAX)
     return false;
   uint32_t indexB = validateIndex(vm, args[2], list->elements.count, "Index 1");
-  if (indexB == UINT32_MAX)
+  if(indexB == UINT32_MAX)
     return false;
 
   Value a = list->elements.data[indexA];
@@ -375,29 +394,28 @@ DEF_PRIMITIVE(list_swap) {
 }
 
 DEF_PRIMITIVE(list_subscript) {
-  ObjList *list = AS_LIST(args[0]);
+  ObjList* list = AS_LIST(args[0]);
 
-  if (IS_NUM(args[1])) {
-    uint32_t index =
-        validateIndex(vm, args[1], list->elements.count, "Subscript");
-    if (index == UINT32_MAX)
+  if(IS_NUM(args[1])) {
+    uint32_t index = validateIndex(vm, args[1], list->elements.count, "Subscript");
+    if(index == UINT32_MAX)
       return false;
 
     RETURN_VAL(list->elements.data[index]);
   }
 
-  if (!IS_RANGE(args[1])) {
+  if(!IS_RANGE(args[1])) {
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
-  int step;
+  int      step;
   uint32_t count = list->elements.count;
   uint32_t start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
-  if (start == UINT32_MAX)
+  if(start == UINT32_MAX)
     return false;
 
-  ObjList *result = wrenNewList(vm, count);
-  for (uint32_t i = 0; i < count; i++) {
+  ObjList* result = wrenNewList(vm, count);
+  for(uint32_t i = 0; i < count; i++) {
     result->elements.data[i] = list->elements.data[start + i * step];
   }
 
@@ -405,32 +423,33 @@ DEF_PRIMITIVE(list_subscript) {
 }
 
 DEF_PRIMITIVE(list_subscriptSetter) {
-  ObjList *list = AS_LIST(args[0]);
-  uint32_t index =
-      validateIndex(vm, args[1], list->elements.count, "Subscript");
-  if (index == UINT32_MAX)
+  ObjList* list = AS_LIST(args[0]);
+  uint32_t index = validateIndex(vm, args[1], list->elements.count, "Subscript");
+  if(index == UINT32_MAX)
     return false;
 
   list->elements.data[index] = args[2];
   RETURN_VAL(args[2]);
 }
 
-DEF_PRIMITIVE(map_new) { RETURN_OBJ(wrenNewMap(vm)); }
+DEF_PRIMITIVE(map_new) {
+  RETURN_OBJ(wrenNewMap(vm));
+}
 
 DEF_PRIMITIVE(map_subscript) {
-  if (!validateKey(vm, args[1]))
+  if(!validateKey(vm, args[1]))
     return false;
 
-  ObjMap *map = AS_MAP(args[0]);
-  Value value = wrenMapGet(map, args[1]);
-  if (IS_UNDEFINED(value))
+  ObjMap* map = AS_MAP(args[0]);
+  Value   value = wrenMapGet(map, args[1]);
+  if(IS_UNDEFINED(value))
     RETURN_NULL;
 
   RETURN_VAL(value);
 }
 
 DEF_PRIMITIVE(map_subscriptSetter) {
-  if (!validateKey(vm, args[1]))
+  if(!validateKey(vm, args[1]))
     return false;
 
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
@@ -441,7 +460,7 @@ DEF_PRIMITIVE(map_subscriptSetter) {
 // the compiler when compiling map literals instead of using [_]=(_) to
 // minimize stack churn.
 DEF_PRIMITIVE(map_addCore) {
-  if (!validateKey(vm, args[1]))
+  if(!validateKey(vm, args[1]))
     return false;
 
   wrenMapSet(vm, AS_MAP(args[0]), args[1], args[2]);
@@ -456,33 +475,35 @@ DEF_PRIMITIVE(map_clear) {
 }
 
 DEF_PRIMITIVE(map_containsKey) {
-  if (!validateKey(vm, args[1]))
+  if(!validateKey(vm, args[1]))
     return false;
 
   RETURN_BOOL(!IS_UNDEFINED(wrenMapGet(AS_MAP(args[0]), args[1])));
 }
 
-DEF_PRIMITIVE(map_count) { RETURN_NUM(AS_MAP(args[0])->count); }
+DEF_PRIMITIVE(map_count) {
+  RETURN_NUM(AS_MAP(args[0])->count);
+}
 
 DEF_PRIMITIVE(map_iterate) {
-  ObjMap *map = AS_MAP(args[0]);
+  ObjMap* map = AS_MAP(args[0]);
 
-  if (map->count == 0)
+  if(map->count == 0)
     RETURN_FALSE;
 
   // If we're starting the iteration, start at the first used entry.
   uint32_t index = 0;
 
   // Otherwise, start one past the last entry we stopped at.
-  if (!IS_NULL(args[1])) {
-    if (!validateInt(vm, args[1], "Iterator"))
+  if(!IS_NULL(args[1])) {
+    if(!validateInt(vm, args[1], "Iterator"))
       return false;
 
-    if (AS_NUM(args[1]) < 0)
+    if(AS_NUM(args[1]) < 0)
       RETURN_FALSE;
     index = (uint32_t)AS_NUM(args[1]);
 
-    if (index >= map->capacity)
+    if(index >= map->capacity)
       RETURN_FALSE;
 
     // Advance the iterator.
@@ -490,8 +511,8 @@ DEF_PRIMITIVE(map_iterate) {
   }
 
   // Find a used entry, if any.
-  for (; index < map->capacity; index++) {
-    if (!IS_UNDEFINED(map->entries[index].key))
+  for(; index < map->capacity; index++) {
+    if(!IS_UNDEFINED(map->entries[index].key))
       RETURN_NUM(index);
   }
 
@@ -500,20 +521,20 @@ DEF_PRIMITIVE(map_iterate) {
 }
 
 DEF_PRIMITIVE(map_remove) {
-  if (!validateKey(vm, args[1]))
+  if(!validateKey(vm, args[1]))
     return false;
 
   RETURN_VAL(wrenMapRemoveKey(vm, AS_MAP(args[0]), args[1]));
 }
 
 DEF_PRIMITIVE(map_keyIteratorValue) {
-  ObjMap *map = AS_MAP(args[0]);
+  ObjMap*  map = AS_MAP(args[0]);
   uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
-  MapEntry *entry = &map->entries[index];
-  if (IS_UNDEFINED(entry->key)) {
+  MapEntry* entry = &map->entries[index];
+  if(IS_UNDEFINED(entry->key)) {
     RETURN_ERROR("Invalid map iterator.");
   }
 
@@ -521,57 +542,63 @@ DEF_PRIMITIVE(map_keyIteratorValue) {
 }
 
 DEF_PRIMITIVE(map_valueIteratorValue) {
-  ObjMap *map = AS_MAP(args[0]);
+  ObjMap*  map = AS_MAP(args[0]);
   uint32_t index = validateIndex(vm, args[1], map->capacity, "Iterator");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
-  MapEntry *entry = &map->entries[index];
-  if (IS_UNDEFINED(entry->key)) {
+  MapEntry* entry = &map->entries[index];
+  if(IS_UNDEFINED(entry->key)) {
     RETURN_ERROR("Invalid map iterator.");
   }
 
   RETURN_VAL(entry->value);
 }
 
-DEF_PRIMITIVE(null_not) { RETURN_VAL(TRUE_VAL); }
+DEF_PRIMITIVE(null_not) {
+  RETURN_VAL(TRUE_VAL);
+}
 
 // @TODO This should return empty string in interpolation but NULL when
 // debugging
-DEF_PRIMITIVE(null_toString) { RETURN_VAL(CONST_STRING(vm, "")); }
+DEF_PRIMITIVE(null_toString) {
+  RETURN_VAL(CONST_STRING(vm, ""));
+}
 
 DEF_PRIMITIVE(num_fromString) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[1]);
 
   // Corner case: Can't parse an empty string.
-  if (string->length == 0)
+  if(string->length == 0)
     RETURN_NULL;
 
   errno = 0;
-  char *end;
+  char*  end;
   double number = strtod(string->value, &end);
 
   // Skip past any trailing whitespace.
-  while (*end != '\0' && isspace((unsigned char)*end))
+  while(*end != '\0' && isspace((unsigned char)*end))
     end++;
 
-  if (errno == ERANGE)
+  if(errno == ERANGE)
     RETURN_ERROR("Number literal is too large.");
 
   // We must have consumed the entire string. Otherwise, it contains non-number
   // characters and we can't parse it.
-  if (end < string->value + string->length)
+  if(end < string->value + string->length)
     RETURN_NULL;
 
   RETURN_NUM(number);
 }
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
-#define DEF_NUM_CONSTANT(name, value)                                          \
-  DEF_PRIMITIVE(num_##name) { RETURN_NUM(value); }
+#define DEF_NUM_CONSTANT(name, value)                                               \
+  DEF_PRIMITIVE(num_##name) {                                                       \
+    RETURN_NUM(value);                                                              \
+  }
 
 DEF_NUM_CONSTANT(infinity, INFINITY)
 DEF_NUM_CONSTANT(nan, WREN_DOUBLE_NAN)
@@ -585,11 +612,11 @@ DEF_NUM_CONSTANT(maxSafeInteger, 9007199254740991.0)
 DEF_NUM_CONSTANT(minSafeInteger, -9007199254740991.0)
 
 // Defines a primitive on Num that calls infix [op] and returns [type].
-#define DEF_NUM_INFIX(name, op, type)                                          \
-  DEF_PRIMITIVE(num_##name) {                                                  \
-    if (!validateNum(vm, args[1], "Right operand"))                            \
-      return false;                                                            \
-    RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1]));                         \
+#define DEF_NUM_INFIX(name, op, type)                                               \
+  DEF_PRIMITIVE(num_##name) {                                                       \
+    if(!validateNum(vm, args[1], "Right operand"))                                  \
+      return false;                                                                 \
+    RETURN_##type(AS_NUM(args[0]) op AS_NUM(args[1]));                              \
   }
 
 DEF_NUM_INFIX(minus, -, NUM)
@@ -602,13 +629,13 @@ DEF_NUM_INFIX(lte, <=, BOOL)
 DEF_NUM_INFIX(gte, >=, BOOL)
 
 // Defines a primitive on Num that call infix bitwise [op].
-#define DEF_NUM_BITWISE(name, op)                                              \
-  DEF_PRIMITIVE(num_bitwise##name) {                                           \
-    if (!validateNum(vm, args[1], "Right operand"))                            \
-      return false;                                                            \
-    uint32_t left = (uint32_t)AS_NUM(args[0]);                                 \
-    uint32_t right = (uint32_t)AS_NUM(args[1]);                                \
-    RETURN_NUM(left op right);                                                 \
+#define DEF_NUM_BITWISE(name, op)                                                   \
+  DEF_PRIMITIVE(num_bitwise##name) {                                                \
+    if(!validateNum(vm, args[1], "Right operand"))                                  \
+      return false;                                                                 \
+    uint32_t left = (uint32_t)AS_NUM(args[0]);                                      \
+    uint32_t right = (uint32_t)AS_NUM(args[1]);                                     \
+    RETURN_NUM(left op right);                                                      \
   }
 
 DEF_NUM_BITWISE(And, &)
@@ -618,8 +645,10 @@ DEF_NUM_BITWISE(LeftShift, <<)
 DEF_NUM_BITWISE(RightShift, >>)
 
 // Defines a primitive method on Num that returns the result of [fn].
-#define DEF_NUM_FN(name, fn)                                                   \
-  DEF_PRIMITIVE(num_##name) { RETURN_NUM(fn(AS_NUM(args[0]))); }
+#define DEF_NUM_FN(name, fn)                                                        \
+  DEF_PRIMITIVE(num_##name) {                                                       \
+    RETURN_NUM(fn(AS_NUM(args[0])));                                                \
+  }
 
 DEF_NUM_FN(abs, fabs)
 DEF_NUM_FN(acos, acos)
@@ -639,19 +668,19 @@ DEF_NUM_FN(log2, log2)
 DEF_NUM_FN(exp, exp)
 
 DEF_PRIMITIVE(num_mod) {
-  if (!validateNum(vm, args[1], "Right operand"))
+  if(!validateNum(vm, args[1], "Right operand"))
     return false;
   RETURN_NUM(fmod(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_eqeq) {
-  if (!IS_NUM(args[1]))
+  if(!IS_NUM(args[1]))
     RETURN_FALSE;
   RETURN_BOOL(AS_NUM(args[0]) == AS_NUM(args[1]));
 }
 
 DEF_PRIMITIVE(num_bangeq) {
-  if (!IS_NUM(args[1]))
+  if(!IS_NUM(args[1]))
     RETURN_TRUE;
   RETURN_BOOL(AS_NUM(args[0]) != AS_NUM(args[1]));
 }
@@ -662,7 +691,7 @@ DEF_PRIMITIVE(num_bitwiseNot) {
 }
 
 DEF_PRIMITIVE(num_dotDot) {
-  if (!validateNum(vm, args[1], "Right hand side of range"))
+  if(!validateNum(vm, args[1], "Right hand side of range"))
     return false;
 
   double from = AS_NUM(args[0]);
@@ -671,7 +700,7 @@ DEF_PRIMITIVE(num_dotDot) {
 }
 
 DEF_PRIMITIVE(num_dotDotDot) {
-  if (!validateNum(vm, args[1], "Right hand side of range"))
+  if(!validateNum(vm, args[1], "Right hand side of range"))
     return false;
 
   double from = AS_NUM(args[0]);
@@ -680,14 +709,14 @@ DEF_PRIMITIVE(num_dotDotDot) {
 }
 
 DEF_PRIMITIVE(num_atan2) {
-  if (!validateNum(vm, args[1], "x value"))
+  if(!validateNum(vm, args[1], "x value"))
     return false;
 
   RETURN_NUM(atan2(AS_NUM(args[0]), AS_NUM(args[1])));
 }
 
 DEF_PRIMITIVE(num_min) {
-  if (!validateNum(vm, args[1], "Other value"))
+  if(!validateNum(vm, args[1], "Other value"))
     return false;
 
   double value = AS_NUM(args[0]);
@@ -696,7 +725,7 @@ DEF_PRIMITIVE(num_min) {
 }
 
 DEF_PRIMITIVE(num_max) {
-  if (!validateNum(vm, args[1], "Other value"))
+  if(!validateNum(vm, args[1], "Other value"))
     return false;
 
   double value = AS_NUM(args[0]);
@@ -705,9 +734,9 @@ DEF_PRIMITIVE(num_max) {
 }
 
 DEF_PRIMITIVE(num_clamp) {
-  if (!validateNum(vm, args[1], "Min value"))
+  if(!validateNum(vm, args[1], "Min value"))
     return false;
-  if (!validateNum(vm, args[2], "Max value"))
+  if(!validateNum(vm, args[2], "Max value"))
     return false;
 
   double value = AS_NUM(args[0]);
@@ -718,7 +747,7 @@ DEF_PRIMITIVE(num_clamp) {
 }
 
 DEF_PRIMITIVE(num_pow) {
-  if (!validateNum(vm, args[1], "Power value"))
+  if(!validateNum(vm, args[1], "Power value"))
     return false;
 
   RETURN_NUM(pow(AS_NUM(args[0]), AS_NUM(args[1])));
@@ -729,22 +758,26 @@ DEF_PRIMITIVE(num_fraction) {
   RETURN_NUM(modf(AS_NUM(args[0]), &unused));
 }
 
-DEF_PRIMITIVE(num_isInfinity) { RETURN_BOOL(isinf(AS_NUM(args[0]))); }
+DEF_PRIMITIVE(num_isInfinity) {
+  RETURN_BOOL(isinf(AS_NUM(args[0])));
+}
 
 DEF_PRIMITIVE(num_isInteger) {
   double value = AS_NUM(args[0]);
-  if (isnan(value) || isinf(value))
+  if(isnan(value) || isinf(value))
     RETURN_FALSE;
   RETURN_BOOL(trunc(value) == value);
 }
 
-DEF_PRIMITIVE(num_isNan) { RETURN_BOOL(isnan(AS_NUM(args[0]))); }
+DEF_PRIMITIVE(num_isNan) {
+  RETURN_BOOL(isnan(AS_NUM(args[0])));
+}
 
 DEF_PRIMITIVE(num_sign) {
   double value = AS_NUM(args[0]);
-  if (value > 0) {
+  if(value > 0) {
     RETURN_NUM(1);
-  } else if (value < 0) {
+  } else if(value < 0) {
     RETURN_NUM(-1);
   } else {
     RETURN_NUM(0);
@@ -761,54 +794,66 @@ DEF_PRIMITIVE(num_truncate) {
   RETURN_NUM(integer);
 }
 
-DEF_PRIMITIVE(object_same) { RETURN_BOOL(wrenValuesEqual(args[1], args[2])); }
+DEF_PRIMITIVE(object_same) {
+  RETURN_BOOL(wrenValuesEqual(args[1], args[2]));
+}
 
-DEF_PRIMITIVE(object_not) { RETURN_VAL(FALSE_VAL); }
+DEF_PRIMITIVE(object_not) {
+  RETURN_VAL(FALSE_VAL);
+}
 
-DEF_PRIMITIVE(object_eqeq) { RETURN_BOOL(wrenValuesEqual(args[0], args[1])); }
+DEF_PRIMITIVE(object_eqeq) {
+  RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
+}
 
 DEF_PRIMITIVE(object_bangeq) {
   RETURN_BOOL(!wrenValuesEqual(args[0], args[1]));
 }
 
 DEF_PRIMITIVE(object_is) {
-  if (!IS_CLASS(args[1])) {
+  if(!IS_CLASS(args[1])) {
     RETURN_ERROR("Right operand must be a class.");
   }
 
-  ObjClass *classObj = wrenGetClass(vm, args[0]);
-  ObjClass *baseClassObj = AS_CLASS(args[1]);
+  ObjClass* classObj = wrenGetClass(vm, args[0]);
+  ObjClass* baseClassObj = AS_CLASS(args[1]);
 
   // Walk the superclass chain looking for the class.
   do {
-    if (baseClassObj == classObj)
+    if(baseClassObj == classObj)
       RETURN_BOOL(true);
 
     classObj = classObj->superclass;
-  } while (classObj != NULL);
+  } while(classObj != NULL);
 
   RETURN_BOOL(false);
 }
 
 DEF_PRIMITIVE(object_toString) {
-  Obj *obj = AS_OBJ(args[0]);
+  Obj*  obj = AS_OBJ(args[0]);
   Value name = OBJ_VAL(obj->classObj->name);
   RETURN_VAL(wrenStringFormat(vm, "instance of @", name));
 }
 
-DEF_PRIMITIVE(object_type) { RETURN_OBJ(wrenGetClass(vm, args[0])); }
+DEF_PRIMITIVE(object_type) {
+  RETURN_OBJ(wrenGetClass(vm, args[0]));
+}
 
-DEF_PRIMITIVE(range_from) { RETURN_NUM(AS_RANGE(args[0])->from); }
+DEF_PRIMITIVE(range_from) {
+  RETURN_NUM(AS_RANGE(args[0])->from);
+}
 
-DEF_PRIMITIVE(range_to) { RETURN_NUM(AS_RANGE(args[0])->to); }
+DEF_PRIMITIVE(range_to) {
+  RETURN_NUM(AS_RANGE(args[0])->to);
+}
 
 DEF_PRIMITIVE(range_min) {
-  ObjRange *range = AS_RANGE(args[0]);
+  ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(fmin(range->from, range->to));
 }
 
 DEF_PRIMITIVE(range_max) {
-  ObjRange *range = AS_RANGE(args[0]);
+  ObjRange* range = AS_RANGE(args[0]);
   RETURN_NUM(fmax(range->from, range->to));
 }
 
@@ -817,33 +862,33 @@ DEF_PRIMITIVE(range_isInclusive) {
 }
 
 DEF_PRIMITIVE(range_iterate) {
-  ObjRange *range = AS_RANGE(args[0]);
+  ObjRange* range = AS_RANGE(args[0]);
 
   // Special case: empty range.
-  if (range->from == range->to && !range->isInclusive)
+  if(range->from == range->to && !range->isInclusive)
     RETURN_FALSE;
 
   // Start the iteration.
-  if (IS_NULL(args[1]))
+  if(IS_NULL(args[1]))
     RETURN_NUM(range->from);
 
-  if (!validateNum(vm, args[1], "Iterator"))
+  if(!validateNum(vm, args[1], "Iterator"))
     return false;
 
   double iterator = AS_NUM(args[1]);
 
   // Iterate towards [to] from [from].
-  if (range->from < range->to) {
+  if(range->from < range->to) {
     iterator++;
-    if (iterator > range->to)
+    if(iterator > range->to)
       RETURN_FALSE;
   } else {
     iterator--;
-    if (iterator < range->to)
+    if(iterator < range->to)
       RETURN_FALSE;
   }
 
-  if (!range->isInclusive && iterator == range->to)
+  if(!range->isInclusive && iterator == range->to)
     RETURN_FALSE;
 
   RETURN_NUM(iterator);
@@ -855,7 +900,7 @@ DEF_PRIMITIVE(range_iteratorValue) {
 }
 
 DEF_PRIMITIVE(range_toString) {
-  ObjRange *range = AS_RANGE(args[0]);
+  ObjRange* range = AS_RANGE(args[0]);
 
   Value from = wrenNumToString(vm, range->from);
   wrenPushRoot(vm, AS_OBJ(from));
@@ -872,13 +917,13 @@ DEF_PRIMITIVE(range_toString) {
 }
 
 DEF_PRIMITIVE(string_fromCodePoint) {
-  if (!validateInt(vm, args[1], "Code point"))
+  if(!validateInt(vm, args[1], "Code point"))
     return false;
 
   int codePoint = (int)AS_NUM(args[1]);
-  if (codePoint < 0) {
+  if(codePoint < 0) {
     RETURN_ERROR("Code point cannot be negative.");
-  } else if (codePoint > 0x10ffff) {
+  } else if(codePoint > 0x10ffff) {
     RETURN_ERROR("Code point cannot be greater than 0x10ffff.");
   }
 
@@ -886,90 +931,92 @@ DEF_PRIMITIVE(string_fromCodePoint) {
 }
 
 DEF_PRIMITIVE(string_fromByte) {
-  if (!validateInt(vm, args[1], "Byte"))
+  if(!validateInt(vm, args[1], "Byte"))
     return false;
   int byte = (int)AS_NUM(args[1]);
-  if (byte < 0) {
+  if(byte < 0) {
     RETURN_ERROR("Byte cannot be negative.");
-  } else if (byte > 0xff) {
+  } else if(byte > 0xff) {
     RETURN_ERROR("Byte cannot be greater than 0xff.");
   }
   RETURN_VAL(wrenStringFromByte(vm, (uint8_t)byte));
 }
 
 DEF_PRIMITIVE(string_byteAt) {
-  ObjString *string = AS_STRING(args[0]);
+  ObjString* string = AS_STRING(args[0]);
 
   uint32_t index = validateIndex(vm, args[1], string->length, "Index");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
   RETURN_NUM((uint8_t)string->value[index]);
 }
 
-DEF_PRIMITIVE(string_byteCount) { RETURN_NUM(AS_STRING(args[0])->length); }
+DEF_PRIMITIVE(string_byteCount) {
+  RETURN_NUM(AS_STRING(args[0])->length);
+}
 
 DEF_PRIMITIVE(string_codePointAt) {
-  ObjString *string = AS_STRING(args[0]);
+  ObjString* string = AS_STRING(args[0]);
 
   uint32_t index = validateIndex(vm, args[1], string->length, "Index");
-  if (index == UINT32_MAX)
+  if(index == UINT32_MAX)
     return false;
 
   // If we are in the middle of a UTF-8 sequence, indicate that.
-  const uint8_t *bytes = (uint8_t *)string->value;
-  if ((bytes[index] & 0xc0) == 0x80)
+  const uint8_t* bytes = (uint8_t*)string->value;
+  if((bytes[index] & 0xc0) == 0x80)
     RETURN_NUM(-1);
 
   // Decode the UTF-8 sequence.
   RETURN_NUM(
-      wrenUtf8Decode((uint8_t *)string->value + index, string->length - index));
+      wrenUtf8Decode((uint8_t*)string->value + index, string->length - index));
 }
 
 DEF_PRIMITIVE(string_contains) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[0]);
-  ObjString *search = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
 
   RETURN_BOOL(wrenStringFind(string, search, 0) != UINT32_MAX);
 }
 
 DEF_PRIMITIVE(string_endsWith) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[0]);
-  ObjString *search = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
 
   // Edge case: If the search string is longer then return false right away.
-  if (search->length > string->length)
+  if(search->length > string->length)
     RETURN_FALSE;
 
-  RETURN_BOOL(memcmp(string->value + string->length - search->length,
-                     search->value, search->length) == 0);
+  RETURN_BOOL(memcmp(string->value + string->length - search->length, search->value,
+                     search->length) == 0);
 }
 
 DEF_PRIMITIVE(string_indexOf1) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[0]);
-  ObjString *search = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
 
   uint32_t index = wrenStringFind(string, search, 0);
   RETURN_NUM(index == UINT32_MAX ? -1 : (int)index);
 }
 
 DEF_PRIMITIVE(string_indexOf2) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[0]);
-  ObjString *search = AS_STRING(args[1]);
-  uint32_t start = validateIndex(vm, args[2], string->length, "Start");
-  if (start == UINT32_MAX)
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
+  uint32_t   start = validateIndex(vm, args[2], string->length, "Start");
+  if(start == UINT32_MAX)
     return false;
 
   uint32_t index = wrenStringFind(string, search, start);
@@ -977,113 +1024,117 @@ DEF_PRIMITIVE(string_indexOf2) {
 }
 
 DEF_PRIMITIVE(string_iterate) {
-  ObjString *string = AS_STRING(args[0]);
+  ObjString* string = AS_STRING(args[0]);
 
   // If we're starting the iteration, return the first index.
-  if (IS_NULL(args[1])) {
-    if (string->length == 0)
+  if(IS_NULL(args[1])) {
+    if(string->length == 0)
       RETURN_FALSE;
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args[1], "Iterator"))
+  if(!validateInt(vm, args[1], "Iterator"))
     return false;
 
-  if (AS_NUM(args[1]) < 0)
+  if(AS_NUM(args[1]) < 0)
     RETURN_FALSE;
   uint32_t index = (uint32_t)AS_NUM(args[1]);
 
   // Advance to the beginning of the next UTF-8 sequence.
   do {
     index++;
-    if (index >= string->length)
+    if(index >= string->length)
       RETURN_FALSE;
-  } while ((string->value[index] & 0xc0) == 0x80);
+  } while((string->value[index] & 0xc0) == 0x80);
 
   RETURN_NUM(index);
 }
 
 DEF_PRIMITIVE(string_iterateByte) {
-  ObjString *string = AS_STRING(args[0]);
+  ObjString* string = AS_STRING(args[0]);
 
   // If we're starting the iteration, return the first index.
-  if (IS_NULL(args[1])) {
-    if (string->length == 0)
+  if(IS_NULL(args[1])) {
+    if(string->length == 0)
       RETURN_FALSE;
     RETURN_NUM(0);
   }
 
-  if (!validateInt(vm, args[1], "Iterator"))
+  if(!validateInt(vm, args[1], "Iterator"))
     return false;
 
-  if (AS_NUM(args[1]) < 0)
+  if(AS_NUM(args[1]) < 0)
     RETURN_FALSE;
   uint32_t index = (uint32_t)AS_NUM(args[1]);
 
   // Advance to the next byte.
   index++;
-  if (index >= string->length)
+  if(index >= string->length)
     RETURN_FALSE;
 
   RETURN_NUM(index);
 }
 
 DEF_PRIMITIVE(string_iteratorValue) {
-  ObjString *string = AS_STRING(args[0]);
-  uint32_t index = validateIndex(vm, args[1], string->length, "Iterator");
-  if (index == UINT32_MAX)
+  ObjString* string = AS_STRING(args[0]);
+  uint32_t   index = validateIndex(vm, args[1], string->length, "Iterator");
+  if(index == UINT32_MAX)
     return false;
 
   RETURN_VAL(wrenStringCodePointAt(vm, string, index));
 }
 
 DEF_PRIMITIVE(string_startsWith) {
-  if (!validateString(vm, args[1], "Argument"))
+  if(!validateString(vm, args[1], "Argument"))
     return false;
 
-  ObjString *string = AS_STRING(args[0]);
-  ObjString *search = AS_STRING(args[1]);
+  ObjString* string = AS_STRING(args[0]);
+  ObjString* search = AS_STRING(args[1]);
 
   // Edge case: If the search string is longer then return false right away.
-  if (search->length > string->length)
+  if(search->length > string->length)
     RETURN_FALSE;
 
   RETURN_BOOL(memcmp(string->value, search->value, search->length) == 0);
 }
 
 DEF_PRIMITIVE(string_plus) {
-  if (!validateString(vm, args[1], "Right operand"))
+  if(!validateString(vm, args[1], "Right operand"))
     return false;
   RETURN_VAL(wrenStringFormat(vm, "@@", args[0], args[1]));
 }
 
 DEF_PRIMITIVE(string_subscript) {
-  ObjString *string = AS_STRING(args[0]);
+  ObjString* string = AS_STRING(args[0]);
 
-  if (IS_NUM(args[1])) {
+  if(IS_NUM(args[1])) {
     int index = validateIndex(vm, args[1], string->length, "Subscript");
-    if (index == -1)
+    if(index == -1)
       return false;
 
     RETURN_VAL(wrenStringCodePointAt(vm, string, index));
   }
 
-  if (!IS_RANGE(args[1])) {
+  if(!IS_RANGE(args[1])) {
     RETURN_ERROR("Subscript must be a number or a range.");
   }
 
-  int step;
+  int      step;
   uint32_t count = string->length;
-  int start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
-  if (start == -1)
+  int      start = calculateRange(vm, AS_RANGE(args[1]), &count, &step);
+  if(start == -1)
     return false;
 
   RETURN_VAL(wrenNewStringFromRange(vm, string, start, count, step));
 }
 
-DEF_PRIMITIVE(string_toString) { RETURN_VAL(args[0]); }
+DEF_PRIMITIVE(string_toString) {
+  RETURN_VAL(args[0]);
+}
 
-DEF_PRIMITIVE(system_clock) { RETURN_NUM((double)clock() / CLOCKS_PER_SEC); }
+DEF_PRIMITIVE(system_clock) {
+  RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
+}
 
 DEF_PRIMITIVE(system_gc) {
   wrenCollectGarbage(vm);
@@ -1091,23 +1142,23 @@ DEF_PRIMITIVE(system_gc) {
 }
 
 DEF_PRIMITIVE(system_writeString) {
-  if (vm->config.writeFn != NULL) {
+  if(vm->config.writeFn != NULL) {
     vm->config.writeFn(vm, AS_CSTRING(args[1]));
   }
 
   RETURN_VAL(args[1]);
 }
 
-static void queryPrepare(WrenVM *vm, BialetQuery *query, ObjList *params) {
+static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
-  if (vm->config.writeFn != NULL) {
-    for (int i = 0; i < params->elements.count; i++) {
+  if(vm->config.writeFn != NULL) {
+    for(int i = 0; i < params->elements.count; i++) {
       val = params->elements.data[i];
-      if (IS_NULL(val)) {
+      if(IS_NULL(val)) {
         addParameter(query, 0, BIALETQUERYTYPE_NULL);
-      } else if (IS_BOOL(val)) {
+      } else if(IS_BOOL(val)) {
         addParameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
-      } else if (IS_NUM(val)) {
+      } else if(IS_NUM(val)) {
         char num[MAX_NUMBER_LENGTH];
         sprintf(num, "%f", AS_NUM(val));
         addParameter(query, num, BIALETQUERYTYPE_NUMBER);
@@ -1123,11 +1174,11 @@ DEF_PRIMITIVE(query_fetch) {
   BialetQuery query = *createBialetQuery();
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
-  ObjList *list = wrenNewList(vm, query.resultsCount);
-  for (int i = 0; i < query.resultsCount; i++) {
-    ObjMap *row = wrenNewMap(vm);
+  ObjList* list = wrenNewList(vm, query.resultsCount);
+  for(int i = 0; i < query.resultsCount; i++) {
+    ObjMap*           row = wrenNewMap(vm);
     BialetQueryResult res = query.results[i];
-    for (int j = 0; j < res.rowCount; j++) {
+    for(int j = 0; j < res.rowCount; j++) {
       wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name),
                  wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size));
     }
@@ -1140,7 +1191,7 @@ DEF_PRIMITIVE(query_execute) {
   BialetQuery query = *createBialetQuery();
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
-  if (query.lastInsertId) {
+  if(query.lastInsertId) {
     Value lastInsertId = wrenNewString(vm, query.lastInsertId);
     RETURN_VAL(lastInsertId);
   } else {
@@ -1149,27 +1200,26 @@ DEF_PRIMITIVE(query_execute) {
 }
 
 DEF_PRIMITIVE(query_toString) {
-  const char *queryString = AS_CSTRING(args[0]);
+  const char* queryString = AS_CSTRING(args[0]);
   RETURN_VAL(wrenNewString(vm, queryString));
 }
 
 // Creates either the Object or Class class in the core module with [name].
-static ObjClass *defineClass(WrenVM *vm, ObjModule *module, const char *name) {
-  ObjString *nameString = AS_STRING(wrenNewString(vm, name));
-  wrenPushRoot(vm, (Obj *)nameString);
+static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name) {
+  ObjString* nameString = AS_STRING(wrenNewString(vm, name));
+  wrenPushRoot(vm, (Obj*)nameString);
 
-  ObjClass *classObj = wrenNewSingleClass(vm, 0, nameString);
+  ObjClass* classObj = wrenNewSingleClass(vm, 0, nameString);
 
-  wrenDefineVariable(vm, module, name, nameString->length, OBJ_VAL(classObj),
-                     NULL);
+  wrenDefineVariable(vm, module, name, nameString->length, OBJ_VAL(classObj), NULL);
 
   wrenPopRoot(vm);
   return classObj;
 }
 
-void wrenInitializeCore(WrenVM *vm) {
-  ObjModule *coreModule = wrenNewModule(vm, NULL);
-  wrenPushRoot(vm, (Obj *)coreModule);
+void wrenInitializeCore(WrenVM* vm) {
+  ObjModule* coreModule = wrenNewModule(vm, NULL);
+  wrenPushRoot(vm, (Obj*)coreModule);
 
   // The core module's key is null in the module map.
   wrenMapSet(vm, vm->modules, NULL_VAL, OBJ_VAL(coreModule));
@@ -1194,7 +1244,7 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->classClass, "attributes", class_attributes);
 
   // Finally, we can define Object's metaclass which is a subclass of Class.
-  ObjClass *objectMetaclass = defineClass(vm, coreModule, "Object metaclass");
+  ObjClass* objectMetaclass = defineClass(vm, coreModule, "Object metaclass");
 
   // Wire up the metaclass relationships now that all three classes are built.
   vm->objectClass->obj.classObj = objectMetaclass;
@@ -1274,8 +1324,7 @@ void wrenInitializeCore(WrenVM *vm) {
   FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call13);
   FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call14);
   FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call15);
-  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)",
-                fn_call16);
+  FUNCTION_CALL(vm->fnClass, "call(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)", fn_call16);
 
   PRIMITIVE(vm->fnClass, "toString", fn_toString);
 
@@ -1345,8 +1394,7 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->numClass, "!=(_)", num_bangeq);
 
   vm->stringClass = AS_CLASS(wrenFindVariable(vm, coreModule, "String"));
-  PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)",
-            string_fromCodePoint);
+  PRIMITIVE(vm->stringClass->obj.classObj, "fromCodePoint(_)", string_fromCodePoint);
   PRIMITIVE(vm->stringClass->obj.classObj, "fromByte(_)", string_fromByte);
   PRIMITIVE(vm->stringClass, "+(_)", string_plus);
   PRIMITIVE(vm->stringClass, "[_]", string_subscript);
@@ -1408,7 +1456,7 @@ void wrenInitializeCore(WrenVM *vm) {
   PRIMITIVE(vm->rangeClass, "iteratorValue(_)", range_iteratorValue);
   PRIMITIVE(vm->rangeClass, "toString", range_toString);
 
-  ObjClass *systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
+  ObjClass* systemClass = AS_CLASS(wrenFindVariable(vm, coreModule, "System"));
   PRIMITIVE(systemClass->obj.classObj, "clock", system_clock);
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
@@ -1421,8 +1469,8 @@ void wrenInitializeCore(WrenVM *vm) {
   //
   // These all currently have a NULL classObj pointer, so go back and assign
   // them now that the string class is known.
-  for (Obj *obj = vm->first; obj != NULL; obj = obj->next) {
-    if (obj->type == OBJ_STRING)
+  for(Obj* obj = vm->first; obj != NULL; obj = obj->next) {
+    if(obj->type == OBJ_STRING)
       obj->classObj = vm->stringClass;
   }
 }

@@ -3,33 +3,30 @@
 
 #include "wren_common.h"
 #include "wren_compiler.h"
-#include "wren_value.h"
 #include "wren_utils.h"
+#include "wren_value.h"
 
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
 #define WREN_MAX_TEMP_ROOTS 8
 
-typedef enum
-{
-  #define OPCODE(name, _) CODE_##name,
-  #include "wren_opcodes.h"
-  #undef OPCODE
+typedef enum {
+#define OPCODE(name, _) CODE_##name,
+#include "wren_opcodes.h"
+#undef OPCODE
 } Code;
 
 // A handle to a value, basically just a linked list of extra GC roots.
 //
 // Note that even non-heap-allocated values can be stored here.
-struct WrenHandle
-{
+struct WrenHandle {
   Value value;
 
   WrenHandle* prev;
   WrenHandle* next;
 };
 
-struct WrenVM
-{
+struct WrenVM {
   ObjClass* boolClass;
   ObjClass* classClass;
   ObjClass* fiberClass;
@@ -50,7 +47,7 @@ struct WrenVM
   // whose key is null) for the module's name and the value is the ObjModule
   // for the module.
   ObjMap* modules;
-  
+
   // The most recently imported module. More specifically, the module whose
   // code has most recently finished executing.
   //
@@ -74,8 +71,8 @@ struct WrenVM
   // The "gray" set for the garbage collector. This is the stack of unprocessed
   // objects while a garbage collection pass is in process.
   Obj** gray;
-  int grayCount;
-  int grayCapacity;
+  int   grayCount;
+  int   grayCapacity;
 
   // The list of temporary roots. This is for temporary or new objects that are
   // not otherwise reachable but should not be collected.
@@ -86,11 +83,11 @@ struct WrenVM
   Obj* tempRoots[WREN_MAX_TEMP_ROOTS];
 
   int numTempRoots;
-  
+
   // Pointer to the first node in the linked list of active handles or NULL if
   // there are none.
   WrenHandle* handles;
-  
+
   // Pointer to the bottom of the range of stack slots available for use from
   // the C API. During a foreign method, this will be in the stack of the fiber
   // that is executing a method.
@@ -101,7 +98,7 @@ struct WrenVM
   Value* apiStack;
 
   WrenConfiguration config;
-  
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap
@@ -142,9 +139,8 @@ WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 // execute it.
 //
 // Returns NULL if a compile error occurred.
-ObjClosure* wrenCompileSource(WrenVM* vm, const char* module,
-                              const char* source, bool isExpression,
-                              bool printErrors);
+ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
+                              bool isExpression, bool printErrors);
 
 // Looks up a variable from a previously-loaded module.
 //
@@ -176,23 +172,22 @@ int wrenDefineVariable(WrenVM* vm, ObjModule* module, const char* name,
 
 // Pushes [closure] onto [fiber]'s callstack to invoke it. Expects [numArgs]
 // arguments (including the receiver) to be on the top of the stack already.
-static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
-                                    ObjClosure* closure, int numArgs)
-{
+static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber, ObjClosure* closure,
+                                    int numArgs) {
   // Grow the call frame array if needed.
-  if (fiber->numFrames + 1 > fiber->frameCapacity)
-  {
+  if(fiber->numFrames + 1 > fiber->frameCapacity) {
     int max = fiber->frameCapacity * 2;
-    fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
-        sizeof(CallFrame) * fiber->frameCapacity, sizeof(CallFrame) * max);
+    fiber->frames = (CallFrame*)wrenReallocate(
+        vm, fiber->frames, sizeof(CallFrame) * fiber->frameCapacity,
+        sizeof(CallFrame) * max);
     fiber->frameCapacity = max;
   }
-  
+
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
-  
+
   wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
 }
 
@@ -207,29 +202,43 @@ void wrenPopRoot(WrenVM* vm);
 // Defined here instead of in wren_value.h because it's critical that this be
 // inlined. That means it must be defined in the header, but the wren_value.h
 // header doesn't have a full definitely of WrenVM yet.
-static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
-{
-  if (IS_NUM(value)) return vm->numClass;
-  if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
+static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value) {
+  if(IS_NUM(value))
+    return vm->numClass;
+  if(IS_OBJ(value))
+    return AS_OBJ(value)->classObj;
 
 #if WREN_NAN_TAGGING
-  switch (GET_TAG(value))
-  {
-    case TAG_FALSE:     return vm->boolClass; break;
-    case TAG_NAN:       return vm->numClass; break;
-    case TAG_NULL:      return vm->nullClass; break;
-    case TAG_TRUE:      return vm->boolClass; break;
-    case TAG_UNDEFINED: UNREACHABLE();
+  switch(GET_TAG(value)) {
+    case TAG_FALSE:
+      return vm->boolClass;
+      break;
+    case TAG_NAN:
+      return vm->numClass;
+      break;
+    case TAG_NULL:
+      return vm->nullClass;
+      break;
+    case TAG_TRUE:
+      return vm->boolClass;
+      break;
+    case TAG_UNDEFINED:
+      UNREACHABLE();
   }
 #else
-  switch (value.type)
-  {
-    case VAL_FALSE:     return vm->boolClass;
-    case VAL_NULL:      return vm->nullClass;
-    case VAL_NUM:       return vm->numClass;
-    case VAL_TRUE:      return vm->boolClass;
-    case VAL_OBJ:       return AS_OBJ(value)->classObj;
-    case VAL_UNDEFINED: UNREACHABLE();
+  switch(value.type) {
+    case VAL_FALSE:
+      return vm->boolClass;
+    case VAL_NULL:
+      return vm->nullClass;
+    case VAL_NUM:
+      return vm->numClass;
+    case VAL_TRUE:
+      return vm->boolClass;
+    case VAL_OBJ:
+      return AS_OBJ(value)->classObj;
+    case VAL_UNDEFINED:
+      UNREACHABLE();
   }
 #endif
 
@@ -239,13 +248,11 @@ static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 
 // Returns `true` if [name] is a local variable name (starts with a lowercase
 // letter).
-static inline bool wrenIsLocalName(const char* name)
-{
+static inline bool wrenIsLocalName(const char* name) {
   return name[0] >= 'a' && name[0] <= 'z';
 }
 
-static inline bool wrenIsFalsyValue(Value value)
-{
+static inline bool wrenIsFalsyValue(Value value) {
   return IS_FALSE(value) || IS_NULL(value);
 }
 
