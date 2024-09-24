@@ -1,0 +1,45 @@
+# Corrected clang-format file for C
+
+Language: Cpp
+
+# Style options
+BasedOnStyle: LLVM
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+ColumnLimit: 85
+
+# Pointer alignment
+PointerAlignment: Left
+
+# Function declarations
+SpaceBeforeParens: Never
+
+# Indent case labels inside switch
+IndentCaseLabels: true
+
+# Align consecutive declarations
+AlignConsecutiveDeclarations: true
+
+# Handling of include directives
+IncludeBlocks: Regroup
+
+# Align trailing comments
+AlignTrailingComments: true
+
+# Keep empty lines at the start of blocks
+KeepEmptyLinesAtTheStartOfBlocks: true
+
+# Sort includes
+SortIncludes: true
+
+# Ensure brace wrapping for control statements
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterNamespace: true
+  BeforeElse: true
+  IndentBraces: false

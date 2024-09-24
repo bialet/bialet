@@ -14,7 +14,7 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-LDFLAGS := -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
+LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
 
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
     # If it does, append -lws2_32 to LDFLAGS
