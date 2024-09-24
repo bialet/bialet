@@ -88,6 +88,7 @@ Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
    structure
    html-strings
    database
+   file
    datetime
    reference
    examples
