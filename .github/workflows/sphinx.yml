@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install -r ./docs/requirements.txt
 
+      - name: Patch Pygments
+        run: cp docs/lexer.py $(pip3 show pygments | grep Location | awk -F " " '{print $2}')/pygments/lexers/wren.py
+
       - name: Sphinx build
         run: sphinx-build -M html docs/ build/
 
