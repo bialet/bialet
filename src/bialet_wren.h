@@ -21,14 +21,14 @@ struct BialetResponse {
   int   length;
 };
 
-void bialet_init(struct BialetConfig* config);
+void bialetInit(struct BialetConfig* config);
 
-struct BialetResponse bialet_run(char* module, char* code,
+struct BialetResponse bialetRun(char* module, char* code,
                                  struct mg_http_message* hm);
 
-char* bialet_read_file(const char* path);
+char* readFile(const char* path);
 
-int bialet_run_cli(char* code);
+int bialetRunCli(char* code);
 
 #define BIALET_EXTENSION ".wren"
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION

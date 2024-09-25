@@ -44,11 +44,11 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
-static void wren_write(WrenVM* vm, const char* text) {
+static void bialetWrenWrite(WrenVM* vm, const char* text) {
   message(yellow("Log"), text);
 }
 
-char* bialet_read_file(const char* path) {
+char* readFile(const char* path) {
   char* buffer = 0;
   long  length;
   FILE* f = fopen(path, "rb");
@@ -66,7 +66,7 @@ char* bialet_read_file(const char* path) {
   return buffer;
 }
 
-static WrenLoadModuleResult wren_load_module(WrenVM* vm, const char* name) {
+static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
   char                 module[MAX_MODULE_LEN];
   WrenLoadModuleResult result = {0};
@@ -103,7 +103,7 @@ static WrenLoadModuleResult wren_load_module(WrenVM* vm, const char* name) {
   strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
   strncat(module, BIALET_EXTENSION, MAX_MODULE_LEN - strlen(module) - 1);
 
-  char* buffer = bialet_read_file(module);
+  char* buffer = readFile(module);
   result.source = NULL;
 
   if(buffer) {
@@ -112,7 +112,7 @@ static WrenLoadModuleResult wren_load_module(WrenVM* vm, const char* name) {
   return result;
 }
 
-void wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
+void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
                 const int line, const char* msg) {
   char lineMessage[MAX_LINE_ERROR_LEN];
   sprintf(lineMessage, "%s line %d", module, line);
@@ -129,7 +129,7 @@ void wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
 }
 
-static char* sqlite3Int64ToString(sqlite3_int64 value) {
+static char* sqliteIntToString(sqlite3_int64 value) {
   char* str = (char*)malloc(21 * sizeof(char));
   if(str == NULL)
     return NULL;
@@ -137,7 +137,7 @@ static char* sqlite3Int64ToString(sqlite3_int64 value) {
   return str;
 }
 
-static void query_sqlite_execute(WrenVM* vm, BialetQuery* query) {
+static void queryExecute(WrenVM* vm, BialetQuery* query) {
   sqlite3_stmt* stmt;
   char*         columns[MAX_COLUMNS];
   const char*   value;
@@ -244,11 +244,11 @@ static void query_sqlite_execute(WrenVM* vm, BialetQuery* query) {
   if(result != SQLITE_DONE && result != SQLITE_OK && result != SQLITE_EMPTY) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
-  query->lastInsertId = sqlite3Int64ToString(sqlite3_last_insert_rowid(db));
+  query->lastInsertId = sqliteIntToString(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);
 }
 
-static void random_string(WrenVM* vm) {
+static void randomString(WrenVM* vm) {
   const int len = wrenGetSlotDouble(vm, 1);
   char      random_str[len + 1];
   char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -262,7 +262,7 @@ static void random_string(WrenVM* vm) {
   wrenSetSlotString(vm, 0, random_str);
 }
 
-static void hash_password(WrenVM* vm) {
+static void hashPassword(WrenVM* vm) {
   const char*   password = wrenGetSlotString(vm, 1);
   unsigned char salt[16];
   if(!RAND_bytes(salt, sizeof(salt))) {
@@ -296,7 +296,7 @@ static void hash_password(WrenVM* vm) {
   wrenSetSlotString(vm, 0, result);
 }
 
-static void verify_password(WrenVM* vm) {
+static void verifyPassword(WrenVM* vm) {
   int         result = 0;
   const char* password = wrenGetSlotString(vm, 1);
   const char* hash_and_salt = wrenGetSlotString(vm, 2);
@@ -333,7 +333,7 @@ static void verify_password(WrenVM* vm) {
   wrenSetSlotBool(vm, 0, result);
 }
 
-static void http_call(WrenVM* vm) {
+static void httpCall(WrenVM* vm) {
 
   // Get data from Wren
   const char* url = wrenGetSlotString(vm, 1);
@@ -358,7 +358,7 @@ static void http_call(WrenVM* vm) {
   response.body = "{}";
 
   // Perform request
-  http_call_perform(&request, &response);
+  httpCallPerform(&request, &response);
   printf("Response: %s\n", response.body);
   printf("Status: %d\n", response.status);
   printf("Headers: %s\n", response.headers);
@@ -383,30 +383,30 @@ static void http_call(WrenVM* vm) {
   free(request.basicAuth);
 }
 
-WrenForeignMethodFn wren_bind_foreign_method(WrenVM* vm, const char* module,
+WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
                                              const char* className, bool isStatic,
                                              const char* signature) {
   if(strcmp(module, MAIN_MODULE_NAME) == 0) {
     if(strcmp(className, "Util") == 0) {
       if(strcmp(signature, "randomString_(_)") == 0) {
-        return random_string;
+        return randomString;
       }
       if(strcmp(signature, "hash_(_)") == 0) {
-        return hash_password;
+        return hashPassword;
       }
       if(strcmp(signature, "verify_(_,_)") == 0) {
-        return verify_password;
+        return verifyPassword;
       }
     }
     if(strcmp(className, "Http") == 0) {
       if(strcmp(signature, "call_(_,_,_,_,_)") == 0) {
-        return http_call;
+        return httpCall;
       }
     }
   }
   return NULL;
 }
-char* escape_special_chars(const char* input) {
+char* escapeSpecialChars(const char* input) {
   int   i, j = 0, len = strlen(input);
   char* output = malloc(len * 2 + 1); // Worst case: all characters need escaping
   if(output == NULL)
@@ -433,7 +433,7 @@ char* get_mg_str(struct mg_str str) {
   return val;
 }
 
-int save_uploaded_files(struct mg_http_message* hm, char* filesIds) {
+int saveUploadedFiles(struct mg_http_message* hm, char* filesIds) {
   struct mg_http_part part;
   size_t              ofs = 0;
   int                 first = 1;
@@ -460,7 +460,7 @@ int save_uploaded_files(struct mg_http_message* hm, char* filesIds) {
         } else {
           strcat(filesIds, ",");
         }
-        strcat(filesIds, sqlite3Int64ToString(sqlite3_last_insert_rowid(db)));
+        strcat(filesIds, sqliteIntToString(sqlite3_last_insert_rowid(db)));
         sqlite3_finalize(stmt);
       } else {
         message(red("Error on saving files"), sqlite3_errmsg(db));
@@ -471,7 +471,7 @@ int save_uploaded_files(struct mg_http_message* hm, char* filesIds) {
   return 1;
 }
 
-struct BialetResponse bialet_run(char* module, char* code,
+struct BialetResponse bialetRun(char* module, char* code,
                                  struct mg_http_message* hm) {
   struct BialetResponse r;
   r.length = 0;
@@ -502,7 +502,7 @@ struct BialetResponse bialet_run(char* module, char* code,
 
     char filesIds[MAX_URL_LEN] = "";
     // @TODO @FIXME This is called always and it can be abuse to fill the disk
-    save_uploaded_files(hm, filesIds);
+    saveUploadedFiles(hm, filesIds);
     wrenSetSlotString(vm, 3, filesIds);
 
     if((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
@@ -593,15 +593,15 @@ struct BialetResponse bialet_run(char* module, char* code,
   return r;
 }
 
-int bialet_run_cli(char* code) {
-  struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
+int bialetRunCli(char* code) {
+  struct BialetResponse response = bialetRun(CLI_MODULE_NAME, code, NULL);
   if(response.status == HTTP_ERROR)
     return 1;
   printf("%s", response.body);
   return 0;
 }
 
-void bialet_init(struct BialetConfig* config) {
+void bialetInit(struct BialetConfig* config) {
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
   if(config->db_path[0] == '/') {
@@ -622,13 +622,13 @@ void bialet_init(struct BialetConfig* config) {
 
   bialet_config = *config;
   wrenInitConfiguration(&wren_config);
-  wren_config.writeFn = &wren_write;
-  wren_config.errorFn = &wren_error;
-  wren_config.queryFn = &query_sqlite_execute;
-  wren_config.loadModuleFn = &wren_load_module;
-  wren_config.bindForeignMethodFn = &wren_bind_foreign_method;
+  wren_config.writeFn = &bialetWrenWrite;
+  wren_config.errorFn = &bialetWrenError;
+  wren_config.queryFn = &queryExecute;
+  wren_config.loadModuleFn = &bialetWrenLoadModule;
+  wren_config.bindForeignMethodFn = &wrenBindForeignMethod;
 
-  http_call_init(&bialet_config);
+  httpCallInit(&bialet_config);
 }
 
 BialetQuery* createBialetQuery() {

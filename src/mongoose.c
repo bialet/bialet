@@ -6758,9 +6758,9 @@ void mg_mgr_poll(struct mg_mgr* mgr, int ms) {
 
 void mg_http_serve_ssi(struct mg_connection* c, struct mg_http_message* hm,
                        const char* root, const char* fullpath) {
-  char* code = bialet_read_file(fullpath);
+  char* code = readFile(fullpath);
   if(code) {
-    struct BialetResponse r = bialet_run((char*)fullpath, code, hm);
+    struct BialetResponse r = bialetRun((char*)fullpath, code, hm);
     // When there is a length, the response is a file
     if(r.length > 0) {
       mg_printf(c, "HTTP/1.1 200 OK\r\n%sContent-Length: %d\r\n\r\n", r.header,
