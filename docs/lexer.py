@@ -36,6 +36,7 @@ class BialetLexer(RegexLexer):
             # HTML
             (r'\{\{', String.Interpol, 'html_interpolation'),
             (r'<\/?[a-z][a-z0-9]*[^>]*>', Other, 'html'),
+            (r'<!doctype html>', Other),
 
             (r'[,\\\[\]{}]', Punctuation),
 
