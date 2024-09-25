@@ -20,7 +20,7 @@ struct HttpResponse {
   char* body;
 };
 
-void http_call_init(struct BialetConfig* config);
-void http_call_perform(struct HttpRequest* req, struct HttpResponse* resp);
+void httpCallInit(struct BialetConfig* config);
+void httpCallPerform(struct HttpRequest* req, struct HttpResponse* resp);
 
 #endif

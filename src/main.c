@@ -57,7 +57,7 @@ int                 routes_index = 0;
 int                 ignored_files_index = 0;
 time_t              last_reload = 0;
 
-static void http_handler(struct mg_connection* c, int ev, void* ev_data,
+static void httpHandler(struct mg_connection* c, int ev, void* ev_data,
                          void* fn_data) {
   if(ev == MG_EV_HTTP_MSG) {
     struct mg_http_message*   hm = (struct mg_http_message*)ev_data;
@@ -89,17 +89,17 @@ static void migrate() {
   strcat(path, MIGRATION_FILE);
   strcpy(altPath, bialet_config.root_dir);
   strcat(altPath, MIGRATION_FILE_ALT);
-  if((code = bialet_read_file(path)) || (code = bialet_read_file(altPath))) {
-    struct BialetResponse r = bialet_run("migration", code, 0);
+  if((code = readFile(path)) || (code = readFile(altPath))) {
+    struct BialetResponse r = bialetRun("migration", code, 0);
     message(yellow("Running migration"), r.body);
   } else {
-    bialet_run("migration", "import \"bialet\" for Db\nDb.init", 0);
+    bialetRun("migration", "import \"bialet\" for Db\nDb.init", 0);
   }
 }
 
 #ifdef IS_UNIX
 // @TODO Add parsing routes in Windows
-static int parse_routes_callback(const char* fpath, const struct stat* sb,
+static int parseRoutesCallback(const char* fpath, const struct stat* sb,
                                  int typeflag) {
   if(typeflag == FTW_F && strstr(fpath, ROUTE_FILE)) {
     if(routes_index >= MAX_ROUTES) {
@@ -132,14 +132,14 @@ static int parse_routes_callback(const char* fpath, const struct stat* sb,
 }
 #endif
 
-static void parse_routes() {
+static void parseRoutes() {
   routes_index = 0;
 #ifdef IS_UNIX
-  ftw(bialet_config.root_dir, parse_routes_callback, 16);
+  ftw(bialet_config.root_dir, parseRoutesCallback, 16);
 #endif
 }
 
-static void parse_ignore(char* ignored_files_str) {
+static void parseIgnoreFiles(char* ignored_files_str) {
   char* token;
   ignored_files_index = 0;
   char* str = strdup(ignored_files_str);
@@ -162,17 +162,17 @@ static void parse_ignore(char* ignored_files_str) {
   free(str);
 }
 /* Reload files */
-static void trigger_reload_files() {
+static void triggerReloadFiles() {
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
     migrate();
-    parse_routes();
+    parseRoutes();
   }
 }
 
 #ifdef IS_UNIX
-static void* file_watcher(void* arg) {
+static void* fileWatcher(void* arg) {
   pthread_detach(pthread_self());
   int   length, i = 0;
   char  buffer[BUF_LEN];
@@ -199,7 +199,7 @@ static void* file_watcher(void* arg) {
         ext = strrchr(event->name, '.');
         // Only reload .wren files
         if(ext && !strcmp(ext, EXTENSION)) {
-          trigger_reload_files();
+          triggerReloadFiles();
         }
       }
       i += EVENT_SIZE + event->len;
@@ -210,17 +210,17 @@ static void* file_watcher(void* arg) {
 }
 #endif
 
-char* server_url() {
+char* serverUrl() {
   static char url[MAX_URL];
   snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, bialet_config.port);
   return url;
 }
 
 void welcome() {
-  message("🚲", green("bialet"), "is riding on", blue(server_url()));
+  message("🚲", green("bialet"), "is riding on", blue(serverUrl()));
 }
 
-void sigint_handler(int signum) {
+void sigintHandler(int signum) {
   _exit(0);
 }
 
@@ -305,29 +305,29 @@ int main(int argc, char* argv[]) {
     /* @TODO Error handling root dir exists */
   }
 
-  message_init(&bialet_config);
-  bialet_init(&bialet_config);
+  messageInit(&bialet_config);
+  bialetInit(&bialet_config);
   if(strcmp(code, "") != 0) {
     migrate();
-    exit(bialet_run_cli(code));
+    exit(bialetRunCli(code));
   }
   mg_mgr_init(&mgr);
 
-  if(mg_http_listen(&mgr, server_url(), http_handler, NULL) == NULL) {
+  if(mg_http_listen(&mgr, serverUrl(), httpHandler, NULL) == NULL) {
     perror("Error starting bialet");
     exit(1);
   }
 
-  signal(SIGINT, sigint_handler);
-  signal(SIGABRT, sigint_handler);
-  signal(SIGTERM, sigint_handler);
+  signal(SIGINT, sigintHandler);
+  signal(SIGABRT, sigintHandler);
+  signal(SIGTERM, sigintHandler);
   welcome();
-  parse_ignore(ignored_files_str);
-  trigger_reload_files();
+  parseIgnoreFiles(ignored_files_str);
+  triggerReloadFiles();
 
 #ifdef IS_UNIX
   int status;
-  pthread_create(&thread_id, NULL, file_watcher, NULL);
+  pthread_create(&thread_id, NULL, fileWatcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;

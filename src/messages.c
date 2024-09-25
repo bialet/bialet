@@ -18,7 +18,7 @@
 FILE* log_file;
 int   apply_color = 0;
 
-void message_init(struct BialetConfig* config) {
+void messageInit(struct BialetConfig* config) {
   log_file = config->log_file;
   apply_color = config->output_color;
   if(!isatty(1))
@@ -53,7 +53,7 @@ char* cyan(char* str) {
   return colorize(str, CYAN_COLOR);
 }
 
-void message_internal(int num, ...) {
+void messageInternal(int num, ...) {
   va_list args;
   va_start(args, num);
 
@@ -81,16 +81,16 @@ void message_internal(int num, ...) {
   }
 }
 
-#define message_1(x) message_internal(1, x)
-#define message_2(x, y) message_internal(2, x, y)
-#define message_3(x, y, z) message_internal(3, x, y, z)
-#define message_4(w, x, y, z) message_internal(4, w, x, y, z)
-#define message_5(v, w, x, y, z) message_internal(5, v, w, x, y, z)
-#define message_6(u, v, w, x, y, z) message_internal(6, u, v, w, x, y, z)
-#define message_7(t, u, v, w, x, y, z) message_internal(7, t, u, v, w, x, y, z)
-#define message_8(s, t, u, v, w, x, y, z) message_internal(8, s, t, u, v, w, x, y, z)
+#define message_1(x) messageInternal(1, x)
+#define message_2(x, y) messageInternal(2, x, y)
+#define message_3(x, y, z) messageInternal(3, x, y, z)
+#define message_4(w, x, y, z) messageInternal(4, w, x, y, z)
+#define message_5(v, w, x, y, z) messageInternal(5, v, w, x, y, z)
+#define message_6(u, v, w, x, y, z) messageInternal(6, u, v, w, x, y, z)
+#define message_7(t, u, v, w, x, y, z) messageInternal(7, t, u, v, w, x, y, z)
+#define message_8(s, t, u, v, w, x, y, z) messageInternal(8, s, t, u, v, w, x, y, z)
 #define message_9(r, s, t, u, v, w, x, y, z)                                        \
-  message_internal(9, r, s, t, u, v, w, x, y, z)
+  messageInternal(9, r, s, t, u, v, w, x, y, z)
 
 #define GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, NAME, ...) NAME
 #define message(...)                                                                \
