@@ -30,6 +30,7 @@ suppress_warnings = ['misc.highlighting_failure']
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
+html_css_files = ["custom.css"]
 html_favicon = '../src/favicon.ico'
 html_theme_options = {
     "logo": {
