@@ -2,6 +2,7 @@ TARGET_EXEC := bialet
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 DOCS_DIRS := ./docs
+TEST_DIR := ./tests
 INSTALL_DIR := ~/.local/bin
 DB_FILE := _db.sqlite3
 
@@ -37,6 +38,9 @@ $(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
 $(OBJ_DIRS):
 	@mkdir -p $@
 
+check: $(BUILD_DIR)/$(TARGET_EXEC)
+	$(TEST_DIR)/run.sh
+
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
 	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)
@@ -51,4 +55,4 @@ clean:
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: all clean wren_to_c_string install uninstall html
+.PHONY: all clean wren_to_c_string install uninstall check html
