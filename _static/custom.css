@@ -1,0 +1,5 @@
+html[data-theme="dark"] .highlight .x { color: #8be9fd } /* Other */
+html[data-theme="dark"] .highlight .sb { color: #ff5555 } /* Literal.String.Backtick */
+html[data-theme="light"] .highlight .x { color: #04B1D5 } /* Other */
+html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Backtick */
+
