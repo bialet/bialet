@@ -25,12 +25,14 @@ test_get() {
     if [[ "$response" -ne "$expected_status" ]]; then
         echo -e "${RED}FAIL${NC}"
         failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_status}\tActual: $response\n"
         return 1
     fi
 
     if [[ -n "$expected_body" && "$body" != *"$expected_body"* ]]; then
         echo -e "${RED}FAIL${NC}"
         failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_body}\tActual: $body\n"
         return 1
     fi
 
@@ -54,12 +56,14 @@ test_post() {
     if [[ "$response" -ne "$expected_status" ]]; then
         echo -e "${RED}FAIL${NC}"
         failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_status}\tActual: $response\n"
         return 1
     fi
 
     if [[ -n "$expected_body" && "$body" != *"$expected_body"* ]]; then
         echo -e "${RED}FAIL${NC}"
         failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_body}\tActual: $body\n"
         return 1
     fi
 
