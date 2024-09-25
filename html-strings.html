@@ -442,12 +442,12 @@ document.write(`
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Basic example of an Inline HTML String</span>
-<span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="nc">World</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;Hello World&lt;/p&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;p&gt;Hello World&lt;/p&gt;&quot;</span>
 </pre></div>
 </div>
 <p>You can also use interpolation inside the string:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="mf">5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="mf">5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;p&gt;8&lt;/p&gt;&quot;</span>
 </pre></div>
 </div>
@@ -456,8 +456,8 @@ document.write(`
 <section id="interpolation">
 <h2>Interpolation<a class="headerlink" href="#interpolation" title="Link to this heading">#</a></h2>
 <p>The handlebars <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> provide string interpolation. You can place any Wren expression inside handlebars, and it will be evaluated and inserted into the string.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;John&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">greeting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}}</span><span class="o">!&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">greeting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;h1&gt;Hello, {{ name }}!&lt;/h1&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;h1&gt;Hello, John!&lt;/h1&gt;&quot;</span>
 </pre></div>
 </div>
@@ -465,7 +465,7 @@ document.write(`
 <section id="example-with-ternary-operator">
 <h3>Example with Ternary Operator:<a class="headerlink" href="#example-with-ternary-operator" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">isLoggedIn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="k">var</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">isLoggedIn</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;Welcome back!&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;Please log in.&quot;</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">isLoggedIn</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;Welcome back!&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Please log in.&quot;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;p&gt;Welcome back!&lt;/p&gt;&quot;</span>
 </pre></div>
 </div>
@@ -479,7 +479,7 @@ document.write(`
 <p>You can include HTML attributes as you would in a regular HTML document. Attributes must be valid, lowercase HTML names.</p>
 <section id="id1">
 <h3>Example:<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;#&quot;</span><span class="o">&gt;</span><span class="nc">Click</span><span class="w"> </span><span class="n">me</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;a href=&quot;#&quot;&gt;Click me&lt;/a&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;a href=&quot;#&quot;&gt;Click me&lt;/a&gt;&quot;</span>
 </pre></div>
 </div>
@@ -491,7 +491,7 @@ document.write(`
 <h3>Mismatched Tags<a class="headerlink" href="#mismatched-tags" title="Link to this heading">#</a></h3>
 <p>Inline HTML Strings must start and end with the same tag. Mismatching tags will result in a parsing error.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
-<span class="k">var</span><span class="w"> </span><span class="n">wrong</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">div</span><span class="o">&gt;&lt;</span><span class="n">span</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">wrong</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -499,7 +499,7 @@ document.write(`
 <h3>Invalid Tag Names<a class="headerlink" href="#invalid-tag-names" title="Link to this heading">#</a></h3>
 <p>Tag names must only contain letters and numbers. Special characters like hyphens (<code class="docutils literal notranslate"><span class="pre">-</span></code>) are not allowed.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
-<span class="k">var</span><span class="w"> </span><span class="n">invalidTag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">custom</span><span class="o">-</span><span class="n">tag</span><span class="o">&gt;</span><span class="nc">Invalid</span><span class="o">&lt;/</span><span class="n">custom</span><span class="o">-</span><span class="n">tag</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">invalidTag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;custom-tag&gt;Invalid&lt;/custom-tag&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -507,8 +507,8 @@ document.write(`
 <h3>Multi-line Attributes<a class="headerlink" href="#multi-line-attributes" title="Link to this heading">#</a></h3>
 <p>Multi-line attributes are not supported. Attributes must be defined on a single line.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
-<span class="k">var</span><span class="w"> </span><span class="n">multiLineAttr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;example&quot;</span>
-<span class="w">                         </span><span class="n">data</span><span class="o">-</span><span class="n">value</span><span class="o">=</span><span class="s">&quot;example&quot;</span><span class="o">&gt;&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">multiLineAttr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div class=&quot;example&quot;</span>
+<span class="x">                         data-value=&quot;example&quot;&gt;&lt;/div&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -518,8 +518,8 @@ document.write(`
 <section id="nesting-interpolations">
 <h3>Nesting Interpolations<a class="headerlink" href="#nesting-interpolations" title="Link to this heading">#</a></h3>
 <p>You can nest up to 9 levels of interpolations inside each other. This allows for more complex dynamic HTML structures.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;John&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">nested</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">&lt;</span><span class="n">span</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">span</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">nested</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;span&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span><span class="w"> </span><span class="c1">// Outputs: &quot;&lt;p&gt;&lt;span&gt;John&lt;/span&gt;&lt;/p&gt;&quot;</span>
 </pre></div>
 </div>
@@ -527,8 +527,8 @@ document.write(`
 <section id="iteration-with-map">
 <h3>Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code><a class="headerlink" href="#iteration-with-map" title="Link to this heading">#</a></h3>
 <p>You can use Wren’s <code class="docutils literal notranslate"><span class="pre">map</span></code> function to generate lists or other repetitive structures.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cherry&quot;</span><span class="p">]</span>
-<span class="k">var</span><span class="w"> </span><span class="n">htmlList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cherry&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">htmlList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">htmlList</span><span class="p">)</span><span class="w"> </span>
 <span class="c1">// Outputs: &quot;&lt;ul&gt;&lt;li&gt;Apple&lt;/li&gt;&lt;li&gt;Banana&lt;/li&gt;&lt;li&gt;Cherry&lt;/li&gt;&lt;/ul&gt;&quot;</span>
 </pre></div>
@@ -550,13 +550,13 @@ document.write(`
 <section id="example-of-correct-and-incorrect-usages">
 <h3>Example of Correct and Incorrect Usages:<a class="headerlink" href="#example-of-correct-and-incorrect-usages" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Correct</span>
-<span class="k">var</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;Item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Item2&quot;</span><span class="p">]</span>
-<span class="k">var</span><span class="w"> </span><span class="n">correctMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Item2&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">correctMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
 
 <span class="c1">// Incorrect</span>
-<span class="k">var</span><span class="w"> </span><span class="n">incorrectMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span>
-<span class="p">}</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">incorrectMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span>
+<span class="w">    </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
 </pre></div>
 </div>
 </section>

@@ -433,9 +433,9 @@ document.write(`
 <section id="our-first-wren-file">
 <h2>Our first Wren file<a class="headerlink" href="#our-first-wren-file" title="Link to this heading">#</a></h2>
 <p>Now let’s create the <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="nc">World</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;p&gt;Hello World!&lt;/p&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The index.wren file is the main HTML file. It works the same as the index.html file.
@@ -460,19 +460,19 @@ powerful string interpolation.</p>
 <p>In your project directory, create a file named <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>. This file will contain the Template class, where we’ll define a static layout method to render our HTML content dynamically. A static method means that we can call it directly from the class <code class="docutils literal notranslate"><span class="pre">Template.layout(&quot;...&quot;)</span></code>.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">header</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">header</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="p">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
+<span class="x">        &lt;head&gt;</span>
+<span class="w">          </span><span class="x">&lt;title&gt;Poll&lt;/title&gt;</span>
+<span class="w">        </span><span class="x">&lt;/head&gt;</span>
+<span class="x">        &lt;body&gt;</span>
+<span class="w">          </span><span class="x">&lt;header&gt;</span>
+<span class="x">            &lt;h1&gt;&lt;a href=&quot;.&quot;&gt;Poll&lt;/a&gt;&lt;/h1&gt;</span>
+<span class="x">          &lt;/header&gt;</span>
+<span class="w">          </span><span class="x">&lt;main&gt;</span>
+<span class="x">            {{ content }}</span>
+<span class="x">          &lt;/main&gt;</span>
+<span class="w">        </span><span class="x">&lt;/body&gt;</span>
+<span class="x">      &lt;/html&gt;</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">html</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -481,44 +481,44 @@ powerful string interpolation.</p>
 <p><strong>Inside an inline HTML string we use the interpolations <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code>, this will execute the expression and return the result.</strong></p>
 <p>For the regular quotes strings the interpolation is defined as <code class="docutils literal notranslate"><span class="pre">%(</span> <span class="pre">...</span> <span class="pre">)</span></code>.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Number: </span><span class="si">%(</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Number: </span><span class="si">%(</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Let’s use the Template class to render our HTML content.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="err">&#39;</span><span class="nc">So</span><span class="w"> </span><span class="n">far</span><span class="p">,</span><span class="w"> </span><span class="n">so</span><span class="w"> </span><span class="n">good</span><span class="o">.</span><span class="err">&#39;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="s1">&#39;So far, so good.&#39;</span><span class="p">)</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In Wren we need to define each variable before usage, for that we use the <code class="docutils literal notranslate"><span class="pre">var</span></code> keyword.
 A single expression inside a block with no new line will return the value.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;Example&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;Example&quot;</span>
 <span class="p">}</span>
 
 <span class="c1">// Could be writed instead</span>
 
-<span class="p">{</span><span class="w"> </span><span class="s">&quot;Example&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">&quot;Example&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Before copying the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> code in our layout we will change it a little bit.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// But wait, if we start a string, we can have multilines as well</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="p">{{</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="p">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
+<span class="x">        &lt;head&gt;</span>
+<span class="w">          </span><span class="x">&lt;title&gt;Poll&lt;/title&gt;</span>
+<span class="w">        </span><span class="x">&lt;/head&gt;</span>
+<span class="x">        &lt;body&gt;</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">          </span><span class="x">&lt;main&gt;</span>
+<span class="x">            {{ content }}</span>
+<span class="x">          &lt;/main&gt;</span>
+<span class="w">        </span><span class="x">&lt;/body&gt;</span>
+<span class="x">      &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// both methods works the same, returning the string</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">&lt;</span><span class="n">header</span><span class="o">&gt;&lt;</span><span class="n">h1</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;.&quot;</span><span class="o">&gt;</span><span class="nc">Poll</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;&lt;/</span><span class="n">header</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;header&gt;&lt;h1&gt;&lt;a href=&quot;.&quot;&gt;Poll&lt;/a&gt;&lt;/h1&gt;&lt;/header&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -543,26 +543,26 @@ But first, we need to create a new table. You should have a file called <code cl
 </div>
 <p>The logic is very simple, we show all the options, then we increment when receiving a vote.
 Let’s write a file called <code class="docutils literal notranslate"><span class="pre">simple_poll.wren</span></code> for our logic.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">simple_poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">            </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Vote&quot;</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;body&gt;</span>
+<span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">        {{ options.map{ |opt| &lt;p&gt;</span>
+<span class="w">            </span><span class="x">&lt;label&gt;</span>
+<span class="x">              &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
+<span class="w">              </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">            </span><span class="x">&lt;/label&gt;</span>
+<span class="x">          &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
+<span class="x">      &lt;/form&gt;</span>
+<span class="w">  </span><span class="x">&lt;/body&gt;</span>
+<span class="x">&lt;/html&gt;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -575,15 +575,15 @@ Instead of having <code class="docutils literal notranslate"><span class="pre">(
 Then we use the same principle than in the refactored Template class, single expression implicitly returns the value.</p>
 <p>Oh, yes you can have an interpolation in your interpolations.</p>
 <p>In order to vote, we need to handle a <code class="docutils literal notranslate"><span class="pre">POST</span></code> request from the form.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s">&quot;vote&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="err">`</span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">simple_poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -592,44 +592,44 @@ Then we use the same principle than in the refactored Template class, single exp
 <p>The query object are <a class="reference external" href="https://en.wikipedia.org/wiki/Prepared_statement">prepared statement</a>, you can’t concatenate them or having interpotations in them.
 You should use the <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholder to pass the value to the query.</p>
 <p>The logic is finished but let’s finish this example showing the results.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="c1">// We will use the vote variable to see if the user voted</span>
 <span class="k">var</span><span class="w"> </span><span class="n">vote</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s">&quot;vote&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="err">`</span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">simple_poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;body&gt;</span>
+<span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
 
-<span class="w">    </span><span class="p">{{</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">            </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Vote&quot;</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="p">{{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="n">votes</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">a</span><span class="w"> </span><span class="n">href</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="o">&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="p">}}</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="p">)</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">        {{ options.map{ |opt| &lt;p&gt;</span>
+<span class="w">            </span><span class="x">&lt;label&gt;</span>
+<span class="x">              &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
+<span class="w">              </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">            </span><span class="x">&lt;/label&gt;</span>
+<span class="x">          &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
+<span class="x">      &lt;/form&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">      </span><span class="x">&lt;main&gt;</span>
+<span class="x">        &lt;p&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="x">&lt;ul&gt;</span>
+<span class="x">          {{ options.map{|opt| &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">votes</span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">        &lt;/ul&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">      </span><span class="x">&lt;/main&gt;</span>
+<span class="x">    }}</span>
+<span class="x">  &lt;/body&gt;</span>
+<span class="x">&lt;/html&gt;</span>
+<span class="x">)</span>
 </pre></div>
 </div>
 <p>Now we have the last interpolation trick, in order to show some code we use a ternary operator.</p>
@@ -640,22 +640,22 @@ You should use the <code class="docutils literal notranslate"><span class="pre">
 <h2>Put it all together<a class="headerlink" href="#put-it-all-together" title="Link to this heading">#</a></h2>
 <p>Now that we have an idea on how to handle the logic. In our complete example we need more columns in the database. This time we will use migrations.</p>
 <p>Create a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file in the root of the project.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span>
-<span class="w">  </span><span class="nc">CREATE</span><span class="w"> </span><span class="nc">TABLE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nc">INTEGER</span><span class="w"> </span><span class="nc">PRIMARY</span><span class="w"> </span><span class="nc">KEY</span><span class="w"> </span><span class="nc">AUTOINCREMENT</span><span class="p">,</span>
-<span class="w">    </span><span class="n">answer</span><span class="w"> </span><span class="nc">TEXT</span><span class="w"> </span><span class="nc">NOT</span><span class="w"> </span><span class="nc">NULL</span><span class="p">,</span>
-<span class="w">    </span><span class="n">comment</span><span class="w"> </span><span class="nc">TEXT</span><span class="p">,</span>
-<span class="w">    </span><span class="n">votes</span><span class="w"> </span><span class="nc">INTEGER</span><span class="w"> </span><span class="nc">NOT</span><span class="w"> </span><span class="nc">NULL</span><span class="w"> </span><span class="nc">DEFAULT</span><span class="w"> </span><span class="mf">0</span>
-<span class="w">  </span><span class="p">)</span>
-<span class="err">`</span><span class="p">)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE poll (</span>
+<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span class="sb">    answer TEXT NOT NULL,</span>
+<span class="sb">    comment TEXT,</span>
+<span class="sb">    votes INTEGER NOT NULL DEFAULT 0</span>
+<span class="sb">  )</span>
+<span class="sb">`</span><span class="p">)</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Add initial data&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span>
-<span class="w">  </span><span class="nc">INSERT</span><span class="w"> </span><span class="nc">INTO</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="p">(</span><span class="n">answer</span><span class="p">,</span><span class="w"> </span><span class="n">comment</span><span class="p">)</span><span class="w"> </span><span class="nc">VALUES</span>
-<span class="w">    </span><span class="p">(</span><span class="s">&quot;Yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;We need to go back to the good old times&quot;</span><span class="p">),</span>
-<span class="w">    </span><span class="p">(</span><span class="s">&quot;No&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;You are just old&quot;</span><span class="p">)</span>
-<span class="err">`</span><span class="p">)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add initial data&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  INSERT INTO poll (answer, comment) VALUES</span>
+<span class="sb">    (&quot;Yes&quot;, &quot;We need to go back to the good old times&quot;),</span>
+<span class="sb">    (&quot;No&quot;, &quot;You are just old&quot;)</span>
+<span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">migrate</span></code> method needs the name of the migration and the query object with the SQL code.
@@ -668,44 +668,44 @@ Let’s add a Poll class to the <code class="docutils literal notranslate"><span
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
-<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">               </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`UPDATE poll SET votes = votes + 1</span>
+<span class="sb">               WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>We add the poll object in the index.wren file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
 
-<span class="w">  </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">action</span><span class="o">=</span><span class="s">&quot;results&quot;</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">h2</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-6&quot;</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">ul</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;grid w-full gap-6 md:grid-cols-2&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;radio&quot;</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;vote&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">id</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;hidden peer&quot;</span><span class="w"> </span><span class="n">required</span><span class="w"> </span><span class="o">/&gt;</span>
-<span class="w">          </span><span class="o">&lt;</span><span class="n">label</span><span class="w"> </span><span class="k">for</span><span class="o">=</span><span class="s">&quot;{{ opt[&quot;</span><span class="n">answer</span><span class="s">&quot;] }}&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700&quot;</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;block&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full text-lg font-semibold&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">            </span><span class="o">&lt;</span><span class="n">svg</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-5 h-5 ms-3 rtl:rotate-180&quot;</span><span class="w"> </span><span class="n">aria</span><span class="o">-</span><span class="n">hidden</span><span class="o">=</span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="n">xmlns</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2000/svg&quot;</span><span class="w"> </span><span class="n">fill</span><span class="o">=</span><span class="s">&quot;none&quot;</span><span class="w"> </span><span class="n">viewBox</span><span class="o">=</span><span class="s">&quot;0 0 14 10&quot;</span><span class="o">&gt;</span>
-<span class="w">              </span><span class="o">&lt;</span><span class="n">path</span><span class="w"> </span><span class="n">stroke</span><span class="o">=</span><span class="s">&quot;currentColor&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">linecap</span><span class="o">=</span><span class="s">&quot;round&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">linejoin</span><span class="o">=</span><span class="s">&quot;round&quot;</span><span class="w"> </span><span class="n">stroke</span><span class="o">-</span><span class="n">width</span><span class="o">=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="n">d</span><span class="o">=</span><span class="s">&quot;M1 5h12m0 0L9 1m4 4L9 9&quot;</span><span class="o">/&gt;</span>
-<span class="w">            </span><span class="o">&lt;/</span><span class="n">svg</span><span class="o">&gt;</span>
-<span class="w">          </span><span class="o">&lt;/</span><span class="n">label</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;pt-8 flex justify-center&quot;</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">button</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800&quot;</span><span class="o">&gt;</span><span class="nc">Vote</span><span class="o">&lt;/</span><span class="n">button</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="x">&lt;form action=&quot;results&quot; method=&quot;post&quot;&gt;</span>
+<span class="x">    &lt;h2 class=&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="x">&lt;div class=&quot;mb-6&quot;&gt;</span>
+<span class="x">      &lt;ul class=&quot;grid w-full gap-6 md:grid-cols-2&quot;&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span>
+<span class="x">          &lt;input type=&quot;radio&quot; id=&quot;{{ opt[&quot;answer&quot;] }}&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;id&quot;] }}&quot; class=&quot;hidden peer&quot; required /&gt;</span>
+<span class="w">          </span><span class="x">&lt;label for=&quot;{{ opt[&quot;answer&quot;] }}&quot; class=&quot;inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700&quot;&gt;</span>
+<span class="x">            &lt;div class=&quot;block&quot;&gt;</span>
+<span class="w">              </span><span class="x">&lt;div class=&quot;w-full text-lg font-semibold&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="w">              </span><span class="x">&lt;div class=&quot;w-full&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="w">            </span><span class="x">&lt;/div&gt;</span>
+<span class="x">            &lt;svg class=&quot;w-5 h-5 ms-3 rtl:rotate-180&quot; aria-hidden=&quot;true&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; fill=&quot;none&quot; viewBox=&quot;0 0 14 10&quot;&gt;</span>
+<span class="w">              </span><span class="x">&lt;path stroke=&quot;currentColor&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot; d=&quot;M1 5h12m0 0L9 1m4 4L9 9&quot;/&gt;</span>
+<span class="x">            &lt;/svg&gt;</span>
+<span class="w">          </span><span class="x">&lt;/label&gt;</span>
+<span class="x">        &lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">    &lt;/div&gt;</span>
+<span class="w">    </span><span class="x">&lt;div class=&quot;pt-8 flex justify-center&quot;&gt;</span>
+<span class="x">      &lt;button type=&quot;submit&quot; class=&quot;text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800&quot;&gt;</span><span class="nc">Vote</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;/div&gt;</span>
+<span class="w">  </span><span class="x">&lt;/form&gt;</span>
 
-<span class="p">))</span>
+<span class="x">))</span>
 </pre></div>
 </div>
 <p>Wren does not have a <a class="reference external" href="https://wren.io/classes.html#constructors">default constructor</a>, we use the <code class="docutils literal notranslate"><span class="pre">constructor</span></code> keyword on any method and use that method to create the object.
@@ -713,25 +713,25 @@ Naming the method <code class="docutils literal notranslate"><span class="pre">n
 <p>We will handle the form. We usually handle it in the same page the form is on.
 This way if we need to show an error we don’t need to go back to the form.
 Once we know the form was correctly validated we can redirect to the results page.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="c1">// Redirect to the results page and stop the script</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&quot;/results&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="c1">// Remember to change the action attribute in the form!</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">action</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">...</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="x">&lt;form action=&quot;/&quot; method=&quot;post&quot;&gt;</span>
+<span class="x">  ...</span>
+<span class="x">  &lt;/form&gt;</span>
 <span class="p">))</span>
 </pre></div>
 </div>
@@ -741,31 +741,31 @@ Once we know the form was correctly validated we can redirect to the results pag
 <p>Back to the results page we create a Poll instance. Remember, this will be created each time the page is called. But first add a <code class="docutils literal notranslate"><span class="pre">percentage</span></code> method and a <code class="docutils literal notranslate"><span class="pre">totalVotes</span></code> property to the poll class.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// ...</span>
-<span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="nc">SUM</span><span class="p">(</span><span class="n">votes</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">poll</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s">&quot;total&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">totalVotes</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="sb">`SELECT SUM(votes) as total FROM poll`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;total&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">totalVotes</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>All the variables we receive from the database are strings.
 We need to convert them to numbers with the <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> method before we can use them.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">h2</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="o">&lt;</span><span class="n">section</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">h3</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white&quot;</span><span class="o">&gt;</span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;w-full bg-gray-200 h-8 mb-6 rounded-full dark:bg-gray-700&quot;</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">div</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full&quot;</span><span class="w"> </span><span class="n">style</span><span class="o">=</span><span class="s">&quot;width: {{ poll.percentage(opt) }}</span><span class="err">%</span><span class="s">&quot;</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}}</span><span class="o">%&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">p</span><span class="w"> </span><span class="k">class</span><span class="o">=</span><span class="s">&quot;mb-5 text-md font-medium text-gray-700 dark:text-gray-400&quot;</span><span class="o">&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="nc">Votes</span><span class="o">:</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">section</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="o">&lt;/</span><span class="n">main</span><span class="o">&gt;</span>
-<span class="p">))</span>
+<span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h2 class=&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;h3 class=&quot;mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;div class=&quot;w-full bg-gray-200 h-8 mb-6 rounded-full dark:bg-gray-700&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;div class=&quot;bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full&quot; style=&quot;width: {{ poll.percentage(opt) }}%&quot;&gt; {{ poll.percentage(opt) }}%&lt;/div&gt;</span>
+<span class="w">    </span><span class="x">&lt;/div&gt;</span>
+<span class="x">    &lt;p class=&quot;mb-5 text-md font-medium text-gray-700 dark:text-gray-400&quot;&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="nc">Votes</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">&lt;/main&gt;</span>
+<span class="x">))</span>
 </pre></div>
 </div>
 <p>We are almost done. Let’s list the problems we need to fix:</p>
@@ -776,14 +776,14 @@ We need to convert them to numbers with the <code class="docutils literal notran
 <li><p>Results is failing when there are no votes.</p></li>
 </ol>
 <p>For the colors we add two new migrations:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Add color column&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span>
-<span class="w">  </span><span class="nc">ALTER</span><span class="w"> </span><span class="nc">TABLE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="nc">ADD</span><span class="w"> </span><span class="nc">COLUMN</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="nc">TEXT</span>
-<span class="err">`</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color column&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  ALTER TABLE poll ADD COLUMN color TEXT</span>
+<span class="sb">`</span><span class="p">)</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s">&quot;Add color data&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">`</span>
-<span class="w">  </span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;blue&quot;</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Yes&quot;</span><span class="err">;</span>
-<span class="w">  </span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;red&quot;</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">answer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;No&quot;</span><span class="err">;</span>
-<span class="err">`</span><span class="p">)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color data&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  UPDATE poll SET color = &quot;blue&quot; WHERE answer = &quot;Yes&quot;;</span>
+<span class="sb">  UPDATE poll SET color = &quot;red&quot; WHERE answer = &quot;No&quot;;</span>
+<span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>All the other problems will be fixed in the Poll class, here is the final version:</p>
@@ -794,10 +794,10 @@ We need to convert them to numbers with the <code class="docutils literal notran
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Fetch the options from the database into the `_opts` property.</span>
 <span class="w">  </span><span class="c1">// Queries are part of Bialet.</span>
-<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_opts</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">poll</span><span class="err">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">())</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_opts</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">())</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Add parameters to the query like a prepared statement.</span>
-<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">`</span><span class="nc">UPDATE</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="nc">SET</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">               </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`UPDATE poll SET votes = votes + 1</span>
+<span class="sb">               WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Getter to get the total number of votes.</span>
 <span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_total</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Fn</span><span class="o">.</span><span class="n">new</span><span class="p">{</span><span class="o">|</span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}))}</span>
 <span class="w">  </span><span class="c1">// Calculate the percentage of votes for an option</span>
@@ -805,7 +805,7 @@ We need to convert them to numbers with the <code class="docutils literal notran
 <span class="w">  </span><span class="c1">// Use the method to get the votes as a number.</span>
 <span class="w">  </span><span class="c1">// There is no access modifier in Wren. Add an underscore at the end</span>
 <span class="w">  </span><span class="c1">// of the method name to identify it as private.</span>
-<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>

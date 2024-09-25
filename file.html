@@ -433,28 +433,28 @@ However, any file that is uploaded but not processed remains temporary, meaning 
 will be deleted within a day or less.</p>
 <section id="example-1-permanent-file-upload">
 <h3>Example 1: Permanent File Upload<a class="headerlink" href="#example-1-permanent-file-upload" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Get the uploaded file and save it as permanent</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s">&quot;upload_file&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Uploaded file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="w">  </span><span class="c1">// Return a message indicating the file was uploaded</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s">&quot;&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
 <span class="o">&lt;!</span><span class="n">doctype</span><span class="w"> </span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="nc">Upload</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="nc">File</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;</span><span class="n">form</span><span class="w"> </span><span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="w"> </span><span class="n">enctype</span><span class="o">=</span><span class="s">&quot;multipart/form-data&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;file&quot;</span><span class="w"> </span><span class="n">name</span><span class="o">=</span><span class="s">&quot;upload_file&quot;</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="o">&lt;</span><span class="n">input</span><span class="w"> </span><span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="w"> </span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Upload&quot;</span><span class="o">&gt;</span>
-<span class="w">      </span><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="x">&lt;html&gt;</span>
+<span class="x">    &lt;body&gt;</span>
+<span class="w">      </span><span class="x">&lt;h1&gt;Upload a File&lt;/h1&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
+<span class="x">        &lt;input type=&quot;file&quot; name=&quot;upload_file&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type=&quot;submit&quot; value=&quot;Upload&quot;&gt;</span>
+<span class="x">      &lt;/form&gt;</span>
+<span class="w">    </span><span class="x">&lt;/body&gt;</span>
+<span class="x">  &lt;/html&gt;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -464,9 +464,9 @@ will be deleted within a day or less.</p>
 <p>There are times that the file is used just to process it. For that, you can mark
 it as temporary and it will be deleted after a short period of time.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get the uploaded file and mark it as temporary</span>
-<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s">&quot;upload_file&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
 <span class="n">file</span><span class="o">.</span><span class="n">temp</span><span class="p">()</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s">&quot;Uploaded temporary file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded temporary file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
@@ -484,11 +484,11 @@ files will be automatically deleted after a short period of time. To manually
 delete a file, use the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.</p>
 <section id="example-1-creating-a-permanent-file">
 <h3>Example 1: Creating a Permanent File<a class="headerlink" href="#example-1-creating-a-permanent-file" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
 
 <span class="c1">// Create a text file with dynamic content</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;This is a dynamically generated text file.&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;example.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a dynamically generated text file.&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;example.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
 
 <span class="c1">// Send the file as a response</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
@@ -499,16 +499,16 @@ delete a file, use the <code class="docutils literal notranslate"><span class="p
 <h3>Example 2: Deleting a File Manually<a class="headerlink" href="#example-2-deleting-a-file-manually" title="Link to this heading">#</a></h3>
 <p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.
 It works for uploaded and dymanically created files.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
 
 <span class="c1">// Create a text file with dynamic content</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;This is a temporary file that will be deleted.&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;temporary.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a temporary file that will be deleted.&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;temporary.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
 
 <span class="c1">// Delete the file manually</span>
 <span class="n">file</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s">&quot;&lt;p&gt;File was created and then deleted.&lt;/p&gt;&quot;</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;File was created and then deleted.&lt;/p&gt;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -525,21 +525,21 @@ display them based on user input, such as a filename.</p>
 <p>In this example, we have a custom table <code class="docutils literal notranslate"><span class="pre">images</span></code> with fields <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">file_id</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">name</span></code>. We will fetch the file based on its name and display it in the browser.</p>
 <p>For more information on routing and dynamic names, see the <a class="reference internal" href="structure.html"><span class="std std-doc">routes section</span></a>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="c1">// Assume we have a route that takes the name as a parameter</span>
 <span class="k">var</span><span class="w"> </span><span class="n">imageName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="c1">// Query the file_id from the custom table</span>
-<span class="k">var</span><span class="w"> </span><span class="n">imageData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">`</span><span class="nc">SELECT</span><span class="w"> </span><span class="n">file_id</span><span class="w"> </span><span class="nc">FROM</span><span class="w"> </span><span class="n">images</span><span class="w"> </span><span class="nc">WHERE</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="err">`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">imageName</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">imageData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT file_id FROM images WHERE name = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">imageName</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">imageData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Serve the file by its file_id</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">imageData</span><span class="p">[</span><span class="s">&quot;file_id&quot;</span><span class="p">])</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">imageData</span><span class="p">[</span><span class="s2">&quot;file_id&quot;</span><span class="p">])</span>
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Return a 404 error if the image is not found</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s">&quot;&lt;h1&gt;404 - File Not Found&lt;/h1&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;404 - File Not Found&lt;/h1&gt;&quot;</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 </div>
