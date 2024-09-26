@@ -8,6 +8,7 @@ failed_tests=0
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Function to run and assert GET requests
@@ -84,9 +85,14 @@ run_test() {
     fi
 }
 
+read_file() {
+    file_path=$1
+    cat "$(dirname "$0")/$file_path"
+}
+
 # Function to print the final result
 print_summary() {
-    echo -e "\nSummary:"
+    echo -e "\nSummary:\n"
     echo -e "Total Tests: $total_tests"
     echo -e "${GREEN}Passed Tests: $passed_tests${NC}"
     echo -e "${RED}Failed Tests: $failed_tests${NC}"
@@ -96,4 +102,40 @@ print_summary() {
     else
         return 0
     fi
+}
+
+# Start server
+echo -e -n "${BLUE}Start server process...\t"
+./build/bialet -p 7000 -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
+disown
+
+# Check if server is running
+PID=$(pgrep -f -o './build/bialet -p 7000 -l /tmp/tests.log')
+
+if [[ ${#PID} != 0 ]]
+then
+  echo -e "${GREEN}OK${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  exit 1
+fi
+
+# Check if server port is up
+echo -e -n "${BLUE}Server port is up...\t"
+nc -4 -d -z -w 1 localhost 7000 &> /dev/null
+if [[ $? == 0 ]]
+then
+  echo -e "${GREEN}OK${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  exit 1
+fi
+
+echo -e "\n${BLUE}Run tests\n---------\n\e[0m"
+
+finish() {
+  echo -e -n "\n${BLUE}Stop server process...\t"
+  # kill all
+  pgrep -f './build/bialet -p 7000 -l /tmp/tests.log' 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  echo -e " ${GREEN}OK${NC}"
 }
