@@ -925,8 +925,9 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_STRING;
+  int           closingTag = -1;
+  char*         tagName = malloc(MAX_METHOD_NAME);
 
-  char* tagName = malloc(MAX_METHOD_NAME);
   if(strlen(previousTagName) > 0) {
     strcpy(tagName, previousTagName);
   } else {
@@ -942,44 +943,59 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         parser->currentChar--;
         break;
       }
-      wrenByteBufferWrite(parser->vm, &string, c);
-      if(c == '>' || c == ' ')
+      if(c == ' ' && peekChar(parser) == '/' && peekNextChar(parser) == '>') {
+        closingTag = 1;
+        // Omit space and slash in self closing tag
+        nextChar(parser);
+        wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
         break;
+      }
+      wrenByteBufferWrite(parser->vm, &string, c);
+      if(c == '>' || c == ' ') {
+        break;
+      }
       tagName[i++] = c;
     }
     tagName[i] = '\0';
   }
 
-  int closingTag = -1;
-  for(;;) {
-    char c = nextChar(parser);
-    if(c == '\0') {
-      lexError(parser, "Unterminated HTML string.");
-      parser->currentChar--;
-      break;
-    }
-    if(c == '{' && peekChar(parser) == '{') {
-      type = TOKEN_INTERPOLATION;
-      strcpy(parser->handlebars[parser->numHandlebars], tagName);
-      parser->numHandlebars++;
-      nextChar(parser);
-      break;
-    }
-    wrenByteBufferWrite(parser->vm, &string, c);
-    if(c == '<' && peekChar(parser) == '/') {
-      closingTag = 0;
-    }
-    // Tags should start with a letter, next characters can be letters or numbers
-    if((closingTag >= 0 && c >= 'a' && c <= 'z') ||
-       (closingTag >= 1 && c >= '0' && c <= '9')) {
-      if(tagName[closingTag] != c) {
-        closingTag = -1; // Different tag
-      } else {
-        closingTag++;
+  if(closingTag < 0) {
+    for(;;) {
+      char c = nextChar(parser);
+      if(c == '\0') {
+        lexError(parser, "Unterminated HTML string.");
+        parser->currentChar--;
+        break;
       }
+      if(c == '{' && peekChar(parser) == '{') {
+        type = TOKEN_INTERPOLATION;
+        strcpy(parser->handlebars[parser->numHandlebars], tagName);
+        parser->numHandlebars++;
+        nextChar(parser);
+        break;
+      }
+      if(c == ' ' && peekChar(parser) == '/' && peekNextChar(parser) == '>') {
+        // Omit space and slash in self closing tag
+        nextChar(parser);
+        wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
+        break;
+      }
+      wrenByteBufferWrite(parser->vm, &string, c);
+      if(c == '<' && peekChar(parser) == '/') {
+        closingTag = 0;
+      }
+      // Tags should start with a letter, next characters can be letters or numbers
+      if((closingTag >= 0 && c >= 'a' && c <= 'z') ||
+         (closingTag >= 1 && c >= '0' && c <= '9')) {
+        if(tagName[closingTag] != c) {
+          closingTag = -1; // Different tag
+        } else {
+          closingTag++;
+        }
+      }
+      if(c == '>' && closingTag == strlen(tagName))
+        break;
     }
-    if(c == '>' && closingTag == strlen(tagName))
-      break;
   }
   free(tagName);
 

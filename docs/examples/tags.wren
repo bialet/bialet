@@ -18,7 +18,26 @@ var content = <div class="container">
   <p>{{ a < b && <b>A is less than B</b> }}</p>
 </div>
 
+// Self-closing tags
+var line = <hr />
+var charset = "utf-8"
+var metaTag = <meta charset="{{ charset }}" />
+var input = <input type="{{ "text" }}" name="name" value="{{ name }}" />
+
+// Yes, < and > signs still work!
 if (a<b || b>a) {
   System.print(title)
 }
-Response.out(<html><body>{{ content }}</body></html>)
+
+// Doctype is a special case, it will end on a close HTML tag: `</html>`
+Response.out(<!doctype html>
+<html>
+<head>
+  {{ metaTag }}
+</head>
+<body>
+  {{ content }}
+  {{ line }}
+  {{ input }}
+</body>
+</html>)
