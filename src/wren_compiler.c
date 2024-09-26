@@ -960,8 +960,11 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   }
 
   if(closingTag < 0) {
+    int tagIsOpen = 1;
     for(;;) {
       char c = nextChar(parser);
+      if(c == '>')
+        tagIsOpen = 0;
       if(c == '\0') {
         lexError(parser, "Unterminated HTML string.");
         parser->currentChar--;
@@ -974,7 +977,8 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         nextChar(parser);
         break;
       }
-      if(c == ' ' && peekChar(parser) == '/' && peekNextChar(parser) == '>') {
+      if(tagIsOpen && c == ' ' && peekChar(parser) == '/' &&
+         peekNextChar(parser) == '>') {
         // Omit space and slash in self closing tag
         nextChar(parser);
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
