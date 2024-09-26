@@ -6,6 +6,7 @@ source "$(dirname "$0")/util.sh"
 run_test "Get the URL parameter       " "get?foo=bar"     200 "bar"
 run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"
 run_test "Get the route parameter     " "route/baz/qux"   200 "bazqux"
+run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
 run_test "This URL not exists         " "donotexists"     404
 run_test "Parsing error               " "parsing-error"   500
