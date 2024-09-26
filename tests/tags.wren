@@ -12,7 +12,7 @@ var singleStaticTag = <span>A</span>
 var emptyTag = <div></div>
 var selfClosingTag = <hr />
 var interpolated = <p>{{ singleStaticTag }}</p>
-var selfClosingInterpolated = "<img src=\"A\">" // @FIXME <img src="{{ a }}" />
+var selfClosingInterpolated = <img src="{{ a }}" />
 var attributes = <a href="#">A</a>
 var selfClosingAttributes = <input name="i" />
 var multiline = <p>
