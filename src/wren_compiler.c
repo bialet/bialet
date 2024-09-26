@@ -927,6 +927,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   WrenTokenType type = TOKEN_STRING;
   int           closingTag = -1;
   char*         tagName = malloc(MAX_METHOD_NAME);
+  int           tagIsOpen = 1;
 
   if(strlen(previousTagName) > 0) {
     strcpy(tagName, previousTagName);
@@ -960,7 +961,6 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   }
 
   if(closingTag < 0) {
-    int tagIsOpen = 1;
     for(;;) {
       char c = nextChar(parser);
       if(c == '>')
