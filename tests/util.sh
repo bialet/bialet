@@ -20,8 +20,8 @@ test_get() {
 
     total_tests=$((total_tests + 1))
     echo -e -n "$description\t"
-    response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:7000/$url_path")
-    body=$(curl -s "http://localhost:7000/$url_path")
+    response=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$PORT/$url_path")
+    body=$(curl -s "http://$HOST:$PORT/$url_path")
 
     if [[ "$response" -ne "$expected_status" ]]; then
         echo -e "${RED}FAIL${NC}"
@@ -51,8 +51,8 @@ test_post() {
 
     total_tests=$((total_tests + 1))
     echo -e -n "$description\t"
-    response=$(curl -s -o /dev/null -w "%{http_code}" -d "$post_data" "http://localhost:7000/$url_path")
-    body=$(curl -s -d "$post_data" "http://localhost:7000/$url_path")
+    response=$(curl -s -o /dev/null -w "%{http_code}" -d "$post_data" "http://$HOST:$PORT/$url_path")
+    body=$(curl -s -d "$post_data" "http://$HOST:$PORT/$url_path")
 
     if [[ "$response" -ne "$expected_status" ]]; then
         echo -e "${RED}FAIL${NC}"
@@ -105,12 +105,15 @@ print_summary() {
 }
 
 # Start server
+echo -e "🚲Run tests with ${BLUE}$TARGET_EXEC${NC} server on ${BLUE}$HOST:$PORT${NC}\n"
+
+# Start server
 echo -e -n "${BLUE}Start server process...\t"
-./build/bialet -p 7000 -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
+$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
 disown
 
 # Check if server is running
-PID=$(pgrep -f -o './build/bialet -p 7000 -l /tmp/tests.log')
+PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
 
 if [[ ${#PID} != 0 ]]
 then
@@ -122,7 +125,7 @@ fi
 
 # Check if server port is up
 echo -e -n "${BLUE}Server port is up...\t"
-nc -4 -d -z -w 1 localhost 7000 &> /dev/null
+nc -4 -d -z -w 1 $HOST $PORT &> /dev/null
 if [[ $? == 0 ]]
 then
   echo -e "${GREEN}OK${NC}"
@@ -136,6 +139,6 @@ echo -e "\n${BLUE}Run tests\n---------\n\e[0m"
 finish() {
   echo -e -n "\n${BLUE}Stop server process...\t"
   # kill all
-  pgrep -f './build/bialet -p 7000 -l /tmp/tests.log' 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   echo -e " ${GREEN}OK${NC}"
 }

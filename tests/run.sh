@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Parameters
+TARGET_EXEC="${1:-./build/bialet}"
+HOST="${2:-localhost}"
+PORT="${3:-7000}"
+
 source "$(dirname "$0")/util.sh"
 
 # Tests
