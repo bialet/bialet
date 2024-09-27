@@ -19,9 +19,11 @@
 
 #ifdef _WIN64
 
-#include <stdio.h>
-#include <windows.h>
 #include <winsock2.h>
+
+#include <windows.h>
+
+#include <stdio.h>
 
 #else
 

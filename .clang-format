@@ -25,6 +25,14 @@ AlignConsecutiveDeclarations: true
 
 # Handling of include directives
 IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<winsock2\.h>'
+    Priority: 1
+  - Regex: '^<windows\.h>'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+
 
 # Align trailing comments
 AlignTrailingComments: true

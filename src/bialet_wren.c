@@ -17,7 +17,6 @@
 #include "utils.h"
 #include "wren.h"
 #include "wren_vm.h"
-
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <sqlite3.h>
@@ -113,7 +112,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 }
 
 void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
-                const int line, const char* msg) {
+                     const int line, const char* msg) {
   char lineMessage[MAX_LINE_ERROR_LEN];
   sprintf(lineMessage, "%s line %d", module, line);
   switch(errorType) {
@@ -384,8 +383,8 @@ static void httpCall(WrenVM* vm) {
 }
 
 WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
-                                             const char* className, bool isStatic,
-                                             const char* signature) {
+                                          const char* className, bool isStatic,
+                                          const char* signature) {
   if(strcmp(module, MAIN_MODULE_NAME) == 0) {
     if(strcmp(className, "Util") == 0) {
       if(strcmp(signature, "randomString_(_)") == 0) {
@@ -472,7 +471,7 @@ int saveUploadedFiles(struct mg_http_message* hm, char* filesIds) {
 }
 
 struct BialetResponse bialetRun(char* module, char* code,
-                                 struct mg_http_message* hm) {
+                                struct mg_http_message* hm) {
   struct BialetResponse r;
   r.length = 0;
   int     error = 0;
