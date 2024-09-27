@@ -38,6 +38,9 @@ $(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
 $(OBJ_DIRS):
 	@mkdir -p $@
 
+installcheck: install
+	$(TEST_DIR)/run.sh $(INSTALL_DIR)/$(TARGET_EXEC)
+
 check: $(BUILD_DIR)/$(TARGET_EXEC)
 	$(TEST_DIR)/run.sh
 
