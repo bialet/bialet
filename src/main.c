@@ -3,17 +3,17 @@
 #include "messages.h"
 #include "mongoose.h"
 #include "wren_vm.h"
-
 #include <sys/types.h>
 
 #ifdef IS_WIN
 
-#include "getopt.h"
+#include <winsock2.h>
 
+#include <windows.h>
+
+#include "getopt.h"
 #include <stdio.h>
 #include <tchar.h>
-#include <windows.h>
-#include <winsock2.h>
 
 #define DIV 1048576
 #define WIDTH 7
@@ -58,7 +58,7 @@ int                 ignored_files_index = 0;
 time_t              last_reload = 0;
 
 static void httpHandler(struct mg_connection* c, int ev, void* ev_data,
-                         void* fn_data) {
+                        void* fn_data) {
   if(ev == MG_EV_HTTP_MSG) {
     struct mg_http_message*   hm = (struct mg_http_message*)ev_data;
     struct mg_http_serve_opts opts = {.root_dir = bialet_config.root_dir,
@@ -100,7 +100,7 @@ static void migrate() {
 #ifdef IS_UNIX
 // @TODO Add parsing routes in Windows
 static int parseRoutesCallback(const char* fpath, const struct stat* sb,
-                                 int typeflag) {
+                               int typeflag) {
   if(typeflag == FTW_F && strstr(fpath, ROUTE_FILE)) {
     if(routes_index >= MAX_ROUTES) {
       message(red("Error"), "Too many routes.");

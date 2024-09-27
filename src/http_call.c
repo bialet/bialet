@@ -2,7 +2,6 @@
 
 #include "messages.h"
 #include "utils.h"
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,10 +10,11 @@
 #endif
 
 #if IS_WIN
+#include <winsock2.h>
+
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <stdio.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 
 #endif
