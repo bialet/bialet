@@ -20,6 +20,6 @@ Request.param("fields") // name,email
 Request.param("sortType") // ASC
 ```
 
-⚠️ There is no need to add a single `_route.wren` file to handle all the routing.
+> **Note:** There is no need to add a single `_route.wren` file to handle all the routing.
 
 
