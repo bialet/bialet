@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Test runner
+#
+# Usage: ./run.sh [executable] [host] [port]
+# Use "-" to not start the server process
+#
 
 # Parameters
 TARGET_EXEC="${1:-./build/bialet}"

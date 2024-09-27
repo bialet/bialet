@@ -108,19 +108,21 @@ print_summary() {
 echo -e "🚲Run tests with ${BLUE}$TARGET_EXEC${NC} server on ${BLUE}$HOST:$PORT${NC}\n"
 
 # Start server
-echo -e -n "${BLUE}Start server process...\t"
-$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
-disown
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  echo -e -n "${BLUE}Start server process...\t"
+  $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
+  disown
 
-# Check if server is running
-PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
+  # Check if server is running
+  PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
 
-if [[ ${#PID} != 0 ]]
-then
-  echo -e "${GREEN}OK${NC}"
-else
-  echo -e "${RED}FAIL${NC}"
-  exit 1
+  if [[ ${#PID} != 0 ]]
+  then
+    echo -e "${GREEN}OK${NC}"
+  else
+    echo -e "${RED}FAIL${NC}"
+    exit 1
+  fi
 fi
 
 # Check if server port is up
@@ -137,8 +139,10 @@ fi
 echo -e "\n${BLUE}Run tests\n---------\n\e[0m"
 
 finish() {
-  echo -e -n "\n${BLUE}Stop server process...\t"
-  # kill all
-  pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
-  echo -e " ${GREEN}OK${NC}"
+  if [[ "$TARGET_EXEC" != "-" ]]; then
+    echo -e -n "\n${BLUE}Stop server process...\t"
+    # kill all
+    pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    echo -e " ${GREEN}OK${NC}"
+  fi
 }
