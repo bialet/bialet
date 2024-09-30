@@ -3,7 +3,7 @@ build/
 src/*.wren.inc
 
 # Bialet generated files
-**/_db.sqlite3
+**/_db.sqlite3*
 
 # Docs files
 .venv/

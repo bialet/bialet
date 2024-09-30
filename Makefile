@@ -53,7 +53,7 @@ uninstall:
 
 clean:
 	rm -rf $(BUILD_DIR)
-	find . -name "$(DB_FILE)" -type f -delete
+	find . -name "$(DB_FILE)*" -type f -delete
 
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
