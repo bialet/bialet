@@ -22,8 +22,7 @@ class Template {
                 <a href="/toggle?id={{ task["id"] }}">
                   {{ Util.htmlEscape(task["description"]) }}
                 </a>
-              </li>
-           } }}
+              </li> } }}
           </ul> :
           <p class="no-tasks">No tasks yet</p>
         }}
