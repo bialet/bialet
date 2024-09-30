@@ -28,6 +28,10 @@
 #include "bialet_extra.wren.inc"
 
 #define BIALET_SQLITE_ERROR 11
+#define BIALET_SQLITE_BUSY_TIMEOUT 5000
+#define BIALET_SQLITE_JOURNAL_SIZE "67108864" // 64 mb
+#define BIALET_SQLITE_MMAP_SIZE "134217728"   // 128 mb
+#define BIALET_SQLITE_CACHE_SIZE "-10000" // It's in kb, so 10 mb
 #define MAX_URL_LEN 1024
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
@@ -618,6 +622,17 @@ void bialetInit(struct BialetConfig* config) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
     exit(BIALET_SQLITE_ERROR);
   }
+  // Set Pragmas
+  // @TODO Adjust the pragmas to the user configuration
+  sqlite3_exec(db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA synchronous = NORMAL;", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";",
+               NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
+               NULL);
+  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL, NULL);
+  sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
 
   bialet_config = *config;
   wrenInitConfiguration(&wren_config);
