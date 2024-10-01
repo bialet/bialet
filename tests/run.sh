@@ -25,6 +25,7 @@ run_test "API call                    " "http"            200 "Adeel Solangi"
 run_test "JSON response               " "json"            200 '{"foo":"bar"}'
 run_test "Database save and fetch     " "db"              200 "John Doe"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
+run_test "Third party modules         " "emoji"           200 "❤️"
 
 finish
 print_summary >&2

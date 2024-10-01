@@ -31,7 +31,7 @@
 #define BIALET_SQLITE_BUSY_TIMEOUT 5000
 #define BIALET_SQLITE_JOURNAL_SIZE "67108864" // 64 mb
 #define BIALET_SQLITE_MMAP_SIZE "134217728"   // 128 mb
-#define BIALET_SQLITE_CACHE_SIZE "-10000" // It's in kb, so 10 mb
+#define BIALET_SQLITE_CACHE_SIZE "-10000"     // It's in kb, so 10 mb
 #define MAX_URL_LEN 1024
 #define MAX_LINE_ERROR_LEN 100
 #define MAX_COLUMNS 100
@@ -39,6 +39,9 @@
 #define HTTP_OK 200
 #define HTTP_ERROR 500
 #define BIALET_FILE_CHAR 26
+#define BIALET_EXTERNAL_IMPORT_URL                                                  \
+  "https://raw.githubusercontent.com/%s/refs/heads/%s/export.wren"
+#define BIALET_EXTERNAL_DEFAULT_BRANCH "main"
 
 #define MAIN_MODULE_NAME "bialet"
 #define CLI_MODULE_NAME "bialet_cli"
@@ -72,6 +75,7 @@ char* readFile(const char* path) {
 static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
   char                 module[MAX_MODULE_LEN];
+  char*                lastSlash;
   WrenLoadModuleResult result = {0};
 
   /* Load Bialet modules */
@@ -92,14 +96,14 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
     /* @TODO Create an object for the user data */
     char* user_data = wrenGetUserData(vm);
     char* called_module = string_safe_copy(user_data);
-    char* last_slash = strrchr(called_module, '/');
+    lastSlash = strrchr(called_module, '/');
     if(strlen(name) + strlen(called_module) + strlen(BIALET_EXTENSION) + 2 >
        MAX_MODULE_LEN) {
       message(red("Error"), "Module name too long.");
       return result;
     }
-    if(last_slash)
-      *last_slash = '\0';
+    if(lastSlash)
+      *lastSlash = '\0';
     snprintf(module, MAX_MODULE_LEN, "%s/", called_module);
   }
 
@@ -111,6 +115,55 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
   if(buffer) {
     result.source = buffer;
+  } else if(strchr(name, '/') != NULL) {
+    // @TODO Refactor the external import, the code is too large
+    // File not exists, try to get from cache
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db,
+                       "SELECT content FROM BIALET_IMPORT WHERE module = ? LIMIT 1",
+                       -1, &stmt, 0);
+    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    const char* content = 0;
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+      content = (char*)sqlite3_column_text(stmt, 0);
+      result.source = string_safe_copy(content);
+      sqlite3_finalize(stmt);
+    } else {
+      // File not found in cache, try to get from GitHub
+      sqlite3_finalize(stmt);
+      struct HttpRequest  req;
+      struct HttpResponse resp;
+      req.method = string_safe_copy("GET");
+      req.basicAuth = string_safe_copy("");
+      req.raw_headers = string_safe_copy("");
+      req.postData = string_safe_copy("");
+      // Use repository@branch, if exists
+      char* branch = strchr(name, '@');
+      if(branch == NULL)
+        branch = BIALET_EXTERNAL_DEFAULT_BRANCH;
+      else
+        branch++;
+      char url[MAX_URL_LEN];
+      sprintf(url, BIALET_EXTERNAL_IMPORT_URL, strtok((char*)name, "@"), branch);
+      req.url = string_safe_copy(url);
+      httpCallPerform(&req, &resp);
+      // @TODO Fix this when status are added in httpCallPerform
+      if(resp.status >= 0) {
+        // File found, save it in cache
+        result.source = resp.body;
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(
+            db, "INSERT INTO BIALET_IMPORT (module, content) VALUES (?, ?)", -1,
+            &stmt, 0);
+        sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, resp.body, -1, SQLITE_STATIC);
+        sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+        message(yellow("External import saved"), name);
+      } else {
+        message(red("Error"), "Module not found in GitHub.");
+      }
+    }
   }
   return result;
 }
@@ -631,7 +684,8 @@ void bialetInit(struct BialetConfig* config) {
                NULL, NULL, NULL);
   sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
                NULL);
-  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
+               NULL);
   sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
 
   bialet_config = *config;

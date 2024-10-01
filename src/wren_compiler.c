@@ -2,7 +2,6 @@
 
 #include "wren_common.h"
 #include "wren_vm.h"
-
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -1319,6 +1318,10 @@ static void nextToken(Parser* parser) {
         return;
 
       case '<':
+        if(lastTokenType(parser) == TOKEN_IMPORT) {
+          readString(parser, '>');
+          return;
+        }
         int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
         int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
                                     lastTokenType(parser) == TOKEN_RETURN;
