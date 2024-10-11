@@ -44,13 +44,13 @@ Response.out(<!doctype html>
         <label for="password">Password</label>
       </p>
       <p>
-        <input type="text" name="password" value="{{password}}" />
+        <input type="text" name="password" value="{{password}}">
       </p>
       <p>
         <label for="password-check">Password to check</label>
       </p>
       <p>
-        <input type="text" name="password-check" value="{{passwordCheck}}" />
+        <input type="text" name="password-check" value="{{passwordCheck}}">
       </p>
       <p>
         <button>Submit</button>
