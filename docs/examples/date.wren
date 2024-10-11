@@ -53,19 +53,19 @@ Response.out(<!doctype html>
       <p>
         <label>
           Date
-          <input type="date" name="date" value="{{ date.format('#Y-#m-#d') }}" />
+          <input type="date" name="date" value="{{ date.format('#Y-#m-#d') }}">
         </label>
       </p>
       <p>
         <label>
           Time
-          <input type="input" name="time" value="{{ date.format('#H:#M:#S') }}" />
+          <input type="input" name="time" value="{{ date.format('#H:#M:#S') }}">
         </label>
       </p>
       <p>
         <label>
           UTC
-          <input type="input" name="utc" value="{{ date.utc }}" />
+          <input type="input" name="utc" value="{{ date.utc }}">
         </label>
       </p
       <p>
