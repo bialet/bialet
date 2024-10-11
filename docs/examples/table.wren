@@ -39,8 +39,7 @@ Response.out(<!doctype html>
         {{ counters.map{|counter| <tr>
             <td>{{ counter["name"] }}</td>
             <td>{{ counter["value"] }}</td>
-          </tr>
-        } }}
+          </tr> } }}
       </table> :
       <p>No counters found</p>
     }}
