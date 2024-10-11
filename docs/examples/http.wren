@@ -3,7 +3,7 @@
 import "bialet" for Response, Http
 
 var users = Http.get('https://dummyjson.com/users?limit=5&select=username,email')['users']
-System.print("Users: {{users)")
+System.print("Users: %(users)")
 
 Response.out(<!doctype html>
 <html>
@@ -23,12 +23,11 @@ Response.out(<!doctype html>
         </tr>
         {{ /* List all the users */
           users.map{|user| <tr>
-            <td>{{user["username"]}}</td>
-            <td>{{user["email"]}}</td>
-          </tr>
-        } }}
-      </table>
-      : /* If there are no users */
+            <td>{{ user["username"] }}</td>
+            <td>{{ user["email"] }}</td>
+          </tr> } }}
+      </table> :
+        /* If there are no users */
         <p>No user found</p>
       }}
     <p><a href=".">Back ↩️</a></p>
