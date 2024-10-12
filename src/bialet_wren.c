@@ -25,7 +25,6 @@
 
 // Wren generated code
 #include "bialet.wren.inc"
-#include "bialet_extra.wren.inc"
 
 #define BIALET_SQLITE_ERROR 11
 #define BIALET_SQLITE_BUSY_TIMEOUT 5000
@@ -77,12 +76,6 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
   char                 module[MAX_MODULE_LEN];
   char*                lastSlash;
   WrenLoadModuleResult result = {0};
-
-  /* Load Bialet modules */
-  if(strcmp(name, "bialet/extra") == 0) {
-    result.source = bialet_extraModuleSource;
-    return result;
-  }
 
   if(name[0] == '/') {
     if(strlen(name) + strlen(bialet_config.root_dir) + strlen(BIALET_EXTENSION) + 1 >
