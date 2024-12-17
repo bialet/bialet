@@ -472,17 +472,6 @@ char* escapeSpecialChars(const char* input) {
   return output;
 }
 
-char* get_string(struct String str) {
-  char* val = NULL;
-  int   method_len = (int)(str.len);
-  val = malloc(method_len + 1);
-  if(val) {
-    strncpy(val, str.str, method_len);
-    val[method_len] = '\0';
-  }
-  return val;
-}
-
 int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
   // TODO: Save uploaded files, implement again with new server
   return 1;
@@ -494,15 +483,6 @@ struct BialetResponse bialetRun(char* module, char* code,
   r.length = 0;
   int     error = 0;
   WrenVM* vm = 0;
-  if(hm) {
-    char url[MAX_URL_LEN];
-    snprintf(url, MAX_URL_LEN, "%s", get_string(hm->uri));
-    if(hm->query.len > 0) {
-      strncat(url, "?", MAX_URL_LEN - strlen(url) - 1);
-      strncat(url, get_string(hm->query), MAX_URL_LEN - strlen(url) - 1);
-    }
-    message(magenta("Request"), get_string(hm->method), url);
-  }
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
@@ -546,6 +526,7 @@ struct BialetResponse bialetRun(char* module, char* code,
       if(body[0] != BIALET_FILE_CHAR) {
         r.body = string_safe_copy(body);
       } else {
+        // @TODO Move this to the server
         // Use the BIALET_FILE_CHAR to request the file instead of send the
         // actual body. It will search the file in the database.
         sqlite3_stmt* stmt;
