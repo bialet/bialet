@@ -12,7 +12,7 @@
 #define BIALET_WREN_H
 
 #include "bialet.h"
-#include "mongoose.h"
+#include "server.h"
 
 struct BialetResponse {
   int   status;
@@ -24,7 +24,7 @@ struct BialetResponse {
 void bialetInit(struct BialetConfig* config);
 
 struct BialetResponse bialetRun(char* module, char* code,
-                                 struct mg_http_message* hm);
+                                 struct HttpMessage* hm);
 
 char* readFile(const char* path);
 

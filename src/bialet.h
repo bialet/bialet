@@ -45,6 +45,7 @@ struct BialetConfig {
   int mem_soft_limit, mem_hard_limit, cpu_soft_limit, cpu_hard_limit;
 
   char* db_path;
+  char* ignored_files;
 };
 
 typedef enum {
