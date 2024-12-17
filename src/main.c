@@ -1,9 +1,10 @@
 #include "bialet.h"
 #include "bialet_wren.h"
 #include "messages.h"
-#include "mongoose.h"
+#include "server.h"
 #include "wren_vm.h"
 #include <sys/types.h>
+#include <unistd.h>
 
 #ifdef IS_WIN
 
@@ -44,42 +45,12 @@
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" EXTENSION
 #define MAX_ROUTES 100
-#define MAX_IGNORED_FILES 20
 #define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
 struct BialetConfig bialet_config;
-char*               routes_list[MAX_ROUTES];
-char*               routes_files[MAX_ROUTES];
-char*               ignored_list[MAX_IGNORED_FILES];
-int                 routes_index = 0;
-int                 ignored_files_index = 0;
 time_t              last_reload = 0;
-
-static void httpHandler(struct mg_connection* c, int ev, void* ev_data,
-                        void* fn_data) {
-  if(ev == MG_EV_HTTP_MSG) {
-    struct mg_http_message*   hm = (struct mg_http_message*)ev_data;
-    struct mg_http_serve_opts opts = {.root_dir = bialet_config.root_dir,
-                                      .ssi_pattern = "#" EXTENSION};
-    for(int i = 0; i < routes_index; i++) {
-      if(mg_http_match_uri(hm, routes_list[i])) {
-        hm->bialet_routes = strdup(routes_list[i]);
-        mg_http_serve_ssi(c, hm, bialet_config.root_dir, routes_files[i]);
-        return;
-      }
-    }
-    for(int i = 0; i < ignored_files_index; i++) {
-      if(mg_http_match_uri(hm, ignored_list[i])) {
-        mg_http_reply(c, 404, BIALET_HEADERS, BIALET_NOT_FOUND_PAGE);
-        return;
-      }
-    }
-    hm->bialet_routes = "";
-    mg_http_serve_dir(c, hm, &opts);
-  }
-}
 
 static void migrate() {
   char* code;
@@ -97,77 +68,12 @@ static void migrate() {
   }
 }
 
-#ifdef IS_UNIX
-// @TODO Add parsing routes in Windows
-static int parseRoutesCallback(const char* fpath, const struct stat* sb,
-                               int typeflag) {
-  if(typeflag == FTW_F && strstr(fpath, ROUTE_FILE)) {
-    if(routes_index >= MAX_ROUTES) {
-      message(red("Error"), "Too many routes.");
-      return 1;
-    }
-    routes_files[routes_index] = strdup(fpath);
-    if(!routes_files[routes_index]) {
-      message(red("Error"), "Memory allocation failed.");
-      return 1;
-    }
-    char* relative_path =
-        strstr(fpath, bialet_config.root_dir) + strlen(bialet_config.root_dir) + 1;
-    char* last_slash = strrchr(relative_path, '/');
-    if(last_slash) {
-      *last_slash = '\0';
-    }
-    size_t route_len = strlen(relative_path) + 3;
-    char*  route_with_hash = malloc(route_len);
-    if(!route_with_hash) {
-      message(red("Error"), "Memory allocation failed.");
-      free(routes_files[routes_index]);
-      return 1;
-    }
-    snprintf(route_with_hash, route_len, "/%s#", relative_path);
-    routes_list[routes_index] = route_with_hash;
-    routes_index++;
-  }
-  return 0;
-}
-#endif
-
-static void parseRoutes() {
-  routes_index = 0;
-#ifdef IS_UNIX
-  ftw(bialet_config.root_dir, parseRoutesCallback, 16);
-#endif
-}
-
-static void parseIgnoreFiles(char* ignored_files_str) {
-  char* token;
-  ignored_files_index = 0;
-  char* str = strdup(ignored_files_str);
-  char  file[MAX_PATH_LEN];
-  token = strtok(str, ",");
-  while(token != NULL) {
-    if(ignored_files_index >= MAX_IGNORED_FILES) {
-      message(red("Too many ignored files"));
-      break;
-    }
-    if(strlen(token) + 1 >= MAX_PATH_LEN) {
-      message(red("File path too long to ignore"));
-      break;
-    }
-    snprintf(file, MAX_PATH_LEN, "/%s", token);
-    ignored_list[ignored_files_index] = strdup(file);
-    ignored_files_index++;
-    token = strtok(NULL, ",");
-  }
-  free(str);
-}
 /* Reload files */
 static void triggerReloadFiles() {
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
     migrate();
-    parseRoutes();
   }
 }
 
@@ -221,12 +127,12 @@ void welcome() {
 }
 
 void sigintHandler(int signum) {
+  stop_server();
   _exit(0);
 }
 
 int main(int argc, char* argv[]) {
   char* code = "";
-  char* ignored_files_str = IGNORED_FILES;
 
 #ifdef IS_UNIX
   pid_t         pid;
@@ -235,8 +141,6 @@ int main(int argc, char* argv[]) {
   pthread_t     thread_id;
 
 #endif
-  struct mg_mgr mgr;
-
   /* Default config values */
   /* Arg config values */
   bialet_config.root_dir = ".";
@@ -251,6 +155,7 @@ int main(int argc, char* argv[]) {
   bialet_config.debug = 0;
   bialet_config.output_color = 1;
   bialet_config.db_path = DB_FILE;
+  bialet_config.ignored_files = IGNORED_FILES;
 
   /* Parse args */
 
@@ -274,7 +179,7 @@ int main(int argc, char* argv[]) {
         bialet_config.db_path = optarg;
         break;
       case 'i':
-        ignored_files_str = optarg;
+        bialet_config.ignored_files = optarg;
         break;
       case 'm':
         bialet_config.mem_soft_limit = atoi(optarg);
@@ -311,9 +216,8 @@ int main(int argc, char* argv[]) {
     migrate();
     exit(bialetRunCli(code));
   }
-  mg_mgr_init(&mgr);
 
-  if(mg_http_listen(&mgr, serverUrl(), httpHandler, NULL) == NULL) {
+  if(start_server(&bialet_config) != 0) {
     perror("Error starting bialet");
     exit(1);
   }
@@ -322,7 +226,6 @@ int main(int argc, char* argv[]) {
   signal(SIGABRT, sigintHandler);
   signal(SIGTERM, sigintHandler);
   welcome();
-  parseIgnoreFiles(ignored_files_str);
   triggerReloadFiles();
 
 #ifdef IS_UNIX
@@ -344,7 +247,7 @@ int main(int argc, char* argv[]) {
         exit(1);
       }
       for(;;) {
-        mg_mgr_poll(&mgr, SERVER_POLL_DELAY);
+        server_poll(SERVER_POLL_DELAY);
       }
     } else if(pid > 0) {
       // Parent: Wait for child to exit
@@ -363,7 +266,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef IS_WIN
   for(;;) {
-    mg_mgr_poll(&mgr, 1000);
+    server_poll(SERVER_POLL_DELAY);
   }
 #endif
 

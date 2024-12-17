@@ -13,10 +13,11 @@
 #include "bialet.h"
 #include "http_call.h"
 #include "messages.h"
-#include "mongoose.h"
+#include "server.h"
 #include "utils.h"
 #include "wren.h"
 #include "wren_vm.h"
+#include <ctype.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #include <sqlite3.h>
@@ -471,69 +472,36 @@ char* escapeSpecialChars(const char* input) {
   return output;
 }
 
-char* get_mg_str(struct mg_str str) {
+char* get_string(struct String str) {
   char* val = NULL;
   int   method_len = (int)(str.len);
   val = malloc(method_len + 1);
   if(val) {
-    strncpy(val, str.ptr, method_len);
+    strncpy(val, str.str, method_len);
     val[method_len] = '\0';
   }
   return val;
 }
 
-int saveUploadedFiles(struct mg_http_message* hm, char* filesIds) {
-  struct mg_http_part part;
-  size_t              ofs = 0;
-  int                 first = 1;
-  while((ofs = mg_http_next_multipart(hm->body, ofs, &part)) > 0) {
-    if(part.body.len > 0) {
-      sqlite3_stmt* stmt;
-      // Prepare
-      int result = sqlite3_prepare_v2(
-          db,
-          "INSERT INTO BIALET_FILES (name, type, originalFileName, file, size) "
-          "VALUES (?, ?, ?, ?, ?)",
-          -1, &stmt, 0);
-      if(result == SQLITE_OK) {
-        struct mg_str mimeType = guess_content_type(part.filename, "");
-        sqlite3_bind_text(stmt, 1, part.name.ptr, part.name.len, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, mimeType.ptr, mimeType.len, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, part.filename.ptr, part.filename.len,
-                          SQLITE_STATIC);
-        sqlite3_bind_blob(stmt, 4, part.body.ptr, part.body.len, SQLITE_STATIC);
-        sqlite3_bind_int(stmt, 5, part.body.len);
-        sqlite3_step(stmt);
-        if(first) {
-          first = 0;
-        } else {
-          strcat(filesIds, ",");
-        }
-        strcat(filesIds, sqliteIntToString(sqlite3_last_insert_rowid(db)));
-        sqlite3_finalize(stmt);
-      } else {
-        message(red("Error on saving files"), sqlite3_errmsg(db));
-        return 0;
-      }
-    }
-  }
+int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
+  // TODO: Save uploaded files, implement again with new server
   return 1;
 }
 
 struct BialetResponse bialetRun(char* module, char* code,
-                                struct mg_http_message* hm) {
+                                struct HttpMessage* hm) {
   struct BialetResponse r;
   r.length = 0;
   int     error = 0;
   WrenVM* vm = 0;
   if(hm) {
     char url[MAX_URL_LEN];
-    snprintf(url, MAX_URL_LEN, "%s", get_mg_str(hm->uri));
+    snprintf(url, MAX_URL_LEN, "%s", get_string(hm->uri));
     if(hm->query.len > 0) {
       strncat(url, "?", MAX_URL_LEN - strlen(url) - 1);
-      strncat(url, get_mg_str(hm->query), MAX_URL_LEN - strlen(url) - 1);
+      strncat(url, get_string(hm->query), MAX_URL_LEN - strlen(url) - 1);
     }
-    message(magenta("Request"), get_mg_str(hm->method), url);
+    message(magenta("Request"), get_string(hm->method), url);
   }
 
   vm = wrenNewVM(&wren_config);
@@ -546,8 +514,8 @@ struct BialetResponse bialetRun(char* module, char* code,
     WrenHandle* requestClass = wrenGetSlotHandle(vm, 0);
     WrenHandle* initMethod = wrenMakeCallHandle(vm, "init(_,_,_)");
     wrenSetSlotHandle(vm, 0, requestClass);
-    wrenSetSlotString(vm, 1, get_mg_str(hm->message));
-    wrenSetSlotString(vm, 2, hm->bialet_routes);
+    wrenSetSlotString(vm, 1, get_string(hm->message));
+    wrenSetSlotString(vm, 2, get_string(hm->routes));
 
     char filesIds[MAX_URL_LEN] = "";
     // @TODO @FIXME This is called always and it can be abuse to fill the disk
