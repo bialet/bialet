@@ -11,6 +11,7 @@
 #include "server.h"
 
 #include "bialet_wren.h"
+#include "favicon.h"
 #include "messages.h"
 #include <arpa/inet.h>
 #include <poll.h>
@@ -72,16 +73,20 @@ struct String create_string(const char* str, int len) {
   return s;
 }
 
-struct HttpMessage* parse_request(const char* request) {
+struct HttpMessage* parse_request(char* request) {
   struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   if(hm == NULL) {
     perror("Failed to allocate memory for HttpMessage");
     exit(EXIT_FAILURE);
   }
 
-  hm->method = create_string("GET", 3);
-  hm->uri = create_string("/", 1);
   hm->message = create_string(request, strlen(request));
+  // Parse request
+  char* method = strtok(request, " ");
+  hm->method = create_string(method, strlen(method));
+  char* url = strtok(NULL, " ");
+  hm->uri = create_string(url, strlen(url));
+
   hm->routes = create_string("", 0);
   hm->query = create_string("", 0);
   hm->headers = create_string("", 0);
@@ -103,6 +108,7 @@ void handle_client(int client_socket) {
   buffer[bytes_read] = '\0'; // Null-terminate request
 
   struct HttpMessage* hm;
+
   hm = parse_request(buffer);
 
   // @TODO: If request has files, save them
@@ -112,13 +118,28 @@ void handle_client(int client_socket) {
   // @TODO: If request is a static file, serve it
   // @TODO: If file not found but there is a _route.wren file, interpret it
   // @TODO: If file not found or you can't serve it, return 404
+  if(strcmp("/favicon.ico", hm->uri.str) == 0) {
+    write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
+    write(client_socket, favicon_data, FAVICON_SIZE);
+    free(hm);
+    close(client_socket);
+    return;
+  }
+  struct BialetResponse response;
+  response.status = 0;
+  response.body = "";
+  response.header = "";
+  response.length = 0;
+  if(response.status == 0) {
+    response =
+        bialetRun("index",
+                  "import \"bialet\" for Response\n"
+                  "var message = \"Hello World!\"\n"
+                  "Response.out(<!doctype html><body>{{message}}</body></html>)",
+                  hm);
+    free(hm);
+  }
 
-  struct BialetResponse response =
-      bialetRun("index",
-                "import \"bialet\" for Response\n"
-                "var message = \"Hello World!\"\n"
-                "Response.out(<!doctype html><body>{{message}}</body></html>)",
-                hm);
   int   maxResponseSize = response.length + 300;
   char* output = malloc(maxResponseSize);
 
@@ -128,14 +149,16 @@ void handle_client(int client_socket) {
   }
 
   // Format the response into the buffer
-  int written = snprintf(output, maxResponseSize,
-                         "HTTP/1.1 %d OK\r\n"
-                         "%s"
-                         "Content-Length: %zu\r\n"
-                         "\r\n"
-                         "%s",
-                         response.status, response.header ? response.header : "",
-                         strlen(response.body), response.body ? response.body : "");
+  int written =
+      snprintf(output, maxResponseSize,
+               "HTTP/1.1 %d OK\r\n"
+               "%s"
+               "Content-Length: %lu\r\n"
+               "\r\n"
+               "%s",
+               response.status, response.header ? response.header : "",
+               response.length > 0 ? response.length : strlen(response.body),
+               response.body ? response.body : "");
 
   if(written < 0 || written >= maxResponseSize) {
     perror("Failed to format HTTP response or buffer overflow");
