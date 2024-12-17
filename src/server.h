@@ -22,6 +22,8 @@ struct String {
   int   len;
 };
 
+char* get_string(struct String str);
+
 struct HttpMessage {
   struct String uri;
   struct String headers;

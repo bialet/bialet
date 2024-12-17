@@ -26,6 +26,19 @@ int server_fd = -1;
 
 void handle_client(int client_socket);
 
+// @TODO Remove this!
+char* get_string(struct String str) {
+  char* val = NULL;
+  int   method_len = (int)(str.len);
+  val = malloc(method_len + 1);
+  if(val) {
+    strncpy(val, str.str, method_len);
+    val[method_len] = '\0';
+  }
+  return val;
+}
+
+
 int start_server(struct BialetConfig* config) {
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(server_fd == -1) {
@@ -79,19 +92,13 @@ struct HttpMessage* parse_request(char* request) {
     perror("Failed to allocate memory for HttpMessage");
     exit(EXIT_FAILURE);
   }
-
   hm->message = create_string(request, strlen(request));
   // Parse request
   char* method = strtok(request, " ");
   hm->method = create_string(method, strlen(method));
   char* url = strtok(NULL, " ");
   hm->uri = create_string(url, strlen(url));
-
   hm->routes = create_string("", 0);
-  hm->query = create_string("", 0);
-  hm->headers = create_string("", 0);
-  hm->basicAuth = create_string("", 0);
-  hm->body = create_string("", 0);
 
   return hm; // Return pointer to the allocated HttpMessage
 }
@@ -111,11 +118,13 @@ void handle_client(int client_socket) {
 
   hm = parse_request(buffer);
 
+  message(magenta("Request"), get_string(hm->method), get_string(hm->uri));
   // @TODO: If request has files, save them
   // @TODO: If request is a directory, serve index.html or index.wren
   // @TODO: If request is a ignored file, ignore it
   // @TODO: If request is a Wren file, interpret it
   // @TODO: If request is a static file, serve it
+  // @TODO: If file is saved in the FILES database, serve it
   // @TODO: If file not found but there is a _route.wren file, interpret it
   // @TODO: If file not found or you can't serve it, return 404
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
