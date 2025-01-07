@@ -19,22 +19,15 @@ void stop_server();
 
 struct String {
   char* str;
-  int   len;
+  size_t len;
 };
-
-char* get_string(struct String str);
 
 struct HttpMessage {
   struct String uri;
   struct String headers;
   struct String method;
-  struct String postData;
-  struct String basicAuth;
-  struct String body;
-  struct String contentType;
   struct String routes;
   struct String message;
-  struct String query;
 };
 
 #endif
