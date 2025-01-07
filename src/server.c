@@ -10,6 +10,7 @@
  */
 #include "server.h"
 
+#include "bialet.h"
 #include "bialet_wren.h"
 #include "favicon.h"
 #include "messages.h"
@@ -18,28 +19,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE BUFSIZ * 4
+#define PATH_SIZE 1024
+#define MIN_RESPONSE_SIZE 300
 
-int server_fd = -1;
+int                        server_fd = -1;
+static struct BialetConfig bialet_config;
 
 void handle_client(int client_socket);
 
-// @TODO Remove this!
-char* get_string(struct String str) {
-  char* val = NULL;
-  int   method_len = (int)(str.len);
-  val = malloc(method_len + 1);
-  if(val) {
-    strncpy(val, str.str, method_len);
-    val[method_len] = '\0';
-  }
-  return val;
-}
-
-
 int start_server(struct BialetConfig* config) {
+  bialet_config = *config;
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(server_fd == -1) {
     perror("Failed to create socket");
@@ -86,6 +80,117 @@ struct String create_string(const char* str, int len) {
   return s;
 }
 
+void clean_http_message(struct HttpMessage* hm) {
+  free(hm->message.str);
+  free(hm->method.str);
+  free(hm->uri.str);
+  free(hm->routes.str);
+  free(hm);
+  hm = NULL;
+}
+
+const char* get_http_status_description(int status_code) {
+  switch(status_code) {
+    case 100:
+      return "Continue";
+    case 101:
+      return "Switching Protocols";
+    case 200:
+      return "OK";
+    case 201:
+      return "Created";
+    case 202:
+      return "Accepted";
+    case 203:
+      return "Non-Authoritative Information";
+    case 204:
+      return "No Content";
+    case 205:
+      return "Reset Content";
+    case 206:
+      return "Partial Content";
+    case 300:
+      return "Multiple Choices";
+    case 301:
+      return "Moved Permanently";
+    case 302:
+      return "Found";
+    case 303:
+      return "See Other";
+    case 304:
+      return "Not Modified";
+    case 307:
+      return "Temporary Redirect";
+    case 308:
+      return "Permanent Redirect";
+    case 400:
+      return "Bad Request";
+    case 401:
+      return "Unauthorized";
+    case 403:
+      return "Forbidden";
+    case 404:
+      return "Not Found";
+    case 405:
+      return "Method Not Allowed";
+    case 406:
+      return "Not Acceptable";
+    case 407:
+      return "Proxy Authentication Required";
+    case 408:
+      return "Request Timeout";
+    case 409:
+      return "Conflict";
+    case 410:
+      return "Gone";
+    case 500:
+      return "Internal Server Error";
+    case 501:
+      return "Not Implemented";
+    case 502:
+      return "Bad Gateway";
+    case 503:
+      return "Service Unavailable";
+    case 504:
+      return "Gateway Timeout";
+    case 505:
+      return "HTTP Version Not Supported";
+    default:
+      return "Unknown Status";
+  }
+}
+
+char* get_content_type(const char* path) {
+  const char* ext = strrchr(path, '.');
+  if(!ext) {
+    return "Content-Type: application/octet-stream\r\n";
+  }
+  if(strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0) {
+    return BIALET_HEADERS;
+  } else if(strcmp(ext, ".css") == 0) {
+    return "Content-Type: text/css\r\n";
+  } else if(strcmp(ext, ".js") == 0) {
+    return "Content-Type: application/javascript\r\n";
+  } else if(strcmp(ext, ".json") == 0) {
+    return "Content-Type: application/json\r\n";
+  } else if(strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0) {
+    return "Content-Type: image/jpeg\r\n";
+  } else if(strcmp(ext, ".png") == 0) {
+    return "Content-Type: image/png\r\n";
+  } else if(strcmp(ext, ".gif") == 0) {
+    return "Content-Type: image/gif\r\n";
+  } else if(strcmp(ext, ".svg") == 0) {
+    return "Content-Type: image/svg+xml\r\n";
+  } else if(strcmp(ext, ".txt") == 0) {
+    return "Content-Type: text/plain\r\n";
+  } else if(strcmp(ext, ".xml") == 0) {
+    return "Content-Type: application/xml\r\n";
+  } else if(strcmp(ext, ".pdf") == 0) {
+    return "Content-Type: application/pdf\r\n";
+  }
+  return "Content-Type: application/octet-stream";
+}
+
 struct HttpMessage* parse_request(char* request) {
   struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   if(hm == NULL) {
@@ -93,14 +198,51 @@ struct HttpMessage* parse_request(char* request) {
     exit(EXIT_FAILURE);
   }
   hm->message = create_string(request, strlen(request));
-  // Parse request
   char* method = strtok(request, " ");
   hm->method = create_string(method, strlen(method));
   char* url = strtok(NULL, " ");
   hm->uri = create_string(url, strlen(url));
   hm->routes = create_string("", 0);
 
-  return hm; // Return pointer to the allocated HttpMessage
+  return hm;
+}
+
+void write_response(int client_socket, struct BialetResponse* response) {
+  if(!response->status) {
+    response->status = 404;
+    response->body = BIALET_NOT_FOUND_PAGE;
+    response->length = strlen(BIALET_NOT_FOUND_PAGE);
+    response->header = BIALET_HEADERS;
+  }
+
+  size_t maxResponseSize = response->length + MIN_RESPONSE_SIZE;
+  char*  output = malloc(maxResponseSize);
+  if(output == NULL) {
+    perror("Failed to allocate memory for HTTP response");
+    return;
+  }
+
+  int written =
+      snprintf(output, maxResponseSize,
+               "HTTP/1.1 %d %s\r\n"
+               "%s"
+               "Content-Length: %lu\r\n"
+               "\r\n"
+               "%s",
+               response->status, get_http_status_description(response->status),
+               response->header ? response->header : "",
+               response->length > 0 ? response->length : strlen(response->body),
+               response->body ? response->body : "");
+
+  if(written < 0) {
+    perror("Failed to format HTTP response or buffer overflow");
+    free(output);
+    return;
+  }
+
+  write(client_socket, output, strlen(output));
+  free(output);
+  close(client_socket);
 }
 
 void handle_client(int client_socket) {
@@ -111,15 +253,13 @@ void handle_client(int client_socket) {
     close(client_socket);
     return;
   }
-
-  buffer[bytes_read] = '\0'; // Null-terminate request
+  buffer[bytes_read] = '\0';
 
   struct HttpMessage* hm;
-
   hm = parse_request(buffer);
+  message(magenta("Request"), hm->method.str, hm->uri.str);
 
-  message(magenta("Request"), get_string(hm->method), get_string(hm->uri));
-  // @TODO: If request has files, save them
+  printf("Bialet root: %s\n", bialet_config.root_dir);
   // @TODO: If request is a directory, serve index.html or index.wren
   // @TODO: If request is a ignored file, ignore it
   // @TODO: If request is a Wren file, interpret it
@@ -130,53 +270,89 @@ void handle_client(int client_socket) {
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
     write(client_socket, favicon_data, FAVICON_SIZE);
-    free(hm);
+    clean_http_message(hm);
     close(client_socket);
     return;
   }
-  struct BialetResponse response;
-  response.status = 0;
-  response.body = "";
-  response.header = "";
-  response.length = 0;
-  if(response.status == 0) {
-    response =
-        bialetRun("index",
-                  "import \"bialet\" for Response\n"
-                  "var message = \"Hello World!\"\n"
-                  "Response.out(<!doctype html><body>{{message}}</body></html>)",
-                  hm);
-    free(hm);
+
+  struct BialetResponse response = {0, "", "", 0};
+  char                  path[PATH_SIZE];
+  char                  wren_path[PATH_SIZE];
+  struct stat           file_stat;
+
+  snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
+  // Remove query parameters if present
+  char* query_start = strchr(path, '?');
+  if(query_start) {
+    *query_start = '\0'; // Truncate at '?'
   }
 
-  int   maxResponseSize = response.length + 300;
-  char* output = malloc(maxResponseSize);
+  // Handle routes ending with "/" or without
+  if(path[strlen(path) - 1] == '/') {
+    path[strlen(path) - 1] = '\0';
+  }
 
-  if(output == NULL) {
-    perror("Failed to allocate memory for HTTP response");
+  if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
+    snprintf(wren_path, PATH_SIZE, "%s.wren", path);
+    if(stat(wren_path, &file_stat) == 0) {
+      strncpy(path, wren_path, PATH_SIZE - 1);
+      path[PATH_SIZE - 1] = '\0'; // Ensure null termination
+    }
+  } else {
+    perror("Path too long to append .wren suffix");
+  }
+
+  if(stat(path, &file_stat) == 0 && S_ISDIR(file_stat.st_mode)) {
+    // Serve index.html or index.wren
+    strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
+    if(stat(path, &file_stat) != 0) {
+      strncpy(path + strlen(path) - 5, ".html", 6); // Try index.html
+    }
+  }
+
+  if(strncmp(hm->uri.str, "/_", 2) == 0 || strstr(hm->uri.str, "/.") != NULL) {
+    // Ignore files starting with _ or .
+    clean_http_message(hm);
+    response.status = 0;
+    write_response(client_socket, &response);
     return;
   }
 
-  // Format the response into the buffer
-  int written =
-      snprintf(output, maxResponseSize,
-               "HTTP/1.1 %d OK\r\n"
-               "%s"
-               "Content-Length: %lu\r\n"
-               "\r\n"
-               "%s",
-               response.status, response.header ? response.header : "",
-               response.length > 0 ? response.length : strlen(response.body),
-               response.body ? response.body : "");
-
-  if(written < 0 || written >= maxResponseSize) {
-    perror("Failed to format HTTP response or buffer overflow");
-    free(output);
+  FILE* file = fopen(path, "rb");
+  if(file == NULL) {
+    perror("Error opening file");
+    clean_http_message(hm);
+    close(client_socket);
     return;
   }
-  write(client_socket, output, strlen(output));
-  free(output);
-  close(client_socket);
+  fseek(file, 0, SEEK_END);
+  long file_size = ftell(file);
+  rewind(file);
+
+  char* file_content = malloc(file_size + 1);
+  if(file_content == NULL) {
+    perror("Error allocating memory for file content");
+    fclose(file);
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
+
+  fread(file_content, 1, file_size, file);
+  file_content[file_size] = '\0';
+  fclose(file);
+
+  if(strstr(path, ".wren") != NULL) {
+    response = bialetRun("main", file_content, hm);
+    free(file_content);
+    clean_http_message(hm);
+  } else {
+    response.status = 200;
+    response.body = file_content;
+    response.length = file_size;
+    response.header = get_content_type(path);
+  }
+  write_response(client_socket, &response);
 }
 
 int server_poll(int delay) {

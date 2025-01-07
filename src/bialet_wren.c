@@ -494,8 +494,8 @@ struct BialetResponse bialetRun(char* module, char* code,
     WrenHandle* requestClass = wrenGetSlotHandle(vm, 0);
     WrenHandle* initMethod = wrenMakeCallHandle(vm, "init(_,_,_)");
     wrenSetSlotHandle(vm, 0, requestClass);
-    wrenSetSlotString(vm, 1, get_string(hm->message));
-    wrenSetSlotString(vm, 2, get_string(hm->routes));
+    wrenSetSlotString(vm, 1, hm->message.str);
+    wrenSetSlotString(vm, 2, hm->routes.str);
 
     char filesIds[MAX_URL_LEN] = "";
     // @TODO @FIXME This is called always and it can be abuse to fill the disk
