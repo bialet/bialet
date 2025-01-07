@@ -207,12 +207,24 @@ struct HttpMessage* parse_request(char* request) {
   return hm;
 }
 
+size_t count_utf8_code_points(const char* s) {
+  size_t count = 0;
+  while(*s) {
+    count += (*s++ & 0xC0) != 0x80;
+  }
+  return count;
+}
+
 void write_response(int client_socket, struct BialetResponse* response) {
   if(!response->status) {
     response->status = 404;
     response->body = BIALET_NOT_FOUND_PAGE;
     response->length = strlen(BIALET_NOT_FOUND_PAGE);
     response->header = BIALET_HEADERS;
+  }
+
+  if (response->length == 0) {
+      response->length = strlen(response->body);
   }
 
   size_t maxResponseSize = response->length + MIN_RESPONSE_SIZE;
@@ -231,7 +243,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
                "%s",
                response->status, get_http_status_description(response->status),
                response->header ? response->header : "",
-               response->length > 0 ? response->length : strlen(response->body),
+               (unsigned long) response->length,
                response->body ? response->body : "");
 
   if(written < 0) {
@@ -259,14 +271,8 @@ void handle_client(int client_socket) {
   hm = parse_request(buffer);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
-  printf("Bialet root: %s\n", bialet_config.root_dir);
-  // @TODO: If request is a directory, serve index.html or index.wren
   // @TODO: If request is a ignored file, ignore it
-  // @TODO: If request is a Wren file, interpret it
-  // @TODO: If request is a static file, serve it
-  // @TODO: If file is saved in the FILES database, serve it
   // @TODO: If file not found but there is a _route.wren file, interpret it
-  // @TODO: If file not found or you can't serve it, return 404
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
     write(client_socket, favicon_data, FAVICON_SIZE);
@@ -344,14 +350,14 @@ void handle_client(int client_socket) {
 
   if(strstr(path, ".wren") != NULL) {
     response = bialetRun("main", file_content, hm);
-    free(file_content);
-    clean_http_message(hm);
   } else {
     response.status = 200;
-    response.body = file_content;
+    response.body = strdup(file_content);
     response.length = file_size;
     response.header = get_content_type(path);
   }
+  free(file_content);
+  clean_http_message(hm);
   write_response(client_socket, &response);
 }
 
