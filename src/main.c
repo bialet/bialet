@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
   /* Default config values */
   /* Arg config values */
   bialet_config.root_dir = ".";
-  bialet_config.host = "localhost";
+  bialet_config.host = "127.0.0.1";
   bialet_config.port = 7000;
   bialet_config.log_file = stdout;
   bialet_config.mem_soft_limit = 50;
