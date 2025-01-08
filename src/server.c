@@ -223,8 +223,8 @@ void write_response(int client_socket, struct BialetResponse* response) {
     response->header = BIALET_HEADERS;
   }
 
-  if (response->length == 0) {
-      response->length = strlen(response->body);
+  if(response->length == 0) {
+    response->length = strlen(response->body);
   }
 
   size_t maxResponseSize = response->length + MIN_RESPONSE_SIZE;
@@ -234,17 +234,16 @@ void write_response(int client_socket, struct BialetResponse* response) {
     return;
   }
 
-  int written =
-      snprintf(output, maxResponseSize,
-               "HTTP/1.1 %d %s\r\n"
-               "%s"
-               "Content-Length: %lu\r\n"
-               "\r\n"
-               "%s",
-               response->status, get_http_status_description(response->status),
-               response->header ? response->header : "",
-               (unsigned long) response->length,
-               response->body ? response->body : "");
+  int written = snprintf(
+      output, maxResponseSize,
+      "HTTP/1.1 %d %s\r\n"
+      "%s"
+      "Content-Length: %lu\r\n"
+      "\r\n"
+      "%s",
+      response->status, get_http_status_description(response->status),
+      response->header ? response->header : "", (unsigned long)response->length,
+      response->body ? response->body : "");
 
   if(written < 0) {
     perror("Failed to format HTTP response or buffer overflow");
