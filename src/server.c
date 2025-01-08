@@ -270,8 +270,6 @@ void handle_client(int client_socket) {
   hm = parse_request(buffer);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
-  // @TODO: If request is a ignored file, ignore it
-  // @TODO: If file not found but there is a _route.wren file, interpret it
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
     write(client_socket, favicon_data, FAVICON_SIZE);
@@ -324,41 +322,64 @@ void handle_client(int client_socket) {
     return;
   }
 
-  if(stat(path, &file_stat) == 0) {
-    FILE* file = fopen(path, "rb");
-    if(file == NULL) {
-      perror("Error opening file");
-      clean_http_message(hm);
-      close(client_socket);
-      return;
+  if(stat(path, &file_stat) != 0) {
+    // Search for _route.wren
+    char* url_copy = strdup(hm->uri.str);
+    while(1) {
+      snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
+               url_copy);
+      if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
+        hm->routes = create_string(path, strlen(path));
+        break;
+      }
+      char* last_slash = strrchr(url_copy, '/');
+      if(!last_slash || last_slash == url_copy) { // Stop if root is reached
+        free(url_copy);
+        clean_http_message(hm);
+        write_response(client_socket, &response);
+        return;
+      }
+      *last_slash = '\0'; // Truncate to parent directory
     }
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    rewind(file);
-
-    char* file_content = malloc(file_size + 1);
-    if(file_content == NULL) {
-      perror("Error allocating memory for file content");
-      fclose(file);
-      clean_http_message(hm);
-      close(client_socket);
-      return;
-    }
-
-    fread(file_content, 1, file_size, file);
-    file_content[file_size] = '\0';
-    fclose(file);
-
-    if(strstr(path, ".wren") != NULL) {
-      response = bialetRun(path, file_content, hm);
-    } else {
-      response.status = 200;
-      response.body = strdup(file_content);
-      response.length = file_size;
-      response.header = get_content_type(path);
-    }
-    free(file_content);
+    free(url_copy);
   }
+
+  // Open file and read content
+  FILE* file = fopen(path, "rb");
+  if(file == NULL) {
+    perror("Error opening file");
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
+  fseek(file, 0, SEEK_END);
+  long file_size = ftell(file);
+  rewind(file);
+
+  char* file_content = malloc(file_size + 1);
+  if(file_content == NULL) {
+    perror("Error allocating memory for file content");
+    fclose(file);
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
+
+  fread(file_content, 1, file_size, file);
+  file_content[file_size] = '\0';
+  fclose(file);
+
+  if(strstr(path, ".wren") != NULL) {
+    // If file is a .wren file, run it
+    response = bialetRun(path, file_content, hm);
+  } else {
+    // Otherwise serve static file
+    response.status = 200;
+    response.body = strdup(file_content);
+    response.length = file_size;
+    response.header = get_content_type(path);
+  }
+  free(file_content);
   clean_http_message(hm);
   write_response(client_socket, &response);
 }
