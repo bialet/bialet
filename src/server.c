@@ -349,7 +349,7 @@ void handle_client(int client_socket) {
   fclose(file);
 
   if(strstr(path, ".wren") != NULL) {
-    response = bialetRun("main", file_content, hm);
+    response = bialetRun(path, file_content, hm);
   } else {
     response.status = 200;
     response.body = strdup(file_content);
