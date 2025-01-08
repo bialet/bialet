@@ -4,7 +4,7 @@
 
 Bialet is licensed under the GNU General Public License, version 2 (GPL-2.0).
 
-Copyright (c) 2023 Rodrigo Arce
+Copyright (c) 2023-2025 Rodrigo Arce
 
 ### GNU GENERAL PUBLIC LICENSE
 

@@ -1,13 +1,12 @@
 //
-//  This file is part of Bialet, which is licensed under the
-//  GNU General Public License, version 2 (GPL-2.0).
+// This file is part of Bialet, which is licensed under the
+// MIT License.
 //
-//  Copyright (c) 2023 Rodrigo Arce
+// Copyright (c) 2023-2025 Rodrigo Arce
 //
-//  SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: MIT
 //
-//  For full license text, see LICENSE.md.
-//
+// For full license text, see LICENSE.md.
 
 class Request {
   static init(message, route, files) {
