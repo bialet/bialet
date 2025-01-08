@@ -318,7 +318,8 @@ void handle_client(int client_socket) {
   if(strncmp(hm->uri.str, "/_", 2) == 0 || strstr(hm->uri.str, "/.") != NULL) {
     // Ignore files starting with _ or .
     clean_http_message(hm);
-    response.status = 0;
+    response.status = 403;
+    response.body = BIALET_FORBIDDEN_PAGE;
     write_response(client_socket, &response);
     return;
   }
