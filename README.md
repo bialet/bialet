@@ -93,7 +93,6 @@ Bialet is released under the GPL 2 license, ensuring that it remains free and op
 Bialet incorporates the work of several open-source projects and contributors. We extend our gratitude to:
 
 - The [Wren programming language](https://wren.io), for its lightweight, flexible, and high-performance capabilities.
-- The [Mongoose library](https://github.com/expressjs/mongoose), for providing an easy-to-use web server solution.
 - Matthew Brandly, for his invaluable contributions to JSON parsing and utility functions in Wren. Check out his work at [Matthew Brandly's GitHub](https://github.com/brandly/wren-json).
 - @PureFox48 for the upper and lower functions.
 - @superwills for providing the `getopt` source.
