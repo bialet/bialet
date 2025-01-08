@@ -24,7 +24,7 @@
 #include <unistd.h>
 
 #define BUFFER_SIZE BUFSIZ * 4
-#define PATH_SIZE 1024
+#define PATH_SIZE 1024 * 2
 #define MIN_RESPONSE_SIZE 300
 
 int                        server_fd = -1;
@@ -282,7 +282,7 @@ void handle_client(int client_socket) {
 
   struct BialetResponse response = {0, "", "", 0};
   char                  path[PATH_SIZE];
-  char                  wren_path[PATH_SIZE];
+  char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
 
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
@@ -298,7 +298,7 @@ void handle_client(int client_socket) {
   }
 
   if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
-    snprintf(wren_path, PATH_SIZE, "%s.wren", path);
+    snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
     if(stat(wren_path, &file_stat) == 0) {
       strncpy(path, wren_path, PATH_SIZE - 1);
       path[PATH_SIZE - 1] = '\0'; // Ensure null termination
