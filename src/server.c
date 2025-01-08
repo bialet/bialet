@@ -324,39 +324,41 @@ void handle_client(int client_socket) {
     return;
   }
 
-  FILE* file = fopen(path, "rb");
-  if(file == NULL) {
-    perror("Error opening file");
-    clean_http_message(hm);
-    close(client_socket);
-    return;
-  }
-  fseek(file, 0, SEEK_END);
-  long file_size = ftell(file);
-  rewind(file);
+  if(stat(path, &file_stat) == 0) {
+    FILE* file = fopen(path, "rb");
+    if(file == NULL) {
+      perror("Error opening file");
+      clean_http_message(hm);
+      close(client_socket);
+      return;
+    }
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    rewind(file);
 
-  char* file_content = malloc(file_size + 1);
-  if(file_content == NULL) {
-    perror("Error allocating memory for file content");
+    char* file_content = malloc(file_size + 1);
+    if(file_content == NULL) {
+      perror("Error allocating memory for file content");
+      fclose(file);
+      clean_http_message(hm);
+      close(client_socket);
+      return;
+    }
+
+    fread(file_content, 1, file_size, file);
+    file_content[file_size] = '\0';
     fclose(file);
-    clean_http_message(hm);
-    close(client_socket);
-    return;
-  }
 
-  fread(file_content, 1, file_size, file);
-  file_content[file_size] = '\0';
-  fclose(file);
-
-  if(strstr(path, ".wren") != NULL) {
-    response = bialetRun(path, file_content, hm);
-  } else {
-    response.status = 200;
-    response.body = strdup(file_content);
-    response.length = file_size;
-    response.header = get_content_type(path);
+    if(strstr(path, ".wren") != NULL) {
+      response = bialetRun(path, file_content, hm);
+    } else {
+      response.status = 200;
+      response.body = strdup(file_content);
+      response.length = file_size;
+      response.header = get_content_type(path);
+    }
+    free(file_content);
   }
-  free(file_content);
   clean_http_message(hm);
   write_response(client_socket, &response);
 }
