@@ -85,7 +85,7 @@ make clean && make && make install
 ```
 ## License
 
-Bialet is released under the GPL 2 license, ensuring that it remains free and open-source, allowing users to modify and share the software under the same license terms.
+Bialet is released under the MIT license, allowing users to freely use, modify, and distribute the software with fewer restrictions.
 
 ## Credits
 
