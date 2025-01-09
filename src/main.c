@@ -45,7 +45,7 @@
 
 #endif
 
-#define BIALET_VERSION "0.6-beta"
+#define BIALET_VERSION "0.7-beta"
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
 #define MAX_PATH_LEN 100
