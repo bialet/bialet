@@ -33,7 +33,7 @@ Response.out(<p>Hello World!</p>)
 ```
 
 The index.wren file is the main HTML file. It works the same as the index.html file.
-Go to [localhost:7000](http://localhost:7000) to see the Hello World message.
+Go to [127.0.0.1:7000](http://127.0.0.1:7000) to see the Hello World message.
 
 Wren don't use `;` to separate statements, it uses new lines instead.
 We import the `Response` class from the framework and then call the `out()` method

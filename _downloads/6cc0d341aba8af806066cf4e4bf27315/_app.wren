@@ -8,7 +8,6 @@ class Template {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
   </head>
   <body class="h-full dark">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <div class="h-screen md:container md:mx-auto bg-white dark:bg-gray-900 px-4">
       {{ header }}
       <main>
@@ -18,6 +17,7 @@ class Template {
       </main>
       {{ footer }}
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
   </body>
 </html> }
 

@@ -54,7 +54,7 @@ Clone or download the `Bialet Skeleton <https://github.com/bialet/skeleton>`_ re
   cd mywebapp
   docker compose up
 
-Visit `localhost:7000 <http://localhost:7000>`_ in your browser.
+Visit `127.0.0.1:7000 <http://127.0.0.1:7000>`_ in your browser.
 
 .. grid:: 2
 

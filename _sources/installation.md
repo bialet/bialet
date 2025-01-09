@@ -97,7 +97,7 @@ The table below summarizes the available command-line parameters for the Bialet 
 | Parameter | Description | Default Value |
 | --- | --- | --- |
 | `-p` | Port number | `7000` |
-| `-h` | Host name | `localhost` |
+| `-h` | Host name | `127.0.0.1` |
 | `-r` | Run the code passed as argument | None |
 | `-l` | Log file location | `stdout` |
 | `-d` | SQLite database file location | `_db.sqlite` |

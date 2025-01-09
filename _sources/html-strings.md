@@ -54,6 +54,22 @@ var link = <a href="#">Click me</a>
 System.print(link) // Outputs: "<a href="#">Click me</a>"
 ```
 
+## Self-Closing Tags
+
+Certain HTML tags, known as self-closing tags, do not need a separate closing element. In Bialet, for readability and consistency, these tags must include a space before the closing slash.
+
+* Correct: `<hr />`, `<input value="{{ val }}" />`
+* Incorrect: `<hr/>`
+
+> **Note:** The final output will omit the slash entirely, rendering tags like this: `<hr>`.
+
+### Example
+
+```
+var inputField = <input value="{{ userInput }}" />
+System.print(inputField) // Outputs: "<input value='{{ userInput }}'>"
+```
+
 ## Common Errors
 
 ### Mismatched Tags
