@@ -59,8 +59,9 @@
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
-struct BialetConfig bialet_config;
-time_t              last_reload = 0;
+struct BialetConfig  bialet_config;
+time_t               last_reload = 0;
+static volatile bool keep_running = true;
 
 static void migrate() {
   char* code;
@@ -137,12 +138,20 @@ void welcome() {
 }
 
 void sigintHandler(int signum) {
+  keep_running = false;
   stop_server();
-  _exit(0);
 }
 
 int main(int argc, char* argv[]) {
-  char* code = "";
+  char*            code = "";
+  struct sigaction sa;
+  sa.sa_handler = sigintHandler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+
+  sigaction(SIGINT, &sa, NULL);
+  sigaction(SIGTERM, &sa, NULL);
+  sigaction(SIGABRT, &sa, NULL);
 
 #ifdef IS_UNIX
   pid_t         pid;
@@ -232,9 +241,6 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  signal(SIGINT, sigintHandler);
-  signal(SIGABRT, sigintHandler);
-  signal(SIGTERM, sigintHandler);
   welcome();
   triggerReloadFiles();
 
@@ -256,9 +262,10 @@ int main(int argc, char* argv[]) {
         perror("setrlimit");
         exit(1);
       }
-      for(;;) {
+      while(keep_running) {
         server_poll(SERVER_POLL_DELAY);
       }
+      exit(0);
     } else if(pid > 0) {
       // Parent: Wait for child to exit
       wait(&status);

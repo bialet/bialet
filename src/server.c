@@ -39,6 +39,13 @@ int start_server(struct BialetConfig* config) {
     perror("Failed to create socket");
     exit(EXIT_FAILURE);
   }
+  // Enable SO_REUSEADDR option
+  int opt = 1;
+  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+    perror("Failed to set SO_REUSEADDR");
+    close(server_fd);
+    exit(EXIT_FAILURE);
+  }
 
   struct sockaddr_in server_addr = {
       .sin_family = AF_INET,
@@ -64,6 +71,7 @@ void stop_server() {
   if(server_fd != -1) {
     close(server_fd);
     server_fd = -1;
+    message(magenta("Server stopped"));
   }
 }
 
