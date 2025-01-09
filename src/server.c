@@ -25,7 +25,7 @@
 
 #define BUFFER_SIZE BUFSIZ * 4
 #define PATH_SIZE 1024 * 2
-#define MIN_RESPONSE_SIZE 300
+#define REQUEST_MESSAGE_SIZE 300
 
 int                        server_fd = -1;
 static struct BialetConfig bialet_config;
@@ -227,32 +227,26 @@ void write_response(int client_socket, struct BialetResponse* response) {
     response->length = strlen(response->body);
   }
 
-  size_t maxResponseSize = response->length + MIN_RESPONSE_SIZE;
-  char*  output = malloc(maxResponseSize);
-  if(output == NULL) {
+  char* message = malloc(REQUEST_MESSAGE_SIZE);
+  if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
     return;
   }
-
-  int written = snprintf(
-      output, maxResponseSize,
-      "HTTP/1.1 %d %s\r\n"
-      "%s"
-      "Content-Length: %lu\r\n"
-      "\r\n"
-      "%s",
-      response->status, get_http_status_description(response->status),
-      response->header ? response->header : "", (unsigned long)response->length,
-      response->body ? response->body : "");
-
-  if(written < 0) {
+  int ok = snprintf(message, REQUEST_MESSAGE_SIZE,
+                    "HTTP/1.1 %d %s\r\n"
+                    "%s"
+                    "Content-Length: %lu\r\n\r\n",
+                    response->status, get_http_status_description(response->status),
+                    response->header, (unsigned long)response->length);
+  if(ok < 0) {
     perror("Failed to format HTTP response or buffer overflow");
-    free(output);
+    free(message);
     return;
   }
 
-  write(client_socket, output, strlen(output));
-  free(output);
+  write(client_socket, message, strlen(message));
+  write(client_socket, response->body, response->length);
+  free(message);
   close(client_socket);
 }
 
@@ -375,13 +369,13 @@ void handle_client(int client_socket) {
   } else {
     // Otherwise serve static file
     response.status = 200;
-    response.body = strdup(file_content);
+    response.body = file_content;
     response.length = file_size;
     response.header = get_content_type(path);
   }
-  free(file_content);
   clean_http_message(hm);
   write_response(client_socket, &response);
+  free(file_content);
 }
 
 int server_poll(int delay) {
