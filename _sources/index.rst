@@ -70,7 +70,7 @@ Visit `127.0.0.1:7000 <http://127.0.0.1:7000>`_ in your browser.
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.6.zip
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.7.zip
 
         :octicon:`file-zip;2em;sd-text-info`
 
