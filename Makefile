@@ -15,7 +15,10 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
+CFLAGS = -Wall -g
 LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
+CFLAGS += -I/opt/homebrew/opt/openssl@3/include
+LDFLAGS += -L/opt/homebrew/opt/openssl@3/lib
 
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
     # If it does, append -lws2_32 to LDFLAGS
@@ -30,10 +33,10 @@ wren_to_c_string:
 	done
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) -Wall -g $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
-	$(CC) -Wall -g -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIRS):
 	@mkdir -p $@
@@ -54,6 +57,9 @@ uninstall:
 clean:
 	rm -rf $(BUILD_DIR)
 	find . -name "$(DB_FILE)*" -type f -delete
+	@echo "CFLAGS: $(CFLAGS)"
+	@echo "LDFLAGS: $(LDFLAGS)"
+
 
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
