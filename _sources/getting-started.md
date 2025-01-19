@@ -467,6 +467,8 @@ class Poll {
 
 **We are done!**
 
+[See the final result working](https://poll.bialet.dev/)
+
 Here are the final files:
 
 * [_app.wren](getting-started/3-final/_app.wren)
