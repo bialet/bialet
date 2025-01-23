@@ -405,31 +405,26 @@
 <h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
 <section id="simple-query-list">
 <h2>Simple query list<a class="headerlink" href="#simple-query-list" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Util</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Users list&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
 <span class="w">  </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">  </span><span class="x">&lt;html&gt;</span>
-<span class="x">    &lt;head&gt;</span>
-<span class="w">      </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">      </span><span class="x">&lt;style&gt;</span>
-<span class="x">        body { font: 1.5em/2.5 system-ui; text-align: center }</span>
-<span class="x">        ul { list-style-type: none }</span>
-<span class="x">      &lt;/style&gt;</span>
-<span class="w">    </span><span class="x">&lt;/head&gt;</span>
-<span class="x">    &lt;body&gt;</span>
-<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">    &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">        </span><span class="x">&lt;ul&gt;</span>
+<span class="w">        </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
 <span class="x">          {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">            </span><span class="x">&lt;a href=&quot;/hello?{{ Util.params({&quot;id&quot;: user[&quot;id&quot;]}) }}&quot;&gt;</span>
-<span class="x">              {{ Util.htmlEscape(user[&quot;name&quot;]) }}</span>
+<span class="w">            </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
+<span class="x">              👋 {{ user[&quot;name&quot;] }}</span>
 <span class="x">            &lt;/a&gt;</span>
 <span class="w">          </span><span class="x">&lt;/li&gt; } }}</span>
 <span class="x">        &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">        </span><span class="cm">/* Users table is empty */</span>
 <span class="w">        </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
 <span class="w">      </span><span class="si">}}</span>
 <span class="w">    </span><span class="x">&lt;/body&gt;</span>
