@@ -36,8 +36,12 @@
 #include <ftw.h>
 #include <pthread.h>
 #include <signal.h>
+#include <sys/inotify.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
+
+#define EVENT_SIZE (sizeof(struct inotify_event))
+#define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
 #endif
 
@@ -84,6 +88,45 @@ static void triggerReloadFiles() {
   }
 }
 
+#ifdef IS_UNIX
+static void* fileWatcher(void* arg) {
+  pthread_detach(pthread_self());
+  int   length, i = 0;
+  char  buffer[BUF_LEN];
+  int   fd = inotify_init();
+  char* ext;
+  if(fd < 0) {
+    perror("inotify_init");
+  }
+  /* @TODO File watchers not work when a new folder is created */
+  int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
+  if(wd < 0) {
+    perror("inotify_add_watch");
+  }
+  for(;;) {
+    length = read(fd, buffer, BUF_LEN);
+
+    if(length < 0) {
+      perror("read");
+    }
+
+    while(i < length) {
+      struct inotify_event* event = (struct inotify_event*)&buffer[i];
+      if(event->len) {
+        ext = strrchr(event->name, '.');
+        // Only reload .wren files
+        if(ext && !strcmp(ext, EXTENSION)) {
+          triggerReloadFiles();
+        }
+      }
+      i += EVENT_SIZE + event->len;
+    }
+    i = 0;
+  }
+  pthread_exit(NULL);
+}
+#endif
+
 char* serverUrl() {
   static char url[MAX_URL];
   snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, bialet_config.port);
@@ -114,6 +157,7 @@ int main(int argc, char* argv[]) {
   pid_t         pid;
   struct rlimit mem_limit;
   struct rlimit cpu_limit;
+  pthread_t     thread_id;
 
 #endif
   /* Default config values */
@@ -202,44 +246,26 @@ int main(int argc, char* argv[]) {
 
 #ifdef IS_UNIX
   int status;
-  struct rlimit sys_limit;
+  pthread_create(&thread_id, NULL, fileWatcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;
   cpu_limit.rlim_cur = bialet_config.cpu_soft_limit;
   cpu_limit.rlim_max = bialet_config.cpu_hard_limit;
 
-  printf("Memory limit: %d MB\n", bialet_config.mem_soft_limit);
-  printf("CPU limit: %d%%\n", bialet_config.cpu_soft_limit);
-
-    if (getrlimit(RLIMIT_AS, &sys_limit) == 0) {
-         printf("System RLIMIT_AS: soft=%lu, hard=%lu\n", sys_limit.rlim_cur, sys_limit.rlim_max);
-        if (mem_limit.rlim_max > sys_limit.rlim_max) {
-            mem_limit.rlim_max = sys_limit.rlim_max;
-        }
-        if (mem_limit.rlim_cur > mem_limit.rlim_max) {
-            mem_limit.rlim_cur = mem_limit.rlim_max;
-        }
-    }
-
-    if (getrlimit(RLIMIT_CPU, &sys_limit) == 0) {
-        if (cpu_limit.rlim_max > sys_limit.rlim_max) {
-            cpu_limit.rlim_max = sys_limit.rlim_max;
-        }
-        if (cpu_limit.rlim_cur > cpu_limit.rlim_max) {
-            cpu_limit.rlim_cur = cpu_limit.rlim_max;
-        }
-    }
-
-    for (int i = 0; i < 5; i++) {  // Limit the number of forks
-        pid = fork();
-        if (pid == 0) {
-            // Simulate child process workload
-                  while(keep_running) {
-                              server_poll(SERVER_POLL_DELAY);
-                                    }
-                  exit(0);
-
+  for(;;) {
+    pid = fork();
+    if(pid == 0) {
+      // Set cpu time and memory limit
+      if(setrlimit(RLIMIT_AS, &mem_limit) == -1 ||
+         setrlimit(RLIMIT_CPU, &cpu_limit) == -1) {
+        perror("setrlimit");
+        exit(1);
+      }
+      while(keep_running) {
+        server_poll(SERVER_POLL_DELAY);
+      }
+      exit(0);
     } else if(pid > 0) {
       // Parent: Wait for child to exit
       wait(&status);
