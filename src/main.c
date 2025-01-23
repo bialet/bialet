@@ -12,11 +12,13 @@
 #include "bialet_wren.h"
 #include "messages.h"
 #include "server.h"
-#include "wren_vm.h"
+#include <stdint.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef IS_WIN
+#if IS_WIN
 
 #include <winsock2.h>
 
@@ -33,10 +35,13 @@
 
 #else
 
+#if !IS_MAC
+#include <sys/inotify.h>
+#endif
+
 #include <ftw.h>
 #include <pthread.h>
 #include <signal.h>
-#include <sys/inotify.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 
@@ -61,7 +66,7 @@
 
 struct BialetConfig  bialet_config;
 time_t               last_reload = 0;
-static volatile bool keep_running = true;
+static volatile int8_t keep_running = 1;
 
 static void migrate() {
   char* code;
@@ -88,7 +93,7 @@ static void triggerReloadFiles() {
   }
 }
 
-#ifdef IS_UNIX
+#if IS_LINUX
 static void* fileWatcher(void* arg) {
   pthread_detach(pthread_self());
   int   length, i = 0;
@@ -138,7 +143,7 @@ void welcome() {
 }
 
 void sigintHandler(int signum) {
-  keep_running = false;
+  keep_running = 0;
   stop_server();
 }
 
@@ -153,7 +158,7 @@ int main(int argc, char* argv[]) {
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);
 
-#ifdef IS_UNIX
+#if IS_LINUX
   pid_t         pid;
   struct rlimit mem_limit;
   struct rlimit cpu_limit;
@@ -164,7 +169,7 @@ int main(int argc, char* argv[]) {
   /* Arg config values */
   bialet_config.root_dir = ".";
   bialet_config.host = "127.0.0.1";
-  bialet_config.port = 7000;
+  bialet_config.port = 7001;
   bialet_config.log_file = stdout;
   bialet_config.mem_soft_limit = 50;
   bialet_config.mem_hard_limit = 100;
@@ -244,7 +249,7 @@ int main(int argc, char* argv[]) {
   welcome();
   triggerReloadFiles();
 
-#ifdef IS_UNIX
+#if IS_LINUX
   int status;
   pthread_create(&thread_id, NULL, fileWatcher, NULL);
 
@@ -281,8 +286,8 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-#ifdef IS_WIN
-  for(;;) {
+#if !IS_LINUX
+  while(keep_running) {
     server_poll(SERVER_POLL_DELAY);
   }
 #endif
