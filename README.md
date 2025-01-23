@@ -49,7 +49,7 @@ cd mywebapp
 docker compose up
 ```
 
-2. Visit [127.0.0.1:7000](http://127.0.0.1:7000) in your browser.
+2. Visit [127.0.0.1:7001](http://127.0.0.1:7001) in your browser.
 
 ## Build
 

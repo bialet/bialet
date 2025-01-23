@@ -16,7 +16,6 @@
 #include "server.h"
 #include "utils.h"
 #include "wren.h"
-#include "wren_vm.h"
 #include <ctype.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>

@@ -5,6 +5,7 @@ DOCS_DIRS := ./docs
 TEST_DIR := ./tests
 INSTALL_DIR := ~/.local/bin
 DB_FILE := _db.sqlite3
+OS := $(shell uname -s)
 
 SPHINXBUILD ?= sphinx-build
 SPHINXOPTS ?=
@@ -15,11 +16,20 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
+CFLAGS := -Wall -g
+LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lcurl
 
+# Not checking against OS because I compile with Wine on Linux
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
     # If it does, append -lws2_32 to LDFLAGS
     LDFLAGS += -lws2_32
+endif
+
+ifeq (,$(findstring Darwin,$(OS)))
+	LDFLAGS += -lssl -lcrypto
+else
+		CFLAGS += $(shell pkg-config --cflags openssl)
+		LDFLAGS += $(shell pkg-config --libs openssl)
 endif
 
 all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
@@ -30,10 +40,10 @@ wren_to_c_string:
 	done
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) -Wall -g $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
-	$(CC) -Wall -g -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIRS):
 	@mkdir -p $@
@@ -54,6 +64,9 @@ uninstall:
 clean:
 	rm -rf $(BUILD_DIR)
 	find . -name "$(DB_FILE)*" -type f -delete
+	@echo "CFLAGS: $(CFLAGS)"
+	@echo "LDFLAGS: $(LDFLAGS)"
+
 
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
