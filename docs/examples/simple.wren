@@ -1,28 +1,23 @@
-import "bialet" for Response, Util
+import "bialet" for Response
 
 var users = `SELECT id, name FROM users`.fetch
-var title = "Users list"
+var TITLE = "🗂️ Users list"
 
 Response.out(
   <!doctype html>
   <html>
-    <head>
-      <title>{{ title }}</title>
-      <style>
-        body { font: 1.5em/2.5 system-ui; text-align: center }
-        ul { list-style-type: none }
-      </style>
-    </head>
-    <body>
-      <h1>{{ title }}</h1>
+    <head><title>{{ TITLE }}</title></head>
+    <body style="font: 1.5em/2.5 system-ui; text-align:center">
+      <h1>{{ TITLE }}</h1>
       {{ users.count > 0 ?
-        <ul>
+        <ul style="list-style-type:none">
           {{ users.map{|user| <li>
-            <a href="/hello?{{ Util.params({"id": user["id"]}) }}">
-              {{ Util.htmlEscape(user["name"]) }}
+            <a href="/hello?id={{ user["id"] }}">
+              👋 {{ user["name"] }}
             </a>
           </li> } }}
         </ul> :
+        /* Users table is empty */
         <p>No users, go to <a href="/hello">hello</a>.</p>
       }}
     </body>
