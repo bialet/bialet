@@ -10,32 +10,30 @@
 </p>
 
 ```wren
-import "bialet" for Request, Response
+import "bialet" for Response
 
-class App {
-  construct new() {
-    _title = "🚲 Welcome to Bialet"
-  }
-  user(id) { `SELECT * FROM users WHERE id = ?`.first(id) }
-  name(id) { user(id)["name"] || "World" }
-  html(content) {
-    return <!doctype html>
-    <html>
-      <head>
-        <title>{{ _title }}</title>
-      </head>
-      <body>
-        <h1>{{ _title }}</h1>
-        {{ content }}
-      </body>
-    </html>
-  }
-}
+var users = `SELECT id, name FROM users`.fetch
+var TITLE = "🗂️ Users list"
 
-var idUrlParam = Request.get("id")
-var app = App.new()
-var html = app.html(
-  <p>👋 Hello <b>{{ app.name(idUrlParam) }}</b></p>
+Response.out(
+  <!doctype html>
+  <html>
+    <head><title>{{ TITLE }}</title></head>
+    <body style="font: 1.5em/2.5 system-ui; text-align:center">
+      <h1>{{ TITLE }}</h1>
+      {{ users.count > 0 ?
+        <ul style="list-style-type:none">
+          {{ users.map{|user| <li>
+            <a href="/hello?id={{ user["id"] }}">
+              👋 {{ user["name"] }}
+            </a>
+          </li> } }}
+        </ul> :
+        /* Users table is empty */
+        <p>No users, go to <a href="/hello">hello</a>.</p>
+      }}
+    </body>
+  </html>
 )
 ```
 
