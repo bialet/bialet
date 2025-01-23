@@ -9,7 +9,7 @@
 # Parameters
 TARGET_EXEC="${1:-./build/bialet}"
 HOST="${2:-127.0.0.1}"
-PORT="${3:-7000}"
+PORT="${3:-7001}"
 
 source "$(dirname "$0")/util.sh"
 

@@ -15,7 +15,7 @@ BIALET_DIR=/path/to/app docker compose up
 
 ### Changing the Default Port
 
-The default application port is `7000`. To use a different port, set the `BIALET_PORT` environment variable:
+The default application port is `7001`. To use a different port, set the `BIALET_PORT` environment variable:
 
 ```bash
 BIALET_PORT=7001 docker compose up
@@ -87,7 +87,7 @@ By default, the application runs in the current directory.
 To change the directory where the application runs or adjust other settings, you can use various command-line arguments:
 
 ```bash
-bialet -p 7000 /path/to/app
+bialet -p 7001 /path/to/app
 ```
 
 ### CLI Parameters
@@ -96,7 +96,7 @@ The table below summarizes the available command-line parameters for the Bialet 
 
 | Parameter | Description | Default Value |
 | --- | --- | --- |
-| `-p` | Port number | `7000` |
+| `-p` | Port number | `7001` |
 | `-h` | Host name | `127.0.0.1` |
 | `-r` | Run the code passed as argument | None |
 | `-l` | Log file location | `stdout` |
