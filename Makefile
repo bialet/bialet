@@ -5,6 +5,7 @@ DOCS_DIRS := ./docs
 TEST_DIR := ./tests
 INSTALL_DIR := ~/.local/bin
 DB_FILE := _db.sqlite3
+OS := $(shell uname -s)
 
 SPHINXBUILD ?= sphinx-build
 SPHINXOPTS ?=
@@ -15,14 +16,20 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-CFLAGS = -Wall -g
-CFLAGS += $(shell pkg-config --cflags openssl)
+CFLAGS := -Wall -g
 LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lcurl
-LDFLAGS += $(shell pkg-config --libs openssl)
 
+# Not checking against OS because I compile with Wine on Linux
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
     # If it does, append -lws2_32 to LDFLAGS
     LDFLAGS += -lws2_32
+endif
+
+ifeq (,$(findstring Darwin,$(OS)))
+	LDFLAGS += -lssl -lcrypto
+else
+		CFLAGS += $(shell pkg-config --cflags openssl)
+		LDFLAGS += $(shell pkg-config --libs openssl)
 endif
 
 all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
