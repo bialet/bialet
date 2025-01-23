@@ -393,7 +393,9 @@ int server_poll(int delay) {
 
   int poll_result = poll(fds, 1, delay);
   if(poll_result < 0) {
-    perror("Poll error");
+    if(server_fd != -1) {
+      perror("Poll error");
+    }
     return -1;
   } else if(poll_result == 0) {
     return 0; // Timeout occurred
