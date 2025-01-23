@@ -13,8 +13,19 @@
 
 #ifdef _WIN32
 #define IS_WIN 1
+#define IS_UNIX 0
+#define IS_MAC 0
+#define IS_LINUX 0
 #else
 #define IS_UNIX 1
+#define IS_WIN 0
+#if __APPLE__
+#define IS_MAC 1
+#define IS_LINUX 0
+#else
+#define IS_LINUX 1
+#define IS_MAC 0
+#endif
 #endif
 
 #ifdef _WIN64
@@ -90,7 +101,7 @@ void addParameter(BialetQuery* query, const char* value, BialetQueryType type);
 void freeBialetQuery(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
-  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "            \
+  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "              \
   "root_dir\n"
 
 /* Welcome, not found and error pages */
@@ -99,11 +110,11 @@ void freeBialetQuery(BialetQuery* query);
   "<!DOCTYPE html><body style=\"font:2.3rem "                                       \
   "system-ui;text-align:center;margin:2em;color:#024\"><h1>"
 #define BIALET_FOOTER_PAGE                                                          \
-  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "           \
+  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "             \
   "href=\"https://bialet.dev\" style=\"color:#007FAD\" >Bialet"
 #define BIALET_WELCOME_PAGE                                                         \
   BIALET_HEADER_PAGE                                                                \
-  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "    \
+  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "      \
   "href=\"https://bialet.dev/getting-started.html\" "                               \
   "style=\"color:#007FAD\">Getting Started "                                        \
   "guide</a></b>." BIALET_FOOTER_PAGE
@@ -115,7 +126,7 @@ void freeBialetQuery(BialetQuery* query);
   "🚨 Internal Server Error</h1><p>Oops! Something broke." BIALET_FOOTER_PAGE
 #define BIALET_FORBIDDEN_PAGE                                                       \
   BIALET_HEADER_PAGE                                                                \
-  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                      \
+  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                        \
   "access this page." BIALET_FOOTER_PAGE
 
 #endif

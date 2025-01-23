@@ -5,6 +5,6 @@ services:
     build:
       context: .
     ports:
-      - ${BIALET_PORT:-7000}:7000
+      - ${BIALET_PORT:-7001}:7001
     volumes:
       - ${BIALET_DIR:-.}:/var/www
