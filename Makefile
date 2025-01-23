@@ -16,9 +16,9 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
 CFLAGS = -Wall -g
-LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lssl -lcrypto -lcurl
-CFLAGS += -I/opt/homebrew/opt/openssl@3/include
-LDFLAGS += -L/opt/homebrew/opt/openssl@3/lib
+CFLAGS += $(shell pkg-config --cflags openssl)
+LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lcurl
+LDFLAGS += $(shell pkg-config --libs openssl)
 
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
     # If it does, append -lws2_32 to LDFLAGS
