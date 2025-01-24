@@ -920,6 +920,17 @@ static void readRawString(Parser* parser) {
   makeToken(parser, type);
 }
 
+static int htmlTagIsVoidElement(char* tagName) {
+  return strcmp(tagName, "img") == 0 || strcmp(tagName, "input") == 0 ||
+         strcmp(tagName, "br") == 0 || strcmp(tagName, "meta") == 0 ||
+         strcmp(tagName, "link") == 0 || strcmp(tagName, "hr") == 0 ||
+         strcmp(tagName, "area") == 0 || strcmp(tagName, "base") == 0 ||
+         strcmp(tagName, "col") == 0 || strcmp(tagName, "embed") == 0 ||
+         strcmp(tagName, "keygen") == 0 || strcmp(tagName, "param") == 0 ||
+         strcmp(tagName, "source") == 0 || strcmp(tagName, "track") == 0 ||
+         strcmp(tagName, "wbr") == 0;
+}
+
 static void readHtmlString(Parser* parser, char* previousTagName) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
@@ -977,7 +988,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         break;
       }
       if(tagIsOpen && c == ' ' && peekChar(parser) == '/' &&
-         peekNextChar(parser) == '>') {
+         peekNextChar(parser) == '>' && htmlTagIsVoidElement(tagName)) {
         // Omit space and slash in self closing tag
         nextChar(parser);
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
