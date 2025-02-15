@@ -28,6 +28,15 @@ struct HttpMessage {
   struct String method;
   struct String routes;
   struct String message;
+  struct String uploaded_files_ids;
+};
+
+struct HttpFile {
+  struct String name;
+  struct String filename;
+  struct String type;
+  char* file;
+  size_t size;
 };
 
 #endif

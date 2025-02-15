@@ -471,13 +471,7 @@ char* escapeSpecialChars(const char* input) {
   return output;
 }
 
-int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
-  // TODO: Save uploaded files, implement again with new server
-  return 1;
-}
-
-struct BialetResponse bialetRun(char* module, char* code,
-                                struct HttpMessage* hm) {
+struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm) {
   struct BialetResponse r;
   r.length = 0;
   int     error = 0;
@@ -495,11 +489,7 @@ struct BialetResponse bialetRun(char* module, char* code,
     wrenSetSlotHandle(vm, 0, requestClass);
     wrenSetSlotString(vm, 1, hm->message.str);
     wrenSetSlotString(vm, 2, hm->routes.str);
-
-    char filesIds[MAX_URL_LEN] = "";
-    // @TODO @FIXME This is called always and it can be abuse to fill the disk
-    saveUploadedFiles(hm, filesIds);
-    wrenSetSlotString(vm, 3, filesIds);
+    wrenSetSlotString(vm, 3, hm->uploaded_files_ids.str);
 
     if((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
       message(red("Runtime Error"), "Failed to initialize request");

@@ -23,14 +23,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE BUFSIZ * 4
-#define PATH_SIZE 1024 * 2
+#define BUFFER_SIZE (1024 * 1024 * 2) // 2 MB
+#define PATH_SIZE (1024 * 2)
 #define REQUEST_MESSAGE_SIZE 300
 
 int                        server_fd = -1;
 static struct BialetConfig bialet_config;
 
 void handle_client(int client_socket);
+void handle_file_upload(int client_socket, struct HttpMessage* hm,
+                        struct BialetResponse* response);
 
 int start_server(struct BialetConfig* config) {
   bialet_config = *config;
@@ -39,7 +41,6 @@ int start_server(struct BialetConfig* config) {
     perror("Failed to create socket");
     exit(EXIT_FAILURE);
   }
-  // Enable SO_REUSEADDR option
   int opt = 1;
   if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
     perror("Failed to set SO_REUSEADDR");
@@ -93,6 +94,7 @@ void clean_http_message(struct HttpMessage* hm) {
   free(hm->method.str);
   free(hm->uri.str);
   free(hm->routes.str);
+  free(hm->uploaded_files_ids.str);
   free(hm);
   hm = NULL;
 }
@@ -211,6 +213,7 @@ struct HttpMessage* parse_request(char* request) {
   char* url = strtok(NULL, " ");
   hm->uri = create_string(url, strlen(url));
   hm->routes = create_string("", 0);
+  hm->uploaded_files_ids = create_string("", 0);
 
   return hm;
 }
@@ -283,7 +286,17 @@ void handle_client(int client_socket) {
   struct BialetResponse response = {0, "", "", 0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
-  struct stat           file_stat;
+
+  if(strcmp(hm->method.str, "POST") == 0 &&
+     strstr(hm->message.str, "multipart/form-data") != NULL) {
+    handle_file_upload(client_socket, hm, &response);
+    if(response.status != 0) {
+      write_response(client_socket, &response);
+      return;
+    }
+  }
+
+  struct stat file_stat;
 
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
   // Remove query parameters if present
@@ -411,4 +424,115 @@ int server_poll(int delay) {
   }
 
   return 0;
+}
+
+void save_uploaded_file(struct HttpMessage* hm, struct HttpFile* files) {
+  // TODO: Save uploaded files, implement again with new server
+}
+
+void parse_upload_file_headers(struct HttpFile* file, char* headers) {
+  // TODO: Parsear lops headers!!
+
+  // Parse Content-Disposition
+
+  /*   char* filename_start = strstr(cd_header, "filename=\""); */
+  /*   if(filename_start) { */
+  /*     filename_start += 10; */
+  /*     char* filename_end = strchr(filename_start, '"'); */
+  /*     if(filename_end) { */
+  /*       *filename_end = '\0'; */
+  /*       filename = filename_start; */
+  /*     } */
+  /*   } */
+  /* } */
+}
+
+void handle_file_upload(int client_socket, struct HttpMessage* hm,
+                        struct BialetResponse* response) {
+  char* request = hm->message.str;
+  printf("%s\n\n-------- DONE -----------\n", request);
+
+  char* boundary_start = strstr(request, "boundary=");
+  if(!boundary_start) {
+    response->status = 400;
+    response->body = BIALET_BAD_REQUEST_PAGE;
+    return;
+  }
+  boundary_start += 9; // Move past "boundary="
+  char* boundary_end;
+  if(*boundary_start == '"') {
+    boundary_start++;
+    boundary_end = strchr(boundary_start, '"');
+    if(!boundary_end) {
+      response->status = 400;
+      response->body = BIALET_BAD_REQUEST_PAGE;
+      return;
+    }
+  } else {
+    boundary_end = boundary_start;
+    while(*boundary_end && !strchr("; \r\n", *boundary_end))
+      boundary_end++;
+  }
+  size_t boundary_len = boundary_end - boundary_start;
+  char   boundary[boundary_len + 1];
+  strncpy(boundary, boundary_start, boundary_len);
+  boundary[boundary_len] = '\0';
+  printf("Boundary value: %s\n", boundary);
+
+  // Locate request body
+  char* body_start = strstr(request, "\r\n\r\n");
+  if(!body_start) {
+    response->status = 400;
+    response->body = BIALET_BAD_REQUEST_PAGE;
+    return;
+  }
+  body_start += 4;
+
+  // Validate initial boundary
+  char initial_boundary[boundary_len + 5];
+  snprintf(initial_boundary, sizeof(initial_boundary), "--%s\r\n", boundary);
+  if(strncmp(body_start, initial_boundary, strlen(initial_boundary)) != 0) {
+    response->status = 400;
+    response->body = BIALET_BAD_REQUEST_PAGE;
+    return;
+  }
+  char* current_part = body_start + strlen(initial_boundary);
+
+  // Process multipart parts
+  while(1) {
+    char* headers_end = strstr(current_part, "\r\n\r\n");
+    if(!headers_end)
+      break;
+    char* content_start = headers_end + 4;
+
+    struct HttpFile* file = (struct HttpFile*)malloc(sizeof(struct HttpFile));
+    parse_upload_file_headers(file, current_part);
+    char boundary_marker[boundary_len + 8];
+    snprintf(boundary_marker, sizeof(boundary_marker), "\r\n--%s", boundary);
+    char* content_end = strstr(content_start, boundary_marker);
+    if(!content_end)
+      break;
+
+    // Calculate file content
+    size_t content_length = content_end - content_start - 1; 
+    printf("Content Length: %zu\n", content_length);
+    // TODO: Obtener el contenido correcto!!
+    // TODO: Probar con binarios!!
+    char content[content_length + 1];
+    strncpy(content, content_start, content_length);
+    content[content_length] = '\0';
+    printf("Content: \n\n--- Start ---\n%s\n--- End ---\n", content);
+    // TODO: Guardar archivo en SQLite!!
+    file->file = content;
+    file->size = content_length;
+
+    // Clean up
+    free(file);
+    file = NULL;
+
+    char* next_boundary = strstr(content_start, boundary_marker);
+    if(!next_boundary)
+      break;
+    current_part = next_boundary + strlen(boundary_marker) + 2;
+  }
 }

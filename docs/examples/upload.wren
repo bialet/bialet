@@ -1,17 +1,23 @@
 import "bialet" for Request, Response, Db
 
 if (Request.isPost) {
-  // Get the uploaded file
-  var uploadedFile = Request.file("form_file_name")
-  System.print("File: %(uploadedFile.name)")
-  // Make it temporal, it will be deleted soon
-  // You can still use it in the rest of the request
-  uploadedFile.temp()
-  // Return the file to the browser
-  return Response.file(uploadedFile.id)
+  // Get the uploaded files
+  var persistFile = Request.file("persist")
+  if (persistFile) {
+    System.print("Saving %(persistFile.name)")
+  }
+  var temporalFile = Request.file("temporal")
+  if (temporalFile) {
+    System.print("Showing %(temporalFile.name)")
+    // Make it temporal, it will be deleted soon
+    // You can still use it in the rest of the request
+    temporalFile.temp()
+    // Return the file to the browser
+    return Response.file(temporalFile.id)
+  }
 }
 
-var title = "Upload File"
+var title = "Upload Files"
 Response.out(
 <!doctype html>
   <head>
@@ -22,8 +28,16 @@ Response.out(
   </head>
   <body>
     <h1>{{ title }}</h1>
+    {{ Request.isPost && <h2>Uploaded Files: {{ Request.files.count }}</h2> }}
     <form method="post" enctype="multipart/form-data">
-      <input type="file" name="form_file_name">
+      <p>
+        <label for="temporal">Temporal file</label>
+        <input type="file" name="temporal" />
+      </p>
+      <p>
+        <label for="persist">Persisted file</label>
+        <input type="file" name="persist" />
+      </p>
       <input type="submit" value="{{ title }}">
     </form>
     <p><a href=".">Back ↩️</a></p>

@@ -28,17 +28,13 @@
 #endif
 #endif
 
-#ifdef _WIN64
+#include <stdio.h>
+
+#if IS_WIN
 
 #include <winsock2.h>
 
 #include <windows.h>
-
-#include <stdio.h>
-
-#else
-
-#include <stdio.h>
 
 #endif
 
@@ -128,5 +124,8 @@ void freeBialetQuery(BialetQuery* query);
   BIALET_HEADER_PAGE                                                                \
   "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                        \
   "access this page." BIALET_FOOTER_PAGE
+#define BIALET_BAD_REQUEST_PAGE                                                     \
+  BIALET_HEADER_PAGE                                                                \
+  "😩 Bad Request</h1><p>Oops! Your request was invalid." BIALET_FOOTER_PAGE
 
 #endif
