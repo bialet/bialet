@@ -275,14 +275,6 @@ void handle_client(int client_socket) {
   hm = parse_request(buffer);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
-  if(strcmp("/favicon.ico", hm->uri.str) == 0) {
-    write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
-    write(client_socket, favicon_data, FAVICON_SIZE);
-    clean_http_message(hm);
-    close(client_socket);
-    return;
-  }
-
   struct BialetResponse response = {0, "", "", 0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
@@ -338,6 +330,15 @@ void handle_client(int client_socket) {
   }
 
   if(stat(path, &file_stat) != 0) {
+    /*  Check if is favicon, send default */
+    if(strcmp("/favicon.ico", hm->uri.str) == 0) {
+      write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
+      write(client_socket, favicon_data, FAVICON_SIZE);
+      clean_http_message(hm);
+      close(client_socket);
+      return;
+    }
+
     // Search for _route.wren
     char* url_copy = strdup(hm->uri.str);
     while(1) {
@@ -514,7 +515,7 @@ void handle_file_upload(int client_socket, struct HttpMessage* hm,
       break;
 
     // Calculate file content
-    size_t content_length = content_end - content_start - 1; 
+    size_t content_length = content_end - content_start - 1;
     printf("Content Length: %zu\n", content_length);
     // TODO: Obtener el contenido correcto!!
     // TODO: Probar con binarios!!
