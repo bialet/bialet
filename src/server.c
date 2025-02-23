@@ -34,6 +34,17 @@ void handle_client(int client_socket);
 void handle_file_upload(int client_socket, struct HttpMessage* hm,
                         struct BialetResponse* response);
 
+void append_string(struct String* s1, struct String s2) {
+  s1->str = realloc(s1->str, s1->len + s2.len + 1);
+  if(s1->str == NULL) {
+    perror("Failed to allocate memory for string");
+    exit(EXIT_FAILURE);
+  }
+  memcpy(s1->str + s1->len, s2.str, s2.len);
+  s1->str[s1->len + s2.len] = '\0';
+  s1->len += s2.len;
+}
+
 int start_server(struct BialetConfig* config) {
   bialet_config = *config;
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -427,31 +438,76 @@ int server_poll(int delay) {
   return 0;
 }
 
-void save_uploaded_file(struct HttpMessage* hm, struct HttpFile* files) {
-  // TODO: Save uploaded files, implement again with new server
+void save_uploaded_file(struct HttpMessage* hm, struct HttpFile* file) {
+  sqlite3_stmt* stmt;
+
+  int result = sqlite3_prepare_v2(
+      bialet_config.db,
+      "INSERT INTO BIALET_FILES (name, type, originalFileName, file, size) "
+      "VALUES (?, ?, ?, ?, ?)",
+      -1, &stmt, 0);
+  if(result == SQLITE_OK) {
+    sqlite3_bind_text(stmt, 1, file->name.str, file->name.len, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, file->type.str, file->type.len, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, file->filename.str, file->filename.len,
+                      SQLITE_STATIC);
+    sqlite3_bind_blob(stmt, 4, file->file, file->size, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 5, file->size);
+    sqlite3_step(stmt);
+    struct String id = create_string(
+        sqliteIntToString(sqlite3_last_insert_rowid(bialet_config.db)), 1);
+    struct String comma = create_string(",", 1);
+    append_string(&hm->uploaded_files_ids, id);
+    append_string(&hm->uploaded_files_ids, comma);
+
+    sqlite3_finalize(stmt);
+    free(id.str);
+    free(comma.str);
+  } else {
+    message(red("Error on saving files"), sqlite3_errmsg(bialet_config.db));
+  }
 }
 
 void parse_upload_file_headers(struct HttpFile* file, char* headers) {
-  // TODO: Parsear lops headers!!
-
-  // Parse Content-Disposition
-
-  /*   char* filename_start = strstr(cd_header, "filename=\""); */
-  /*   if(filename_start) { */
-  /*     filename_start += 10; */
-  /*     char* filename_end = strchr(filename_start, '"'); */
-  /*     if(filename_end) { */
-  /*       *filename_end = '\0'; */
-  /*       filename = filename_start; */
-  /*     } */
-  /*   } */
-  /* } */
+  // Extract Content-Type
+  char* content_type_start = strstr(headers, "Content-Type: ");
+  if(content_type_start) {
+    content_type_start += strlen("Content-Type: ");
+    char* content_type_end = strstr(content_type_start, "\r\n");
+    if(!content_type_end)
+      content_type_end = strstr(content_type_start, "\n");
+    if(content_type_end) {
+      size_t len = content_type_end - content_type_start;
+      file->type = create_string(content_type_start, len);
+    }
+  }
+  // Extract Content-Disposition filename and name
+  char* content_disp_start = strstr(headers, "Content-Disposition: ");
+  if(content_disp_start) {
+    char* name_start = strstr(content_disp_start, "name=\"");
+    if(name_start) {
+      name_start += strlen("name=\"");
+      char* name_end = strchr(name_start, '\"');
+      if(name_end) {
+        size_t len = name_end - name_start;
+        file->name = create_string(name_start, len);
+      }
+    }
+    char* filename_start = strstr(content_disp_start, "filename=\"");
+    if(filename_start) {
+      filename_start += strlen("filename=\"");
+      char* filename_end = strchr(filename_start, '\"');
+      if(filename_end) {
+        size_t len = filename_end - filename_start;
+        file->filename = create_string(filename_start, len);
+      }
+    }
+  }
 }
 
 void handle_file_upload(int client_socket, struct HttpMessage* hm,
                         struct BialetResponse* response) {
   char* request = hm->message.str;
-  printf("%s\n\n-------- DONE -----------\n", request);
 
   char* boundary_start = strstr(request, "boundary=");
   if(!boundary_start) {
@@ -478,7 +534,6 @@ void handle_file_upload(int client_socket, struct HttpMessage* hm,
   char   boundary[boundary_len + 1];
   strncpy(boundary, boundary_start, boundary_len);
   boundary[boundary_len] = '\0';
-  printf("Boundary value: %s\n", boundary);
 
   // Locate request body
   char* body_start = strstr(request, "\r\n\r\n");
@@ -516,16 +571,14 @@ void handle_file_upload(int client_socket, struct HttpMessage* hm,
 
     // Calculate file content
     size_t content_length = content_end - content_start - 1;
-    printf("Content Length: %zu\n", content_length);
-    // TODO: Obtener el contenido correcto!!
-    // TODO: Probar con binarios!!
-    char content[content_length + 1];
+    char   content[content_length + 1];
     strncpy(content, content_start, content_length);
-    content[content_length] = '\0';
-    printf("Content: \n\n--- Start ---\n%s\n--- End ---\n", content);
-    // TODO: Guardar archivo en SQLite!!
+    // TODO: Probar con binarios!!
+    /* printf("Content Length: %zu\n", content_length); */
+    /* printf("Content: \n\n--- Start ---\n%s\n--- End ---\n", content); */
     file->file = content;
     file->size = content_length;
+    save_uploaded_file(hm, file);
 
     // Clean up
     free(file);

@@ -14,7 +14,7 @@ class Request {
     __headers = {}
     __get = {}
     __post = {}
-    __files = files
+    __files = files.trimEnd(',')
     var lines = message.split("\n")
     var tmp = lines.removeAt(0).split(" ")
     __method = tmp[0]
@@ -82,8 +82,8 @@ class Request {
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static files {
     var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE id IN (%(__files))", [name])
-    var all = []
-    res.each{|r| all[r["key"]] = File.new(r["val"]).save }
+    var all = {}
+    res.each{|r| all[r["name"]] = File.new(r).save }
     return all
   }
   static file(name) {

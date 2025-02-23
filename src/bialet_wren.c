@@ -178,7 +178,7 @@ void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
 }
 
-static char* sqliteIntToString(sqlite3_int64 value) {
+char* sqliteIntToString(sqlite3_int64 value) {
   char* str = (char*)malloc(21 * sizeof(char));
   if(str == NULL)
     return NULL;
@@ -618,6 +618,7 @@ void bialetInit(struct BialetConfig* config) {
   sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
                NULL);
   sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
+  config->db = db;
 
   bialet_config = *config;
   wrenInitConfiguration(&wren_config);

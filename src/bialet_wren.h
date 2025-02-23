@@ -23,12 +23,12 @@ struct BialetResponse {
 
 void bialetInit(struct BialetConfig* config);
 
-struct BialetResponse bialetRun(char* module, char* code,
-                                 struct HttpMessage* hm);
+struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
 
 char* readFile(const char* path);
 
-int bialetRunCli(char* code);
+int   bialetRunCli(char* code);
+char* sqliteIntToString(sqlite3_int64 value);
 
 #define BIALET_EXTENSION ".wren"
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION

@@ -28,6 +28,7 @@
 #endif
 #endif
 
+#include <sqlite3.h>
 #include <stdio.h>
 
 #if IS_WIN
@@ -51,8 +52,9 @@ struct BialetConfig {
 
   int mem_soft_limit, mem_hard_limit, cpu_soft_limit, cpu_hard_limit;
 
-  char* db_path;
-  char* ignored_files;
+  char*    db_path;
+  char*    ignored_files;
+  sqlite3* db;
 };
 
 typedef enum {
