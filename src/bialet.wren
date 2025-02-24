@@ -81,12 +81,14 @@ class Request {
   static post(name) { __post[name] ? __post[name]:null }
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static files {
+    if (__files == "") return {}
     var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE id IN (%(__files))", [name])
     var all = {}
     res.each{|r| all[r["name"]] = File.new(r).save }
     return all
   }
   static file(name) {
+    if (__files == "") return null
     var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE name = ? AND id IN (%(__files))", [name])
     if (res.count == 0) return null
     return File.new(res[0]).save

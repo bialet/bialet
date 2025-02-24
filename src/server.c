@@ -212,13 +212,15 @@ char* get_content_type(const char* path) {
   return "Content-Type: application/octet-stream";
 }
 
-struct HttpMessage* parse_request(char* request) {
+struct HttpMessage* parse_request(char* request, ssize_t len) {
   struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   if(hm == NULL) {
     perror("Failed to allocate memory for HttpMessage");
     exit(EXIT_FAILURE);
   }
-  hm->message = create_string(request, strlen(request));
+  hm->message = create_string(request, len);
+  printf("Message: %s\n", hm->message.str);
+  printf("Message size: %zu\n", hm->message.len);
   char* method = strtok(request, " ");
   hm->method = create_string(method, strlen(method));
   char* url = strtok(NULL, " ");
@@ -283,7 +285,7 @@ void handle_client(int client_socket) {
   buffer[bytes_read] = '\0';
 
   struct HttpMessage* hm;
-  hm = parse_request(buffer);
+  hm = parse_request(buffer, bytes_read);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
   struct BialetResponse response = {0, "", "", 0};
@@ -409,6 +411,7 @@ void handle_client(int client_socket) {
   clean_http_message(hm);
   write_response(client_socket, &response);
   free(file_content);
+  // TODO Delete temporal upload files?
 }
 
 int server_poll(int delay) {
@@ -562,22 +565,25 @@ void handle_file_upload(int client_socket, struct HttpMessage* hm,
     char* content_start = headers_end + 4;
 
     struct HttpFile* file = (struct HttpFile*)malloc(sizeof(struct HttpFile));
+    // TODO Get non-files form data as well
     parse_upload_file_headers(file, current_part);
     char boundary_marker[boundary_len + 8];
     snprintf(boundary_marker, sizeof(boundary_marker), "\r\n--%s", boundary);
     char* content_end = strstr(content_start, boundary_marker);
-    if(!content_end)
+    if(!content_end || content_end == content_start)
       break;
 
     // Calculate file content
     size_t content_length = content_end - content_start - 1;
+    printf("Content Length: %zu\n", content_length);
     char   content[content_length + 1];
     strncpy(content, content_start, content_length);
-    // TODO: Probar con binarios!!
-    /* printf("Content Length: %zu\n", content_length); */
-    /* printf("Content: \n\n--- Start ---\n%s\n--- End ---\n", content); */
+    printf("Content Length: %zu\n", content_length);
+    printf("Content: \n\n--- Start ---\n%s\n--- End ---\n", content);
     file->file = content;
     file->size = content_length;
+    // TODO Ignore empty files
+    // TODO Work with binary!
     save_uploaded_file(hm, file);
 
     // Clean up
