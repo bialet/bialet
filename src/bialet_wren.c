@@ -17,11 +17,15 @@
 #include "utils.h"
 #include "wren.h"
 #include <ctype.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #include <sqlite3.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef OPENSSL_VERSION_NUMBER
+#define OPENSSL_OK 1
+#include <openssl/rand.h>
+#include <openssl/sha.h>
+#endif
 
 // Wren generated code
 #include "bialet.wren.inc"
@@ -312,6 +316,7 @@ static void randomString(WrenVM* vm) {
 }
 
 static void hashPassword(WrenVM* vm) {
+#ifdef OPENSSL_OK
   const char*   password = wrenGetSlotString(vm, 1);
   unsigned char salt[16];
   if(!RAND_bytes(salt, sizeof(salt))) {
@@ -340,12 +345,16 @@ static void hashPassword(WrenVM* vm) {
   for(int i = 0; i < sizeof(salt); i++) {
     sprintf(result + strlen(result), "%02x", salt[i]);
   }
+#else
+  char* result = "";
+#endif
 
   wrenEnsureSlots(vm, 2);
   wrenSetSlotString(vm, 0, result);
 }
 
 static void verifyPassword(WrenVM* vm) {
+#ifdef OPENSSL_OK
   int         result = 0;
   const char* password = wrenGetSlotString(vm, 1);
   const char* hash_and_salt = wrenGetSlotString(vm, 2);
@@ -378,6 +387,9 @@ static void verifyPassword(WrenVM* vm) {
   }
   new_hash_str[64] = 0;
   result = strcmp(new_hash_str, stored_hash) == 0;
+#else
+  int result = 0;
+#endif
   wrenEnsureSlots(vm, 2);
   wrenSetSlotBool(vm, 0, result);
 }
@@ -476,8 +488,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
   return 1;
 }
 
-struct BialetResponse bialetRun(char* module, char* code,
-                                struct HttpMessage* hm) {
+struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm) {
   struct BialetResponse r;
   r.length = 0;
   int     error = 0;
