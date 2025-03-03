@@ -30,19 +30,24 @@ To build Bialet from source, you'll need to install certain dependencies and run
 #### Debian/Ubuntu
 
 ```bash
-sudo apt install -y libsqlite3-dev libssl-dev libcurl4-openssl-dev
+sudo apt install -y libsqlite3-dev libssl-dev 
+# Optional, but recommended for production
+sudo apt install -y libcurl4-openssl-dev
 ```
 
 #### MacOS
 
 ```bash
-brew install sqlite3 openssl curl
+brew install sqlite3 curl
+# Optional, but recommended for production
+brew install openssl
 ```
+
 ### Windows
 
 * libcrypto-3-x64.dll
 * libsqlite3-0.dll
-* libssl-3-x64.dll
+* libssl-3-x64.dll (Optional, but recommended for production)
 
 ### Building the Project
 

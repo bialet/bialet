@@ -1,6 +1,5 @@
 #include "http_call.h"
 
-#include "messages.h"
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
@@ -294,7 +293,6 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
     // Create an SSL connection and attach it to the socket
     ssl = SSL_new(ctx);
     if(ssl == NULL) {
-      printf("SSL_new failed\n");
       response->error = 5; // SSL creation failed
       SSL_CTX_free(ctx);
       cleanup_openssl();
@@ -306,8 +304,6 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
     int result = SSL_connect(ssl);
     if(result != 1) {
       int ssl_err = errno;
-      printf("SSL_connect failed with error code: %d\n", SSL_get_error(ssl, result));
-      printf("Captured errno: %d\n", ssl_err);
       response->error = 5; // SSL connection failed
       SSL_free(ssl);
       closesocket(sockfd);

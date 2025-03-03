@@ -26,9 +26,13 @@ ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
 endif
 
 ifeq (,$(findstring Darwin,$(OS)))
+HAVE_SSL := $(shell echo "#include <openssl/ssl.h>" | $(CC) -E - 2>/dev/null && echo 1 || echo 0)
+ifeq ($(HAVE_SSL),1)
+	CFLAGS += -DHAVE_SSL
 	LDFLAGS += -lssl -lcrypto
+endif
 else
-		CFLAGS += $(shell pkg-config --cflags openssl)
+		CFLAGS += $(shell pkg-config --cflags openssl) -DHAVE_SSL
 		LDFLAGS += $(shell pkg-config --libs openssl)
 endif
 

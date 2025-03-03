@@ -11,14 +11,13 @@
 #include "bialet_wren.h"
 
 #include "bialet.h"
+#include "hash.h"
 #include "http_call.h"
 #include "messages.h"
 #include "server.h"
 #include "utils.h"
 #include "wren.h"
 #include <ctype.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
 #include <sqlite3.h>
 #include <string.h>
 #include <time.h>
@@ -311,87 +310,13 @@ static void randomString(WrenVM* vm) {
   wrenSetSlotString(vm, 0, random_str);
 }
 
-static void hashPassword(WrenVM* vm) {
-  const char*   password = wrenGetSlotString(vm, 1);
-  unsigned char salt[16];
-  if(!RAND_bytes(salt, sizeof(salt))) {
-    perror("Failed to generate salt");
-    return;
-  }
-
-  unsigned char hash[EVP_MAX_MD_SIZE];
-  unsigned int  hash_len;
-  EVP_MD_CTX*   ctx = EVP_MD_CTX_new();
-  const EVP_MD* md = EVP_sha256();
-
-  EVP_DigestInit_ex(ctx, md, NULL);
-  EVP_DigestUpdate(ctx, password, strlen(password));
-  EVP_DigestUpdate(ctx, salt, sizeof(salt));
-  EVP_DigestFinal_ex(ctx, hash, &hash_len);
-
-  EVP_MD_CTX_free(ctx);
-
-  static char result[128];
-  for(unsigned int i = 0; i < hash_len; i++) {
-    sprintf(result + (i * 2), "%02x", hash[i]);
-  }
-
-  strcat(result, "/");
-  for(int i = 0; i < sizeof(salt); i++) {
-    sprintf(result + strlen(result), "%02x", salt[i]);
-  }
-
-  wrenEnsureSlots(vm, 2);
-  wrenSetSlotString(vm, 0, result);
-}
-
-static void verifyPassword(WrenVM* vm) {
-  int         result = 0;
-  const char* password = wrenGetSlotString(vm, 1);
-  const char* hash_and_salt = wrenGetSlotString(vm, 2);
-
-  char stored_hash[65], stored_salt[33];
-  strncpy(stored_hash, hash_and_salt, 64);
-  stored_hash[64] = 0;
-  strcpy(stored_salt, hash_and_salt + 65);
-
-  unsigned char salt[16];
-  for(int i = 0; i < 16; i++) {
-    sscanf(stored_salt + i * 2, "%2hhx", &salt[i]);
-  }
-
-  unsigned char new_hash[EVP_MAX_MD_SIZE];
-  unsigned int  new_hash_len;
-  EVP_MD_CTX*   ctx = EVP_MD_CTX_new();
-  const EVP_MD* md = EVP_sha256();
-
-  EVP_DigestInit_ex(ctx, md, NULL);
-  EVP_DigestUpdate(ctx, password, strlen(password));
-  EVP_DigestUpdate(ctx, salt, sizeof(salt));
-  EVP_DigestFinal_ex(ctx, new_hash, &new_hash_len);
-
-  EVP_MD_CTX_free(ctx);
-
-  char new_hash_str[65];
-  for(unsigned int i = 0; i < new_hash_len; i++) {
-    sprintf(new_hash_str + (i * 2), "%02x", new_hash[i]);
-  }
-  new_hash_str[64] = 0;
-  result = strcmp(new_hash_str, stored_hash) == 0;
-  wrenEnsureSlots(vm, 2);
-  wrenSetSlotBool(vm, 0, result);
-}
-
 static void httpCall(WrenVM* vm) {
-
-  // Get data from Wren
   const char* url = wrenGetSlotString(vm, 1);
   const char* method = wrenGetSlotString(vm, 2);
   const char* raw_headers = wrenGetSlotString(vm, 3);
   const char* postData = wrenGetSlotString(vm, 4);
   const char* basicAuth = wrenGetSlotString(vm, 5);
 
-  // Set request
   struct HttpRequest request;
   request.url = string_safe_copy(url);
   request.method = string_safe_copy(method);
@@ -399,21 +324,14 @@ static void httpCall(WrenVM* vm) {
   request.postData = string_safe_copy(postData);
   request.basicAuth = string_safe_copy(basicAuth);
 
-  // Initialize response
   struct HttpResponse response;
   response.error = 0;
   response.status = HTTP_OK;
   response.headers = "Content-Type: text/json";
   response.body = "{}";
 
-  // Perform request
   httpCallPerform(&request, &response);
-  printf("Response: %s\n", response.body);
-  printf("Status: %d\n", response.status);
-  printf("Headers: %s\n", response.headers);
-  printf("Error: %d\n", response.error);
 
-  // Set response to Wren
   wrenEnsureSlots(vm, 6);
   wrenSetSlotNewList(vm, 0);
   wrenSetSlotDouble(vm, 5, response.status);
