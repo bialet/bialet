@@ -311,15 +311,12 @@ static void randomString(WrenVM* vm) {
 }
 
 static void httpCall(WrenVM* vm) {
-
-  // Get data from Wren
   const char* url = wrenGetSlotString(vm, 1);
   const char* method = wrenGetSlotString(vm, 2);
   const char* raw_headers = wrenGetSlotString(vm, 3);
   const char* postData = wrenGetSlotString(vm, 4);
   const char* basicAuth = wrenGetSlotString(vm, 5);
 
-  // Set request
   struct HttpRequest request;
   request.url = string_safe_copy(url);
   request.method = string_safe_copy(method);
@@ -327,21 +324,14 @@ static void httpCall(WrenVM* vm) {
   request.postData = string_safe_copy(postData);
   request.basicAuth = string_safe_copy(basicAuth);
 
-  // Initialize response
   struct HttpResponse response;
   response.error = 0;
   response.status = HTTP_OK;
   response.headers = "Content-Type: text/json";
   response.body = "{}";
 
-  // Perform request
   httpCallPerform(&request, &response);
-  printf("Response: %s\n", response.body);
-  printf("Status: %d\n", response.status);
-  printf("Headers: %s\n", response.headers);
-  printf("Error: %d\n", response.error);
 
-  // Set response to Wren
   wrenEnsureSlots(vm, 6);
   wrenSetSlotNewList(vm, 0);
   wrenSetSlotDouble(vm, 5, response.status);
