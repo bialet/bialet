@@ -990,7 +990,7 @@ class Date {
   year { `SELECT strftime('%Y', ?, ?)`.toNumber(_date, a) }
   month { `SELECT strftime('%m', ?, ?)`.toNumber(_date, a) }
   day { `SELECT strftime('%e', ?, ?)`.toNumber(_date, a) }
-  hour { `SELECT strftime('%k', ?, ?)`.toNumber(_date, a) }
+  hour { `SELECT strftime('%H', ?, ?)`.toNumber(_date, a) }
   minute { `SELECT strftime('%M', ?, ?)`.toNumber(_date, a) }
   second { `SELECT strftime('%S', ?, ?)`.toNumber(_date, a) }
   weekday { `SELECT strftime('%w', ?, ?)`.toNumber(_date, a) }
@@ -1020,6 +1020,28 @@ class Date {
 }
 // Set the Global UTC to 0
 Date.utc = 0
+
+class Cron {
+  static run_(should, job) {
+    if (should) {
+      var res = job.call(__now)
+      System.print("Running cron: %(res)")
+    }
+    return should
+  }
+  static at(hour, minute, dayOfWeek, job) {
+    if (!__now) __now = Date.now
+    return run_(__now.hour == hour && __now.minute == minute && __now.weekday == dayOfWeek, job)
+  }
+  static at(hour, minute, job) {
+    if (!__now) __now = Date.now
+    return run_(__now.hour == hour && __now.minute == minute, job)
+  }
+  static every(minutes, job) {
+    if (!__now) __now = Date.now
+    return run_(__now.minute % minutes == 0, job)
+  }
+}
 
 // Setup
 Response.init()
