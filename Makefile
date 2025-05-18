@@ -36,7 +36,7 @@ else
 		LDFLAGS += $(shell pkg-config --libs openssl)
 endif
 
-all: wren_to_c_string $(BUILD_DIR)/$(TARGET_EXEC)
+all: $(BUILD_DIR)/$(TARGET_EXEC)
 
 wren_to_c_string:
 	@for file in $(WREN_FILES); do \
