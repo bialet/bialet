@@ -13,10 +13,10 @@
 #include "messages.h"
 #include "server.h"
 #include <stdint.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #if IS_WIN
 
@@ -57,6 +57,8 @@
 #define EXTENSION ".wren"
 #define MIGRATION_FILE "/_migration" EXTENSION
 #define MIGRATION_FILE_ALT "/_app/migration" EXTENSION
+#define CRON_FILE "/_cron" EXTENSION
+#define CRON_FILE_ALT "/_app/cron" EXTENSION
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" EXTENSION
 #define MAX_ROUTES 100
@@ -64,9 +66,11 @@
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
-struct BialetConfig  bialet_config;
-time_t               last_reload = 0;
+struct BialetConfig    bialet_config;
+time_t                 last_reload = 0;
 static volatile int8_t keep_running = 1;
+static int             cron_installed = 0;
+static char*           cron_code = 0;
 
 static void migrate() {
   char* code;
@@ -84,12 +88,42 @@ static void migrate() {
   }
 }
 
+static void cron_install() {
+  char path[MAX_PATH_LEN];
+  char altPath[MAX_PATH_LEN];
+  strcpy(path, bialet_config.root_dir);
+  strcat(path, CRON_FILE);
+  strcpy(altPath, bialet_config.root_dir);
+  strcat(altPath, MIGRATION_FILE_ALT);
+  if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
+    message(yellow("Installing cron"));
+    cron_installed = 1;
+  } else {
+    cron_installed = 0;
+  }
+}
+
+static void cron_run() {
+  if(cron_installed) {
+    bialetRun("cron", cron_code, 0);
+  }
+}
+
+void* cron_thread(void* arg) {
+  while(1) {
+    cron_run();
+    sleep(60);
+  }
+  return NULL;
+}
+
 /* Reload files */
 static void triggerReloadFiles() {
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
     migrate();
+    cron_install();
   }
 }
 
@@ -238,6 +272,7 @@ int main(int argc, char* argv[]) {
   bialetInit(&bialet_config);
   if(strcmp(code, "") != 0) {
     migrate();
+    cron_install();
     exit(bialetRunCli(code));
   }
 
@@ -250,7 +285,9 @@ int main(int argc, char* argv[]) {
   triggerReloadFiles();
 
 #if IS_LINUX
-  int status;
+  int       status;
+  pthread_t cron_tid;
+  pthread_create(&cron_tid, NULL, cron_thread, NULL);
   pthread_create(&thread_id, NULL, fileWatcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
@@ -287,8 +324,14 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if !IS_LINUX
+  time_t last_cron = time(NULL);
   while(keep_running) {
     server_poll(SERVER_POLL_DELAY);
+    time_t now = time(NULL);
+    if(difftime(now, last_cron) >= 60) {
+      cron_run();
+      last_cron = now;
+    }
   }
 #endif
 

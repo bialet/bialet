@@ -479,3 +479,29 @@ Marks the file as permanent by setting `isTemp` to false in the database.
 
 ### temp
 Marks the file as temporary by setting `isTemp` to true in the database.
+
+## Cron
+
+### Cron.every(minutes)
+
+Runs the job every `minutes`. It checks if the current minute is divisible by the given value.
+
+- `minutes` (Number): Interval in minutes.
+- Returns: `Bool` indicating if the job ran.
+
+### Cron.at(hour, minute)
+
+Runs the job at a specific hour and minute.
+
+- `hour` (Number): Hour of the day (0–23).
+- `minute` (Number): Minute of the hour (0–59).
+- Returns: `Bool` indicating if the job ran.
+
+### Cron.at(hour, minute, dayOfWeek)
+
+Runs the job at a specific hour, minute, and day of the week.
+
+- `hour` (Number): Hour of the day (0–23).
+- `minute` (Number): Minute of the hour (0–59).
+- `dayOfWeek` (Number): Day of the week (0=Sunday, 6=Saturday).
+- Returns: `Bool` indicating if the job ran.

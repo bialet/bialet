@@ -35,4 +35,9 @@ class Task {
     WHERE finished = 1 AND session = ?
     `.query(_session) }
 
+
+  static clearAll() { `
+    DELETE FROM tasks
+    WHERE finished = 1
+    `.query }
 }
