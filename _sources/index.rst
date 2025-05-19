@@ -38,6 +38,16 @@ Bialet
 
 Bialet is a full-stack web framework that integrates the object-oriented `Wren language <https://wren.io/>`_ with a HTTP server and a built-in SQLite database **in a single app**, creating a unified environment for web development.
 
+------------
+Installation
+------------
+
+Use `Brew <https://brew.sh/>`_ to install Bialet:
+
+.. code-block:: shell
+
+  brew install bialet/bialet/bialet
+
 ----------
 Quickstart
 ----------
