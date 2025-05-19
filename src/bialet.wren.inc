@@ -720,6 +720,7 @@ static const char* bialetModuleSource =
 "    }\n"
 "    return Query.fromString(\"REPLACE INTO `%(table)` (%(values.keys.join(','))) VALUES (%(bind.join(',')))\", params)\n"
 "  }\n"
+"  static delete(table, id) { Query.fromString(\"DELETE FROM `%(table)` WHERE id = ?\", [id]) }\n"
 "}\n"
 "class Http {\n"
 "  construct new() {\n"
