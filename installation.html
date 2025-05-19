@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="With Docker Compose: Use the Bialet Skeleton repository or the framework repository to start Docker Compose the application. Customizing the Application Directory: To specify a custom directory for..." />
+<meta property="og:description" content="With Brew: The easiest way to install Bialet is to use Homebrew: With Docker Compose: Use the Bialet Skeleton repository or the framework repository to start Docker Compose the application. Customi..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="With Docker Compose: Use the Bialet Skeleton repository or the framework repository to start Docker Compose the application. Customizing the Application Directory: To specify a custom directory for..." />
+<meta name="description" content="With Brew: The easiest way to install Bialet is to use Homebrew: With Docker Compose: Use the Bialet Skeleton repository or the framework repository to start Docker Compose the application. Customi..." />
 
     <title>Installation and Usage &#8212; Bialet  documentation</title>
   
@@ -381,6 +381,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
@@ -417,10 +418,22 @@
                   
   <section id="installation-and-usage">
 <h1>Installation and Usage<a class="headerlink" href="#installation-and-usage" title="Link to this heading">#</a></h1>
+<section id="with-brew">
+<h2>With Brew<a class="headerlink" href="#with-brew" title="Link to this heading">#</a></h2>
+<p>The easiest way to install Bialet is to use <a class="reference external" href="https://brew.sh/">Homebrew</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>bialet/bialet/bialet
+</pre></div>
+</div>
+</section>
 <section id="with-docker-compose">
 <h2>With Docker Compose<a class="headerlink" href="#with-docker-compose" title="Link to this heading">#</a></h2>
 <p>Use the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository or the <a class="reference external" href="https://github.com/bialet/bialet">framework repository</a>
 to start <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a> the application.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>mywebapp
+<span class="nb">cd</span><span class="w"> </span>mywebapp
+docker<span class="w"> </span>compose<span class="w"> </span>up
+</pre></div>
+</div>
 <section id="customizing-the-application-directory">
 <h3>Customizing the Application Directory<a class="headerlink" href="#customizing-the-application-directory" title="Link to this heading">#</a></h3>
 <p>To specify a custom directory for the Bialet project, set the <code class="docutils literal notranslate"><span class="pre">BIALET_DIR</span></code> environment variable:</p>
@@ -621,6 +634,7 @@ brew<span class="w"> </span>install<span class="w"> </span>openssl
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>

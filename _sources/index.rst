@@ -42,7 +42,7 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
 Installation
 ------------
 
-Use `Brew <https://brew.sh/>`_ to install Bialet:
+Use `Homebrew <https://brew.sh/>`_ to install Bialet:
 
 .. code-block:: shell
 
@@ -52,13 +52,11 @@ Use `Brew <https://brew.sh/>`_ to install Bialet:
 Quickstart
 ----------
 
-Clone or download the `Bialet Skeleton <https://github.com/bialet/skeleton>`_ repository and use `Docker Compose <https://docs.docker.com/compose/>`_ to start the app.
+Create an `index.wren` file in your app directory and run it:
 
 .. code-block:: shell
 
-  git clone --depth 1 https://github.com/bialet/skeleton.git mywebapp
-  cd mywebapp
-  docker compose up
+  bialet
 
 Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
 
