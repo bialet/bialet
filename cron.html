@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="Bialet is a full-stack web framework made to enhance HTML with a native integration to a persistent database" name="description" />
-<meta property="og:title" content="Bialet" />
+<meta property="og:title" content="Cron Tasks" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://bialet.dev/index.html" />
+<meta property="og:url" content="https://bialet.dev/cron.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet is a full-stack web framework that integrates the object-oriented Wren language with a HTTP server and a built-in SQLite database in a single app, creating a unified environment for web deve..." />
+<meta property="og:description" content="Bialet allows you to run scheduled code by defining a cron job in a Wren file. This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data. Th..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet allows you to run scheduled code by defining a cron job in a Wren file. This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data. Th..." />
 
-    <title>Bialet &#8212; Bialet  documentation</title>
+    <title>Cron Tasks &#8212; Bialet  documentation</title>
   
   
   
@@ -57,11 +57,12 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cron';</script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting Started" href="getting-started.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.4" />
@@ -113,8 +114,6 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -134,7 +133,7 @@
     
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="index.html">
   
   
   
@@ -162,7 +161,7 @@
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
@@ -170,7 +169,7 @@
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -249,7 +248,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/edit/main/docs/index.rst" target="_blank"
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/cron.md" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -266,7 +265,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Findex.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fcron.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -296,7 +295,7 @@
       
       
       
-      <li><a href="_sources/index.rst" target="_blank"
+      <li><a href="_sources/cron.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -306,7 +305,7 @@
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.rst</span>
+<span class="btn__text-container">.md</span>
 </a>
 </li>
       
@@ -372,7 +371,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Bialet</h1>
+    <h1>Cron Tasks</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -382,7 +381,15 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-methods">Helper methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes"><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek"><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-rules">Custom Rules</a></li>
 </ul>
             </nav>
         </div>
@@ -394,72 +401,58 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="bialet">
-<h1>Bialet<a class="headerlink" href="#bialet" title="Link to this heading">#</a></h1>
-<p style="text-align: center; font-size: 1.5em; margin: 1em 0">Enhance HTML with a native integration to a persistent database</p><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+  <section id="cron-tasks">
+<h1>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading">#</a></h1>
+<p>Bialet allows you to run scheduled code by defining a cron job in a Wren file.</p>
+<p>This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data.</p>
+<p>The cron file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> or be inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/cron.wren</span></code>.</p>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h2>
+<p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the Wren cron file.
+These methods receive a block that is called at the specified time.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cron</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="k">var</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
+<span class="c1">// Every 2 minutes</span>
+<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Hello, from Cron!&quot;</span><span class="w"> </span><span class="p">}</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">  </span><span class="x">&lt;html&gt;</span>
-<span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">    &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">        </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
-<span class="x">          {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">            </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
-<span class="x">              👋 {{ user[&quot;name&quot;] }}</span>
-<span class="x">            &lt;/a&gt;</span>
-<span class="w">          </span><span class="x">&lt;/li&gt; } }}</span>
-<span class="x">        &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">        </span><span class="cm">/* Users table is empty */</span>
-<span class="w">        </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
-<span class="w">      </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;/body&gt;</span>
-<span class="x">  &lt;/html&gt;</span>
-<span class="p">)</span>
+<span class="c1">// At 2:00 AM</span>
+<span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">clearAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>Bialet is a full-stack web framework that integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with a HTTP server and a built-in SQLite database <strong>in a single app</strong>, creating a unified environment for web development.</p>
-<section id="quickstart">
-<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h2>
-<p>Clone or download the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository and use <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a> to start the app.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>mywebapp
-<span class="nb">cd</span><span class="w"> </span>mywebapp
-docker<span class="w"> </span>compose<span class="w"> </span>up
+<p>The <code class="docutils literal notranslate"><span class="pre">|date|</span></code> argument is the current <a class="reference internal" href="datetime.html"><span class="doc std std-doc">Date object</span></a> used for evaluation. You can ignore it if not needed.</p>
+<section id="helper-methods">
+<h3>Helper methods<a class="headerlink" href="#helper-methods" title="Link to this heading">#</a></h3>
+<section id="cron-every-minutes">
+<h4><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code><a class="headerlink" href="#cron-every-minutes" title="Link to this heading">#</a></h4>
+<p>Runs the job when the current minute is divisible by <code class="docutils literal notranslate"><span class="pre">minutes</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs every 10 minutes&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>Visit <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> in your browser.</p>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-text-center docutils">
-<div class="sd-card-body docutils">
-<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-mark-github sd-text-info" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg></p>
-<p class="sd-card-text">View repository</p>
+</section>
+<section id="cron-at-hour-minute-dayofweek">
+<h4><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code><a class="headerlink" href="#cron-at-hour-minute-dayofweek" title="Link to this heading">#</a></h4>
+<p>Runs the job when the current time matches the given <code class="docutils literal notranslate"><span class="pre">hour</span></code> and <code class="docutils literal notranslate"><span class="pre">minute</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 03:15 every day&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
 </div>
-<div class="sd-card-footer docutils">
-<p class="sd-card-text"><em>In GitHub</em></p>
+<p>Runs the job when the current time matches the given hour, minute, and day of week.
+Days of week: 0 (Sunday) to 6 (Saturday)</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 04:30 every Monday&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
 </div>
-<a class="sd-stretched-link reference external" href="https://github.com/bialet/bialet/"></a></div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover sd-text-center docutils">
-<div class="sd-card-body docutils">
-<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-file-zip sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5a.5.5 0 00-.5.5v18a.5.5 0 00.5.5h1.75a.75.75 0 010 1.5H5a2 2 0 01-2-2V3a2 2 0 012-2h9.982a2 2 0 011.414.586l4.018 4.018A2 2 0 0121 7.018V21a2 2 0 01-2 2h-2.75a.75.75 0 010-1.5H19a.5.5 0 00.5-.5V7.018a.5.5 0 00-.146-.354l-4.018-4.018a.5.5 0 00-.354-.146H5z"></path><path d="M11.5 15.75a.75.75 0 01.75-.75h1a.75.75 0 010 1.5h-1a.75.75 0 01-.75-.75zm.75-3.75a.75.75 0 000 1.5h1a.75.75 0 000-1.5h-1zm-.75-2.25a.75.75 0 01.75-.75h1a.75.75 0 010 1.5h-1a.75.75 0 01-.75-.75zM12.25 6a.75.75 0 000 1.5h1a.75.75 0 000-1.5h-1zm-.75-2.25a.75.75 0 01.75-.75h1a.75.75 0 010 1.5h-1a.75.75 0 01-.75-.75zM9.75 13.5a.75.75 0 000 1.5h1a.75.75 0 000-1.5h-1zM9 11.25a.75.75 0 01.75-.75h1a.75.75 0 010 1.5h-1a.75.75 0 01-.75-.75zm.75-3.75a.75.75 0 000 1.5h1a.75.75 0 000-1.5h-1zM9 5.25a.75.75 0 01.75-.75h1a.75.75 0 010 1.5h-1A.75.75 0 019 5.25z"></path><path fill-rule="evenodd" d="M11 17a2 2 0 00-2 2v4.25c0 .414.336.75.75.75h3.5a.75.75 0 00.75-.75V19a2 2 0 00-2-2h-1zm-.5 2a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v3.5h-2V19z"></path></svg></p>
-<p class="sd-card-text">Download source</p>
-</div>
-<div class="sd-card-footer docutils">
-<p class="sd-card-text"><em>use it with Docker or compile it</em></p>
-</div>
-<a class="sd-stretched-link reference external" href="https://github.com/bialet/bialet/archive/refs/tags/v0.8.zip"></a></div>
-</div>
-</div>
-</div>
-<div class="toctree-wrapper compound">
+</section>
+</section>
+</section>
+<section id="custom-rules">
+<h2>Custom Rules<a class="headerlink" href="#custom-rules" title="Link to this heading">#</a></h2>
+<p>Each job receives a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object of the current time, which can be used for custom rules.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">hour</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;It&#39;s the first of the month!&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 </section>
 </section>
@@ -475,12 +468,21 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="datetime.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Date and Time Functions</p>
+      </div>
+    </a>
     <a class="right-next"
-       href="getting-started.html"
+       href="reference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Getting Started</p>
+        <p class="prev-next-title">Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -501,7 +503,15 @@ docker<span class="w"> </span>compose<span class="w"> </span>up
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quickstart">Quickstart</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-methods">Helper methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes"><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek"><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-rules">Custom Rules</a></li>
 </ul>
   </nav></div>
 

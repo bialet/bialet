@@ -50,7 +50,7 @@ Clone or download the `Bialet Skeleton <https://github.com/bialet/skeleton>`_ re
   cd mywebapp
   docker compose up
 
-Visit `127.0.0.1:7000 <http://127.0.0.1:7000>`_ in your browser.
+Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
 
 .. grid:: 2
 
@@ -66,7 +66,7 @@ Visit `127.0.0.1:7000 <http://127.0.0.1:7000>`_ in your browser.
 
     .. grid-item-card::
         :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.7.zip
+        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.8.zip
 
         :octicon:`file-zip;2em;sd-text-info`
 
@@ -86,5 +86,6 @@ Visit `127.0.0.1:7000 <http://127.0.0.1:7000>`_ in your browser.
    database
    file
    datetime
+   cron
    reference
    examples
