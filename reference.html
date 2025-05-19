@@ -62,7 +62,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
-    <link rel="prev" title="Date and Time Functions" href="datetime.html" />
+    <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.4" />
@@ -169,6 +169,7 @@
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -519,6 +520,12 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron">Cron</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes">Cron.every(minutes)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute">Cron.at(hour, minute)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek">Cron.at(hour, minute, dayOfWeek)</a></li>
 </ul>
 </li>
 </ul>
@@ -1278,6 +1285,36 @@
 <p>Marks the file as temporary by setting <code class="docutils literal notranslate"><span class="pre">isTemp</span></code> to true in the database.</p>
 </section>
 </section>
+<section id="cron">
+<h2>Cron<a class="headerlink" href="#cron" title="Link to this heading">#</a></h2>
+<section id="cron-every-minutes">
+<h3>Cron.every(minutes)<a class="headerlink" href="#cron-every-minutes" title="Link to this heading">#</a></h3>
+<p>Runs the job every <code class="docutils literal notranslate"><span class="pre">minutes</span></code>. It checks if the current minute is divisible by the given value.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">minutes</span></code> (Number): Interval in minutes.</p></li>
+<li><p>Returns: <code class="docutils literal notranslate"><span class="pre">Bool</span></code> indicating if the job ran.</p></li>
+</ul>
+</section>
+<section id="cron-at-hour-minute">
+<h3>Cron.at(hour, minute)<a class="headerlink" href="#cron-at-hour-minute" title="Link to this heading">#</a></h3>
+<p>Runs the job at a specific hour and minute.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hour</span></code> (Number): Hour of the day (0–23).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minute</span></code> (Number): Minute of the hour (0–59).</p></li>
+<li><p>Returns: <code class="docutils literal notranslate"><span class="pre">Bool</span></code> indicating if the job ran.</p></li>
+</ul>
+</section>
+<section id="cron-at-hour-minute-dayofweek">
+<h3>Cron.at(hour, minute, dayOfWeek)<a class="headerlink" href="#cron-at-hour-minute-dayofweek" title="Link to this heading">#</a></h3>
+<p>Runs the job at a specific hour, minute, and day of the week.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hour</span></code> (Number): Hour of the day (0–23).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minute</span></code> (Number): Minute of the hour (0–59).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dayOfWeek</span></code> (Number): Day of the week (0=Sunday, 6=Saturday).</p></li>
+<li><p>Returns: <code class="docutils literal notranslate"><span class="pre">Bool</span></code> indicating if the job ran.</p></li>
+</ul>
+</section>
+</section>
 </section>
 
 
@@ -1292,12 +1329,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="datetime.html"
+       href="cron.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Date and Time Functions</p>
+        <p class="prev-next-title">Cron Tasks</p>
       </div>
     </a>
     <a class="right-next"
@@ -1465,6 +1502,12 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cron">Cron</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes">Cron.every(minutes)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute">Cron.at(hour, minute)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek">Cron.at(hour, minute, dayOfWeek)</a></li>
 </ul>
 </li>
 </ul>

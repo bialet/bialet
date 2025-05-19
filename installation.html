@@ -169,6 +169,7 @@
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -429,7 +430,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 </section>
 <section id="changing-the-default-port">
 <h3>Changing the Default Port<a class="headerlink" href="#changing-the-default-port" title="Link to this heading">#</a></h3>
-<p>The default application port is <code class="docutils literal notranslate"><span class="pre">7000</span></code>. To use a different port, set the <code class="docutils literal notranslate"><span class="pre">BIALET_PORT</span></code> environment variable:</p>
+<p>The default application port is <code class="docutils literal notranslate"><span class="pre">7001</span></code>. To use a different port, set the <code class="docutils literal notranslate"><span class="pre">BIALET_PORT</span></code> environment variable:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BIALET_PORT</span><span class="o">=</span><span class="m">7001</span><span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up
 </pre></div>
 </div>
@@ -442,13 +443,17 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 <h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
 <section id="debian-ubuntu">
 <h4>Debian/Ubuntu<a class="headerlink" href="#debian-ubuntu" title="Link to this heading">#</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libssl-dev<span class="w"> </span>libcurl4-openssl-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libssl-dev<span class="w"> </span>
+<span class="c1"># Optional, but recommended for production</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libcurl4-openssl-dev
 </pre></div>
 </div>
 </section>
 <section id="macos">
 <h4>MacOS<a class="headerlink" href="#macos" title="Link to this heading">#</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>sqlite3<span class="w"> </span>openssl<span class="w"> </span>curl
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>sqlite3<span class="w"> </span>curl
+<span class="c1"># Optional, but recommended for production</span>
+brew<span class="w"> </span>install<span class="w"> </span>openssl
 </pre></div>
 </div>
 </section>
@@ -458,7 +463,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 <ul class="simple">
 <li><p>libcrypto-3-x64.dll</p></li>
 <li><p>libsqlite3-0.dll</p></li>
-<li><p>libssl-3-x64.dll</p></li>
+<li><p>libssl-3-x64.dll (Optional, but recommended for production)</p></li>
 </ul>
 </section>
 <section id="building-the-project">
@@ -495,7 +500,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 <section id="customizing-startup-options">
 <h3>Customizing Startup Options<a class="headerlink" href="#customizing-startup-options" title="Link to this heading">#</a></h3>
 <p>To change the directory where the application runs or adjust other settings, you can use various command-line arguments:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7000</span><span class="w"> </span>/path/to/app
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/path/to/app
 </pre></div>
 </div>
 </section>
@@ -512,7 +517,7 @@ to start <a class="reference external" href="https://docs.docker.com/compose/">D
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-p</span></code></p></td>
 <td><p>Port number</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">7000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">7001</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
 <td><p>Host name</p></td>
