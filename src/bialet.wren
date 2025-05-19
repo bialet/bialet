@@ -841,6 +841,7 @@ class Db {
     }
     return Query.fromString("REPLACE INTO `%(table)` (%(values.keys.join(','))) VALUES (%(bind.join(',')))", params)
   }
+  static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
 
 class Http {
