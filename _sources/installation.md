@@ -1,9 +1,23 @@
 # Installation and Usage
 
+## With Brew
+
+The easiest way to install Bialet is to use [Homebrew](https://brew.sh/):
+
+```bash
+brew install bialet/bialet/bialet
+```
+
 ## With Docker Compose
 
 Use the [Bialet Skeleton](https://github.com/bialet/skeleton) repository or the [framework repository](https://github.com/bialet/bialet)
 to start [Docker Compose](https://docs.docker.com/compose/) the application.
+
+```bash
+git clone --depth 1 https://github.com/bialet/skeleton.git mywebapp
+cd mywebapp
+docker compose up
+```
 
 ### Customizing the Application Directory
 

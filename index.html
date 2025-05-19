@@ -427,17 +427,15 @@
 <p>Bialet is a full-stack web framework that integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with a HTTP server and a built-in SQLite database <strong>in a single app</strong>, creating a unified environment for web development.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Use <a class="reference external" href="https://brew.sh/">Brew</a> to install Bialet:</p>
+<p>Use <a class="reference external" href="https://brew.sh/">Homebrew</a> to install Bialet:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>bialet/bialet/bialet
 </pre></div>
 </div>
 </section>
 <section id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">#</a></h2>
-<p>Clone or download the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> repository and use <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a> to start the app.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>mywebapp
-<span class="nb">cd</span><span class="w"> </span>mywebapp
-docker<span class="w"> </span>compose<span class="w"> </span>up
+<p>Create an <cite>index.wren</cite> file in your app directory and run it:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>bialet
 </pre></div>
 </div>
 <p>Visit <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> in your browser.</p>
