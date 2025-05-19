@@ -39,14 +39,20 @@ Response.out(
 
 Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development
 
-## Quickstart
+## Install
 
-1. Clone or download the [Bialet Skeleton](https://github.com/bialet/skeleton) repository and use [Docker Compose](https://docs.docker.com/compose/) to start the app.
+Use [Homebrew](https://brew.sh) to install Bialet:
 
 ```bash
-git clone --depth 1 https://github.com/bialet/skeleton.git mywebapp
-cd mywebapp
-docker compose up
+brew install bialet/bialet/bialet
+```
+
+## Quickstart
+
+1. Create an `index.wren` file in your app directory and run it:
+
+```bash
+bialet
 ```
 
 2. Visit [127.0.0.1:7001](http://127.0.0.1:7001) in your browser.
