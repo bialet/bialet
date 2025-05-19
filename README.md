@@ -92,6 +92,15 @@ After installing the dependencies, compile the project and install it:
 ```bash
 make clean && make && make install
 ```
+
+## Development
+
+To run Bialet in development mode, you can use the `PATH_RUN` environment variable to specify the path to the app directory:
+
+```bash
+make dev PATH_RUN=/path/to/dev-app
+```
+
 ## License
 
 Bialet is released under the MIT license, allowing users to freely use, modify, and distribute the software with fewer restrictions.

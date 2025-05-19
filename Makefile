@@ -36,6 +36,9 @@ else
 		LDFLAGS += $(shell pkg-config --libs openssl)
 endif
 
+dev: clean wren_to_c_string all
+	@$(BUILD_DIR)/$(TARGET_EXEC) $(RUN_PATH)
+
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
 wren_to_c_string:
@@ -75,4 +78,4 @@ clean:
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: all clean wren_to_c_string install uninstall check html
+.PHONY: all clean wren_to_c_string dev install uninstall check html
