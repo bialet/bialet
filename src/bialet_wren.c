@@ -537,7 +537,9 @@ void bialetInit(struct BialetConfig* config) {
   // @TODO Adjust the pragmas to the user configuration
   sqlite3_exec(db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
   sqlite3_exec(db, "PRAGMA synchronous = NORMAL;", NULL, NULL, NULL);
-  sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
+  if(config->wal_mode) {
+    sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
+  }
   sqlite3_exec(db, "PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";",
                NULL, NULL, NULL);
   sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
