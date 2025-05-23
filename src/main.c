@@ -213,12 +213,13 @@ int main(int argc, char* argv[]) {
   bialet_config.debug = 0;
   bialet_config.output_color = 1;
   bialet_config.db_path = DB_FILE;
+  bialet_config.wal_mode = 0;
   bialet_config.ignored_files = IGNORED_FILES;
 
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:v")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:vw")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -235,6 +236,9 @@ int main(int argc, char* argv[]) {
         break;
       case 'd':
         bialet_config.db_path = optarg;
+        break;
+      case 'w':
+        bialet_config.wal_mode = 1;
         break;
       case 'i':
         bialet_config.ignored_files = optarg;
