@@ -12,4 +12,5 @@ RUN make clean && make
 # Copy bialet binary
 FROM base AS run
 COPY --from=build /usr/src/build/bialet /usr/local/bin/bialet
+EXPOSE 7001
 ENTRYPOINT ["bialet", "-h", "0.0.0.0", "/var/www/"]
