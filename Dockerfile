@@ -10,6 +10,6 @@ WORKDIR /usr/src
 RUN make clean && make
 
 # Copy bialet binary
-FROM base as run
+FROM base AS run
 COPY --from=build /usr/src/build/bialet /usr/local/bin/bialet
 ENTRYPOINT ["bialet", "-h", "0.0.0.0", "/var/www/"]
