@@ -396,6 +396,9 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
 
 struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm) {
   struct BialetResponse r;
+  r.status = HTTP_OK;
+  r.header = NULL;
+  r.body = NULL;
   r.length = 0;
   int     error = 0;
   WrenVM* vm = 0;
@@ -430,42 +433,50 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   }
   if(!error) {
     wrenEnsureSlots(vm, 1);
+    int type = wrenGetSlotType(vm, 0);
+    if(type == WREN_TYPE_STRING) {
+      const char* returnBody = wrenGetSlotString(vm, 0);
+      r.body = string_safe_copy(returnBody);
+    }
+
     wrenGetVariable(vm, MAIN_MODULE_NAME, "Response", 0);
     WrenHandle* responseClass = wrenGetSlotHandle(vm, 0);
-    /* Get body from response */
-    WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
-    wrenSetSlotHandle(vm, 0, responseClass);
-    if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
-      message(red("Runtime Error"), "Failed to get body");
-    } else {
-      const char* body = wrenGetSlotString(vm, 0);
-      if(body[0] != BIALET_FILE_CHAR) {
-        r.body = string_safe_copy(body);
+    if(r.body == NULL || strlen(r.body) == 0) {
+      /* Get body from response */
+      WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
+      wrenSetSlotHandle(vm, 0, responseClass);
+      if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
+        message(red("Runtime Error"), "Failed to get body");
       } else {
-        // @TODO Move this to the server
-        // Use the BIALET_FILE_CHAR to request the file instead of send the
-        // actual body. It will search the file in the database.
-        sqlite3_stmt* stmt;
-        int           result = sqlite3_prepare_v2(
-            db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
-        if(!(error = result != SQLITE_OK)) {
-          sqlite3_bind_text(stmt, 1, body + 1, -1, SQLITE_STATIC);
-          if(sqlite3_step(stmt) == SQLITE_ROW) {
-            int len = 0;
-            len = sqlite3_column_bytes(stmt, 0);
-            r.body = safe_malloc(len + 1);
-            memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
-            r.length = len;
-          } else {
-            // If the id is not found, we will send an internal server error.
-            message(red("Error file not found"), sqlite3_errmsg(db));
-            error = 1;
+        const char* body = wrenGetSlotString(vm, 0);
+        if(body[0] != BIALET_FILE_CHAR) {
+          r.body = string_safe_copy(body);
+        } else {
+          // @TODO Move this to the server
+          // Use the BIALET_FILE_CHAR to request the file instead of send the
+          // actual body. It will search the file in the database.
+          sqlite3_stmt* stmt;
+          int           result = sqlite3_prepare_v2(
+              db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
+          if(!(error = result != SQLITE_OK)) {
+            sqlite3_bind_text(stmt, 1, body + 1, -1, SQLITE_STATIC);
+            if(sqlite3_step(stmt) == SQLITE_ROW) {
+              int len = 0;
+              len = sqlite3_column_bytes(stmt, 0);
+              r.body = safe_malloc(len + 1);
+              memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
+              r.length = len;
+            } else {
+              // If the id is not found, we will send an internal server error.
+              message(red("Error file not found"), sqlite3_errmsg(db));
+              error = 1;
+            }
+            sqlite3_finalize(stmt);
           }
-          sqlite3_finalize(stmt);
         }
       }
+      wrenReleaseHandle(vm, outMethod);
     }
-    wrenReleaseHandle(vm, outMethod);
     /* Get status from response */
     wrenEnsureSlots(vm, 1);
     WrenHandle* statusMethod = wrenMakeCallHandle(vm, "status");
