@@ -6,7 +6,6 @@
 #include "wren_core.h"
 #include "wren_debug.h"
 #include "wren_primitive.h"
-
 #include <stdarg.h>
 #include <string.h>
 
@@ -1415,7 +1414,13 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   wrenPopRoot(vm); // closure.
   vm->apiStack = NULL;
 
-  return runInterpreter(vm, fiber);
+  WrenInterpretResult result = runInterpreter(vm, fiber);
+
+  if(fiber != NULL) {
+    vm->apiStack = fiber->stack;
+  }
+
+  return result;
 }
 
 ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
