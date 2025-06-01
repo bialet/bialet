@@ -1,7 +1,3 @@
-// This line imports the Response class for managing HTTP interactions.
-// The import lines are write at the top of the script.
-import "bialet" for Response
-
 // We use the `query()` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.
 // This should be do it with migrations, here it is added to the script to be self-contained.
@@ -10,7 +6,7 @@ import "bialet" for Response
 // We use the `fetch()` method to get the query result as an array of objects.
 var counters = `SELECT * FROM counter ORDER BY name ASC`.fetch
 
-// We use the `out()` method to send the response to the client.
+// We use the `return` to finish the script and send the response to the client.
 // The `{{ ... }}` syntax is used to interpolate the value of the `counters` variable.
 // and the `count` variable.
 //
@@ -21,7 +17,7 @@ var counters = `SELECT * FROM counter ORDER BY name ASC`.fetch
 // That's the way to have a FOR statement in the interpolated string.
 //
 // Apart from the interpolation, the strings are regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -45,4 +41,4 @@ Response.out(<!doctype html>
     }}
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>)
+</html>

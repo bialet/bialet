@@ -1,6 +1,6 @@
-// This line imports the Response and Request classes for managing HTTP interactions.
+// This line imports the Request class for managing HTTP interactions.
 // The import lines are write at the top of the script.
-import "bialet" for Response, Request
+import "bialet" for Request
 
 // We use the `query` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.
@@ -24,10 +24,10 @@ if (Request.get("reset")) {
 // We use the `val()` method to get the value of the first row in the query result.
 var clicks = `SELECT value FROM counter WHERE name = "clicks"`.val
 
-// We use the `out()` method to send the response to the client.
+// We use the `return` to finish the script and send the response to the client.
 // The `{{ ... }}` syntax is used to interpolate the value of the `clicks` variable.
 // Apart from the interpolation, the string is regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -44,4 +44,3 @@ Response.out(<!doctype html>
     <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
-)

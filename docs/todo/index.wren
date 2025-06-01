@@ -11,4 +11,4 @@ if (Request.isPost) {
 
 var template = Template.new()
 var tasks = task.list()
-Response.out(template.home(tasks))
+return template.home(tasks)

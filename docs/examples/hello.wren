@@ -22,17 +22,11 @@ class App {
       <body>
         <h1>{{ _title }}</h1>
         {{ content }}
+        <p><a href=".">Back ↩️</a></p>
       </body>
     </html>
   }
 }
-
-// We use the `query()` method to execute SQL statements.
-// In this case we create a table named `users` with two columns: `id` and `name`.
-// This should be do it with migrations, here it is added to the script to be self-contained.
-`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)`.query()
-// Also, we ensure that we have some data in the table.
-`REPLACE INTO users (id, name) VALUES (1, "Alice"), (2, "Bob"), (3, "Charlie")`.query()
 
 // We use the `get()` method to get the `id` parameter from the URL.
 var idUrlParam = Request.get("id")
