@@ -10,13 +10,10 @@
 </p>
 
 ```wren
-import "bialet" for Response
-
 var users = `SELECT id, name FROM users`.fetch
 var TITLE = "🗂️ Users list"
 
-Response.out(
-  <!doctype html>
+return <!doctype html>
   <html>
     <head><title>{{ TITLE }}</title></head>
     <body style="font: 1.5em/2.5 system-ui; text-align:center">
@@ -34,7 +31,6 @@ Response.out(
       }}
     </body>
   </html>
-)
 ```
 
 Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development

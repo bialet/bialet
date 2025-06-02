@@ -27,17 +27,13 @@ See other installation options in the [installation](installation.md) section.
 Now let's create the `index.wren` file.
 
 ```wren
-import "bialet" for Response
-
-Response.out(<p>Hello World!</p>)
+return <p>Hello World!</p>
 ```
 
 The index.wren file is the main HTML file. It works the same as the index.html file.
 Go to [127.0.0.1:7001](http://127.0.0.1:7001) to see the Hello World message.
 
-Wren don't use `;` to separate statements, it uses new lines instead.
-We import the `Response` class from the framework and then call the `out()` method
-to print the HTML.
+We use the `return` keyword to finish the script and send the response.
 
 Inline HTML Strings allow you to write HTML directly in your Wren files,
 keeping your code clean and simple. This feature is similar to JSX in React but instead
@@ -217,7 +213,7 @@ You should use the `?` placeholder to pass the value to the query.
 The logic is finished but let's finish this example showing the results.
 
 ```wren
-import "bialet" for Request, Response
+import "bialet" for Request
 
 // We will use the vote variable to see if the user voted
 var vote
@@ -230,8 +226,7 @@ if (Request.isPost) {
 var options = `SELECT * FROM simple_poll`.fetch()
 System.print(options)
 
-Response.out(
-<html>
+return <html>
   <body>
     <h1>Has web development become overly complex?</h1>
 
@@ -254,7 +249,6 @@ Response.out(
     }}
   </body>
 </html>
-)
 ```
 
 Now we have the last interpolation trick, in order to show some code we use a ternary operator.
@@ -311,12 +305,11 @@ class Poll {
 We add the poll object in the index.wren file.
 
 ```wren
-import "bialet" for Response
 import "_app" for Template, Poll
 
 var poll = Poll.new()
 
-Response.out(Template.layout(
+return Template.layout(
 
   <form action="results" method="post">
     <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
@@ -340,8 +333,7 @@ Response.out(Template.layout(
       <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Vote</button>
     </div>
   </form>
-
-))
+)
 ```
 
 Wren does not have a [default constructor](https://wren.io/classes.html#constructors), we use the `constructor` keyword on any method and use that method to create the object.
@@ -367,7 +359,7 @@ if (Request.isPost) {
 }
 
 // Remember to change the action attribute in the form!
-Response.out(Template.layout(
+return Template.layout(
   <form action="/" method="post">
   ...
   </form>
