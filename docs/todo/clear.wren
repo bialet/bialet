@@ -1,5 +1,5 @@
-import "bialet" for Response, Db
+import "bialet" for Response
 import "_domain" for Task
 
-Task.new().clearFinished()
+Task.clearFinished()
 Response.redirect("/")

@@ -1,43 +1,63 @@
-import "bialet" for Session
+import "bialet" for Session, Db
 
 class Task {
 
-  construct new() { _session = Session.new().id }
+  // Constructors
+  construct new() {
+    _id = null
+    _description = ""
+    _finished = false
+    _session = Session.new().id
+  }
+  construct new(id) { load_(`SELECT * FROM tasks WHERE id = ?`.first(id)) }
+  construct from(task) { load_(task) }
 
-  list() { `
-      SELECT * FROM tasks
-      WHERE session = ?
-      ORDER BY createdAt ASC
-    `.fetch(_session).map{ |task| normalize_(task) } }
+  // Getters and Setters
+  id { _id }
+  description { _description.trim() != "" ? _description : "No description" }
+  finished { _finished }
+  description=(val) { _description = val.toString.trim() }
 
-  normalize_(task) {
-    task["description"] = task["description"].trim()
-    if (task["description"] == "") {
-      task["description"] = "No description"
-    }
-    return task
+  // New syntax!
+  // load_(task) { _** = task }
+  // save() { Db.save('tasks', _**) }
+
+  // Helper method to load a task
+  load_(task) {
+    _id = task["id"]
+    _description = task["description"]
+    _finished = task["finished"]
+    _session = task["session"]
   }
 
-  save(description) { `
-    INSERT
-      INTO tasks (description, finished, session)
-      VALUES (?, ?, ?)
-      `.query(description.trim(), false, _session) }
+  // Save a task into the database
+  save() { Db.save('tasks', {
+    "id": _id,
+    "description": _description,
+    "finished": _finished,
+    "session": _session,
+  }) }
 
-  toggleFinished(id) { `
-    UPDATE tasks
-        SET finished = ((finished | 1) - (finished & 1))
-        WHERE id = ? AND session = ?
-    `.query(id, _session) }
+  // Toggle a task
+  toggleFinished() {
+      `UPDATE tasks
+      SET finished = ((finished | 1) - (finished & 1))
+      WHERE id = ? AND session = ?`.query(_id, _session)
+      _finished = !_finished
+    }
 
-  clearFinished() { `
-    DELETE FROM tasks
-    WHERE finished = 1 AND session = ?
-    `.query(_session) }
+  // Static methods
 
+  // List all tasks for the current session
+  static list() { `
+    SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC
+  `.fetch(Session.new().id).map{ |task| Task.from(task) } }
 
-  static clearAll() { `
-    DELETE FROM tasks
-    WHERE finished = 1
-    `.query }
+  // Clear finished tasks for the current session
+  static clearFinished() { `
+    DELETE FROM tasks WHERE finished = 1 AND session = ?
+    `.query(Session.new().id) }
+
+  // Clear all finished tasks
+  static clearAll() { `DELETE FROM tasks WHERE finished = 1`.query }
 }

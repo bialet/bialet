@@ -2,13 +2,12 @@ import "bialet" for Response, Request
 import "_template" for Template
 import "_domain" for Task
 
-var task = Task.new()
-
 if (Request.isPost) {
-  task.save(Request.post("task"))
+  var task = Task.new()
+  task.description = Request.post("task")
+  task.save()
   return Response.redirect("/")
 }
 
 var template = Template.new()
-var tasks = task.list()
-return template.home(tasks)
+return template.home(Task.list())
