@@ -1,63 +1,33 @@
-import "bialet" for Session, Db
+import "bialet" for Session, Db, Date
 
 class Task {
-
-  // Constructors
-  construct new() {
-    _id = null
-    _description = ""
-    _finished = false
-    _session = Session.new().id
+  construct new(task) {
+    _id = task["id"]
+    _description = task["description"] || ""
+    _finished = task["finished"] || false
+    _session = task["session"] || Session.new().id
+    _createdAt = task["createdAt"] || Date.new()
   }
-  construct new(id) { load_(`SELECT * FROM tasks WHERE id = ?`.first(id)) }
-  construct from(task) { load_(task) }
+  static new() { Task.new({}) }
 
-  // Getters and Setters
   id { _id }
-  description { _description.trim() != "" ? _description : "No description" }
   finished { _finished }
+  description { _description.trim() != "" ? _description : "No description" }
+  createdAt { Date.new(_createdAt) }
   description=(val) { _description = val.toString.trim() }
 
-  // New syntax!
-  // load_(task) { _** = task }
-  // save() { Db.save('tasks', _**) }
-
-  // Helper method to load a task
-  load_(task) {
-    _id = task["id"]
-    _description = task["description"]
-    _finished = task["finished"]
-    _session = task["session"]
+  save() { Db.save(type, this) }
+  toggle() {
+    `UPDATE Task SET finished = ((finished | 1) - (finished & 1))
+    WHERE id = ? AND session = ?`.query(_id, Session.new().id)
+    _finished = !_finished
   }
 
-  // Save a task into the database
-  save() { Db.save('tasks', {
-    "id": _id,
-    "description": _description,
-    "finished": _finished,
-    "session": _session,
-  }) }
-
-  // Toggle a task
-  toggleFinished() {
-      `UPDATE tasks
-      SET finished = ((finished | 1) - (finished & 1))
-      WHERE id = ? AND session = ?`.query(_id, _session)
-      _finished = !_finished
-    }
-
-  // Static methods
-
-  // List all tasks for the current session
   static list() { `
-    SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC
-  `.fetch(Session.new().id).map{ |task| Task.from(task) } }
-
-  // Clear finished tasks for the current session
+    SELECT * FROM Task WHERE session = ? ORDER BY createdAt ASC
+  `.fetch(Session.new().id).map{ |task| Task.new(task) } }
   static clearFinished() { `
-    DELETE FROM tasks WHERE finished = 1 AND session = ?
+    DELETE FROM Task WHERE finished = 1 AND session = ?
     `.query(Session.new().id) }
-
-  // Clear all finished tasks
-  static clearAll() { `DELETE FROM tasks WHERE finished = 1`.query }
+  static clearAll() { `DELETE FROM Task WHERE finished = 1`.query }
 }
