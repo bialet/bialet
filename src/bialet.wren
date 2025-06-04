@@ -174,6 +174,7 @@ class Session {
       res.each{|r| __values[r["key"]] = r["val"] }
     }
   }
+  static id { Session.new().id }
   id { _id }
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
