@@ -828,18 +828,27 @@ class Db {
     Db.clean
   }
   static save(table, values) {
+    var keys = []
     var bind = []
     var params = []
-    for (v in values) {
-      if (v.value is Query) {
+    var v
+    for (val in values) {
+      v = val
+      if (v is MapEntry) {
+        v = val.value
+        keys.add(val.key)
+      }
+      if (v is Date) v = v.toString.replace("T", " ")
+      if (v is Query) {
         // add raw query string
-        bind.add(v.value.toString)
+        bind.add(v.toString)
       } else {
         bind.add("?")
-        params.add(v.value)
+        params.add(v)
       }
     }
-    return Query.fromString("REPLACE INTO `%(table)` (%(values.keys.join(','))) VALUES (%(bind.join(',')))", params)
+    var k = keys.count > 0 ? "(%(keys.join(",")))" : ""
+    return Query.fromString("REPLACE INTO `%(table)` %(k) VALUES (%(bind.join(',')))", params)
   }
   static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
@@ -940,9 +949,9 @@ class Date {
     _utc = __utc
     _date = Date.d2U_("now", _utc)
   }
-  construct new(date) {
-    _utc = __utc
-    _date = Date.d2U_(date, _utc)
+  static new(date) {
+    if (date is Date) return date
+    return Date.new(date, __utc)
   }
   construct new(date, utc) {
     _utc = utc
