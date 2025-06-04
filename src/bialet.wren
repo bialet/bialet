@@ -997,17 +997,17 @@ class Date {
     return "%(_utc):00"
   }
   format(format) { `SELECT strftime(?, ?, ?)`.val(format.replace("#", "\%"), _date, a) }
-  year { `SELECT strftime('%Y', ?, ?)`.toNumber(_date, a) }
-  month { `SELECT strftime('%m', ?, ?)`.toNumber(_date, a) }
-  day { `SELECT strftime('%e', ?, ?)`.toNumber(_date, a) }
-  hour { `SELECT strftime('%H', ?, ?)`.toNumber(_date, a) }
-  minute { `SELECT strftime('%M', ?, ?)`.toNumber(_date, a) }
-  second { `SELECT strftime('%S', ?, ?)`.toNumber(_date, a) }
-  weekday { `SELECT strftime('%w', ?, ?)`.toNumber(_date, a) }
-  dayOfYear { `SELECT strftime('%j', ?, ?)`.toNumber(_date, a) }
+  year { `SELECT strftime('%Y', ?, ?)`.toNum(_date, a) }
+  month { `SELECT strftime('%m', ?, ?)`.toNum(_date, a) }
+  day { `SELECT strftime('%e', ?, ?)`.toNum(_date, a) }
+  hour { `SELECT strftime('%H', ?, ?)`.toNum(_date, a) }
+  minute { `SELECT strftime('%M', ?, ?)`.toNum(_date, a) }
+  second { `SELECT strftime('%S', ?, ?)`.toNum(_date, a) }
+  weekday { `SELECT strftime('%w', ?, ?)`.toNum(_date, a) }
+  dayOfYear { `SELECT strftime('%j', ?, ?)`.toNum(_date, a) }
   date { `SELECT strftime('%Y-%m-%d', ?, ?)`.val(_date, a) }
   time { `SELECT strftime('%H:%M:%S', ?, ?)`.val(_date, a) }
-  unix { `SELECT strftime('%s', ?, ?)`.toNumber(_date, a) }
+  unix { `SELECT strftime('%s', ?, ?)`.toNum(_date, a) }
   iso { `SELECT strftime('%T', ?, ?)`.toString(_date, a) }
   inUtc { _date }
   toString { `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, a) }
