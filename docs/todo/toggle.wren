@@ -1,5 +1,6 @@
-import "bialet" for Response, Request, Db
+import "bialet" for Response, Request, Session, Db
 import "_domain" for Task
 
-Task.new(Request.get("id")).toggleFinished()
+var id = Request.get("id")
+Task.new({"id": id}).toggle()
 Response.redirect("/")

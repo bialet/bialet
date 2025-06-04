@@ -19,7 +19,9 @@ class Template {
         {{ tasks.count > 0 ?
           <ul>
             {{ tasks.map{ |task| <li class="finished_{{ task.finished }}">
-                <a href="/toggle?id={{ task.id }}">
+                <a
+                  href="/toggle?id={{ task.id }}"
+                  title="Created at {{ task.createdAt.format("#H:#M") }} hs">
                   {{ Util.htmlEscape(task.description) }}
                 </a>
               </li> } }}
