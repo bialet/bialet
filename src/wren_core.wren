@@ -572,12 +572,12 @@ class Query {
   }
   val(p1, p2) { first_([p1, p2]).values.join() }
   val(p1, p2, p3) { first_([p1, p2, p3]).values.join() }
-  toNumber { Num.fromString(val) }
-  toNumber(param) { Num.fromString(val(param)) }
-  toNumber(p1, p2) { Num.fromString(val(p1, p2)) }
-  toNumber(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }
-  toBool { toNumber != 0 }
-  toBool(param) { toNumber(param) != 0 }
-  toBool(p1, p2) { toNumber(p1, p2) != 0 }
-  toBool(p1, p2, p3) { toNumber(p1, p2, p3) != 0 }
+  toNum { Num.fromString(val) }
+  toNum(param) { Num.fromString(val(param)) }
+  toNum(p1, p2) { Num.fromString(val(p1, p2)) }
+  toNum(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }
+  toBool { toNum != 0 }
+  toBool(param) { toNum(param) != 0 }
+  toBool(p1, p2) { toNum(p1, p2) != 0 }
+  toBool(p1, p2, p3) { toNum(p1, p2, p3) != 0 }
 }
