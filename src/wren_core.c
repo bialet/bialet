@@ -7,7 +7,6 @@
 #include "wren_primitive.h"
 #include "wren_utils.h"
 #include "wren_value.h"
-
 #include <ctype.h>
 #include <errno.h>
 #include <float.h>
@@ -839,6 +838,22 @@ DEF_PRIMITIVE(object_type) {
   RETURN_OBJ(wrenGetClass(vm, args[0]));
 }
 
+DEF_PRIMITIVE(object_iterate) {
+  if(IS_NULL(args[1]))
+    RETURN_NUM(0);
+  double iterator = AS_NUM(args[1]);
+  ++iterator;
+  if(iterator < AS_OBJ(args[0])->classObj->numFields)
+    RETURN_NUM(iterator);
+  RETURN_FALSE;
+}
+
+DEF_PRIMITIVE(object_iteratorValue) {
+    ObjInstance* instance = AS_INSTANCE(args[0]);
+    uint32_t index = validateIndex(vm, args[1], instance->obj.classObj->numFields, "Field");
+    RETURN_VAL(instance->fields[index]);
+}
+
 DEF_PRIMITIVE(range_from) {
   RETURN_NUM(AS_RANGE(args[0])->from);
 }
@@ -1234,6 +1249,8 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(vm->objectClass, "is(_)", object_is);
   PRIMITIVE(vm->objectClass, "toString", object_toString);
   PRIMITIVE(vm->objectClass, "type", object_type);
+  PRIMITIVE(vm->objectClass, "iterate(_)", object_iterate);
+  PRIMITIVE(vm->objectClass, "iteratorValue(_)", object_iteratorValue);
 
   // Now we can define Class, which is a subclass of Object.
   vm->classClass = defineClass(vm, coreModule, "Class");
