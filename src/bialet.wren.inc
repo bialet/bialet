@@ -151,6 +151,7 @@ static const char* bialetModuleSource =
 "      res.each{|r| __values[r[\"key\"]] = r[\"val\"] }\n"
 "    }\n"
 "  }\n"
+"  static id { Session.new().id }\n"
 "  id { _id }\n"
 "  get(key) { __values[key] ? __values[key] : null }\n"
 "  set(key, value) {\n"
