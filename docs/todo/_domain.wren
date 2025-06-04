@@ -17,17 +17,20 @@ class Task {
   description=(val) { _description = val.toString.trim() }
 
   save() { Db.save(type, this) }
+
   toggle() {
     `UPDATE Task SET finished = ((finished | 1) - (finished & 1))
     WHERE id = ? AND session = ?`.query(_id, Session.new().id)
-    _finished = !_finished
+    _finished = `SELECT finished FROM Task WHERE id = ?`.toBool(_id)
   }
 
   static list() { `
     SELECT * FROM Task WHERE session = ? ORDER BY createdAt ASC
   `.fetch(Session.new().id).map{ |task| Task.new(task) } }
+
   static clearFinished() { `
     DELETE FROM Task WHERE finished = 1 AND session = ?
     `.query(Session.new().id) }
+
   static clearAll() { `DELETE FROM Task WHERE finished = 1`.query }
 }

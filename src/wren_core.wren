@@ -576,4 +576,8 @@ class Query {
   toNumber(param) { Num.fromString(val(param)) }
   toNumber(p1, p2) { Num.fromString(val(p1, p2)) }
   toNumber(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }
+  toBool { toNumber != 0 }
+  toBool(param) { toNumber(param) != 0 }
+  toBool(p1, p2) { toNumber(p1, p2) != 0 }
+  toBool(p1, p2, p3) { toNumber(p1, p2, p3) != 0 }
 }
