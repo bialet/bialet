@@ -471,4 +471,8 @@ static const char* coreModuleSource =
 "  toNumber(param) { Num.fromString(val(param)) }\n"
 "  toNumber(p1, p2) { Num.fromString(val(p1, p2)) }\n"
 "  toNumber(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }\n"
+"  toBool { toNumber != 0 }\n"
+"  toBool(param) { toNumber(param) != 0 }\n"
+"  toBool(p1, p2) { toNumber(p1, p2) != 0 }\n"
+"  toBool(p1, p2, p3) { toNumber(p1, p2, p3) != 0 }\n"
 "}\n";
