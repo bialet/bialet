@@ -671,11 +671,6 @@ class Util {
     }
   }
 
-  static htmlEscape(str) {
-    if (!str) return ""
-    return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
-  }
-
   static encodeBase64(input) {
     var encoded = ""
     var i = 0
