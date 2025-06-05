@@ -1,4 +1,3 @@
-import "bialet" for Cron
 import "/_domain" for Task
 
 Cron.every(2){ |date| "Hello, from Cron!" }
