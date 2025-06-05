@@ -1,6 +1,5 @@
 // This line imports the Request class for managing HTTP interactions.
 // The import lines are write at the top of the script.
-import "bialet" for Request
 
 // We use the `query` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.

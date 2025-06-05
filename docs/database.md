@@ -74,7 +74,6 @@ var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(userParams)
 But you can also use the `Db.save` method, sending the table name and the a Map object with the values.
 
 ```wren
-import "bialet" for Db
 var user = {"name": "John Doe", "email": "john@example.com"}
 var id = Db.save("users", user)
 ```
@@ -82,7 +81,6 @@ var id = Db.save("users", user)
 The same method also work for updating the row.
 
 ```wren
-import "bialet" for Db
 var user = {"name": "John Doe", "email": "john@example.com"}
 user["id"] = 1
 // This will update the row
@@ -96,7 +94,6 @@ The migration file can be in the root and be called `_migration.wren` or be insi
 This script will be run every time the application starts and also when a Wren file is updated.
 
 ```wren
-import "bialet" for Db
 
 Db.migrate("Name of the migration", `SOME QUERY`)
 ```

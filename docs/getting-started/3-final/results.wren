@@ -1,4 +1,3 @@
-import "bialet" for Response
 import "_app" for Template, Poll
 
 var poll = Poll.new()

@@ -138,7 +138,6 @@ bialet -r 'System.print("Hello, World!")'
 The response will be printed directly.
 
 ```bash
-bialet -r 'import "bialet" for Response
 Response.out("No log, plain response")'
 ```
 

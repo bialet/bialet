@@ -86,7 +86,6 @@ System.print("Number: %( number )")
 Let's use the Template class to render our HTML content.
 
 ```wren
-import "bialet" for Response
 import "_app" for Template
 
 var html = Template.layout('So far, so good.')
@@ -154,7 +153,6 @@ The logic is very simple, we show all the options, then we increment when receiv
 Let's write a file called `simple_poll.wren` for our logic.
 
 ```wren
-import "bialet" for Response
 
 var options = `SELECT * FROM simple_poll`.fetch()
 System.print(options)
@@ -192,7 +190,6 @@ Oh, yes you can have an interpolation in your interpolations.
 In order to vote, we need to handle a `POST` request from the form.
 
 ```wren
-import "bialet" for Request, Response
 
 if (Request.isPost) {
   var vote = Request.post("vote")
@@ -213,7 +210,6 @@ You should use the `?` placeholder to pass the value to the query.
 The logic is finished but let's finish this example showing the results.
 
 ```wren
-import "bialet" for Request
 
 // We will use the vote variable to see if the user voted
 var vote
@@ -264,7 +260,6 @@ Now that we have an idea on how to handle the logic. In our complete example we 
 Create a `_migration.wren` file in the root of the project.
 
 ```
-import "bialet" for Db
 
 Db.migrate("Create Poll table", `
   CREATE TABLE poll (
@@ -344,7 +339,6 @@ This way if we need to show an error we don't need to go back to the form.
 Once we know the form was correctly validated we can redirect to the results page.
 
 ```wren
-import "bialet" for Request, Response
 import "_app" for Template, Poll
 
 var poll = Poll.new()
@@ -386,7 +380,6 @@ All the variables we receive from the database are strings.
 We need to convert them to numbers with the `Num.fromString` method before we can use them.
 
 ```wren
-import "bialet" for Response
 import "_app" for Template, Poll
 
 var poll = Poll.new()

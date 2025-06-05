@@ -12,7 +12,6 @@ That mean that each file is public and will be executed **except** when it start
 For dynamic routing, add a `_route.wren` file in the folder and use the `Request.route(N)` function to get the value. **N** is the position of the route parameter. For the file `api/_route.wren` when called from [127.0.0.1:7001/api/users/1?fields=name,email&sortType=ASC](http://127.0.0.1:7001/api/users/1?fields=name,email&sortType=ASC) those will be the values:
 
 ```wren
-import "bialet" for Request
 
 Request.route(0) // users
 Request.route(1) // 1

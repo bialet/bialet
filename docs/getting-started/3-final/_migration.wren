@@ -1,4 +1,3 @@
-import "bialet" for Db
 
 Db.migrate("Create Poll table", `
   CREATE TABLE poll (

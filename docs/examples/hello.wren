@@ -1,4 +1,3 @@
-import "bialet" for Request, Response
 
 // We create a class that that contains the logic and template.
 // This is not required by Bialet, but it is a good practice.
