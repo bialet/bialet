@@ -534,6 +534,11 @@ class System {
     return obj
   }
 
+  static log(obj) {
+    writeObject_(obj)
+    return obj
+  }
+
   static writeAll(sequence) {
     for (object in sequence) writeObject_(object)
   }
