@@ -1,5 +1,3 @@
-import "bialet" for Db
-
 Db.migrate("Posts Table", `
   CREATE TABLE posts (
     id INTEGER PRIMARY KEY,

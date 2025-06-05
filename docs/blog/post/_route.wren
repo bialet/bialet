@@ -1,13 +1,11 @@
-import "bialet" for Response, Request
 import "/_app" for Template, Posts
-var slug = Request.route(0)
 
+var slug = Request.route(0)
 if (!slug) {
   return Response.redirect("/")
 }
 
 var post = Posts.page(slug)
-
 return Template.layout(
   post["title"],
   <div>

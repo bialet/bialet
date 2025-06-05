@@ -1,5 +1,3 @@
-import "bialet" for Date
-
 class Template {
   static layout(title, main) { <!doctype html><html>
       <head>
