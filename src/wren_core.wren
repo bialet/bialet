@@ -346,6 +346,26 @@ class String is Sequence {
     }
     return output
   }
+
+  safe {
+    var output = ""
+    for (c in codePoints) {
+        if (c == 38) {
+            output = output + "&amp;"
+        } else if (c == 60) {
+            output = output + "&lt;"
+        } else if (c == 62) {
+            output = output + "&gt;"
+        } else if (c == 34) {
+            output = output + "&quot;"
+        } else if (c == 39) {
+            output = output + "&apos;"
+        } else {
+            output = output + String.fromCodePoint(c)
+        }
+    }
+    return output
+  }
 }
 
 class StringByteSequence is Sequence {

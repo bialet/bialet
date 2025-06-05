@@ -1,4 +1,4 @@
-import "bialet" for Response, Request, Util
+import "bialet" for Response, Request
 import "_template" for Template
 import "_domain" for Task
 
@@ -17,7 +17,7 @@ var tasksSection = <section>
           <a
             href="/toggle?id={{ task.id }}"
             title="Created at {{ task.createdAt.format("#H:#M") }} hs">
-            {{ Util.htmlEscape(task.description) }}
+            {{ task.description.safe }}
           </a>
         </li> } }}
     </ul> :
