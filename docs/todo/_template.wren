@@ -1,5 +1,3 @@
-import "bialet" for Date
-
 class Template {
   construct new() {
     _title = "🥳 TODO List"

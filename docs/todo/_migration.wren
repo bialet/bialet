@@ -1,5 +1,3 @@
-import "bialet" for Db
-
 Db.migrate("Tasks Table", `
   CREATE TABLE Task (
     id INTEGER PRIMARY KEY,
