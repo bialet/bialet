@@ -14,6 +14,13 @@ h1 strong {
   color: #b00;
 }
 
+footer {
+  color: #666;
+  font-size: 80%;
+  text-align: center;
+  margin: 2em;
+}
+
 a {
   color: #40A2D8;
 }

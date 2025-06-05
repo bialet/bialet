@@ -1,5 +1,6 @@
 *, *:before, *:after { box-sizing: border-box }
 body{ font: 14pt system-ui; width:90%; max-width: 20em; margin: 2em auto }
+footer{ font-size: 80%; text-align: center; margin-top: 2em }
 h1, form{ text-align: center }
 a{ color: #e52ca8; text-decoration: none }
 input, button {

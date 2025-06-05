@@ -31,8 +31,8 @@ Response.out( <!doctype html>
             </label>
           </p> } }}
         <p><input type="submit" value="Vote"></p>
-      </form>
-     : <div>
+      </form> :
+      <div>
         <p>Thank you for voting!</p>
         <ul>
           {{ options.map{|opt| <li>{{opt["answer"]}} - {{opt["votes"]}} votes</li> } }}
@@ -40,5 +40,10 @@ Response.out( <!doctype html>
         <p><a href="">Vote again</a></p>
       </div>
     }}
+
+    <footer>
+      Made with <a href="https://bialet.dev">Bialet</a>.
+      View <a href="https://github.com/bialet/bialet/tree/main/docs/getting-started">source code</a>.
+    </footer>
   </body>
 </html> )
