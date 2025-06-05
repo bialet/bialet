@@ -1,4 +1,3 @@
-import "bialet" for Request, Response, Db
 
 if (Request.isPost) {
   // Get the uploaded file

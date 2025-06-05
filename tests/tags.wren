@@ -1,4 +1,3 @@
-import "bialet" for Request, Response
 
 var a = "A"
 var b = "B"

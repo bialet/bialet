@@ -1,5 +1,3 @@
-import "bialet" for Request, Response
-
 // This makes the example self-contained and runable.
 // Don't forget to use migrations in your apps.
 `CREATE TABLE IF NOT EXISTS simple_poll (answer TEXT PRIMARY KEY, votes INT)`.query

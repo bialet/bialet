@@ -1,7 +1,6 @@
 // This line imports the Response and Request classes for managing HTTP interactions.
 // It also imports the Util class, that includes the helper functions.
 // The import lines are write at the top of the script.
-import "bialet" for Request, Response, Util
 
 // We use the `post()` method to get a parameter from the POST request.
 var password = Request.post('password')

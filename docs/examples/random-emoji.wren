@@ -1,4 +1,3 @@
-import "bialet" for Response, File
 import "random" for Random
 
 // Generate an emoji SVG

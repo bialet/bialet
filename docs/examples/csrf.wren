@@ -1,7 +1,6 @@
 // This line imports the Response and Request classes for managing HTTP interactions.
 // It also imports the Session class, that includes the Cross-Site Request Forgery functions.
 // The import lines are write at the top of the script.
-import "bialet" for Request, Response, Session
 
 var session = Session.new()
 var verify
