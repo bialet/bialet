@@ -41,7 +41,7 @@
   "https://raw.githubusercontent.com/%s/refs/heads/%s/export.wren"
 #define BIALET_EXTERNAL_DEFAULT_BRANCH "main"
 
-#define MAIN_MODULE_NAME "bialet"
+#define MAIN_MODULE_NAME "main"
 #define CLI_MODULE_NAME "bialet_cli"
 
 WrenConfiguration          wren_config;
@@ -405,7 +405,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
-  wrenInterpret(vm, MAIN_MODULE_NAME, bialetModuleSource);
+  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init");
   if(hm) {
     /* Initialize request */
     wrenEnsureSlots(vm, 4);
@@ -439,7 +439,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
       r.body = string_safe_copy(returnBody);
     }
 
-    wrenGetVariable(vm, MAIN_MODULE_NAME, "Response", 0);
+    wrenGetVariable(vm, module, "Response", 0);
     WrenHandle* responseClass = wrenGetSlotHandle(vm, 0);
     if(r.body == NULL || strlen(r.body) == 0) {
       /* Get body from response */

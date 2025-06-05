@@ -84,7 +84,7 @@ static void migrate() {
     struct BialetResponse r = bialetRun("migration", code, 0);
     message(yellow("Running migration"), r.body);
   } else {
-    bialetRun("migration", "import \"bialet\" for Db\nDb.init", 0);
+    bialetRun("migration", "Db.init", 0);
   }
 }
 
