@@ -1,7 +1,7 @@
 import "bialet" for Date
 
 class Template {
-  static layout(title, content) { <!doctype html><html>
+  static layout(title, main) { <!doctype html><html>
       <head>
         <title>{{ title }}</title>
         <meta charset="utf-8" />
@@ -17,8 +17,10 @@ class Template {
         </style>
       </head>
       <body>
-        {{ content }}
-        <p style="margin-top:3em; font-size: .7em">Copyright &copy; {{ Date.new().year }} Bialet</p>
+        {{ main }}
+        <p style="margin-top:3em; font-size: .7em">
+          Made with <a href="https://bialet.dev">Bialet</a>.
+          View <a href="https://github.com/bialet/bialet/tree/main/docs/blog">source code</a>.
       </body>
     </html> }
 }
