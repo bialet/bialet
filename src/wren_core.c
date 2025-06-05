@@ -1,7 +1,7 @@
 #include "wren_core.h"
 
 #include "bialet.h"
-#include "wren_common.h"
+#include "bialet.wren.inc"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
@@ -849,9 +849,10 @@ DEF_PRIMITIVE(object_iterate) {
 }
 
 DEF_PRIMITIVE(object_iteratorValue) {
-    ObjInstance* instance = AS_INSTANCE(args[0]);
-    uint32_t index = validateIndex(vm, args[1], instance->obj.classObj->numFields, "Field");
-    RETURN_VAL(instance->fields[index]);
+  ObjInstance* instance = AS_INSTANCE(args[0]);
+  uint32_t     index =
+      validateIndex(vm, args[1], instance->obj.classObj->numFields, "Field");
+  RETURN_VAL(instance->fields[index]);
 }
 
 DEF_PRIMITIVE(range_from) {
@@ -1490,4 +1491,6 @@ void wrenInitializeCore(WrenVM* vm) {
     if(obj->type == OBJ_STRING)
       obj->classObj = vm->stringClass;
   }
+
+  wrenInterpret(vm, NULL, bialetModuleSource);
 }

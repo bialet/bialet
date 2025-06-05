@@ -88,11 +88,12 @@ class Request {
 }
 
 class Response {
-  static init() {
+  static init {
     __headers = {"Content-Type": "text/html; charset=UTF-8"}
     __cookies = []
     __status = 200
     __out = ""
+    Cookie.init
   }
 
   // Getters
@@ -134,7 +135,7 @@ class Response {
 }
 
 class Cookie {
-  static init() { __cookies = {} }
+  static init { __cookies = {} }
   static parseHeader(headerValue) {
     __cookies = {}
     for (cookieStr in headerValue.split(";")) {
@@ -536,9 +537,9 @@ var BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 
 class Util {
 
-  foreign static randomString_(length)
-  foreign static hash_(password)
-  foreign static verify_(password, hash)
+  // foreign static randomString_(length)
+  // foreign static hash_(password)
+  // foreign static verify_(password, hash)
 
   static randomString(length) { randomString_(toNum(length)) }
   static hash(password) { hash_("%( password )") }
@@ -909,7 +910,7 @@ class Http {
     return _error == 0
   }
 
-  foreign call_(url, method, headers, postData, basicAuth)
+  // foreign call_(url, method, headers, postData, basicAuth)
 
   static request(url, method, data, options) {
     __http = Http.new()
@@ -1024,8 +1025,6 @@ class Date {
   ==(o) { cmp_(o) == 0 }
   !=(o) { cmp_(o) != 0 }
 }
-// Set the Global UTC to 0
-Date.utc = 0
 
 class Cron {
   static run_(should, job) {
@@ -1049,6 +1048,4 @@ class Cron {
   }
 }
 
-// Setup
-Response.init()
-Cookie.init()
+Date.utc = 0
