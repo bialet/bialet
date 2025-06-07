@@ -295,58 +295,6 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
   sqlite3_finalize(stmt);
 }
 
-static void httpCall(WrenVM* vm) {
-  const char* url = wrenGetSlotString(vm, 1);
-  const char* method = wrenGetSlotString(vm, 2);
-  const char* raw_headers = wrenGetSlotString(vm, 3);
-  const char* postData = wrenGetSlotString(vm, 4);
-  const char* basicAuth = wrenGetSlotString(vm, 5);
-
-  struct HttpRequest request;
-  request.url = string_safe_copy(url);
-  request.method = string_safe_copy(method);
-  request.raw_headers = string_safe_copy(raw_headers);
-  request.postData = string_safe_copy(postData);
-  request.basicAuth = string_safe_copy(basicAuth);
-
-  struct HttpResponse response;
-  response.error = 0;
-  response.status = HTTP_OK;
-  response.headers = "Content-Type: text/json";
-  response.body = "{}";
-
-  httpCallPerform(&request, &response);
-
-  wrenEnsureSlots(vm, 6);
-  wrenSetSlotNewList(vm, 0);
-  wrenSetSlotDouble(vm, 5, response.status);
-  wrenSetSlotString(vm, 6, string_safe_copy(response.headers));
-  wrenSetSlotString(vm, 7, string_safe_copy(response.body));
-  wrenSetSlotDouble(vm, 8, response.error);
-  wrenInsertInList(vm, 0, 0, 5);
-  wrenInsertInList(vm, 0, 1, 6);
-  wrenInsertInList(vm, 0, 2, 7);
-  wrenInsertInList(vm, 0, 3, 8);
-
-  free(request.url);
-  free(request.method);
-  free(request.raw_headers);
-  free(request.postData);
-  free(request.basicAuth);
-}
-
-WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
-                                          const char* className, bool isStatic,
-                                          const char* signature) {
-  if(strcmp(module, MAIN_MODULE_NAME) == 0) {
-    if(strcmp(className, "Http") == 0) {
-      if(strcmp(signature, "call_(_,_,_,_,_)") == 0) {
-        return httpCall;
-      }
-    }
-  }
-  return NULL;
-}
 char* escapeSpecialChars(const char* input) {
   int   i, j = 0, len = strlen(input);
   char* output = malloc(len * 2 + 1); // Worst case: all characters need escaping
@@ -539,7 +487,6 @@ void bialetInit(struct BialetConfig* config) {
   wren_config.errorFn = &bialetWrenError;
   wren_config.queryFn = &queryExecute;
   wren_config.loadModuleFn = &bialetWrenLoadModule;
-  wren_config.bindForeignMethodFn = &wrenBindForeignMethod;
 
   httpCallInit(&bialet_config);
 }

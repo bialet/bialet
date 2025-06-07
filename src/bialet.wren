@@ -906,8 +906,6 @@ class Http {
     return _error == 0
   }
 
-  // foreign call_(url, method, headers, postData, basicAuth)
-
   static request(url, method, data, options) {
     __http = Http.new()
     __http.method = method
