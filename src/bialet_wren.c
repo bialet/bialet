@@ -11,7 +11,6 @@
 #include "bialet_wren.h"
 
 #include "bialet.h"
-#include "hash.h"
 #include "http_call.h"
 #include "messages.h"
 #include "server.h"
@@ -296,20 +295,6 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
   sqlite3_finalize(stmt);
 }
 
-static void randomString(WrenVM* vm) {
-  const int len = wrenGetSlotDouble(vm, 1);
-  char      random_str[len + 1];
-  char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  srand(time(0));
-  for(int i = 0; i < len; i++) {
-    int random_index = rand() % (sizeof(charset) - 1);
-    random_str[i] = charset[random_index];
-  }
-
-  random_str[len] = '\0';
-  wrenSetSlotString(vm, 0, random_str);
-}
-
 static void httpCall(WrenVM* vm) {
   const char* url = wrenGetSlotString(vm, 1);
   const char* method = wrenGetSlotString(vm, 2);
@@ -354,17 +339,6 @@ WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
                                           const char* className, bool isStatic,
                                           const char* signature) {
   if(strcmp(module, MAIN_MODULE_NAME) == 0) {
-    if(strcmp(className, "Util") == 0) {
-      if(strcmp(signature, "randomString_(_)") == 0) {
-        return randomString;
-      }
-      if(strcmp(signature, "hash_(_)") == 0) {
-        return hashPassword;
-      }
-      if(strcmp(signature, "verify_(_,_)") == 0) {
-        return verifyPassword;
-      }
-    }
     if(strcmp(className, "Http") == 0) {
       if(strcmp(signature, "call_(_,_,_,_,_)") == 0) {
         return httpCall;

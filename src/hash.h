@@ -11,7 +11,6 @@
 #ifndef HASH_H
 #define HASH_H
 
-#include "wren.h"
 #ifdef HAVE_SSL
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
@@ -21,7 +20,11 @@
 #endif
 #endif
 
-void verifyPassword(WrenVM* vm);
-void hashPassword(WrenVM* vm);
+#define SALT_LENGTH 16
+#define HASH_LENGTH 64
+#define HASH_AND_SALT_LENGTH 98
+
+int  verifyPassword(char* password, char* hash_and_salt);
+void hashPassword(char* password, char* output);
 
 #endif

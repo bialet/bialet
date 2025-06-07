@@ -13,8 +13,9 @@
 #include <string.h>
 
 #ifndef OPENSSL_OK
-#define SALT_LENGTH 16
-#define HASH_LENGTH 64
+
+#include <stdio.h>
+#include <stdlib.h>
 
 void unsafe_hash(const char* input, char* output) {
   unsigned int hash = 5381;
@@ -35,8 +36,7 @@ void generate_salt(char* salt, size_t length) {
 }
 #endif
 
-void hashPassword(WrenVM* vm) {
-  const char* password = wrenGetSlotString(vm, 1);
+void hashPassword(char* password, char* output) {
 #ifdef OPENSSL_OK
   unsigned char salt[16];
   if(!RAND_bytes(salt, sizeof(salt))) {
@@ -56,7 +56,7 @@ void hashPassword(WrenVM* vm) {
 
   EVP_MD_CTX_free(ctx);
 
-  static char result[128];
+  static char result[HASH_AND_SALT_LENGTH];
   for(unsigned int i = 0; i < hash_len; i++) {
     sprintf(result + (i * 2), "%02x", hash[i]);
   }
@@ -72,18 +72,15 @@ void hashPassword(WrenVM* vm) {
   snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", password, salt);
   char hash[HASH_LENGTH + 1];
   unsafe_hash(saltedPassword, hash);
-  char result[HASH_LENGTH + SALT_LENGTH + 2];
+  char result[HASH_AND_SALT_LENGTH];
   snprintf(result, sizeof(result), "%s$%s", hash, salt); // Formato: hash$salt
 #endif
 
-  wrenEnsureSlots(vm, 2);
-  wrenSetSlotString(vm, 0, result);
+  strcpy(output, result);
 }
 
-void verifyPassword(WrenVM* vm) {
-  int         result = 0;
-  const char* password = wrenGetSlotString(vm, 1);
-  const char* hash_and_salt = wrenGetSlotString(vm, 2);
+int verifyPassword(char* password, char* hash_and_salt) {
+  int result = 0;
 #ifdef OPENSSL_OK
 
   char stored_hash[65], stored_salt[33];
@@ -118,9 +115,7 @@ void verifyPassword(WrenVM* vm) {
   char storedHash[HASH_LENGTH + 1];
   char storedSalt[SALT_LENGTH + 1];
   if(sscanf(hash_and_salt, "%64[^$]$%16s", storedHash, storedSalt) != 2) {
-    wrenEnsureSlots(vm, 2);
-    wrenSetSlotBool(vm, 0, 0);
-    return;
+    return 0;
   }
   char saltedPassword[strlen(password) + SALT_LENGTH + 1];
   snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", password, storedSalt);
@@ -128,6 +123,5 @@ void verifyPassword(WrenVM* vm) {
   unsafe_hash(saltedPassword, computedHash);
   result = (strncmp(computedHash, storedHash, HASH_LENGTH) == 0);
 #endif
-  wrenEnsureSlots(vm, 2);
-  wrenSetSlotBool(vm, 0, result);
+  return result;
 }

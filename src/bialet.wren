@@ -537,10 +537,6 @@ var BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 
 class Util {
 
-  // foreign static randomString_(length)
-  // foreign static hash_(password)
-  // foreign static verify_(password, hash)
-
   static randomString(length) { randomString_(toNum(length)) }
   static hash(password) { hash_("%( password )") }
   static verify(password, hash) { verify_("%( password )", "%( hash )") }
