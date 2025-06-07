@@ -3,6 +3,7 @@
 #include "bialet.h"
 #include "bialet.wren.inc"
 #include "hash.h"
+#include "http_call.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
@@ -1193,6 +1194,31 @@ DEF_PRIMITIVE(util_randomString) {
   RETURN_VAL(wrenNewString(vm, random_str));
 }
 
+DEF_PRIMITIVE(http_call) {
+  struct HttpRequest request;
+  request.url = AS_CSTRING(args[1]);
+  request.method = AS_CSTRING(args[2]);
+  request.raw_headers = AS_CSTRING(args[3]);
+  request.postData = AS_CSTRING(args[4]);
+  request.basicAuth = AS_CSTRING(args[5]);
+
+  struct HttpResponse response;
+  response.error = 0;
+  response.status = 200;
+  response.headers = "Content-Type: text/json";
+  response.body = "{}";
+
+  httpCallPerform(&request, &response);
+
+  ObjList* res = wrenNewList(vm, 4);
+  res->elements.data[0] = NUM_VAL(response.status);
+  res->elements.data[1] = wrenNewString(vm, response.headers);
+  res->elements.data[2] = wrenNewString(vm, response.body);
+  res->elements.data[3] = NUM_VAL(response.error);
+
+  RETURN_OBJ(res);
+}
+
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
   if(vm->config.writeFn != NULL) {
@@ -1520,9 +1546,14 @@ void wrenInitializeCore(WrenVM* vm) {
       obj->classObj = vm->stringClass;
   }
 
+  // Bialet classes
   wrenInterpret(vm, NULL, bialetModuleSource);
+
   ObjClass* utilClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Util"));
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
+
+  ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
+  PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);
 }
