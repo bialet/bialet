@@ -1,6 +1,3 @@
-// This line imports the Request class for managing HTTP interactions.
-// The import lines are write at the top of the script.
-
 // We use the `query` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.
 // Then we insert a row with the name `clicks` and a value of 0, if there is no row

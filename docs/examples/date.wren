@@ -1,4 +1,3 @@
-
 // Global UTC is zero by default
 // We set it to -3 for GMT-3
 Date.utc = -3
@@ -17,11 +16,11 @@ if (Request.isPost) {
 // Log the dates
 System.print("Date: %(date) - Current: %(current)")
 
-// We use the `out()` method to send the response to the client.
+// We use the `return` to finish the script and send the response to the client.
 // The `{{ ... )` syntax is used to interpolate the properties of the date object
 // and also any other string.
 // Apart from the interpolation, the string is regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -74,4 +73,3 @@ Response.out(<!doctype html>
     <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
-)

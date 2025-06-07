@@ -1,4 +1,3 @@
-
 // We create a class that that contains the logic and template.
 // This is not required by Bialet, but it is a good practice.
 // Once the logic and template become too big, you should split it
@@ -32,7 +31,6 @@ var idUrlParam = Request.get("id")
 // Create an instance of the `App` class.
 var app = App.new()
 // Generate the HTML, with the name of the user.
-var html = app.html(
+return app.html(
   <p>👋 Hello <b>{{ app.name(idUrlParam) }}</b></p>
 )
-Response.out(html) // Serve the HTML

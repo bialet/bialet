@@ -1,4 +1,3 @@
-
 if (Request.isPost) {
   // Get the uploaded file
   var uploadedFile = Request.file("form_file_name")
@@ -11,8 +10,7 @@ if (Request.isPost) {
 }
 
 var title = "Upload File"
-Response.out(
-<!doctype html>
+return <!doctype html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,4 +26,3 @@ Response.out(
     <p><a href=".">Back ↩️</a></p>
   </body>
 </html>
-)
