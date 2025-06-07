@@ -2,6 +2,7 @@
 
 #include "bialet.h"
 #include "bialet.wren.inc"
+#include "hash.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
@@ -1165,6 +1166,33 @@ DEF_PRIMITIVE(system_writeString) {
   RETURN_VAL(args[1]);
 }
 
+DEF_PRIMITIVE(util_hash) {
+  char* password = AS_CSTRING(args[1]);
+  char  hash[HASH_AND_SALT_LENGTH] = {0};
+  hashPassword(password, hash);
+  RETURN_VAL(wrenNewString(vm, hash));
+}
+
+DEF_PRIMITIVE(util_verify) {
+  char* password = AS_CSTRING(args[1]);
+  char* hash_and_salt = AS_CSTRING(args[2]);
+  int   result = verifyPassword(password, hash_and_salt);
+  RETURN_BOOL(result);
+}
+
+DEF_PRIMITIVE(util_randomString) {
+  const int len = AS_NUM(args[1]);
+  char      random_str[len + 1];
+  char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  srand(time(0));
+  for(int i = 0; i < len; i++) {
+    int random_index = rand() % (sizeof(charset) - 1);
+    random_str[i] = charset[random_index];
+  }
+  random_str[len] = '\0';
+  RETURN_VAL(wrenNewString(vm, random_str));
+}
+
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
   if(vm->config.writeFn != NULL) {
@@ -1493,4 +1521,8 @@ void wrenInitializeCore(WrenVM* vm) {
   }
 
   wrenInterpret(vm, NULL, bialetModuleSource);
+  ObjClass* utilClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Util"));
+  PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
+  PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
+  PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
 }
