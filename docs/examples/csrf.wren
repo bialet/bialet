@@ -1,7 +1,3 @@
-// This line imports the Response and Request classes for managing HTTP interactions.
-// It also imports the Session class, that includes the Cross-Site Request Forgery functions.
-// The import lines are write at the top of the script.
-
 var session = Session.new()
 var verify
 
@@ -11,11 +7,7 @@ if (Request.isPost) {
   verify = session.csrfOk
 }
 
-// We use the `out()` method to send the response to the client.
-// The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.
-// The `session.csrf` generates the hidden input field with the CSRF token.
-// Apart from the interpolation, the string is regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -36,4 +28,4 @@ Response.out(<!doctype html>
     </form>
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>)
+</html>

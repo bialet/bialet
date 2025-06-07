@@ -1,10 +1,9 @@
-// This line imports the Response class for managing HTTP interactions.
-// The import lines are write at the top of the script.
+var res = Http.get("https://dummyjson.com/users?limit=5&select=username,email")
+var users = res["users"]
 
-var users = Http.get('https://dummyjson.com/users?limit=5&select=username,email')['users']
-System.print("Users: %(users)")
+System.log("Users: %(users)")
 
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -31,4 +30,4 @@ Response.out(<!doctype html>
       }}
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>)
+</html>

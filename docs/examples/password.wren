@@ -1,7 +1,3 @@
-// This line imports the Response and Request classes for managing HTTP interactions.
-// It also imports the Util class, that includes the helper functions.
-// The import lines are write at the top of the script.
-
 // We use the `post()` method to get a parameter from the POST request.
 var password = Request.post('password')
 var passwordCheck = Request.post('password-check')
@@ -19,10 +15,10 @@ if (Request.isPost) {
   verify = Util.verify(passwordCheck, encrypted)
 }
 
-// We use the `out()` method to send the response to the client.
+// We use the `return` to finish the script and send the response to the client.
 // The `{{ ... }}` syntax is used to interpolate the value inputs.
 // Apart from the interpolation, the string is regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -57,4 +53,4 @@ Response.out(<!doctype html>
     </form>
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>)
+</html>

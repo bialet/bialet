@@ -1,6 +1,3 @@
-// This line imports the Response and Request classes for managing HTTP interactions.
-// The import lines are write at the top of the script.
-
 // We use the `query` method to execute SQL statements.
 // In this case we create a table named `counter` with two columns: `name` and `value`.
 // Then we insert a row with the name `form` and a value of 0, if there is no row
@@ -27,11 +24,11 @@ if (Request.isPost) {
 // We use the `val()` method to get the value of the first row in the query result.
 var total = `SELECT value FROM counter WHERE name = "form"`.val
 
-// We use the `out()` method to send the response to the client.
+// We use the `return` to finish the script and send the response to the client.
 // The `{{ ... )` syntax is used to interpolate the value of the `total` variable.
 // and the `value` variable.
 // Apart from the interpolation, the string is regular HTML.
-Response.out(<!doctype html>
+return <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -46,4 +43,4 @@ Response.out(<!doctype html>
     </form>
     <p><a href=".">Back ↩️</a></p>
   </body>
-</html>)
+</html>
