@@ -1328,11 +1328,7 @@ static void nextToken(Parser* parser) {
         makeToken(parser, TOKEN_SLASH);
         return;
 
-      case '<':
-        if(lastTokenType(parser) == TOKEN_IMPORT) {
-          readString(parser, '>');
-          return;
-        }
+      case '<': {
         int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
         int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
                                     lastTokenType(parser) == TOKEN_RETURN;
@@ -1364,7 +1360,7 @@ static void nextToken(Parser* parser) {
           twoCharToken(parser, '=', TOKEN_LTEQ, TOKEN_LT);
         }
         return;
-
+      }
       case '>':
         if(matchChar(parser, '>')) {
           makeToken(parser, TOKEN_GTGT);

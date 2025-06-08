@@ -37,7 +37,7 @@
 #define HTTP_ERROR 500
 #define BIALET_FILE_CHAR 26
 #define BIALET_EXTERNAL_IMPORT_URL                                                  \
-  "https://raw.githubusercontent.com/%s/refs/heads/%s/export.wren"
+  "https://raw.githubusercontent.com/%s/%s/refs/heads/%s/%s" BIALET_EXTENSION
 #define BIALET_EXTERNAL_DEFAULT_BRANCH "main"
 
 #define MAIN_MODULE_NAME "main"
@@ -71,17 +71,17 @@ char* readFile(const char* path) {
 
 static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
-  char                 module[MAX_MODULE_LEN];
+  char                 module[MAX_URL_LEN];
   char*                lastSlash;
   WrenLoadModuleResult result = {0};
 
   if(name[0] == '/') {
     if(strlen(name) + strlen(bialet_config.root_dir) + strlen(BIALET_EXTENSION) + 1 >
-       MAX_MODULE_LEN) {
+       MAX_URL_LEN) {
       message(red("Error"), "Module name too long.");
       return result;
     }
-    snprintf(module, MAX_MODULE_LEN, "%s", bialet_config.root_dir);
+    snprintf(module, MAX_URL_LEN, "%s", bialet_config.root_dir);
   } else {
     /* @TODO Security: prevent load modules from parent directories */
     /* @TODO Create an object for the user data */
@@ -107,6 +107,33 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
   if(buffer) {
     result.source = buffer;
   } else if(strchr(name, '/') != NULL) {
+    char url[MAX_URL_LEN];
+    // If name start with https:// or http://
+    if(strncmp(name, "http://", 7) == 0 || strncmp(name, "https://", 8) == 0) {
+      snprintf(url, MAX_URL_LEN, "%s", name);
+    } else if(strncmp(name, "gh:", 3) == 0) {
+      name += 3; // Remove gh:
+      char name_copy[MAX_URL_LEN];
+      strncpy(name_copy, name, sizeof(name_copy));
+      name_copy[sizeof(name_copy) - 1] = '\0';
+      char* at = strchr(name_copy, '@');
+      char* branch = BIALET_EXTERNAL_DEFAULT_BRANCH;
+      if(at != NULL) {
+        *at = '\0'; // Remove @
+        branch = at + 1;
+      }
+      char* user = strtok(name_copy, "/");
+      char* repo = strtok(NULL, "/");
+      char* path = strtok(NULL, "");
+      if(!user || !repo || !path) {
+        message(red("Error"), "Invalid GitHub URL.");
+        return result;
+      }
+      sprintf(url, BIALET_EXTERNAL_IMPORT_URL, user, repo, branch, path);
+      name -= 3; // Restore gh:
+    } else {
+      return result;
+    }
     // @TODO Refactor the external import, the code is too large
     // File not exists, try to get from cache
     sqlite3_stmt* stmt;
@@ -128,14 +155,6 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       req.basicAuth = string_safe_copy("");
       req.raw_headers = string_safe_copy("");
       req.postData = string_safe_copy("");
-      // Use repository@branch, if exists
-      char* branch = strchr(name, '@');
-      if(branch == NULL)
-        branch = BIALET_EXTERNAL_DEFAULT_BRANCH;
-      else
-        branch++;
-      char url[MAX_URL_LEN];
-      sprintf(url, BIALET_EXTERNAL_IMPORT_URL, strtok((char*)name, "@"), branch);
       req.url = string_safe_copy(url);
       httpCallPerform(&req, &resp);
       // @TODO Fix this when status are added in httpCallPerform
