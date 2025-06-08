@@ -275,8 +275,6 @@ int main(int argc, char* argv[]) {
   messageInit(&bialet_config);
   bialetInit(&bialet_config);
   if(strcmp(code, "") != 0) {
-    migrate();
-    cron_install();
     exit(bialetRunCli(code));
   }
 
