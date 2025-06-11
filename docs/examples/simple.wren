@@ -1,11 +1,11 @@
 var users = `SELECT id, name FROM users`.fetch
-var TITLE = "🗂️ Users list"
+var title = "🗂️ Users list"
 
 return <!doctype html>
 <html>
-  <head><title>{{ TITLE }}</title></head>
+  <head><title>{{ title }}</title></head>
   <body style="font: 1.5em/2.5 system-ui; text-align:center">
-    <h1>{{ TITLE }}</h1>
+    <h1>{{ title }}</h1>
     {{ users.count > 0 ?
       <ul style="list-style-type:none">
         {{ users.map{|user| <li>

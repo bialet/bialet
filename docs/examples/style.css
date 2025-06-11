@@ -50,3 +50,15 @@ code {
   overflow-wrap: anywhere;
   width: 100%;
 }
+
+ul.two-column-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  ul.two-column-list li {
+    flex: 0 0 50%;
+  }
