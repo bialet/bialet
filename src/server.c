@@ -225,10 +225,7 @@ size_t count_utf8_code_points(const char* s) {
 
 void write_response(int client_socket, struct BialetResponse* response) {
   if(!response->status) {
-    response->status = 404;
-    response->body = BIALET_NOT_FOUND_PAGE;
-    response->length = strlen(BIALET_NOT_FOUND_PAGE);
-    response->header = BIALET_HEADERS;
+    custom_error(404, response);
   }
 
   if(response->length == 0) {
@@ -420,4 +417,38 @@ int server_poll(int delay) {
   }
 
   return 0;
+}
+
+void custom_error(int status, struct BialetResponse* response) {
+  response->header = BIALET_HEADERS;
+  response->status = status;
+  char        path[PATH_SIZE];
+  struct stat file_stat;
+  snprintf(path, PATH_SIZE, "%s/%d.html", bialet_config.root_dir, status);
+  if(stat(path, &file_stat) == 0) {
+    FILE* file = fopen(path, "rb");
+    if(file != NULL) {
+      fseek(file, 0, SEEK_END);
+      long file_size = ftell(file);
+      rewind(file);
+      char* file_content = malloc(file_size + 1);
+      if(file_content != NULL) {
+        fread(file_content, 1, file_size, file);
+        file_content[file_size] = '\0';
+        fclose(file);
+        response->body = file_content;
+        response->length = file_size;
+        return;
+      }
+    }
+  }
+  response->length = 0;
+  switch(status) {
+    case 404:
+      response->body = BIALET_NOT_FOUND_PAGE;
+      break;
+    case 500:
+      response->body = BIALET_ERROR_PAGE;
+      break;
+  }
 }

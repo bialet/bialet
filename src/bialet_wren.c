@@ -448,9 +448,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   wrenFreeVM(vm);
 
   if(error) {
-    r.status = HTTP_ERROR;
-    r.header = BIALET_HEADERS;
-    r.body = BIALET_ERROR_PAGE;
+    custom_error(HTTP_ERROR, &r);
   }
 
   if(!hm)
