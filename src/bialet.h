@@ -57,7 +57,14 @@ struct BialetConfig {
 
   char* db_path;
   char* ignored_files;
-  int wal_mode;
+  int   wal_mode;
+};
+
+struct BialetResponse {
+  int   status;
+  char* header;
+  char* body;
+  int   length;
 };
 
 typedef enum {

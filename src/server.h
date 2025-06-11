@@ -16,9 +16,10 @@
 int  start_server(struct BialetConfig* config);
 int  server_poll(int delay);
 void stop_server();
+void custom_error(int status, struct BialetResponse* response);
 
 struct String {
-  char* str;
+  char*  str;
   size_t len;
 };
 

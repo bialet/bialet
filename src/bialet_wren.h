@@ -14,17 +14,9 @@
 #include "bialet.h"
 #include "server.h"
 
-struct BialetResponse {
-  int   status;
-  char* header;
-  char* body;
-  int   length;
-};
-
 void bialetInit(struct BialetConfig* config);
 
-struct BialetResponse bialetRun(char* module, char* code,
-                                 struct HttpMessage* hm);
+struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
 
 char* readFile(const char* path);
 
