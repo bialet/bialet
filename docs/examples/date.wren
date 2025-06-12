@@ -1,7 +1,3 @@
-// Global UTC is zero by default
-// We set it to -3 for GMT-3
-Date.utc = -3
-
 var date = Date.new()
 var current = Date.now
 
@@ -10,7 +6,7 @@ if (Request.isPost) {
   // Update the date
   var d = Request.post("date")
   var t = Request.post("time")
-  date = Date.new("%(d) %(t)", Num.fromString(Request.post("utc")))
+  date = Date.new("%(d) %(t)", Request.post("tz"))
 }
 
 // Log the dates
@@ -35,16 +31,14 @@ return <!doctype html>
     <p>{{ date < current ? "Date is less than current" : "" }}</p>
     <p>{{ date == current ? "Date is equal to current" : "" }}</p>
     <p>{{ date != current ? "Date is not equal to current" : "" }}</p>
-    <p>UTC: {{date.utc}}</p>
+    <p>tz: {{date.tz}}</p>
     <p>Year: {{date.year}}</p>
     <p>Month: {{date.month}}</p>
     <p>Day: {{date.day}}</p>
-    <p>Hour: {{date.hour}}</p>
-    <p>Minute: {{date.minute}}</p>
-    <p>Second: {{date.second}}</p>
+    <p>Hour: {{date.hours}}</p>
+    <p>Minute: {{date.minutes}}</p>
+    <p>Second: {{date.seconds}}</p>
     <p>Timestamp: {{date.unix}}</p>
-    <p>Date: {{date.date}}</p>
-    <p>Time: {{date.time}}</p>
     <p>US Format: {{date.format('#m/#d/#Y')}}</p>
     <h2>Change date</h2>
     <form method="POST">
@@ -62,8 +56,8 @@ return <!doctype html>
       </p>
       <p>
         <label>
-          UTC
-          <input type="input" name="utc" value="{{ date.utc }}">
+          tz
+          <input type="input" name="tz" value="{{ date.tz }}">
         </label>
       </p
       <p>

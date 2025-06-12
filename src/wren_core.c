@@ -1219,6 +1219,22 @@ DEF_PRIMITIVE(http_call) {
   RETURN_OBJ(res);
 }
 
+DEF_PRIMITIVE(date_current) {
+  // @TODO: Get timezone and return the current date in YYYY-MM-DD HH:MM:SS
+  RETURN_VAL(CONST_STRING(vm, "2025-12-31 12:34:56"));
+};
+
+DEF_PRIMITIVE(date_format) {
+  // @TODO: Call to strftime
+  RETURN_VAL(CONST_STRING(vm, "not working yet!"));
+};
+
+DEF_PRIMITIVE(date_unix) {
+  // @TODO: Get the unix timestamp based on the passed date
+  time_t now = time(NULL);
+  RETURN_NUM((double)now);
+};
+
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
   if(vm->config.writeFn != NULL) {
@@ -1556,4 +1572,9 @@ void wrenInitializeCore(WrenVM* vm) {
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);
+
+  ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
+  PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
+  PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
+  PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
 }
