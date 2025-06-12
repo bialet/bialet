@@ -960,12 +960,12 @@ class Date {
   }
   construct new(year, month, day, hours, minutes, seconds, tz) {
     _tz = tz
-    _year = year
-    _month = month
-    _day = day
-    _hours = hours
-    _minutes = minutes
-    _seconds = seconds
+    _year = toNum_(year)
+    _month = toNum_(month)
+    _day = toNum_(day)
+    _hours = toNum_(hours)
+    _minutes = toNum_(minutes)
+    _seconds = toNum_(seconds)
   }
   static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
   static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
@@ -973,6 +973,8 @@ class Date {
   static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
   static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }
   static now { Date.new() }
+
+  toNum_(n) { n is Num ? n : (!n ? 0 : "%(n)".toNum) }
 
   seconds { _seconds }
   minutes { _minutes }
@@ -982,13 +984,21 @@ class Date {
   year { _year }
   tz { _tz }
 
+  yyyy { _year.toString }
+  yy { _year.toString.substring(2, 4) }
+  mo { _month > 9 ? _month.toString : "0%(month)" }
+  dd { _day > 9 ? _day.toString : "0%(day)" }
+  hh { _hours > 9 ? _hours.toString : "0%(hours)" }
+  mi { _minutes > 9 ? _minutes.toString : "0%(minutes)" }
+  ss { _seconds > 9 ? _seconds.toString : "0%(seconds)" }
+
   dayOfWeek { Date.format_("\%w", year, month, day, hours, minutes, seconds, tz).toNum }
   weekOfYear { Date.format_("\%V", year, month, day, hours, minutes, seconds, tz).toNum }
   dayOfYear { Date.format_("\%j", year, month, day, hours, minutes, seconds, tz).toNum }
   unix { Date.unix_(year, month, day, hours, minutes, seconds, tz) }
   format(format) { Date.format_(format.replace("#", "\%"), year, month, day, hours, minutes, seconds, tz) }
   iso { toString }
-  toString { "%(year)-%(month)-%(day) %(hours):%(minutes):%(seconds)" }
+  toString { "%(year)-%(mo)-%(dd) %(hh):%(mi):%(ss)" }
   diff(otherDate) { unix - otherDate.unix }
   cmp_(o) { diff(o) }
   < (o) { cmp_(o) <  0 }

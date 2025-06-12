@@ -10,7 +10,7 @@ if (Request.isPost) {
 }
 
 // Log the dates
-System.print("Date: %(date) - Current: %(current)")
+System.log("Date: %(date) - Current: %(current)")
 
 // We use the `return` to finish the script and send the response to the client.
 // The `{{ ... )` syntax is used to interpolate the properties of the date object
@@ -31,7 +31,7 @@ return <!doctype html>
     <p>{{ date < current ? "Date is less than current" : "" }}</p>
     <p>{{ date == current ? "Date is equal to current" : "" }}</p>
     <p>{{ date != current ? "Date is not equal to current" : "" }}</p>
-    <p>tz: {{date.tz}}</p>
+    <p>Timezone: {{date.tz}}</p>
     <p>Year: {{date.year}}</p>
     <p>Month: {{date.month}}</p>
     <p>Day: {{date.day}}</p>
@@ -56,7 +56,7 @@ return <!doctype html>
       </p>
       <p>
         <label>
-          tz
+          Timezone
           <input type="input" name="tz" value="{{ date.tz }}">
         </label>
       </p
