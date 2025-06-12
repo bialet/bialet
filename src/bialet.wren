@@ -934,84 +934,63 @@ class Http {
   static delete(url) { delete(url, {}) }
 }
 
-// @TODO Use a C library instead of calling to SQLite in the Date class
 class Date {
-  construct new() {
-    _utc = __utc
-    _date = Date.d2U_("now", _utc)
+  static init {
+    __tz = null
   }
-  static new(date) {
-    if (date is Date) return date
-    return Date.new(date, __utc)
+  static tz {
+    if (__tz is Null) {
+       __tz = Config.get("BIALET_TIMEZONE") 
+    }
+    return __tz
   }
-  construct new(date, utc) {
-    _utc = utc
-    _date = Date.d2U_(date, _utc)
+
+  static fromString(date) { Date.fromString(date, Date.tz) }
+  construct fromString(date, tz) {
+    _tz = tz
+    var f = date.split(" ")
+    var d = f[0].split("-")
+    var t = (f.count > 1 ? f[1] : "00:00:00").split(":")
+    _seconds = t[2].toNum
+    _minutes = t[1].toNum
+    _hours = t[0].toNum
+    _day = d[2].toNum
+    _month = d[1].toNum
+    _year = d[0].toNum
   }
-  construct new(year, month, day, hour, minute, second) {
-    _utc = __utc
-    _date = Date.d2U_("%(year)-%(month)-%(day) %(hour):(minute):%(second)", _utc)
+  construct new(year, month, day, hours, minutes, seconds, tz) {
+    _tz = tz
+    _year = year
+    _month = month
+    _day = day
+    _hours = hours
+    _minutes = minutes
+    _seconds = seconds
   }
-  construct new(year, month, day, hour, minute, second, utc) {
-    _utc = utc
-    _date = Date.d2U_("%(year)-%(month)-%(day) %(hour):(minute):%(second)", _utc)
-  }
-  construct new(year, month, day) {
-    _utc = __utc
-    _date = Date.d2U_("%(year)-%(month)-%(day) 00:00:00", _utc)
-  }
-  construct new(year, month, day, utc) {
-    _utc = utc
-    _date = Date.d2U_("%(year)-%(month)-%(day) 00:00:00", _utc)
-  }
-  // Save the date in UTC
-  static d2U_(date, utc) {
-    if (utc == 0) return date
-    utc = utc * -1
-    var a = "%(utc):00"
-    if (utc > 0 && utc < 10) a = "+0%(utc):00"
-    if (utc > -10 && utc < 0) a = "-0%(utc.abs):00"
-    if (utc > 10) a = "+%(utc):00"
-    return `SELECT strftime('%Y-%m-%d %H:%M:%S', ?, ?)`.val(date, a)
-  }
+  static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
+  static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
+  static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
+  static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
+  static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }
   static now { Date.new() }
-  static utc_(utc) { utc >= 0 ? "+%(utc)" : utc }
-  static utc=(utc) { utc is Num ? __utc = utc : __utc = Num.fromString(utc.upper.replace("UTC", "")) }
-  static utc { Date.utc_(__utc) }
-  utc=(utc) { utc is Num ? _utc = utc : _utc = Num.fromString(utc.upper.replace("UTC", "")) }
-  utc { Date.utc_(_utc) }
-  // Modifier to adjust the date relative to UTC
-  a {
-    if (_utc >= 0 && _utc < 10) return "+0%(_utc):00"
-    if (_utc > -10 && _utc < 0) return "-0%(_utc.abs):00"
-    if (_utc > 10) return "+%(_utc):00"
-    return "%(_utc):00"
-  }
-  format(format) { `SELECT strftime(?, ?, ?)`.val(format.replace("#", "\%"), _date, a) }
-  year { `SELECT strftime('%Y', ?, ?)`.toNum(_date, a) }
-  month { `SELECT strftime('%m', ?, ?)`.toNum(_date, a) }
-  day { `SELECT strftime('%e', ?, ?)`.toNum(_date, a) }
-  hour { `SELECT strftime('%H', ?, ?)`.toNum(_date, a) }
-  minute { `SELECT strftime('%M', ?, ?)`.toNum(_date, a) }
-  second { `SELECT strftime('%S', ?, ?)`.toNum(_date, a) }
-  weekday { `SELECT strftime('%w', ?, ?)`.toNum(_date, a) }
-  dayOfYear { `SELECT strftime('%j', ?, ?)`.toNum(_date, a) }
-  date { `SELECT strftime('%Y-%m-%d', ?, ?)`.val(_date, a) }
-  time { `SELECT strftime('%H:%M:%S', ?, ?)`.val(_date, a) }
-  unix { `SELECT strftime('%s', ?, ?)`.toNum(_date, a) }
-  iso { `SELECT strftime('%T', ?, ?)`.toString(_date, a) }
-  inUtc { _date }
-  toString { `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, a) }
-  +(plus) { _date = `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, plus, a) }
-  -(minus) { _date = `SELECT strftime('%Y-%m-%dT%H:%M:%S', ?, ?)`.val(_date, "-%(minus)", a) }
-  diff(otherDate) { `SELECT timediff(?, ?)`.val(_date, otherDate.inUtc) }
-  cmp_(o) {
-    var diff = diff(o)
-    if (diff == "+0000-00-00 00:00:00.000") return 0
-    if (diff[0] == "-") return -1
-    if (diff[0] == "+") return 1
-    Fiber.abort("Unexpected date diff: %(diff)")
-  }
+
+  seconds { _seconds }
+  minutes { _minutes }
+  hours { _hours }
+  day { _day }
+  month { _month }
+  year { _year }
+  tz { _tz }
+
+  dayOfWeek { Date.format_("\%w", year, month, day, hours, minutes, seconds, tz).toNum }
+  weekOfYear { Date.format_("\%V", year, month, day, hours, minutes, seconds, tz).toNum }
+  dayOfYear { Date.format_("\%j", year, month, day, hours, minutes, seconds, tz).toNum }
+  unix { Date.unix_(year, month, day, hours, minutes, seconds, tz) }
+  format(format) { Date.format_(format.replace("#", "\%"), year, month, day, hours, minutes, seconds, tz) }
+  iso { toString }
+  toString { "%(year)-%(month)-%(day) %(hours):%(minutes):%(seconds)" }
+  diff(otherDate) { unix - otherDate.unix }
+  cmp_(o) { diff(o) }
   < (o) { cmp_(o) <  0 }
   > (o) { cmp_(o) >  0 }
   <=(o) { cmp_(o) <= 0 }
@@ -1028,18 +1007,16 @@ class Cron {
     }
     return should
   }
-  static at(hour, minute, dayOfWeek, job) {
+  static at(hours, minutes, dayOfWeek, job) {
     if (!__now) __now = Date.now
-    return run_(__now.hour == hour && __now.minute == minute && __now.weekday == dayOfWeek, job)
+    return run_(__now.hours == hours && __now.minutes == minutes && __now.weekday == dayOfWeek, job)
   }
-  static at(hour, minute, job) {
+  static at(hours, minutes, job) {
     if (!__now) __now = Date.now
-    return run_(__now.hour == hour && __now.minute == minute, job)
+    return run_(__now.hours == hours && __now.minutes == minutes, job)
   }
   static every(minutes, job) {
     if (!__now) __now = Date.now
-    return run_(__now.minute % minutes == 0, job)
+    return run_(__now.minutes % minutes == 0, job)
   }
 }
-
-Date.utc = 0

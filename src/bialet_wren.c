@@ -346,7 +346,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
-  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init");
+  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init\nDate.init");
   if(hm) {
     /* Initialize request */
     wrenEnsureSlots(vm, 4);

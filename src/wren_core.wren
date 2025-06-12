@@ -366,6 +366,7 @@ class String is Sequence {
     }
     return output
   }
+  toNum { Num.fromString(this) }
 }
 
 class StringByteSequence is Sequence {

@@ -300,6 +300,7 @@ static const char* coreModuleSource =
 "    }\n"
 "    return output\n"
 "  }\n"
+"  toNum { Num.fromString(this) }\n"
 "}\n"
 "class StringByteSequence is Sequence {\n"
 "  construct new(string) {\n"
