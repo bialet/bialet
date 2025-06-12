@@ -1219,20 +1219,65 @@ DEF_PRIMITIVE(http_call) {
   RETURN_OBJ(res);
 }
 
+void setTimezone(const char* tz) {
+  char tz_env[64];
+  snprintf(tz_env, sizeof(tz_env), "TZ=%s", tz);
+  putenv(tz_env);
+  tzset();
+}
+
 DEF_PRIMITIVE(date_current) {
-  // @TODO: Get timezone and return the current date in YYYY-MM-DD HH:MM:SS
-  RETURN_VAL(CONST_STRING(vm, "2025-12-31 12:34:56"));
-};
+  setTimezone(AS_CSTRING(args[1]));
+  char       fullDate[20];
+  time_t     now = time(NULL);
+  struct tm* local = localtime(&now);
+  strftime(fullDate, 20, "%F %T", local);
+  RETURN_VAL(wrenNewString(vm, fullDate));
+}
 
 DEF_PRIMITIVE(date_format) {
-  // @TODO: Call to strftime
-  RETURN_VAL(CONST_STRING(vm, "not working yet!"));
-};
+  const char* format = AS_CSTRING(args[1]);
+  int         year = AS_NUM(args[2]);
+  int         month = AS_NUM(args[3]);
+  int         day = AS_NUM(args[4]);
+  int         hour = AS_NUM(args[5]);
+  int         minute = AS_NUM(args[6]);
+  int         second = AS_NUM(args[7]);
+  const char* tz = AS_CSTRING(args[8]);
+  setTimezone(tz);
+  struct tm t = {0};
+  t.tm_year = year - 1900;
+  t.tm_mon = month - 1;
+  t.tm_mday = day;
+  t.tm_hour = hour;
+  t.tm_min = minute;
+  t.tm_sec = second;
+
+  char buf[64];
+  strftime(buf, sizeof(buf), format, &t);
+  RETURN_VAL(wrenNewString(vm, buf));
+}
 
 DEF_PRIMITIVE(date_unix) {
-  // @TODO: Get the unix timestamp based on the passed date
-  time_t now = time(NULL);
-  RETURN_NUM((double)now);
+  int         year = AS_NUM(args[1]);
+  int         month = AS_NUM(args[2]);
+  int         day = AS_NUM(args[3]);
+  int         hour = AS_NUM(args[4]);
+  int         minute = AS_NUM(args[5]);
+  int         second = AS_NUM(args[6]);
+  const char* tz = AS_CSTRING(args[7]);
+  setTimezone(tz);
+
+  struct tm t = {0};
+  t.tm_year = year - 1900;
+  t.tm_mon = month - 1;
+  t.tm_mday = day;
+  t.tm_hour = hour;
+  t.tm_min = minute;
+  t.tm_sec = second;
+
+  time_t result = mktime(&t);
+  RETURN_NUM((double)result);
 };
 
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
