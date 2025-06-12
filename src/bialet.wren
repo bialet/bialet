@@ -968,6 +968,7 @@ class Date {
     _seconds = toNum_(seconds)
   }
   static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
+  static new(date) { Date.new(date, Date.tz) }
   static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
   static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
   static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }

@@ -842,6 +842,7 @@ static const char* bialetModuleSource =
 "    _seconds = toNum_(seconds)\n"
 "  }\n"
 "  static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }\n"
+"  static new(date) { Date.new(date, Date.tz) }\n"
 "  static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }\n"
 "  static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }\n"
 "  static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }\n"
