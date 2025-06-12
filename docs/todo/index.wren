@@ -15,7 +15,7 @@ var tasksSection = <section>
       {{ tasks.map{ |task| <li class="finished_{{ task.finished }}">
           <a
             href="/toggle?id={{ task.id }}"
-            title="Created at {{ task.createdAt.format("#H:#M") }} hs">
+            title="Created at {{ task.createdAt.hh }}:{{ task.createdAt.mi }} hs">
             {{ task.description.safe }}
           </a>
         </li> } }}
