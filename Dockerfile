@@ -1,10 +1,10 @@
 # Install library dependencies
 FROM alpine:latest AS base
-RUN apk add sqlite-dev curl
+RUN apk add --no-cache sqlite-dev curl tzdata
 
 # Install compilation tools
 FROM base AS build
-RUN apk add gcc make musl-dev openssl-dev curl-dev
+RUN apk add --no-cache gcc make musl-dev openssl-dev curl-dev
 COPY . /usr/src
 WORKDIR /usr/src
 RUN make clean && make
