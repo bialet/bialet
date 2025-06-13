@@ -50,8 +50,8 @@ struct BialetConfig {
   int   port;
 
   FILE* log_file;
-  int   debug;
   int   output_color;
+  int   prod_mode;
 
   int mem_soft_limit, mem_hard_limit, cpu_soft_limit, cpu_hard_limit;
 

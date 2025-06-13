@@ -172,8 +172,13 @@ char* serverUrl() {
   return url;
 }
 
-void welcome() {
+void welcome(int prodMode) {
   message("🚲", green("bialet"), "is riding on", blue(serverUrl()));
+  if(prodMode) {
+    message(green("🚀 Production mode, all good!"));
+  } else {
+    message(red("⚠️ Development mode, do not use in production!"));
+  }
 }
 
 void sigintHandler(int signum) {
@@ -210,7 +215,7 @@ int main(int argc, char* argv[]) {
   bialet_config.cpu_soft_limit = 15;
   bialet_config.cpu_hard_limit = 30;
   /* Env config values */
-  bialet_config.debug = 0;
+  bialet_config.prod_mode = 0;
   bialet_config.output_color = 1;
   bialet_config.db_path = DB_FILE;
   bialet_config.wal_mode = 0;
@@ -219,7 +224,7 @@ int main(int argc, char* argv[]) {
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:vw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:vwP")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -236,6 +241,9 @@ int main(int argc, char* argv[]) {
         break;
       case 'd':
         bialet_config.db_path = optarg;
+        break;
+      case 'P':
+        bialet_config.prod_mode = 1;
         break;
       case 'w':
         bialet_config.wal_mode = 1;
@@ -283,7 +291,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  welcome();
+  welcome(bialet_config.prod_mode);
   triggerReloadFiles();
 
 #if IS_LINUX
