@@ -36,9 +36,9 @@
 #define HTTP_OK 200
 #define HTTP_ERROR 500
 #define BIALET_FILE_CHAR 26
-#define BIALET_EXTERNAL_IMPORT_URL                                                  \
+#define BIALET_REMOTE_MODULE_GITHUB_URL                                             \
   "https://raw.githubusercontent.com/%s/%s/refs/heads/%s/%s" BIALET_EXTENSION
-#define BIALET_EXTERNAL_DEFAULT_BRANCH "main"
+#define BIALET_REMOTE_MODULE_DEFAULT_BRANCH "main"
 
 #define MAIN_MODULE_NAME "main"
 #define CLI_MODULE_NAME "bialet_cli"
@@ -81,38 +81,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
   char*                lastSlash;
   WrenLoadModuleResult result = {0};
 
-  if(name[0] == '/') {
-    if(strlen(name) + strlen(bialet_config.root_dir) + strlen(BIALET_EXTENSION) + 1 >
-       MAX_URL_LEN) {
-      message(red("Error"), "Module name too long.");
-      return result;
-    }
-    snprintf(module, MAX_URL_LEN, "%s", bialet_config.root_dir);
-  } else {
-    /* @TODO Security: prevent load modules from parent directories */
-    /* @TODO Create an object for the user data */
-    char* user_data = wrenGetUserData(vm);
-    char* called_module = string_safe_copy(user_data);
-    lastSlash = strrchr(called_module, '/');
-    if(strlen(name) + strlen(called_module) + strlen(BIALET_EXTENSION) + 2 >
-       MAX_MODULE_LEN) {
-      message(red("Error"), "Module name too long.");
-      return result;
-    }
-    if(lastSlash)
-      *lastSlash = '\0';
-    snprintf(module, MAX_MODULE_LEN, "%s/", called_module);
-  }
-
-  strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
-  strncat(module, BIALET_EXTENSION, MAX_MODULE_LEN - strlen(module) - 1);
-
-  char* buffer = readFile(module);
-  result.source = NULL;
-
-  if(buffer) {
-    result.source = buffer;
-  } else if(strchr(name, '/') != NULL) {
+  if(strchr(name, ':') != NULL) {
     char url[MAX_URL_LEN];
     // If name start with https:// or http://
     if(strncmp(name, "http://", 7) == 0 || strncmp(name, "https://", 8) == 0) {
@@ -123,7 +92,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       strncpy(name_copy, name, sizeof(name_copy));
       name_copy[sizeof(name_copy) - 1] = '\0';
       char* at = strchr(name_copy, '@');
-      char* branch = BIALET_EXTERNAL_DEFAULT_BRANCH;
+      char* branch = BIALET_REMOTE_MODULE_DEFAULT_BRANCH;
       if(at != NULL) {
         *at = '\0'; // Remove @
         branch = at + 1;
@@ -135,17 +104,16 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
         message(red("Error"), "Invalid GitHub URL.");
         return result;
       }
-      sprintf(url, BIALET_EXTERNAL_IMPORT_URL, user, repo, branch, path);
+      sprintf(url, BIALET_REMOTE_MODULE_GITHUB_URL, user, repo, branch, path);
       name -= 3; // Restore gh:
     } else {
+      message(red("Error"), "Import type not supported.");
       return result;
     }
-    // @TODO Refactor the external import, the code is too large
-    // File not exists, try to get from cache
     sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(db,
-                       "SELECT content FROM BIALET_IMPORT WHERE module = ? LIMIT 1",
-                       -1, &stmt, 0);
+    sqlite3_prepare_v2(
+        db, "SELECT content FROM BIALET_REMOTE_MODULES WHERE module = ? LIMIT 1", -1,
+        &stmt, 0);
     sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
     const char* content = 0;
     if(sqlite3_step(stmt) == SQLITE_ROW) {
@@ -153,7 +121,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       result.source = string_safe_copy(content);
       sqlite3_finalize(stmt);
     } else {
-      // File not found in cache, try to get from GitHub
+      // File not found in cache, try to get from URL
       sqlite3_finalize(stmt);
       struct HttpRequest  req;
       struct HttpResponse resp;
@@ -169,17 +137,64 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
         result.source = resp.body;
         sqlite3_stmt* stmt;
         sqlite3_prepare_v2(
-            db, "INSERT INTO BIALET_IMPORT (module, content) VALUES (?, ?)", -1,
-            &stmt, 0);
+            db, "INSERT INTO BIALET_REMOTE_MODULES (module, content) VALUES (?, ?)",
+            -1, &stmt, 0);
         sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, resp.body, -1, SQLITE_STATIC);
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
-        message(yellow("External import saved"), name);
+        message(yellow("Remote module saved"), name);
       } else {
         message(red("Error"), "Module not found in GitHub.");
       }
     }
+    return result;
+  }
+
+  if(name[0] == '/') {
+    if(strlen(name) + strlen(bialet_config.full_root_dir) + BIALET_EXTENSION_LEN +
+           1 >
+       MAX_URL_LEN) {
+      message(red("Error"), "Module name too long.");
+      return result;
+    }
+    snprintf(module, MAX_URL_LEN, "%s", bialet_config.full_root_dir);
+  } else {
+    char* calledFrom = string_safe_copy(wrenGetUserData(vm));
+    lastSlash = strrchr(calledFrom, '/');
+    if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
+       MAX_MODULE_LEN) {
+      message(red("Error"), "Module name too long.");
+      return result;
+    }
+    if(lastSlash)
+      *lastSlash = '\0';
+    snprintf(module, MAX_MODULE_LEN, "%s/", calledFrom);
+  }
+
+  strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
+  size_t name_len = strlen(module);
+  if(name_len < BIALET_EXTENSION_LEN ||
+     strcmp(module + name_len - BIALET_EXTENSION_LEN, BIALET_EXTENSION) != 0) {
+    strncat(module, BIALET_EXTENSION, MAX_MODULE_LEN - strlen(module) - 1);
+  }
+
+  char resolved[MAX_URL_LEN];
+  if(realpath(module, resolved) == NULL) {
+    return result;
+  }
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
+     (resolved[root_len] != '/' && resolved[root_len] != '\0')) {
+    return result;
+  }
+
+  char* buffer = readFile(module);
+  result.source = NULL;
+
+  if(buffer) {
+    result.source = buffer;
   }
   return result;
 }

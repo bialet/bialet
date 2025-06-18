@@ -54,13 +54,12 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
 #define MAX_PATH_LEN 100
-#define EXTENSION ".wren"
-#define MIGRATION_FILE "/_migration" EXTENSION
-#define MIGRATION_FILE_ALT "/_app/migration" EXTENSION
-#define CRON_FILE "/_cron" EXTENSION
-#define CRON_FILE_ALT "/_app/cron" EXTENSION
+#define MIGRATION_FILE "/_migration" BIALET_EXTENSION
+#define MIGRATION_FILE_ALT "/_app/migration" BIALET_EXTENSION
+#define CRON_FILE "/_cron" BIALET_EXTENSION
+#define CRON_FILE_ALT "/_app/cron" BIALET_EXTENSION
 #define DB_FILE "_db.sqlite3"
-#define ROUTE_FILE "_route" EXTENSION
+#define ROUTE_FILE "_route" BIALET_EXTENSION
 #define MAX_ROUTES 100
 #define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
@@ -154,7 +153,7 @@ static void* fileWatcher(void* arg) {
       if(event->len) {
         ext = strrchr(event->name, '.');
         // Only reload .wren files
-        if(ext && !strcmp(ext, EXTENSION)) {
+        if(ext && !strcmp(ext, BIALET_EXTENSION)) {
           triggerReloadFiles();
         }
       }
@@ -269,8 +268,13 @@ int main(int argc, char* argv[]) {
   }
   if(optind < argc) {
     bialet_config.root_dir = argv[optind];
-    /* @TODO Error handling root dir exists */
   }
+  char resolved_root[MAX_PATH_LEN];
+  if(realpath(bialet_config.root_dir, resolved_root) == NULL) {
+    fprintf(stderr, "Error with root directory.\n");
+    exit(EXIT_FAILURE);
+  }
+  bialet_config.full_root_dir = resolved_root;
 
   messageInit(&bialet_config);
   bialetInit(&bialet_config);
