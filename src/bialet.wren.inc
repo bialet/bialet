@@ -682,6 +682,7 @@ static const char* bialetModuleSource =
 "}\n"
 "class Db {\n"
 "  static init {\n"
+"    `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()\n"
 "    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()\n"
 "    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()\n"
 "    `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()\n"

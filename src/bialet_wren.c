@@ -47,8 +47,14 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
-static void bialetWrenWrite(WrenVM* vm, const char* text) {
-  message(yellow("Log"), text);
+static void bialetWrenWrite(WrenVM* vm, const char* message) {
+  message(yellow("Log"), message);
+  sqlite3_stmt* stmt;
+  sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1, &stmt,
+                     0);
+  sqlite3_bind_text(stmt, 1, message, -1, SQLITE_STATIC);
+  sqlite3_step(stmt);
+  sqlite3_finalize(stmt);
 }
 
 char* readFile(const char* path) {
