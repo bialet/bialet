@@ -5,6 +5,7 @@ if (Request.isPost) {
   var task = Task.new()
   task.description = Request.post("task")
   task.save()
+  System.log("✅ New task created: %(task)")
   return Response.redirect("/")
 }
 
