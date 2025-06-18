@@ -24,6 +24,8 @@ class Task {
     `.toBool(_id, Session.id)
   }
 
+  toString { description }
+
   static list() { `
     SELECT * FROM Task WHERE session = ? ORDER BY createdAt ASC
   `.fetch(Session.id).map{ |task| Task.new(task) } }
