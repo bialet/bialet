@@ -43,9 +43,12 @@
 #endif
 
 #define MAX_NUMBER_LENGTH 100
+#define BIALET_EXTENSION ".wren"
+#define BIALET_EXTENSION_LEN 5
 
 struct BialetConfig {
   char* root_dir;
+  char* full_root_dir;
   char* host;
   int   port;
 

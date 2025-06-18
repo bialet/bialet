@@ -22,7 +22,6 @@ char* readFile(const char* path);
 
 int bialetRunCli(char* code);
 
-#define BIALET_EXTENSION ".wren"
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 
 #endif
