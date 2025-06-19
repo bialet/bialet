@@ -337,7 +337,7 @@ void handle_client(int client_socket) {
       snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
                url_copy);
       if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
-        hm->routes = create_string(path, strlen(path));
+        hm->routes = create_string(url_copy, strlen(url_copy));
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
