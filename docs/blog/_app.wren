@@ -25,6 +25,6 @@ class Template {
 
 class Posts {
   static home() { `SELECT * FROM posts ORDER BY createdAt DESC`.fetch() }
-  static page(slug) { `SELECT title, content FROM posts WHERE slug = ?`.first(slug) }
+  static page(slug) { `SELECT id, title, content FROM posts WHERE slug = ?`.first(slug) }
   static id(id) { `SELECT * FROM posts WHERE id = ?`.first(id) }
 }
