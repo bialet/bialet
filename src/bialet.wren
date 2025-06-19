@@ -811,10 +811,14 @@ class Db {
     `DELETE FROM BIALET_FILES WHERE isTemp = 1 AND createdAt < date('now', '-1 day')`.query()
   }
 
-  static migrate(version, schema) {
+  static migrate(version, schemaOrCallback) {
     Db.init
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
-      schema.toString.split(";").each{|q| Query.fromString(q, []) }
+      if (schemaOrCallback is Fn) {
+        schemaOrCallback.call()
+      } else {
+        schemaOrCallback.toString.split(";").each{|q| Query.fromString(q, []) }
+      }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
     }
     Db.clean
