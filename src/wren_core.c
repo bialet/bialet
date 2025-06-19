@@ -2,8 +2,10 @@
 
 #include "bialet.h"
 #include "bialet.wren.inc"
+#include "bialet_wren.h"
 #include "hash.h"
 #include "http_call.h"
+#include "markdown.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
@@ -1280,6 +1282,19 @@ DEF_PRIMITIVE(date_unix) {
   RETURN_NUM((double)result);
 };
 
+DEF_PRIMITIVE(markdown_html) {
+  char* html = markdownToHtml(AS_CSTRING(args[1]));
+  RETURN_VAL(wrenNewString(vm, html));
+}
+
+DEF_PRIMITIVE(markdown_file) {
+  char* content = bialetReadFile(AS_CSTRING(args[1]));
+  if (content == NULL)
+    RETURN_FALSE;
+  char* html = markdownToHtml(content);
+  RETURN_VAL(wrenNewString(vm, html));
+};
+
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
   if(vm->config.writeFn != NULL) {
@@ -1622,4 +1637,8 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
   PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
   PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
+
+  ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
+  PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
+  PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
 }

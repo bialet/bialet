@@ -902,4 +902,6 @@ static const char* bialetModuleSource =
 "    if (!__now) __now = Date.now\n"
 "    return run_(__now.minutes % minutes == 0, job)\n"
 "  }\n"
+"}\n"
+"class Markdown {\n"
 "}\n";
