@@ -19,6 +19,7 @@ void bialetInit(struct BialetConfig* config);
 struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
 
 char* readFile(const char* path);
+char* bialetReadFile(const char* path);
 
 int bialetRunCli(char* code);
 

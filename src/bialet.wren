@@ -1034,3 +1034,6 @@ class Cron {
     return run_(__now.minutes % minutes == 0, job)
   }
 }
+
+class Markdown {
+}

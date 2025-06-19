@@ -57,6 +57,14 @@ static void bialetWrenWrite(WrenVM* vm, const char* message) {
   sqlite3_finalize(stmt);
 }
 
+char* bialetReadFile(const char* path) {
+  char fullPath[MAX_URL_LEN];
+  strcpy(fullPath, bialet_config.full_root_dir);
+  strcat(fullPath, "/");
+  strcat(fullPath, path);
+  return readFile(fullPath);
+}
+
 char* readFile(const char* path) {
   char* buffer = 0;
   long  length;
