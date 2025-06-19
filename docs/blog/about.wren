@@ -2,9 +2,8 @@ import "/_app" for Template
 
 return Template.layout(
   "About Bialet",
-  <div>
+  <main>
     {{ Markdown.html("[Back to home](/)") }}
-
-    {{ Markdown.file("about.md") }}
-  </div>
+    {{ Markdown.file("_about-bialet.md") }}
+  </main>
 )
