@@ -6,7 +6,10 @@
  *
  * SPDX-License-Identifier: MIT
  *
- * For full license text, see LICENSE.md.
+ * This project includes code from the 'dmon' library by Sepehr Taghdisian,
+ * which is licensed under the BSD 2-Clause License.
+ *
+ * For full license texts, see LICENSE.md.
  */
 #include "bialet.h"
 #include "bialet_wren.h"
@@ -17,6 +20,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#define DMON_IMPL
+#include "dmon.h"
 
 #if IS_WIN
 
@@ -115,7 +121,6 @@ void* cron_thread(void* arg) {
   }
   return NULL;
 }
-
 /* Reload files */
 static void triggerReloadFiles() {
   time_t current_time = time(NULL);
@@ -126,44 +131,11 @@ static void triggerReloadFiles() {
   }
 }
 
-#if IS_LINUX
-static void* fileWatcher(void* arg) {
-  pthread_detach(pthread_self());
-  int   length, i = 0;
-  char  buffer[BUF_LEN];
-  int   fd = inotify_init();
-  char* ext;
-  if(fd < 0) {
-    perror("inotify_init");
-  }
-  /* @TODO File watchers not work when a new folder is created */
-  int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
-  if(wd < 0) {
-    perror("inotify_add_watch");
-  }
-  for(;;) {
-    length = read(fd, buffer, BUF_LEN);
-
-    if(length < 0) {
-      perror("read");
-    }
-
-    while(i < length) {
-      struct inotify_event* event = (struct inotify_event*)&buffer[i];
-      if(event->len) {
-        ext = strrchr(event->name, '.');
-        // Only reload .wren files
-        if(ext && !strcmp(ext, BIALET_EXTENSION)) {
-          triggerReloadFiles();
-        }
-      }
-      i += EVENT_SIZE + event->len;
-    }
-    i = 0;
-  }
-  pthread_exit(NULL);
+static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
+                          const char* rootdir, const char* filepath,
+                          const char* oldfilepath, void* user) {
+  triggerReloadFiles();
 }
-#endif
 
 char* serverUrl() {
   static char url[MAX_URL];
@@ -177,6 +149,7 @@ void welcome() {
 
 void sigintHandler(int signum) {
   keep_running = 0;
+  dmon_deinit();
   stop_server();
 }
 
@@ -289,12 +262,14 @@ int main(int argc, char* argv[]) {
 
   welcome();
   triggerReloadFiles();
+  dmon_init();
+  dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
+             NULL);
 
 #if IS_LINUX
   int       status;
   pthread_t cron_tid;
   pthread_create(&cron_tid, NULL, cron_thread, NULL);
-  pthread_create(&thread_id, NULL, fileWatcher, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;

@@ -33,7 +33,7 @@ ifeq ($(HAVE_SSL),1)
 endif
 else
 		CFLAGS += $(shell pkg-config --cflags openssl) -DHAVE_SSL
-		LDFLAGS += $(shell pkg-config --libs openssl)
+		LDFLAGS += $(shell pkg-config --libs openssl) -framework CoreFoundation -framework CoreServices
 endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
