@@ -6,6 +6,9 @@ if (!slug) {
 }
 
 var post = Posts.page(slug)
+if (!post) {
+  return Response.redirect("404")
+}
 return Template.layout(
   post["title"],
   <main>

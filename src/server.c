@@ -16,6 +16,7 @@
 #include "messages.h"
 #include <arpa/inet.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,13 +27,18 @@
 #define BUFFER_SIZE BUFSIZ * 4
 #define PATH_SIZE 1024 * 2
 #define REQUEST_MESSAGE_SIZE 300
+#define MAX_SSE_CLIENTS 32
 
-int                        server_fd = -1;
+int sse_clients[MAX_SSE_CLIENTS] = {0};
+int sse_client_count = 0;
+int server_fd = -1;
+
 static struct BialetConfig bialet_config;
 
 void handle_client(int client_socket);
 
 int start_server(struct BialetConfig* config) {
+  signal(SIGPIPE, SIG_IGN);
   bialet_config = *config;
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(server_fd == -1) {
@@ -237,6 +243,12 @@ void write_response(int client_socket, struct BialetResponse* response) {
     perror("Failed to allocate memory for HTTP response");
     return;
   }
+  // If contains text/html header
+  if(strstr(response->header, "Content-Type: text/html") != NULL) {
+    response->length += SSE_SCRIPT_LEN;
+    strcat(response->body, SSE_SCRIPT);
+  }
+
   int ok = snprintf(message, REQUEST_MESSAGE_SIZE,
                     "HTTP/1.1 %d %s\r\n"
                     "%s"
@@ -251,6 +263,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
 
   write(client_socket, message, strlen(message));
   write(client_socket, response->body, response->length);
+
   free(message);
   close(client_socket);
 }
@@ -267,6 +280,17 @@ void handle_client(int client_socket) {
 
   struct HttpMessage* hm;
   hm = parse_request(buffer);
+
+  if(strcmp("/__bialet_reload", hm->uri.str) == 0) {
+    write(client_socket, SSE_KEEP_ALIVE, SSE_KEEP_ALIVE_LEN);
+    if(sse_client_count < MAX_SSE_CLIENTS) {
+      sse_clients[sse_client_count++] = client_socket;
+    } else {
+      close(client_socket);
+    }
+    return;
+  }
+
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
@@ -276,7 +300,6 @@ void handle_client(int client_socket) {
     close(client_socket);
     return;
   }
-
   struct BialetResponse response = {0, "", "", 0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
@@ -450,4 +473,27 @@ void custom_error(int status, struct BialetResponse* response) {
       response->body = BIALET_ERROR_PAGE;
       break;
   }
+}
+
+void sse_broadcast_reload() {
+  const char* msg = "event: reload\ndata: now\n\n";
+  for(int i = 0; i < sse_client_count; ++i) {
+    int fd = sse_clients[i];
+    if(fd < 0) {
+      continue;
+    }
+    ssize_t result = write(fd, msg, strlen(msg));
+    if(result < 0) {
+      close(fd);
+      sse_clients[i] = -1;
+      continue;
+    }
+  }
+  int j = 0;
+  for(int i = 0; i < sse_client_count; ++i) {
+    if(sse_clients[i] >= 0) {
+      sse_clients[j++] = sse_clients[i];
+    }
+  }
+  sse_client_count = j;
 }

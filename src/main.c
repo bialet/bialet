@@ -60,15 +60,16 @@
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
 #define MAX_PATH_LEN 100
-#define MIGRATION_FILE "/_migration" BIALET_EXTENSION
-#define MIGRATION_FILE_ALT "/_app/migration" BIALET_EXTENSION
-#define CRON_FILE "/_cron" BIALET_EXTENSION
-#define CRON_FILE_ALT "/_app/cron" BIALET_EXTENSION
+#define MIGRATION_FILE "_migration" BIALET_EXTENSION
+#define MIGRATION_FILE_ALT "_app/migration" BIALET_EXTENSION
+#define PATH_SEPARATOR "/"
+#define CRON_FILE "_cron" BIALET_EXTENSION
+#define CRON_FILE_ALT "_app/cron" BIALET_EXTENSION
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" BIALET_EXTENSION
 #define MAX_ROUTES 100
 #define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
-#define WAIT_FOR_RELOAD 3
+#define WAIT_FOR_RELOAD 5
 #define SERVER_POLL_DELAY 200
 
 struct BialetConfig    bialet_config;
@@ -82,8 +83,10 @@ static void migrate() {
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
   strcpy(path, bialet_config.root_dir);
+  strcat(path, PATH_SEPARATOR);
   strcat(path, MIGRATION_FILE);
   strcpy(altPath, bialet_config.root_dir);
+  strcpy(altPath, PATH_SEPARATOR);
   strcat(altPath, MIGRATION_FILE_ALT);
   if((code = readFile(path)) || (code = readFile(altPath))) {
     struct BialetResponse r = bialetRun("migration", code, 0);
@@ -97,8 +100,10 @@ static void cron_install() {
   char path[MAX_PATH_LEN];
   char altPath[MAX_PATH_LEN];
   strcpy(path, bialet_config.root_dir);
+  strcat(path, PATH_SEPARATOR);
   strcat(path, CRON_FILE);
   strcpy(altPath, bialet_config.root_dir);
+  strcat(altPath, PATH_SEPARATOR);
   strcat(altPath, MIGRATION_FILE_ALT);
   if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
     message(yellow("Installing cron"));
@@ -122,19 +127,26 @@ void* cron_thread(void* arg) {
   return NULL;
 }
 /* Reload files */
-static void triggerReloadFiles() {
-  time_t current_time = time(NULL);
-  if(current_time - last_reload > WAIT_FOR_RELOAD) {
-    last_reload = current_time;
-    migrate();
-    cron_install();
+static void triggerReloadFiles(const char* filepath) {
+  if(strncmp(filepath, bialet_config.db_path, strlen(bialet_config.db_path)) == 0) {
+    return;
   }
+  if(strcmp(filepath, MIGRATION_FILE) == 0 ||
+     strcmp(filepath, MIGRATION_FILE_ALT) == 0) {
+    migrate();
+    return;
+  }
+  if(strcmp(filepath, CRON_FILE) == 0 || strcmp(filepath, CRON_FILE_ALT) == 0) {
+    cron_install();
+    return;
+  }
+  sse_broadcast_reload();
 }
 
 static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
                           const char* rootdir, const char* filepath,
                           const char* oldfilepath, void* user) {
-  triggerReloadFiles();
+  triggerReloadFiles(filepath);
 }
 
 char* serverUrl() {
@@ -261,7 +273,8 @@ int main(int argc, char* argv[]) {
   }
 
   welcome();
-  triggerReloadFiles();
+  migrate();
+  cron_install();
   dmon_init();
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);

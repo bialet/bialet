@@ -17,6 +17,7 @@ class Template {
       <body>
         {{ main }}
         <p style="margin-top:3em; font-size: .7em">
+          <a href="https://github.com/bialet/bialet">Bialet</a>
           Made with <a href="https://bialet.dev">Bialet</a>.
           View <a href="https://github.com/bialet/bialet/tree/main/docs/blog">source code</a>.
       </body>
