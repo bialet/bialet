@@ -309,15 +309,6 @@ void handle_client(int client_socket) {
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
     if(stat(path, &file_stat) != 0) {
       strncpy(path + strlen(path) - 5, ".html", 6); // Try index.html
-      if(stat(path, &file_stat) != 0 && strncmp(hm->uri.str, "/", 2) == 0) {
-        // If no index.wren or index.html in root, serve welcome page
-        response.status = 200;
-        response.body = BIALET_WELCOME_PAGE;
-        response.length = strlen(BIALET_WELCOME_PAGE);
-        response.header = BIALET_HEADERS;
-        write_response(client_socket, &response);
-        return;
-      }
     }
   }
 
@@ -341,8 +332,16 @@ void handle_client(int client_socket) {
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
-      if(!last_slash || last_slash == url_copy) { // Stop if root is reached
+      if(!last_slash) { // Stop if root is reached
         free(url_copy);
+        // If no index.wren or index.html or _route.wren in root
+        // serve welcome page
+        if(strncmp(hm->uri.str, "/", 2) == 0) {
+          response.status = 200;
+          response.body = BIALET_WELCOME_PAGE;
+          response.length = strlen(BIALET_WELCOME_PAGE);
+          response.header = BIALET_HEADERS;
+        }
         clean_http_message(hm);
         write_response(client_socket, &response);
         return;
