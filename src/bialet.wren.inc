@@ -12,7 +12,7 @@ static const char* bialetModuleSource =
 "    __method = tmp[0]\n"
 "    __fullUri = tmp[1]\n"
 "    __body = \"\"\n"
-"    __route = __fullUri.trimStart(route).split(\"/\")\n"
+"    __route = __fullUri.trimStart(route.count>0 ? route : \"/\").split(\"/\")\n"
 "    var uriSeparator = __fullUri.indexOf(\"?\")\n"
 "    if (uriSeparator > 0) {\n"
 "      __uri = __fullUri[0...uriSeparator]\n"
