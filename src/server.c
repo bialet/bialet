@@ -16,19 +16,35 @@
 #include "messages.h"
 #include <arpa/inet.h>
 #include <poll.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE BUFSIZ * 4
-#define PATH_SIZE 1024 * 2
+#define BUFFER_SIZE (BUFSIZ * 4)
+#define PATH_SIZE (1024 * 2)
 #define REQUEST_MESSAGE_SIZE 300
 
 int                        server_fd = -1;
 static struct BialetConfig bialet_config;
+
+static ssize_t send_all(int fd, const void* buf, size_t count) {
+  size_t      sent = 0;
+  const char* p = (const char*)buf;
+  while(sent < count) {
+    ssize_t n = send(fd, p + sent, count - sent, 0);
+    if(n < 0)
+      return n; // error
+    if(n == 0)
+      break; // peer closed
+    sent += (size_t)n;
+  }
+  return (ssize_t)sent;
+}
 
 void handle_client(int client_socket);
 
@@ -78,17 +94,19 @@ void stop_server() {
 struct String create_string(const char* str, int len) {
   struct String s;
   s.len = len;
-  s.str = (char*)malloc(len + 1); // Allocate memory for string + null terminator
+  s.str = (char*)malloc((size_t)len + 1);
   if(s.str == NULL) {
     perror("Failed to allocate memory for string");
     exit(EXIT_FAILURE);
   }
-  strncpy(s.str, str, len);
-  s.str[len] = '\0'; // Ensure null termination
+  memcpy(s.str, str, (size_t)len);
+  s.str[len] = '\0';
   return s;
 }
 
 void clean_http_message(struct HttpMessage* hm) {
+  if(!hm)
+    return;
   free(hm->message.str);
   free(hm->method.str);
   free(hm->uri.str);
@@ -171,32 +189,32 @@ const char* get_http_status_description(int status_code) {
 char* get_content_type(const char* path) {
   const char* ext = strrchr(path, '.');
   if(!ext) {
-    return "Content-Type: application/octet-stream\r\n";
+    return (char*)"Content-Type: application/octet-stream\r\n";
   }
   if(strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0) {
     return BIALET_HEADERS;
   } else if(strcmp(ext, ".css") == 0) {
-    return "Content-Type: text/css\r\n";
+    return (char*)"Content-Type: text/css\r\n";
   } else if(strcmp(ext, ".js") == 0) {
-    return "Content-Type: application/javascript\r\n";
+    return (char*)"Content-Type: application/javascript\r\n";
   } else if(strcmp(ext, ".json") == 0) {
-    return "Content-Type: application/json\r\n";
+    return (char*)"Content-Type: application/json\r\n";
   } else if(strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0) {
-    return "Content-Type: image/jpeg\r\n";
+    return (char*)"Content-Type: image/jpeg\r\n";
   } else if(strcmp(ext, ".png") == 0) {
-    return "Content-Type: image/png\r\n";
+    return (char*)"Content-Type: image/png\r\n";
   } else if(strcmp(ext, ".gif") == 0) {
-    return "Content-Type: image/gif\r\n";
+    return (char*)"Content-Type: image/gif\r\n";
   } else if(strcmp(ext, ".svg") == 0) {
-    return "Content-Type: image/svg+xml\r\n";
+    return (char*)"Content-Type: image/svg+xml\r\n";
   } else if(strcmp(ext, ".txt") == 0) {
-    return "Content-Type: text/plain\r\n";
+    return (char*)"Content-Type: text/plain\r\n";
   } else if(strcmp(ext, ".xml") == 0) {
-    return "Content-Type: application/xml\r\n";
+    return (char*)"Content-Type: application/xml\r\n";
   } else if(strcmp(ext, ".pdf") == 0) {
-    return "Content-Type: application/pdf\r\n";
+    return (char*)"Content-Type: application/pdf\r\n";
   }
-  return "Content-Type: application/octet-stream";
+  return (char*)"Content-Type: application/octet-stream\r\n";
 }
 
 struct HttpMessage* parse_request(char* request) {
@@ -205,22 +223,33 @@ struct HttpMessage* parse_request(char* request) {
     perror("Failed to allocate memory for HttpMessage");
     exit(EXIT_FAILURE);
   }
-  hm->message = create_string(request, strlen(request));
-  char* method = strtok(request, " ");
-  hm->method = create_string(method, strlen(method));
-  char* url = strtok(NULL, " ");
-  hm->uri = create_string(url, strlen(url));
+
+  // Copiar solo la primera línea (método y path) sin modificar el buffer original
+  char   first_line[BUFFER_SIZE];
+  char*  line_end = strstr(request, "\r\n");
+  size_t line_len = line_end ? (size_t)(line_end - request) : strlen(request);
+  if(line_len >= sizeof(first_line))
+    line_len = sizeof(first_line) - 1;
+  memcpy(first_line, request, line_len);
+  first_line[line_len] = '\0';
+
+  hm->message = create_string(request, (int)strlen(request));
+
+  // Tokenizar la primera línea segura
+  char* saveptr = NULL;
+  char* method = strtok_r(first_line, " ", &saveptr);
+  if(!method)
+    method = (char*)"GET";
+  hm->method = create_string(method, (int)strlen(method));
+
+  char* url = strtok_r(NULL, " ", &saveptr);
+  if(!url)
+    url = (char*)"/";
+  hm->uri = create_string(url, (int)strlen(url));
+
   hm->routes = create_string("", 0);
 
   return hm;
-}
-
-size_t count_utf8_code_points(const char* s) {
-  size_t count = 0;
-  while(*s) {
-    count += (*s++ & 0xC0) != 0x80;
-  }
-  return count;
 }
 
 void write_response(int client_socket, struct BialetResponse* response) {
@@ -228,50 +257,54 @@ void write_response(int client_socket, struct BialetResponse* response) {
     custom_error(404, response);
   }
 
-  if(response->length == 0) {
-    response->length = strlen(response->body);
+  size_t body_len = response->length;
+  if(body_len == 0 && response->body) {
+    body_len = strlen(response->body);
   }
 
-  char* message = malloc(REQUEST_MESSAGE_SIZE);
+  char* message = (char*)malloc(REQUEST_MESSAGE_SIZE);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
     return;
   }
-  int ok = snprintf(message, REQUEST_MESSAGE_SIZE,
-                    "HTTP/1.1 %d %s\r\n"
-                    "%s"
-                    "Content-Length: %lu\r\n\r\n",
-                    response->status, get_http_status_description(response->status),
-                    response->header, (unsigned long)response->length);
+  int ok =
+      snprintf(message, REQUEST_MESSAGE_SIZE,
+               "HTTP/1.1 %d %s\r\n"
+               "%s"
+               "Content-Length: %lu\r\n\r\n",
+               response->status, get_http_status_description(response->status),
+               response->header ? response->header : "", (unsigned long)body_len);
   if(ok < 0) {
     perror("Failed to format HTTP response or buffer overflow");
     free(message);
     return;
   }
 
-  write(client_socket, message, strlen(message));
-  write(client_socket, response->body, response->length);
+  (void)send_all(client_socket, message, strlen(message));
   free(message);
+
+  if(response->body && body_len > 0) {
+    (void)send_all(client_socket, response->body, body_len);
+  }
+
   close(client_socket);
 }
 
 void handle_client(int client_socket) {
   char    buffer[BUFFER_SIZE];
-  ssize_t bytes_read = read(client_socket, buffer, BUFFER_SIZE - 1);
-  if(bytes_read < 0) {
+  ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer), 0);
+  if(bytes_read <= 0) {
     perror("Error reading request");
     close(client_socket);
     return;
   }
-  buffer[bytes_read] = '\0';
 
-  struct HttpMessage* hm;
-  hm = parse_request(buffer);
+  struct HttpMessage* hm = parse_request(buffer);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
-    write(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
-    write(client_socket, favicon_data, FAVICON_SIZE);
+    (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
+    (void)send_all(client_socket, favicon_data, FAVICON_SIZE);
     clean_http_message(hm);
     close(client_socket);
     return;
@@ -290,8 +323,9 @@ void handle_client(int client_socket) {
   }
 
   // Handle routes ending with "/" or without
-  if(path[strlen(path) - 1] == '/') {
-    path[strlen(path) - 1] = '\0';
+  size_t pathlen = strlen(path);
+  if(pathlen > 0 && path[pathlen - 1] == '/') {
+    path[pathlen - 1] = '\0';
   }
 
   if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
@@ -308,7 +342,11 @@ void handle_client(int client_socket) {
     // Serve index.html or index.wren
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
     if(stat(path, &file_stat) != 0) {
-      strncpy(path + strlen(path) - 5, ".html", 6); // Try index.html
+      // Reemplazar sufijo ".wren" por ".html"
+      size_t L = strlen(path);
+      if(L >= 5) {
+        strncpy(path + L - 5, ".html", 6);
+      }
     }
   }
 
@@ -317,6 +355,8 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     response.status = 403;
     response.body = BIALET_FORBIDDEN_PAGE;
+    response.length = strlen(BIALET_FORBIDDEN_PAGE);
+    response.header = BIALET_HEADERS;
     write_response(client_socket, &response);
     return;
   }
@@ -324,11 +364,17 @@ void handle_client(int client_socket) {
   if(stat(path, &file_stat) != 0) {
     // Search for _route.wren
     char* url_copy = strdup(hm->uri.str);
+    if(!url_copy) {
+      perror("strdup");
+      clean_http_message(hm);
+      close(client_socket);
+      return;
+    }
     while(1) {
       snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
                url_copy);
       if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
-        hm->routes = create_string(url_copy, strlen(url_copy));
+        hm->routes = create_string(url_copy, (int)strlen(url_copy));
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
@@ -359,11 +405,30 @@ void handle_client(int client_socket) {
     close(client_socket);
     return;
   }
-  fseek(file, 0, SEEK_END);
-  long file_size = ftell(file);
+  if(fseek(file, 0, SEEK_END) != 0) {
+    perror("fseek");
+    fclose(file);
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
+  size_t file_size = ftell(file);
+  if(file_size < 0) {
+    perror("ftell");
+    fclose(file);
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
   rewind(file);
 
-  char* file_content = malloc(file_size + 1);
+  unsigned char is_wren_file = 0;
+  if(strstr(path, ".wren") != NULL) {
+    is_wren_file = 1;
+  }
+
+  size_t alloc_size = file_size + is_wren_file;
+  char*  file_content = malloc(alloc_size);
   if(file_content == NULL) {
     perror("Error allocating memory for file content");
     fclose(file);
@@ -371,21 +436,30 @@ void handle_client(int client_socket) {
     close(client_socket);
     return;
   }
-
-  fread(file_content, 1, file_size, file);
-  file_content[file_size] = '\0';
+  size_t read_bytes = fread(file_content, 1, file_size, file);
+  if(read_bytes != file_size) {
+    perror("Error reading file");
+    free(file_content);
+    fclose(file);
+    clean_http_message(hm);
+    close(client_socket);
+    return;
+  }
   fclose(file);
 
-  if(strstr(path, ".wren") != NULL) {
-    // If file is a .wren file, run it
+  if(is_wren_file) {
+    file_content[read_bytes] = '\0';
     response = bialetRun(path, file_content, hm);
+    if(response.length == 0 && response.body) {
+      response.length = strlen(response.body);
+    }
   } else {
-    // Otherwise serve static file
     response.status = 200;
     response.body = file_content;
-    response.length = file_size;
+    response.length = read_bytes;
     response.header = get_content_type(path);
   }
+
   clean_http_message(hm);
   write_response(client_socket, &response);
   free(file_content);
@@ -427,27 +501,31 @@ void custom_error(int status, struct BialetResponse* response) {
   if(stat(path, &file_stat) == 0) {
     FILE* file = fopen(path, "rb");
     if(file != NULL) {
-      fseek(file, 0, SEEK_END);
-      long file_size = ftell(file);
-      rewind(file);
-      char* file_content = malloc(file_size + 1);
-      if(file_content != NULL) {
-        fread(file_content, 1, file_size, file);
-        file_content[file_size] = '\0';
-        fclose(file);
-        response->body = file_content;
-        response->length = file_size;
-        return;
+      if(fseek(file, 0, SEEK_END) == 0) {
+        long file_size = ftell(file);
+        if(file_size >= 0) {
+          rewind(file);
+          char* file_content = (char*)malloc((size_t)file_size);
+          if(file_content != NULL) {
+            size_t read_bytes = fread(file_content, 1, (size_t)file_size, file);
+            fclose(file);
+            response->body = file_content;
+            response->length = read_bytes;
+            return;
+          }
+        }
       }
+      fclose(file);
     }
   }
-  response->length = 0;
-  switch(status) {
-    case 404:
-      response->body = BIALET_NOT_FOUND_PAGE;
-      break;
-    case 500:
-      response->body = BIALET_ERROR_PAGE;
-      break;
+  if(status == 404) {
+    response->body = BIALET_NOT_FOUND_PAGE;
+    response->length = strlen(BIALET_NOT_FOUND_PAGE);
+  } else if(status == 500) {
+    response->body = BIALET_ERROR_PAGE;
+    response->length = strlen(BIALET_ERROR_PAGE);
+  } else {
+    response->body = (char*)"";
+    response->length = 0;
   }
 }
