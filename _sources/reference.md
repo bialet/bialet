@@ -285,6 +285,11 @@ Saves data to a specified table.
 - `table`: The name of the table to save data to.
 - `values`: The data to save, typically as a key-value pair object.
 
+### delete(table, id)
+Deletes data from a specified table based on its ID.
+- `table`: The name of the table to delete data from.
+- `id`: The ID of the data to delete.
+
 ## Http
 A class for handling HTTP requests and responses, with methods to perform various types of HTTP requests.
 

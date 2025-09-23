@@ -416,9 +416,9 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code>: Returns the result of the query as an array (List object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">first()</span></code>: Returns the first result of the query as an object (Map object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">val()</span></code>: Returns the value of the first result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">toNumber()</span></code>: Returns the value of the first result as a number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toNum()</span></code>: Returns the value of the first result as a number.</p></li>
 </ul>
-<p><strong>First will add a LIMIT clause automatically in first(), val and toNumber.</strong></p>
+<p><strong>First will add a LIMIT clause automatically in first(), val and toNum.</strong></p>
 <p>You can’t concatenate strings or use interpolations with the Query object.
 When you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the method.</p>
 <p>All methods receive the following parameters:</p>
@@ -429,7 +429,7 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2)</span></code>: Convert all parameters to String.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2,</span> <span class="pre">param3)</span></code>: Convert all parameters to String.</p></li>
 </ul>
-<p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and <code class="docutils literal notranslate"><span class="pre">.toNumber</span></code>.</p>
+<p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and <code class="docutils literal notranslate"><span class="pre">.toNum</span></code>.</p>
 <p>If you need more parameters, use the array syntax (<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
@@ -448,7 +448,7 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 
 <span class="c1">// Give the current day of the year</span>
-<span class="k">var</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT strftime(&#39;%j&#39;, &#39;now&#39;)`</span><span class="o">.</span><span class="n">toNumber</span>
+<span class="k">var</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT strftime(&#39;%j&#39;, &#39;now&#39;)`</span><span class="o">.</span><span class="n">toNum</span>
 </pre></div>
 </div>
 </section>
@@ -460,14 +460,12 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 </pre></div>
 </div>
 <p>But you can also use the <code class="docutils literal notranslate"><span class="pre">Db.save</span></code> method, sending the table name and the a Map object with the values.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
-<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The same method also work for updating the row.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
-<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
 <span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
 <span class="c1">// This will update the row</span>
 <span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">)</span>
@@ -478,9 +476,7 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <h2>Migrations<a class="headerlink" href="#migrations" title="Link to this heading">#</a></h2>
 <p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
 <p>This script will be run every time the application starts and also when a Wren file is updated.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Name of the migration&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`SOME QUERY`</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Name of the migration&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`SOME QUERY`</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The name of the migration is used to avoid repeating migrations. Use a descriptive name.</p>

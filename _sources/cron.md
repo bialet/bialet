@@ -12,7 +12,6 @@ To schedule a task, use the `Cron.every` or `Cron.at` helpers methods inside the
 These methods receive a block that is called at the specified time.
 
 ```wren
-import "bialet" for Cron
 import "/_domain" for Task
 
 // Every 2 minutes

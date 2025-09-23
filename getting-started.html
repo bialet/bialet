@@ -420,16 +420,12 @@
 <section id="our-first-wren-file">
 <h2>Our first Wren file<a class="headerlink" href="#our-first-wren-file" title="Link to this heading">#</a></h2>
 <p>Now let’s create the <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;p&gt;Hello World!&lt;/p&gt;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Hello World!&lt;/p&gt;</span>
 </pre></div>
 </div>
 <p>The index.wren file is the main HTML file. It works the same as the index.html file.
 Go to <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> to see the Hello World message.</p>
-<p>Wren don’t use <code class="docutils literal notranslate"><span class="pre">;</span></code> to separate statements, it uses new lines instead.
-We import the <code class="docutils literal notranslate"><span class="pre">Response</span></code> class from the framework and then call the <code class="docutils literal notranslate"><span class="pre">out()</span></code> method
-to print the HTML.</p>
+<p>We use the <code class="docutils literal notranslate"><span class="pre">return</span></code> keyword to finish the script and send the response.</p>
 <p>Inline HTML Strings allow you to write HTML directly in your Wren files,
 keeping your code clean and simple. This feature is similar to JSX in React but instead
 of creating objects, it generates plain strings. You can use interpolation with
@@ -472,8 +468,7 @@ powerful string interpolation.</p>
 </pre></div>
 </div>
 <p>Let’s use the Template class to render our HTML content.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="s1">&#39;So far, so good.&#39;</span><span class="p">)</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
@@ -530,9 +525,7 @@ But first, we need to create a new table. You should have a file called <code cl
 </div>
 <p>The logic is very simple, we show all the options, then we increment when receiving a vote.
 Let’s write a file called <code class="docutils literal notranslate"><span class="pre">simple_poll.wren</span></code> for our logic.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
@@ -562,9 +555,7 @@ Instead of having <code class="docutils literal notranslate"><span class="pre">(
 Then we use the same principle than in the refactored Template class, single expression implicitly returns the value.</p>
 <p>Oh, yes you can have an interpolation in your interpolations.</p>
 <p>In order to vote, we need to handle a <code class="docutils literal notranslate"><span class="pre">POST</span></code> request from the form.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -579,9 +570,7 @@ Then we use the same principle than in the refactored Template class, single exp
 <p>The query object are <a class="reference external" href="https://en.wikipedia.org/wiki/Prepared_statement">prepared statement</a>, you can’t concatenate them or having interpotations in them.
 You should use the <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholder to pass the value to the query.</p>
 <p>The logic is finished but let’s finish this example showing the results.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="c1">// We will use the vote variable to see if the user voted</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We will use the vote variable to see if the user voted</span>
 <span class="k">var</span><span class="w"> </span><span class="n">vote</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
@@ -592,8 +581,7 @@ You should use the <code class="docutils literal notranslate"><span class="pre">
 <span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="x">&lt;html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;body&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
 
@@ -616,7 +604,6 @@ You should use the <code class="docutils literal notranslate"><span class="pre">
 <span class="x">    }}</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-<span class="x">)</span>
 </pre></div>
 </div>
 <p>Now we have the last interpolation trick, in order to show some code we use a ternary operator.</p>
@@ -627,9 +614,7 @@ You should use the <code class="docutils literal notranslate"><span class="pre">
 <h2>Put it all together<a class="headerlink" href="#put-it-all-together" title="Link to this heading">#</a></h2>
 <p>Now that we have an idea on how to handle the logic. In our complete example we need more columns in the database. This time we will use migrations.</p>
 <p>Create a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file in the root of the project.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Db</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  CREATE TABLE poll (</span>
 <span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
 <span class="sb">    answer TEXT NOT NULL,</span>
@@ -662,12 +647,11 @@ Let’s add a Poll class to the <code class="docutils literal notranslate"><span
 </pre></div>
 </div>
 <p>We add the poll object in the index.wren file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
 
 <span class="w">  </span><span class="x">&lt;form action=&quot;results&quot; method=&quot;post&quot;&gt;</span>
 <span class="x">    &lt;h2 class=&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
@@ -691,8 +675,7 @@ Let’s add a Poll class to the <code class="docutils literal notranslate"><span
 <span class="x">      &lt;button type=&quot;submit&quot; class=&quot;text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800&quot;&gt;</span><span class="nc">Vote</span><span class="x">&lt;/button&gt;</span>
 <span class="x">    &lt;/div&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt;</span>
-
-<span class="x">))</span>
+<span class="x">)</span>
 </pre></div>
 </div>
 <p>Wren does not have a <a class="reference external" href="https://wren.io/classes.html#constructors">default constructor</a>, we use the <code class="docutils literal notranslate"><span class="pre">constructor</span></code> keyword on any method and use that method to create the object.
@@ -700,8 +683,7 @@ Naming the method <code class="docutils literal notranslate"><span class="pre">n
 <p>We will handle the form. We usually handle it in the same page the form is on.
 This way if we need to show an error we don’t need to go back to the form.
 Once we know the form was correctly validated we can redirect to the results page.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
@@ -715,7 +697,7 @@ Once we know the form was correctly validated we can redirect to the results pag
 <span class="p">}</span>
 
 <span class="c1">// Remember to change the action attribute in the form!</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
 <span class="w">  </span><span class="x">&lt;form action=&quot;/&quot; method=&quot;post&quot;&gt;</span>
 <span class="x">  ...</span>
 <span class="x">  &lt;/form&gt;</span>
@@ -735,8 +717,7 @@ Once we know the form was correctly validated we can redirect to the results pag
 </div>
 <p>All the variables we receive from the database are strings.
 We need to convert them to numbers with the <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> method before we can use them.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
