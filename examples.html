@@ -406,50 +406,46 @@
 <h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
 <section id="simple-query-list">
 <h2>Simple query list<a class="headerlink" href="#simple-query-list" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="k">var</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
-
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">  </span><span class="x">&lt;html&gt;</span>
-<span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">    &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">TITLE</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">        </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
-<span class="x">          {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">            </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
-<span class="x">              👋 {{ user[&quot;name&quot;] }}</span>
-<span class="x">            &lt;/a&gt;</span>
-<span class="w">          </span><span class="x">&lt;/li&gt; } }}</span>
-<span class="x">        &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">        </span><span class="cm">/* Users table is empty */</span>
-<span class="w">        </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
-<span class="w">      </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;/body&gt;</span>
-<span class="x">  &lt;/html&gt;</span>
-<span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">  &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
+<span class="w">      </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
+<span class="x">        {{ users.map{|user| &lt;li&gt;</span>
+<span class="w">          </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
+<span class="x">            👋 {{ user[&quot;name&quot;] }}</span>
+<span class="x">          &lt;/a&gt;</span>
+<span class="w">        </span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">      &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">      </span><span class="cm">/* Users table is empty */</span>
+<span class="w">      </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="w">    </span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/body&gt;</span>
+<span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>
 <section id="hello-world">
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="c1">// We create a class that that contains the logic and template.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We create a class that that contains the logic and template.</span>
 <span class="c1">// This is not required by Bialet, but it is a good practice.</span>
 <span class="c1">// Once the logic and template become too big, you should split it</span>
 <span class="c1">// in multiple classes.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// The name of the constructor could be anything.</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🚲 Welcome to Bialet&quot;</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Fetch the user from the database using plain SQL</span>
-<span class="w">  </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Get the name from the current user if it exists or the default</span>
-<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">user</span><span class="p">(</span><span class="n">id</span><span class="p">)[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="c1">// Fetch the user&#39;s name from the database using plain SQL</span>
+<span class="w">  </span><span class="c1">// or return &quot;World&quot; if the user doesn&#39;t exist.</span>
+<span class="w">  </span><span class="c1">// Single line methods return the value of the expression.</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Build the HTML</span>
 <span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
@@ -457,40 +453,28 @@
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
 <span class="w">      </span><span class="x">&lt;/head&gt;</span>
-<span class="x">      &lt;body&gt;</span>
+<span class="x">      &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
 <span class="w">        </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;simple&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nc">List</span><span class="w"> </span><span class="err">👥</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="n">to</span><span class="w"> </span><span class="nc">Home</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
 <span class="x">    &lt;/html&gt;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="c1">// We use the `query()` method to execute SQL statements.</span>
-<span class="c1">// In this case we create a table named `users` with two columns: `id` and `name`.</span>
-<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
-<span class="sb">`CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
-<span class="c1">// Also, we ensure that we have some data in the table.</span>
-<span class="sb">`REPLACE INTO users (id, name) VALUES (1, &quot;Alice&quot;), (2, &quot;Bob&quot;), (3, &quot;Charlie&quot;)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
-
 <span class="c1">// We use the `get()` method to get the `id` parameter from the URL.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">idUrlParam</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
 <span class="c1">// Create an instance of the `App` class.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="c1">// Generate the HTML, with the name of the user.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;p&gt;👋 Hello &lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">idUrlParam</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;&lt;/p&gt;</span>
-<span class="p">)</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span><span class="w"> </span><span class="c1">// Serve the HTML</span>
+<span class="k">return</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="x">&lt;p&gt;👋 Hello &lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;&lt;/p&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="count-the-visitors-of-your-website">
 <h2>Count the visitors of your website<a class="headerlink" href="#count-the-visitors-of-your-website" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="c1">// We use the `query()` method to execute SQL statements.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `query()` method to execute SQL statements.</span>
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `visits` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `visits`.</span>
@@ -506,10 +490,10 @@
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;visits&quot;`</span><span class="o">.</span><span class="n">val</span>
 
-<span class="c1">// We use the `out()` method to send the response to the client.</span>
+<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `visits` variable.</span>
 <span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -525,17 +509,12 @@
 <span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-<span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="count-the-clicks">
 <h2>Count the clicks<a class="headerlink" href="#count-the-clicks" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response and Request classes for managing HTTP interactions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Request</span>
-
-<span class="c1">// We use the `query` method to execute SQL statements.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `query` method to execute SQL statements.</span>
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `clicks` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `clicks`.</span>
@@ -557,10 +536,10 @@
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;clicks&quot;`</span><span class="o">.</span><span class="n">val</span>
 
-<span class="c1">// We use the `out()` method to send the response to the client.</span>
+<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `clicks` variable.</span>
 <span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -577,17 +556,12 @@
 <span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-<span class="x">)</span>
 </pre></div>
 </div>
 </section>
 <section id="form-submission">
 <h2>Form submission<a class="headerlink" href="#form-submission" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response and Request classes for managing HTTP interactions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Request</span>
-
-<span class="c1">// We use the `query` method to execute SQL statements.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `query` method to execute SQL statements.</span>
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `form` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `form`.</span>
@@ -613,11 +587,11 @@
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;form&quot;`</span><span class="o">.</span><span class="n">val</span>
 
-<span class="c1">// We use the `out()` method to send the response to the client.</span>
+<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... )` syntax is used to interpolate the value of the `total` variable.</span>
 <span class="c1">// and the `value` variable.</span>
 <span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -632,7 +606,7 @@
 <span class="x">    &lt;/form&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span><span class="p">)</span>
+<span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -640,7 +614,6 @@
 <h2>JSON Response<a class="headerlink" href="#json-response" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
 <span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span>
 
 <span class="c1">// We use the `query()` method to execute SQL statements.</span>
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
@@ -658,9 +631,7 @@
 </section>
 <section id="form-upload">
 <h2>Form Upload<a class="headerlink" href="#form-upload" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Db</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Get the uploaded file</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;form_file_name&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;File: </span><span class="si">%(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -672,8 +643,7 @@
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Upload File&quot;</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">  </span><span class="x">&lt;head&gt;</span>
 <span class="x">    &lt;meta charset=&quot;utf-8&quot;&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
@@ -689,14 +659,12 @@
 <span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-<span class="x">)</span>
 </pre></div>
 </div>
 </section>
 <section id="file-creation">
 <h2>File Creation<a class="headerlink" href="#file-creation" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;random&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;random&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
 
 <span class="c1">// Generate an emoji SVG</span>
 <span class="k">var</span><span class="w"> </span><span class="n">random</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
@@ -713,14 +681,12 @@
 </section>
 <section id="http-api-call">
 <h2>HTTP API Call<a class="headerlink" href="#http-api-call" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Http</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://dummyjson.com/users?limit=5&amp;select=username,email&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">]</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://dummyjson.com/users?limit=5&amp;select=username,email&#39;</span><span class="p">)[</span><span class="s1">&#39;users&#39;</span><span class="p">]</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Users: </span><span class="si">%(</span><span class="n">users</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Users: </span><span class="si">%(</span><span class="n">users</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -747,18 +713,13 @@
 <span class="x">      }}</span>
 <span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;)</span>
+<span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>
 <section id="password-utilities">
 <h2>Password utilities<a class="headerlink" href="#password-utilities" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response and Request classes for managing HTTP interactions.</span>
-<span class="c1">// It also imports the Util class, that includes the helper functions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Util</span>
-
-<span class="c1">// We use the `post()` method to get a parameter from the POST request.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `post()` method to get a parameter from the POST request.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">passwordCheck</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password-check&#39;</span><span class="p">)</span>
 <span class="c1">// Set up the hash and verify variables</span>
@@ -775,10 +736,10 @@
 <span class="w">  </span><span class="n">verify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">passwordCheck</span><span class="p">,</span><span class="w"> </span><span class="n">encrypted</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="c1">// We use the `out()` method to send the response to the client.</span>
+<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value inputs.</span>
 <span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -813,18 +774,13 @@
 <span class="x">    &lt;/form&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span><span class="p">)</span>
+<span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>
 <section id="cross-site-request-forgery">
 <h2>Cross site request forgery<a class="headerlink" href="#cross-site-request-forgery" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response and Request classes for managing HTTP interactions.</span>
-<span class="c1">// It also imports the Session class, that includes the Cross-Site Request Forgery functions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="k">var</span><span class="w"> </span><span class="n">verify</span>
 
 <span class="c1">// We use the `isPost` property to check if the request method is POST</span>
@@ -833,11 +789,7 @@
 <span class="w">  </span><span class="n">verify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">session</span><span class="o">.</span><span class="n">csrfOk</span>
 <span class="p">}</span>
 
-<span class="c1">// We use the `out()` method to send the response to the client.</span>
-<span class="c1">// The `%( ... )` syntax is used to interpolate the value of the `clicks` variable.</span>
-<span class="c1">// The `session.csrf` generates the hidden input field with the CSRF token.</span>
-<span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
 <span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
@@ -858,7 +810,7 @@
 <span class="x">    &lt;/form&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span><span class="p">)</span>
+<span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>

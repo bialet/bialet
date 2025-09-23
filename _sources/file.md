@@ -15,7 +15,6 @@ will be deleted within a day or less.
 ### Example 1: Permanent File Upload
 
 ```wren
-import "bialet" for Request, Response
 
 if (Request.isPost) {
   // Get the uploaded file and save it as permanent
@@ -66,7 +65,6 @@ delete a file, use the `fileObject.destroy()` method.
 ### Example 1: Creating a Permanent File
 
 ```wren
-import "bialet" for Response, File
 
 // Create a text file with dynamic content
 var content = "This is a dynamically generated text file."
@@ -82,7 +80,6 @@ You can also delete files manually using the `fileObject.destroy()` method.
 It works for uploaded and dymanically created files.
 
 ```wren
-import "bialet" for Response, File
 
 // Create a text file with dynamic content
 var content = "This is a temporary file that will be deleted."
@@ -111,7 +108,6 @@ and `name`. We will fetch the file based on its name and display it in the brows
 For more information on routing and dynamic names, see the [routes section](structure.md).
 
 ```wren
-import "bialet" for Request, Response
 
 // Assume we have a route that takes the name as a parameter
 var imageName = Request.route(0)

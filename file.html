@@ -420,9 +420,7 @@ However, any file that is uploaded but not processed remains temporary, meaning 
 will be deleted within a day or less.</p>
 <section id="example-1-permanent-file-upload">
 <h3>Example 1: Permanent File Upload<a class="headerlink" href="#example-1-permanent-file-upload" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Get the uploaded file and save it as permanent</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -471,9 +469,7 @@ files will be automatically deleted after a short period of time. To manually
 delete a file, use the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.</p>
 <section id="example-1-creating-a-permanent-file">
 <h3>Example 1: Creating a Permanent File<a class="headerlink" href="#example-1-creating-a-permanent-file" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
-
-<span class="c1">// Create a text file with dynamic content</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a text file with dynamic content</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a dynamically generated text file.&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;example.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
 
@@ -486,9 +482,7 @@ delete a file, use the <code class="docutils literal notranslate"><span class="p
 <h3>Example 2: Deleting a File Manually<a class="headerlink" href="#example-2-deleting-a-file-manually" title="Link to this heading">#</a></h3>
 <p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.
 It works for uploaded and dymanically created files.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Response</span><span class="p">,</span><span class="w"> </span><span class="nc">File</span>
-
-<span class="c1">// Create a text file with dynamic content</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a text file with dynamic content</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a temporary file that will be deleted.&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;temporary.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
 
@@ -512,9 +506,7 @@ display them based on user input, such as a filename.</p>
 <p>In this example, we have a custom table <code class="docutils literal notranslate"><span class="pre">images</span></code> with fields <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">file_id</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">name</span></code>. We will fetch the file based on its name and display it in the browser.</p>
 <p>For more information on routing and dynamic names, see the <a class="reference internal" href="structure.html"><span class="std std-doc">routes section</span></a>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Request</span><span class="p">,</span><span class="w"> </span><span class="nc">Response</span>
-
-<span class="c1">// Assume we have a route that takes the name as a parameter</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Assume we have a route that takes the name as a parameter</span>
 <span class="k">var</span><span class="w"> </span><span class="n">imageName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="c1">// Query the file_id from the custom table</span>

@@ -410,8 +410,7 @@
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h2>
 <p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the Wren cron file.
 These methods receive a block that is called at the specified time.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;bialet&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cron</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="c1">// Every 2 minutes</span>
 <span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Hello, from Cron!&quot;</span><span class="w"> </span><span class="p">}</span>

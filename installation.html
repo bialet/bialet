@@ -548,23 +548,27 @@ brew<span class="w"> </span>install<span class="w"> </span>openssl
 <td><p>SQLite database file location</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<td><p>Enable SQLite <a class="reference external" href="https://www.sqlite.org/wal.html">Write-Ahead logging mode</a></p></td>
+<td><p>Disabled</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
 <td><p>Ignored files, comma separated list of glob expressions</p></td>
 <td><p>README*, LICENSE* , *.json, *.yml, *.yaml</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Memory limit (MB)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code></p></td>
 <td><p>Hard memory limit (MB)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
 <td><p>CPU limit (%)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">15</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code></p></td>
 <td><p>Hard CPU limit (%)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
 </tr>
@@ -580,8 +584,7 @@ brew<span class="w"> </span>install<span class="w"> </span>openssl
 </pre></div>
 </div>
 <p>The response will be printed directly.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;import &quot;bialet&quot; for Response</span>
-<span class="s1">Response.out(&quot;No log, plain response&quot;)&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Response.out<span class="o">(</span><span class="s2">&quot;No log, plain response&quot;</span><span class="o">)</span><span class="err">&#39;</span>
 </pre></div>
 </div>
 <p>You have to respect new lines in the code.</p>

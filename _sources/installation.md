@@ -120,6 +120,7 @@ The table below summarizes the available command-line parameters for the Bialet 
 | `-r` | Run the code passed as argument | None |
 | `-l` | Log file location | `stdout` |
 | `-d` | SQLite database file location | `_db.sqlite` |
+| `-w` | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html) | Disabled |
 | `-i` | Ignored files, comma separated list of glob expressions | README\*, LICENSE\* , \*.json, \*.yml, \*.yaml |
 | `-m` | Memory limit (MB) | `50` |
 | `-M` | Hard memory limit (MB) | `100` |
@@ -137,7 +138,6 @@ bialet -r 'System.print("Hello, World!")'
 The response will be printed directly.
 
 ```bash
-bialet -r 'import "bialet" for Response
 Response.out("No log, plain response")'
 ```
 

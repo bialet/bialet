@@ -1,4 +1,3 @@
-import "bialet" for Request, Response
 import "_app" for Template, Poll
 
 var poll = Poll.new()
@@ -12,7 +11,7 @@ if (Request.isPost) {
   return
 }
 
-Response.out(Template.layout(
+return Template.layout(
   <form action="/" method="post">
     <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
     <div class="mb-6">
@@ -35,4 +34,4 @@ Response.out(Template.layout(
       <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Vote</button>
     </div>
   </form>
-))
+)
