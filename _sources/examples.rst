@@ -66,3 +66,9 @@ Cross site request forgery
 
 .. include:: examples/csrf.wren
    :code: wren
+
+Markdown
+--------
+
+.. include:: examples/markdown.wren
+   :code: wren
