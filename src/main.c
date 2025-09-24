@@ -165,14 +165,14 @@ static void* fileWatcher(void* arg) {
 }
 #endif
 
-char* serverUrl() {
+char* serverUrl(int port) {
   static char url[MAX_URL];
-  snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, bialet_config.port);
+  snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, port);
   return url;
 }
 
-void welcome() {
-  message("🚲", green("bialet"), "is riding on", blue(serverUrl()));
+void welcome(int port) {
+  message("🚲", green("bialet"), "is riding on", blue(serverUrl(port)));
 }
 
 void sigintHandler(int signum) {
@@ -201,8 +201,8 @@ int main(int argc, char* argv[]) {
   /* Default config values */
   /* Arg config values */
   bialet_config.root_dir = ".";
-  bialet_config.host = "127.0.0.1";
-  bialet_config.port = 7001;
+  bialet_config.host = BIALET_DEFAULT_HOST;
+  bialet_config.port = -1;
   bialet_config.log_file = stdout;
   bialet_config.mem_soft_limit = 50;
   bialet_config.mem_hard_limit = 100;
@@ -282,12 +282,13 @@ int main(int argc, char* argv[]) {
     exit(bialetRunCli(code));
   }
 
-  if(start_server(&bialet_config) != 0) {
+  int port = start_server(&bialet_config);
+  if(port < 0) {
     perror("Error starting bialet");
     exit(1);
   }
 
-  welcome();
+  welcome(port);
   triggerReloadFiles();
 
 #if IS_LINUX
