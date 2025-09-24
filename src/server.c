@@ -68,19 +68,38 @@ int start_server(struct BialetConfig* config) {
       .sin_addr.s_addr = inet_addr(config->host),
       .sin_port = htons(config->port),
   };
+  int port;
+  int initial_port = config->port < 0 ? BIALET_DEFAULT_PORT : config->port;
+  int max_retries = config->port < 0 ? 10 : 1;
 
-  if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-    perror("Failed to bind");
-    close(server_fd);
-    exit(EXIT_FAILURE);
+  for(int retries = 0; retries < max_retries; retries++) {
+    port = initial_port + retries;
+    server_addr.sin_port = htons(port);
+    if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+      continue;
+    }
+    if(listen(server_fd, 10) == -1) {
+      continue;
+    }
+    return port;
   }
-
-  if(listen(server_fd, 10) == -1) {
-    perror("Failed to listen");
-    close(server_fd);
-    exit(EXIT_FAILURE);
+  if(max_retries == 1) {
+    char port_str[10];
+    snprintf(port_str, sizeof(port_str), "%d", port);
+    message(red("Could not bind port"), magenta(port_str),
+            "- Check if the port is already in use.");
+  } else {
+    message(red("Could not open server"));
+    char initial_port_str[10];
+    snprintf(initial_port_str, sizeof(initial_port_str), "%d", config->port);
+    char last_port_str[10];
+    snprintf(last_port_str, sizeof(last_port_str), "%d", port);
+    message("Ports from", magenta(initial_port_str), "to", magenta(last_port_str),
+            "tried");
   }
-  return 0;
+  close(server_fd);
+  exit(EXIT_FAILURE);
+  return -1;
 }
 
 void stop_server() {

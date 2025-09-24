@@ -45,6 +45,8 @@
 #define MAX_NUMBER_LENGTH 100
 #define BIALET_EXTENSION ".wren"
 #define BIALET_EXTENSION_LEN 5
+#define BIALET_DEFAULT_PORT 7001
+#define BIALET_DEFAULT_HOST "127.0.0.1"
 
 struct BialetConfig {
   char* root_dir;
