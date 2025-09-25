@@ -21,9 +21,6 @@
 #include <string.h>
 #include <time.h>
 
-// Wren generated code
-#include "bialet.wren.inc"
-
 #define BIALET_SQLITE_ERROR 11
 #define BIALET_SQLITE_BUSY_TIMEOUT 5000
 #define BIALET_SQLITE_JOURNAL_SIZE "67108864" // 64 mb
