@@ -93,7 +93,7 @@ static void cron_install() {
   strcpy(path, bialet_config.root_dir);
   strcat(path, CRON_FILE);
   strcpy(altPath, bialet_config.root_dir);
-  strcat(altPath, MIGRATION_FILE_ALT);
+  strcat(altPath, CRON_FILE_ALT);
   if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
     message(yellow("Installing cron"));
     cron_installed = 1;
