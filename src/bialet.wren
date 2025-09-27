@@ -85,6 +85,13 @@ class Request {
     if (res.count == 0) return null
     return File.new(res[0]).save
   }
+  static login(user, pass) {
+    var authHeader = Request.header("authorization")
+    if (!authHeader) return Response.login()
+    var login = Util.decodeBase64(authHeader.split(" ")[1]).split(":")
+    if (login[0] != user|| login[1] != pass) return Response.login()
+    return false
+  }
 }
 
 class Response {
