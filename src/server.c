@@ -236,14 +236,13 @@ char* get_content_type(const char* path) {
   return (char*)"Content-Type: application/octet-stream\r\n";
 }
 
-struct HttpMessage* parse_request(char* request) {
+struct HttpMessage* parse_request(char* request, ssize_t length) {
   struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   if(hm == NULL) {
     perror("Failed to allocate memory for HttpMessage");
     exit(EXIT_FAILURE);
   }
 
-  // Copiar solo la primera línea (método y path) sin modificar el buffer original
   char   first_line[BUFFER_SIZE];
   char*  line_end = strstr(request, "\r\n");
   size_t line_len = line_end ? (size_t)(line_end - request) : strlen(request);
@@ -252,7 +251,7 @@ struct HttpMessage* parse_request(char* request) {
   memcpy(first_line, request, line_len);
   first_line[line_len] = '\0';
 
-  hm->message = create_string(request, (int)strlen(request));
+  hm->message = create_string(request, (int)length);
 
   // Tokenizar la primera línea segura
   char* saveptr = NULL;
@@ -318,7 +317,7 @@ void handle_client(int client_socket) {
     return;
   }
 
-  struct HttpMessage* hm = parse_request(buffer);
+  struct HttpMessage* hm = parse_request(buffer, bytes_read);
   message(magenta("Request"), hm->method.str, hm->uri.str);
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
