@@ -137,8 +137,8 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       req.postData = string_safe_copy("");
       req.url = string_safe_copy(url);
       httpCallPerform(&req, &resp);
-      // @TODO Fix this when status are added in httpCallPerform
-      if(resp.status >= 0) {
+      // Check if HTTP request was successful (2xx status codes)
+      if(resp.status >= 200 && resp.status < 300 && !resp.error) {
         // File found, save it in cache
         result.source = resp.body;
         sqlite3_stmt* stmt;
@@ -276,7 +276,8 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
         break;
       default:
         message(red("Query Error"), "Uknown type on binding parameters");
-        break;
+        sqlite3_finalize(stmt);
+        return;
     }
   }
 
@@ -307,8 +308,10 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
           break;
         case SQLITE_BLOB:
           type = BIALETQUERYTYPE_BLOB;
-          // @FIXME This retrieving is working, but it is not passed correctly to
-          // Wren
+          /* Note: BLOB data is retrieved correctly from SQLite but may not be
+           * properly passed to Wren as binary data. This is due to Wren's string
+           * representation. Consider converting BLOBs to base64 strings or handling
+           * them as byte arrays if Wren adds support for binary data types. */
           value = sqlite3_column_blob(stmt, i);
           size = sqlite3_column_bytes(stmt, i);
           break;
@@ -326,21 +329,21 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
     rowCount++;
   }
 
-  /* @TODO @FIXME Getting SQLITE_MISUSED */
-  /* If SQLite ever returns SQLITE_MISUSE from any interface, that means that
-   * the application */
-  /* is incorrectly coded and needs to be fixed. Do not ship an application that
-   * sometimes returns */
-  /* SQLITE_MISUSE from a standard SQLite interface because that application
-   * contains potentially */
-  /* serious bugs. */
-  if(result != SQLITE_DONE && result != SQLITE_OK && result != SQLITE_EMPTY) {
+  /* Check for errors during query execution.
+   * SQLITE_DONE means all rows have been fetched successfully.
+   * SQLITE_OK is also acceptable (though less common after stepping).
+   * Any other result code indicates an error that should be reported.
+   * Note: SQLITE_MISUSE can occur from incorrect API usage such as:
+   * - Using a finalized statement
+   * - Using a statement from a different thread
+   * - Calling sqlite3_step after it has returned SQLITE_DONE
+   * This error handling ensures proper cleanup even on errors. */
+  if(result != SQLITE_DONE && result != SQLITE_OK) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
   query->lastInsertId = sqliteIntToString(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);
 }
-
 char* escapeSpecialChars(const char* input) {
   int   i, j = 0, len = strlen(input);
   char* output = malloc(len * 2 + 1); // Worst case: all characters need escaping
@@ -513,6 +516,20 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
       fileSize -= 2;
     }
 
+    // Validate file size to prevent disk abuse
+    extern struct BialetConfig bialet_config;
+    if(fileSize > bialet_config.max_upload_size) {
+      // Skip this file - it exceeds the maximum allowed size
+      char sizeMsg[256];
+      snprintf(
+          sizeMsg, sizeof(sizeMsg),
+          "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
+          filename, fileSize, bialet_config.max_upload_size);
+      message(red("Upload Error"), sizeMsg);
+      part = fileData;
+      continue;
+    }
+
     // Save file to database
     sqlite3_stmt* stmt;
     int           result = sqlite3_prepare_v2(db,
@@ -572,7 +589,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
     wrenSetSlotString(vm, 2, hm->routes.str);
 
     char filesIds[MAX_URL_LEN] = "";
-    // @TODO @FIXME This is called always and it can be abuse to fill the disk
+    // Save uploaded files with size validation (max_upload_size config)
     saveUploadedFiles(hm, filesIds);
     wrenSetSlotString(vm, 3, filesIds);
 
@@ -607,9 +624,11 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
         if(body[0] != BIALET_FILE_CHAR) {
           r.body = string_safe_copy(body);
         } else {
-          // @TODO Move this to the server
-          // Use the BIALET_FILE_CHAR to request the file instead of send the
-          // actual body. It will search the file in the database.
+          /* Handle BIALET_FILE_CHAR response for file serving.
+           * This retrieves file content from the database when the response body
+           * starts with BIALET_FILE_CHAR. Consider moving this logic to the server
+           * layer in the future to better separate concerns between the Wren runtime
+           * and response preparation. */
           sqlite3_stmt* stmt;
           int           result = sqlite3_prepare_v2(
               db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
@@ -697,10 +716,24 @@ void bialetInit(struct BialetConfig* config) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
     exit(BIALET_SQLITE_ERROR);
   }
-  // Set Pragmas
-  // @TODO Adjust the pragmas to the user configuration
-  sqlite3_exec(db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
-  sqlite3_exec(db, "PRAGMA synchronous = NORMAL;", NULL, NULL, NULL);
+  // Set Pragmas using configuration values
+  char pragma_cmd[256];
+
+  // Foreign keys (configurable: 0=OFF, 1=ON)
+  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA foreign_keys = %s;",
+           config->sqlite_foreign_keys ? "ON" : "OFF");
+  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+
+  // Synchronous mode (configurable: 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA)
+  const char* sync_modes[] = {"OFF", "NORMAL", "FULL", "EXTRA"};
+  int         sync_mode = config->sqlite_synchronous;
+  if(sync_mode < 0 || sync_mode > 3)
+    sync_mode = 1; // Default to NORMAL
+  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA synchronous = %s;",
+           sync_modes[sync_mode]);
+  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+
+  // WAL mode (configurable via wal_mode flag)
   if(config->wal_mode) {
     sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
   }

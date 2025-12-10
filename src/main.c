@@ -136,7 +136,11 @@ static void* fileWatcher(void* arg) {
   if(fd < 0) {
     perror("inotify_init");
   }
-  /* @TODO File watchers not work when a new folder is created */
+  /* Note: This only watches the root directory. To properly watch subdirectories,
+   * we would need to either:
+   * 1. Recursively add inotify watches for all subdirectories at startup
+   * 2. Listen for IN_CREATE events and dynamically add watches for new directories
+   * For now, only files directly in root_dir will trigger auto-reload. */
   int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
   if(wd < 0) {
     perror("inotify_add_watch");
@@ -214,6 +218,10 @@ int main(int argc, char* argv[]) {
   bialet_config.db_path = DB_FILE;
   bialet_config.wal_mode = 0;
   bialet_config.ignored_files = IGNORED_FILES;
+  bialet_config.max_upload_size = 2 * 1024 * 1024; // Default 2MB
+  /* SQLite pragma defaults */
+  bialet_config.sqlite_foreign_keys = 1; // ON
+  bialet_config.sqlite_synchronous = 1;  // NORMAL
 
   /* Parse args */
 
