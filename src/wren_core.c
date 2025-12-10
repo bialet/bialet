@@ -562,8 +562,10 @@ DEF_PRIMITIVE(null_not) {
   RETURN_VAL(TRUE_VAL);
 }
 
-// @TODO This should return empty string in interpolation but NULL when
-// debugging
+// Returns empty string for null values. This is used in string interpolation
+// and when explicitly calling .toString on null. For debugging purposes,
+// consider using System.print(value == null) to explicitly check for null
+// rather than relying on toString representation.
 DEF_PRIMITIVE(null_toString) {
   RETURN_VAL(CONST_STRING(vm, ""));
 }
@@ -1289,7 +1291,7 @@ DEF_PRIMITIVE(markdown_html) {
 
 DEF_PRIMITIVE(markdown_file) {
   char* content = bialetReadFile(AS_CSTRING(args[1]));
-  if (content == NULL)
+  if(content == NULL)
     RETURN_FALSE;
   char* html = markdownToHtml(content);
   RETURN_VAL(wrenNewString(vm, html));

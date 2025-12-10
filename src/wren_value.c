@@ -2,7 +2,6 @@
 
 #include "wren.h"
 #include "wren_vm.h"
-
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -1230,7 +1229,10 @@ void wrenFreeObj(WrenVM* vm, Obj* obj) {
     case OBJ_UPVALUE:
       break;
 
-    // @TODO Query free should close the connection
+    // Note: OBJ_QUERY objects are ObjString-based and don't hold database
+    // connections or statements. The sqlite3_stmt is created, used, and
+    // finalized within queryExecute() in bialet_wren.c, so no additional
+    // cleanup is needed here beyond the normal string object handling.
     case OBJ_QUERY:
       break;
   }

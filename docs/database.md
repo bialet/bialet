@@ -87,6 +87,16 @@ user["id"] = 1
 Db.save("users", user)
 ```
 
+## Data Types and BLOB Support
+
+SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and NULL. Bialet handles most of these types automatically:
+
+* **TEXT**: Returned as strings
+* **INTEGER** and **REAL**: Returned as numbers
+* **NULL**: Returned as null values
+
+**Note on BLOB data**: While BLOB (Binary Large Object) data is retrieved correctly from SQLite, it may not be properly handled when passed to Wren code due to Wren's string representation. If you need to work with binary data, consider encoding it as base64 or using another text-based representation.
+
 ## Migrations
 
 The migration file can be in the root and be called `_migration.wren` or be inside the `_app` folder, `_app/migration.wren`.

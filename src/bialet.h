@@ -63,6 +63,13 @@ struct BialetConfig {
   char* db_path;
   char* ignored_files;
   int   wal_mode;
+
+  /* Max upload size in bytes (default 10MB) */
+  size_t max_upload_size;
+
+  /* SQLite pragma settings */
+  int sqlite_foreign_keys; /* Default: 1 (ON) */
+  int sqlite_synchronous;  /* 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA; Default: 1 */
 };
 
 struct BialetResponse {

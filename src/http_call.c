@@ -44,8 +44,19 @@ static size_t header_callback(char* buffer, size_t size, size_t nitems,
                               void* userdata) {
   /* received header is nitems * size long in 'buffer' NOT ZERO TERMINATED */
   /* 'userdata' is set with CURLOPT_HEADERDATA */
-  /* @TODO Get response headers and HTTP status */
-  return nitems * size;
+  size_t         realsize = nitems * size;
+  struct memory* mem = (struct memory*)userdata;
+
+  char* ptr = realloc(mem->response, mem->size + realsize + 1);
+  if(!ptr)
+    return 0; /* out of memory! */
+
+  mem->response = ptr;
+  memcpy(&(mem->response[mem->size]), buffer, realsize);
+  mem->size += realsize;
+  mem->response[mem->size] = 0;
+
+  return realsize;
 }
 #endif
 
@@ -154,9 +165,11 @@ void httpCallInit(struct BialetConfig* config) {
 void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response) {
 #if IS_UNIX
   struct memory      chunk = {0};
+  struct memory      header_chunk = {0};
   CURL*              handle;
   CURLcode           res;
   struct curl_slist* headers = NULL;
+  long               http_code = 0;
 
   const char* url = request->url;
   const char* method = request->method;
@@ -208,10 +221,18 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
   curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, write_callback);
   curl_easy_setopt(handle, CURLOPT_WRITEDATA, &chunk);
   curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
+  curl_easy_setopt(handle, CURLOPT_HEADERDATA, &header_chunk);
 
   res = curl_easy_perform(handle);
 
-  response->body = string_safe_copy(chunk.response);
+  response->body =
+      chunk.response ? string_safe_copy(chunk.response) : string_safe_copy("");
+  response->headers = header_chunk.response ? string_safe_copy(header_chunk.response)
+                                            : string_safe_copy("");
+
+  /* Get HTTP status code */
+  curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &http_code);
+  response->status = (int)http_code;
 
   /* Check for errors */
   if(res != CURLE_OK) {
@@ -221,6 +242,7 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
 
   /* always cleanup */
   free(chunk.response);
+  free(header_chunk.response);
   curl_easy_cleanup(handle);
   curl_slist_free_all(headers);
 

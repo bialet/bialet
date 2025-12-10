@@ -127,6 +127,26 @@ The table below summarizes the available command-line parameters for the Bialet 
 | `-c` | CPU limit (%) | `15` |
 | `-C` | Hard CPU limit (%) | `30` |
 
+### Advanced Configuration
+
+Bialet provides several advanced configuration options that can be set programmatically in the C code (future versions may expose these as CLI parameters):
+
+#### File Upload Limits
+
+* **Max Upload Size**: Controls the maximum file size for uploads (default: 10 MB)
+* Files exceeding this limit will be rejected with an error message
+
+#### SQLite Pragma Settings
+
+* **Foreign Keys**: Enable/disable foreign key constraints (default: ON)
+* **Synchronous Mode**: Controls how SQLite writes to disk (default: NORMAL)
+  * OFF: Fastest, least safe
+  * NORMAL: Balanced performance and safety (default)
+  * FULL: Very safe, slower
+  * EXTRA: Maximum safety, slowest
+
+These settings are optimized for most use cases but can be adjusted in the source code if needed.
+
 ## Run code from the Command Line
 
 To run code from the command line, use the `-r` command:

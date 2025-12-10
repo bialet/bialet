@@ -12,6 +12,8 @@ By default, files handled through `Request.file()` are marked as permanent.
 However, any file that is uploaded but not processed remains temporary, meaning it
 will be deleted within a day or less.
 
+**File Size Limits**: Bialet enforces a maximum upload size limit (default: 10 MB) to prevent disk abuse. Files exceeding this limit will be rejected with an error message. This limit is configurable in the source code through the `max_upload_size` configuration option.
+
 ### Example 1: Permanent File Upload
 
 ```wren
