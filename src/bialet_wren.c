@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <sqlite3.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 
 #define BIALET_SQLITE_ERROR 11
@@ -357,7 +358,194 @@ char* escapeSpecialChars(const char* input) {
 }
 
 int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
-  // TODO: Save uploaded files, implement again with new server
+  filesIds[0] = '\0'; // Initialize empty string
+
+  // Find Content-Type header to check if it's multipart/form-data
+  const char* headers = hm->message.str;
+  const char* headerEnd = strstr(headers, "\r\n\r\n");
+
+  if(!headerEnd)
+    return 0;
+
+  // Search for Content-Type header
+  const char* ctStart = strcasestr(headers, "Content-Type:");
+  if(!ctStart || ctStart > headerEnd)
+    return 0;
+
+  ctStart += 13; // Skip "Content-Type:"
+  while(*ctStart == ' ')
+    ctStart++; // Skip spaces
+
+  // Check if it's multipart/form-data
+  if(strncasecmp(ctStart, "multipart/form-data", 19) != 0)
+    return 0;
+
+  // Extract boundary
+  const char* boundaryStart = strcasestr(ctStart, "boundary=");
+  if(!boundaryStart || boundaryStart > headerEnd)
+    return 0;
+
+  boundaryStart += 9; // Skip "boundary="
+  char boundary[256];
+  int  i = 0;
+  while(boundaryStart[i] && boundaryStart[i] != '\r' && boundaryStart[i] != '\n' &&
+        boundaryStart[i] != ';' && i < 255) {
+    boundary[i] = boundaryStart[i];
+    i++;
+  }
+  boundary[i] = '\0';
+
+  // Find the body (after \r\n\r\n)
+  const char* body = headerEnd + 4;
+  size_t      bodyLen = hm->message.len - (body - hm->message.str);
+
+  // Create full boundary markers
+  char startBoundary[260];
+  char endBoundary[264];
+  snprintf(startBoundary, sizeof(startBoundary), "--%s", boundary);
+  snprintf(endBoundary, sizeof(endBoundary), "--%s--", boundary);
+
+  // Parse multipart parts
+  const char* part = body;
+  int         firstFile = 1;
+
+  while(part && part < body + bodyLen) {
+    // Find next boundary
+    part = strstr(part, startBoundary);
+    if(!part)
+      break;
+
+    part += strlen(startBoundary);
+
+    // Skip CRLF after boundary
+    if(*part == '\r')
+      part++;
+    if(*part == '\n')
+      part++;
+
+    // Check if this is the end boundary
+    if(strncmp(part - strlen(startBoundary), endBoundary, strlen(endBoundary)) ==
+       0) {
+      break;
+    }
+
+    // Parse headers for this part
+    const char* partHeaderEnd = strstr(part, "\r\n\r\n");
+    if(!partHeaderEnd || partHeaderEnd >= body + bodyLen)
+      break;
+
+    // Extract Content-Disposition
+    const char* cdStart = strcasestr(part, "Content-Disposition:");
+    if(!cdStart || cdStart > partHeaderEnd)
+      continue;
+
+    // Extract filename
+    const char* filenameStart = strcasestr(cdStart, "filename=\"");
+    if(!filenameStart || filenameStart > partHeaderEnd) {
+      part = partHeaderEnd + 4;
+      continue;
+    }
+
+    filenameStart += 10; // Skip 'filename="'
+    const char* filenameEnd = strchr(filenameStart, '"');
+    if(!filenameEnd || filenameEnd > partHeaderEnd)
+      continue;
+
+    char filename[256];
+    int  fnLen = filenameEnd - filenameStart;
+    if(fnLen > 255)
+      fnLen = 255;
+    strncpy(filename, filenameStart, fnLen);
+    filename[fnLen] = '\0';
+
+    // Skip empty filenames
+    if(filename[0] == '\0') {
+      part = partHeaderEnd + 4;
+      continue;
+    }
+
+    // Extract field name
+    const char* nameStart = strcasestr(cdStart, "name=\"");
+    if(!nameStart || nameStart > partHeaderEnd)
+      continue;
+
+    nameStart += 6; // Skip 'name="'
+    const char* nameEnd = strchr(nameStart, '"');
+    if(!nameEnd || nameEnd > partHeaderEnd)
+      continue;
+
+    char fieldName[256];
+    int  nameLen = nameEnd - nameStart;
+    if(nameLen > 255)
+      nameLen = 255;
+    strncpy(fieldName, nameStart, nameLen);
+    fieldName[nameLen] = '\0';
+
+    // Extract Content-Type for this part
+    const char* partCtStart = strcasestr(part, "Content-Type:");
+    char        contentTypeStr[256] = "application/octet-stream";
+    if(partCtStart && partCtStart < partHeaderEnd) {
+      partCtStart += 13; // Skip "Content-Type:"
+      while(*partCtStart == ' ')
+        partCtStart++;
+
+      int ctLen = 0;
+      while(partCtStart[ctLen] && partCtStart[ctLen] != '\r' &&
+            partCtStart[ctLen] != '\n' && ctLen < 255) {
+        contentTypeStr[ctLen] = partCtStart[ctLen];
+        ctLen++;
+      }
+      contentTypeStr[ctLen] = '\0';
+    }
+
+    // Find file data (after part headers)
+    const char* fileData = partHeaderEnd + 4;
+
+    // Find end of file data (next boundary)
+    const char* nextBoundary = strstr(fileData, startBoundary);
+    if(!nextBoundary)
+      nextBoundary = body + bodyLen;
+
+    // Calculate file size (remove trailing \r\n before boundary)
+    size_t fileSize = nextBoundary - fileData;
+    if(fileSize >= 2 && fileData[fileSize - 2] == '\r' &&
+       fileData[fileSize - 1] == '\n') {
+      fileSize -= 2;
+    }
+
+    // Save file to database
+    sqlite3_stmt* stmt;
+    int           result = sqlite3_prepare_v2(db,
+                                              "INSERT INTO BIALET_FILES (name, "
+                                                        "originalFileName, type, file, size, isTemp) "
+                                                        "VALUES (?, ?, ?, ?, ?, 1)",
+                                              -1, &stmt, 0);
+
+    if(result == SQLITE_OK) {
+      sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
+      sqlite3_bind_text(stmt, 2, filename, -1, SQLITE_STATIC);
+      sqlite3_bind_text(stmt, 3, contentTypeStr, -1, SQLITE_STATIC);
+      sqlite3_bind_blob(stmt, 4, fileData, fileSize, SQLITE_STATIC);
+      sqlite3_bind_int(stmt, 5, fileSize);
+
+      if(sqlite3_step(stmt) == SQLITE_DONE) {
+        sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
+
+        // Append file ID to filesIds string
+        if(!firstFile) {
+          strcat(filesIds, ",");
+        }
+        char idStr[32];
+        snprintf(idStr, sizeof(idStr), "%lld", fileId);
+        strcat(filesIds, idStr);
+        firstFile = 0;
+      }
+      sqlite3_finalize(stmt);
+    }
+
+    part = fileData;
+  }
+
   return 1;
 }
 
