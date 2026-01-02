@@ -80,7 +80,7 @@ For the regular quotes strings the interpolation is defined as `%( ... )`.
 
 ```wren
 var number = 5
-System.print("Number: %( number )")
+System.log("Number: %( number )")
 ```
 
 Let's use the Template class to render our HTML content.
@@ -155,7 +155,7 @@ Let's write a file called `simple_poll.wren` for our logic.
 ```wren
 
 var options = `SELECT * FROM simple_poll`.fetch()
-System.print(options)
+System.log(options)
 
 Response.out(
 <html>
@@ -178,7 +178,7 @@ Response.out(
 It looks like we have a string with `` `SELECT * FROM simple_poll` `` but it's actually a **Query object**. Query objects are used to execute SQL queries in Bialet.
 We use the `fetch` method to get the results of the query.
 
-Then we call to `System.print` to log the results. This is very useful for debugging.
+Then we call to `System.log` to log the results. This is very useful for debugging.
 
 Also we use `map` to iterate over the results and create a template for each option.
 Note that `map` is using a callback with [block arguments](https://wren.io/functions.html#block-arguments).
@@ -194,11 +194,11 @@ In order to vote, we need to handle a `POST` request from the form.
 if (Request.isPost) {
   var vote = Request.post("vote")
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
-  System.print("Voted for %(vote)")
+  System.log("Voted for %(vote)")
 }
 
 var options = `SELECT * FROM simple_poll`.fetch()
-System.print(options)
+System.log(options)
 // ...
 ```
 
@@ -216,11 +216,11 @@ var vote
 if (Request.isPost) {
   vote = Request.post("vote")
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
-  System.print("Voted for %(vote)")
+  System.log("Voted for %(vote)")
 }
 
 var options = `SELECT * FROM simple_poll`.fetch()
-System.print(options)
+System.log(options)
 
 return <html>
   <body>
@@ -346,7 +346,7 @@ var poll = Poll.new()
 if (Request.isPost) {
   var vote = Request.post("vote")
   poll.vote(vote)
-  System.print("Voted for %(vote)")
+  System.log("Voted for %(vote)")
   // Redirect to the results page and stop the script
   Response.redirect("/results")
   return
@@ -383,7 +383,7 @@ We need to convert them to numbers with the `Num.fromString` method before we ca
 import "_app" for Template, Poll
 
 var poll = Poll.new()
-System.print(poll.options)
+System.log(poll.options)
 
 Response.out(Template.layout(
 <main>
@@ -425,16 +425,18 @@ All the other problems will be fixed in the Poll class, here is the final versio
 class Poll {
   construct new() {
     _opts = null
-    _total = null
   }
   // Fetch the options from the database into the `_opts` property.
   // Queries are part of Bialet.
-  options { _opts || (_opts = `SELECT * FROM poll`.fetch()) }
+  options { _opts || (_opts = `SELECT * FROM poll`.fetch) }
   // Add parameters to the query like a prepared statement.
-  vote(opt) { `UPDATE poll SET votes = votes + 1
-               WHERE id = ?`.query(opt) }
+  // Also reset the cached options to null to force re-fetching them.
+  vote(opt) {
+    `UPDATE poll SET votes = votes + 1 WHERE id = ?`.query(opt)
+    _opts = null
+  }
   // Getter to get the total number of votes.
-  totalVotes { _total || (_total = options.reduce(0, Fn.new{|sum, opt| sum + votes_(opt) }))}
+  totalVotes { options.reduce(0, Fn.new{|sum, opt| sum + votes_(opt)}) }
   // Calculate the percentage of votes for an option
   percentage(opt) { totalVotes > 0 ? ((votes_(opt) / totalVotes) * 100).round : 0 }
   // Use the method to get the votes as a number.

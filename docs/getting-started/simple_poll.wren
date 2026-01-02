@@ -9,11 +9,11 @@ var vote
 if (Request.isPost) {
   vote = Request.post("vote")
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
-  System.print("Voted for %(vote)")
+  System.log("Voted for %(vote)")
 }
 
 var options = `SELECT * FROM simple_poll`.fetch
-System.print(options)
+System.log(options)
 
 Response.out( <!doctype html>
 <html>

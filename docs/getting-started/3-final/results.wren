@@ -1,7 +1,7 @@
 import "_app" for Template, Poll
 
 var poll = Poll.new()
-System.print(poll.options)
+System.log(poll.options)
 
 Response.out(Template.layout(
 <main>
