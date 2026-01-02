@@ -5,7 +5,7 @@ var poll = Poll.new()
 if (Request.isPost) {
   var vote = Request.post("vote")
   poll.vote(vote)
-  System.print("Voted for {{vote)")
+  System.log("Voted for {{vote)")
   // Redirect to the results page and stop the script
   Response.redirect("/results")
   return

@@ -40,16 +40,18 @@ class Template {
 class Poll {
   construct new() {
     _opts = null
-    _total = null
   }
   // Fetch the options from the database into the `_opts` property.
   // Queries are part of Bialet.
-  options { _opts || (_opts = `SELECT * FROM poll`.fetch()) }
+  options { _opts || (_opts = `SELECT * FROM poll`.fetch) }
   // Add parameters to the query like a prepared statement.
-  vote(opt) { `UPDATE poll SET votes = votes + 1
-               WHERE id = ?`.query(opt) }
+  // Also reset the cached options to null to force re-fetching them.
+  vote(opt) {
+    `UPDATE poll SET votes = votes + 1 WHERE id = ?`.query(opt)
+    _opts = null
+  }
   // Getter to get the total number of votes.
-  totalVotes { _total || (_total = options.reduce(0, Fn.new{|sum, opt| sum + votes_(opt) }))}
+  totalVotes { options.reduce(0, Fn.new{|sum, opt| sum + votes_(opt)}) }
   // Calculate the percentage of votes for an option
   percentage(opt) { totalVotes > 0 ? ((votes_(opt) / totalVotes) * 100).round : 0 }
   // Use the method to get the votes as a number.
