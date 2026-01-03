@@ -18,28 +18,31 @@ Use backticks to surround SQL statements `` ` ` ``.
 
 The Query object have 5 methods. All the methods accept the same parameters.
 
-* `query()`: Returns the last inserted id if the query was a `INSERT` statement.
-* `fetch()`: Returns the result of the query as an array (List object).
-* `first()`: Returns the first result of the query as an object (Map object).
-* `val()`: Returns the value of the first result.
-* `toNum()`: Returns the value of the first result as a number.
+- `query()`: Returns the last inserted id if the query was a `INSERT` statement.
+- `fetch()`: Returns the result of the query as an array (List object).
+- `first()`: Returns the first result of the query as an object (Map object).
+- `val()`: Returns the value of the first result.
+- `toNum()`: Returns the value of the first result as a number.
 
 **First will add a LIMIT clause automatically in first(), val and toNum.**
 
-You can't concatenate strings or use interpolations with the Query object.
-When you need to add parameters, use placeholders `?` and send the parameters to the method.
+You can't concatenate strings or use interpolations with the Query object. When
+you need to add parameters, use placeholders `?` and send the parameters to the
+method.
 
 All methods receive the following parameters:
 
-* `()`: No parameters.
-* `(params)`: An array of parameters.
-* `(param1)`: Any non array parameter is converted to String.
-* `(param1, param2)`: Convert all parameters to String.
-* `(param1, param2, param3)`: Convert all parameters to String.
+- `()`: No parameters.
+- `(params)`: An array of parameters.
+- `(param1)`: Any non array parameter is converted to String.
+- `(param1, param2)`: Convert all parameters to String.
+- `(param1, param2, param3)`: Convert all parameters to String.
 
-They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and `.toNum`.
+They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and
+`.toNum`.
 
-If you need more parameters, use the array syntax (`([param1, param2, param3, param4, param5, ...])`).
+If you need more parameters, use the array syntax
+(`([param1, param2, param3, param4, param5, ...])`).
 
 ```wren
 // This will fail
@@ -71,7 +74,8 @@ var userParams = ["John Doe", "john@example.com"]
 var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(userParams)
 ```
 
-But you can also use the `Db.save` method, sending the table name and the a Map object with the values.
+But you can also use the `Db.save` method, sending the table name and the a Map
+object with the values.
 
 ```wren
 var user = {"name": "John Doe", "email": "john@example.com"}
@@ -89,30 +93,38 @@ Db.save("users", user)
 
 ## Data Types and BLOB Support
 
-SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and NULL. Bialet handles most of these types automatically:
+SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
+NULL. Bialet handles most of these types automatically:
 
-* **TEXT**: Returned as strings
-* **INTEGER** and **REAL**: Returned as numbers
-* **NULL**: Returned as null values
+- **TEXT**: Returned as strings
+- **INTEGER** and **REAL**: Returned as numbers
+- **NULL**: Returned as null values
 
-**Note on BLOB data**: While BLOB (Binary Large Object) data is retrieved correctly from SQLite, it may not be properly handled when passed to Wren code due to Wren's string representation. If you need to work with binary data, consider encoding it as base64 or using another text-based representation.
+**Note on BLOB data**: While BLOB (Binary Large Object) data is retrieved
+correctly from SQLite, it may not be properly handled when passed to Wren code
+due to Wren's string representation. If you need to work with binary data,
+consider encoding it as base64 or using another text-based representation.
 
 ## Migrations
 
-The migration file can be in the root and be called `_migration.wren` or be inside the `_app` folder, `_app/migration.wren`.
+The migration file can be in the root and be called `_migration.wren` or be
+inside the `_app` folder, `_app/migration.wren`.
 
-This script will be run every time the application starts and also when a Wren file is updated.
+This script will be run every time the application starts and also when a Wren
+file is updated.
 
 ```wren
 
 Db.migrate("Name of the migration", `SOME QUERY`)
 ```
 
-The name of the migration is used to avoid repeating migrations. Use a descriptive name.
+The name of the migration is used to avoid repeating migrations. Use a
+descriptive name.
 
 You can have multiples queries separated by `;`.
 
-Use migration to insert non-transactional data. You can interact with the `BIALET_*` tables.
+Use migration to insert non-transactional data. You can interact with the
+`BIALET_*` tables.
 
 ```wren
 Db.migrate("Add default title", `INSERT INTO BIALET_CONFIG VALUES ("title", "Bialet example page")`)
@@ -122,10 +134,11 @@ Db.migrate("Add default title", `INSERT INTO BIALET_CONFIG VALUES ("title", "Bia
 
 Bialet tables are prefixed with `BIALET_`.
 
-* `BIALET_CONFIG`: The configuration table.
-* `BIALET_MIGRATIONS`: The migration history table.
-* `BIALET_SESSIONS`: The session table.
+- `BIALET_CONFIG`: The configuration table.
+- `BIALET_MIGRATIONS`: The migration history table.
+- `BIALET_SESSIONS`: The session table.
 
-If you delete or alter any of this tables your application will not work correctly.
+If you delete or alter any of this tables your application will not work
+correctly.
 
 You may insert, update or delete rows, however do it with caution.

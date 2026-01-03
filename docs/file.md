@@ -1,18 +1,20 @@
 # File Handling
 
-In Bialet, files are **always saved in the database**. Whether you are
-uploading a file or creating one dynamically, Bialet provides an easy and
-efficient way to manage file storage. Below are the three main parts of file
-handling in Bialet.
+In Bialet, files are **always saved in the database**. Whether you are uploading
+a file or creating one dynamically, Bialet provides an easy and efficient way to
+manage file storage. Below are the three main parts of file handling in Bialet.
 
 ## File Uploading
 
-When a file is uploaded through Bialet, it is automatically saved in the database.
-By default, files handled through `Request.file()` are marked as permanent.
-However, any file that is uploaded but not processed remains temporary, meaning it
-will be deleted within a day or less.
+When a file is uploaded through Bialet, it is automatically saved in the
+database. By default, files handled through `Request.file()` are marked as
+permanent. However, any file that is uploaded but not processed remains
+temporary, meaning it will be deleted within a day or less.
 
-**File Size Limits**: Bialet enforces a maximum upload size limit (default: 10 MB) to prevent disk abuse. Files exceeding this limit will be rejected with an error message. This limit is configurable in the source code through the `max_upload_size` configuration option.
+**File Size Limits**: Bialet enforces a maximum upload size limit (default: 10
+MB) to prevent disk abuse. Files exceeding this limit will be rejected with an
+error message. This limit is configurable in the source code through the
+`max_upload_size` configuration option.
 
 ### Example 1: Permanent File Upload
 
@@ -54,8 +56,8 @@ System.print("Uploaded temporary file: %(file.name)")
 ```
 
 > **Note:** Each file processed with `Request.file()` is saved as permanent by
-default. Files that are uploaded but not processed remain temporary and will be
-deleted within a day or less.
+> default. Files that are uploaded but not processed remain temporary and will
+> be deleted within a day or less.
 
 ## File Creation
 
@@ -78,8 +80,8 @@ Response.file(file.id)
 
 ### Example 2: Deleting a File Manually
 
-You can also delete files manually using the `fileObject.destroy()` method.
-It works for uploaded and dymanically created files.
+You can also delete files manually using the `fileObject.destroy()` method. It
+works for uploaded and dymanically created files.
 
 ```wren
 
@@ -95,9 +97,9 @@ Response.out("<p>File was created and then deleted.</p>")
 
 ## Showing a File in the Browser
 
-Once a file is saved in the database, the only way to show it in the browser
-is by using `Response.file(id)`. This will take the file ID and return the
-file to the browser.
+Once a file is saved in the database, the only way to show it in the browser is
+by using `Response.file(id)`. This will take the file ID and return the file to
+the browser.
 
 You can also use `_route` to dynamically fetch files from your database and
 display them based on user input, such as a filename.
@@ -105,9 +107,11 @@ display them based on user input, such as a filename.
 ### Example: Serving Files by Name from a Custom Table
 
 In this example, we have a custom table `images` with fields `id`, `file_id`,
-and `name`. We will fetch the file based on its name and display it in the browser.
+and `name`. We will fetch the file based on its name and display it in the
+browser.
 
-For more information on routing and dynamic names, see the [routes section](structure.md).
+For more information on routing and dynamic names, see the
+[routes section](structure.md).
 
 ```wren
 
