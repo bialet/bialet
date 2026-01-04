@@ -34,6 +34,8 @@
 #define HTTP_OK 200
 #define HTTP_ERROR 500
 #define BIALET_FILE_CHAR 26
+#define BIALET_EXTERNAL_MODULE_LEN 3
+#define BIALET_MODULE_GITHUB_PREFIX "gh:"
 #define BIALET_REMOTE_MODULE_GITHUB_URL                                             \
   "https://raw.githubusercontent.com/%s/%s/refs/heads/%s/%s" BIALET_EXTENSION
 #define BIALET_REMOTE_MODULE_DEFAULT_BRANCH "main"
@@ -92,8 +94,9 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
     // If name start with https:// or http://
     if(strncmp(name, "http://", 7) == 0 || strncmp(name, "https://", 8) == 0) {
       snprintf(url, MAX_URL_LEN, "%s", name);
-    } else if(strncmp(name, "gh:", 3) == 0) {
-      name += 3; // Remove gh:
+    } else if(strncmp(name, BIALET_MODULE_GITHUB_PREFIX,
+                      BIALET_EXTERNAL_MODULE_LEN) == 0) {
+      name += BIALET_EXTERNAL_MODULE_LEN; // Remove gh:
       char name_copy[MAX_URL_LEN];
       strncpy(name_copy, name, sizeof(name_copy));
       name_copy[sizeof(name_copy) - 1] = '\0';
@@ -131,6 +134,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       sqlite3_finalize(stmt);
       struct HttpRequest  req;
       struct HttpResponse resp;
+      resp.error = 0;
       req.method = string_safe_copy("GET");
       req.basicAuth = string_safe_copy("");
       req.raw_headers = string_safe_copy("");
