@@ -6,21 +6,21 @@ This document provides the API reference for Bialet's built-in classes and exter
 
 The following classes are available by default in all Bialet applications without requiring imports:
 
-- [Request](#request) - Handle incoming HTTP requests
-- [Response](#response) - Construct and manage HTTP responses
-- [Cookie](#cookie) - Manage cookies
-- [Session](#session) - Manage session data
-- [Json](#json) - Handle JSON data
-- [Util](#util) - Utility helper methods
-- [Config](#config) - Manage configuration settings
-- [Db](#db) - Database interactions
-- [Http](#http) - Perform HTTP requests
-- [Date](#date) - Date and time operations
-- [File](#file) - File operations
+- **Request** - Handle incoming HTTP requests
+- **Response** - Construct and manage HTTP responses
+- **Cookie** - Manage cookies
+- **Session** - Manage session data
+- **Json** - Handle JSON data
+- **Util** - Utility helper methods
+- **Config** - Manage configuration settings
+- **Db** - Database interactions
+- **Http** - Perform HTTP requests
+- **Date** - Date and time operations
+- **File** - File operations
 
 ## External Classes
 
-External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md#external-imports) for details on how to import external modules.
+External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md) section on External Imports for details on how to import external modules.
 
 Available external modules:
 
