@@ -90,13 +90,43 @@ char* markdownToHtml(const char* markdown) {
   char* html = calloc(1, MAX_OUTPUT);
   char* out = html;
   char* input = strdup(markdown);
-  char* line = strtok(input, "\n");
+
+  // Split into lines preserving empty lines
+  char* lines[10000];
+  int   line_count = 0;
+  char* p = input;
+  char* line_start = input;
+
+  while(*p) {
+    if(*p == '\n') {
+      *p = '\0';
+      lines[line_count++] = line_start;
+      line_start = p + 1;
+    }
+    p++;
+  }
+  if(line_start < p) {
+    lines[line_count++] = line_start;
+  }
 
   bool in_list = false, in_blockquote = false, in_codeblock = false,
        in_table = false;
   bool table_header_parsed = false;
 
-  while(line) {
+  int i = 0;
+
+  // Skip metadata if present at the beginning
+  if(i < line_count && strcmp(lines[i], "---") == 0) {
+    i++;
+    while(i < line_count && strcmp(lines[i], "---") != 0)
+      i++;
+    if(i < line_count)
+      i++;
+  }
+
+  while(i < line_count) {
+    char* line = lines[i];
+
     while(*line == ' ' && !in_codeblock)
       line++;
 
@@ -108,14 +138,14 @@ char* markdownToHtml(const char* markdown) {
         out += sprintf(out, "</code></pre>\n");
         in_codeblock = false;
       }
-      line = strtok(NULL, "\n");
+      i++;
       continue;
     }
 
     if(in_codeblock) {
       out = escapeHtml(line, out);
       out += sprintf(out, "\n");
-      line = strtok(NULL, "\n");
+      i++;
       continue;
     }
 
@@ -126,7 +156,7 @@ char* markdownToHtml(const char* markdown) {
       }
       out = renderInline(line + 2, out);
       out += sprintf(out, "<br>\n");
-      line = strtok(NULL, "\n");
+      i++;
       continue;
     } else if(in_blockquote) {
       out += sprintf(out, "</blockquote>\n");
@@ -149,7 +179,7 @@ char* markdownToHtml(const char* markdown) {
       }
 
       if(is_separator) {
-        line = strtok(NULL, "\n");
+        i++;
         continue;
       }
 
@@ -171,7 +201,7 @@ char* markdownToHtml(const char* markdown) {
       free(row);
       out += sprintf(out, "</tr>\n");
       table_header_parsed = true;
-      line = strtok(NULL, "\n");
+      i++;
       continue;
     } else if(in_table) {
       out += sprintf(out, "</table>\n");
@@ -186,7 +216,7 @@ char* markdownToHtml(const char* markdown) {
       out += sprintf(out, "<li>");
       out = renderInline(line + 2, out);
       out += sprintf(out, "</li>\n");
-      line = strtok(NULL, "\n");
+      i++;
       continue;
     } else if(in_list) {
       out += sprintf(out, "</ul>\n");
@@ -201,7 +231,7 @@ char* markdownToHtml(const char* markdown) {
         out += sprintf(out, "<h%d>", level);
         out = renderInline(line + level + 1, out);
         out += sprintf(out, "</h%d>\n", level);
-        line = strtok(NULL, "\n");
+        i++;
         continue;
       }
     }
@@ -209,10 +239,43 @@ char* markdownToHtml(const char* markdown) {
     if(*line != '\0') {
       out += sprintf(out, "<p>");
       out = renderInline(line, out);
+
+      // Collect consecutive non-empty lines into the same paragraph
+      i++;
+      while(i < line_count) {
+        char* next_line = lines[i];
+
+        // Trim leading spaces
+        while(*next_line == ' ')
+          next_line++;
+
+        // Empty line ends the paragraph
+        if(*next_line == '\0') {
+          break;
+        }
+
+        // Check if this line starts a special block
+        bool is_special =
+            (next_line[0] == '#') || (strncmp(next_line, "- ", 2) == 0) ||
+            (strncmp(next_line, "* ", 2) == 0) ||
+            (strncmp(next_line, "```", 3) == 0) || (next_line[0] == '>') ||
+            (next_line[0] == '|' && strchr(next_line + 1, '|'));
+
+        if(is_special) {
+          break;
+        }
+
+        // Add space and continue the paragraph
+        out += sprintf(out, " ");
+        out = renderInline(next_line, out);
+        i++;
+      }
+
       out += sprintf(out, "</p>\n");
+      continue;
     }
 
-    line = strtok(NULL, "\n");
+    i++;
   }
 
   if(in_list)
