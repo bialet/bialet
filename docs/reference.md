@@ -1,5 +1,35 @@
 # Reference
 
+This document provides the API reference for Bialet's built-in classes and external modules.
+
+## Core Classes
+
+The following classes are available by default in all Bialet applications without requiring imports:
+
+- [Request](#request) - Handle incoming HTTP requests
+- [Response](#response) - Construct and manage HTTP responses
+- [Cookie](#cookie) - Manage cookies
+- [Session](#session) - Manage session data
+- [Json](#json) - Handle JSON data
+- [Util](#util) - Utility helper methods
+- [Config](#config) - Manage configuration settings
+- [Db](#db) - Database interactions
+- [Http](#http) - Perform HTTP requests
+- [Date](#date) - Date and time operations
+- [File](#file) - File operations
+
+## External Classes
+
+External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md#external-imports) for details on how to import external modules.
+
+Available external modules:
+
+- **Mcp** - Model Context Protocol server support
+  - Import: `import "gh:bialet/extra/mcp" for Mcp`
+  - Documentation: [MCP Documentation](mcp.md)
+
+---
+
 ## Request
 
 A class to handle incoming HTTP requests, parsing their content, and providing
@@ -724,8 +754,12 @@ Runs the job at a specific hour, minute, and day of the week.
 
 ## Mcp
 
+**External Class** - Must be imported: `import "gh:bialet/extra/mcp" for Mcp`
+
 A class for creating Model Context Protocol (MCP) servers that expose tools,
 resources, and prompts to AI assistants.
+
+For complete documentation and examples, see [MCP Documentation](mcp.md).
 
 ### new(name, version)
 
@@ -736,6 +770,8 @@ Creates a new MCP server instance.
 - Returns: A new `Mcp` instance.
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 var mcp = Mcp.new('my-server', '1.0.0')
 ```
 
@@ -787,6 +823,8 @@ MCP tools use special comment annotations to describe their behavior:
 Example tool class:
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "A simple greeting tool"
 class Greet {
   construct new(params) {

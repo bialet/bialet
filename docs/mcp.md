@@ -27,6 +27,8 @@ an MCP server through its `_route.wren` file.
 ### Basic Structure
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 // Define your tools as classes
 class MyTool {
   construct new(params) {
@@ -65,6 +67,8 @@ Use special comment annotations to describe your tool and its parameters:
 ### Example 1: Simple Greeting Tool
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "A simple greeting tool"
 class Greet {
   construct new(params) {
@@ -87,6 +91,8 @@ mcp.serve
 ### Example 2: Flight Search Tool
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "Search for available flights"
 class SearchFlights {
   construct new(params) {
@@ -135,6 +141,8 @@ mcp.serve
 ### Example 3: Database Query Tool
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "Query user information from the database"
 class GetUser {
   construct new(params) {
@@ -304,6 +312,8 @@ Here's a complete example that combines database queries, file handling, and
 multiple tools:
 
 ```wren
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "Get user profile information"
 class GetUserProfile {
   construct new(params) {

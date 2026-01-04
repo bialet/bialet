@@ -1,3 +1,5 @@
+import "gh:bialet/extra/mcp" for Mcp
+
 #!doc = "A simple greeting tool"
 class Greet {
   construct new(params) {
