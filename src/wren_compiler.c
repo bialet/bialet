@@ -1339,6 +1339,7 @@ static void nextToken(Parser* parser) {
             lastTokenType(parser) == TOKEN_PIPE ||
             lastTokenType(parser) == TOKEN_COLON ||
             lastTokenType(parser) == TOKEN_AMPAMP ||
+            lastTokenType(parser) == TOKEN_QUESTION ||
             lastTokenType(parser) == TOKEN_LINE)) {
           if(!isDocType) {
             readHtmlString(parser, "");

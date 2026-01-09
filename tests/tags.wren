@@ -19,8 +19,8 @@ var multiline = <p>
 </p>
 var interpolatedAttributes = <p id="{{ i }}_{{ j }}">C</p>
 var interpolatedInsideInterpolated = <ul>{{ list.map{|x| <li>{{ x }}</li> } }}</ul>
-var conditionalRendering = <p>{{ a != b && "C" }}</p>
-var ternary = <p>{{ a == b ? "<b>==</b>" : "<b>!=</b>" }}</p>
+var conditionalRendering = <p>{{ a != b && <b>C</b> }}</p>
+var ternary = <p>{{ a == b ? <b>==</b> : <b>!=</b> }}</p>
 var content = ""
 
 // Yes, < and > signs still work!
