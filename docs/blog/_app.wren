@@ -24,7 +24,24 @@ class Template {
 }
 
 class Posts {
-  static home() { `SELECT * FROM posts ORDER BY createdAt DESC`.fetch() }
-  static page(slug) { `SELECT id, title, content FROM posts WHERE slug = ?`.first(slug) }
-  static id(id) { `SELECT * FROM posts WHERE id = ?`.first(id) }
+  static all() { `SELECT * FROM posts ORDER BY createdAt DESC`.fetch }
+  static one(id) { `SELECT * FROM posts WHERE id = ?`.first(id) }
+  static page(slug) { `SELECT id, title, content FROM posts WHERE slug = ?`.first(slug).to(Post) }
+  static home() { all().to(Post) }
+  static id(id) { one(id).to(Post) }
+}
+
+class Post {
+  construct new(data) {
+    _id = data["id"]
+    _title = data["title"]
+    _content = data["content"]
+    _slug = data["slug"]
+    _createdAt = data["createdAt"]
+  }
+  id { _id }
+  title { _title }
+  content { _content }
+  slug { _slug }
+  createdAt { _createdAt }
 }
