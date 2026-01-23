@@ -423,9 +423,21 @@ static void printError(Parser* parser, int line, const char* label,
 
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
-  int  length = sprintf(message, "%s: ", label);
-  length += vsprintf(message + length, format, args);
-  ASSERT(length < ERROR_MESSAGE_SIZE, "Error should not exceed buffer.");
+  int  length = snprintf(message, ERROR_MESSAGE_SIZE, "%s: ", label);
+  if(length < 0 || length >= ERROR_MESSAGE_SIZE) {
+    length = ERROR_MESSAGE_SIZE - 1;
+  }
+
+  int remaining = ERROR_MESSAGE_SIZE - length;
+  if(remaining > 0) {
+    int written = vsnprintf(message + length, remaining, format, args);
+    if(written > 0) {
+      length += (written < remaining) ? written : (remaining - 1);
+    }
+  }
+
+  // Ensure null termination
+  message[ERROR_MESSAGE_SIZE - 1] = '\0';
 
   ObjString*  module = parser->module->name;
   const char* module_name = module ? module->value : "<unknown>";
@@ -857,6 +869,18 @@ static void readRawString(Parser* parser) {
 
   for(;;) {
     char c = nextChar(parser);
+
+    // Check for null terminator immediately after consuming character
+    // to prevent reading beyond buffer
+    if(c == '\0') {
+      lexError(parser, "Unterminated raw string.");
+      // Don't consume it if it isn't expected. Keeps us from reading past the
+      // end of an unterminated string.
+      parser->currentChar--;
+      break;
+    }
+
+    // Now safe to peek ahead since we know current position is valid
     char c1 = peekChar(parser);
     char c2 = peekNextChar(parser);
 
@@ -887,12 +911,9 @@ static void readRawString(Parser* parser) {
     if(firstNewline == -1 && !isWhitespace && c != '\n')
       skipStart = -1;
 
-    if(c == '\0' || c1 == '\0' || c2 == '\0') {
+    // Additional safety check for null terminators in lookahead
+    if(c1 == '\0' || c2 == '\0') {
       lexError(parser, "Unterminated raw string.");
-
-      // Don't consume it if it isn't expected. Keeps us from reading past the
-      // end of an unterminated string.
-      parser->currentChar--;
       break;
     }
 
@@ -1528,10 +1549,15 @@ static int emitByte(Compiler* compiler, int byte) {
 static void emitOp(Compiler* compiler, Code instruction) {
   emitByte(compiler, instruction);
 
-  // Keep track of the stack's high water mark.
-  compiler->numSlots += stackEffects[instruction];
-  if(compiler->numSlots > compiler->fn->maxSlots) {
-    compiler->fn->maxSlots = compiler->numSlots;
+  // Validate instruction is within bounds before accessing stackEffects array
+  // The stackEffects array is generated from wren_opcodes.h and should match
+  // the Code enum exactly, but we add a safety check here.
+  if(instruction >= 0 && instruction < CODE_END + 1) {
+    // Keep track of the stack's high water mark.
+    compiler->numSlots += stackEffects[instruction];
+    if(compiler->numSlots > compiler->fn->maxSlots) {
+      compiler->fn->maxSlots = compiler->numSlots;
+    }
   }
 }
 
@@ -1707,6 +1733,11 @@ static void popScope(Compiler* compiler) {
 // Attempts to look up the name in the local variables of [compiler]. If found,
 // returns its index, otherwise returns -1.
 static int resolveLocal(Compiler* compiler, const char* name, int length) {
+  // Bounds check to prevent heap buffer overflow
+  if(compiler->numLocals < 0 || compiler->numLocals > MAX_LOCALS) {
+    return -1;
+  }
+
   // Look it up in the local scopes. Look in reverse order so that the most
   // nested variable is found first and shadows outer ones.
   for(int i = compiler->numLocals - 1; i >= 0; i--) {
@@ -1736,6 +1767,9 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index) {
   return compiler->fn->numUpvalues++;
 }
 
+// Maximum nesting depth for upvalue resolution to prevent stack overflow
+#define MAX_UPVALUE_RECURSION_DEPTH 100
+
 // Attempts to look up [name] in the functions enclosing the one being compiled
 // by [compiler]. If found, it adds an upvalue for it to this compiler's list
 // of upvalues (unless it's already in there) and returns its index. If not
@@ -1747,7 +1781,12 @@ static int addUpvalue(Compiler* compiler, bool isLocal, int index) {
 //
 // If it reaches a method boundary, this stops and returns -1 since methods do
 // not close over local variables.
-static int findUpvalue(Compiler* compiler, const char* name, int length) {
+static int findUpvalueWithDepth(Compiler* compiler, const char* name, int length,
+                                int depth) {
+  // Prevent excessive recursion
+  if(depth > MAX_UPVALUE_RECURSION_DEPTH)
+    return -1;
+
   // If we are at the top level, we didn't find it.
   if(compiler->parent == NULL)
     return -1;
@@ -1773,7 +1812,7 @@ static int findUpvalue(Compiler* compiler, const char* name, int length) {
   // intermediate functions to get from the function where a local is declared
   // all the way into the possibly deeply nested function that is closing over
   // it.
-  int upvalue = findUpvalue(compiler->parent, name, length);
+  int upvalue = findUpvalueWithDepth(compiler->parent, name, length, depth + 1);
   if(upvalue != -1) {
     return addUpvalue(compiler, false, upvalue);
   }
@@ -1781,6 +1820,10 @@ static int findUpvalue(Compiler* compiler, const char* name, int length) {
   // If we got here, we walked all the way up the parent chain and couldn't
   // find it.
   return -1;
+}
+
+static int findUpvalue(Compiler* compiler, const char* name, int length) {
+  return findUpvalueWithDepth(compiler, name, length, 0);
 }
 
 // Look up [name] in the current scope to see what variable it refers to.
@@ -3010,8 +3053,18 @@ static int getByteCountForArguments(const uint8_t* bytecode, const Value* consta
       return 4;
 
     case CODE_CLOSURE: {
+      // Prevent null pointer dereference
+      if(constants == NULL) {
+        return 2; // Return minimum size if constants unavailable
+      }
+
       int    constant = (bytecode[ip + 1] << 8) | bytecode[ip + 2];
       ObjFn* loadedFn = AS_FN(constants[constant]);
+
+      // Additional null check for loaded function
+      if(loadedFn == NULL) {
+        return 2; // Return minimum size if function is null
+      }
 
       // There are two bytes for the constant, then two for each upvalue.
       return 2 + (loadedFn->numUpvalues * 2);
