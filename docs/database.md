@@ -65,6 +65,38 @@ var name = `SELECT name FROM users WHERE id = ?`.val(id)
 var day = `SELECT strftime('%j', 'now')`.toNum
 ```
 
+## Mapping Results to Domain Classes
+
+Query results can be automatically mapped to domain classes using the `.to(Class)` method. This is useful for converting database rows into instances of your domain models.
+
+```wren
+// Define a domain class with a constructor that accepts a Map
+class Post {
+  construct new(data) {
+    _id = data["id"]
+    _title = data["title"]
+    _content = data["content"]
+  }
+  
+  id { _id }
+  title { _title }
+  content { _content }
+}
+
+// Map a single result to a domain class
+var post = `SELECT * FROM posts WHERE id = ?`.first(1).to(Post)
+
+// Map multiple results to domain classes
+var posts = `SELECT * FROM posts`.fetch.to(Post)
+// Returns a List where each element is a Post instance
+```
+
+The `.to(Class)` method works with:
+
+- Query results from `.fetch()` (returns a List of class instances)
+- Single results from `.first()` (returns a single class instance)
+- Any Map or List of Maps
+
 ## Insert and update
 
 You can use a regular SQL `INSERT` or `UPDATE` statement.

@@ -9,7 +9,7 @@ return Template.layout(
       is a sample page with Markdown.
     </p>
     {{ Posts.home().map{ |post| <p>
-        <a href="/post/{{ post["slug"] }}">{{ post["title"] }}</a>
+        <a href="/post/{{ post.slug }}">{{ post.title }}</a>
       </p> } }}
     <p style="margin-top: 2em"><a href="/api/">API JSON</a></p>
   </div>

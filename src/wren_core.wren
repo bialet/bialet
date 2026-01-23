@@ -67,6 +67,7 @@ class Sequence {
   isEmpty { iterate(null) ? false : true }
 
   map(transformation) { MapSequence.new(this, transformation) }
+  to(Class) { map{ |element| Class.new(element) } }
 
   skip(count) {
     if (!(count is Num) || !count.isInteger || count < 0) {
@@ -367,6 +368,7 @@ class String is Sequence {
     return output
   }
   toNum { Num.fromString(this) }
+  toBool { toNum != 0 }
 }
 
 class StringByteSequence is Sequence {
@@ -464,6 +466,7 @@ class List is Sequence {
 class Map is Sequence {
   keys { MapKeySequence.new(this) }
   values { MapValueSequence.new(this) }
+  to(Class) { Class.new(this) }
 
   toString {
     var first = true

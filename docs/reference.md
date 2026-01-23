@@ -838,3 +838,74 @@ class Greet {
   call() { "Hello, %(_name)!" }
 }
 ```
+
+## Wren Core Extensions
+
+Bialet extends several core Wren classes with additional methods to make development easier.
+
+### String Extensions
+
+#### toBool
+
+Converts a string to a boolean value by first converting to a number (using `toNum`), then checking if it's non-zero.
+
+```wren
+"1".toBool    // true
+"0".toBool    // false
+"42".toBool   // true
+"".toBool     // false
+```
+
+### Sequence Extensions
+
+The `Sequence` class is the base for all iterable collections (List, Map, Range, etc.).
+
+#### to(Class)
+
+Maps each element of a sequence to an instance of the specified class by calling `Class.new(element)` for each element.
+
+```wren
+class User {
+  construct new(data) {
+    _name = data["name"]
+    _email = data["email"]
+  }
+  name { _name }
+  email { _email }
+}
+
+// Convert list of maps to list of User instances
+var usersData = [
+  {"name": "Alice", "email": "alice@example.com"},
+  {"name": "Bob", "email": "bob@example.com"}
+]
+var users = usersData.to(User)
+// users is now a List of User objects
+
+// Works with query results
+var posts = `SELECT * FROM posts`.fetch.to(Post)
+```
+
+### Map Extensions
+
+#### to(Class)
+
+Converts a Map to an instance of the specified class by passing the map to the class constructor.
+
+```wren
+class Post {
+  construct new(data) {
+    _id = data["id"]
+    _title = data["title"]
+  }
+  id { _id }
+  title { _title }
+}
+
+var postData = {"id": 1, "title": "Hello World"}
+var post = postData.to(Post)
+// post is now a Post instance
+
+// Works with single query results
+var post = `SELECT * FROM posts WHERE id = ?`.first(1).to(Post)
+```
