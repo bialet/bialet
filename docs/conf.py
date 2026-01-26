@@ -17,7 +17,7 @@ version = '0.4'
 extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton']
 
 templates_path = ['_templates']
-exclude_patterns = ['requirements.txt']
+exclude_patterns = ['requirements.txt', 'BIALET_PROMPT.md']
 
 highlight_language = 'wren'
 highlight_options = {'guess_lang': False}
