@@ -609,4 +609,14 @@ class Query {
   toBool(param) { toNum(param) != 0 }
   toBool(p1, p2) { toNum(p1, p2) != 0 }
   toBool(p1, p2, p3) { toNum(p1, p2, p3) != 0 }
+  order(col,direction, allowwedCols) { order(col, direction, allowwedCols, -1) }
+  order(col, direction, allowedCols, limit) {
+    if (allowedCols != null && allowedCols is List && !allowedCols.contains(col)) col = allowedCols[0]
+    var dir = direction is String ? direction.lower : "asc"
+    if (dir != "asc" && dir != "desc") dir = "asc"
+    if (limit > 0) {
+      return Query.new("%(this) ORDER BY %(col) %(dir.upper) LIMIT %(limit)")
+    }
+    return Query.new("%(this) ORDER BY %(col) %(dir.upper)")
+  }
 }

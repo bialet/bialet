@@ -1352,6 +1352,11 @@ DEF_PRIMITIVE(query_toString) {
   RETURN_VAL(wrenNewString(vm, queryString));
 }
 
+DEF_PRIMITIVE(query_new) {
+  const char* queryString = AS_CSTRING(args[1]);
+  RETURN_VAL(wrenNewQuery(vm, queryString));
+}
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name) {
   ObjString* nameString = AS_STRING(wrenNewString(vm, name));
@@ -1562,6 +1567,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(vm->stringClass, "toString", string_toString);
 
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
+  PRIMITIVE(vm->queryClass->obj.classObj, "new(_)", query_new);
   PRIMITIVE(vm->queryClass, "toString", query_toString);
   PRIMITIVE(vm->queryClass, "query_(_,_)", query_execute);
   PRIMITIVE(vm->queryClass, "fetch_(_,_)", query_fetch);

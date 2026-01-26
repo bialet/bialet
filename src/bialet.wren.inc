@@ -1,4 +1,4 @@
-// Generated automatically from src/bialet.wren. Do not edit.
+// Generated automatically from ./src/bialet.wren. Do not edit.
 static const char* bialetModuleSource =
 "class Request {\n"
 "  static init(message, route, files) {\n"
