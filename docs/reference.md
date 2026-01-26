@@ -68,6 +68,19 @@ Checks if the request method is POST.
 
 Checks if the request's content type is JSON.
 
+### json()
+
+Parses and returns the JSON body of the request. This is a convenience method equivalent to `Json.parse(Request.body)`.
+
+Example:
+```wren
+if (Request.isJson) {
+  var data = Request.json()
+  var name = data["name"]
+  var email = data["email"]
+}
+```
+
 ### header(name)
 
 Returns the value of a specified request header.

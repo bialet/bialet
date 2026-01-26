@@ -81,7 +81,7 @@ if (!id && Request.method == "GET") {
 
 // POST /api/users - Create a new user
 if (Request.method == "POST") {
-  var data = Json.parse(Request.body)
+  var data = Request.json()
   var name = data["name"]
   var email = data["email"]
   
@@ -100,7 +100,7 @@ if (Request.method == "POST") {
 
 // PUT /api/users?id=1 - Update a user
 if (id && Request.method == "PUT") {
-  var data = Json.parse(Request.body)
+  var data = Request.json()
   var name = data["name"]
   var email = data["email"]
   
@@ -156,10 +156,14 @@ The `Response.cors` method:
 ### JSON Request Body
 
 ```wren
+// Using the convenience method
+var data = Request.json()
+var name = data["name"]
+var email = data["email"]
+
+// Or check content type first
 if (Request.isJson) {
-  var data = Json.parse(Request.body)
-  var name = data["name"]
-  var email = data["email"]
+  var data = Request.json()
   // ... use the data
 }
 ```
@@ -442,7 +446,7 @@ if (!id && Request.method == "GET") {
 
 // POST /api/products - Create product
 if (Request.method == "POST") {
-  var data = Json.parse(Request.body)
+  var data = Request.json()
   var name = data["name"]
   var description = data["description"]
   var price = data["price"]
@@ -477,7 +481,7 @@ if (id && Request.method == "PUT") {
     return Response.json({"error": "Product not found"})
   }
   
-  var data = Json.parse(Request.body)
+  var data = Request.json()
   var name = data["name"] || product["name"]
   var description = data["description"] || product["description"]
   var price = data["price"] || product["price"]
