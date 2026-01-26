@@ -65,6 +65,57 @@ var name = `SELECT name FROM users WHERE id = ?`.val(id)
 var day = `SELECT strftime('%j', 'now')`.toNum
 ```
 
+## Safe Sorting with .order()
+
+The `.order()` method provides a safe way to add ORDER BY clauses to your queries by validating column names against an allowed list and normalizing the sort direction.
+
+```wren
+order(column, direction, allowedColumns)
+order(column, direction, allowedColumns, limit)
+```
+
+Parameters:
+- `column`: The column name to sort by
+- `direction`: Sort direction ("asc" or "desc", case-insensitive)
+- `allowedColumns`: Optional list of allowed column names for validation (can be null)
+- `limit`: Optional number of results to limit (only added if > 0)
+
+The method returns a new Query object with the ORDER BY clause appended. If the column is not in the allowed list, it defaults to the first allowed column. The direction is automatically validated and normalized to uppercase.
+
+```wren
+// Basic usage
+var users = `SELECT * FROM users`.order("name", "asc", null).fetch
+
+// With validation - only allow specific columns
+var allowedSorts = ["id", "name", "email", "created_at"]
+var sortCol = Request.get("sort") ? Request.get("sort") : "id"
+var sortDir = Request.get("order") ? Request.get("order") : "asc"
+
+var users = `SELECT * FROM users`
+  .order(sortCol, sortDir, allowedSorts)
+  .fetch
+
+// Combined with filtering
+var search = Request.get("search") ? Request.get("search") : ""
+var users = `
+  SELECT * FROM users 
+  WHERE (? = '' OR name LIKE '%' || ? || '%')
+`.order(sortCol, sortDir, allowedSorts).fetch([search, search])
+
+// With limit for pagination
+var topUsers = `SELECT * FROM users`
+  .order("score", "desc", ["score", "created_at"], 10)
+  .fetch
+
+// Invalid columns are rejected
+var users = `SELECT * FROM users`
+  .order("malicious_col", "desc", ["id", "name"])
+  .fetch
+// Will use "id" instead of "malicious_col"
+```
+
+This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.
+
 ## Mapping Results to Domain Classes
 
 Query results can be automatically mapped to domain classes using the `.to(Class)` method. This is useful for converting database rows into instances of your domain models.

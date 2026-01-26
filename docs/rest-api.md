@@ -1,6 +1,6 @@
 # Building REST APIs
 
-This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, authentication, and best practices.
+This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication.
 
 ## Quick Start
 
@@ -311,34 +311,33 @@ Response.json({
 ## Filtering and Sorting
 
 ```wren
-// GET /api/users?sort=name&order=asc&status=active
+// GET /api/users?search=john&status=active&sort=name&order=asc
 
+var search = Request.get("search") || ""
+var status = Request.get("status") || ""
 var sort = Request.get("sort") || "id"
 var order = Request.get("order") || "asc"
-var status = Request.get("status")
 
-// Build query with filters
-var conditions = []
-var params = []
-
-if (status) {
-  conditions.add("status = ?")
-  params.add(status)
-}
-
-var where = conditions.count > 0 ? "WHERE " + conditions.join(" AND ") : ""
-
-// Validate sort and order to prevent SQL injection
+// Define allowed columns for sorting
 var allowedSorts = ["id", "name", "email", "created_at"]
-var allowedOrders = ["asc", "desc"]
 
-if (!allowedSorts.contains(sort)) sort = "id"
-if (!allowedOrders.contains(order)) order = "asc"
-
-var query = "SELECT * FROM users %(where) ORDER BY %(sort) %(order)"
-var users = Query.fromString(query, params).fetch()
+// Use parameterized queries with conditional logic and safe sorting
+var users = `
+  SELECT * FROM users 
+  WHERE (? = '' OR name LIKE '%' || ? || '%')
+    AND (? = '' OR status = ?)
+`.order(sort, order, allowedSorts).fetch([search, search, status, status])
 
 Response.json(users)
+```
+
+The `.order()` method validates the sort column against the allowed list and normalizes the direction (case-insensitive "asc" or "desc"), preventing SQL injection through column name manipulation. You can also pass an optional fourth parameter to add a LIMIT clause:
+
+```wren
+// Top 10 users by score
+var topUsers = `SELECT * FROM users`
+  .order("score", "desc", ["score", "name"], 10)
+  .fetch
 ```
 
 ## Database Migrations
@@ -595,43 +594,6 @@ await fetch('http://localhost:7001/api/products?id=
     'X-API-Key': 'your-api-key'
   }
 });
-```
-
-## Best Practices
-
-1. **Always enable CORS** for APIs accessed from browsers
-2. **Use proper status codes** (200, 201, 400, 401, 404, etc.)
-3. **Validate input** before processing
-4. **Use authentication** for protected endpoints
-5. **Implement pagination** for large datasets
-6. **Return consistent JSON structures**
-7. **Use meaningful error messages**
-8. **Document your API** endpoints
-9. **Version your API** (e.g., `/api/v1/users`)
-10. **Use HTTPS** in production
-
-## Rate Limiting
-
-```wren
-// Simple rate limiting using session or API key
-var key = Request.header("x-api-key")
-var now = Date.new()
-var windowStart = now.unix - 60  // 60 seconds window
-
-// Count requests in the last minute
-var count = `
-  SELECT COUNT(*) as count 
-  FROM request_log 
-  WHERE api_key = ? AND timestamp > ?
-`.first([key, windowStart])["count"]
-
-if (Util.toNum(count) > 100) {
-  Response.status(429)
-  return Response.json({"error": "Rate limit exceeded. Try again later."})
-}
-
-// Log this request
-`INSERT INTO request_log (api_key, timestamp) VALUES (?, ?)`.query([key, now.unix])
 ```
 
 ## Next Steps
