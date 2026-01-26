@@ -98,6 +98,7 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
    structure
    html-strings
    database
+   rest-api
    file
    datetime
    cron

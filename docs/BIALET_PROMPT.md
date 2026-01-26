@@ -71,7 +71,7 @@ Bialet is intentionally simple. These concepts **do not exist**:
 
 Always add the database to `.gitignore`. SQLite uses WAL mode, so multiple files are created:
 
-```gitignore
+```text
 # .gitignore
 _db.sqlite3*
 ```
@@ -962,7 +962,7 @@ email-api/
 ```
 
 ### .gitignore
-```gitignore
+```text
 _db.sqlite3*
 ```
 
