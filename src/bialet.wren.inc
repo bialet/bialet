@@ -1,4 +1,4 @@
-// Generated automatically from ./src/bialet.wren. Do not edit.
+// Generated automatically from src/bialet.wren. Do not edit.
 static const char* bialetModuleSource =
 "class Request {\n"
 "  static init(message, route, files) {\n"
@@ -64,6 +64,7 @@ static const char* bialetModuleSource =
 "  static body { __body }\n"
 "  static isPost { __method == \"POST\" }\n"
 "  static isJson { header(\"content-type\") == \"application/json\" }\n"
+"  static json() { Json.parse(__body) }\n"
 "  static header(name) { __headers[name] ? __headers[name]:null }\n"
 "  static get(name) { __get[name] ? __get[name]:null }\n"
 "  static post(name) { __post[name] ? __post[name]:null }\n"
@@ -113,8 +114,9 @@ static const char* bialetModuleSource =
 "    header(\"Access-Control-Allow-Headers\", headers)\n"
 "    if (Request.method == \"OPTIONS\") {\n"
 "      status(204)\n"
-"      Fiber.suspend()\n"
+"      return true\n"
 "    }\n"
+"    return false\n"
 "  }\n"
 "  static cors(origin) { cors(origin, \"GET, POST, PUT, DELETE, OPTIONS\", \"Content-Type, Authorization\") }\n"
 "  static cors() { cors(\"*\") }\n"
