@@ -50,7 +50,7 @@ Parses the query string of the request.
 
 ### method
 
-Returns the HTTP method of the request.
+Returns the HTTP method of the request (uppercase, e.g., "GET", "POST", "PUT", "DELETE").
 
 ### uri
 
@@ -150,6 +150,49 @@ Sets a response header.
 Sends a JSON response.
 
 - `data`: The data to be JSON-encoded.
+
+### cors(origin, methods, headers)
+
+Enables Cross-Origin Resource Sharing (CORS) by setting the appropriate headers.
+When the request method is OPTIONS, it automatically responds with a 204 No Content
+status and returns `true`. Otherwise, it returns `false`.
+
+- `origin`: The allowed origin (e.g., `"*"` for all origins, or `"https://example.com"`).
+- `methods`: Comma-separated list of allowed HTTP methods (e.g., `"GET, POST, PUT, DELETE, OPTIONS"`).
+- `headers`: Comma-separated list of allowed headers (e.g., `"Content-Type, Authorization"`).
+
+Example:
+```wren
+// Full control over CORS settings
+if (Response.cors("https://example.com", "GET, POST", "Content-Type")) return
+
+// Or use the default methods and headers for a specific origin
+if (Response.cors("https://example.com")) return
+
+// Or allow all origins with default methods and headers
+if (Response.cors("*")) return
+
+// Or use as a getter for the simplest case (allows all origins)
+if (Response.cors) return
+```
+
+### cors(origin)
+
+Convenience method that enables CORS with default methods and headers.
+
+- `origin`: The allowed origin (e.g., `"*"` for all origins).
+
+Default methods: `"GET, POST, PUT, DELETE, OPTIONS"`  
+Default headers: `"Content-Type, Authorization"`
+
+### cors()
+
+Convenience method that enables CORS for all origins (`"*"`) with default methods and headers.
+
+### cors
+
+Property getter that enables CORS for all origins with default methods and headers.
+This is the simplest way to enable CORS.
 
 ### file(id)
 

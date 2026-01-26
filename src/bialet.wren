@@ -17,7 +17,7 @@ class Request {
     __files = files
     var lines = message.split("\n")
     var tmp = lines.removeAt(0).split(" ")
-    __method = tmp[0]
+    __method = tmp[0].upper
     __fullUri = tmp[1]
     __body = ""
     __route = __fullUri.trimStart(route.count>0 ? route : "/").split("/")
@@ -46,7 +46,7 @@ class Request {
         __body = __body + line
       }
     }
-    if (__method.upper == "POST") {
+    if (__method == "POST") {
       __post = parseQuery(__body)
     }
   }
@@ -126,6 +126,20 @@ class Response {
     header("Content-Type", "application/json; charset=UTF-8")
     out(Json.stringify(data))
   }
+
+  static cors(origin, methods, headers) {
+    header("Access-Control-Allow-Origin", origin)
+    header("Access-Control-Allow-Methods", methods)
+    header("Access-Control-Allow-Headers", headers)
+    if (Request.method == "OPTIONS") {
+      status(204)
+      return true
+    }
+    return false
+  }
+  static cors(origin) { cors(origin, "GET, POST, PUT, DELETE, OPTIONS", "Content-Type, Authorization") }
+  static cors() { cors("*") }
+  static cors { cors("*") }
 
   static page(title, message) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( title )</h1><p>%( message )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
   static end(code, title, message) { status(code) && out(page(title, message)) }
