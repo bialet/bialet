@@ -14,6 +14,7 @@ class Null {
   [key] { null }
   map(f) { List.new() }
   count { 0 }
+  to(Class) { this }
 }
 
 class Sequence {

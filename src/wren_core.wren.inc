@@ -12,6 +12,7 @@ static const char* coreModuleSource =
 "  [key] { null }\n"
 "  map(f) { List.new() }\n"
 "  count { 0 }\n"
+"  to(Class) { this }\n"
 "}\n"
 "class Sequence {\n"
 "  all(f) {\n"
