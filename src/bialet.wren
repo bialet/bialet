@@ -79,6 +79,7 @@ class Request {
   static json() { Json.parse(__body) }
   static header(name) { __headers[name] ? __headers[name]:null }
   static get(name) { __get[name] ? __get[name]:null }
+  static query(name) { get(name) }
   static post(name) { __post[name] ? __post[name]:null }
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static file(name) {

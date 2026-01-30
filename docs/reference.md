@@ -93,6 +93,12 @@ Returns the value of a specified query parameter.
 
 - `name`: The name of the query parameter.
 
+### query(name)
+
+Alias for `get(name)`. Returns the value of a specified query parameter.
+
+- `name`: The name of the query parameter.
+
 ### post(name)
 
 Returns the value of a specified POST parameter.
