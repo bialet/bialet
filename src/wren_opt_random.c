@@ -96,6 +96,9 @@ const char* wrenRandomSource() {
 
 WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm, const char* module,
                                                    const char* className) {
+  (void)vm;
+  (void)module;
+  (void)className;
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
   WrenForeignClassMethods methods;
   methods.allocate = randomAllocate;
@@ -106,6 +109,9 @@ WrenForeignClassMethods wrenRandomBindForeignClass(WrenVM* vm, const char* modul
 WrenForeignMethodFn wrenRandomBindForeignMethod(WrenVM* vm, const char* className,
                                                 bool        isStatic,
                                                 const char* signature) {
+  (void)vm;
+  (void)className;
+  (void)isStatic;
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
 
   if(strcmp(signature, "<allocate>") == 0)

@@ -48,6 +48,7 @@ static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
 static void bialetWrenWrite(WrenVM* vm, const char* message) {
+  (void)vm;
   message(yellow("Log"), message);
   sqlite3_stmt* stmt;
   sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1, &stmt,
@@ -211,6 +212,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
 void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
                      const int line, const char* msg) {
+  (void)vm;
   char lineMessage[MAX_LINE_ERROR_LEN];
   sprintf(lineMessage, "%s line %d", module, line);
   switch(errorType) {
@@ -235,6 +237,7 @@ static char* sqliteIntToString(sqlite3_int64 value) {
 }
 
 static void queryExecute(WrenVM* vm, BialetQuery* query) {
+  (void)vm;
   sqlite3_stmt* stmt;
   char*         columns[MAX_COLUMNS];
   const char*   value;

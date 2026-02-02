@@ -28,7 +28,9 @@
 // Defines a primitive method whose C function name is [name]. This abstracts
 // the actual type signature of a primitive function and makes it clear which C
 // functions are invoked as primitives.
-#define DEF_PRIMITIVE(name) static bool prim_##name(WrenVM* vm, Value* args)
+#define DEF_PRIMITIVE(name) \
+  static bool prim_##name(__attribute__((unused)) WrenVM* vm, \
+                          __attribute__((unused)) Value* args)
 
 #define RETURN_VAL(value)                                                           \
   do {                                                                              \
