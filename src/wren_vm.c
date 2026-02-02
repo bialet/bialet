@@ -590,6 +590,7 @@ static void createClass(WrenVM* vm, int numFields, ObjModule* module) {
 }
 
 static void createForeign(WrenVM* vm, ObjFiber* fiber, Value* stack) {
+  (void)fiber;
   ObjClass* classObj = AS_CLASS(stack[0]);
   ASSERT(classObj->numFields == -1, "Class must be a foreign class.");
 
@@ -1450,6 +1451,7 @@ Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName) {
 }
 
 Value wrenFindVariable(WrenVM* vm, ObjModule* module, const char* name) {
+  (void)vm;
   int symbol = wrenSymbolTableFind(&module->variableNames, name, strlen(name));
   return module->variables.data[symbol];
 }
@@ -1543,6 +1545,8 @@ void wrenEnsureSlots(WrenVM* vm, int numSlots) {
 
 // Ensures that [slot] is a valid index into the API's stack of slots.
 static void validateApiSlot(WrenVM* vm, int slot) {
+  (void)vm;
+  (void)slot;
   ASSERT(slot >= 0, "Slot cannot be negative.");
   ASSERT(slot < wrenGetSlotCount(vm), "Not that many slots.");
 }

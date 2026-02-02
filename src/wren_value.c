@@ -294,6 +294,7 @@ void wrenListInsert(WrenVM* vm, ObjList* list, Value value, uint32_t index) {
 }
 
 int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value) {
+  (void)vm;
   int count = list->elements.count;
   for(int i = 0; i < count; i++) {
     Value item = list->elements.data[i];
@@ -1035,6 +1036,8 @@ static void blackenFn(WrenVM* vm, ObjFn* fn) {
 }
 
 static void blackenForeign(WrenVM* vm, ObjForeign* foreign) {
+  (void)vm;
+  (void)foreign;
   // TODO: Keep track of how much memory the foreign object uses. We can store
   // this in each foreign object, but it will balloon the size. We may not want
   // that much overhead. One option would be to let the foreign class register
@@ -1095,6 +1098,7 @@ static void blackenModule(WrenVM* vm, ObjModule* module) {
 }
 
 static void blackenRange(WrenVM* vm, ObjRange* range) {
+  (void)range;
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += sizeof(ObjRange);
 }

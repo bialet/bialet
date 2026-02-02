@@ -1028,7 +1028,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
           closingTag++;
         }
       }
-      if(c == '>' && closingTag == strlen(tagName))
+      if(c == '>' && (size_t)closingTag == strlen(tagName))
         break;
     }
   }
@@ -2304,12 +2304,14 @@ static void loadCoreVariable(Compiler* compiler, const char* name) {
 
 // A parenthesized expression.
 static void grouping(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   expression(compiler);
   consume(compiler, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 // A list literal.
 static void list(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
@@ -2334,6 +2336,7 @@ static void list(Compiler* compiler, bool canAssign) {
 
 // A map literal.
 static void map(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   // Instantiate a new map.
   loadCoreVariable(compiler, "Map");
   callMethod(compiler, 0, "new()", 5);
@@ -2364,6 +2367,7 @@ static void map(Compiler* compiler, bool canAssign) {
 
 // Unary operators like `-foo`.
 static void unaryOp(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   ignoreNewlines(compiler);
@@ -2376,6 +2380,7 @@ static void unaryOp(Compiler* compiler, bool canAssign) {
 }
 
 static void wrenBoolean(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   emitOp(compiler,
          compiler->parser->previous.type == TOKEN_FALSE ? CODE_FALSE : CODE_TRUE);
 }
@@ -2548,11 +2553,13 @@ static void name(Compiler* compiler, bool canAssign) {
 }
 
 static void null(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   emitOp(compiler, CODE_NULL);
 }
 
 // A number or string literal.
 static void literal(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   emitConstant(compiler, compiler->parser->previous.value);
 }
 
@@ -2567,6 +2574,7 @@ static void literal(Compiler* compiler, bool canAssign) {
 //
 //     ["a ", b + c, " d"].join()
 static void stringInterpolation(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   // Instantiate a new list.
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
@@ -2619,6 +2627,7 @@ static void super_(Compiler* compiler, bool canAssign) {
 }
 
 static void this_(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   if(getEnclosingClass(compiler) == NULL) {
     error(compiler, "Cannot use 'this' outside of a method.");
     return;
@@ -2655,6 +2664,7 @@ static void call(Compiler* compiler, bool canAssign) {
 }
 
 static void and_(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   ignoreNewlines(compiler);
 
   // Skip the right argument if the left is false.
@@ -2664,6 +2674,7 @@ static void and_(Compiler* compiler, bool canAssign) {
 }
 
 static void or_(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   ignoreNewlines(compiler);
 
   // Skip the right argument if the left is true.
@@ -2673,6 +2684,7 @@ static void or_(Compiler* compiler, bool canAssign) {
 }
 
 static void conditional(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   // Ignore newline after '?'.
   ignoreNewlines(compiler);
 
@@ -2699,6 +2711,7 @@ static void conditional(Compiler* compiler, bool canAssign) {
 }
 
 void infixOp(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
   GrammarRule* rule = getRule(compiler->parser->previous.type);
 
   // An infix operator cannot end an expression.
@@ -2726,6 +2739,7 @@ void infixSignature(Compiler* compiler, Signature* signature) {
 
 // Compiles a method signature for an unary operator (i.e. "!").
 void unarySignature(Compiler* compiler, Signature* signature) {
+  (void)compiler;
   // Do nothing. The name is already complete.
   signature->type = SIG_GETTER;
 }
@@ -3394,6 +3408,7 @@ static void defineMethod(Compiler* compiler, Variable classVariable, bool isStat
 // Returns the symbol for the method.
 static int declareMethod(Compiler* compiler, Signature* signature, const char* name,
                          int length) {
+  (void)length;
   int symbol = signatureSymbol(compiler, signature);
 
   // See if the class has already declared method with this signature.

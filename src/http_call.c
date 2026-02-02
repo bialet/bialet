@@ -157,6 +157,7 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
 #endif
 
 void httpCallInit(struct BialetConfig* config) {
+  (void)config;
 #if IS_UNIX
   curl_global_init(CURL_GLOBAL_ALL);
 #endif

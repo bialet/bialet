@@ -67,6 +67,7 @@ static const char* bialetModuleSource =
 "  static json() { Json.parse(__body) }\n"
 "  static header(name) { __headers[name] ? __headers[name]:null }\n"
 "  static get(name) { __get[name] ? __get[name]:null }\n"
+"  static query(name) { get(name) }\n"
 "  static post(name) { __post[name] ? __post[name]:null }\n"
 "  static route(pos) { __route.count > pos && __route[pos] != \"\" ? __route[pos]:null}\n"
 "  static file(name) {\n"

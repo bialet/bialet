@@ -16,7 +16,7 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-CFLAGS := -Wall -g
+CFLAGS := -Wall -Wextra -Werror -g
 LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lcurl
 
 # Not checking against OS because I compile with Wine on Linux

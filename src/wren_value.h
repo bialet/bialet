@@ -622,6 +622,7 @@ ObjFiber* wrenNewFiber(WrenVM* vm, ObjClosure* closure);
 // [stackStart].
 static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
                                        ObjClosure* closure, Value* stackStart) {
+  (void)vm;
   // The caller should have ensured we already have enough capacity.
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
 

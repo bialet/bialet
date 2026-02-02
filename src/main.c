@@ -108,6 +108,7 @@ static void cron_run() {
 }
 
 void* cron_thread(void* arg) {
+  (void)arg;
   while(1) {
     cron_run();
     sleep(60);
@@ -179,6 +180,7 @@ void welcome(int port) {
 }
 
 void sigintHandler(int signum) {
+  (void)signum;
   keep_running = 0;
   stop_server();
 }

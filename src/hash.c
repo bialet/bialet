@@ -62,7 +62,7 @@ void hashPassword(char* password, char* output) {
   }
 
   strcat(result, "/");
-  for(int i = 0; i < sizeof(salt); i++) {
+  for(size_t i = 0; i < sizeof(salt); i++) {
     sprintf(result + strlen(result), "%02x", salt[i]);
   }
 #else
