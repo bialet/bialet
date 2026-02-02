@@ -61,6 +61,11 @@ cleaner and more organized.
 **Security Note:** Any file or folder starting with `_` or `.` (like `_app/`,
 `_private/`) returns **403 Forbidden** when accessed directly via URL.
 
+**Ignored Files:** Certain files are automatically ignored and won't be served:
+`README*`, `AGENTS*`, `LICENSE*`, `*.json`, `*.yml`, and `*.yaml`. This allows
+you to keep documentation, AI agent instructions, and configuration files in
+your project without exposing them.
+
 ### 3. Dynamic Routing with `_route.wren`
 
 For dynamic URL segments (like user IDs, slugs, or API paths), create a

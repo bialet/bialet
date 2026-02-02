@@ -60,7 +60,7 @@
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" BIALET_EXTENSION
 #define MAX_ROUTES 100
-#define IGNORED_FILES "README*,LICENSE*,*.json,*.yml,*.yaml"
+#define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
