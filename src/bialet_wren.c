@@ -705,6 +705,24 @@ int bialetRunCli(char* code) {
   return 0;
 }
 
+int bialetValidateSyntax(const char* filePath) {
+  char* code = readFile(filePath);
+  if(code == NULL) {
+    fprintf(stderr, "Error: Cannot read file '%s'\n", filePath);
+    return 1;
+  }
+
+  WrenVM* vm = wrenNewVM(&wren_config);
+  WrenInterpretResult result = wrenInterpret(vm, filePath, code);
+  wrenFreeVM(vm);
+  free(code);
+
+  if(result == WREN_RESULT_COMPILE_ERROR) {
+    return 1;
+  }
+  return 0;
+}
+
 void bialetInit(struct BialetConfig* config) {
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;

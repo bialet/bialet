@@ -187,6 +187,7 @@ void sigintHandler(int signum) {
 
 int main(int argc, char* argv[]) {
   char*            code = "";
+  char*            validate_file = NULL;
   struct sigaction sa;
   sa.sa_handler = sigintHandler;
   sa.sa_flags = 0;
@@ -227,7 +228,7 @@ int main(int argc, char* argv[]) {
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:vw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:vw")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -266,6 +267,9 @@ int main(int argc, char* argv[]) {
       case 'r':
         code = optarg;
         break;
+      case 't':
+        validate_file = optarg;
+        break;
       case 'v':
         printf("bialet %s\n", BIALET_VERSION);
         exit(0);
@@ -289,6 +293,16 @@ int main(int argc, char* argv[]) {
   bialetInit(&bialet_config);
   if(strcmp(code, "") != 0) {
     exit(bialetRunCli(code));
+  }
+
+  if(validate_file != NULL) {
+    int result = bialetValidateSyntax(validate_file);
+    if(result == 0) {
+      printf("✓ Syntax OK: %s\n", validate_file);
+    } else {
+      fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
+    }
+    exit(result);
   }
 
   int port = start_server(&bialet_config);

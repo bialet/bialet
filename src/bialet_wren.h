@@ -22,6 +22,7 @@ char* readFile(const char* path);
 char* bialetReadFile(const char* path);
 
 int bialetRunCli(char* code);
+int bialetValidateSyntax(const char* filePath);
 
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 
