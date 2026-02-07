@@ -126,6 +126,7 @@ CLI:
 | `-p`      | Port number                                                               | `7001`                                         |
 | `-h`      | Host name                                                                 | `127.0.0.1`                                    |
 | `-r`      | Run the code passed as argument                                           | None                                           |
+| `-t`      | Validate syntax of a Wren file                                            | None                                           |
 | `-l`      | Log file location                                                         | `stdout`                                       |
 | `-d`      | SQLite database file location                                             | `_db.sqlite`                                   |
 | `-w`      | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html) | Disabled                                       |
@@ -174,3 +175,23 @@ Response.out("No log, plain response")'
 ```
 
 You have to respect new lines in the code.
+
+## Validate Syntax of a Wren File
+
+To check the syntax of a Wren file without executing it, use the `-t` command:
+
+```bash
+bialet -t myfile.wren
+```
+
+This will validate the syntax and exit with code `0` if the syntax is valid, or code `1` if there are compilation errors. This is useful for CI/CD pipelines and pre-commit hooks.
+
+```bash
+# Example: Check syntax before deploying
+if bialet -t app.wren; then
+    echo "Syntax OK, deploying..."
+else
+    echo "Syntax errors found, aborting deployment"
+    exit 1
+fi
+```

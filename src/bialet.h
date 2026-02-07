@@ -124,7 +124,7 @@ void freeBialetQuery(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
   "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "              \
-  "root_dir\n"
+  "[-t file] root_dir\n"
 
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
