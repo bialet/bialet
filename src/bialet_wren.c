@@ -893,6 +893,7 @@ void bialetInit(struct BialetConfig* config) {
   wren_config.errorFn = &bialetWrenError;
   wren_config.queryFn = &queryExecute;
   wren_config.loadModuleFn = &bialetWrenLoadModule;
+  wren_config.enableTests = config->enable_tests;
 
   httpCallInit(&bialet_config);
 }

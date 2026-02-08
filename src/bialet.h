@@ -72,6 +72,9 @@ struct BialetConfig {
   /* SQLite pragma settings */
   int sqlite_foreign_keys; /* Default: 1 (ON) */
   int sqlite_synchronous;  /* 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA; Default: 1 */
+
+  /* Set to true when running tests with -T flag */
+  int enable_tests;
 };
 
 struct BialetResponse {
