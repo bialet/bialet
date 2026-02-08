@@ -723,6 +723,123 @@ int bialetValidateSyntax(const char* filePath) {
   return 0;
 }
 
+#include <dirent.h>
+#include <sys/stat.h>
+
+#define TESTS_DIR "_tests"
+#define TEST_INIT_FILE "_init.wren"
+#define MAX_TEST_FILES 100
+
+const char* bialetGetFullRootDir() {
+  return bialet_config.full_root_dir;
+}
+
+static int isTestFile(const char* name) {
+  size_t len = strlen(name);
+  if(len < 6) return 0; // min: x.wren
+  if(strcmp(name + len - 5, ".wren") != 0) return 0;
+  if(strcmp(name, TEST_INIT_FILE) == 0) return 0;
+  return 1;
+}
+
+static int runTestFile(const char* testPath, const char* testName, const char* initPath) {
+  (void)testName;
+  char* code = readFile(testPath);
+  if(code == NULL) {
+    fprintf(stderr, "  ✗ Cannot read test file: %s\n", testPath);
+    return 1;
+  }
+
+  WrenVM* vm = wrenNewVM(&wren_config);
+  
+  // Initialize Response and Date in main module
+  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init\nDate.init");
+  
+  // Run init file if provided
+  if(initPath != NULL) {
+    char* initCode = readFile(initPath);
+    if(initCode != NULL) {
+      wrenInterpret(vm, MAIN_MODULE_NAME, initCode);
+      free(initCode);
+    }
+  }
+  
+  // Run test code in main module
+  WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, code);
+  
+  wrenFreeVM(vm);
+  free(code);
+
+  return (result == WREN_RESULT_SUCCESS) ? 0 : 1;
+}
+
+int bialetRunTests(const char* testDir, const char* rootDir) {
+  (void)rootDir;
+  char testsPath[MAX_MODULE_LEN];
+  snprintf(testsPath, sizeof(testsPath), "%s/%s", testDir, TESTS_DIR);
+
+  struct stat st;
+  if(stat(testsPath, &st) != 0 || !S_ISDIR(st.st_mode)) {
+    fprintf(stderr, "Error: Test directory not found: %s\n", testsPath);
+    return 1;
+  }
+
+  printf("Running tests in %s...\n\n", testsPath);
+
+  DIR* dir = opendir(testsPath);
+  if(dir == NULL) {
+    fprintf(stderr, "Error: Cannot open test directory: %s\n", testsPath);
+    return 1;
+  }
+
+  // Collect test files
+  char* testFiles[MAX_TEST_FILES];
+  int   testCount = 0;
+
+  struct dirent* entry;
+  while((entry = readdir(dir)) != NULL && testCount < MAX_TEST_FILES) {
+    if(isTestFile(entry->d_name)) {
+      testFiles[testCount] = strdup(entry->d_name);
+      testCount++;
+    }
+  }
+  closedir(dir);
+
+  if(testCount == 0) {
+    printf("No tests found.\n");
+    return 0;
+  }
+
+  // Check for init file
+  char initPath[MAX_MODULE_LEN];
+  snprintf(initPath, sizeof(initPath), "%s/%s", testsPath, TEST_INIT_FILE);
+  char* initPathPtr = (stat(initPath, &st) == 0) ? initPath : NULL;
+
+  int passed = 0;
+  int failed = 0;
+
+  // Run each test file
+  for(int i = 0; i < testCount; i++) {
+    char testPath[MAX_MODULE_LEN];
+    snprintf(testPath, sizeof(testPath), "%s/%s", testsPath, testFiles[i]);
+
+    printf("  Running %s...\n", testFiles[i]);
+
+    int result = runTestFile(testPath, testFiles[i], initPathPtr);
+    if(result == 0) {
+      passed++;
+      printf("    ✓ Passed\n");
+    } else {
+      failed++;
+      printf("    ✗ Failed\n");
+    }
+
+    free(testFiles[i]);
+  }
+
+  printf("\n%d passed, %d failed\n", passed, failed);
+  return (failed > 0) ? 1 : 0;
+}
 void bialetInit(struct BialetConfig* config) {
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
@@ -778,6 +895,13 @@ void bialetInit(struct BialetConfig* config) {
   wren_config.loadModuleFn = &bialetWrenLoadModule;
 
   httpCallInit(&bialet_config);
+}
+
+void bialetCleanup() {
+  if(db) {
+    sqlite3_close(db);
+    db = NULL;
+  }
 }
 
 BialetQuery* createBialetQuery() {

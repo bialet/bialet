@@ -290,7 +290,7 @@ static WrenForeignMethodFn findForeignMethod(WrenVM* vm, const char* moduleName,
   }
 
   // If the host didn't provide it, see if it's an optional one.
-  if(method == NULL) {
+  if(method == NULL && moduleName != NULL && moduleName[0] != '\0') {
 #if WREN_OPT_META
     if(strcmp(moduleName, "meta") == 0) {
       method = wrenMetaBindForeignMethod(vm, className, isStatic, signature);

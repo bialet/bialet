@@ -1223,6 +1223,121 @@ DEF_PRIMITIVE(http_call) {
   RETURN_OBJ(res);
 }
 
+DEF_PRIMITIVE(test_runRequest) {
+  const char* route = AS_CSTRING(args[1]);
+  const char* message = AS_CSTRING(args[2]);
+  
+  // Get root directory from bialet config
+  extern const char* bialetGetFullRootDir();
+  const char* rootDir = bialetGetFullRootDir();
+  
+  // Resolve route to .wren file path
+  char path[1024];
+  char filePath[1024];
+  snprintf(path, sizeof(path), "%s%s.wren", rootDir, route);
+  
+  // Check if file exists, otherwise try index.wren
+  extern char* readFile(const char* path);
+  char* code = readFile(path);
+  if (code == NULL) {
+    snprintf(path, sizeof(path), "%s%s/index.wren", rootDir, route);
+    code = readFile(path);
+  }
+  
+  if (code == NULL) {
+    // Return 404 response
+    ObjList* res = wrenNewList(vm, 3);
+    res->elements.data[0] = NUM_VAL(404);
+    res->elements.data[1] = OBJ_VAL(wrenNewString(vm, "Not Found"));
+    res->elements.data[2] = OBJ_VAL(wrenNewString(vm, ""));
+    RETURN_OBJ(res);
+  }
+  
+  // Build HttpMessage struct
+  extern struct String create_string(const char* str, int len);
+  struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
+  memset(hm, 0, sizeof(struct HttpMessage));
+  
+  // Store full message
+  hm->message = create_string(message, (int)strlen(message));
+  
+  // Parse method from message
+  const char* methodEnd = strchr(message, ' ');
+  if (methodEnd) {
+    size_t methodLen = methodEnd - message;
+    char methodBuf[32];
+    strncpy(methodBuf, message, methodLen);
+    methodBuf[methodLen] = '\0';
+    hm->method = create_string(methodBuf, (int)methodLen);
+    
+    // Parse URI
+    const char* uriStart = methodEnd + 1;
+    const char* uriEnd = strchr(uriStart, ' ');
+    if (uriEnd) {
+      size_t uriLen = uriEnd - uriStart;
+      char uriBuf[1024];
+      strncpy(uriBuf, uriStart, uriLen);
+      uriBuf[uriLen] = '\0';
+      hm->uri = create_string(uriBuf, (int)uriLen);
+    } else {
+      hm->uri = create_string("/", 1);
+    }
+  } else {
+    hm->method = create_string("GET", 3);
+    hm->uri = create_string("/", 1);
+  }
+  
+  // Extract headers
+  const char* headersStart = strchr(message, '\n');
+  if (headersStart) {
+    headersStart++; // skip \n
+    const char* bodyStart = strstr(headersStart, "\r\n\r\n");
+    if (bodyStart) {
+      size_t headersLen = bodyStart - headersStart;
+      char headersBuf[4096];
+      if (headersLen < sizeof(headersBuf)) {
+        strncpy(headersBuf, headersStart, headersLen);
+        headersBuf[headersLen] = '\0';
+        hm->headers = create_string(headersBuf, (int)headersLen);
+      } else {
+        hm->headers = create_string("", 0);
+      }
+    } else {
+      hm->headers = create_string(headersStart, (int)strlen(headersStart));
+    }
+  } else {
+    hm->headers = create_string("", 0);
+  }
+  
+  hm->routes = create_string("", 0);
+  
+  // Call bialetRun to execute the route handler
+  extern struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
+  snprintf(filePath, sizeof(filePath), "%s%s", rootDir, route);
+  struct BialetResponse response = bialetRun(filePath, code, hm);
+  
+  // Free HttpMessage fields
+  free(hm->method.str);
+  free(hm->uri.str);
+  free(hm->headers.str);
+  free(hm->routes.str);
+  free(hm->message.str);
+  free(hm);
+  free(code);
+  
+  // Return [status, body, headers_string]
+  ObjList* res = wrenNewList(vm, 3);
+  res->elements.data[0] = NUM_VAL(response.status);
+  res->elements.data[1] = OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
+  res->elements.data[2] = OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
+  
+  // Free response data
+  if (response.body) free(response.body);
+  if (response.header) free(response.header);
+  
+  RETURN_OBJ(res);
+}
+
 void setTimezone(const char* tz) {
   char tz_env[64];
   snprintf(tz_env, sizeof(tz_env), "TZ=%s", tz);
@@ -1631,7 +1746,10 @@ void wrenInitializeCore(WrenVM* vm) {
   }
 
   // Bialet classes
-  wrenInterpret(vm, NULL, bialetModuleSource);
+  WrenInterpretResult bialetResult = wrenInterpret(vm, NULL, bialetModuleSource);
+  if(bialetResult != WREN_RESULT_SUCCESS) {
+    fprintf(stderr, "ERROR: Failed to load bialet module: %d\n", bialetResult);
+  }
 
   ObjClass* utilClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Util"));
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
@@ -1649,4 +1767,7 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
   PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
   PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
+
+  ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
+  PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
 }
