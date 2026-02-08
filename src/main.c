@@ -188,6 +188,8 @@ void sigintHandler(int signum) {
 int main(int argc, char* argv[]) {
   char*            code = "";
   char*            validate_file = NULL;
+  char*            test_dir = NULL;
+  int              run_tests = 0;
   struct sigaction sa;
   sa.sa_handler = sigintHandler;
   sa.sa_flags = 0;
@@ -228,7 +230,7 @@ int main(int argc, char* argv[]) {
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:vw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:Tvw")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -270,6 +272,13 @@ int main(int argc, char* argv[]) {
       case 't':
         validate_file = optarg;
         break;
+      case 'T':
+        run_tests = 1;
+        if(optind < argc && argv[optind][0] != '-') {
+          test_dir = argv[optind];
+          optind++;
+        }
+        break;
       case 'v':
         printf("bialet %s\n", BIALET_VERSION);
         exit(0);
@@ -282,6 +291,19 @@ int main(int argc, char* argv[]) {
   if(optind < argc) {
     bialet_config.root_dir = argv[optind];
   }
+  
+  // Set up temporary database for tests
+  char temp_db_path[MAX_PATH_LEN];
+  if(run_tests) {
+    snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3", getpid());
+    bialet_config.db_path = temp_db_path;
+    
+    // If test_dir was specified, set it as root_dir for resolution
+    if(test_dir != NULL) {
+      bialet_config.root_dir = test_dir;
+    }
+  }
+  
   char resolved_root[MAX_PATH_LEN];
   if(realpath(bialet_config.root_dir, resolved_root) == NULL) {
     fprintf(stderr, "Error with root directory.\n");
@@ -302,6 +324,23 @@ int main(int argc, char* argv[]) {
     } else {
       fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
     }
+    exit(result);
+  }
+
+  if(run_tests) {
+    // Run migrations on temp database
+    migrate();
+    
+    // Run tests
+    if(test_dir == NULL) {
+      test_dir = bialet_config.root_dir;
+    }
+    int result = bialetRunTests(test_dir, bialet_config.root_dir);
+    
+    // Clean up temp database
+    bialetCleanup();
+    unlink(temp_db_path);
+    
     exit(result);
   }
 

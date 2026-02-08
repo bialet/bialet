@@ -15,6 +15,9 @@
 #include "server.h"
 
 void bialetInit(struct BialetConfig* config);
+void bialetCleanup();
+
+const char* bialetGetFullRootDir();
 
 struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
 
@@ -23,6 +26,7 @@ char* bialetReadFile(const char* path);
 
 int bialetRunCli(char* code);
 int bialetValidateSyntax(const char* filePath);
+int bialetRunTests(const char* testDir, const char* rootDir);
 
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 
