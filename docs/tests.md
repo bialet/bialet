@@ -88,10 +88,74 @@ Chain these after the request method:
 |-----------|-------------|
 | `.status(code)` | Assert HTTP status code |
 | `.contains(str)` | Assert body contains string |
+| `.equals(str)` | Assert body exactly equals string |
+| `.notContains(str)` | Assert body doesn't contain string |
 | `.header(name)` | Assert header exists |
 | `.header(name, value)` | Assert header equals value |
+| `.json()` | Return parsed JSON body (Map or List) |
+| `.jsonContains(key)` | Assert JSON object has key |
+| `.jsonEquals(key, value)` | Assert JSON key equals value |
+| `.jsonNotContains(key)` | Assert JSON object doesn't have key |
+| `.assert(condition, message)` | Custom assertion with message |
 
 **Note:** Assertions are lazy - the request is executed when the first assertion is called.
+
+### Body Assertions
+
+```wren
+// Exact match
+Test.get("/health").status(200).equals("OK")
+
+// Contains substring
+Test.get("/page").contains("Welcome")
+
+// Negative assertion (security checks)
+Test.get("/public").notContains("password")
+
+// Multiple assertions chained
+Test.get("/api")
+    .status(200)
+    .contains("success")
+    .notContains("error")
+```
+
+### JSON Assertions
+
+For API endpoints that return JSON:
+
+```wren
+// Parse JSON body for custom validation
+var data = Test.apiGet("/users").status(200).json()
+Test.assert(data.count > 0, "Expected at least one user")
+
+// Fluent JSON key assertions
+Test.apiPost("/users", {"name": "Alice"})
+    .status(201)
+    .jsonContains("id")
+    .jsonContains("createdAt")
+    .jsonEquals("name", "Alice")
+
+// Security - ensure sensitive fields not exposed
+Test.get("/public/user/1")
+    .status(200)
+    .jsonNotContains("password")
+    .jsonNotContains("ssn")
+```
+
+### Custom Assertions
+
+Use `assert()` for complex validation logic:
+
+```wren
+// Static method
+var users = Test.apiGet("/users").json()
+Test.assert(users.count >= 5, "Expected at least 5 users")
+
+// Instance method (chained)
+Test.apiGet("/stats")
+    .status(200)
+    .assert(json()["active"] > 0, "Expected active users")
+```
 
 ### Multiple Assertions
 
@@ -125,29 +189,124 @@ Test.post("/api/users", {})
     .contains("name is required")
 ```
 
-## API Testing
+## API Testing Examples
 
-For JSON API endpoints, use the `api*` methods:
+### JSON Response Testing
 
 ```wren
-// GET /api/users
-Test.apiGet("/api/users")
-    .status(200)
-    .header("Content-Type", "application/json")
+// Test JSON endpoint (from _tests/json.wren)
+// Endpoint returns array of counters from database
 
-// POST /api/users with JSON body
-Test.apiPost("/api/users", {"name": "Jane", "email": "jane@example.com"})
+// Validate JSON structure
+var data = Test.apiGet("/json").status(200).json()
+Test.assert(data is List, "Expected JSON array")
+
+// Insert test data
+`INSERT OR REPLACE INTO counter (name, value) VALUES ('test1', 10)`.query()
+
+// Test with assertions
+var counters = Test.apiGet("/json").status(200).json()
+Test.assert(counters.count >= 1, "Expected at least 1 counter")
+
+// Validate specific values
+for (counter in counters) {
+  if (counter["name"] == "test1") {
+    Test.assert(counter["value"] == "10", "Expected value '10'")
+  }
+}
+```
+
+### Multiple Assertions
+
+```wren
+// Test with chained assertions (from _tests/assertions.wren)
+Test.get("/hi")
+    .status(200)
+    .contains("Hello")
+    .contains("World")
+    .notContains("Error")
+    .equals("<h1>👋 Hello World</h1>")
+
+// Security testing
+Test.get("/public")
+    .status(200)
+    .notContains("password")
+    .notContains("secret")
+```
+
+### Form Testing
+
+```wren
+// Test form submission
+Test.post("/password", {"password": "test123", "password-check": "test123"})
+    .status(200)
+    .contains("The passwords are the same")
+    .contains("Hash:")
+
+// Test validation
+Test.post("/password", {"password": "abc", "password-check": "xyz"})
+    .status(200)
+    .contains("The passwords are different")
+```
+
+## Best Practices
+
+### Use Appropriate Assertion Methods
+
+```wren
+// ✅ Good - specific assertions
+Test.get("/health").equals("OK")
+Test.apiGet("/users").jsonContains("id")
+
+// ❌ Avoid - too generic
+Test.get("/health").contains("OK")  // Could match "NOT OK"
+```
+
+### Security Testing
+
+Always check that sensitive data isn't exposed:
+
+```wren
+// Ensure passwords/keys not in responses
+Test.get("/public/user")
+    .notContains("password")
+    .jsonNotContains("ssn")
+    .jsonNotContains("api_key")
+```
+
+### Use Custom Assertions for Complex Logic
+
+```wren
+// Instead of manual Fiber.abort()
+var data = Test.apiGet("/stats").json()
+Test.assert(data["active"] > data["inactive"], "More active expected")
+Test.assert(data["total"] == data["active"] + data["inactive"], "Count mismatch")
+```
+
+### Chain Related Assertions
+
+```wren
+// Group related checks together
+Test.apiPost("/users", {"name": "Alice"})
     .status(201)
-    .contains("\"id\"")
+    .jsonContains("id")
+    .jsonContains("createdAt")
+    .jsonEquals("name", "Alice")
+    .jsonEquals("active", true)
+```
 
-// PUT /api/users/1
-Test.apiPut("/api/users/1", {"name": "Jane Updated"})
+### Test Both Success and Failure Cases
+
+```wren
+// Success case
+Test.post("/login", {"user": "admin", "pass": "correct"})
     .status(200)
-    .contains("Updated")
+    .contains("Welcome")
 
-// DELETE /api/users/1
-Test.apiDelete("/api/users/1")
-    .status(204)
+// Failure case
+Test.post("/login", {"user": "admin", "pass": "wrong"})
+    .status(401)
+    .contains("Invalid credentials")
 ```
 
 ## Database Isolation
