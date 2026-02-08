@@ -128,33 +128,41 @@ For API endpoints that return JSON:
 var data = Test.apiGet("/users").status(200).json()
 Test.assert(data.count > 0, "Expected at least one user")
 
-// Fluent JSON key assertions
-Test.apiPost("/users", {"name": "Alice"})
-    .status(201)
-    .jsonContains("id")
-    .jsonContains("createdAt")
-    .jsonEquals("name", "Alice")
-
-// Security - ensure sensitive fields not exposed
-Test.get("/public/user/1")
+// Fluent JSON assertions (from _tests/api-user.wren)
+Test.apiGet("/api-user")
     .status(200)
+    .jsonContains("id")
+    .jsonContains("name")
+    .jsonContains("email")
+    .jsonEquals("id", 1)
+    .jsonEquals("name", "Test User")
+    .jsonEquals("active", true)
     .jsonNotContains("password")
     .jsonNotContains("ssn")
 ```
 
-### Custom Assertions
+### Two Approaches to JSON Testing
 
-Use `assert()` for complex validation logic:
-
+**Approach 1: Fluent JSON methods** (best for simple checks)
 ```wren
-// Static method
-var users = Test.apiGet("/users").json()
-Test.assert(users.count >= 5, "Expected at least 5 users")
+// From _tests/api-user.wren
+Test.apiGet("/api-user")
+    .jsonContains("id")
+    .jsonEquals("name", "Test User")
+    .jsonNotContains("password")
+```
 
-// Instance method (chained)
-Test.apiGet("/stats")
-    .status(200)
-    .assert(json()["active"] > 0, "Expected active users")
+**Approach 2: Parse JSON + custom logic** (best for complex validation)
+```wren
+// From _tests/json.wren
+var counters = Test.apiGet("/json").json()
+Test.assert(counters.count >= 2, "Expected at least 2 counters")
+
+for (counter in counters) {
+  if (counter["name"] == "test1") {
+    Test.assert(counter["value"] == "10", "Expected value '10'")
+  }
+}
 ```
 
 ### Multiple Assertions
@@ -194,21 +202,21 @@ Test.post("/api/users", {})
 ### JSON Response Testing
 
 ```wren
-// Test JSON endpoint (from _tests/json.wren)
-// Endpoint returns array of counters from database
+// Test JSON endpoint with json() and assert() (from _tests/json.wren)
+// Shows parsing JSON and custom validation logic
 
-// Validate JSON structure
+// Parse JSON response
 var data = Test.apiGet("/json").status(200).json()
 Test.assert(data is List, "Expected JSON array")
 
 // Insert test data
 `INSERT OR REPLACE INTO counter (name, value) VALUES ('test1', 10)`.query()
 
-// Test with assertions
+// Complex validation with parsed JSON
 var counters = Test.apiGet("/json").status(200).json()
-Test.assert(counters.count >= 1, "Expected at least 1 counter")
+Test.assert(counters.count >= 2, "Expected at least 2 counters")
 
-// Validate specific values
+// Iterate and validate specific values
 for (counter in counters) {
   if (counter["name"] == "test1") {
     Test.assert(counter["value"] == "10", "Expected value '10'")
@@ -216,37 +224,67 @@ for (counter in counters) {
 }
 ```
 
-### Multiple Assertions
+### Multiple Test Patterns
 
 ```wren
-// Test with chained assertions (from _tests/assertions.wren)
+// From _tests/hi.wren - different assertion styles
+
+// Simple contains check
+Test.get("/hi").status(200).contains("Hello World")
+
+// Exact match
+Test.get("/hi")
+    .status(200)
+    .equals("<h1>👋 Hello World</h1>")
+
+// Multiple chained assertions
 Test.get("/hi")
     .status(200)
     .contains("Hello")
     .contains("World")
-    .notContains("Error")
-    .equals("<h1>👋 Hello World</h1>")
+    .notContains("Goodbye")
+```
 
-// Security testing
-Test.get("/public")
+### Security and Negative Assertions
+
+```wren
+// From _tests/password.wren - test what should NOT be present
+Test.post("/password", {"password": "abc", "password-check": "xyz"})
     .status(200)
-    .notContains("password")
-    .notContains("secret")
+    .notContains("The passwords are the same")  // Should not contain success message
+
+// From _tests/assertions.wren
+Test.get("/hi")
+    .status(200)
+    .notContains("Error")
+    .notContains("Failed")
 ```
 
 ### Form Testing
 
 ```wren
-// Test form submission
+// From _tests/password.wren
+Test.post("/password", {"password": "123", "password-check": "123"})
+    .status(200)
+    .contains("The passwords are the same")
+
+Test.post("/password", {"password": "123", "password-check": "321"})
+    .status(200)
+    .contains("The passwords are different")
+```
+
+### Complete Test Examples
+
+```wren
+// From _tests/assertions.wren - comprehensive testing
+Test.get("/hi")
+    .status(200)
+    .equals("<h1>👋 Hello World</h1>")
+
 Test.post("/password", {"password": "test123", "password-check": "test123"})
     .status(200)
     .contains("The passwords are the same")
     .contains("Hash:")
-
-// Test validation
-Test.post("/password", {"password": "abc", "password-check": "xyz"})
-    .status(200)
-    .contains("The passwords are different")
 ```
 
 ## Best Practices
