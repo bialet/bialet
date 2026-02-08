@@ -39,9 +39,8 @@ endif
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
 wren_files:
-	@for file in $(WREN_FILES); do \
-		python3 tools/wren_to_c_string.py $$file.inc $$file; \
-	done
+	python3 tools/wren_to_c_string.py src/bialet.wren.inc src/bialet.wren
+	python3 tools/wren_to_c_string.py src/bialet_test.wren.inc src/bialet_test.wren
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)

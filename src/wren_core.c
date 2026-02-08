@@ -2,6 +2,7 @@
 
 #include "bialet.h"
 #include "bialet.wren.inc"
+#include "bialet_test.wren.inc"
 #include "bialet_wren.h"
 #include "hash.h"
 #include "http_call.h"
@@ -1768,6 +1769,14 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
   PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
 
-  ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
-  PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
+  // Conditionally load test classes
+  if(vm->config.enableTests) {
+    WrenInterpretResult testResult = wrenInterpret(vm, NULL, bialet_testModuleSource);
+    if(testResult != WREN_RESULT_SUCCESS) {
+      fprintf(stderr, "ERROR: Failed to load test module: %d\n", testResult);
+    }
+
+    ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
+    PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
+  }
 }

@@ -295,6 +295,7 @@ int main(int argc, char* argv[]) {
   // Set up temporary database for tests
   char temp_db_path[MAX_PATH_LEN];
   if(run_tests) {
+    bialet_config.enable_tests = 1;
     snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3", getpid());
     bialet_config.db_path = temp_db_path;
     

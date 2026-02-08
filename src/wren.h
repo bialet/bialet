@@ -276,6 +276,10 @@ typedef struct {
   // User-defined data associated with the VM.
   void* userData;
 
+  // When true, load test framework classes (Test, TestResponse).
+  // Set this to true only when running tests with -T flag.
+  bool enableTests;
+
 } WrenConfiguration;
 
 typedef enum {
