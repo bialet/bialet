@@ -64,6 +64,67 @@ class Test {
     }
     return this
   }
+  equals(expected) {
+    if (!_response) run_()
+    if (_response.body != expected) {
+      Fiber.abort("Expected body to equal \"%(expected)\" but was \"%(_response.body)\"")
+    }
+    return this
+  }
+  notContains(str) {
+    if (!_response) run_()
+    if (_response.body.contains(str)) {
+      Fiber.abort("Expected body not to contain \"%(str)\" but it did")
+    }
+    return this
+  }
+  json() {
+    if (!_response) run_()
+    return Json.parse(_response.body)
+  }
+  jsonContains(key) {
+    if (!_response) run_()
+    var data = Json.parse(_response.body)
+    if (!(data is Map)) {
+      Fiber.abort("Expected JSON object but body was: \"%(_response.body)\"")
+    }
+    if (!data.containsKey(key)) {
+      Fiber.abort("Expected JSON to contain key \"%(key)\"")
+    }
+    return this
+  }
+  jsonEquals(key, value) {
+    if (!_response) run_()
+    var data = Json.parse(_response.body)
+    if (!(data is Map)) {
+      Fiber.abort("Expected JSON object but body was: \"%(_response.body)\"")
+    }
+    if (!data.containsKey(key)) {
+      Fiber.abort("Expected JSON to contain key \"%(key)\"")
+    }
+    if (data[key] != value) {
+      Fiber.abort("Expected JSON[\"%(key)\"] to be \"%(value)\" but was \"%(data[key])\"")
+    }
+    return this
+  }
+  jsonNotContains(key) {
+    if (!_response) run_()
+    var data = Json.parse(_response.body)
+    if (!(data is Map)) {
+      Fiber.abort("Expected JSON object but body was: \"%(_response.body)\"")
+    }
+    if (data.containsKey(key)) {
+      Fiber.abort("Expected JSON not to contain key \"%(key)\" but it did")
+    }
+    return this
+  }
+  assert(condition, message) {
+    if (!_response) run_()
+    if (!condition) {
+      Fiber.abort(message)
+    }
+    return this
+  }
   apiHeader() { 
     setHeader("Content-Type", "application/json")
     return this
@@ -120,4 +181,10 @@ class Test {
   static apiPost(route, params) { Test.post(route, Json.stringify(params)).apiHeader() }
   static apiPut(route, params) { Test.new().route(route).method("PUT").postData(Json.stringify(params)).apiHeader() }
   static apiDelete(route) { Test.new().route(route).method("DELETE").apiHeader() }
+  
+  static assert(condition, message) {
+    if (!condition) {
+      Fiber.abort(message)
+    }
+  }
 }
