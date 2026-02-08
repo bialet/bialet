@@ -127,6 +127,7 @@ CLI:
 | `-h`      | Host name                                                                 | `127.0.0.1`                                    |
 | `-r`      | Run the code passed as argument                                           | None                                           |
 | `-t`      | Validate syntax of a Wren file                                            | None                                           |
+| `-T`      | Run tests in `_tests/` folder                                             | None                                           |
 | `-l`      | Log file location                                                         | `stdout`                                       |
 | `-d`      | SQLite database file location                                             | `_db.sqlite`                                   |
 | `-w`      | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html) | Disabled                                       |
@@ -175,6 +176,15 @@ Response.out("No log, plain response")'
 ```
 
 You have to respect new lines in the code.
+
+## Running Tests
+
+Bialet includes a built-in testing framework. See [Testing Guide](tests.md) for full documentation.
+
+```bash
+bialet -T                    # Run all tests in _tests/
+bialet -T docs/examples      # Run tests in specific directory
+```
 
 ## Validate Syntax of a Wren File
 

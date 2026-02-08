@@ -1060,3 +1060,53 @@ class Cron {
 
 class Markdown {
 }
+
+class Test {
+  construct new() {
+    _method = 'GET'
+    _postData = {}
+    _headers = {}
+    _response = null
+    _result = []
+  }
+  method(m) {
+    _method = m
+    return this
+  }
+  postData(d) {
+    _postData = d
+    return this
+  }
+  setHeader(n, v){
+    _headers[n] = v
+    return this
+  }
+  header(name, value) {
+    if (!_response) run()
+    assert(_response.headers.containsKey(name), "Expected response to contain header \"%(name)\"")
+    assert(_response.headers[name] == value, "Expected header \"%(name)\" to be \"%(value)\" but was \"%(_response.headers[name])\"")
+    return this
+  }
+  header(name) {
+    if (!_response) run()
+    assert(_response.headers.containsKey(name), "Expected response to contain header \"%(name)\"")
+    return this
+  }
+  status(code) {
+    if (!_response) run()
+    assert(code == _response.code, "Expected code to be %(code) but was %(_response.code)")
+    return this
+  }
+  contains(str) {
+    if (!_response) run()
+    assert(_response.body.contains(str), "Expected response body to contain \"%(str)\"")
+    return this
+  }
+  apiHeader() { setHeader("Content-Type", "application/json") }
+  static get(route) { return Test.new().method('GET') }
+  static post(route, params) { return Test.new().method('POST').postData(params) }
+  static apiGet(route) { return Test.get(route).apiHeader() }
+  static apiPost(route, params) { return Test.post(route, Json.stringify(params)).apiHeader() }
+  static apiPut(route, params) { return Test.new().method('PUT').postData(Json.stringify(params)).apiHeader() }
+  static apiDelete(route) { return Test.new().method('DELETE').apiHeader() }
+}
