@@ -79,7 +79,7 @@ space before the closing slash.
 
 ### Example
 
-```
+```wren
 var inputField = <input value="{{ userInput }}" />
 System.log(inputField) // Outputs: "<input value='{{ userInput }}'>"
 ```
@@ -175,4 +175,4 @@ Inline HTML Strings in Bialet give you the flexibility to generate dynamic HTML
 content with ease. By following the rules of tag names, interpolation, and
 attributes, you'll be able to avoid common pitfalls and create robust HTML
 templates. Remember to take advantage of Wren's built-in features like `map` and
-ternary operators to simplify your code.e can use HTML strings in our bialet.
+ternary operators to simplify your code.

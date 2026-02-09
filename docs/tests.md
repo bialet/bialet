@@ -406,10 +406,3 @@ This makes it easy to integrate with CI/CD pipelines:
 
 This approach is fast (no network overhead), reliable (no port conflicts), and safe (isolated database).
 
-## Best Practices
-
-1. **One test file per route/handler**: `password.wren` → `_tests/password.wren`
-2. **Test success and failure cases**: Verify both happy paths and error handling
-3. **Use `_init.wren` for shared setup**: Common test data, authentication tokens
-4. **Clean up not needed**: Database is temporary and auto-deleted
-5. **Run tests before committing**: `bialet -T` should be part of your workflow

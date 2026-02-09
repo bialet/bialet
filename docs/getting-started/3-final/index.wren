@@ -5,7 +5,7 @@ var poll = Poll.new()
 if (Request.isPost) {
   var vote = Request.post("vote")
   poll.vote(vote)
-  System.log("Voted for {{vote)")
+  System.log("Voted for %(vote)")
   // Redirect to the results page and stop the script
   Response.redirect("/results")
   return
@@ -24,7 +24,7 @@ return Template.layout(
               <div class="w-full">{{ opt["comment"] }}</div>
             </div>
             <svg class="w-5 h-5 ms-3 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"></path>
             </svg>
           </label>
         </li> } }}

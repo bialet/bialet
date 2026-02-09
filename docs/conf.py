@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Bialet'
-copyright = '2024, Rodrigo Arce'
+copyright = '2026, Rodrigo Arce'
 author = 'Rodrigo Arce'
-version = '0.4'
+version = '0.10'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

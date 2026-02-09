@@ -16,15 +16,16 @@ To change the name of the database, set the `-d` option.
 
 Use backticks to surround SQL statements `` ` ` ``.
 
-The Query object have 5 methods. All the methods accept the same parameters.
+The Query object has 6 methods. All the methods accept the same parameters.
 
 - `query()`: Returns the last inserted id if the query was a `INSERT` statement.
 - `fetch()`: Returns the result of the query as an array (List object).
 - `first()`: Returns the first result of the query as an object (Map object).
 - `val()`: Returns the value of the first result.
 - `toNum()`: Returns the value of the first result as a number.
+- `toBool()`: Returns the value of the first result as a boolean.
 
-**First will add a LIMIT clause automatically in first(), val and toNum.**
+The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
 
 You can't concatenate strings or use interpolations with the Query object. When
 you need to add parameters, use placeholders `?` and send the parameters to the
@@ -220,8 +221,11 @@ Bialet tables are prefixed with `BIALET_`.
 - `BIALET_CONFIG`: The configuration table.
 - `BIALET_MIGRATIONS`: The migration history table.
 - `BIALET_SESSIONS`: The session table.
+- `BIALET_FILES`: The file storage table.
+- `BIALET_LOGS`: The logging table.
+- `BIALET_REMOTE_MODULES`: The remote module cache table.
 
-If you delete or alter any of this tables your application will not work
+If you delete or alter any of these tables your application will not work
 correctly.
 
 You may insert, update or delete rows, however do it with caution.

@@ -5,7 +5,7 @@ you through making it functional with Bialet, emphasizing how to work with
 pre-existing HTML structures and add dynamic content.
 
 They are built with [Flowbite](https://flowbite.com/) and
-[Tailwind](https://tailwindcss.com/) and they consists on two HTML pages, the
+[Tailwind](https://tailwindcss.com/) and they consist of two HTML pages, the
 first one with a form to vote and the results.
 
 Check them and download the HTML files to a new folder for the project.
@@ -119,7 +119,7 @@ value.
   return "Example"
 }
 
-// Could be writed instead
+// Could be written instead
 
 { "Example" }
 ```
@@ -233,9 +233,9 @@ System.log(options)
 
 Check the output in the terminal to see if it works.
 
-The query object are
-[prepared statement](https://en.wikipedia.org/wiki/Prepared_statement), you
-can't concatenate them or having interpotations in them. You should use the `?`
+Query objects are
+[prepared statements](https://en.wikipedia.org/wiki/Prepared_statement), you
+can't concatenate them or have interpolations in them. You should use the `?`
 placeholder to pass the value to the query.
 
 The logic is finished but let's finish this example showing the results.
@@ -292,7 +292,7 @@ need more columns in the database. This time we will use migrations.
 
 Create a `_migration.wren` file in the root of the project.
 
-```
+```wren
 
 Db.migrate("Create Poll table", `
   CREATE TABLE poll (
@@ -367,7 +367,7 @@ return Template.layout(
 
 Wren does not have a
 [default constructor](https://wren.io/classes.html#constructors), we use the
-`constructor` keyword on any method and use that method to create the object.
+`construct` keyword on any method and use that method to create the object.
 Naming the method `new` is a good practice.
 
 We will handle the form. We usually handle it in the same page the form is on.
@@ -393,7 +393,7 @@ return Template.layout(
   <form action="/" method="post">
   ...
   </form>
-))
+)
 ```
 
 With `Request.isPost` we check if the request is a POST request.
@@ -486,7 +486,7 @@ class Poll {
 }
 ```
 
-- We define the `_opts` and `_total` properties in the constructor.
+- We define the `_opts` property in the constructor.
 - We use `||` to set the value of a property in a one-liner.
 - We use `Fn.new` to create a function object for the `reduce` callback.
 - We use `votes_` to get the votes as a number. This is a private method
