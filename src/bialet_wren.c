@@ -22,6 +22,25 @@
 #include <strings.h>
 #include <time.h>
 
+// Portable case-insensitive substring search (avoids _GNU_SOURCE dependency)
+static const char* bialet_strcasestr(const char* haystack, const char* needle) {
+  if(!needle[0])
+    return haystack;
+  for(; *haystack; haystack++) {
+    if(tolower((unsigned char)*haystack) == tolower((unsigned char)*needle)) {
+      const char* h = haystack;
+      const char* n = needle;
+      while(*h && *n && tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
+        h++;
+        n++;
+      }
+      if(!*n)
+        return haystack;
+    }
+  }
+  return NULL;
+}
+
 #define BIALET_SQLITE_ERROR 11
 #define BIALET_SQLITE_BUSY_TIMEOUT 5000
 #define BIALET_SQLITE_JOURNAL_SIZE "67108864" // 64 mb
@@ -378,7 +397,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
     return 0;
 
   // Search for Content-Type header
-  const char* ctStart = strcasestr(headers, "Content-Type:");
+  const char* ctStart = bialet_strcasestr(headers, "Content-Type:");
   if(!ctStart || ctStart > headerEnd)
     return 0;
 
@@ -391,7 +410,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
     return 0;
 
   // Extract boundary
-  const char* boundaryStart = strcasestr(ctStart, "boundary=");
+  const char* boundaryStart = bialet_strcasestr(ctStart, "boundary=");
   if(!boundaryStart || boundaryStart > headerEnd)
     return 0;
 
@@ -445,12 +464,12 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
       break;
 
     // Extract Content-Disposition
-    const char* cdStart = strcasestr(part, "Content-Disposition:");
+    const char* cdStart = bialet_strcasestr(part, "Content-Disposition:");
     if(!cdStart || cdStart > partHeaderEnd)
       continue;
 
     // Extract filename
-    const char* filenameStart = strcasestr(cdStart, "filename=\"");
+    const char* filenameStart = bialet_strcasestr(cdStart, "filename=\"");
     if(!filenameStart || filenameStart > partHeaderEnd) {
       part = partHeaderEnd + 4;
       continue;
@@ -475,7 +494,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
     }
 
     // Extract field name
-    const char* nameStart = strcasestr(cdStart, "name=\"");
+    const char* nameStart = bialet_strcasestr(cdStart, "name=\"");
     if(!nameStart || nameStart > partHeaderEnd)
       continue;
 
@@ -492,7 +511,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
     fieldName[nameLen] = '\0';
 
     // Extract Content-Type for this part
-    const char* partCtStart = strcasestr(part, "Content-Type:");
+    const char* partCtStart = bialet_strcasestr(part, "Content-Type:");
     char        contentTypeStr[256] = "application/octet-stream";
     if(partCtStart && partCtStart < partHeaderEnd) {
       partCtStart += 13; // Skip "Content-Type:"
@@ -527,7 +546,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
     extern struct BialetConfig bialet_config;
     if(fileSize > bialet_config.max_upload_size) {
       // Skip this file - it exceeds the maximum allowed size
-      char sizeMsg[256];
+      char sizeMsg[512];
       snprintf(
           sizeMsg, sizeof(sizeMsg),
           "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
@@ -712,7 +731,7 @@ int bialetValidateSyntax(const char* filePath) {
     return 1;
   }
 
-  WrenVM* vm = wrenNewVM(&wren_config);
+  WrenVM*             vm = wrenNewVM(&wren_config);
   WrenInterpretResult result = wrenInterpret(vm, filePath, code);
   wrenFreeVM(vm);
   free(code);
@@ -736,13 +755,17 @@ const char* bialetGetFullRootDir() {
 
 static int isTestFile(const char* name) {
   size_t len = strlen(name);
-  if(len < 6) return 0; // min: x.wren
-  if(strcmp(name + len - 5, ".wren") != 0) return 0;
-  if(strcmp(name, TEST_INIT_FILE) == 0) return 0;
+  if(len < 6)
+    return 0; // min: x.wren
+  if(strcmp(name + len - 5, ".wren") != 0)
+    return 0;
+  if(strcmp(name, TEST_INIT_FILE) == 0)
+    return 0;
   return 1;
 }
 
-static int runTestFile(const char* testPath, const char* testName, const char* initPath) {
+static int runTestFile(const char* testPath, const char* testName,
+                       const char* initPath) {
   (void)testName;
   char* code = readFile(testPath);
   if(code == NULL) {
@@ -751,10 +774,10 @@ static int runTestFile(const char* testPath, const char* testName, const char* i
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
-  
+
   // Initialize Response and Date in main module
   wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init\nDate.init");
-  
+
   // Run init file if provided
   if(initPath != NULL) {
     char* initCode = readFile(initPath);
@@ -763,10 +786,10 @@ static int runTestFile(const char* testPath, const char* testName, const char* i
       free(initCode);
     }
   }
-  
+
   // Run test code in main module
   WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, code);
-  
+
   wrenFreeVM(vm);
   free(code);
 
@@ -811,7 +834,7 @@ int bialetRunTests(const char* testDir, const char* rootDir) {
   }
 
   // Check for init file
-  char initPath[MAX_MODULE_LEN];
+  char initPath[MAX_MODULE_LEN + 16];
   snprintf(initPath, sizeof(initPath), "%s/%s", testsPath, TEST_INIT_FILE);
   char* initPathPtr = (stat(initPath, &st) == 0) ? initPath : NULL;
 
@@ -820,7 +843,7 @@ int bialetRunTests(const char* testDir, const char* rootDir) {
 
   // Run each test file
   for(int i = 0; i < testCount; i++) {
-    char testPath[MAX_MODULE_LEN];
+    char testPath[MAX_MODULE_LEN * 2];
     snprintf(testPath, sizeof(testPath), "%s/%s", testsPath, testFiles[i]);
 
     printf("  Running %s...\n", testFiles[i]);

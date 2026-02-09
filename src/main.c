@@ -128,6 +128,7 @@ static void triggerReloadFiles() {
 
 #if IS_LINUX
 static void* fileWatcher(void* arg) {
+  (void)arg;
   pthread_detach(pthread_self());
   int   length, i = 0;
   char  buffer[BUF_LEN];
@@ -291,20 +292,21 @@ int main(int argc, char* argv[]) {
   if(optind < argc) {
     bialet_config.root_dir = argv[optind];
   }
-  
+
   // Set up temporary database for tests
   char temp_db_path[MAX_PATH_LEN];
   if(run_tests) {
     bialet_config.enable_tests = 1;
-    snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3", getpid());
+    snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3",
+             getpid());
     bialet_config.db_path = temp_db_path;
-    
+
     // If test_dir was specified, set it as root_dir for resolution
     if(test_dir != NULL) {
       bialet_config.root_dir = test_dir;
     }
   }
-  
+
   char resolved_root[MAX_PATH_LEN];
   if(realpath(bialet_config.root_dir, resolved_root) == NULL) {
     fprintf(stderr, "Error with root directory.\n");
@@ -331,17 +333,17 @@ int main(int argc, char* argv[]) {
   if(run_tests) {
     // Run migrations on temp database
     migrate();
-    
+
     // Run tests
     if(test_dir == NULL) {
       test_dir = bialet_config.root_dir;
     }
     int result = bialetRunTests(test_dir, bialet_config.root_dir);
-    
+
     // Clean up temp database
     bialetCleanup();
     unlink(temp_db_path);
-    
+
     exit(result);
   }
 

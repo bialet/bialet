@@ -430,14 +430,15 @@ void handle_client(int client_socket) {
     close(client_socket);
     return;
   }
-  size_t file_size = ftell(file);
-  if(file_size < 0) {
+  long file_size_l = ftell(file);
+  if(file_size_l < 0) {
     perror("ftell");
     fclose(file);
     clean_http_message(hm);
     close(client_socket);
     return;
   }
+  size_t file_size = (size_t)file_size_l;
   rewind(file);
 
   unsigned char is_wren_file = 0;
