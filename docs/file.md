@@ -81,7 +81,7 @@ Response.file(file.id)
 ### Example 2: Deleting a File Manually
 
 You can also delete files manually using the `fileObject.destroy()` method. It
-works for uploaded and dymanically created files.
+works for uploaded and dynamically created files.
 
 ```wren
 

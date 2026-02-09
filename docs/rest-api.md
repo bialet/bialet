@@ -231,7 +231,6 @@ Response.json({
 
 ```wren
 // api/_route.wren
-users.wren
 
 // Enable CORS
 if (Response.cors) return
@@ -251,7 +250,7 @@ if (!user) {
 }
 
 // Continue with your API logic...
-var id = Request.get("id"
+var id = Request.get("id")
 ```
 
 ### Bearer Token Authentication
@@ -391,7 +390,6 @@ Here's a complete REST API for managing products:
 
 ```wren
 // api/_route.wren
-products.wren
 
 // Enable CORS
 if (Response.cors) return
@@ -517,7 +515,8 @@ if (id && Request.method == "DELETE") {
 
 // 404 for unknown operations
 Response.status(404)
-Response.json({"error": "Invalid request
+Response.json({"error": "Invalid request"})
+```
 
 ## Testing Your API
 
@@ -528,9 +527,7 @@ Response.json({"error": "Invalid request
 curl http://localhost:7001/api/products
 
 # Get single product
-curl http://localhost:7001/api/products/1
-
-# Cre"http://localhost:7001/api/products?id=1"
+curl "http://localhost:7001/api/products?id=1"
 
 # Create product
 curl -X POST http://localhost:7001/api/products \
@@ -557,9 +554,7 @@ curl "http://localhost:7001/api/products?page=2&limit=10"
 const products = await fetch('http://localhost:7001/api/products')
   .then(res => res.json());
 
-// Create product
-const newProduct = await fetch('http://localhost:7001/api/products', {
-  mGet single product
+// Get single product
 const product = await fetch('http://localhost:7001/api/products?id=1')
   .then(res => res.json());
 
@@ -590,7 +585,9 @@ const updated = await fetch('http://localhost:7001/api/products?id=1', {
 }).then(res => res.json());
 
 // Delete product
-await fetch('http://localhost:7001/api/products?id=
+await fetch('http://localhost:7001/api/products?id=1', {
+  method: 'DELETE',
+  headers: {
     'X-API-Key': 'your-api-key'
   }
 });
@@ -599,6 +596,6 @@ await fetch('http://localhost:7001/api/products?id=
 ## Next Steps
 
 - Learn about [Database operations](database.md)
-- Explore [Session management](reference)
+- Explore [Session management](reference.md)
 - Read about [File uploads](file.md)
-- Check out [External imports](structure) for using external libraries
+- Check out [External imports](structure.md) for using external libraries

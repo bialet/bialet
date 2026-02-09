@@ -284,7 +284,7 @@ call() {
   return {
     "status": "success",
     "data": "Some value",
-    "timestamp": DateTime.now
+    "timestamp": Date.now
   }
 }
 ```
@@ -366,7 +366,7 @@ class CreateUser {
     var userData = {
       "name": _name,
       "email": _email,
-      "created_at": DateTime.now
+      "created_at": Date.now
     }
 
     var userId = Db.save("users", userData)

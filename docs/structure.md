@@ -82,19 +82,19 @@ var id = Request.route(1)       // Second dynamic segment
 
 if (segment == "users") {
   var userId = Num.fromString(id)
-  var user = `SELECT * FROM users WHERE id = ?`.query(userId).fetch()
+  var user = `SELECT * FROM users WHERE id = ?`.first([userId])
   Response.out(user)
 
 } else if (segment == "posts") {
   var slug = id
-  var post = `SELECT * FROM posts WHERE slug = ?`.query(slug).fetch()
+  var post = `SELECT * FROM posts WHERE slug = ?`.first([slug])
   Response.out(post)
 }
 ```
 
 **URL Examples:**
 
-| URL                              | `Request.route(0)` | `Request.route(1)` | `Request.param("fields")` |
+| URL                              | `Request.route(0)` | `Request.route(1)` | `Request.get("fields")` |
 | -------------------------------- | ------------------ | ------------------ | ------------------------- |
 | `/api/users/1`                   | `"users"`          | `"1"`              | `null`                    |
 | `/api/posts/hello-world`         | `"posts"`          | `"hello-world"`    | `null`                    |
@@ -137,10 +137,6 @@ my-blog/
 ├── api/
 │   └── _route.wren        # API endpoints (/api/*)
 │
-├── _components/           # Reusable Wren components (protected)
-│   ├── header.wren
-│   ├── footer.wren
-│   └── post-card.wren
 │
 ├── css/
 │   └── style.css          # Static CSS
@@ -162,7 +158,6 @@ my-blog/
 | `/admin/posts/123`    | `admin/posts/_route.wren` | Edit post with ID 123                    |
 | `/api/posts/456`      | `api/_route.wren`         | API endpoint for post 456                |
 | `/_app`               | ❌ **403 Forbidden**      | Protected file                           |
-| `/_components/header` | ❌ **403 Forbidden**      | Protected folder                         |
 
 ### Example: Blog Post Handler
 

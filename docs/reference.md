@@ -35,12 +35,13 @@ Available external modules:
 A class to handle incoming HTTP requests, parsing their content, and providing
 convenient access to their components.
 
-### init(message, route)
+### init(message, route, files)
 
-Initializes a new Request object with a given message and route.
+Initializes a new Request object with a given message, route, and files.
 
 - `message`: The raw HTTP request message.
 - `route`: The route the request is targeting.
+- `files`: The uploaded files data.
 
 ### parseQuery(query)
 
@@ -117,6 +118,16 @@ Fetches a file from the database based on its name and returns it as a `File`
 object if found. If the file is not found, returns `null`.
 
 - `name`: The name of the file to retrieve.
+
+### login(user, pass)
+
+Performs basic HTTP authentication. Checks the provided credentials against the
+request's Authorization header. If authentication fails, triggers `Response.login()`
+to prompt for credentials.
+
+- `user`: The expected username.
+- `pass`: The expected password.
+- Returns: `false` if authenticated successfully.
 
 ## Response
 
@@ -302,6 +313,14 @@ Returns the value of a specified cookie.
 
 A class for managing session data, including setting and destroying sessions.
 
+### new()
+
+Creates a new Session instance.
+
+### id
+
+Returns the current session ID.
+
 ### name
 
 Returns the name of the session cookie.
@@ -311,6 +330,28 @@ Returns the name of the session cookie.
 Sets the name of the session cookie.
 
 - `n`: The new name for the session cookie.
+
+### get(key)
+
+Retrieves a value from the session by its key.
+
+- `key`: The session key to look up.
+
+### set(key, value)
+
+Sets a value in the session.
+
+- `key`: The session key.
+- `value`: The value to store.
+
+### csrf
+
+Returns the CSRF token for the current session as a hidden HTML input field.
+
+### csrfOk
+
+Validates the CSRF token from the current request against the session token.
+Returns `true` if the token is valid.
 
 ### destroy()
 
@@ -601,13 +642,13 @@ Creates a new `Date` object from a provided date string.
 
 - `date`: The date string to initialize the `Date` object.
 
-### new(date, utc)
+### new(date, tz)
 
-Creates a new `Date` object from a provided date string and a specified UTC
+Creates a new `Date` object from a provided date string and a specified timezone
 offset.
 
 - `date`: The date string to initialize the `Date` object.
-- `utc`: The UTC offset to apply.
+- `tz`: The timezone offset to apply.
 
 ### new(year, month, day, hour, minute, second)
 
@@ -620,10 +661,10 @@ Creates a new `Date` object with the provided date and time components.
 - `minute`: The minute component.
 - `second`: The second component.
 
-### new(year, month, day, hour, minute, second, utc)
+### new(year, month, day, hour, minute, second, tz)
 
 Creates a new `Date` object with the provided date and time components and a
-specified UTC offset.
+specified timezone offset.
 
 - `year`: The year component.
 - `month`: The month component.
@@ -631,7 +672,7 @@ specified UTC offset.
 - `hour`: The hour component.
 - `minute`: The minute component.
 - `second`: The second component.
-- `utc`: The UTC offset to apply.
+- `tz`: The timezone offset to apply.
 
 ### new(year, month, day)
 
@@ -642,25 +683,25 @@ Creates a new `Date` object with the provided date, setting the time to
 - `month`: The month component.
 - `day`: The day component.
 
-### new(year, month, day, utc)
+### new(year, month, day, tz)
 
-Creates a new `Date` object with the provided date and a specified UTC offset,
-setting the time to `00:00:00`.
+Creates a new `Date` object with the provided date and a specified timezone
+offset, setting the time to `00:00:00`.
 
 - `year`: The year component.
 - `month`: The month component.
 - `day`: The day component.
-- `utc`: The UTC offset to apply.
+- `tz`: The timezone offset to apply.
 
-### utc=(utc)
+### tz=(tz)
 
-Sets the UTC offset for the current `Date` object.
+Sets the timezone offset for the current `Date` object.
 
-- `utc`: The UTC offset to apply.
+- `tz`: The timezone offset to apply.
 
-### utc
+### tz
 
-Returns the UTC offset for the current `Date` object.
+Returns the timezone offset for the current `Date` object.
 
 ### format(format)
 
@@ -692,9 +733,9 @@ Returns the minute component of the date.
 
 Returns the second component of the date.
 
-### weekday
+### dayOfWeek
 
-Returns the weekday number (0 for Sunday, 6 for Saturday).
+Returns the day of the week as a number (0 for Sunday, 6 for Saturday).
 
 ### dayOfYear
 
@@ -714,7 +755,7 @@ Returns the Unix timestamp of the date.
 
 ### iso
 
-Returns the ISO 8601 formatted date (`HH:MM:SS`).
+Returns the date as an ISO 8601 formatted string (`YYYY-MM-DD HH:MM:SS`). Alias for `toString`.
 
 ### inUtc
 
@@ -775,6 +816,30 @@ size is determined by the content.
 - `type`: The MIME type of the file.
 - `file`: The file content.
 
+### id
+
+Returns the file's database ID.
+
+### type
+
+Returns the MIME type of the file.
+
+### name
+
+Returns the name of the file.
+
+### size
+
+Returns the size of the file in bytes.
+
+### isTemp
+
+Returns whether the file is temporary.
+
+### createdAt
+
+Returns the creation date of the file.
+
 ### destroy
 
 Deletes the file from the database based on its ID.
@@ -789,30 +854,42 @@ Marks the file as temporary by setting `isTemp` to true in the database.
 
 ## Cron
 
-### Cron.every(minutes)
+### Cron.every(minutes, job)
 
 Runs the job every `minutes`. It checks if the current minute is divisible by
 the given value.
 
 - `minutes` (Number): Interval in minutes.
-- Returns: `Bool` indicating if the job ran.
+- `job` (Fn): The callback function to execute.
 
-### Cron.at(hour, minute)
+```wren
+Cron.every(10) { |d| System.log("Running every 10 minutes at %(d)") }
+```
+
+### Cron.at(hour, minute, job)
 
 Runs the job at a specific hour and minute.
 
 - `hour` (Number): Hour of the day (0–23).
 - `minute` (Number): Minute of the hour (0–59).
-- Returns: `Bool` indicating if the job ran.
+- `job` (Fn): The callback function to execute.
 
-### Cron.at(hour, minute, dayOfWeek)
+```wren
+Cron.at(9, 0) { |d| System.log("Running at 9:00 AM") }
+```
+
+### Cron.at(hour, minute, dayOfWeek, job)
 
 Runs the job at a specific hour, minute, and day of the week.
 
 - `hour` (Number): Hour of the day (0–23).
 - `minute` (Number): Minute of the hour (0–59).
 - `dayOfWeek` (Number): Day of the week (0=Sunday, 6=Saturday).
-- Returns: `Bool` indicating if the job ran.
+- `job` (Fn): The callback function to execute.
+
+```wren
+Cron.at(9, 0, 1) { |d| System.log("Running Monday at 9:00 AM") }
+```
 
 ## Mcp
 
@@ -916,6 +993,41 @@ Converts a string to a boolean value by first converting to a number (using `toN
 "0".toBool    // false
 "42".toBool   // true
 "".toBool     // false
+```
+
+#### safe
+
+Escapes special HTML characters in a string to prevent XSS attacks. Replaces `&`, `<`, `>`, `"`, and `'` with their HTML entity equivalents.
+
+```wren
+"<script>alert('xss')</script>".safe  // "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+```
+
+#### lower
+
+Converts the string to lowercase.
+
+```wren
+"Hello World".lower  // "hello world"
+```
+
+#### upper
+
+Converts the string to uppercase.
+
+```wren
+"Hello World".upper  // "HELLO WORLD"
+```
+
+### List Extensions
+
+#### first
+
+Returns the first element of the list, or `null` if the list is empty.
+
+```wren
+[1, 2, 3].first  // 1
+[].first          // null
 ```
 
 ### Sequence Extensions

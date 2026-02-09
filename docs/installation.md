@@ -35,7 +35,7 @@ The default application port is `7001`. To use a different port, set the
 `BIALET_PORT` environment variable:
 
 ```bash
-BIALET_PORT=7001 docker compose up
+BIALET_PORT=8080 docker compose up
 ```
 
 ## Building from Source
@@ -129,7 +129,7 @@ CLI:
 | `-t`      | Validate syntax of a Wren file                                            | None                                           |
 | `-T`      | Run tests in `_tests/` folder                                             | None                                           |
 | `-l`      | Log file location                                                         | `stdout`                                       |
-| `-d`      | SQLite database file location                                             | `_db.sqlite`                                   |
+| `-d`      | SQLite database file location                                             | `_db.sqlite3`                                  |
 | `-w`      | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html) | Disabled                                       |
 | `-i`      | Ignored files, comma separated list of glob expressions                   | README\*, LICENSE\* , \*.json, \*.yml, \*.yaml |
 | `-m`      | Memory limit (MB)                                                         | `50`                                           |
@@ -172,7 +172,7 @@ bialet -r 'System.log("Hello, World!")'
 The response will be printed directly.
 
 ```bash
-Response.out("No log, plain response")'
+bialet -r 'Response.out("No log, plain response")'
 ```
 
 You have to respect new lines in the code.
