@@ -25,7 +25,8 @@
 // may return a non-NULL pointer which must not be dereferenced but nevertheless
 // should be freed. To prevent that, we avoid calling realloc() with a zero
 // size.
-static void* defaultReallocate(void* ptr, size_t newSize, void* _) {
+static void* defaultReallocate(void* ptr, size_t newSize, void* userData) {
+  (void)userData;
   if(newSize == 0) {
     free(ptr);
     return NULL;
