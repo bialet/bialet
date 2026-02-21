@@ -1,6 +1,9 @@
 if (Request.isPost) {
   // Get the uploaded file
   var uploadedFile = Request.file("form_file_name")
+  if (uploadedFile == null) {
+    return Response.end(400, "❌ Upload Error", "No file was uploaded. Please select a file first.")
+  }
   System.print("File: %(uploadedFile.name)")
   // Make it temporal, it will be deleted soon
   // You can still use it in the rest of the request
