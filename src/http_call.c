@@ -121,10 +121,18 @@ int parse_url(char* url, char** hostname, char** port, char** path) {
 }
 
 void parse_http_response(struct HttpResponse* res, char* fullResponse) {
-  char* line;
-  int   isBody = 0;
-  char* headers = calloc(1, 1); // Allocate a single byte for null termination
-  char* body = calloc(1, 1);    // Allocate a single byte for null termination
+  char*  line;
+  int    isBody = 0;
+  size_t headers_size = 1;
+  size_t body_size = 1;
+  char*  headers = calloc(1, 1); // Allocate a single byte for null termination
+  char*  body = calloc(1, 1);    // Allocate a single byte for null termination
+
+  if(!headers || !body) {
+    free(headers);
+    free(body);
+    return;
+  }
 
   // Use strtok to split the response by newlines
   line = strtok(fullResponse, "\n");
@@ -137,17 +145,33 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
         isBody = 1;
       } else { // Header line
         trim(line);
-        headers = realloc(headers, strlen(headers) + strlen(line) +
-                                       2); // +2 for newline and null terminator
-        strcat(headers, line);
-        strcat(headers, "\n");
+        size_t line_len = strlen(line);
+        size_t new_size = headers_size + line_len + 1; // +1 for newline
+        char*  new_headers = realloc(headers, new_size);
+        if(!new_headers) {
+          free(headers);
+          free(body);
+          return;
+        }
+        headers = new_headers;
+        strncat(headers, line, line_len);
+        strncat(headers, "\n", 1);
+        headers_size = new_size;
       }
     } else {
       // Parse body
-      body = realloc(body, strlen(body) + strlen(line) +
-                               2); // +2 for newline and null terminator
-      strcat(body, line);
-      strcat(body, "\n");
+      size_t line_len = strlen(line);
+      size_t new_size = body_size + line_len + 1; // +1 for newline
+      char*  new_body = realloc(body, new_size);
+      if(!new_body) {
+        free(headers);
+        free(body);
+        return;
+      }
+      body = new_body;
+      strncat(body, line, line_len);
+      strncat(body, "\n", 1);
+      body_size = new_size;
     }
     line = strtok(NULL, "\n");
   }
@@ -323,7 +347,13 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
       return;
     }
     SSL_set_fd(ssl, sockfd);
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+
+    // Enable certificate verification for security
+    // NOTE: This requires proper certificate store setup on Windows
+    // For production, consider loading system certificates or a CA bundle
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    SSL_CTX_set_default_verify_paths(ctx);
+
     int result = SSL_connect(ssl);
     if(result != 1) {
       int ssl_err = errno;
@@ -339,11 +369,26 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
 
   // Send an initial buffer
   char req[1024];
-  sprintf(req, "%s /%s HTTP/1.1\r\nHost: %s\r\n%s\r\nContent-Length: %d\r\n\r\n%s",
-          request->method, path, hostname,
-          request->raw_headers ? request->raw_headers : "",
-          request->postData ? (int)strlen(request->postData) : 0,
-          request->postData ? request->postData : "");
+  int  ret =
+      snprintf(req, sizeof(req),
+               "%s /%s HTTP/1.1\r\nHost: %s\r\n%s\r\nContent-Length: %d\r\n\r\n%s",
+               request->method, path, hostname,
+               request->raw_headers ? request->raw_headers : "",
+               request->postData ? (int)strlen(request->postData) : 0,
+               request->postData ? request->postData : "");
+
+  if(ret < 0 || ret >= (int)sizeof(req)) {
+    response->error = 9; // Request too large
+    if(use_ssl) {
+      SSL_shutdown(ssl);
+      SSL_free(ssl);
+      SSL_CTX_free(ctx);
+      cleanup_openssl();
+    }
+    closesocket(sockfd);
+    WSACleanup();
+    return;
+  }
 
   if(use_ssl) {
     if(SSL_write(ssl, req, strlen(req)) <= 0) {

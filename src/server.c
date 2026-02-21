@@ -15,6 +15,7 @@
 #include "favicon.h"
 #include "messages.h"
 #include <arpa/inet.h>
+#include <errno.h>
 #include <poll.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -321,39 +322,58 @@ void handle_client(int client_socket) {
   char*  full_request = buffer;
   size_t total_read = bytes_read;
   size_t content_length = 0;
-  
+
+// Maximum request size to prevent DoS (10MB by default)
+#define MAX_REQUEST_SIZE (10 * 1024 * 1024)
+
   // Find Content-Length header
   const char* cl_header = strcasestr(buffer, "Content-Length:");
   if(cl_header && (cl_header < buffer + bytes_read)) {
-    content_length = atoi(cl_header + 15);
+    char* endptr;
+    long  cl_value = strtol(cl_header + 15, &endptr, 10);
+    if(cl_value < 0 || cl_value > MAX_REQUEST_SIZE) {
+      message(red("Request Error"), "Content-Length too large or invalid");
+      close(client_socket);
+      return;
+    }
+    content_length = (size_t)cl_value;
   }
-  
+
   // Find end of headers
   const char* body_start = strstr(buffer, "\r\n\r\n");
   if(body_start && content_length > 0) {
     body_start += 4;
     size_t headers_len = body_start - buffer;
     size_t body_read = bytes_read - headers_len;
-    
+
     // If we haven't read the full body yet, allocate and read more
     if(body_read < content_length) {
       size_t full_size = headers_len + content_length;
+
+      // Additional safety check
+      if(full_size > MAX_REQUEST_SIZE) {
+        message(red("Request Error"), "Request size exceeds maximum allowed");
+        close(client_socket);
+        return;
+      }
+
       full_request = (char*)malloc(full_size + 1);
       if(!full_request) {
         perror("Failed to allocate memory for large request");
         close(client_socket);
         return;
       }
-      
+
       // Copy what we already have
       memcpy(full_request, buffer, bytes_read);
       total_read = bytes_read;
-      
+
       // Read remaining data
       while(total_read < full_size) {
-        ssize_t n = recv(client_socket, full_request + total_read, 
+        ssize_t n = recv(client_socket, full_request + total_read,
                          full_size - total_read, 0);
-        if(n <= 0) break;
+        if(n <= 0)
+          break;
         total_read += n;
       }
       full_request[total_read] = '\0';
@@ -370,7 +390,8 @@ void handle_client(int client_socket) {
     (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
     (void)send_all(client_socket, favicon_data, FAVICON_SIZE);
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -385,6 +406,20 @@ void handle_client(int client_socket) {
   char* query_start = strchr(path, '?');
   if(query_start) {
     *query_start = '\0'; // Truncate at '?'
+  }
+
+  // Check for directory traversal patterns in the URI before processing
+  if(strstr(hm->uri.str, "..") != NULL) {
+    message(red("Security Error"), "Path traversal attempt blocked", hm->uri.str);
+    clean_http_message(hm);
+    response.status = 403;
+    response.body = BIALET_FORBIDDEN_PAGE;
+    response.length = strlen(BIALET_FORBIDDEN_PAGE);
+    response.header = BIALET_HEADERS;
+    write_response(client_socket, &response);
+    if(should_free_request)
+      free(full_request);
+    return;
   }
 
   // Handle routes ending with "/" or without
@@ -423,7 +458,8 @@ void handle_client(int client_socket) {
     response.length = strlen(BIALET_FORBIDDEN_PAGE);
     response.header = BIALET_HEADERS;
     write_response(client_socket, &response);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     return;
   }
 
@@ -433,7 +469,8 @@ void handle_client(int client_socket) {
     if(!url_copy) {
       perror("strdup");
       clean_http_message(hm);
-      if(should_free_request) free(full_request);
+      if(should_free_request)
+        free(full_request);
       close(client_socket);
       return;
     }
@@ -457,7 +494,8 @@ void handle_client(int client_socket) {
         }
         clean_http_message(hm);
         write_response(client_socket, &response);
-        if(should_free_request) free(full_request);
+        if(should_free_request)
+          free(full_request);
         return;
       }
       *last_slash = '\0'; // Truncate to parent directory
@@ -465,12 +503,35 @@ void handle_client(int client_socket) {
     free(url_copy);
   }
 
+  // Validate final path is within root_dir before opening file
+  char resolved_path[PATH_SIZE];
+  if(realpath(path, resolved_path) != NULL) {
+    size_t root_len = strlen(bialet_config.full_root_dir);
+    if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
+       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\0')) {
+      message(red("Security Error"), "Path traversal blocked", path);
+      clean_http_message(hm);
+      response.status = 403;
+      response.body = BIALET_FORBIDDEN_PAGE;
+      response.length = strlen(BIALET_FORBIDDEN_PAGE);
+      response.header = BIALET_HEADERS;
+      write_response(client_socket, &response);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+    // Use the verified resolved path
+    strncpy(path, resolved_path, PATH_SIZE - 1);
+    path[PATH_SIZE - 1] = '\0';
+  }
+
   // Open file and read content
   FILE* file = fopen(path, "rb");
   if(file == NULL) {
     perror("Error opening file");
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -478,7 +539,8 @@ void handle_client(int client_socket) {
     perror("fseek");
     fclose(file);
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -487,7 +549,8 @@ void handle_client(int client_socket) {
     perror("ftell");
     fclose(file);
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -505,7 +568,8 @@ void handle_client(int client_socket) {
     perror("Error allocating memory for file content");
     fclose(file);
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -515,7 +579,8 @@ void handle_client(int client_socket) {
     free(file_content);
     fclose(file);
     clean_http_message(hm);
-    if(should_free_request) free(full_request);
+    if(should_free_request)
+      free(full_request);
     close(client_socket);
     return;
   }
@@ -537,7 +602,7 @@ void handle_client(int client_socket) {
   clean_http_message(hm);
   write_response(client_socket, &response);
   free(file_content);
-  
+
   // Free allocated memory if we had to read a large request
   if(full_request != buffer) {
     free(full_request);

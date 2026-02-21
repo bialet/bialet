@@ -57,13 +57,20 @@ void hashPassword(char* password, char* output) {
   EVP_MD_CTX_free(ctx);
 
   static char result[HASH_AND_SALT_LENGTH];
-  for(unsigned int i = 0; i < hash_len; i++) {
-    sprintf(result + (i * 2), "%02x", hash[i]);
+  size_t offset = 0;
+  for(unsigned int i = 0; i < hash_len && offset + 2 < HASH_AND_SALT_LENGTH; i++) {
+    snprintf(result + offset, HASH_AND_SALT_LENGTH - offset, "%02x", hash[i]);
+    offset += 2;
   }
 
-  strcat(result, "/");
-  for(size_t i = 0; i < sizeof(salt); i++) {
-    sprintf(result + strlen(result), "%02x", salt[i]);
+  if(offset + 1 < HASH_AND_SALT_LENGTH) {
+    result[offset++] = '/';
+    result[offset] = '\0';
+  }
+  
+  for(size_t i = 0; i < sizeof(salt) && offset + 2 < HASH_AND_SALT_LENGTH; i++) {
+    snprintf(result + offset, HASH_AND_SALT_LENGTH - offset, "%02x", salt[i]);
+    offset += 2;
   }
 #else
   char salt[SALT_LENGTH + 1];
@@ -76,7 +83,8 @@ void hashPassword(char* password, char* output) {
   snprintf(result, sizeof(result), "%s$%s", hash, salt); // Formato: hash$salt
 #endif
 
-  strcpy(output, result);
+  strncpy(output, result, HASH_AND_SALT_LENGTH - 1);
+  output[HASH_AND_SALT_LENGTH - 1] = '\0';
 }
 
 int verifyPassword(char* password, char* hash_and_salt) {
@@ -86,7 +94,12 @@ int verifyPassword(char* password, char* hash_and_salt) {
   char stored_hash[65], stored_salt[33];
   strncpy(stored_hash, hash_and_salt, 64);
   stored_hash[64] = 0;
-  strcpy(stored_salt, hash_and_salt + 65);
+  if(strlen(hash_and_salt) >= 65) {
+    strncpy(stored_salt, hash_and_salt + 65, 32);
+    stored_salt[32] = 0;
+  } else {
+    return 0; // Invalid hash format
+  }
 
   unsigned char salt[16];
   for(int i = 0; i < 16; i++) {
@@ -106,8 +119,10 @@ int verifyPassword(char* password, char* hash_and_salt) {
   EVP_MD_CTX_free(ctx);
 
   char new_hash_str[65];
-  for(unsigned int i = 0; i < new_hash_len; i++) {
-    sprintf(new_hash_str + (i * 2), "%02x", new_hash[i]);
+  size_t offset = 0;
+  for(unsigned int i = 0; i < new_hash_len && offset + 2 < sizeof(new_hash_str); i++) {
+    snprintf(new_hash_str + offset, sizeof(new_hash_str) - offset, "%02x", new_hash[i]);
+    offset += 2;
   }
   new_hash_str[64] = 0;
   result = strcmp(new_hash_str, stored_hash) == 0;
