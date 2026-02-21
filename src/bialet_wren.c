@@ -79,9 +79,12 @@ static void bialetWrenWrite(WrenVM* vm, const char* message) {
 
 char* bialetReadFile(const char* path) {
   char fullPath[MAX_URL_LEN];
-  strcpy(fullPath, bialet_config.full_root_dir);
-  strcat(fullPath, "/");
-  strcat(fullPath, path);
+  int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", 
+                     bialet_config.full_root_dir, path);
+  if(ret < 0 || ret >= (int)sizeof(fullPath)) {
+    message(red("Error"), "Path too long in bialetReadFile");
+    return NULL;
+  }
   return readFile(fullPath);
 }
 
@@ -133,7 +136,11 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
         message(red("Error"), "Invalid GitHub URL.");
         return result;
       }
-      sprintf(url, BIALET_REMOTE_MODULE_GITHUB_URL, user, repo, branch, path);
+      int ret = snprintf(url, sizeof(url), BIALET_REMOTE_MODULE_GITHUB_URL, user, repo, branch, path);
+      if(ret < 0 || ret >= (int)sizeof(url)) {
+        message(red("Error"), "GitHub URL too long.");
+        return result;
+      }
       name -= 3; // Restore gh:
     } else {
       message(red("Error"), "Import type not supported.");
@@ -233,7 +240,7 @@ void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
                      const int line, const char* msg) {
   (void)vm;
   char lineMessage[MAX_LINE_ERROR_LEN];
-  sprintf(lineMessage, "%s line %d", module, line);
+  snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
   switch(errorType) {
     case WREN_ERROR_COMPILE: {
       message(red("Compilation Error"), lineMessage, (char*)msg);
@@ -251,7 +258,7 @@ static char* sqliteIntToString(sqlite3_int64 value) {
   char* str = (char*)malloc(21 * sizeof(char));
   if(str == NULL)
     return NULL;
-  sprintf(str, "%lld", value);
+  snprintf(str, 21, "%lld", value);
   return str;
 }
 
@@ -574,14 +581,22 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
 
-        // Append file ID to filesIds string
-        if(!firstFile) {
-          strcat(filesIds, ",");
-        }
+        // Append file ID to filesIds string safely
         char idStr[32];
         snprintf(idStr, sizeof(idStr), "%lld", fileId);
-        strcat(filesIds, idStr);
-        firstFile = 0;
+        
+        size_t currentLen = strlen(filesIds);
+        size_t neededLen = currentLen + (firstFile ? 0 : 1) + strlen(idStr);
+        
+        if(neededLen < MAX_URL_LEN) {
+          if(!firstFile) {
+            strncat(filesIds, ",", MAX_URL_LEN - currentLen - 1);
+          }
+          strncat(filesIds, idStr, MAX_URL_LEN - strlen(filesIds) - 1);
+          firstFile = 0;
+        } else {
+          message(red("Upload Error"), "Too many files uploaded");
+        }
       }
       sqlite3_finalize(stmt);
     }
@@ -867,14 +882,18 @@ void bialetInit(struct BialetConfig* config) {
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
   if(config->db_path[0] == '/') {
-    strcpy(db_path, config->db_path);
+    strncpy(db_path, config->db_path, sizeof(db_path) - 1);
+    db_path[sizeof(db_path) - 1] = '\0';
   } else {
     if(config->db_path[lastChar] == '/') {
       config->db_path[lastChar] = '\0';
     }
-    strcpy(db_path, config->root_dir);
-    strcat(db_path, "/");
-    strcat(db_path, config->db_path);
+    int ret = snprintf(db_path, sizeof(db_path), "%s/%s", 
+                       config->root_dir, config->db_path);
+    if(ret < 0 || ret >= (int)sizeof(db_path)) {
+      message(red("Error"), "Database path too long");
+      exit(BIALET_SQLITE_ERROR);
+    }
   }
   if(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                      NULL) != SQLITE_OK) {

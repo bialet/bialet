@@ -12,6 +12,7 @@
 #include "bialet_wren.h"
 #include "messages.h"
 #include "server.h"
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,10 +75,9 @@ static void migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
-  strcpy(path, bialet_config.root_dir);
-  strcat(path, MIGRATION_FILE);
-  strcpy(altPath, bialet_config.root_dir);
-  strcat(altPath, MIGRATION_FILE_ALT);
+  snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE);
+  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+           MIGRATION_FILE_ALT);
   if((code = readFile(path)) || (code = readFile(altPath))) {
     struct BialetResponse r = bialetRun("migration", code, 0);
     message(yellow("Running migration"), r.body);
@@ -89,10 +89,9 @@ static void migrate() {
 static void cron_install() {
   char path[MAX_PATH_LEN];
   char altPath[MAX_PATH_LEN];
-  strcpy(path, bialet_config.root_dir);
-  strcat(path, CRON_FILE);
-  strcpy(altPath, bialet_config.root_dir);
-  strcat(altPath, MIGRATION_FILE_ALT);
+  snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
+  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+           MIGRATION_FILE_ALT);
   if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
     message(yellow("Installing cron"));
     cron_installed = 1;
@@ -236,9 +235,15 @@ int main(int argc, char* argv[]) {
       case 'h':
         bialet_config.host = optarg;
         break;
-      case 'p':
-        bialet_config.port = atoi(optarg);
-        break;
+      case 'p': {
+        char* endptr;
+        long  port_val = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || port_val < 0 || port_val > 65535) {
+          fprintf(stderr, "Invalid port number: %s\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.port = (int)port_val;
+      } break;
       case 'l':
         if((bialet_config.log_file = fopen(optarg, "a")) == NULL) {
           perror("Error opening log file");
@@ -255,18 +260,42 @@ int main(int argc, char* argv[]) {
       case 'i':
         bialet_config.ignored_files = optarg;
         break;
-      case 'm':
-        bialet_config.mem_soft_limit = atoi(optarg);
-        break;
-      case 'M':
-        bialet_config.mem_hard_limit = atoi(optarg);
-        break;
-      case 'c':
-        bialet_config.cpu_soft_limit = atoi(optarg);
-        break;
-      case 'C':
-        bialet_config.cpu_hard_limit = atoi(optarg);
-        break;
+      case 'm': {
+        char* endptr;
+        long  mem = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || mem < 0) {
+          fprintf(stderr, "Invalid memory limit: %s\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.mem_soft_limit = (int)mem;
+      } break;
+      case 'M': {
+        char* endptr;
+        long  mem = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || mem < 0) {
+          fprintf(stderr, "Invalid memory limit: %s\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.mem_hard_limit = (int)mem;
+      } break;
+      case 'c': {
+        char* endptr;
+        long  cpu = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || cpu < 0) {
+          fprintf(stderr, "Invalid CPU limit: %s\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.cpu_soft_limit = (int)cpu;
+      } break;
+      case 'C': {
+        char* endptr;
+        long  cpu = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || cpu < 0) {
+          fprintf(stderr, "Invalid CPU limit: %s\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.cpu_hard_limit = (int)cpu;
+      } break;
       case 'r':
         code = optarg;
         break;
