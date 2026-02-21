@@ -15,6 +15,7 @@
 #include "favicon.h"
 #include "messages.h"
 #include <arpa/inet.h>
+#include <ctype.h>
 #include <errno.h>
 #include <poll.h>
 #include <stddef.h>
@@ -32,6 +33,23 @@
 
 int                        server_fd = -1;
 static struct BialetConfig bialet_config;
+
+// Portable case-insensitive string search
+static const char* stristr(const char* haystack, const char* needle) {
+  if(!*needle)
+    return haystack;
+  for(; *haystack; haystack++) {
+    const char* h = haystack;
+    const char* n = needle;
+    while(*h && *n && tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
+      h++;
+      n++;
+    }
+    if(!*n)
+      return haystack;
+  }
+  return NULL;
+}
 
 static ssize_t send_all(int fd, const void* buf, size_t count) {
   size_t      sent = 0;
@@ -327,7 +345,7 @@ void handle_client(int client_socket) {
 #define MAX_REQUEST_SIZE (10 * 1024 * 1024)
 
   // Find Content-Length header
-  const char* cl_header = strcasestr(buffer, "Content-Length:");
+  const char* cl_header = stristr(buffer, "Content-Length:");
   if(cl_header && (cl_header < buffer + bytes_read)) {
     char* endptr;
     long  cl_value = strtol(cl_header + 15, &endptr, 10);
