@@ -317,13 +317,60 @@ void handle_client(int client_socket) {
     return;
   }
 
-  struct HttpMessage* hm = parse_request(buffer, bytes_read);
+  // Check if we need to read more data (for large POST bodies)
+  char*  full_request = buffer;
+  size_t total_read = bytes_read;
+  size_t content_length = 0;
+  
+  // Find Content-Length header
+  const char* cl_header = strcasestr(buffer, "Content-Length:");
+  if(cl_header && (cl_header < buffer + bytes_read)) {
+    content_length = atoi(cl_header + 15);
+  }
+  
+  // Find end of headers
+  const char* body_start = strstr(buffer, "\r\n\r\n");
+  if(body_start && content_length > 0) {
+    body_start += 4;
+    size_t headers_len = body_start - buffer;
+    size_t body_read = bytes_read - headers_len;
+    
+    // If we haven't read the full body yet, allocate and read more
+    if(body_read < content_length) {
+      size_t full_size = headers_len + content_length;
+      full_request = (char*)malloc(full_size + 1);
+      if(!full_request) {
+        perror("Failed to allocate memory for large request");
+        close(client_socket);
+        return;
+      }
+      
+      // Copy what we already have
+      memcpy(full_request, buffer, bytes_read);
+      total_read = bytes_read;
+      
+      // Read remaining data
+      while(total_read < full_size) {
+        ssize_t n = recv(client_socket, full_request + total_read, 
+                         full_size - total_read, 0);
+        if(n <= 0) break;
+        total_read += n;
+      }
+      full_request[total_read] = '\0';
+    }
+  }
+
+  struct HttpMessage* hm = parse_request(full_request, total_read);
   message(magenta("Request"), hm->method.str, hm->uri.str);
+
+  // Variable to track if we need to free full_request
+  int should_free_request = (full_request != buffer);
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
     (void)send_all(client_socket, favicon_data, FAVICON_SIZE);
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -376,6 +423,7 @@ void handle_client(int client_socket) {
     response.length = strlen(BIALET_FORBIDDEN_PAGE);
     response.header = BIALET_HEADERS;
     write_response(client_socket, &response);
+    if(should_free_request) free(full_request);
     return;
   }
 
@@ -385,6 +433,7 @@ void handle_client(int client_socket) {
     if(!url_copy) {
       perror("strdup");
       clean_http_message(hm);
+      if(should_free_request) free(full_request);
       close(client_socket);
       return;
     }
@@ -408,6 +457,7 @@ void handle_client(int client_socket) {
         }
         clean_http_message(hm);
         write_response(client_socket, &response);
+        if(should_free_request) free(full_request);
         return;
       }
       *last_slash = '\0'; // Truncate to parent directory
@@ -420,6 +470,7 @@ void handle_client(int client_socket) {
   if(file == NULL) {
     perror("Error opening file");
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -427,6 +478,7 @@ void handle_client(int client_socket) {
     perror("fseek");
     fclose(file);
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -435,6 +487,7 @@ void handle_client(int client_socket) {
     perror("ftell");
     fclose(file);
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -452,6 +505,7 @@ void handle_client(int client_socket) {
     perror("Error allocating memory for file content");
     fclose(file);
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -461,6 +515,7 @@ void handle_client(int client_socket) {
     free(file_content);
     fclose(file);
     clean_http_message(hm);
+    if(should_free_request) free(full_request);
     close(client_socket);
     return;
   }
@@ -482,6 +537,11 @@ void handle_client(int client_socket) {
   clean_http_message(hm);
   write_response(client_socket, &response);
   free(file_content);
+  
+  // Free allocated memory if we had to read a large request
+  if(full_request != buffer) {
+    free(full_request);
+  }
 }
 
 int server_poll(int delay) {
