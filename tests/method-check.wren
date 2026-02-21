@@ -1,0 +1,1 @@
+Response.out(Request.method)

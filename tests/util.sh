@@ -113,6 +113,9 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
   disown
 
+  # Wait for server to start
+  sleep 3
+
   # Check if server is running
   PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
 
@@ -127,7 +130,12 @@ fi
 
 # Check if server port is up
 echo -e -n "${BLUE}Server port is up...\t"
-timeout 1 bash -c "echo >/dev/tcp/$HOST/$PORT" &> /dev/null
+# Try connecting to the port (works on both Linux and macOS)
+(bash -c "echo >/dev/tcp/$HOST/$PORT" 2>/dev/null &
+PID=$!
+sleep 5
+kill $PID 2>/dev/null)
+bash -c "echo >/dev/tcp/$HOST/$PORT" &> /dev/null
 if [[ $? == 0 ]]
 then
   echo -e "${GREEN}OK${NC}"
