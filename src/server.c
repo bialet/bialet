@@ -2,7 +2,7 @@
  * This file is part of Bialet, which is licensed under the
  * MIT License.
  *
- * Copyright (c) 2023-2025 Rodrigo Arce
+ * Copyright (c) 2023-2026 Rodrigo Arce
  *
  * SPDX-License-Identifier: MIT
  *
