@@ -127,7 +127,7 @@ fi
 
 # Check if server port is up
 echo -e -n "${BLUE}Server port is up...\t"
-nc -4 -d -z -w 1 $HOST $PORT &> /dev/null
+timeout 1 bash -c "echo >/dev/tcp/$HOST/$PORT" &> /dev/null
 if [[ $? == 0 ]]
 then
   echo -e "${GREEN}OK${NC}"

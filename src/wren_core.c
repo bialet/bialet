@@ -1232,16 +1232,28 @@ DEF_PRIMITIVE(test_runRequest) {
   extern const char* bialetGetFullRootDir();
   const char* rootDir = bialetGetFullRootDir();
   
+  // Strip query string from route for file lookup
+  const char* qmark = strchr(route, '?');
+  int routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
+
   // Resolve route to .wren file path
-  char path[1024];
-  char filePath[1024];
-  snprintf(path, sizeof(path), "%s%s.wren", rootDir, route);
+  char path[4096];
+  char filePath[4096];
+  {
+    char tmp[4096];
+    snprintf(tmp, sizeof(tmp), "%s%.*s.wren", rootDir, routePathLen, route);
+    strncpy(path, tmp, sizeof(path) - 1);
+    path[sizeof(path) - 1] = '\0';
+  }
   
   // Check if file exists, otherwise try index.wren
   extern char* readFile(const char* path);
   char* code = readFile(path);
   if (code == NULL) {
-    snprintf(path, sizeof(path), "%s%s/index.wren", rootDir, route);
+    char tmp2[4096];
+    snprintf(tmp2, sizeof(tmp2), "%s%.*s/index.wren", rootDir, routePathLen, route);
+    strncpy(path, tmp2, sizeof(path) - 1);
+    path[sizeof(path) - 1] = '\0';
     code = readFile(path);
   }
   
