@@ -50,6 +50,16 @@ class Test {
     }
     return this
   }
+  headerContains(name, value) {
+    if (!_response) run_()
+    if (!_response.headers.containsKey(name)) {
+      Fiber.abort("Expected response to contain header \"%(name)\"")
+    }
+    if (!_response.headers[name].contains(value)) {
+      Fiber.abort("Expected header \"%(name)\" to contain \"%(value)\" but was \"%(_response.headers[name])\"")
+    }
+    return this
+  }
   status(code) {
     if (!_response) run_()
     if (code != _response.code) {

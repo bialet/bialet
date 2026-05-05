@@ -56,6 +56,7 @@ installcheck: install
 
 check: $(BUILD_DIR)/$(TARGET_EXEC)
 	$(TEST_DIR)/run.sh
+	./$(BUILD_DIR)/$(TARGET_EXEC) -T $(TEST_DIR)
 
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)

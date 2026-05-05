@@ -1,0 +1,5 @@
+Test.get("/cookie?set=1")
+  .status(200)
+  .headerContains("Set-Cookie", "Path=/")
+  .headerContains("Set-Cookie", "HttpOnly")
+  .headerContains("Set-Cookie", "SameSite=Lax")
