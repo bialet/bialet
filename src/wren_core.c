@@ -16,8 +16,8 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <sqlite3.h>
 #include <string.h>
-#include <time.h>
 
 DEF_PRIMITIVE(bool_not) {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -1188,12 +1188,22 @@ DEF_PRIMITIVE(util_verify) {
 
 DEF_PRIMITIVE(util_randomString) {
   const int len = AS_NUM(args[1]);
+  if(len < 0) {
+    RETURN_ERROR("Length cannot be negative.");
+  }
+
   char      random_str[len + 1];
-  char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  srand(time(0));
-  for(int i = 0; i < len; i++) {
-    int random_index = rand() % (sizeof(charset) - 1);
-    random_str[i] = charset[random_index];
+  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const int  charset_len = (int)(sizeof(charset) - 1);
+  int        written = 0;
+
+  while(written < len) {
+    unsigned char random_byte = 0;
+    sqlite3_randomness(1, &random_byte);
+    if(random_byte >= (unsigned char)(charset_len * 4)) {
+      continue;
+    }
+    random_str[written++] = charset[random_byte % charset_len];
   }
   random_str[len] = '\0';
   RETURN_VAL(wrenNewString(vm, random_str));

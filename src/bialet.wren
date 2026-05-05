@@ -83,15 +83,29 @@ class Request {
   static post(name) { __post[name] ? __post[name]:null }
   static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
   static file(name) {
-    var res = Query.fetchFromString("SELECT * FROM BIALET_FILES WHERE name = ? AND id IN (%(__files))", [name])
-    if (res.count == 0) return null
-    return File.new(res[0]).save
+    if (!__files || __files.trim() == "") return null
+    for (fileId in __files.split(",")) {
+      fileId = fileId.trim()
+      if (fileId == "") continue
+      if (!Util.isDigits(fileId)) Fiber.abort("Invalid uploaded file id")
+      var file = `SELECT * FROM BIALET_FILES WHERE name = ? AND id = ?`.first([name, fileId])
+      if (file) return File.new(file).save
+    }
+    return null
   }
   static login(user, pass) {
     var authHeader = Request.header("authorization")
     if (!authHeader) return Response.login()
-    var login = Util.decodeBase64(authHeader.split(" ")[1]).split(":")
-    if (login[0] != user|| login[1] != pass) return Response.login()
+    var parts = authHeader.split(" ")
+    if (parts.count != 2 || parts[0].lower != "basic") return Response.login()
+    var decoded = Util.decodeBase64(parts[1])
+    var separator = decoded.indexOf(":")
+    if (separator < 0) return Response.login()
+    var loginUser = decoded[0...separator]
+    var loginPass = decoded[separator + 1..-1]
+    if (!Util.secureEquals(loginUser, user) || !Util.secureEquals(loginPass, pass)) {
+      return Response.login()
+    }
     return false
   }
 }
@@ -112,8 +126,8 @@ class Response {
 
   static out(out) { __out = __out + "\r\n" + out }
   static status(status) { __status = status }
-  static addCookieHeader(value) { __cookies.add("Set-Cookie: %(value)") }
-  static header(header, value) { __headers[header.trim()] = value.trim() }
+  static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
+  static header(header, value) { __headers[Util.headerName(header)] = Util.headerValue(value) }
   static file(id) {
     var type = `SELECT type FROM BIALET_FILES WHERE id = ?`.val([id])
     if (!type) return false
@@ -143,17 +157,20 @@ class Response {
   static cors() { cors("*") }
   static cors { cors("*") }
 
-  static page(title, message) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( title )</h1><p>%( message )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
+  static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }
+  static pageHtml(title, messageHtml) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( Util.htmlEscape(title) )</h1><p>%( messageHtml )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
   static end(code, title, message) { status(code) && out(page(title, message)) }
+  static endHtml(code, title, messageHtml) { status(code) && out(pageHtml(title, messageHtml)) }
 
   static redirect(url) {
     header("Location", url)
-    return end(302, "➡️ Redirect to", '<a href="%(url)">%(url)</a>')
+    var safeUrl = Util.htmlEscape(url)
+    return endHtml(302, "➡️ Redirect to", '<a href="%(safeUrl)">%(safeUrl)</a>')
   }
   static forbidden() { end(403, "🚫 Forbidden", "Sorry, you don't have permission to access this page") }
   static login() {
     header("WWW-Authenticate", 'Basic realm="Login required"')
-    return end(401, "🔒 Needs login", '<a href="javascript:location.reload()">Sign in</a> to access this page')
+    return endHtml(401, "🔒 Needs login", '<a href="javascript:location.reload()">Sign in</a> to access this page')
   }
 }
 
@@ -169,8 +186,32 @@ class Cookie {
     }
   }
   static set(name, value, options) {
-    Response.addCookieHeader("%(name)=%(value); %( options.keys.map{|k| "%(k)=%(options[k])"}.join("; ") )")
-    __cookies[name] = value
+    var safeName = Util.cookieToken(name, "Cookie name")
+    var safeValue = Util.cookieValue(value, "Cookie value")
+    var cookieOptions = {
+      "Path": "/",
+      "HttpOnly": true,
+      "SameSite": "Lax"
+    }
+    if (Util.isHttpsRequest) {
+      cookieOptions["Secure"] = true
+    }
+    for (key in options.keys) {
+      cookieOptions[key] = options[key]
+    }
+    var serialized = []
+    for (key in cookieOptions.keys) {
+      var safeKey = Util.cookieToken(key, "Cookie option")
+      var optionValue = cookieOptions[key]
+      if (optionValue == null || optionValue == false) continue
+      if (optionValue == true) {
+        serialized.add(safeKey)
+      } else {
+        serialized.add("%(safeKey)=%(Util.cookieValue(optionValue, safeKey))")
+      }
+    }
+    Response.addCookieHeader("%(safeName)=%(safeValue); %(serialized.join("; "))")
+    __cookies[safeName] = safeValue
   }
   static set(name, value){ set(name, value, {}) }
   static delete(name){ set(name, "", {"expires": "Thu, 01 Jan 1970 00:00:00 GMT"}) }
@@ -208,9 +249,9 @@ class Session {
   csrf {
     var token = Util.randomString(60)
     set("_bialet_csrf", token)
-    return '<input type="hidden" name="_bialet_csrf" value="%( token )">'
+    return '<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">'
   }
-  csrfOk { get("_bialet_csrf") == Request.post("_bialet_csrf") }
+  csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
 }
 
 // Json library and Util functions are from Matthew Brandly
@@ -570,6 +611,111 @@ class Util {
     val = Num.fromString("%(val)")
     if (!val) return 0
     return val
+  }
+
+  static htmlEscape(value) {
+    var input = value == null ? "" : "%(value)"
+    var escaped = ""
+    for (char in input) {
+      if (char == "&") {
+        escaped = escaped + "&amp;"
+      } else if (char == "<") {
+        escaped = escaped + "&lt;"
+      } else if (char == ">") {
+        escaped = escaped + "&gt;"
+      } else if (char == "\"") {
+        escaped = escaped + "&quot;"
+      } else if (char == "'") {
+        escaped = escaped + "&#x27;"
+      } else {
+        escaped = escaped + char
+      }
+    }
+    return escaped
+  }
+
+  static isDigits(value) {
+    if (!value || value.count == 0) return false
+    for (char in value) {
+      var byte = char.bytes[0]
+      if (byte < "0".bytes[0] || byte > "9".bytes[0]) return false
+    }
+    return true
+  }
+
+  static secureEquals(left, right) {
+    if (left == null || right == null) return false
+    left = "%(left)"
+    right = "%(right)"
+    var diff = left.count == right.count ? 0 : 1
+    var limit = left.count > right.count ? left.count : right.count
+    for (i in 0...limit) {
+      var leftByte = i < left.count ? left[i].bytes[0] : 0
+      var rightByte = i < right.count ? right[i].bytes[0] : 0
+      diff = diff | (leftByte ^ rightByte)
+    }
+    return diff == 0
+  }
+
+  static hasHeaderBreak(value) {
+    value = value == null ? "" : "%(value)"
+    for (char in value) {
+      var byte = char.bytes[0]
+      if (byte < 32 || byte == 127) return true
+    }
+    return false
+  }
+
+  static stripControlChars(value) {
+    value = value == null ? "" : "%(value)"
+    var sanitized = ""
+    for (char in value) {
+      var byte = char.bytes[0]
+      if (byte >= 32 && byte != 127) {
+        sanitized = sanitized + char
+      }
+    }
+    return sanitized
+  }
+
+  static headerName(value) {
+    value = value == null ? "" : "%(value)"
+    var header = value.trim()
+    if (header == "" || hasHeaderBreak(header) || header.contains(":")) {
+      Fiber.abort("Invalid response header name")
+    }
+    return header
+  }
+
+  static headerValue(value) {
+    return stripControlChars(value).trim()
+  }
+
+  static cookieToken(value, label) {
+    value = value == null ? "" : "%(value)"
+    var token = value.trim()
+    if (token == "" || hasHeaderBreak(token)) Fiber.abort("%(label) is invalid")
+    for (char in token) {
+      if (char == " " || char == "\t" || char == ";" || char == "=" || char == ",") {
+        Fiber.abort("%(label) contains invalid characters")
+      }
+    }
+    return token
+  }
+
+  static cookieValue(value, label) {
+    value = stripControlChars(value)
+    if (value.contains(";")) {
+      Fiber.abort("%(label) contains invalid characters")
+    }
+    return value
+  }
+
+  static isHttpsRequest {
+    var forwardedProto = Request.header("x-forwarded-proto")
+    if (forwardedProto && forwardedProto.lower == "https") return true
+    var forwarded = Request.header("forwarded")
+    return forwarded && forwarded.lower.contains("proto=https")
   }
 
   static hexToDec(hexStr) {
