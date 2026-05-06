@@ -18,6 +18,7 @@
 #include <math.h>
 #include <sqlite3.h>
 #include <string.h>
+#include <time.h>
 
 DEF_PRIMITIVE(bool_not) {
   RETURN_BOOL(!AS_BOOL(args[0]));
