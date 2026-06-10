@@ -329,12 +329,13 @@ void write_response(int client_socket, struct BialetResponse* response) {
 
 void handle_client(int client_socket) {
   char    buffer[BUFFER_SIZE];
-  ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer), 0);
+  ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
   if(bytes_read <= 0) {
     perror("Error reading request");
     close(client_socket);
     return;
   }
+  buffer[bytes_read] = '\0';
 
   // Check if we need to read more data (for large POST bodies)
   char*  full_request = buffer;
