@@ -395,8 +395,8 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
   sqlite3_finalize(stmt);
 }
 char* escapeSpecialChars(const char* input) {
-  int   i, j = 0, len = strlen(input);
-  char* output = malloc(len * 2 + 1); // Worst case: all characters need escaping
+  size_t i, j = 0, len = strlen(input);
+  char* output = malloc(len * 2 + 1);
   if(output == NULL)
     return NULL;
 
