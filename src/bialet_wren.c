@@ -96,6 +96,10 @@ char* readFile(const char* path) {
     fseek(f, 0, SEEK_END);
     length = ftell(f);
     fseek(f, 0, SEEK_SET);
+    if(length < 0) {
+      fclose(f);
+      return NULL;
+    }
     buffer = malloc(length + 1);
     if(buffer) {
       fread(buffer, 1, length, f);
