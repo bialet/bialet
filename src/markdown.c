@@ -92,7 +92,13 @@ char* markdownToHtml(const char* markdown) {
   char* input = strdup(markdown);
 
   // Split into lines preserving empty lines
-  char* lines[10000];
+  int   line_capacity = 256;
+  char** lines = malloc(line_capacity * sizeof(char*));
+  if(lines == NULL) {
+    free(input);
+    free(html);
+    return NULL;
+  }
   int   line_count = 0;
   char* p = input;
   char* line_start = input;
@@ -100,12 +106,34 @@ char* markdownToHtml(const char* markdown) {
   while(*p) {
     if(*p == '\n') {
       *p = '\0';
+      if(line_count >= line_capacity) {
+        line_capacity *= 2;
+        char** tmp = realloc(lines, line_capacity * sizeof(char*));
+        if(tmp == NULL) {
+          free(input);
+          free(html);
+          free(lines);
+          return NULL;
+        }
+        lines = tmp;
+      }
       lines[line_count++] = line_start;
       line_start = p + 1;
     }
     p++;
   }
   if(line_start < p) {
+    if(line_count >= line_capacity) {
+      line_capacity++;
+      char** tmp = realloc(lines, line_capacity * sizeof(char*));
+      if(tmp == NULL) {
+        free(input);
+        free(html);
+        free(lines);
+        return NULL;
+      }
+      lines = tmp;
+    }
     lines[line_count++] = line_start;
   }
 
@@ -287,6 +315,7 @@ char* markdownToHtml(const char* markdown) {
   if(in_codeblock)
     out += sprintf(out, "</code></pre>\n");
 
+  free(lines);
   free(input);
   return html;
 }
