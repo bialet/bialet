@@ -128,15 +128,15 @@ void stop_server() {
   }
 }
 
-struct String create_string(const char* str, int len) {
+struct String create_string(const char* str, size_t len) {
   struct String s;
   s.len = len;
-  s.str = (char*)malloc((size_t)len + 1);
+  s.str = (char*)malloc(len + 1);
   if(s.str == NULL) {
     perror("Failed to allocate memory for string");
     exit(EXIT_FAILURE);
   }
-  memcpy(s.str, str, (size_t)len);
+  memcpy(s.str, str, len);
   s.str[len] = '\0';
   return s;
 }
@@ -269,19 +269,19 @@ struct HttpMessage* parse_request(char* request, ssize_t length) {
   memcpy(first_line, request, line_len);
   first_line[line_len] = '\0';
 
-  hm->message = create_string(request, (int)length);
+  hm->message = create_string(request, length);
 
   // Tokenizar la primera línea segura
   char* saveptr = NULL;
   char* method = strtok_r(first_line, " ", &saveptr);
   if(!method)
     method = (char*)"GET";
-  hm->method = create_string(method, (int)strlen(method));
+  hm->method = create_string(method, strlen(method));
 
   char* url = strtok_r(NULL, " ", &saveptr);
   if(!url)
     url = (char*)"/";
-  hm->uri = create_string(url, (int)strlen(url));
+  hm->uri = create_string(url, strlen(url));
 
   hm->routes = create_string("", 0);
 
@@ -502,7 +502,7 @@ void handle_client(int client_socket) {
       snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
                url_copy);
       if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
-        hm->routes = create_string(url_copy, (int)strlen(url_copy));
+        hm->routes = create_string(url_copy, strlen(url_copy));
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
