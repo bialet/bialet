@@ -1278,12 +1278,12 @@ DEF_PRIMITIVE(test_runRequest) {
   }
   
   // Build HttpMessage struct
-  extern struct String create_string(const char* str, int len);
+  extern struct String create_string(const char* str, size_t len);
   struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   memset(hm, 0, sizeof(struct HttpMessage));
   
   // Store full message
-  hm->message = create_string(message, (int)strlen(message));
+  hm->message = create_string(message, strlen(message));
   
   // Parse method from message
   const char* methodEnd = strchr(message, ' ');
@@ -1292,7 +1292,7 @@ DEF_PRIMITIVE(test_runRequest) {
     char methodBuf[32];
     strncpy(methodBuf, message, methodLen);
     methodBuf[methodLen] = '\0';
-    hm->method = create_string(methodBuf, (int)methodLen);
+    hm->method = create_string(methodBuf, methodLen);
     
     // Parse URI
     const char* uriStart = methodEnd + 1;
@@ -1302,7 +1302,7 @@ DEF_PRIMITIVE(test_runRequest) {
       char uriBuf[1024];
       strncpy(uriBuf, uriStart, uriLen);
       uriBuf[uriLen] = '\0';
-      hm->uri = create_string(uriBuf, (int)uriLen);
+      hm->uri = create_string(uriBuf, uriLen);
     } else {
       hm->uri = create_string("/", 1);
     }
@@ -1322,12 +1322,12 @@ DEF_PRIMITIVE(test_runRequest) {
       if (headersLen < sizeof(headersBuf)) {
         strncpy(headersBuf, headersStart, headersLen);
         headersBuf[headersLen] = '\0';
-        hm->headers = create_string(headersBuf, (int)headersLen);
+        hm->headers = create_string(headersBuf, headersLen);
       } else {
         hm->headers = create_string("", 0);
       }
     } else {
-      hm->headers = create_string(headersStart, (int)strlen(headersStart));
+      hm->headers = create_string(headersStart, strlen(headersStart));
     }
   } else {
     hm->headers = create_string("", 0);
