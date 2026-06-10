@@ -91,3 +91,111 @@ files.
 - Avoid reordering exported struct/layout changes without adjusting consumers
 - Prefer small, focused changes
 - Run `make` then `make check` to validate
+
+## C Security Rules
+
+These rules prevent the most common and severe C vulnerabilities. Violations
+will be flagged during code review.
+
+### 1. Null-terminate network buffers before string ops
+
+`recv()` does NOT null-terminate. Always read `sizeof(buf) - 1` bytes and
+write `'\0'` after the last byte before passing the buffer to `strstr()`,
+`strlen()`, `printf()`, or any function expecting a C string.
+
+```c
+// Correct
+ssize_t n = recv(fd, buf, sizeof(buf) - 1, 0);
+if (n > 0) buf[n] = '\0';
+```
+
+### 2. Never use fixed-size buffers with dynamic content
+
+If the size depends on caller input (headers, log messages, file paths), compute
+the required size at runtime. Use `snprintf(NULL, 0, fmt, ...)` to measure, then
+`malloc(needed + 1)` to allocate.
+
+```c
+// Correct — dynamic allocation
+int needed = snprintf(NULL, 0, "HTTP/1.1 %d %s\r\n%s\r\n", status, desc, headers);
+char *msg = malloc(needed + 1);
+snprintf(msg, needed + 1, "HTTP/1.1 %d %s\r\n%s\r\n", status, desc, headers);
+```
+
+### 3. No large stack allocations
+
+Never allocate unbounded arrays on the stack. Arrays > 4096 bytes risk stack
+overflow, especially in recursive or nested call paths. Use `malloc`/`realloc`
+for any array whose size is not trivially bounded at compile time.
+
+```c
+// Wrong — 80KB on stack, no bounds check
+char *lines[10000];
+
+// Correct — heap-allocated with growth
+char **lines = malloc(capacity * sizeof(char *));
+// ... realloc() as needed, free() at end
+```
+
+### 4. Check `ftell()` and `fseek()` return values
+
+`ftell()` returns `-1` on error. Passing `-1` to `malloc()` or `fread()` causes
+undefined behavior (typically a massive overflow). Always check before use.
+
+```c
+// Correct
+long len = ftell(f);
+if (len < 0) { fclose(f); return NULL; }
+buffer = malloc(len + 1);
+```
+
+### 5. Validate filesystem paths with `realpath()`
+
+Any user-controlled path must be resolved with `realpath()` and verified to be
+within the allowed root directory. This prevents directory traversal attacks.
+
+```c
+// Correct
+char resolved[PATH_MAX];
+if (realpath(user_path, resolved) == NULL) return ERROR;
+if (strncmp(resolved, root_dir, root_len) != 0) return ERROR;
+// safe to use resolved now
+```
+
+### 6. Use `size_t` for lengths, not `int`
+
+`int` overflows at 2GB on 64-bit systems and silently wraps to negative on
+`len * 2` expressions. Always use `size_t` for buffer sizes, string lengths,
+and allocation arithmetic.
+
+```c
+// Wrong
+int len = strlen(s);
+char *buf = malloc(len * 2 + 1);  // overflow possible
+
+// Correct
+size_t len = strlen(s);
+char *buf = malloc(len * 2 + 1);
+```
+
+### 7. `trim()` must modify the buffer in-place
+
+Advancing a local pointer without shifting content means callers still see the
+original (untrimmed) string. Use `memmove()` to shift the trimmed portion to the
+start of the buffer.
+
+### 8. Prefer `snprintf` over `sprintf`
+
+`sprintf` has no bounds checking. Always use `snprintf` with the actual buffer
+size — never assume the output fits.
+
+### 9. Check every allocation
+
+Every `malloc`, `realloc`, `calloc`, and `strdup` call must have a NULL check.
+Do not just `exit()` — clean up resources (close FDs, free partial allocations)
+before returning an error.
+
+### 10. Avoid format string vulnerabilities
+
+Never pass user-controlled strings as the format argument to `printf`/`fprintf`/
+`snprintf`. Use `"%s"` as the format and pass the string as an argument.
