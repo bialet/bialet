@@ -3,11 +3,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
-#define COLORIZE_MAX 100
 #define GREEN_COLOR 32
 #define RED_COLOR 31
 #define YELLOW_COLOR 33
@@ -29,8 +29,11 @@ char* colorize(char* str, int color) {
   if(!apply_color || !color) {
     return str;
   }
-  char* output = malloc(COLORIZE_MAX);
-  sprintf(output, "\033[%dm%s\033[0m", color, str);
+  size_t len = strlen(str);
+  char* output = malloc(len + 20);
+  if(output == NULL)
+    return str;
+  snprintf(output, len + 20, "\033[%dm%s\033[0m", color, str);
   return output;
 }
 
