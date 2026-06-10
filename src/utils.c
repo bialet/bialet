@@ -49,23 +49,22 @@ char* string_append(char* zPrior, const char* zSep, const char* zSrc) {
 }
 
 void trim(char* str) {
+  char* start = str;
   char* end;
 
-  // Trim leading space
-  while(isspace((unsigned char)*str))
-    str++;
+  while(isspace((unsigned char)*start))
+    start++;
 
-  // All spaces?
-  if(*str == 0) {
-    *str = '\0'; // If the string only had spaces, set it to an empty string
+  if(*start == 0) {
+    *str = '\0';
     return;
   }
 
-  // Trim trailing space
-  end = str + strlen(str) - 1;
-  while(end > str && isspace((unsigned char)*end))
+  end = start + strlen(start) - 1;
+  while(end > start && isspace((unsigned char)*end))
     end--;
-
-  // Write new null terminator character
   end[1] = '\0';
+
+  if(start != str)
+    memmove(str, start, strlen(start) + 1);
 }
