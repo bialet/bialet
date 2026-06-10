@@ -29,7 +29,6 @@
 
 #define BUFFER_SIZE (BUFSIZ * 4)
 #define PATH_SIZE (1024 * 2)
-#define REQUEST_MESSAGE_SIZE 300
 
 int                        server_fd = -1;
 static struct BialetConfig bialet_config;
@@ -299,23 +298,29 @@ void write_response(int client_socket, struct BialetResponse* response) {
     body_len = strlen(response->body);
   }
 
-  char* message = (char*)malloc(REQUEST_MESSAGE_SIZE);
+  const char* desc = get_http_status_description(response->status);
+  const char* hdr = response->header ? response->header : "";
+
+  int needed = snprintf(NULL, 0,
+                        "HTTP/1.1 %d %s\r\n"
+                        "%s"
+                        "Content-Length: %lu\r\n\r\n",
+                        response->status, desc, hdr, (unsigned long)body_len);
+  if(needed < 0) {
+    perror("Failed to format HTTP response");
+    return;
+  }
+
+  char* message = (char*)malloc((size_t)needed + 1);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
     return;
   }
-  int ok =
-      snprintf(message, REQUEST_MESSAGE_SIZE,
-               "HTTP/1.1 %d %s\r\n"
-               "%s"
-               "Content-Length: %lu\r\n\r\n",
-               response->status, get_http_status_description(response->status),
-               response->header ? response->header : "", (unsigned long)body_len);
-  if(ok < 0) {
-    perror("Failed to format HTTP response or buffer overflow");
-    free(message);
-    return;
-  }
+  snprintf(message, (size_t)needed + 1,
+           "HTTP/1.1 %d %s\r\n"
+           "%s"
+           "Content-Length: %lu\r\n\r\n",
+           response->status, desc, hdr, (unsigned long)body_len);
 
   (void)send_all(client_socket, message, strlen(message));
   free(message);
