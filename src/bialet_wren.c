@@ -85,7 +85,20 @@ char* bialetReadFile(const char* path) {
     message(red("Error"), "Path too long in bialetReadFile");
     return NULL;
   }
-  return readFile(fullPath);
+
+  char resolved[MAX_URL_LEN];
+  if(realpath(fullPath, resolved) == NULL) {
+    return NULL;
+  }
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
+     (resolved[root_len] != '/' && resolved[root_len] != '\0')) {
+    message(red("Error"), "Path traversal attempt in bialetReadFile");
+    return NULL;
+  }
+
+  return readFile(resolved);
 }
 
 char* readFile(const char* path) {
