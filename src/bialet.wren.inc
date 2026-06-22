@@ -231,7 +231,7 @@ static const char* bialetModuleSource =
 "}\n"
 "class Json {\n"
 "  static parse(string) {\n"
-"    return JsonParser.new(string).parse\n"
+"    return parse_(string)\n"
 "  }\n"
 "  static stringify(object) {\n"
 "    return JsonStringifier.new(object).toString\n"
