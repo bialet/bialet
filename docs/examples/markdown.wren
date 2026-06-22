@@ -6,7 +6,7 @@ This is written in Markdown.
 
 [Back ↩️](.)
 
-This is the README.md file:
+This is the example.md file:
 "
 
 return <!doctype html>
@@ -21,7 +21,7 @@ return <!doctype html>
     {{ Markdown.html(markdown) }}</p>
 
     <div style="text-align: left">
-      {{ Markdown.file("../../README.md") }}
+      {{ Markdown.file("example.md") }}
     </div>
 
   </body>
