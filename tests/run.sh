@@ -28,6 +28,7 @@ run_test "Response headers            " "headers"         200 "headers-set"
 # Tests - JSON & Parsing
 run_test "JSON response               " "json"            200 '{"foo":"bar"}'
 run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
+run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Parsing error               " "parsing-error"   500
 

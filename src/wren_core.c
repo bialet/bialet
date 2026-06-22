@@ -6,6 +6,7 @@
 #include "bialet_wren.h"
 #include "hash.h"
 #include "http_call.h"
+#include "json.h"
 #include "markdown.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
@@ -1791,6 +1792,9 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
   PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
   PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
+
+  ObjClass* jsonClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Json"));
+  PRIMITIVE(jsonClass->obj.classObj, "parse_(_)", json_parse_primitive);
 
   // Conditionally load test classes
   if(vm->config.enableTests) {

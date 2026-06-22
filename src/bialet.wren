@@ -258,7 +258,7 @@ class Session {
 // https://github.com/brandly/wren-json
 class Json {
   static parse(string) {
-    return JsonParser.new(string).parse
+    return parse_(string)
   }
 
   static stringify(object) {
