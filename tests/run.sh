@@ -31,6 +31,7 @@ run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Parsing error               " "parsing-error"   500
+run_test "Markdown ordered list       " "markdown-ol"    200 "<ol>"
 
 # Tests - Database
 run_test "Database save and fetch     " "db"              200 "John Doe"

@@ -7,6 +7,17 @@
 
 #define MAX_OUTPUT 2 * 1024 * 1024
 
+static bool is_ordered_list_item(const char* line) {
+  if(*line < '0' || *line > '9') return false;
+  while(*line >= '0' && *line <= '9') line++;
+  return (*line == '.' && *(line + 1) == ' ');
+}
+
+static const char* skip_ordered_list_prefix(const char* line) {
+  while(*line >= '0' && *line <= '9') line++;
+  return line + 2;
+}
+
 static char* escapeHtml(const char* src, char* out) {
   while(*src) {
     switch(*src) {
@@ -137,8 +148,8 @@ char* markdownToHtml(const char* markdown) {
     lines[line_count++] = line_start;
   }
 
-  bool in_list = false, in_blockquote = false, in_codeblock = false,
-       in_table = false;
+  bool in_list = false, in_olist = false, in_blockquote = false,
+       in_codeblock = false, in_table = false;
   bool table_header_parsed = false;
 
   int i = 0;
@@ -236,7 +247,30 @@ char* markdownToHtml(const char* markdown) {
       in_table = false;
     }
 
+    if(is_ordered_list_item(line)) {
+      if(in_list) {
+        out += sprintf(out, "</ul>\n");
+        in_list = false;
+      }
+      if(!in_olist) {
+        out += sprintf(out, "<ol>\n");
+        in_olist = true;
+      }
+      out += sprintf(out, "<li>");
+      out = renderInline(skip_ordered_list_prefix(line), out);
+      out += sprintf(out, "</li>\n");
+      i++;
+      continue;
+    } else if(in_olist) {
+      out += sprintf(out, "</ol>\n");
+      in_olist = false;
+    }
+
     if(strncmp(line, "- ", 2) == 0 || strncmp(line, "* ", 2) == 0) {
+      if(in_olist) {
+        out += sprintf(out, "</ol>\n");
+        in_olist = false;
+      }
       if(!in_list) {
         out += sprintf(out, "<ul>\n");
         in_list = true;
@@ -287,7 +321,8 @@ char* markdownToHtml(const char* markdown) {
             (next_line[0] == '#') || (strncmp(next_line, "- ", 2) == 0) ||
             (strncmp(next_line, "* ", 2) == 0) ||
             (strncmp(next_line, "```", 3) == 0) || (next_line[0] == '>') ||
-            (next_line[0] == '|' && strchr(next_line + 1, '|'));
+            (next_line[0] == '|' && strchr(next_line + 1, '|')) ||
+            is_ordered_list_item(next_line);
 
         if(is_special) {
           break;
@@ -308,6 +343,8 @@ char* markdownToHtml(const char* markdown) {
 
   if(in_list)
     out += sprintf(out, "</ul>\n");
+  if(in_olist)
+    out += sprintf(out, "</ol>\n");
   if(in_table)
     out += sprintf(out, "</table>\n");
   if(in_blockquote)
