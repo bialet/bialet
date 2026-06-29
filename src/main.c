@@ -91,7 +91,7 @@ static void cron_install() {
   char altPath[MAX_PATH_LEN];
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
-           MIGRATION_FILE_ALT);
+           CRON_FILE_ALT);
   if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
     message(yellow("Installing cron"));
     cron_installed = 1;
