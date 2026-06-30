@@ -1,8 +1,14 @@
+---
+orphan: true
+---
+
 # About Bialet
 
-**Bialet** is a minimalist full-stack web framework that brings back the joy of writing web apps.
+**Bialet** is a minimalist full-stack web framework that brings back the joy of
+writing web apps.
 
-No build steps. No dependencies. Just HTML, SQL, and a lightweight scripting language.
+No build steps. No dependencies. Just HTML, SQL, and a lightweight scripting
+language.
 
 ## ✨ Features
 
@@ -30,3 +36,4 @@ class App {
 }
 
 return App.new().html()
+```

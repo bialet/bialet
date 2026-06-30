@@ -1,0 +1,1062 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Model Context Protocol (MCP)" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/mcp.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet includes built-in support for the Model Context Protocol (MCP), allowing you to create MCP servers that expose tools, resources, and prompts to AI assistants like Claude, GitHub Copilot, and..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet includes built-in support for the Model Context Protocol (MCP), allowing you to create MCP servers that expose tools, resources, and prompts to AI assistants like Claude, GitHub Copilot, and..." />
+
+    <title>Model Context Protocol (MCP) &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a180c788" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'mcp';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Cron Tasks" href="cron.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/mcp.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fmcp.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/mcp.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Model Context Protocol (MCP)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-mcp">What is MCP?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-an-mcp-server">Creating an MCP Server</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-structure">Basic Structure</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-tools">Defining Tools</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-annotations">Tool Annotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-simple-greeting-tool">Example 1: Simple Greeting Tool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-flight-search-tool">Example 2: Flight Search Tool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-3-database-query-tool">Example 3: Database Query Tool</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-parameters">Tool Parameters</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-types">Parameter Types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-formats">Parameter Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-vs-required-parameters">Optional vs Required Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp-class-methods">Mcp Class Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp-new-name-version">Mcp.new(name, version)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addtool-toolclass">addTool(toolClass)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addprompt-prompt">addPrompt(prompt)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve">serve</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#returning-data-from-tools">Returning Data from Tools</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-values">Simple Values</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maps-objects">Maps (Objects)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lists-arrays">Lists (Arrays)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-results">Database Results</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-to-ai-assistants">Connecting to AI Assistants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-example">Configuration Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging">Debugging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="model-context-protocol-mcp">
+<h1>Model Context Protocol (MCP)<a class="headerlink" href="#model-context-protocol-mcp" title="Link to this heading">#</a></h1>
+<p>Bialet includes built-in support for the
+<a class="reference external" href="https://modelcontextprotocol.io/">Model Context Protocol (MCP)</a>, allowing you
+to create MCP servers that expose tools, resources, and prompts to AI assistants
+like Claude, GitHub Copilot, and others.</p>
+<section id="what-is-mcp">
+<h2>What is MCP?<a class="headerlink" href="#what-is-mcp" title="Link to this heading">#</a></h2>
+<p>The Model Context Protocol is an open standard that enables seamless integration
+between AI applications and external data sources. With Bialet’s MCP support,
+you can:</p>
+<ul class="simple">
+<li><p><strong>Expose Tools</strong>: Create callable functions that AI assistants can invoke</p></li>
+<li><p><strong>Provide Resources</strong>: Share data and content that assistants can access</p></li>
+<li><p><strong>Define Prompts</strong>: Offer pre-configured prompts for specific tasks</p></li>
+</ul>
+</section>
+<section id="creating-an-mcp-server">
+<h2>Creating an MCP Server<a class="headerlink" href="#creating-an-mcp-server" title="Link to this heading">#</a></h2>
+<p>To create an MCP server in Bialet, you need a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file that defines
+your tools and serves them using the <code class="docutils literal notranslate"><span class="pre">Mcp</span></code> class.</p>
+<p><strong>Important</strong>: The <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file is always needed for MCP servers. You
+don’t need to place it inside a specific <code class="docutils literal notranslate"><span class="pre">mcp</span></code> folder - any directory can host
+an MCP server through its <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file.</p>
+<section id="basic-structure">
+<h3>Basic Structure<a class="headerlink" href="#basic-structure" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="c1">// Define your tools as classes</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Initialize with parameters</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Define the tool&#39;s logic</span>
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Return the result</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Create and configure the MCP server</span>
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;my-server-name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">MyTool</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;System prompt for the AI assistant&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="defining-tools">
+<h2>Defining Tools<a class="headerlink" href="#defining-tools" title="Link to this heading">#</a></h2>
+<p>Tools are defined as Wren classes with specific annotations that describe their
+parameters and behavior.</p>
+<section id="tool-annotations">
+<h3>Tool Annotations<a class="headerlink" href="#tool-annotations" title="Link to this heading">#</a></h3>
+<p>Use special comment annotations to describe your tool and its parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#!doc</span> <span class="pre">=</span> <span class="pre">&quot;description&quot;</span></code>: Describes the tool or parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#!required</span></code>: Marks a parameter as required</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#!type</span> <span class="pre">=</span> <span class="pre">TypeName</span></code>: Specifies the parameter type (String, Number, Boolean,
+etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#!format</span> <span class="pre">=</span> <span class="pre">&quot;format&quot;</span></code>: Specifies the format for strings (e.g., “date”,
+“email”, “uri”)</p></li>
+</ul>
+</section>
+<section id="example-1-simple-greeting-tool">
+<h3>Example 1: Simple Greeting Tool<a class="headerlink" href="#example-1-simple-greeting-tool" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="cs">#!doc = &quot;A simple greeting tool&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">!&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;greeter&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a friendly assistant that greets people.&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+<section id="example-2-flight-search-tool">
+<h3>Example 2: Flight Search Tool<a class="headerlink" href="#example-2-flight-search-tool" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="cs">#!doc = &quot;Search for available flights&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchFlights</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_origin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;origin&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_destination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Departure city&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">origin</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Arrival city&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">destination</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Travel date&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!format = &quot;date&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">date</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Query your database or external API</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">flights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM flights</span>
+<span class="sb">                   WHERE origin = ? AND destination = ? AND date = ?`</span>
+<span class="w">                   </span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="vi">_origin</span><span class="p">,</span><span class="w"> </span><span class="vi">_destination</span><span class="p">,</span><span class="w"> </span><span class="vi">_date</span><span class="p">])</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;from&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_origin</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;to&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_destination</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;date&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_date</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;flights&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">flights</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;flight-search&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchFlights</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a travel assistant that helps users find flights.&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+<section id="example-3-database-query-tool">
+<h3>Example 3: Database Query Tool<a class="headerlink" href="#example-3-database-query-tool" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="cs">#!doc = &quot;Query user information from the database&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GetUser</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;userId&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;User ID to query&quot;</span>
+<span class="w">  </span><span class="cs">#!type = Number</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">userId</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="vi">_userId</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;user-api&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">GetUser</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are an assistant that provides user information.&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tool-parameters">
+<h2>Tool Parameters<a class="headerlink" href="#tool-parameters" title="Link to this heading">#</a></h2>
+<section id="parameter-types">
+<h3>Parameter Types<a class="headerlink" href="#parameter-types" title="Link to this heading">#</a></h3>
+<p>The following types are supported:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">String</span></code>: Text values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Number</span></code>: Numeric values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Boolean</span></code>: True/false values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Array</span></code>: Lists of values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Object</span></code>: Key-value pairs (Map)</p></li>
+</ul>
+</section>
+<section id="parameter-formats">
+<h3>Parameter Formats<a class="headerlink" href="#parameter-formats" title="Link to this heading">#</a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">String</span></code> type parameters, you can specify formats:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code>: ISO 8601 date format (YYYY-MM-DD)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;date-time&quot;</span></code>: ISO 8601 datetime format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;email&quot;</span></code>: Email address format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;uri&quot;</span></code>: URI/URL format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;uuid&quot;</span></code>: UUID format</p></li>
+</ul>
+</section>
+<section id="optional-vs-required-parameters">
+<h3>Optional vs Required Parameters<a class="headerlink" href="#optional-vs-required-parameters" title="Link to this heading">#</a></h3>
+<p>By default, parameters are optional unless marked with <code class="docutils literal notranslate"><span class="pre">#!required</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyTool</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_required</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;required&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_optional</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;optional&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;This parameter is required&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">required</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;This parameter is optional&quot;</span>
+<span class="w">  </span><span class="n">optional</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Handle both required and optional parameters</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="mcp-class-methods">
+<h2>Mcp Class Methods<a class="headerlink" href="#mcp-class-methods" title="Link to this heading">#</a></h2>
+<section id="mcp-new-name-version">
+<h3>Mcp.new(name, version)<a class="headerlink" href="#mcp-new-name-version" title="Link to this heading">#</a></h3>
+<p>Creates a new MCP server instance.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of your MCP server (String)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code>: The version number (String)</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;my-server&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="addtool-toolclass">
+<h3>addTool(toolClass)<a class="headerlink" href="#addtool-toolclass" title="Link to this heading">#</a></h3>
+<p>Adds a tool class to the MCP server.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">toolClass</span></code>: The class that implements the tool</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchFlights</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="addprompt-prompt">
+<h3>addPrompt(prompt)<a class="headerlink" href="#addprompt-prompt" title="Link to this heading">#</a></h3>
+<p>Sets the system prompt for the MCP server. This prompt helps guide the AI
+assistant on how to use your tools.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prompt</span></code>: The system prompt text (String)</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a helpful assistant that can greet people and search for flights.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="serve">
+<h3>serve<a class="headerlink" href="#serve" title="Link to this heading">#</a></h3>
+<p>Starts the MCP server and begins listening for requests. This must be the last
+call in your <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="returning-data-from-tools">
+<h2>Returning Data from Tools<a class="headerlink" href="#returning-data-from-tools" title="Link to this heading">#</a></h2>
+<p>Tools can return various types of data:</p>
+<section id="simple-values">
+<h3>Simple Values<a class="headerlink" href="#simple-values" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;Hello, World!&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">42</span><span class="w"> </span><span class="p">}</span>
+<span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="maps-objects">
+<h3>Maps (Objects)<a class="headerlink" href="#maps-objects" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Some value&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;timestamp&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="lists-arrays">
+<h3>Lists (Arrays)<a class="headerlink" href="#lists-arrays" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;item1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;item3&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="database-results">
+<h3>Database Results<a class="headerlink" href="#database-results" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">users</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="complete-example">
+<h2>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h2>
+<p>Here’s a complete example that combines database queries, file handling, and
+multiple tools:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="cs">#!doc = &quot;Get user profile information&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GetUserProfile</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;userId&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;User ID&quot;</span>
+<span class="w">  </span><span class="cs">#!type = Number</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">userId</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT u.*, f.id as avatar_id</span>
+<span class="sb">                FROM users u</span>
+<span class="sb">                LEFT JOIN files f ON u.avatar_file_id = f.id</span>
+<span class="sb">                WHERE u.id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="vi">_userId</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;avatar_url&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;avatar_id&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;/files/</span><span class="si">%(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;avatar_id&quot;</span><span class="p">]</span><span class="si">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cs">#!doc = &quot;Create a new user&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CreateUser</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;User&#39;s full name&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">name</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;User&#39;s email address&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!format = &quot;email&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">email</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">userData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_name</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_email</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;created_at&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">userData</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;userId&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;message&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User created successfully&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cs">#!doc = &quot;Search users by name or email&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchUsers</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_query</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;query&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Search query&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">query</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">searchTerm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="err">%</span><span class="si">%(</span><span class="vi">_query</span><span class="si">)</span><span class="err">%</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email</span>
+<span class="sb">                 FROM users</span>
+<span class="sb">                 WHERE name LIKE ? OR email LIKE ?</span>
+<span class="sb">                 LIMIT 10`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">searchTerm</span><span class="p">,</span><span class="w"> </span><span class="n">searchTerm</span><span class="p">])</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;count&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;users&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Set up the MCP server</span>
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;bialet-user-api&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">GetUserProfile</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">CreateUser</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchUsers</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a user management assistant that can retrieve, create, and search for users.&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+<section id="connecting-to-ai-assistants">
+<h2>Connecting to AI Assistants<a class="headerlink" href="#connecting-to-ai-assistants" title="Link to this heading">#</a></h2>
+<p>Once your MCP server is running in Bialet, AI assistants can connect to it using
+the standard MCP protocol. The server will be accessible at the URL where your
+Bialet application is running.</p>
+<section id="configuration-example">
+<h3>Configuration Example<a class="headerlink" href="#configuration-example" title="Link to this heading">#</a></h3>
+<p>For Claude Desktop or other MCP clients, you would configure the connection
+like:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;bialet-server&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/mcp&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;transport&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Replace the URL with your actual Bialet server address and the path to your
+<code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file.</p>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Use Descriptive Documentation</strong>: Always include <code class="docutils literal notranslate"><span class="pre">#!doc</span></code> annotations to help
+AI assistants understand your tools</p></li>
+<li><p><strong>Validate Input</strong>: Check parameters in your <code class="docutils literal notranslate"><span class="pre">call()</span></code> method before using
+them</p></li>
+<li><p><strong>Handle Errors Gracefully</strong>: Return error objects instead of crashing</p></li>
+<li><p><strong>Keep Tools Focused</strong>: Each tool should do one thing well</p></li>
+<li><p><strong>Use Database Efficiently</strong>: Leverage SQLite queries for data operations</p></li>
+<li><p><strong>Return Structured Data</strong>: Use Maps and Lists for complex return values</p></li>
+<li><p><strong>Test Your Tools</strong>: Verify each tool works correctly before deployment</p></li>
+</ol>
+</section>
+<section id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Link to this heading">#</a></h2>
+<p>To debug your MCP server, you can use <code class="docutils literal notranslate"><span class="pre">System.log()</span></code> to output messages:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Received parameters: </span><span class="si">%(</span><span class="vi">_userId</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="vi">_userId</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Found user: </span><span class="si">%(</span><span class="n">user</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">user</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These messages will appear in the Bialet server logs, helping you track down
+issues.</p>
+</section>
+<section id="security-considerations">
+<h2>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Validate User Input</strong>: Always validate and sanitize parameters</p></li>
+<li><p><strong>Use Parameterized Queries</strong>: Never concatenate user input into SQL queries</p></li>
+<li><p><strong>Limit Data Exposure</strong>: Only return necessary information</p></li>
+<li><p><strong>Implement Rate Limiting</strong>: Consider adding rate limits to prevent abuse</p></li>
+<li><p><strong>Authenticate Requests</strong>: Add authentication if your MCP server handles
+sensitive data</p></li>
+</ol>
+</section>
+<section id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://modelcontextprotocol.io/">Model Context Protocol Specification</a></p></li>
+<li><p><a class="reference internal" href="database.html"><span class="std std-doc">Database Documentation</span></a> - Learn more about SQLite in Bialet</p></li>
+<li><p><a class="reference internal" href="file.html"><span class="std std-doc">File Handling</span></a> - Work with files in your MCP tools</p></li>
+<li><p><a class="reference internal" href="structure.html"><span class="std std-doc">Structure</span></a> - Understanding <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> and routing</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="cron.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Cron Tasks</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-mcp">What is MCP?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-an-mcp-server">Creating an MCP Server</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-structure">Basic Structure</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-tools">Defining Tools</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-annotations">Tool Annotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-simple-greeting-tool">Example 1: Simple Greeting Tool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-flight-search-tool">Example 2: Flight Search Tool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-3-database-query-tool">Example 3: Database Query Tool</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-parameters">Tool Parameters</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-types">Parameter Types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parameter-formats">Parameter Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-vs-required-parameters">Optional vs Required Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp-class-methods">Mcp Class Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp-new-name-version">Mcp.new(name, version)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addtool-toolclass">addTool(toolClass)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addprompt-prompt">addPrompt(prompt)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve">serve</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#returning-data-from-tools">Returning Data from Tools</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-values">Simple Values</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maps-objects">Maps (Objects)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lists-arrays">Lists (Arrays)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-results">Database Results</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-to-ai-assistants">Connecting to AI Assistants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-example">Configuration Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging">Debugging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -56,7 +56,7 @@ Create an `index.wren` file in your app directory and run it:
 
 Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
 
-.. grid:: 2
+.. grid:: 3
 
     .. grid-item-card::
         :text-align: center
@@ -78,6 +78,16 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
         +++++++++++++++
         *use it with Docker or compile it*
 
+    .. grid-item-card::
+        :text-align: center
+        :link: https://raw.githubusercontent.com/bialet/bialet/main/prompt.md
+
+        :octicon:`download;2em;sd-text-info`
+
+        AI Development Guide
+        ++++++++++++++++++++
+        *prompt.md for AI assistants*
+
 .. toctree::
    :hidden:
    :maxdepth: 2
@@ -88,8 +98,11 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
    structure
    html-strings
    database
+   rest-api
+   tests
    file
    datetime
    cron
+   mcp
    reference
    examples

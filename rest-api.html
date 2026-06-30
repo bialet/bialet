@@ -1,0 +1,1156 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Building REST APIs" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/rest-api.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. Quick Start: Create an API endpoint by making a.wren file in your project: Visit http://loc..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. Quick Start: Create an API endpoint by making a.wren file in your project: Visit http://loc..." />
+
+    <title>Building REST APIs &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a180c788" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'rest-api';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Testing in Bialet" href="tests.html" />
+    <link rel="prev" title="Database" href="database.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/rest-api.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Frest-api.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/rest-api.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Building REST APIs</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-structure">Project Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-different-http-methods">Handling Different HTTP Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cors-configuration">CORS Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request-parsing">Request Parsing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-request-body">JSON Request Body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-data">Form Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-parameters">Query Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-query-parameters">Multiple Query Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response-formats">Response Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status-codes">Status Codes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-responses">Error Responses</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication">Authentication</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-key-authentication">API Key Authentication</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token-authentication">Bearer Token Authentication</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-and-sorting">Filtering and Sorting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-migrations">Database Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-products-api">Complete Example: Products API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-api">Testing Your API</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-curl">Using curl</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-javascript-fetch">Using JavaScript (fetch)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="building-rest-apis">
+<h1>Building REST APIs<a class="headerlink" href="#building-rest-apis" title="Link to this heading">#</a></h1>
+<p>This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication.</p>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<p>Create an API endpoint by making a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file in your project:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/users.wren - Handles /api/users</span>
+
+<span class="c1">// Enable CORS for browser access</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Get ID from query parameter (e.g., /api/users?id=1)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Get single user</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// List all users</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email FROM users`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Visit <code class="docutils literal notranslate"><span class="pre">http://localhost:7001/api/users</span></code> to list all users, or <code class="docutils literal notranslate"><span class="pre">http://localhost:7001/api/users?id=1</span></code> to get a specific user.</p>
+</section>
+<section id="project-structure">
+<h2>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading">#</a></h2>
+<p>For a typical API, organize your files like this:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">my</span><span class="o">-</span><span class="n">api</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_db</span><span class="o">.</span><span class="n">sqlite3</span><span class="w">           </span><span class="cs"># Database file</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_migration</span><span class="o">.</span><span class="n">wren</span><span class="w">       </span><span class="cs"># Database migrations</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">api</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">wren</span><span class="w">       </span><span class="cs"># /api/users endpoint</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">products</span><span class="o">.</span><span class="n">wren</span><span class="w">    </span><span class="cs"># /api/products endpoint</span>
+<span class="err">└──</span><span class="w"> </span><span class="vi">_app</span><span class="o">.</span><span class="n">wren</span><span class="w">            </span><span class="cs"># Shared utilities (optional)</span>
+</pre></div>
+</div>
+</section>
+<section id="handling-different-http-methods">
+<h2>Handling Different HTTP Methods<a class="headerlink" href="#handling-different-http-methods" title="Link to this heading">#</a></h2>
+<p>Handle different HTTP methods in a single file using query parameters:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/users.wren - Handles /api/users</span>
+
+<span class="c1">// Enable CORS for all methods</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Get ID from query parameter</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+<span class="c1">// GET /api/users?id=1 - Get a single user</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email, created_at FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// GET /api/users - List all users</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email, created_at FROM users`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// POST /api/users - Create a new user</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="c1">// Validation</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">email</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Name and email are required&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="c1">// Insert new user</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">email</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">email</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// PUT /api/users?id=1 - Update a user</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;PUT&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="c1">// Check if user exists</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="c1">// Update user</span>
+<span class="w">  </span><span class="sb">`UPDATE users SET name = ?, email = ? WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">email</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">email</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// DELETE /api/users?id=1 - Delete a user</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;DELETE&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`DELETE FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">204</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({})</span>
+<span class="p">}</span>
+
+<span class="c1">// 404 for unknown operations</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid request&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="cors-configuration">
+<h2>CORS Configuration<a class="headerlink" href="#cors-configuration" title="Link to this heading">#</a></h2>
+<p>Enable Cross-Origin Resource Sharing to allow browser access from different domains:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Allow all origins (simplest form)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Allow specific origin</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">&quot;https://myapp.com&quot;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Full control over CORS</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">&quot;https://myapp.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;GET, POST, PUT, DELETE&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Content-Type, Authorization&quot;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Response.cors</span></code> method:</p>
+<ul class="simple">
+<li><p>Sets appropriate CORS headers</p></li>
+<li><p>Automatically handles OPTIONS preflight requests</p></li>
+<li><p>Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for OPTIONS (so you return early)</p></li>
+<li><p>Returns <code class="docutils literal notranslate"><span class="pre">false</span></code> for other methods (so processing continues)</p></li>
+</ul>
+</section>
+<section id="request-parsing">
+<h2>Request Parsing<a class="headerlink" href="#request-parsing" title="Link to this heading">#</a></h2>
+<section id="json-request-body">
+<h3>JSON Request Body<a class="headerlink" href="#json-request-body" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Using the convenience method</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+
+<span class="c1">// Or check content type first</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isJson</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="w">  </span><span class="c1">// ... use the data</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="form-data">
+<h3>Form Data<a class="headerlink" href="#form-data" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="query-parameters">
+<h3>Query Parameters<a class="headerlink" href="#query-parameters" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?page=2&amp;limit=10</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-query-parameters">
+<h3>Multiple Query Parameters<a class="headerlink" href="#multiple-query-parameters" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// For /api/users?id=123&amp;include=posts</span>
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">include</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="response-formats">
+<h2>Response Formats<a class="headerlink" href="#response-formats" title="Link to this heading">#</a></h2>
+<section id="json-response">
+<h3>JSON Response<a class="headerlink" href="#json-response" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;message&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Success&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="status-codes">
+<h3>Status Codes<a class="headerlink" href="#status-codes" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="w">  </span><span class="c1">// OK</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span><span class="w">  </span><span class="c1">// Created</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">204</span><span class="p">)</span><span class="w">  </span><span class="c1">// No Content</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span><span class="w">  </span><span class="c1">// Bad Request</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span><span class="w">  </span><span class="c1">// Unauthorized</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">403</span><span class="p">)</span><span class="w">  </span><span class="c1">// Forbidden</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span><span class="w">  </span><span class="c1">// Not Found</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">500</span><span class="p">)</span><span class="w">  </span><span class="c1">// Internal Server Error</span>
+</pre></div>
+</div>
+</section>
+<section id="error-responses">
+<h3>Error Responses<a class="headerlink" href="#error-responses" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">  </span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Validation failed&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;details&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Name is required&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid email format&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading">#</a></h2>
+<section id="api-key-authentication">
+<h3>API Key Authentication<a class="headerlink" href="#api-key-authentication" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/_route.wren</span>
+
+<span class="c1">// Enable CORS</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Check API key</span>
+<span class="k">var</span><span class="w"> </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;x-api-key&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">apiKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;API key is required&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// Validate API key</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM api_keys WHERE key = ? AND active = 1`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">apiKey</span><span class="p">])</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid API key&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// Continue with your API logic...</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="bearer-token-authentication">
+<h3>Bearer Token Authentication<a class="headerlink" href="#bearer-token-authentication" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get authorization header</span>
+<span class="k">var</span><span class="w"> </span><span class="n">authHeader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;authorization&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">authHeader</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Authorization required&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// Extract token (format: &quot;Bearer &lt;token&gt;&quot;)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">authHeader</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">parts</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;Bearer&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid authorization format&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span>
+
+<span class="c1">// Validate token</span>
+<span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM sessions WHERE token = ? AND expires_at &gt; datetime(&#39;now&#39;)`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">token</span><span class="p">])</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">session</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid or expired token&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pagination">
+<h2>Pagination<a class="headerlink" href="#pagination" title="Link to this heading">#</a></h2>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?page=1&amp;limit=20</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
+
+<span class="c1">// Get total count</span>
+<span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as count FROM users`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
+
+<span class="c1">// Get paginated results</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email FROM users LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">])</span>
+
+<span class="c1">// Return with pagination metadata</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">  </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;pagination&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;limit&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;total&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">),</span>
+<span class="w">    </span><span class="s2">&quot;pages&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="filtering-and-sorting">
+<h2>Filtering and Sorting<a class="headerlink" href="#filtering-and-sorting" title="Link to this heading">#</a></h2>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?search=john&amp;status=active&amp;sort=name&amp;order=asc</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;id&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;asc&quot;</span>
+
+<span class="c1">// Define allowed columns for sorting</span>
+<span class="k">var</span><span class="w"> </span><span class="n">allowedSorts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;created_at&quot;</span><span class="p">]</span>
+
+<span class="c1">// Use parameterized queries with conditional logic and safe sorting</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM users </span>
+<span class="sb">  WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)</span>
+<span class="sb">    AND (? = &#39;&#39; OR status = ?)</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sort</span><span class="p">,</span><span class="w"> </span><span class="n">order</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">])</span>
+
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">.order()</span></code> method validates the sort column against the allowed list and normalizes the direction (case-insensitive “asc” or “desc”), preventing SQL injection through column name manipulation. You can also pass an optional fourth parameter to add a LIMIT clause:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Top 10 users by score</span>
+<span class="k">var</span><span class="w"> </span><span class="n">topUsers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;desc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">],</span><span class="w"> </span><span class="mf">10</span><span class="p">)</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
+</pre></div>
+</div>
+</section>
+<section id="database-migrations">
+<h2>Database Migrations<a class="headerlink" href="#database-migrations" title="Link to this heading">#</a></h2>
+<p>Create a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file for your API database:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _migration.wren</span>
+
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;001_create_users&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE users (</span>
+<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span class="sb">    name TEXT NOT NULL,</span>
+<span class="sb">    email TEXT UNIQUE NOT NULL,</span>
+<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
+<span class="sb">    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP</span>
+<span class="sb">  );</span>
+<span class="sb">  </span>
+<span class="sb">  CREATE INDEX idx_users_email ON users(email);</span>
+<span class="sb">`</span><span class="p">)</span>
+
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;002_create_api_keys&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE api_keys (</span>
+<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span class="sb">    key TEXT UNIQUE NOT NULL,</span>
+<span class="sb">    user_id INTEGER NOT NULL,</span>
+<span class="sb">    active INTEGER DEFAULT 1,</span>
+<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
+<span class="sb">    FOREIGN KEY (user_id) REFERENCES users(id)</span>
+<span class="sb">  );</span>
+<span class="sb">  </span>
+<span class="sb">  CREATE INDEX idx_api_keys_key ON api_keys(key);</span>
+<span class="sb">`</span><span class="p">)</span>
+
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;003_create_products&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE products (</span>
+<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
+<span class="sb">    name TEXT NOT NULL,</span>
+<span class="sb">    description TEXT,</span>
+<span class="sb">    price REAL NOT NULL,</span>
+<span class="sb">    stock INTEGER DEFAULT 0,</span>
+<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
+<span class="sb">    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP</span>
+<span class="sb">  );</span>
+<span class="sb">`</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="complete-example-products-api">
+<h2>Complete Example: Products API<a class="headerlink" href="#complete-example-products-api" title="Link to this heading">#</a></h2>
+<p>Here’s a complete REST API for managing products:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/_route.wren</span>
+
+<span class="c1">// Enable CORS</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
+<span class="c1">// Authentication (optional)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;x-api-key&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">apiKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;API key required&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM api_keys WHERE key = ? AND active = 1`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">apiKey</span><span class="p">])</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid API key&quot;</span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+<span class="c1">// GET /api/products?id=1 - Get single product</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM products WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">product</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Product not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// GET /api/products - List products with pagination</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as count FROM products`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">products</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">    </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">products</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;pagination&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;limit&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;total&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">),</span>
+<span class="w">      </span><span class="s2">&quot;pages&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// POST /api/products - Create product</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">stock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;stock&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="c1">// Validation</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">name</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">price</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Name and price are required&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">productId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">    INSERT INTO products (name, description, price, stock) </span>
+<span class="sb">    VALUES (?, ?, ?, ?)</span>
+<span class="sb">  `</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">,</span><span class="w"> </span><span class="n">price</span><span class="p">,</span><span class="w"> </span><span class="n">stock</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">    </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">productId</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;description&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">description</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;price&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">price</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;stock&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">stock</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// PUT /api/products?id=1 - Update product</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;PUT&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM products WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">product</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Product not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">product</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">product</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">product</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">stock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;stock&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">product</span><span class="p">[</span><span class="s2">&quot;stock&quot;</span><span class="p">]</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="sb">`</span>
+<span class="sb">    UPDATE products </span>
+<span class="sb">    SET name = ?, description = ?, price = ?, stock = ?, updated_at = CURRENT_TIMESTAMP </span>
+<span class="sb">    WHERE id = ?</span>
+<span class="sb">  `</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">description</span><span class="p">,</span><span class="w"> </span><span class="n">price</span><span class="p">,</span><span class="w"> </span><span class="n">stock</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">    </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">id</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;description&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">description</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;price&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">price</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;stock&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">stock</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// DELETE /api/products?id=1 - Delete product</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;DELETE&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id FROM products WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">product</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Product not found&quot;</span><span class="p">})</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="sb">`DELETE FROM products WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">204</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({})</span>
+<span class="p">}</span>
+
+<span class="c1">// 404 for unknown operations</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid request&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="testing-your-api">
+<h2>Testing Your API<a class="headerlink" href="#testing-your-api" title="Link to this heading">#</a></h2>
+<section id="using-curl">
+<h3>Using curl<a class="headerlink" href="#using-curl" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># List products</span>
+curl<span class="w"> </span>http://localhost:7001/api/products
+
+<span class="c1"># Get single product</span>
+curl<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/products?id=1&quot;</span>
+
+<span class="c1"># Create product</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:7001/api/products<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;X-API-Key: your-api-key&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;Widget&quot;,&quot;price&quot;:19.99,&quot;stock&quot;:100}&#39;</span>
+
+<span class="c1"># Update product</span>
+curl<span class="w"> </span>-X<span class="w"> </span>PUT<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/products?id=1&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;X-API-Key: your-api-key&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;price&quot;:24.99}&#39;</span>
+
+<span class="c1"># Delete product</span>
+curl<span class="w"> </span>-X<span class="w"> </span>DELETE<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/products?id=1&quot;</span>
+<span class="c1"># With pagination</span>
+curl<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/products?page=2&amp;limit=10&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="using-javascript-fetch">
+<h3>Using JavaScript (fetch)<a class="headerlink" href="#using-javascript-fetch" title="Link to this heading">#</a></h3>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// List products</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">products</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;http://localhost:7001/api/products&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+
+<span class="c1">// Get single product</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">product</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;http://localhost:7001/api/products?id=1&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+
+<span class="c1">// Create product</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">newProduct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;http://localhost:7001/api/products&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;X-API-Key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-api-key&#39;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Widget&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">price</span><span class="o">:</span><span class="w"> </span><span class="mf">19.99</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">stock</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+
+<span class="c1">// Update product</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;http://localhost:7001/api/products?id=1&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;PUT&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;X-API-Key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-api-key&#39;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">price</span><span class="o">:</span><span class="w"> </span><span class="mf">24.99</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="nx">res</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">());</span>
+
+<span class="c1">// Delete product</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;http://localhost:7001/api/products?id=1&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DELETE&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;X-API-Key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-api-key&#39;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Learn about <a class="reference internal" href="database.html"><span class="std std-doc">Database operations</span></a></p></li>
+<li><p>Explore <a class="reference internal" href="reference.html"><span class="std std-doc">Session management</span></a></p></li>
+<li><p>Read about <a class="reference internal" href="file.html"><span class="std std-doc">File uploads</span></a></p></li>
+<li><p>Check out <a class="reference internal" href="structure.html"><span class="std std-doc">External imports</span></a> for using external libraries</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="database.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Database</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tests.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Testing in Bialet</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#project-structure">Project Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-different-http-methods">Handling Different HTTP Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cors-configuration">CORS Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request-parsing">Request Parsing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-request-body">JSON Request Body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-data">Form Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-parameters">Query Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-query-parameters">Multiple Query Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response-formats">Response Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status-codes">Status Codes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-responses">Error Responses</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication">Authentication</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-key-authentication">API Key Authentication</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token-authentication">Bearer Token Authentication</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-and-sorting">Filtering and Sorting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-migrations">Database Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-products-api">Complete Example: Products API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-api">Testing Your API</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-curl">Using curl</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-javascript-fetch">Using JavaScript (fetch)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

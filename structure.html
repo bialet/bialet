@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/structure.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="The best way to think a project with Bialet is do it first like static old school HTML, then replace the logic and template duplication with Wren code. The scripts will be load as if they were HTML..." />
+<meta property="og:description" content="Overview: Bialet uses a file-based routing system inspired by static HTML websites. Each.wren file in your project corresponds to a URL path, making it intuitive to organize and understand your app..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="The best way to think a project with Bialet is do it first like static old school HTML, then replace the logic and template duplication with Wren code. The scripts will be load as if they were HTML..." />
+<meta name="description" content="Overview: Bialet uses a file-based routing system inspired by static HTML websites. Each.wren file in your project corresponds to a URL path, making it intuitive to organize and understand your app..." />
 
     <title>Project Structure and Routing &#8212; Bialet  documentation</title>
   
@@ -65,7 +65,7 @@
     <link rel="prev" title="Installation and Usage" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -167,9 +167,12 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -358,7 +361,9 @@
 <button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
 </button>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -374,6 +379,46 @@
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-routing-rules">Basic Routing Rules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">1. Direct File Mapping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#special-files-protected-from-direct-access">2. Special Files (Protected from Direct Access)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-structure-app-folder">Preferred Structure: <code class="docutils literal notranslate"><span class="pre">_app/</span></code> Folder</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: Root-Level Special Files</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-routing-with-route-wren">3. Dynamic Routing with <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-project-structure">Complete Example Project Structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-blog-post-handler">Example: Blog Post Handler</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-syntax">Import Syntax</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#github-shorthand-recommended">1. GitHub Shorthand (Recommended)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#full-url">2. Full URL</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -385,21 +430,563 @@
                   
   <section id="project-structure-and-routing">
 <h1>Project Structure and Routing<a class="headerlink" href="#project-structure-and-routing" title="Link to this heading">#</a></h1>
-<p><strong>The best way to think a project with Bialet is do it first like static old school HTML,
-then replace the logic and template duplication with Wren code.</strong></p>
-<p>The scripts will be load as if they were HTML files, so the file <code class="docutils literal notranslate"><span class="pre">contact-us.wren</span></code> can be open with the URL <a class="reference external" href="http://127.0.0.1:7001/contact-us.wren">127.0.0.1:7001/contact-us.wren</a> or even without the wren suffix <a class="reference external" href="http://127.0.0.1:7001/contact-us">127.0.0.1:7001/contact-us</a>.</p>
-<p>This will work with each folder, for example the URL <a class="reference external" href="http://127.0.0.1:7001/landing/newsletter/cool-campaign">127.0.0.1:7001/landing/newsletter/cool-campaign</a> will run the script <code class="docutils literal notranslate"><span class="pre">landing/newsletter/cool-campaign.wren</span></code>. Like if there was an HMTL file.</p>
-<p>That mean that each file is public and will be executed <strong>except</strong> when it start with a <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>. The <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> file won’t be load with the URL <a class="reference external" href="http://127.0.0.1:7001/_app">127.0.0.1:7001/_app</a> or with any other URL. Any file or any file under a folder that start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> won’t be open.</p>
-<p>For dynamic routing, add a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file in the folder and use the <code class="docutils literal notranslate"><span class="pre">Request.route(N)</span></code> function to get the value. <strong>N</strong> is the position of the route parameter. For the file <code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code> when called from <a class="reference external" href="http://127.0.0.1:7001/api/users/1?fields=name,email&amp;amp;sortType=ASC">127.0.0.1:7001/api/users/1?fields=name,email&amp;sortType=ASC</a> those will be the values:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="c1">// users</span>
-<span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="c1">// 1</span>
-<span class="nc">Request</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s2">&quot;fields&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// name,email</span>
-<span class="nc">Request</span><span class="o">.</span><span class="n">param</span><span class="p">(</span><span class="s2">&quot;sortType&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">// ASC</span>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Bialet uses a <strong>file-based routing system</strong> inspired by static HTML websites.
+Each <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file in your project corresponds to a URL path, making it intuitive
+to organize and understand your application structure.</p>
+<p><strong>Philosophy:</strong> Think of your Bialet project as a static HTML website first,
+then add dynamic behavior with Wren code where needed.</p>
+</section>
+<section id="basic-routing-rules">
+<h2>Basic Routing Rules<a class="headerlink" href="#basic-routing-rules" title="Link to this heading">#</a></h2>
+<section id="direct-file-mapping">
+<h3>1. Direct File Mapping<a class="headerlink" href="#direct-file-mapping" title="Link to this heading">#</a></h3>
+<p>Each <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file maps directly to a URL path, similar to how static HTML files
+work:</p>
+<ul class="simple">
+<li><p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">contact-us.wren</span></code></p></li>
+<li><p><strong>URLs:</strong></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:7001/contact-us.wren</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:7001/contact-us</span></code> (extension optional)</p></li>
+</ul>
+</li>
+<li><p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">landing/newsletter/cool-campaign.wren</span></code></p></li>
+<li><p><strong>URL:</strong> <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:7001/landing/newsletter/cool-campaign</span></code></p></li>
+</ul>
+</section>
+<section id="special-files-protected-from-direct-access">
+<h3>2. Special Files (Protected from Direct Access)<a class="headerlink" href="#special-files-protected-from-direct-access" title="Link to this heading">#</a></h3>
+<p>Files and folders starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are <strong>protected</strong> and cannot be
+accessed directly via URL.</p>
+<section id="preferred-structure-app-folder">
+<h4>Preferred Structure: <code class="docutils literal notranslate"><span class="pre">_app/</span></code> Folder<a class="headerlink" href="#preferred-structure-app-folder" title="Link to this heading">#</a></h4>
+<p>The recommended approach is to organize special files inside an <code class="docutils literal notranslate"><span class="pre">_app/</span></code>
+directory:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_app/template.wren</span></code> — Application-wide template (header, footer, nav)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code> — Database migrations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_app/cron.wren</span></code> — Scheduled tasks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_app/domain.wren</span></code> — Domain-specific configuration (optional)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> — SQLite database file</p></li>
+</ul>
+<blockquote>
+<div><p><strong>Note on Configuration:</strong> Bialet doesn’t use <code class="docutils literal notranslate"><span class="pre">.env</span></code> files. Configuration is
+stored in the <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> table within your SQLite database
+(<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>). Since each environment uses its own SQLite database file,
+your configuration is naturally environment-specific. See the
+<a class="reference internal" href="reference.html"><span class="std std-doc">Config class reference</span></a> for managing configuration values.</p>
+</div></blockquote>
+</section>
+<section id="alternative-root-level-special-files">
+<h4>Alternative: Root-Level Special Files<a class="headerlink" href="#alternative-root-level-special-files" title="Link to this heading">#</a></h4>
+<p>You can also place special files directly at the root (prefixed with <code class="docutils literal notranslate"><span class="pre">_</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> — Application-wide template</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> — Database migrations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> — Scheduled tasks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> — Dynamic route handler (explained below)</p></li>
+</ul>
+<p><strong>Both approaches work</strong>, but the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder keeps your root directory
+cleaner and more organized.</p>
+<p><strong>Security Note:</strong> Any file or folder starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> (like <code class="docutils literal notranslate"><span class="pre">_app/</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_private/</span></code>) returns <strong>403 Forbidden</strong> when accessed directly via URL.</p>
+<p><strong>Ignored Files:</strong> Certain files are automatically ignored and won’t be served:
+<code class="docutils literal notranslate"><span class="pre">README*</span></code>, <code class="docutils literal notranslate"><span class="pre">AGENTS*</span></code>, <code class="docutils literal notranslate"><span class="pre">LICENSE*</span></code>, <code class="docutils literal notranslate"><span class="pre">*.json</span></code>, <code class="docutils literal notranslate"><span class="pre">*.yml</span></code>, and <code class="docutils literal notranslate"><span class="pre">*.yaml</span></code>. This allows
+you to keep documentation, AI agent instructions, and configuration files in
+your project without exposing them.</p>
+</section>
+</section>
+<section id="dynamic-routing-with-route-wren">
+<h3>3. Dynamic Routing with <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code><a class="headerlink" href="#dynamic-routing-with-route-wren" title="Link to this heading">#</a></h3>
+<p>For dynamic URL segments (like user IDs, slugs, or API paths), create a
+<code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file in the relevant directory.</p>
+<p><strong>Example:</strong> Create <code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code> to handle dynamic API routes:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: api/_route.wren</span>
+<span class="c1">// Handles URLs like: /api/users/123 or /api/posts/my-slug</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">segment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// First dynamic segment</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">       </span><span class="c1">// Second dynamic segment</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">userId</span><span class="p">])</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;posts&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE slug = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">slug</span><span class="p">])</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>URL Examples:</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>URL</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.route(1)</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;fields&quot;)</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/api/users/1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;users&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/api/posts/hello-world</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;posts&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;hello-world&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/api/users/1?fields=name,email</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;users&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;name,email&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<div><p><strong>Note:</strong> You don’t need a single <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file for all routing. Create
+separate <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> files in different directories as needed.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="complete-example-project-structure">
+<h2>Complete Example Project Structure<a class="headerlink" href="#complete-example-project-structure" title="Link to this heading">#</a></h2>
+<p>Here’s a practical example of a blog application structure using the <strong>preferred
+<code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder approach</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-blog/
+├── _app/                  # Protected folder for app configuration
+│   ├── template.wren      # Site-wide template (header, footer, nav)
+│   ├── migration.wren     # Database schema setup
+│   ├── cron.wren          # Scheduled tasks (optional)
+│   └── domain.wren        # Domain config (optional)
+│
+├── _db.sqlite3            # SQLite database
+│
+├── index.wren             # Homepage (/)
+├── about.wren             # About page (/about)
+├── contact.wren           # Contact page (/contact)
+│
+├── blog/
+│   ├── index.wren         # Blog list (/blog)
+│   └── _route.wren        # Dynamic post handler (/blog/post-slug)
+│
+├── admin/
+│   ├── index.wren         # Admin dashboard (/admin)
+│   ├── login.wren         # Admin login (/admin/login)
+│   └── posts/
+│       ├── index.wren     # Post list (/admin/posts)
+│       ├── new.wren       # Create post (/admin/posts/new)
+│       └── _route.wren    # Edit post (/admin/posts/:id)
+│
+├── api/
+│   └── _route.wren        # API endpoints (/api/*)
+│
+│
+├── css/
+│   └── style.css          # Static CSS
+│
+└── js/
+    └── main.js            # Static JavaScript
+</pre></div>
+</div>
+<p><strong>URL Mapping for this structure:</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>URL</p></th>
+<th class="head"><p>File Executed</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">index.wren</span></code></p></td>
+<td><p>Homepage</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/about</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">about.wren</span></code></p></td>
+<td><p>About page</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/blog</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">blog/index.wren</span></code></p></td>
+<td><p>Blog post list</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code></p></td>
+<td><p>Single blog post (slug: “my-first-post”)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/admin</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin/index.wren</span></code></p></td>
+<td><p>Admin dashboard</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/admin/posts/new</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts/new.wren</span></code></p></td>
+<td><p>Create new post form</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/admin/posts/123</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts/_route.wren</span></code></p></td>
+<td><p>Edit post with ID 123</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/api/posts/456</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code></p></td>
+<td><p>API endpoint for post 456</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/_app</span></code></p></td>
+<td><p>❌ <strong>403 Forbidden</strong></p></td>
+<td><p>Protected file</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="example-blog-post-handler">
+<h3>Example: Blog Post Handler<a class="headerlink" href="#example-blog-post-handler" title="Link to this heading">#</a></h3>
+<p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import shared layout from _app folder</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">App</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">slug</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/blog&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span>
+<span class="p">}</span>
+
+<span class="c1">// Fetch post from database</span>
+<span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT title, content, createdAt, author</span>
+<span class="sb">  FROM posts</span>
+<span class="sb">  WHERE slug = ? AND published = 1</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">slug</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span>
+<span class="p">}</span>
+
+<span class="c1">// Render using App template</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="x">&lt;article&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;div class=&quot;content&quot;&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;/div&gt;</span>
+<span class="x">  &lt;/article&gt;</span>
+<span class="p">})</span>
 </pre></div>
 </div>
 <blockquote>
-<div><p><strong>Note:</strong> There is no need to add a single <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file to handle all the routing.</p>
+<div><p><strong>Note:</strong> If using the root-level structure, import from <code class="docutils literal notranslate"><span class="pre">_app</span></code> instead:
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;_app&quot;</span> <span class="pre">for</span> <span class="pre">App</span></code></p>
 </div></blockquote>
+</section>
+</section>
+<section id="key-takeaways">
+<h2>Key Takeaways<a class="headerlink" href="#key-takeaways" title="Link to this heading">#</a></h2>
+<p>✅ <strong>File-based routing</strong> — Each <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a route (just like HTML)<br />
+✅ <strong>Protected files</strong> — Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are hidden from direct
+access<br />
+✅ <strong>Dynamic routes</strong> — Use <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> + <code class="docutils literal notranslate"><span class="pre">Request.route(N)</span></code> for dynamic
+segments<br />
+✅ <strong>Flexible structure</strong> — Organize files however makes sense for your
+project<br />
+✅ <strong>No configuration needed</strong> — Routing works automatically based on file
+structure</p>
+</section>
+<section id="external-imports">
+<h2>External Imports<a class="headerlink" href="#external-imports" title="Link to this heading">#</a></h2>
+<p>Bialet supports importing external Wren modules from remote sources. This allows
+you to use community-created libraries and modules without having to manually
+download and manage them.</p>
+<section id="import-syntax">
+<h3>Import Syntax<a class="headerlink" href="#import-syntax" title="Link to this heading">#</a></h3>
+<p>There are two ways to import external modules:</p>
+<section id="github-shorthand-recommended">
+<h4>1. GitHub Shorthand (Recommended)<a class="headerlink" href="#github-shorthand-recommended" title="Link to this heading">#</a></h4>
+<p>The most common way is using the <code class="docutils literal notranslate"><span class="pre">gh:</span></code> prefix for GitHub repositories:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+</pre></div>
+</div>
+<p>This will fetch the module from the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch by default. You can also
+specify a different branch or tag:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file@branch-or-tag&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+</pre></div>
+</div>
+<p><strong>Examples:</strong></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import from main branch (recommended for latest version)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="c1">// Import emoji utilities from main branch</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+
+<span class="c1">// Import from specific version/branch (recommended for stability)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/export@1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">EmojiV1</span>
+
+<span class="c1">// Import from a specific tag</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:username/mylib/module@v2.1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">MyClass</span>
+</pre></div>
+</div>
+<p><strong>Important Notes:</strong></p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is <strong>automatically appended</strong> - do not include it in the
+import path</p></li>
+<li><p>Default branch is <code class="docutils literal notranslate"><span class="pre">main</span></code> if not specified with <code class="docutils literal notranslate"><span class="pre">&#64;branch</span></code></p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&#64;branch</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;tag</span></code> to target specific versions</p></li>
+</ul>
+</section>
+<section id="full-url">
+<h4>2. Full URL<a class="headerlink" href="#full-url" title="Link to this heading">#</a></h4>
+<p>You can also import from any URL that returns raw Wren code:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;https://example.com/path/to/module.wren&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+</pre></div>
+</div>
+<p>When using full URLs:</p>
+<ul class="simple">
+<li><p>You <strong>must</strong> include the <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension in the URL</p></li>
+<li><p>The URL must return raw Wren source code (not HTML)</p></li>
+<li><p>For GitHub, use <code class="docutils literal notranslate"><span class="pre">raw.githubusercontent.com</span></code> URLs</p></li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;https://raw.githubusercontent.com/4lb0/emoji/main/emoji.wren&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="how-it-works">
+<h3>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h3>
+<p>When Bialet encounters an external import:</p>
+<ol class="arabic simple">
+<li><p><strong>Cache Check</strong>: First, it checks if the module is already cached in the
+<code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code> database table</p></li>
+<li><p><strong>Download</strong>: If not cached, it downloads the module from the specified URL
+using an HTTP GET request</p></li>
+<li><p><strong>Validation</strong>: Checks for HTTP 2xx status codes (200-299) to ensure
+successful download</p></li>
+<li><p><strong>Store</strong>: The content is stored in the database with the import path as the
+key</p></li>
+<li><p><strong>Load</strong>: The module is loaded and made available to your code</p></li>
+</ol>
+<p>This means:</p>
+<ul class="simple">
+<li><p><strong>First load</strong>: Requires an internet connection to download the module</p></li>
+<li><p><strong>Subsequent loads</strong>: Use the cached version from the database (no internet
+needed)</p></li>
+<li><p><strong>Performance</strong>: After the first download, imports are fast since they’re
+served from the local database</p></li>
+<li><p><strong>Persistence</strong>: Cached modules remain in the database until explicitly
+cleared</p></li>
+</ul>
+</section>
+<section id="cache-management">
+<h3>Cache Management<a class="headerlink" href="#cache-management" title="Link to this heading">#</a></h3>
+<p>External modules are cached in your application’s SQLite database
+(<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>) in the <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code> table.</p>
+<p><strong>Table Schema:</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">module</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w">      </span><span class="c1">-- The import path (e.g., &quot;gh:user/repo/path&quot;)</span>
+<span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                 </span><span class="c1">-- The cached Wren source code</span>
+<span class="w">  </span><span class="n">createdAt</span><span class="w"> </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>To refresh cached modules:</strong></p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Clear all cached external modules (forces re-download on next import)</span>
+<span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
+
+<span class="c1">-- Clear a specific module</span>
+<span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;gh:bialet/extra/mcp&#39;</span><span class="p">;</span>
+
+<span class="c1">-- View all cached modules</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="n">createdAt</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
+
+<span class="c1">-- Check cache size</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="k">LENGTH</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">total_bytes</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>After clearing the cache, restart your Bialet application or trigger a reload to
+re-download the modules.</p>
+</section>
+<section id="github-url-format">
+<h3>GitHub URL Format<a class="headerlink" href="#github-url-format" title="Link to this heading">#</a></h3>
+<p>The GitHub shorthand <code class="docutils literal notranslate"><span class="pre">gh:owner/repo/path&#64;branch</span></code> is internally converted to:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path.wren
+</pre></div>
+</div>
+<p><strong>Conversion Examples:</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Import Statement</p></th>
+<th class="head"><p>Generated URL</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:bialet/extra/mcp</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/bialet/extra/refs/heads/main/mcp.wren</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gh:user/lib/utils&#64;dev</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/user/lib/refs/heads/dev/utils.wren</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:org/pkg/sub/module&#64;v1.0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/org/pkg/refs/heads/v1.0/sub/module.wren</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is automatically added by Bialet</p></li>
+<li><p>Default branch is <code class="docutils literal notranslate"><span class="pre">main</span></code> if not specified</p></li>
+<li><p>The path must lead to a valid Wren file in the repository</p></li>
+<li><p>Invalid paths or missing files will trigger error messages in the logs</p></li>
+</ul>
+</section>
+<section id="error-handling">
+<h3>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h3>
+<p>Bialet provides clear error messages for import failures:</p>
+<p><strong>“Invalid GitHub URL”</strong>:</p>
+<ul class="simple">
+<li><p>The import path doesn’t follow the <code class="docutils literal notranslate"><span class="pre">gh:owner/repo/path</span></code> format</p></li>
+<li><p>Missing owner, repository, or file path components</p></li>
+</ul>
+<p><strong>“Module not found in GitHub”</strong>:</p>
+<ul class="simple">
+<li><p>The file doesn’t exist at the specified path</p></li>
+<li><p>The branch/tag doesn’t exist</p></li>
+<li><p>HTTP request returned non-2xx status code</p></li>
+<li><p>Network connectivity issues</p></li>
+</ul>
+<p><strong>“Import type not supported”</strong>:</p>
+<ul class="simple">
+<li><p>The import uses a protocol other than <code class="docutils literal notranslate"><span class="pre">gh:</span></code>, <code class="docutils literal notranslate"><span class="pre">http://</span></code>, or <code class="docutils literal notranslate"><span class="pre">https://</span></code></p></li>
+</ul>
+<p>Check the Bialet logs for detailed error messages:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Debug: attempting import...&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="security-considerations">
+<h3>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">#</a></h3>
+<p><strong>Important</strong>: External imports download and execute code from remote sources.
+Only import modules from trusted sources.</p>
+<ul class="simple">
+<li><p><strong>Verify the source</strong>: Check the repository and author before importing</p></li>
+<li><p><strong>Review the code</strong>: When possible, review the module’s source code on GitHub</p></li>
+<li><p><strong>Use version tags</strong>: Prefer importing from specific branches or tags rather
+than <code class="docutils literal notranslate"><span class="pre">main</span></code> to ensure stability and prevent unexpected changes</p></li>
+<li><p><strong>Cache behavior</strong>: Once downloaded, modules are cached and won’t update
+automatically - this is a security feature</p></li>
+<li><p><strong>Trust implications</strong>: Imported code runs with the same privileges as your
+application</p></li>
+</ul>
+<p><strong>Best Practices:</strong></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good: Using a specific version tag</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp@v1.0.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="c1">// ⚠️ Caution: Using main branch (may change over time)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="c1">// ✅ Good: Well-known, maintained library</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji@1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+
+<span class="c1">// ❌ Avoid: Unknown sources without verification</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:random-user/suspicious-lib/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">SomeClass</span>
+</pre></div>
+</div>
+</section>
+<section id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h3>
+<p>Here’s a complete example using external imports:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import external MCP module from a specific version</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp@v1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="c1">// Import emoji library from main branch</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+
+<span class="cs">#!doc = &quot;A greeting tool with emojis&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">%(</span><span class="nc">Emoji</span><span class="o">.</span><span class="n">wave</span><span class="si">)</span><span class="s2"> Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">! </span><span class="si">%(</span><span class="nc">Emoji</span><span class="o">.</span><span class="n">heart</span><span class="si">)</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;emoji-greeter&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-versions">
+<h3>Multiple Versions<a class="headerlink" href="#multiple-versions" title="Link to this heading">#</a></h3>
+<p>You can import different versions of the same module using aliases:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:user/lib/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleLatest</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:user/lib/module@v1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleV1</span>
+
+<span class="c1">// Use specific version based on your needs</span>
+<span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ModuleV1</span><span class="o">.</span><span class="n">someFunction</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting">
+<h3>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h3>
+<p><strong>Module not found errors:</strong></p>
+<ul class="simple">
+<li><p>Verify the GitHub repository and file path exist by visiting the URL in a
+browser</p></li>
+<li><p>Check your internet connection (required for first-time downloads)</p></li>
+<li><p>Ensure the branch name is correct (defaults to <code class="docutils literal notranslate"><span class="pre">main</span></code>, not <code class="docutils literal notranslate"><span class="pre">master</span></code>)</p></li>
+<li><p>Verify the file exists at the exact path specified</p></li>
+</ul>
+<p><strong>Import fails silently:</strong></p>
+<ul class="simple">
+<li><p>Check the Bialet server logs for error messages</p></li>
+<li><p>Verify the module returns valid Wren code (not HTML or an error page)</p></li>
+<li><p>Ensure the URL is accessible and returns raw content</p></li>
+<li><p>Try the full URL format to see if it’s a GitHub-specific issue</p></li>
+</ul>
+<p><strong>Cached version is outdated:</strong></p>
+<ul>
+<li><p>Clear the module from the database cache:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;gh:user/repo%&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Restart your Bialet application to fetch the latest version</p></li>
+<li><p>Consider using version tags instead of branches for stability</p></li>
+</ul>
+<p><strong>“Import type not supported” error:</strong></p>
+<ul class="simple">
+<li><p>Ensure you’re using <code class="docutils literal notranslate"><span class="pre">gh:</span></code>, <code class="docutils literal notranslate"><span class="pre">http://</span></code>, or <code class="docutils literal notranslate"><span class="pre">https://</span></code> protocols</p></li>
+<li><p>Other protocols (ftp, file, etc.) are not supported</p></li>
+<li><p>Check for typos in the import statement</p></li>
+</ul>
+</section>
+<section id="performance-tips">
+<h3>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Use version tags</strong> to avoid cache invalidation and ensure consistent
+behavior</p></li>
+<li><p><strong>Import only what you need</strong> - each import adds to startup time on first
+load</p></li>
+<li><p><strong>Pre-cache modules</strong> in development by importing them once before deployment</p></li>
+<li><p><strong>Monitor cache size</strong> if importing many large modules</p></li>
+</ol>
+</section>
+</section>
 </section>
 
 
@@ -437,6 +1024,54 @@ then replace the logic and template duplication with Wren code.</strong></p>
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-routing-rules">Basic Routing Rules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">1. Direct File Mapping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#special-files-protected-from-direct-access">2. Special Files (Protected from Direct Access)</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-structure-app-folder">Preferred Structure: <code class="docutils literal notranslate"><span class="pre">_app/</span></code> Folder</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: Root-Level Special Files</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-routing-with-route-wren">3. Dynamic Routing with <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-project-structure">Complete Example Project Structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-blog-post-handler">Example: Blog Post Handler</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-syntax">Import Syntax</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#github-shorthand-recommended">1. GitHub Shorthand (Recommended)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#full-url">2. Full URL</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
