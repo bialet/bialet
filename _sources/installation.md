@@ -1,8 +1,17 @@
 # Installation and Usage
 
+## With the Install Script
+
+The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
+x86_64, Ubuntu ARM) is with the install script:
+
+```bash
+curl -sSL https://get.bialet.dev | sh
+```
+
 ## With Brew
 
-The easiest way to install Bialet is to use [Homebrew](https://brew.sh/):
+Use [Homebrew](https://brew.sh/) to install Bialet on macOS or Linux:
 
 ```bash
 brew install bialet/bialet/bialet
