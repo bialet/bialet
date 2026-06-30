@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="8. Results" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/getting-started/8-results.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="The final step: display vote counts with percentage bars. Add calculation methods: Extend the Poll class in_app.wren: Important details: Caching:_opts || (_opts = ...) fetches once, reuses the resu..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="The final step: display vote counts with percentage bars. Add calculation methods: Extend the Poll class in_app.wren: Important details: Caching:_opts || (_opts = ...) fetches once, reuses the resu..." />
+
+    <title>8. Results &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68f60be9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/8-results';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Installation and Usage" href="../installation.html" />
+    <link rel="prev" title="7. Forms &amp; Voting" href="7-forms-voting.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Bialet</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Getting Started</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why-bialet.html">Why Bialet?</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/getting-started/8-results.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fgetting-started/8-results.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/getting-started/8-results.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>8. Results</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#add-calculation-methods">Add calculation methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-results-page">Build the results page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#final-polish">Final polish</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#done">Done!</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="results">
+<h1>8. Results<a class="headerlink" href="#results" title="Link to this heading">#</a></h1>
+<p>The final step: display vote counts with percentage bars.</p>
+<section id="add-calculation-methods">
+<h2>Add calculation methods<a class="headerlink" href="#add-calculation-methods" title="Link to this heading">#</a></h2>
+<p>Extend the <code class="docutils literal notranslate"><span class="pre">Poll</span></code> class in <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Cache query results so we don&#39;t re-query on every access</span>
+<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_opts</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`UPDATE poll SET votes = votes + 1 WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+<span class="w">    </span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="w">  </span><span class="c1">// invalidate cache after voting</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">options</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Fn</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)})</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">totalVotes</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">((</span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">totalVotes</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Private helper — underscore suffix is a Wren convention</span>
+<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Important details:</p>
+<ul class="simple">
+<li><p><strong>Caching</strong>: <code class="docutils literal notranslate"><span class="pre">_opts</span> <span class="pre">||</span> <span class="pre">(_opts</span> <span class="pre">=</span> <span class="pre">...)</span></code> fetches once, reuses the result.
+We clear the cache after voting so the results refresh.</p></li>
+<li><p><strong>DB values are strings</strong>: <code class="docutils literal notranslate"><span class="pre">opt[&quot;votes&quot;]</span></code> is a string. Use
+<code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> before doing math.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">.round</span></code></strong>: A property on Number — rounds to the nearest integer.</p></li>
+</ul>
+</section>
+<section id="build-the-results-page">
+<h2>Build the results page<a class="headerlink" href="#build-the-results-page" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">results.wren</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h2&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;div style=&quot;background:#e5e7eb;height:2rem;border-radius:999px&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;div style=&quot;background:#3b82f6;height:2rem;width:{{</span>
+<span class="x">        poll.percentage(opt) }}%;border-radius:999px;text-align:center;color:#fff&quot;&gt;</span>
+<span class="x">        {{ poll.percentage(opt) }}%</span>
+<span class="x">      &lt;/div&gt;</span>
+<span class="w">    </span><span class="x">&lt;/div&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">votes</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;p&gt;&lt;a href=&quot;/&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+<span class="x">))</span>
+</pre></div>
+</div>
+</section>
+<section id="final-polish">
+<h2>Final polish<a class="headerlink" href="#final-polish" title="Link to this heading">#</a></h2>
+<p>A few improvements we can make:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Add color to poll options via migrations</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color column&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  ALTER TABLE poll ADD COLUMN color TEXT</span>
+<span class="sb">`</span><span class="p">)</span>
+
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Set colors&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  UPDATE poll SET color = &quot;blue&quot; WHERE answer = &quot;Yes&quot;;</span>
+<span class="sb">  UPDATE poll SET color = &quot;red&quot; WHERE answer = &quot;No&quot;;</span>
+<span class="sb">`</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then reference <code class="docutils literal notranslate"><span class="pre">opt[&quot;color&quot;]</span></code> in the progress bar style.</p>
+</section>
+<section id="done">
+<h2>Done!<a class="headerlink" href="#done" title="Link to this heading">#</a></h2>
+<p>Your poll app is complete. Here are the final files:</p>
+<ul class="simple">
+<li><p><a class="reference download internal" download="" href="../_downloads/6cc0d341aba8af806066cf4e4bf27315/_app.wren"><span class="xref download myst">_app.wren</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/71802f126f258b9d04ae410b1d8f6784/_migration.wren"><span class="xref download myst">_migration.wren</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/5a49b851be650549dc5f16f2924af81c/index.wren"><span class="xref download myst">index.wren</span></a></p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/5bd9612139630143594b1710588d391f/results.wren"><span class="xref download myst">results.wren</span></a></p></li>
+</ul>
+<p><a class="reference external" href="https://poll.bialet.dev/">See the live demo</a>.</p>
+</section>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Learn more about <a class="reference internal" href="../database.html"><span class="std std-doc">Database</span></a> — ordering, pagination, <code class="docutils literal notranslate"><span class="pre">.to()</span></code>
+mapping</p></li>
+<li><p>Explore the <a class="reference internal" href="../reference.html"><span class="std std-doc">API Reference</span></a> for all built-in classes</p></li>
+<li><p>Check the <a class="reference internal" href="../examples.html"><span class="std std-doc">Examples</span></a> page for more patterns</p></li>
+<li><p>Read <a class="reference internal" href="../structure.html"><span class="std std-doc">Structure &amp; Routing</span></a> for file-based routing and
+external imports</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Previous:</strong> <a class="reference internal" href="7-forms-voting.html"><span class="doc std std-doc">7. Forms &amp; Voting</span></a></p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="7-forms-voting.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">7. Forms &amp; Voting</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../installation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Installation and Usage</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#add-calculation-methods">Add calculation methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-results-page">Build the results page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#final-polish">Final polish</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#done">Done!</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
