@@ -3,3 +3,38 @@ html[data-theme="dark"] .highlight .sb { color: #ff5555 } /* Literal.String.Back
 html[data-theme="light"] .highlight .x { color: #04B1D5 } /* Other */
 html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Backtick */
 
+/* ── Landing page ─────────────────────────────────────────── */
+.landing-main {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.landing-content {
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.landing-content h1 {
+  font-size: 2.2rem;
+  margin-top: 0;
+}
+
+.landing-content h2 {
+  font-size: 1.6rem;
+  margin-top: 2.5rem;
+}
+
+.landing-content .sd-card {
+  border-radius: 0.5rem;
+}
+
+.landing-content .highlight {
+  border-radius: 0.5rem;
+}
+
+.landing-footer {
+  margin-top: 3rem;
+  border-top: 1px solid var(--pst-color-border);
+  padding-top: 1.5rem;
+}
