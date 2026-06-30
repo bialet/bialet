@@ -35,7 +35,7 @@ require() {
   command -v "$1" >/dev/null 2>&1 || abort "$1 is required but not installed."
 }
 require curl
-require tar
+require unzip
 require mktemp
 
 # ── Runtime deps warning ───────────────────────────────────────
@@ -67,20 +67,20 @@ fi
 green "==> Latest version: ${TAG#v}"
 
 # ── Download ───────────────────────────────────────────────────
-TARNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.tar.gz"
-DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$TARNAME"
+ZIPNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.zip"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$ZIPNAME"
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-echo "==> Downloading $TARNAME..."
-curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
+echo "==> Downloading $ZIPNAME..."
+curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$ZIPNAME" || abort "Download failed. Check that release $TAG exists."
 
 # ── Install ────────────────────────────────────────────────────
 echo "==> Installing to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
 
-tar xzf "$TMPDIR/$TARNAME" -C "$TMPDIR"
+unzip -qo "$TMPDIR/$ZIPNAME" -d "$TMPDIR"
 cp "$TMPDIR/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
 chmod +x "$INSTALL_DIR/$BIN_NAME"
 
