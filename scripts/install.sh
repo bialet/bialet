@@ -38,23 +38,6 @@ require curl
 require tar
 require mktemp
 
-# ── Runtime deps warning ───────────────────────────────────────
-check_runtime_deps() {
-  local missing=""
-  if [ "$PLATFORM" = "linux" ]; then
-    command -v ldconfig >/dev/null 2>&1 || return
-    ldconfig -p 2>/dev/null | grep -q libsqlite3 || missing="libsqlite3"
-    ldconfig -p 2>/dev/null | grep -q libcurl   || missing="$missing libcurl"
-  elif [ "$PLATFORM" = "macos" ]; then
-    # macOS usually ships sqlite3; curl is system
-    true
-  fi
-  if [ -n "$missing" ]; then
-    yellow "Note: runtime libraries may be needed: $missing"
-    yellow "See https://bialet.dev/installation.html for distro-specific packages."
-  fi
-}
-
 # ── Fetch latest release tag ───────────────────────────────────
 echo "==> Fetching latest Bialet release..."
 RELEASE_URL="https://api.github.com/repos/$REPO/releases/latest"
@@ -118,4 +101,3 @@ esac
 "$INSTALL_DIR/$BIN_NAME" -v || abort "Installation verification failed."
 
 green "==> 🚲 Bialet ${TAG#v} installed successfully!"
-check_runtime_deps
