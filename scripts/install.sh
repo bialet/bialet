@@ -35,7 +35,7 @@ require() {
   command -v "$1" >/dev/null 2>&1 || abort "$1 is required but not installed."
 }
 require curl
-require unzip
+require tar
 require mktemp
 
 # ── Runtime deps warning ───────────────────────────────────────
@@ -67,25 +67,25 @@ fi
 green "==> Latest version: ${TAG#v}"
 
 # ── Download ───────────────────────────────────────────────────
-ZIPNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.zip"
-DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$ZIPNAME"
+TARNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.tar.gz"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$TARNAME"
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-echo "==> Downloading $ZIPNAME..."
-curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$ZIPNAME" || abort "Download failed. Check that release $TAG exists."
+echo "==> Downloading $TARNAME..."
+curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
 
-# ── Verify zip ──────────────────────────────────────────────────
-if ! unzip -tq "$TMPDIR/$ZIPNAME" > /dev/null 2>&1; then
-  abort "Downloaded file is not a valid zip. Release asset may be missing for $TAG."
+# ── Verify tar ──────────────────────────────────────────────────
+if ! tar tzf "$TMPDIR/$TARNAME" > /dev/null 2>&1; then
+  abort "Downloaded file is not a valid tar.gz. Release asset may be missing for $TAG."
 fi
 
 # ── Install ────────────────────────────────────────────────────
 echo "==> Installing to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
 
-unzip -qo "$TMPDIR/$ZIPNAME" -d "$TMPDIR"
+tar xzf "$TMPDIR/$TARNAME" -C "$TMPDIR"
 BIN_PATH=$(find "$TMPDIR" -name "$BIN_NAME" -type f | head -1)
 if [ -z "$BIN_PATH" ]; then
   abort "Extraction failed: binary not found in archive."
