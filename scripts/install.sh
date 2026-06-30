@@ -69,6 +69,7 @@ green "==> Latest version: ${TAG#v}"
 # ── Download ───────────────────────────────────────────────────
 ZIPNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.zip"
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$ZIPNAME"
+echo $DOWNLOAD_URL
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -76,11 +77,19 @@ trap 'rm -rf "$TMPDIR"' EXIT
 echo "==> Downloading $ZIPNAME..."
 curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$ZIPNAME" || abort "Download failed. Check that release $TAG exists."
 
+# ── Verify zip ──────────────────────────────────────────────────
+if ! unzip -tq "$TMPDIR/$ZIPNAME" > /dev/null 2>&1; then
+  abort "Downloaded file is not a valid zip. Release asset may be missing for $TAG."
+fi
+
 # ── Install ────────────────────────────────────────────────────
 echo "==> Installing to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
 
 unzip -qo "$TMPDIR/$ZIPNAME" -d "$TMPDIR"
+if [ ! -f "$TMPDIR/$BIN_NAME" ]; then
+  abort "Extraction failed: binary not found in archive."
+fi
 cp "$TMPDIR/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
 chmod +x "$INSTALL_DIR/$BIN_NAME"
 
