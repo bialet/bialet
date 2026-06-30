@@ -72,3 +72,8 @@ Markdown
 
 .. include:: examples/markdown.wren
    :code: wren
+
+MCP
+---
+.. include:: examples/mcp/_route.wren
+   :code: wren

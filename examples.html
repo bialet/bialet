@@ -64,7 +64,7 @@
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -166,9 +166,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Examples</a></li>
 </ul>
@@ -392,6 +395,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">MCP</a></li>
 </ul>
             </nav>
         </div>
@@ -624,6 +628,11 @@
 <span class="c1">// We use the `fetch()` method to get the query result as an array of objects.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM counter ORDER BY name ASC`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 
+<span class="c1">// We use the `cors` method to enable Cross-Origin Resource Sharing (CORS).</span>
+<span class="c1">// When the request method is OPTIONS, it will respond with the appropriate headers</span>
+<span class="c1">// and a 204 No Content status, then return early.</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+
 <span class="c1">// We use the `json()` method to send the query result as a JSON.</span>
 <span class="c1">// This will add the header `Content-Type: application/json`.</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">counters</span><span class="p">)</span>
@@ -635,6 +644,9 @@
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Get the uploaded file</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;form_file_name&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="mf">400</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;❌ Upload Error&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;No file was uploaded. Please select a file first.&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;File: </span><span class="si">%(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="c1">// Make it temporal, it will be deleted soon</span>
 <span class="w">  </span><span class="c1">// You can still use it in the rest of the request</span>
@@ -825,7 +837,7 @@
 
 <span class="s2">[Back ↩️](.)</span>
 
-<span class="s2">This is the README.md file:</span>
+<span class="s2">This is the example.md file:</span>
 <span class="s2">&quot;</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
@@ -840,11 +852,62 @@
 <span class="x">    {{ Markdown.html(markdown) }}&lt;/p&gt;</span>
 
 <span class="w">    </span><span class="x">&lt;div style=&quot;text-align: left&quot;&gt;</span>
-<span class="x">      {{ Markdown.file(&quot;../../README.md&quot;) }}</span>
+<span class="x">      {{ Markdown.file(&quot;example.md&quot;) }}</span>
 <span class="x">    &lt;/div&gt;</span>
 
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="mcp">
+<h2>MCP<a class="headerlink" href="#mcp" title="Link to this heading">#</a></h2>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+
+<span class="cs">#!doc = &quot;A simple greeting tool&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">!&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cs">#!doc = &quot;Search for available flights&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchFlights</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_origin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;origin&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_destination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Departure city&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">origin</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Arrival city&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">destination</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="cs">#!doc = &quot;Travel date&quot;</span>
+<span class="w">  </span><span class="cs">#!type = String</span>
+<span class="w">  </span><span class="cs">#!format = &quot;date&quot;</span>
+<span class="w">  </span><span class="cs">#!required</span>
+<span class="w">  </span><span class="n">date</span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;from&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_origin</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;to&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_destination</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;date&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_date</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;flights&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Flight 101&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Flight 202&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Flight 303&quot;</span><span class="p">]}</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;bialet-mcp-server&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchFlights</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a helpful assistant that can greet people and search for flights.&quot;</span><span class="p">)</span>
+<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
 </pre></div>
 </div>
 </section>
@@ -899,6 +962,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">MCP</a></li>
 </ul>
   </nav></div>
 

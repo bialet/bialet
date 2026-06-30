@@ -65,7 +65,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -167,9 +167,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -402,11 +405,14 @@
                   
   <section id="date-and-time-functions">
 <h1>Date and Time Functions<a class="headerlink" href="#date-and-time-functions" title="Link to this heading">#</a></h1>
-<p>This page demonstrates the usage of the <code class="docutils literal notranslate"><span class="pre">Date</span></code> class. It covers basic date and time manipulations, formatting, and how to handle date inputs in various contexts.</p>
+<p>This page demonstrates the usage of the <code class="docutils literal notranslate"><span class="pre">Date</span></code> class. It covers basic date and
+time manipulations, formatting, and how to handle date inputs in various
+contexts.</p>
 <p>See more details in the <a class="reference internal" href="reference.html#date-reference"><span class="std std-ref">Date class reference</span></a>.</p>
 <section id="creating-a-date-object">
 <h2>Creating a Date Object<a class="headerlink" href="#creating-a-date-object" title="Link to this heading">#</a></h2>
-<p>You can create a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object in several ways, representing both the current and specific dates:</p>
+<p>You can create a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object in several ways, representing both the current
+and specific dates:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
 <span class="k">var</span><span class="w"> </span><span class="n">specificDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">justDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span>
@@ -414,8 +420,10 @@
 </div>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Date.now</span></code> creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day,</span> <span class="pre">hour,</span> <span class="pre">minute,</span> <span class="pre">second)</span></code> allows you to create a specific date and time.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day)</span></code> creates a date object with the specified year, month, and day at midnight.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day,</span> <span class="pre">hour,</span> <span class="pre">minute,</span> <span class="pre">second)</span></code> allows you to create a
+specific date and time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day)</span></code> creates a date object with the specified year,
+month, and day at midnight.</p></li>
 </ul>
 </section>
 <section id="global-utc-handling">
@@ -436,7 +444,8 @@
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Date with specific UTC: </span><span class="si">%(</span><span class="n">date</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This lets you control the UTC offset at the instance level without affecting other <code class="docutils literal notranslate"><span class="pre">Date</span></code> objects.</p>
+<p>This lets you control the UTC offset at the instance level without affecting
+other <code class="docutils literal notranslate"><span class="pre">Date</span></code> objects.</p>
 </section>
 <section id="displaying-date-and-time-components">
 <h2>Displaying Date and Time Components<a class="headerlink" href="#displaying-date-and-time-components" title="Link to this heading">#</a></h2>

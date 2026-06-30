@@ -62,10 +62,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Date and Time Functions" href="datetime.html" />
-    <link rel="prev" title="Database" href="database.html" />
+    <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -167,9 +167,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -408,16 +411,19 @@
                   
   <section id="file-handling">
 <h1>File Handling<a class="headerlink" href="#file-handling" title="Link to this heading">#</a></h1>
-<p>In Bialet, files are <strong>always saved in the database</strong>. Whether you are
-uploading a file or creating one dynamically, Bialet provides an easy and
-efficient way to manage file storage. Below are the three main parts of file
-handling in Bialet.</p>
+<p>In Bialet, files are <strong>always saved in the database</strong>. Whether you are uploading
+a file or creating one dynamically, Bialet provides an easy and efficient way to
+manage file storage. Below are the three main parts of file handling in Bialet.</p>
 <section id="file-uploading">
 <h2>File Uploading<a class="headerlink" href="#file-uploading" title="Link to this heading">#</a></h2>
-<p>When a file is uploaded through Bialet, it is automatically saved in the database.
-By default, files handled through <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> are marked as permanent.
-However, any file that is uploaded but not processed remains temporary, meaning it
-will be deleted within a day or less.</p>
+<p>When a file is uploaded through Bialet, it is automatically saved in the
+database. By default, files handled through <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> are marked as
+permanent. However, any file that is uploaded but not processed remains
+temporary, meaning it will be deleted within a day or less.</p>
+<p><strong>File Size Limits</strong>: Bialet enforces a maximum upload size limit (default: 10
+MB) to prevent disk abuse. Files exceeding this limit will be rejected with an
+error message. This limit is configurable in the source code through the
+<code class="docutils literal notranslate"><span class="pre">max_upload_size</span></code> configuration option.</p>
 <section id="example-1-permanent-file-upload">
 <h3>Example 1: Permanent File Upload<a class="headerlink" href="#example-1-permanent-file-upload" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -456,8 +462,8 @@ it as temporary and it will be deleted after a short period of time.</p>
 </div>
 <blockquote>
 <div><p><strong>Note:</strong> Each file processed with <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> is saved as permanent by
-default. Files that are uploaded but not processed remain temporary and will be
-deleted within a day or less.</p>
+default. Files that are uploaded but not processed remain temporary and will
+be deleted within a day or less.</p>
 </div></blockquote>
 </section>
 </section>
@@ -480,8 +486,8 @@ delete a file, use the <code class="docutils literal notranslate"><span class="p
 </section>
 <section id="example-2-deleting-a-file-manually">
 <h3>Example 2: Deleting a File Manually<a class="headerlink" href="#example-2-deleting-a-file-manually" title="Link to this heading">#</a></h3>
-<p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.
-It works for uploaded and dymanically created files.</p>
+<p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method. It
+works for uploaded and dynamically created files.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a text file with dynamic content</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a temporary file that will be deleted.&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;temporary.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
@@ -496,16 +502,18 @@ It works for uploaded and dymanically created files.</p>
 </section>
 <section id="showing-a-file-in-the-browser">
 <h2>Showing a File in the Browser<a class="headerlink" href="#showing-a-file-in-the-browser" title="Link to this heading">#</a></h2>
-<p>Once a file is saved in the database, the only way to show it in the browser
-is by using <code class="docutils literal notranslate"><span class="pre">Response.file(id)</span></code>. This will take the file ID and return the
-file to the browser.</p>
+<p>Once a file is saved in the database, the only way to show it in the browser is
+by using <code class="docutils literal notranslate"><span class="pre">Response.file(id)</span></code>. This will take the file ID and return the file to
+the browser.</p>
 <p>You can also use <code class="docutils literal notranslate"><span class="pre">_route</span></code> to dynamically fetch files from your database and
 display them based on user input, such as a filename.</p>
 <section id="example-serving-files-by-name-from-a-custom-table">
 <h3>Example: Serving Files by Name from a Custom Table<a class="headerlink" href="#example-serving-files-by-name-from-a-custom-table" title="Link to this heading">#</a></h3>
 <p>In this example, we have a custom table <code class="docutils literal notranslate"><span class="pre">images</span></code> with fields <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">file_id</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">name</span></code>. We will fetch the file based on its name and display it in the browser.</p>
-<p>For more information on routing and dynamic names, see the <a class="reference internal" href="structure.html"><span class="std std-doc">routes section</span></a>.</p>
+and <code class="docutils literal notranslate"><span class="pre">name</span></code>. We will fetch the file based on its name and display it in the
+browser.</p>
+<p>For more information on routing and dynamic names, see the
+<a class="reference internal" href="structure.html"><span class="std std-doc">routes section</span></a>.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Assume we have a route that takes the name as a parameter</span>
 <span class="k">var</span><span class="w"> </span><span class="n">imageName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
@@ -538,12 +546,12 @@ and <code class="docutils literal notranslate"><span class="pre">name</span></co
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="database.html"
+       href="tests.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Database</p>
+        <p class="prev-next-title">Testing in Bialet</p>
       </div>
     </a>
     <a class="right-next"

@@ -1,0 +1,1016 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Testing in Bialet" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/tests.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints. Running Tests: Use the-T flag to run all ..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints. Running Tests: Use the-T flag to run all ..." />
+
+    <title>Testing in Bialet &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a180c788" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tests';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="File Handling" href="file.html" />
+    <link rel="prev" title="Building REST APIs" href="rest-api.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/tests.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Ftests.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/tests.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Testing in Bialet</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-directory-structure">Test Directory Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-initialization">Test Initialization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-tests">Writing Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#two-approaches-to-json-testing">Two Approaches to JSON Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-assertions">Multiple Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-tests-in-one-file">Multiple Tests in One File</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-test-patterns">Multiple Test Patterns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-test-examples">Complete Test Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-assertion-methods">Use Appropriate Assertion Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-testing">Security Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-custom-assertions-for-complex-logic">Use Custom Assertions for Complex Logic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chain-related-assertions">Chain Related Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-both-success-and-failure-cases">Test Both Success and Failure Cases</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="testing-in-bialet">
+<h1>Testing in Bialet<a class="headerlink" href="#testing-in-bialet" title="Link to this heading">#</a></h1>
+<p>Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints.</p>
+<section id="running-tests">
+<h2>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h2>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">-T</span></code> flag to run all tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-T<span class="w">                    </span><span class="c1"># Run all tests in _tests/ folder</span>
+bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class="w">      </span><span class="c1"># Run tests in specific directory</span>
+</pre></div>
+</div>
+</section>
+<section id="test-directory-structure">
+<h2>Test Directory Structure<a class="headerlink" href="#test-directory-structure" title="Link to this heading">#</a></h2>
+<p>Tests are located in the <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder within your application:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">myapp</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_app</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_migration</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">hi</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_tests</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="vi">_init</span><span class="o">.</span><span class="n">wren</span><span class="w">           </span><span class="cs"># Optional: runs before test files</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">hi</span><span class="o">.</span><span class="n">wren</span><span class="w">              </span><span class="cs"># Tests for hi.wren</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">password</span><span class="o">.</span><span class="n">wren</span><span class="w">        </span><span class="cs"># Tests for password.wren</span>
+</pre></div>
+</div>
+<p><strong>Important:</strong> The <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder name starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> to prevent direct HTTP access, following Bialet’s convention for private files.</p>
+</section>
+<section id="test-initialization">
+<h2>Test Initialization<a class="headerlink" href="#test-initialization" title="Link to this heading">#</a></h2>
+<section id="tests-init-wren-optional">
+<h3><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)<a class="headerlink" href="#tests-init-wren-optional" title="Link to this heading">#</a></h3>
+<p>If present, this file runs once before each test file. Use it for common setup:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/_init.wren</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Setting up test environment&quot;</span><span class="p">)</span>
+
+<span class="c1">// Insert test data</span>
+<span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;Test User&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;test@example.com&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="writing-tests">
+<h2>Writing Tests<a class="headerlink" href="#writing-tests" title="Link to this heading">#</a></h2>
+<p>Tests use the <code class="docutils literal notranslate"><span class="pre">Test</span></code> class with a fluent API:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Basic GET request test</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+
+<span class="c1">// POST request test with form data</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/password&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="s2">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password-check&quot;</span><span class="o">:</span><span class="s2">&quot;123&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;The passwords are the same&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="test-api-reference">
+<h2>Test API Reference<a class="headerlink" href="#test-api-reference" title="Link to this heading">#</a></h2>
+<section id="http-request-methods">
+<h3>HTTP Request Methods<a class="headerlink" href="#http-request-methods" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Test.get(route)</span></code></p></td>
+<td><p>Send GET request</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test.post(route,</span> <span class="pre">params)</span></code></p></td>
+<td><p>Send POST request with form data</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Test.apiGet(route)</span></code></p></td>
+<td><p>Send GET with JSON Content-Type header</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test.apiPost(route,</span> <span class="pre">params)</span></code></p></td>
+<td><p>Send POST with JSON body</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Test.apiPut(route,</span> <span class="pre">params)</span></code></p></td>
+<td><p>Send PUT with JSON body</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test.apiDelete(route)</span></code></p></td>
+<td><p>Send DELETE request</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="request-configuration">
+<h3>Request Configuration<a class="headerlink" href="#request-configuration" title="Link to this heading">#</a></h3>
+<p>Chain these before assertions:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/user&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">setHeader</span><span class="p">(</span><span class="s2">&quot;Authorization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Bearer token123&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// Add custom header</span>
+<span class="w">    </span><span class="o">.</span><span class="n">method</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w">                                     </span><span class="c1">// Explicitly set method</span>
+<span class="w">    </span><span class="o">.</span><span class="n">postData</span><span class="p">({</span><span class="s2">&quot;key&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">})</span><span class="w">                       </span><span class="c1">// Set POST data</span>
+</pre></div>
+</div>
+</section>
+<section id="assertions">
+<h3>Assertions<a class="headerlink" href="#assertions" title="Link to this heading">#</a></h3>
+<p>Chain these after the request method:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Assertion</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.status(code)</span></code></p></td>
+<td><p>Assert HTTP status code</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.contains(str)</span></code></p></td>
+<td><p>Assert body contains string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.equals(str)</span></code></p></td>
+<td><p>Assert body exactly equals string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.notContains(str)</span></code></p></td>
+<td><p>Assert body doesn’t contain string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.header(name)</span></code></p></td>
+<td><p>Assert header exists</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.header(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Assert header equals value</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.json()</span></code></p></td>
+<td><p>Return parsed JSON body (Map or List)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.jsonContains(key)</span></code></p></td>
+<td><p>Assert JSON object has key</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.jsonEquals(key,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Assert JSON key equals value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.jsonNotContains(key)</span></code></p></td>
+<td><p>Assert JSON object doesn’t have key</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.assert(condition,</span> <span class="pre">message)</span></code></p></td>
+<td><p>Custom assertion with message</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Note:</strong> Assertions are lazy - the request is executed when the first assertion is called.</p>
+</section>
+<section id="body-assertions">
+<h3>Body Assertions<a class="headerlink" href="#body-assertions" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Exact match</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
+
+<span class="c1">// Contains substring</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/page&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Welcome&quot;</span><span class="p">)</span>
+
+<span class="c1">// Negative assertion (security checks)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/public&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span>
+
+<span class="c1">// Multiple assertions chained</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;success&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="json-assertions">
+<h3>JSON Assertions<a class="headerlink" href="#json-assertions" title="Link to this heading">#</a></h3>
+<p>For API endpoints that return JSON:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Parse JSON body for custom validation</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected at least one user&quot;</span><span class="p">)</span>
+
+<span class="c1">// Fluent JSON assertions (from _tests/api-user.wren)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/api-user&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Test User&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">&quot;ssn&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="two-approaches-to-json-testing">
+<h3>Two Approaches to JSON Testing<a class="headerlink" href="#two-approaches-to-json-testing" title="Link to this heading">#</a></h3>
+<p><strong>Approach 1: Fluent JSON methods</strong> (best for simple checks)</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/api-user.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/api-user&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Test User&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Approach 2: Parse JSON + custom logic</strong> (best for complex validation)</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/json.wren</span>
+<span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected at least 2 counters&quot;</span><span class="p">)</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">counters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;test1&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;10&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected value &#39;10&#39;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-assertions">
+<h3>Multiple Assertions<a class="headerlink" href="#multiple-assertions" title="Link to this heading">#</a></h3>
+<p>Chain multiple assertions on a single request:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/users&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;application/json&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;user@example.com&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-tests-in-one-file">
+<h3>Multiple Tests in One File<a class="headerlink" href="#multiple-tests-in-one-file" title="Link to this heading">#</a></h3>
+<p>Write multiple independent tests in a single file:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/api.wren</span>
+
+<span class="c1">// Test 1: List users</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">)</span>
+
+<span class="c1">// Test 2: Create user</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiPost</span><span class="p">(</span><span class="s2">&quot;/api/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;John&quot;</span><span class="p">)</span>
+
+<span class="c1">// Test 3: Invalid request</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;name is required&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="api-testing-examples">
+<h2>API Testing Examples<a class="headerlink" href="#api-testing-examples" title="Link to this heading">#</a></h2>
+<section id="json-response-testing">
+<h3>JSON Response Testing<a class="headerlink" href="#json-response-testing" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Test JSON endpoint with json() and assert() (from _tests/json.wren)</span>
+<span class="c1">// Shows parsing JSON and custom validation logic</span>
+
+<span class="c1">// Parse JSON response</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="nc">List</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected JSON array&quot;</span><span class="p">)</span>
+
+<span class="c1">// Insert test data</span>
+<span class="sb">`INSERT OR REPLACE INTO counter (name, value) VALUES (&#39;test1&#39;, 10)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+
+<span class="c1">// Complex validation with parsed JSON</span>
+<span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected at least 2 counters&quot;</span><span class="p">)</span>
+
+<span class="c1">// Iterate and validate specific values</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">counters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;test1&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;10&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Expected value &#39;10&#39;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-test-patterns">
+<h3>Multiple Test Patterns<a class="headerlink" href="#multiple-test-patterns" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/hi.wren - different assertion styles</span>
+
+<span class="c1">// Simple contains check</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+
+<span class="c1">// Exact match</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;👋 Hello World&lt;/h1&gt;&quot;</span><span class="p">)</span>
+
+<span class="c1">// Multiple chained assertions</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;World&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;Goodbye&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="security-and-negative-assertions">
+<h3>Security and Negative Assertions<a class="headerlink" href="#security-and-negative-assertions" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/password.wren - test what should NOT be present</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/password&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;abc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password-check&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;xyz&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;The passwords are the same&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// Should not contain success message</span>
+
+<span class="c1">// From _tests/assertions.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;Failed&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="form-testing">
+<h3>Form Testing<a class="headerlink" href="#form-testing" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/password.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/password&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password-check&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;The passwords are the same&quot;</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/password&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password-check&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;321&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;The passwords are different&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="complete-test-examples">
+<h3>Complete Test Examples<a class="headerlink" href="#complete-test-examples" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/assertions.wren - comprehensive testing</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;👋 Hello World&lt;/h1&gt;&quot;</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/password&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;test123&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password-check&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;test123&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;The passwords are the same&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Hash:&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<section id="use-appropriate-assertion-methods">
+<h3>Use Appropriate Assertion Methods<a class="headerlink" href="#use-appropriate-assertion-methods" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good - specific assertions</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+
+<span class="c1">// ❌ Avoid - too generic</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// Could match &quot;NOT OK&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="security-testing">
+<h3>Security Testing<a class="headerlink" href="#security-testing" title="Link to this heading">#</a></h3>
+<p>Always check that sensitive data isn’t exposed:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Ensure passwords/keys not in responses</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/public/user&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">&quot;ssn&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">&quot;api_key&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-custom-assertions-for-complex-logic">
+<h3>Use Custom Assertions for Complex Logic<a class="headerlink" href="#use-custom-assertions-for-complex-logic" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Instead of manual Fiber.abort()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">&quot;/stats&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;inactive&quot;</span><span class="p">],</span><span class="w"> </span><span class="s2">&quot;More active expected&quot;</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;total&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;inactive&quot;</span><span class="p">],</span><span class="w"> </span><span class="s2">&quot;Count mismatch&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="chain-related-assertions">
+<h3>Chain Related Assertions<a class="headerlink" href="#chain-related-assertions" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Group related checks together</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiPost</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Alice&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">&quot;createdAt&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Alice&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="test-both-success-and-failure-cases">
+<h3>Test Both Success and Failure Cases<a class="headerlink" href="#test-both-success-and-failure-cases" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Success case</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;user&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;correct&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Welcome&quot;</span><span class="p">)</span>
+
+<span class="c1">// Failure case</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;user&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pass&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;wrong&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Invalid credentials&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="database-isolation">
+<h2>Database Isolation<a class="headerlink" href="#database-isolation" title="Link to this heading">#</a></h2>
+<p>Tests run against a <strong>temporary database file</strong> that is created fresh for each test run:</p>
+<ol class="arabic simple">
+<li><p>A temporary database file is created</p></li>
+<li><p>Migrations are automatically run (<code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">/_app/migration.wren</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> runs (if exists)</p></li>
+<li><p>Test files execute</p></li>
+<li><p>Temporary database is deleted</p></li>
+</ol>
+<p>This ensures tests don’t pollute your development or production database.</p>
+</section>
+<section id="complete-example">
+<h2>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h2>
+<p><strong>Application file:</strong> <code class="docutils literal notranslate"><span class="pre">hi.wren</span></code></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;h1&gt;👋 Hello World&lt;/h1&gt;</span>
+</pre></div>
+</div>
+<p><strong>Test file:</strong> <code class="docutils literal notranslate"><span class="pre">_tests/hi.wren</span></code></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/hi&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Run tests:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
+Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests/...
+
+✓<span class="w"> </span>_tests/hi.wren:<span class="w"> </span>Test.get<span class="o">(</span><span class="s2">&quot;/hi&quot;</span><span class="o">)</span>.status<span class="o">(</span><span class="m">200</span><span class="o">)</span>.contains<span class="o">(</span><span class="s2">&quot;Hello World&quot;</span><span class="o">)</span>
+
+<span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">0</span><span class="w"> </span>failed
+</pre></div>
+</div>
+</section>
+<section id="exit-codes">
+<h2>Exit Codes<a class="headerlink" href="#exit-codes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: All tests passed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: One or more tests failed</p></li>
+</ul>
+<p>This makes it easy to integrate with CI/CD pipelines:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># GitHub Actions example</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run tests</span>
+<span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bialet -T</span>
+</pre></div>
+</div>
+</section>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Request Building</strong>: The <code class="docutils literal notranslate"><span class="pre">Test</span></code> class builds an HTTP request (method, headers, body)</p></li>
+<li><p><strong>Internal Routing</strong>: Instead of making actual HTTP calls, the test runner directly invokes the Wren handler</p></li>
+<li><p><strong>Response Capture</strong>: The response (status, headers, body) is captured and wrapped</p></li>
+<li><p><strong>Assertions</strong>: Each assertion checks the response and reports failures</p></li>
+<li><p><strong>Database</strong>: All database operations happen on a temp DB, isolated from your main data</p></li>
+</ol>
+<p>This approach is fast (no network overhead), reliable (no port conflicts), and safe (isolated database).</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="rest-api.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Building REST APIs</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="file.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">File Handling</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-directory-structure">Test Directory Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-initialization">Test Initialization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-tests">Writing Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#two-approaches-to-json-testing">Two Approaches to JSON Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-assertions">Multiple Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-tests-in-one-file">Multiple Tests in One File</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-test-patterns">Multiple Test Patterns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-test-examples">Complete Test Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-assertion-methods">Use Appropriate Assertion Methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-testing">Security Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-custom-assertions-for-complex-logic">Use Custom Assertions for Complex Logic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chain-related-assertions">Chain Related Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-both-success-and-failure-cases">Test Both Success and Failure Cases</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

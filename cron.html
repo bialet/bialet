@@ -61,11 +61,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="next" title="Model Context Protocol (MCP)" href="mcp.html" />
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -167,9 +167,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -404,12 +407,15 @@
   <section id="cron-tasks">
 <h1>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading">#</a></h1>
 <p>Bialet allows you to run scheduled code by defining a cron job in a Wren file.</p>
-<p>This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data.</p>
-<p>The cron file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> or be inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/cron.wren</span></code>.</p>
+<p>This is useful for running periodic operations like cleaning old records,
+sending emails, or syncing external data.</p>
+<p>The cron file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> or be inside the
+<code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/cron.wren</span></code>.</p>
 <section id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h2>
-<p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the Wren cron file.
-These methods receive a block that is called at the specified time.</p>
+<p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the
+Wren cron file. These methods receive a block that is called at the specified
+time.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="c1">// Every 2 minutes</span>
@@ -419,7 +425,8 @@ These methods receive a block that is called at the specified time.</p>
 <span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">clearAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">|date|</span></code> argument is the current <a class="reference internal" href="datetime.html"><span class="doc std std-doc">Date object</span></a> used for evaluation. You can ignore it if not needed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">|date|</span></code> argument is the current <a class="reference internal" href="datetime.html"><span class="doc std std-doc">Date object</span></a> used for
+evaluation. You can ignore it if not needed.</p>
 <section id="helper-methods">
 <h3>Helper methods<a class="headerlink" href="#helper-methods" title="Link to this heading">#</a></h3>
 <section id="cron-every-minutes">
@@ -435,8 +442,8 @@ These methods receive a block that is called at the specified time.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 03:15 every day&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>Runs the job when the current time matches the given hour, minute, and day of week.
-Days of week: 0 (Sunday) to 6 (Saturday)</p>
+<p>Runs the job when the current time matches the given hour, minute, and day of
+week. Days of week: 0 (Sunday) to 6 (Saturday)</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 04:30 every Monday&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
@@ -445,7 +452,8 @@ Days of week: 0 (Sunday) to 6 (Saturday)</p>
 </section>
 <section id="custom-rules">
 <h2>Custom Rules<a class="headerlink" href="#custom-rules" title="Link to this heading">#</a></h2>
-<p>Each job receives a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object of the current time, which can be used for custom rules.</p>
+<p>Each job receives a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object of the current time, which can be used for
+custom rules.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">hour</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="s2">&quot;It&#39;s the first of the month!&quot;</span>
@@ -477,11 +485,11 @@ Days of week: 0 (Sunday) to 6 (Saturday)</p>
       </div>
     </a>
     <a class="right-next"
-       href="reference.html"
+       href="mcp.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Reference</p>
+        <p class="prev-next-title">Model Context Protocol (MCP)</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

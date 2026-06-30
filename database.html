@@ -61,11 +61,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="File Handling" href="file.html" />
+    <link rel="next" title="Building REST APIs" href="rest-api.html" />
     <link rel="prev" title="Inline HTML Strings" href="html-strings.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.4" />
+  <meta name="docsearch:version" content="0.10" />
   </head>
   
   
@@ -167,9 +167,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
@@ -383,7 +386,10 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
 </ul>
@@ -410,17 +416,19 @@
 <section id="query-object">
 <h2>Query Object<a class="headerlink" href="#query-object" title="Link to this heading">#</a></h2>
 <p>Use backticks to surround SQL statements <code class="docutils literal notranslate"><span class="pre">`</span> <span class="pre">`</span></code>.</p>
-<p>The Query object have 5 methods. All the methods accept the same parameters.</p>
+<p>The Query object has 6 methods. All the methods accept the same parameters.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">query()</span></code>: Returns the last inserted id if the query was a <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> statement.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code>: Returns the result of the query as an array (List object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">first()</span></code>: Returns the first result of the query as an object (Map object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">val()</span></code>: Returns the value of the first result.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">toNum()</span></code>: Returns the value of the first result as a number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toBool()</span></code>: Returns the value of the first result as a boolean.</p></li>
 </ul>
-<p><strong>First will add a LIMIT clause automatically in first(), val and toNum.</strong></p>
-<p>You can’t concatenate strings or use interpolations with the Query object.
-When you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the method.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a LIMIT clause.</p>
+<p>You can’t concatenate strings or use interpolations with the Query object. When
+you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the
+method.</p>
 <p>All methods receive the following parameters:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">()</span></code>: No parameters.</p></li>
@@ -429,8 +437,10 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2)</span></code>: Convert all parameters to String.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2,</span> <span class="pre">param3)</span></code>: Convert all parameters to String.</p></li>
 </ul>
-<p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and <code class="docutils literal notranslate"><span class="pre">.toNum</span></code>.</p>
-<p>If you need more parameters, use the array syntax (<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
+<p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and
+<code class="docutils literal notranslate"><span class="pre">.toNum</span></code>.</p>
+<p>If you need more parameters, use the array syntax
+(<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
 <span class="sb">`SELECT * FROM users WHERE id = %(id)`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
@@ -452,6 +462,85 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 </pre></div>
 </div>
 </section>
+<section id="safe-sorting-with-order">
+<h2>Safe Sorting with .order()<a class="headerlink" href="#safe-sorting-with-order" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">.order()</span></code> method provides a safe way to add ORDER BY clauses to your queries by validating column names against an allowed list and normalizing the sort direction.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">order</span><span class="p">(</span><span class="n">column</span><span class="p">,</span><span class="w"> </span><span class="n">direction</span><span class="p">,</span><span class="w"> </span><span class="n">allowedColumns</span><span class="p">)</span>
+<span class="n">order</span><span class="p">(</span><span class="n">column</span><span class="p">,</span><span class="w"> </span><span class="n">direction</span><span class="p">,</span><span class="w"> </span><span class="n">allowedColumns</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">column</span></code>: The column name to sort by</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">direction</span></code>: Sort direction (“asc” or “desc”, case-insensitive)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">allowedColumns</span></code>: Optional list of allowed column names for validation (can be null)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code>: Optional number of results to limit (only added if &gt; 0)</p></li>
+</ul>
+<p>The method returns a new Query object with the ORDER BY clause appended. If the column is not in the allowed list, it defaults to the first allowed column. The direction is automatically validated and normalized to uppercase.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Basic usage</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;asc&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="c1">// With validation - only allow specific columns</span>
+<span class="k">var</span><span class="w"> </span><span class="n">allowedSorts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;created_at&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">sortCol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;id&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">sortDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;asc&quot;</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sortCol</span><span class="p">,</span><span class="w"> </span><span class="n">sortDir</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="c1">// Combined with filtering</span>
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM users </span>
+<span class="sb">  WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sortCol</span><span class="p">,</span><span class="w"> </span><span class="n">sortDir</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">])</span>
+
+<span class="c1">// With limit for pagination</span>
+<span class="k">var</span><span class="w"> </span><span class="n">topUsers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;desc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;created_at&quot;</span><span class="p">],</span><span class="w"> </span><span class="mf">10</span><span class="p">)</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="c1">// Invalid columns are rejected</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;malicious_col&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;desc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
+<span class="c1">// Will use &quot;id&quot; instead of &quot;malicious_col&quot;</span>
+</pre></div>
+</div>
+<p>This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.</p>
+</section>
+<section id="mapping-results-to-domain-classes">
+<h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
+<p>Query results can be automatically mapped to domain classes using the <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method. This is useful for converting database rows into instances of your domain models.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Define a domain class with a constructor that accepts a Map</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span>
+<span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">title</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_content</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Map a single result to a domain class</span>
+<span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span>
+
+<span class="c1">// Map multiple results to domain classes</span>
+<span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts`</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span>
+<span class="c1">// Returns a List where each element is a Post instance</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method works with:</p>
+<ul class="simple">
+<li><p>Query results from <code class="docutils literal notranslate"><span class="pre">.fetch()</span></code> (returns a List of class instances)</p></li>
+<li><p>Single results from <code class="docutils literal notranslate"><span class="pre">.first()</span></code> (returns a single class instance)</p></li>
+<li><p>Any Map or List of Maps</p></li>
+</ul>
+</section>
 <section id="insert-and-update">
 <h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
 <p>You can use a regular SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statement.</p>
@@ -459,7 +548,8 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">userParams</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>But you can also use the <code class="docutils literal notranslate"><span class="pre">Db.save</span></code> method, sending the table name and the a Map object with the values.</p>
+<p>But you can also use the <code class="docutils literal notranslate"><span class="pre">Db.save</span></code> method, sending the table name and the a Map
+object with the values.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">)</span>
 </pre></div>
@@ -472,16 +562,34 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 </pre></div>
 </div>
 </section>
+<section id="data-types-and-blob-support">
+<h2>Data Types and BLOB Support<a class="headerlink" href="#data-types-and-blob-support" title="Link to this heading">#</a></h2>
+<p>SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
+NULL. Bialet handles most of these types automatically:</p>
+<ul class="simple">
+<li><p><strong>TEXT</strong>: Returned as strings</p></li>
+<li><p><strong>INTEGER</strong> and <strong>REAL</strong>: Returned as numbers</p></li>
+<li><p><strong>NULL</strong>: Returned as null values</p></li>
+</ul>
+<p><strong>Note on BLOB data</strong>: While BLOB (Binary Large Object) data is retrieved
+correctly from SQLite, it may not be properly handled when passed to Wren code
+due to Wren’s string representation. If you need to work with binary data,
+consider encoding it as base64 or using another text-based representation.</p>
+</section>
 <section id="migrations">
 <h2>Migrations<a class="headerlink" href="#migrations" title="Link to this heading">#</a></h2>
-<p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
-<p>This script will be run every time the application starts and also when a Wren file is updated.</p>
+<p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be
+inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
+<p>This script will be run every time the application starts and also when a Wren
+file is updated.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Name of the migration&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`SOME QUERY`</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The name of the migration is used to avoid repeating migrations. Use a descriptive name.</p>
+<p>The name of the migration is used to avoid repeating migrations. Use a
+descriptive name.</p>
 <p>You can have multiples queries separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>.</p>
-<p>Use migration to insert non-transactional data. You can interact with the <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code> tables.</p>
+<p>Use migration to insert non-transactional data. You can interact with the
+<code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code> tables.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default title&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES (&quot;title&quot;, &quot;Bialet example page&quot;)`</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -493,8 +601,12 @@ When you need to add parameters, use placeholders <code class="docutils literal 
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>: The configuration table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_MIGRATIONS</span></code>: The migration history table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_SESSIONS</span></code>: The session table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_FILES</span></code>: The file storage table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_LOGS</span></code>: The logging table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>: The remote module cache table.</p></li>
 </ul>
-<p>If you delete or alter any of this tables your application will not work correctly.</p>
+<p>If you delete or alter any of these tables your application will not work
+correctly.</p>
 <p>You may insert, update or delete rows, however do it with caution.</p>
 </section>
 </section>
@@ -520,11 +632,11 @@ When you need to add parameters, use placeholders <code class="docutils literal 
       </div>
     </a>
     <a class="right-next"
-       href="file.html"
+       href="rest-api.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">File Handling</p>
+        <p class="prev-next-title">Building REST APIs</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -547,7 +659,10 @@ When you need to add parameters, use placeholders <code class="docutils literal 
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
 </ul>
