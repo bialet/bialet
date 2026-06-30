@@ -1,0 +1,800 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="FAQ" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/faq.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="General: What is Bialet?: Bialet is a full-stack web framework that integrates the Wren language with an HTTP server and a built-in SQLite database in a single binary. You write HTML with embedded ..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="General: What is Bialet?: Bialet is a full-stack web framework that integrates the Wren language with an HTTP server and a built-in SQLite database in a single binary. You write HTML with embedded ..." />
+
+    <title>FAQ &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68f60be9" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Why Bialet?" href="why-bialet.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/faq.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Ffaq.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/faq.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>FAQ</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general">General</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-bialet">What is Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-name-bialet">Why the name “Bialet”?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-bialet-production-ready">Is Bialet production-ready?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-bialet-compare-to-php-flask-rails-django">How does Bialet compare to PHP / Flask / Rails / Django?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-should-i-use-bialet">When should I use Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-should-i-not-use-bialet">When should I NOT use Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-license-is-bialet">What license is Bialet?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#technical">Technical</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-javascript">Can I use JavaScript?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-other-databases-besides-sqlite">Can I use other databases besides SQLite?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-platforms-are-supported">What platforms are supported?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-css-frameworks">Can I use CSS frameworks?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-routing-work">How does routing work?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-handle-forms">How do I handle forms?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-database-queries-work">How do database queries work?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db-values-come-back-as-strings-how-do-i-work-with-numbers">DB values come back as strings. How do I work with numbers?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-create-reusable-layouts">How do I create reusable layouts?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-import-external-wren-modules">Can I import external Wren modules?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-support-https">Does Bialet support HTTPS?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-deploy-a-bialet-app">How do I deploy a Bialet app?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-run-multiple-apps-on-one-server">Can I run multiple apps on one server?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-support-websockets">Does Bialet support WebSockets?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-there-a-live-reload-hot-reload-feature">Is there a live-reload / hot-reload feature?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#community">Community</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-report-a-bug">How do I report a bug?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-can-i-contribute">How can I contribute?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-planned-for-future-releases">What’s planned for future releases?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-can-i-ask-questions">Where can I ask questions?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-there-a-way-to-try-bialet-online">Is there a way to try Bialet online?</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="faq">
+<h1>FAQ<a class="headerlink" href="#faq" title="Link to this heading">#</a></h1>
+<section id="general">
+<h2>General<a class="headerlink" href="#general" title="Link to this heading">#</a></h2>
+<section id="what-is-bialet">
+<h3>What is Bialet?<a class="headerlink" href="#what-is-bialet" title="Link to this heading">#</a></h3>
+<p>Bialet is a full-stack web framework that integrates the
+<a class="reference external" href="https://wren.io">Wren language</a> with an HTTP server and a built-in SQLite
+database in a single binary. You write HTML with embedded queries and logic
+in <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files — no build steps, no configuration files, no separate
+database server.</p>
+</section>
+<section id="why-the-name-bialet">
+<h3>Why the name “Bialet”?<a class="headerlink" href="#why-the-name-bialet" title="Link to this heading">#</a></h3>
+<p>Bialet is named after <a class="reference external" href="https://es.wikipedia.org/wiki/Juan_Bialet_Mass%C3%A9">Juan Bialet Massé</a>,
+an Argentine physician, lawyer, and educator known for his practical,
+no-nonsense approach to solving problems.</p>
+</section>
+<section id="is-bialet-production-ready">
+<h3>Is Bialet production-ready?<a class="headerlink" href="#is-bialet-production-ready" title="Link to this heading">#</a></h3>
+<p>Bialet is stable and used in production for small to medium traffic sites.
+It’s well-suited for CRUD apps, dashboards, internal tools, and prototypes.
+If you need horizontal scaling, WebSocket support, or high-throughput
+architectures, you may want to evaluate other frameworks.</p>
+</section>
+<section id="how-does-bialet-compare-to-php-flask-rails-django">
+<h3>How does Bialet compare to PHP / Flask / Rails / Django?<a class="headerlink" href="#how-does-bialet-compare-to-php-flask-rails-django" title="Link to this heading">#</a></h3>
+<p>Bialet is closer to PHP in philosophy: files map to URLs, no build step, and
+you write server-rendered HTML. Unlike PHP, Bialet bundles SQLite and the
+entire runtime in a single binary. Compared to Flask or Rails, Bialet is
+simpler and more opinionated — there’s no ORM, no middleware stack, and no
+routing DSL. The trade-off is less flexibility for less complexity.</p>
+</section>
+<section id="when-should-i-use-bialet">
+<h3>When should I use Bialet?<a class="headerlink" href="#when-should-i-use-bialet" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Prototyping and internal tools</p></li>
+<li><p>Simple CRUD applications</p></li>
+<li><p>Learning web development without configuration overhead</p></li>
+<li><p>Single-server deployments where you want zero infrastructure</p></li>
+</ul>
+</section>
+<section id="when-should-i-not-use-bialet">
+<h3>When should I NOT use Bialet?<a class="headerlink" href="#when-should-i-not-use-bialet" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Applications requiring horizontal scaling or load balancing</p></li>
+<li><p>Real-time features (WebSockets, SSE) — not currently supported</p></li>
+<li><p>Teams that need a mature ecosystem of plugins and libraries</p></li>
+<li><p>Projects where you must use PostgreSQL, MySQL, or other databases</p></li>
+</ul>
+</section>
+<section id="what-license-is-bialet">
+<h3>What license is Bialet?<a class="headerlink" href="#what-license-is-bialet" title="Link to this heading">#</a></h3>
+<p>MIT. You can use, modify, and distribute it freely.</p>
+</section>
+</section>
+<section id="technical">
+<h2>Technical<a class="headerlink" href="#technical" title="Link to this heading">#</a></h2>
+<section id="can-i-use-javascript">
+<h3>Can I use JavaScript?<a class="headerlink" href="#can-i-use-javascript" title="Link to this heading">#</a></h3>
+<p>Yes. JavaScript is welcome but never required. Include <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tags in
+your HTML, link to external JS files, or use libraries like
+<a class="reference external" href="https://alpinejs.dev">Alpine.js</a> for interactivity. Bialet apps are
+classic multi-page applications — use forms and links for navigation, and
+sprinkle JS where you need client-side behavior.</p>
+</section>
+<section id="can-i-use-other-databases-besides-sqlite">
+<h3>Can I use other databases besides SQLite?<a class="headerlink" href="#can-i-use-other-databases-besides-sqlite" title="Link to this heading">#</a></h3>
+<p>No. Bialet is built around SQLite. The database file (<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>) is
+created automatically in your app directory. This keeps deployment simple:
+copy your files, and the database comes along.</p>
+</section>
+<section id="what-platforms-are-supported">
+<h3>What platforms are supported?<a class="headerlink" href="#what-platforms-are-supported" title="Link to this heading">#</a></h3>
+<p>Pre-built binaries for:</p>
+<ul class="simple">
+<li><p>macOS ARM (Apple Silicon)</p></li>
+<li><p>Linux x86_64</p></li>
+<li><p>Linux ARM64</p></li>
+</ul>
+<p>You can also build from source on any platform with a C17 compiler, SQLite3,
+and libcurl (see <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a>).</p>
+</section>
+<section id="can-i-use-css-frameworks">
+<h3>Can I use CSS frameworks?<a class="headerlink" href="#can-i-use-css-frameworks" title="Link to this heading">#</a></h3>
+<p>Yes. Link any CSS file in your <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> template or include a <code class="docutils literal notranslate"><span class="pre">&lt;link&gt;</span></code> in
+your HTML. The Getting Started tutorial uses
+<a class="reference external" href="https://flowbite.com/">Flowbite</a> + <a class="reference external" href="https://tailwindcss.com/">Tailwind</a>,
+but <a class="reference external" href="https://picocss.com">Pico CSS</a>, Bootstrap, or plain CSS work fine.</p>
+</section>
+<section id="how-does-routing-work">
+<h3>How does routing work?<a class="headerlink" href="#how-does-routing-work" title="Link to this heading">#</a></h3>
+<p>Bialet uses file-based routing. A request to <code class="docutils literal notranslate"><span class="pre">/about</span></code> maps to
+<code class="docutils literal notranslate"><span class="pre">about.wren</span></code> (or <code class="docutils literal notranslate"><span class="pre">about.html</span></code>). For dynamic routes, create a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code>
+file in a directory and use <code class="docutils literal notranslate"><span class="pre">Request.route(pos)</span></code> to read URL segments. See
+<a class="reference internal" href="structure.html"><span class="std std-doc">Structure &amp; Routing</span></a>.</p>
+</section>
+<section id="how-do-i-handle-forms">
+<h3>How do I handle forms?<a class="headerlink" href="#how-do-i-handle-forms" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> to check the method and <code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code> to read
+submitted values. Redirect after processing with
+<code class="docutils literal notranslate"><span class="pre">Response.redirect(&quot;/path&quot;)</span></code>. See the <a class="reference internal" href="getting-started/index.html"><span class="doc std std-doc">Getting Started</span></a> tutorial.
+tutorial for a complete example.</p>
+</section>
+<section id="how-do-database-queries-work">
+<h3>How do database queries work?<a class="headerlink" href="#how-do-database-queries-work" title="Link to this heading">#</a></h3>
+<p>Use backtick strings for prepared queries:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE active = ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Query methods: <code class="docutils literal notranslate"><span class="pre">.fetch()</span></code>, <code class="docutils literal notranslate"><span class="pre">.first()</span></code>, <code class="docutils literal notranslate"><span class="pre">.val()</span></code>, <code class="docutils literal notranslate"><span class="pre">.toNum()</span></code>, <code class="docutils literal notranslate"><span class="pre">.toBool()</span></code>.
+See <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> for details.</p>
+</section>
+<section id="db-values-come-back-as-strings-how-do-i-work-with-numbers">
+<h3>DB values come back as strings. How do I work with numbers?<a class="headerlink" href="#db-values-come-back-as-strings-how-do-i-work-with-numbers" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">query.toNum()</span></code> for direct numeric retrieval, or <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code>
+for manual conversion:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as c FROM votes`</span><span class="o">.</span><span class="n">toNum</span>
+<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="how-do-i-create-reusable-layouts">
+<h3>How do I create reusable layouts?<a class="headerlink" href="#how-do-i-create-reusable-layouts" title="Link to this heading">#</a></h3>
+<p>Create an <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> file with a <code class="docutils literal notranslate"><span class="pre">Template</span></code> class. This file is
+automatically loaded and its class is available to all pages in your app.
+Use the <code class="docutils literal notranslate"><span class="pre">Site</span></code> variable to access it:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">head</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;head&gt;...&lt;/head&gt;&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">body</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
+<span class="nc">Site</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;</span><span class="p">)</span>
+<span class="nc">Site</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="can-i-import-external-wren-modules">
+<h3>Can I import external Wren modules?<a class="headerlink" href="#can-i-import-external-wren-modules" title="Link to this heading">#</a></h3>
+<p>Yes, using <code class="docutils literal notranslate"><span class="pre">import</span></code> with a GitHub path:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="structure.html"><span class="std std-doc">Structure &amp; Routing</span></a>.</p>
+</section>
+<section id="does-bialet-support-https">
+<h3>Does Bialet support HTTPS?<a class="headerlink" href="#does-bialet-support-https" title="Link to this heading">#</a></h3>
+<p>Bialet itself serves HTTP. For HTTPS in production, put a reverse proxy
+like nginx or Caddy in front of it. For local development, HTTP on
+<code class="docutils literal notranslate"><span class="pre">localhost</span></code> is fine.</p>
+</section>
+<section id="how-do-i-deploy-a-bialet-app">
+<h3>How do I deploy a Bialet app?<a class="headerlink" href="#how-do-i-deploy-a-bialet-app" title="Link to this heading">#</a></h3>
+<p>Copy your app directory and the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary to a server, then run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p>That’s it. No build pipeline, no CI/CD required. Use Docker Compose
+(see <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a>) if you prefer containers.</p>
+</section>
+<section id="can-i-run-multiple-apps-on-one-server">
+<h3>Can I run multiple apps on one server?<a class="headerlink" href="#can-i-run-multiple-apps-on-one-server" title="Link to this heading">#</a></h3>
+<p>Yes. Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> with different <code class="docutils literal notranslate"><span class="pre">-p</span></code> (port) and <code class="docutils literal notranslate"><span class="pre">-A</span></code> (app directory)
+flags:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-A<span class="w"> </span>/apps/site1<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span><span class="p">&amp;</span>
+bialet<span class="w"> </span>-A<span class="w"> </span>/apps/site2<span class="w"> </span>-p<span class="w"> </span><span class="m">7002</span><span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="does-bialet-support-websockets">
+<h3>Does Bialet support WebSockets?<a class="headerlink" href="#does-bialet-support-websockets" title="Link to this heading">#</a></h3>
+<p>Not currently. Bialet is designed for request/response HTTP. For real-time
+features, consider polling or integrating an external WebSocket service.</p>
+</section>
+<section id="is-there-a-live-reload-hot-reload-feature">
+<h3>Is there a live-reload / hot-reload feature?<a class="headerlink" href="#is-there-a-live-reload-hot-reload-feature" title="Link to this heading">#</a></h3>
+<p>On Linux, Bialet uses inotify to watch <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files and automatically
+reload when they change. On macOS, restart the server manually for now.</p>
+</section>
+</section>
+<section id="community">
+<h2>Community<a class="headerlink" href="#community" title="Link to this heading">#</a></h2>
+<section id="how-do-i-report-a-bug">
+<h3>How do I report a bug?<a class="headerlink" href="#how-do-i-report-a-bug" title="Link to this heading">#</a></h3>
+<p>Open an issue on <a class="reference external" href="https://github.com/bialet/bialet/issues">GitHub Issues</a>.</p>
+</section>
+<section id="how-can-i-contribute">
+<h3>How can I contribute?<a class="headerlink" href="#how-can-i-contribute" title="Link to this heading">#</a></h3>
+<p>See the <a class="reference external" href="https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md">Contributing Guide</a>
+for setup, coding guidelines, and pull request workflow.</p>
+</section>
+<section id="what-s-planned-for-future-releases">
+<h3>What’s planned for future releases?<a class="headerlink" href="#what-s-planned-for-future-releases" title="Link to this heading">#</a></h3>
+<p>See the <a class="reference external" href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">Roadmap</a> for
+planned features and improvements.</p>
+</section>
+<section id="where-can-i-ask-questions">
+<h3>Where can I ask questions?<a class="headerlink" href="#where-can-i-ask-questions" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/bialet/bialet/issues">GitHub Issues</a> — for bugs and
+feature requests</p></li>
+<li><p><a class="reference external" href="https://github.com/bialet/bialet/discussions">GitHub Discussions</a> —
+for questions and community chat (check if enabled)</p></li>
+</ul>
+</section>
+<section id="is-there-a-way-to-try-bialet-online">
+<h3>Is there a way to try Bialet online?<a class="headerlink" href="#is-there-a-way-to-try-bialet-online" title="Link to this heading">#</a></h3>
+<p>Not yet, but you can install and run it in seconds:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;return &lt;h1&gt;Hello!&lt;/h1&gt;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>index.wren
+bialet
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="examples.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="why-bialet.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Why Bialet?</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general">General</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-bialet">What is Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-name-bialet">Why the name “Bialet”?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-bialet-production-ready">Is Bialet production-ready?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-bialet-compare-to-php-flask-rails-django">How does Bialet compare to PHP / Flask / Rails / Django?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-should-i-use-bialet">When should I use Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-should-i-not-use-bialet">When should I NOT use Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-license-is-bialet">What license is Bialet?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#technical">Technical</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-javascript">Can I use JavaScript?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-other-databases-besides-sqlite">Can I use other databases besides SQLite?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-platforms-are-supported">What platforms are supported?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-use-css-frameworks">Can I use CSS frameworks?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-routing-work">How does routing work?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-handle-forms">How do I handle forms?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-database-queries-work">How do database queries work?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#db-values-come-back-as-strings-how-do-i-work-with-numbers">DB values come back as strings. How do I work with numbers?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-create-reusable-layouts">How do I create reusable layouts?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-import-external-wren-modules">Can I import external Wren modules?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-support-https">Does Bialet support HTTPS?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-deploy-a-bialet-app">How do I deploy a Bialet app?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#can-i-run-multiple-apps-on-one-server">Can I run multiple apps on one server?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-support-websockets">Does Bialet support WebSockets?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-there-a-live-reload-hot-reload-feature">Is there a live-reload / hot-reload feature?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#community">Community</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-report-a-bug">How do I report a bug?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-can-i-contribute">How can I contribute?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-planned-for-future-releases">What’s planned for future releases?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-can-i-ask-questions">Where can I ask questions?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-there-a-way-to-try-bialet-online">Is there a way to try Bialet online?</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Cron Tasks" />
+<meta property="og:title" content="Why Bialet?" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://bialet.dev/cron.html" />
+<meta property="og:url" content="https://bialet.dev/why-bialet.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet allows you to run scheduled code by defining a cron job in a Wren file. This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data. Th..." />
+<meta property="og:description" content="Bialet makes a specific trade-off: maximum simplicity for a narrow but common set of use cases. This page explains what that means, when it’s a good fit, and how it compares to other tools. The Phi..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet allows you to run scheduled code by defining a cron job in a Wren file. This is useful for running periodic operations like cleaning old records, sending emails, or syncing external data. Th..." />
+<meta name="description" content="Bialet makes a specific trade-off: maximum simplicity for a narrow but common set of use cases. This page explains what that means, when it’s a good fit, and how it compares to other tools. The Phi..." />
 
-    <title>Cron Tasks &#8212; Bialet  documentation</title>
+    <title>Why Bialet? &#8212; Bialet  documentation</title>
   
   
   
@@ -57,12 +57,11 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'cron';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'why-bialet';</script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Model Context Protocol (MCP)" href="mcp.html" />
-    <link rel="prev" title="Date and Time Functions" href="datetime.html" />
+    <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.10" />
@@ -183,12 +182,12 @@
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Why Bialet?</a></li>
 </ul>
 
     </div>
@@ -265,7 +264,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/edit/main/docs/cron.md" target="_blank"
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/why-bialet.md" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -282,7 +281,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fcron.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fwhy-bialet.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -312,7 +311,7 @@
       
       
       
-      <li><a href="_sources/cron.md" target="_blank"
+      <li><a href="_sources/why-bialet.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -388,7 +387,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Cron Tasks</h1>
+    <h1>Why Bialet?</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -398,15 +397,17 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-methods">Helper methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes"><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek"><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-philosophy">The Philosophy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-flask-express">Bialet vs. Flask / Express</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-rails-django">Bialet vs. Rails / Django</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-rules">Custom Rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trade-off">The Trade-off</a></li>
 </ul>
             </nav>
         </div>
@@ -418,63 +419,207 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="cron-tasks">
-<h1>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading">#</a></h1>
-<p>Bialet allows you to run scheduled code by defining a cron job in a Wren file.</p>
-<p>This is useful for running periodic operations like cleaning old records,
-sending emails, or syncing external data.</p>
-<p>The cron file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> or be inside the
-<code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/cron.wren</span></code>.</p>
-<section id="basic-usage">
-<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h2>
-<p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the
-Wren cron file. These methods receive a block that is called at the specified
-time.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
-
-<span class="c1">// Every 2 minutes</span>
-<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Hello, from Cron!&quot;</span><span class="w"> </span><span class="p">}</span>
-
-<span class="c1">// At 2:00 AM</span>
-<span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">clearAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">|date|</span></code> argument is the current <a class="reference internal" href="datetime.html"><span class="doc std std-doc">Date object</span></a> used for
-evaluation. You can ignore it if not needed.</p>
-<section id="helper-methods">
-<h3>Helper methods<a class="headerlink" href="#helper-methods" title="Link to this heading">#</a></h3>
-<section id="cron-every-minutes">
-<h4><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code><a class="headerlink" href="#cron-every-minutes" title="Link to this heading">#</a></h4>
-<p>Runs the job when the current minute is divisible by <code class="docutils literal notranslate"><span class="pre">minutes</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs every 10 minutes&quot;</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
-</div>
+  <section id="why-bialet">
+<h1>Why Bialet?<a class="headerlink" href="#why-bialet" title="Link to this heading">#</a></h1>
+<p>Bialet makes a specific trade-off: <strong>maximum simplicity for a narrow but common
+set of use cases</strong>. This page explains what that means, when it’s a good fit,
+and how it compares to other tools.</p>
+<section id="the-philosophy">
+<h2>The Philosophy<a class="headerlink" href="#the-philosophy" title="Link to this heading">#</a></h2>
+<p>Most web frameworks optimize for flexibility. They give you middleware stacks,
+ORM layers, routing DSLs, template engines, and configuration files — all
+designed to handle any scenario you might encounter.</p>
+<p>Bialet optimizes for <strong>getting things done on a single server</strong>. It bundles the
+HTTP server, the database, and the language runtime into one binary. Your app
+is a directory of <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files and a SQLite database. That’s it.</p>
+<p>If your needs fit within Bialet’s scope, you get an experience no other
+framework can match: zero-config development, single-command deployment, and
+no dependency management.</p>
+<p>If your needs grow beyond that scope, you’ll want a different tool — and that’s
+okay.</p>
 </section>
-<section id="cron-at-hour-minute-dayofweek">
-<h4><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code><a class="headerlink" href="#cron-at-hour-minute-dayofweek" title="Link to this heading">#</a></h4>
-<p>Runs the job when the current time matches the given <code class="docutils literal notranslate"><span class="pre">hour</span></code> and <code class="docutils literal notranslate"><span class="pre">minute</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 03:15 every day&quot;</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
+<section id="when-to-use-bialet">
+<h2>When to Use Bialet<a class="headerlink" href="#when-to-use-bialet" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Prototypes and MVPs</strong> — Go from idea to working app in minutes. No setup,
+no boilerplate.</p></li>
+<li><p><strong>Internal tools and dashboards</strong> — Admin panels, reporting UIs, data
+browsers. The database is already there.</p></li>
+<li><p><strong>Simple CRUD applications</strong> — Blogs, polls, task trackers, form-based apps.</p></li>
+<li><p><strong>Learning web development</strong> — Skip the configuration and focus on HTML,
+SQL, and basic programming concepts.</p></li>
+<li><p><strong>Single-server deployments</strong> — Small to medium traffic sites on a VPS or
+shared host.</p></li>
+</ul>
+</section>
+<section id="when-not-to-use-bialet">
+<h2>When NOT to Use Bialet<a class="headerlink" href="#when-not-to-use-bialet" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>High-traffic public sites</strong> — Bialet is a single-process server. It can’t
+distribute load across multiple machines.</p></li>
+<li><p><strong>Real-time applications</strong> — No WebSocket or Server-Sent Events support.
+Polling works for simple cases, but it’s not ideal.</p></li>
+<li><p><strong>Large teams with existing infrastructure</strong> — If you already have
+PostgreSQL, Redis, and a CI pipeline, Bialet’s simplicity isn’t buying you
+much.</p></li>
+<li><p><strong>Microservices</strong> — Bialet is designed for monolithic apps on a single
+server.</p></li>
+<li><p><strong>Complex auth flows</strong> — Bialet supports basic auth and sessions, but not
+OAuth, SAML, or multi-factor authentication out of the box.</p></li>
+</ul>
+</section>
+<section id="comparisons">
+<h2>Comparisons<a class="headerlink" href="#comparisons" title="Link to this heading">#</a></h2>
+<section id="bialet-vs-php">
+<h3>Bialet vs. PHP<a class="headerlink" href="#bialet-vs-php" title="Link to this heading">#</a></h3>
+<p>PHP is the closest philosophical relative. Both let you drop files in a
+directory and serve them immediately. Both embed logic in HTML.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>PHP</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Language</p></td>
+<td><p>Wren (object-oriented)</p></td>
+<td><p>PHP</p></td>
+</tr>
+<tr class="row-odd"><td><p>Database</p></td>
+<td><p>SQLite built-in, always present</p></td>
+<td><p>Must install and configure</p></td>
+</tr>
+<tr class="row-even"><td><p>Deployment</p></td>
+<td><p>Single binary + app directory</p></td>
+<td><p>PHP runtime + web server + DB</p></td>
+</tr>
+<tr class="row-odd"><td><p>Package manager</p></td>
+<td><p>None (import from GitHub URLs)</p></td>
+<td><p>Composer</p></td>
+</tr>
+<tr class="row-even"><td><p>Template engine</p></td>
+<td><p>Inline HTML strings (JSX-like)</p></td>
+<td><p>Plain PHP or Twig/Blade</p></td>
+</tr>
+<tr class="row-odd"><td><p>Configuration</p></td>
+<td><p>None</p></td>
+<td><p>php.ini, .env, server config</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>Runs the job when the current time matches the given hour, minute, and day of
-week. Days of week: 0 (Sunday) to 6 (Saturday)</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 04:30 every Monday&quot;</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
+<p>Bialet wins on simplicity. PHP wins on ecosystem and scalability.</p>
+</section>
+<section id="bialet-vs-flask-express">
+<h3>Bialet vs. Flask / Express<a class="headerlink" href="#bialet-vs-flask-express" title="Link to this heading">#</a></h3>
+<p>Flask and Express are minimalist frameworks, but they still need a database
+driver, a template engine, and often an ORM — all configured separately.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>Flask / Express</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Setup</p></td>
+<td><p>One binary, zero config</p></td>
+<td><p>Install packages, configure DB</p></td>
+</tr>
+<tr class="row-odd"><td><p>Database</p></td>
+<td><p>SQLite built-in</p></td>
+<td><p>SQLAlchemy + driver (Flask)</p></td>
+</tr>
+<tr class="row-even"><td><p>Routing</p></td>
+<td><p>File-based</p></td>
+<td><p>Decorators / router definitions</p></td>
+</tr>
+<tr class="row-odd"><td><p>Templates</p></td>
+<td><p>Inline HTML + interpolation</p></td>
+<td><p>Jinja2 / EJS / Pug</p></td>
+</tr>
+<tr class="row-even"><td><p>Production</p></td>
+<td><p>Single binary</p></td>
+<td><p>gunicorn + nginx / pm2 + nginx</p></td>
+</tr>
+<tr class="row-odd"><td><p>Language</p></td>
+<td><p>Wren</p></td>
+<td><p>Python / JavaScript</p></td>
+</tr>
+</tbody>
+</table>
 </div>
+<p>Bialet eliminates the “glue code” phase entirely. Flask/Express give you more
+control over the stack but require more decisions up front.</p>
+</section>
+<section id="bialet-vs-rails-django">
+<h3>Bialet vs. Rails / Django<a class="headerlink" href="#bialet-vs-rails-django" title="Link to this heading">#</a></h3>
+<p>Rails and Django are full-stack frameworks with ORMs, admin interfaces,
+migrations, and extensive ecosystems. Bialet is full-stack in a different way:
+it bundles the essentials, nothing more.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>Rails / Django</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Learning curve</p></td>
+<td><p>Hours</p></td>
+<td><p>Weeks to months</p></td>
+</tr>
+<tr class="row-odd"><td><p>ORM</p></td>
+<td><p>Raw SQL with Query objects</p></td>
+<td><p>ActiveRecord / Django ORM</p></td>
+</tr>
+<tr class="row-even"><td><p>Admin panel</p></td>
+<td><p>Build your own</p></td>
+<td><p>Built-in (Django admin) / gems</p></td>
+</tr>
+<tr class="row-odd"><td><p>Migrations</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file</p></td>
+<td><p>Versioned migration files</p></td>
+</tr>
+<tr class="row-even"><td><p>Scaling</p></td>
+<td><p>Single process</p></td>
+<td><p>Horizontally via workers/load bal</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ecosystem</p></td>
+<td><p>Minimal</p></td>
+<td><p>Massive (gems / packages)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If you’re building a complex, long-lived application with a team, Rails or
+Django are better choices. If you’re building something simple today, Bialet
+gets you there faster.</p>
+</section>
+<section id="bialet-vs-static-site-generators">
+<h3>Bialet vs. Static Site Generators<a class="headerlink" href="#bialet-vs-static-site-generators" title="Link to this heading">#</a></h3>
+<p>Static site generators (Hugo, Jekyll, Eleventy) produce HTML files at build
+time. Bialet generates HTML at request time and includes a database.</p>
+<p>If your site has no dynamic data and no forms, use a static site generator.
+If you need a database, forms, or user-specific content, Bialet is the
+lighter alternative to a full backend framework.</p>
 </section>
 </section>
-</section>
-<section id="custom-rules">
-<h2>Custom Rules<a class="headerlink" href="#custom-rules" title="Link to this heading">#</a></h2>
-<p>Each job receives a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object of the current time, which can be used for
-custom rules.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">hour</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="s2">&quot;It&#39;s the first of the month!&quot;</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<section id="the-trade-off">
+<h2>The Trade-off<a class="headerlink" href="#the-trade-off" title="Link to this heading">#</a></h2>
+<p>Bialet is intentionally limited. It doesn’t have:</p>
+<ul class="simple">
+<li><p>Horizontal scaling</p></li>
+<li><p>WebSockets</p></li>
+<li><p>Background job queues (beyond Cron)</p></li>
+<li><p>A plugin ecosystem</p></li>
+<li><p>PostgreSQL / MySQL support</p></li>
+<li><p>An ORM</p></li>
+<li><p>OAuth or social login</p></li>
+</ul>
+<p>What it does have is <strong>everything you need to build a data-driven website in
+a single binary</strong>. For many projects, that’s exactly the right trade-off.</p>
 </section>
 </section>
 
@@ -490,22 +635,13 @@ custom rules.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="datetime.html"
+       href="faq.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Date and Time Functions</p>
+        <p class="prev-next-title">FAQ</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="mcp.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model Context Protocol (MCP)</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -524,15 +660,17 @@ custom rules.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-methods">Helper methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-every-minutes"><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek"><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-philosophy">The Philosophy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-flask-express">Bialet vs. Flask / Express</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-rails-django">Bialet vs. Rails / Django</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-rules">Custom Rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trade-off">The Trade-off</a></li>
 </ul>
   </nav></div>
 

@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Getting Started" />
+<meta property="og:title" content="<no title>" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/getting-started.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="We’ve got the HTML ready for a basic poll app. This getting-started will guide you through making it functional with Bialet, emphasizing how to work with pre-existing HTML structures and add dynami..." />
+<meta property="og:description" content=".. raw:: html" />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="We’ve got the HTML ready for a basic poll app. This getting-started will guide you through making it functional with Bialet, emphasizing how to work with pre-existing HTML structures and add dynami..." />
+<meta name="description" content=".. raw:: html" />
 
-    <title>Getting Started &#8212; Bialet  documentation</title>
+    <title>&lt;no title&gt; &#8212; Bialet  documentation</title>
   
   
   
@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=a180c788" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68f60be9" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -61,8 +61,6 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation and Usage" href="installation.html" />
-    <link rel="prev" title="Bialet" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.10" />
@@ -74,6 +72,8 @@
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
   
   <div id="pst-scroll-pixel-helper"></div>
   
@@ -113,6 +113,8 @@
     <div class="bd-container__inner bd-page-width">
       
       
+      
+        
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
@@ -160,9 +162,19 @@
 </button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
@@ -175,6 +187,8 @@
 <li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 </ul>
 
     </div>
@@ -374,7 +388,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Getting Started</h1>
+    <h1><no title></h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -383,13 +397,9 @@
                 <h2> Contents </h2>
             </div>
             <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-with-docker-compose">Install with Docker Compose</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#our-first-wren-file">Our first Wren file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template">Template</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logic-and-database">Logic and database</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#put-it-all-together">Put it all together</a></li>
+                <ul class="simple visible nav section-nav flex-column">
 </ul>
+
             </nav>
         </div>
     </div>
@@ -400,446 +410,9 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
-<p>We’ve got the HTML ready for a basic poll app. This getting-started will guide
-you through making it functional with Bialet, emphasizing how to work with
-pre-existing HTML structures and add dynamic content.</p>
-<p>They are built with <a class="reference external" href="https://flowbite.com/">Flowbite</a> and
-<a class="reference external" href="https://tailwindcss.com/">Tailwind</a> and they consist of two HTML pages, the
-first one with a form to vote and the results.</p>
-<p>Check them and download the HTML files to a new folder for the project.</p>
-<ul class="simple">
-<li><p><a class="reference download internal" download="" href="_downloads/2d4b9196be881707031ba30d31346003/vote.html"><span class="xref download myst">vote.html</span></a>
-<img alt="Poll Vote" src="_images/poll-vote.png" /></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/e87c0bfc2703466c9d377641008759ee/results.html"><span class="xref download myst">results.html</span></a>
-<img alt="Poll Results" src="_images/poll-results.png" /></p></li>
-</ul>
-<p>Our project could have other files like JavaScript, CSS, images, etc, like any
-other
-<a class="reference external" href="https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/Dealing_with_files">HTML project (see in MDN)</a>.</p>
-<section id="install-with-docker-compose">
-<h2>Install with Docker Compose<a class="headerlink" href="#install-with-docker-compose" title="Link to this heading">#</a></h2>
-<p>Clone or download the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a>
-repository with <a class="reference external" href="https://docs.docker.com/compose/">Docker Compose</a>. Then start
-the app with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BIALET_DIR</span><span class="o">=</span>/home/user/projects/poll<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up
-</pre></div>
-</div>
-<p>See other installation options in the <a class="reference internal" href="installation.html"><span class="std std-doc">installation</span></a> section.</p>
-</section>
-<section id="our-first-wren-file">
-<h2>Our first Wren file<a class="headerlink" href="#our-first-wren-file" title="Link to this heading">#</a></h2>
-<p>Now let’s create the <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Hello World!&lt;/p&gt;</span>
-</pre></div>
-</div>
-<p>The index.wren file is the main HTML file. It works the same as the index.html
-file. Go to <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> to see the Hello World
-message.</p>
-<p>We use the <code class="docutils literal notranslate"><span class="pre">return</span></code> keyword to finish the script and send the response.</p>
-<p>Inline HTML Strings allow you to write HTML directly in your Wren files, keeping
-your code clean and simple. This feature is similar to JSX in React but instead
-of creating objects, it generates plain strings. You can use interpolation with
-<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> to dynamically insert variables, conditions, or loops into your HTML.</p>
-<p>In the example above, <code class="docutils literal notranslate"><span class="pre">&lt;p&gt;Hello</span> <span class="pre">World!&lt;/p&gt;</span></code> is an Inline HTML String. It outputs
-the string exactly as you wrote it, which makes generating HTML content in your
-Wren application very intuitive. This approach ensures that the HTML you write
-looks the same as it would in any HTML document, but with the added flexibility
-of Wren’s powerful string interpolation.</p>
-<p>More details can be found in the <a class="reference internal" href="html-strings.html"><span class="std std-doc">Inline HTML Strings</span></a> section.</p>
-</section>
-<section id="template">
-<h2>Template<a class="headerlink" href="#template" title="Link to this heading">#</a></h2>
-<p>To streamline our project and avoid duplicating content across HTML files, we’ll
-consolidate common elements, such as headers, footers, and navigation bars, into
-a single file. This approach keeps our code DRY (Don’t Repeat Yourself) and
-simplifies maintenance.</p>
-<p>In your project directory, create a file named <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>. This file will
-contain the Template class, where we’ll define a static layout method to render
-our HTML content dynamically. A static method means that we can call it directly
-from the class <code class="docutils literal notranslate"><span class="pre">Template.layout(&quot;...&quot;)</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
-<span class="x">        &lt;head&gt;</span>
-<span class="w">          </span><span class="x">&lt;title&gt;Poll&lt;/title&gt;</span>
-<span class="w">        </span><span class="x">&lt;/head&gt;</span>
-<span class="x">        &lt;body&gt;</span>
-<span class="w">          </span><span class="x">&lt;header&gt;</span>
-<span class="x">            &lt;h1&gt;&lt;a href=&quot;.&quot;&gt;Poll&lt;/a&gt;&lt;/h1&gt;</span>
-<span class="x">          &lt;/header&gt;</span>
-<span class="w">          </span><span class="x">&lt;main&gt;</span>
-<span class="x">            {{ content }}</span>
-<span class="x">          &lt;/main&gt;</span>
-<span class="w">        </span><span class="x">&lt;/body&gt;</span>
-<span class="x">      &lt;/html&gt;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">html</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p><strong>Inside an inline HTML string we use the interpolations <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code>, this will
-execute the expression and return the result.</strong></p>
-<p>For the regular quotes strings the interpolation is defined as <code class="docutils literal notranslate"><span class="pre">%(</span> <span class="pre">...</span> <span class="pre">)</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Number: </span><span class="si">%(</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Let’s use the Template class to render our HTML content.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="s1">&#39;So far, so good.&#39;</span><span class="p">)</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In Wren we need to define each variable before usage, for that we use the <code class="docutils literal notranslate"><span class="pre">var</span></code>
-keyword. A single expression inside a block with no new line will return the
-value.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;Example&quot;</span>
-<span class="p">}</span>
-
-<span class="c1">// Could be written instead</span>
-
-<span class="p">{</span><span class="w"> </span><span class="s2">&quot;Example&quot;</span><span class="w"> </span><span class="p">}</span>
-</pre></div>
-</div>
-<p>Before copying the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> code in our layout we will change it a little
-bit.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// But wait, if we start a string, we can have multilines as well</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
-<span class="x">        &lt;head&gt;</span>
-<span class="w">          </span><span class="x">&lt;title&gt;Poll&lt;/title&gt;</span>
-<span class="w">        </span><span class="x">&lt;/head&gt;</span>
-<span class="x">        &lt;body&gt;</span>
-<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">          </span><span class="x">&lt;main&gt;</span>
-<span class="x">            {{ content }}</span>
-<span class="x">          &lt;/main&gt;</span>
-<span class="w">        </span><span class="x">&lt;/body&gt;</span>
-<span class="x">      &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// both methods works the same, returning the string</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">header</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;header&gt;&lt;h1&gt;&lt;a href=&quot;.&quot;&gt;Poll&lt;/a&gt;&lt;/h1&gt;&lt;/header&gt;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Now it’s time to copy the <code class="docutils literal notranslate"><span class="pre">vote.html</span></code> file to our project. Also, try to create a
-<code class="docutils literal notranslate"><span class="pre">results.html</span></code> file in Wren, named <code class="docutils literal notranslate"><span class="pre">results.wren</span></code>.</p>
-<p>Here are the files:</p>
-<ul class="simple">
-<li><p><a class="reference download internal" download="" href="_downloads/3a2841946ca55592b06ad4127f276a81/_app.wren"><span class="xref download myst">_app.wren</span></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/d3fa140416f285b8a758d09b779e63ec/index.wren"><span class="xref download myst">index.wren</span></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/6d527cbce3eb1462c00ab27b13fb170e/results.wren"><span class="xref download myst">results.wren</span></a></p></li>
-</ul>
-<p>We manage to replicate the HTML static content in Bialet. Now let’s make it
-actually work.</p>
-</section>
-<section id="logic-and-database">
-<h2>Logic and database<a class="headerlink" href="#logic-and-database" title="Link to this heading">#</a></h2>
-<p>We will step back and first solve the logic of the poll in a separate Wren file.
-But first, we need to create a new table. You should have a file called
-<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> in the root of your project. That’s our SQLite database.</p>
-<p>Use an SQLite program to interact with it, like
-<a class="reference external" href="https://sqlitebrowser.org/">SQLite Browser</a> or
-<a class="reference external" href="https://sqlite.org/cli.html">SQLite CLI</a> and run these queries:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="p">(</span><span class="n">answer</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="nb">INT</span><span class="p">);</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="ss">&quot;Yes&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="ss">&quot;No&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>The logic is very simple, we show all the options, then we increment when
-receiving a vote. Let’s write a file called <code class="docutils literal notranslate"><span class="pre">simple_poll.wren</span></code> for our logic.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="x">&lt;html&gt;</span>
-<span class="x">  &lt;body&gt;</span>
-<span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
-<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">        {{ options.map{ |opt| &lt;p&gt;</span>
-<span class="w">            </span><span class="x">&lt;label&gt;</span>
-<span class="x">              &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
-<span class="w">              </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">            </span><span class="x">&lt;/label&gt;</span>
-<span class="x">          &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
-<span class="x">      &lt;/form&gt;</span>
-<span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>It looks like we have a string with <code class="docutils literal notranslate"><span class="pre">`SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">simple_poll`</span></code> but it’s
-actually a <strong>Query object</strong>. Query objects are used to execute SQL queries in
-Bialet. We use the <code class="docutils literal notranslate"><span class="pre">fetch</span></code> method to get the results of the query.</p>
-<p>Then we call to <code class="docutils literal notranslate"><span class="pre">System.log</span></code> to log the results. This is very useful for
-debugging.</p>
-<p>Also we use <code class="docutils literal notranslate"><span class="pre">map</span></code> to iterate over the results and create a template for each
-option. Note that <code class="docutils literal notranslate"><span class="pre">map</span></code> is using a callback with
-<a class="reference external" href="https://wren.io/functions.html#block-arguments">block arguments</a>. Instead of
-having <code class="docutils literal notranslate"><span class="pre">()</span></code>, we use <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">}</span></code> to define the block and <code class="docutils literal notranslate"><span class="pre">|arg1,</span> <span class="pre">arg2,</span> <span class="pre">...|</span></code> to pass
-the arguments. Then we use the same principle than in the refactored Template
-class, single expression implicitly returns the value.</p>
-<p>Oh, yes you can have an interpolation in your interpolations.</p>
-<p>In order to vote, we need to handle a <code class="docutils literal notranslate"><span class="pre">POST</span></code> request from the form.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-<span class="c1">// ...</span>
-</pre></div>
-</div>
-<p>Check the output in the terminal to see if it works.</p>
-<p>Query objects are
-<a class="reference external" href="https://en.wikipedia.org/wiki/Prepared_statement">prepared statements</a>, you
-can’t concatenate them or have interpolations in them. You should use the <code class="docutils literal notranslate"><span class="pre">?</span></code>
-placeholder to pass the value to the query.</p>
-<p>The logic is finished but let’s finish this example showing the results.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We will use the vote variable to see if the user voted</span>
-<span class="k">var</span><span class="w"> </span><span class="n">vote</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
-<span class="x">  &lt;body&gt;</span>
-<span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
-
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">        {{ options.map{ |opt| &lt;p&gt;</span>
-<span class="w">            </span><span class="x">&lt;label&gt;</span>
-<span class="x">              &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
-<span class="w">              </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">            </span><span class="x">&lt;/label&gt;</span>
-<span class="x">          &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
-<span class="x">      &lt;/form&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">      </span><span class="x">&lt;main&gt;</span>
-<span class="x">        &lt;p&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">        </span><span class="x">&lt;ul&gt;</span>
-<span class="x">          {{ options.map{|opt| &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">votes</span><span class="x">&lt;/li&gt; } }}</span>
-<span class="x">        &lt;/ul&gt;</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
-<span class="w">      </span><span class="x">&lt;/main&gt;</span>
-<span class="x">    }}</span>
-<span class="x">  &lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span>
-</pre></div>
-</div>
-<p>Now we have the last interpolation trick, in order to show some code we use a
-ternary operator.</p>
-<p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">someExpression</span> <span class="pre">?</span> <span class="pre">'When</span> <span class="pre">true'</span> <span class="pre">:</span> <span class="pre">'When</span> <span class="pre">false'</span> <span class="pre">}}</span></code></p>
-<p>And once again we have interpolations inside another interpolation.</p>
-</section>
-<section id="put-it-all-together">
-<h2>Put it all together<a class="headerlink" href="#put-it-all-together" title="Link to this heading">#</a></h2>
-<p>Now that we have an idea on how to handle the logic. In our complete example we
-need more columns in the database. This time we will use migrations.</p>
-<p>Create a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file in the root of the project.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  CREATE TABLE poll (</span>
-<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
-<span class="sb">    answer TEXT NOT NULL,</span>
-<span class="sb">    comment TEXT,</span>
-<span class="sb">    votes INTEGER NOT NULL DEFAULT 0</span>
-<span class="sb">  )</span>
-<span class="sb">`</span><span class="p">)</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add initial data&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  INSERT INTO poll (answer, comment) VALUES</span>
-<span class="sb">    (&quot;Yes&quot;, &quot;We need to go back to the good old times&quot;),</span>
-<span class="sb">    (&quot;No&quot;, &quot;You are just old&quot;)</span>
-<span class="sb">`</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">migrate</span></code> method needs the name of the migration and the query object with
-the SQL code. The name is used to avoid repeating migrations.</p>
-<p>A good practice is to keep the logic separated from the form logic. Let’s add a
-Poll class to the <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> file. This time the Poll class won’t use static
-methods, we will have a Poll object in our code.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// ...</span>
-<span class="p">}</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
-<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`UPDATE poll SET votes = votes + 1</span>
-<span class="sb">               WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>We add the poll object in the index.wren file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-
-<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-
-<span class="w">  </span><span class="x">&lt;form action=&quot;results&quot; method=&quot;post&quot;&gt;</span>
-<span class="x">    &lt;h2 class=&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="x">&lt;div class=&quot;mb-6&quot;&gt;</span>
-<span class="x">      &lt;ul class=&quot;grid w-full gap-6 md:grid-cols-2&quot;&gt;</span>
-<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span>
-<span class="x">          &lt;input type=&quot;radio&quot; id=&quot;{{ opt[&quot;answer&quot;] }}&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;id&quot;] }}&quot; class=&quot;hidden peer&quot; required /&gt;</span>
-<span class="w">          </span><span class="x">&lt;label for=&quot;{{ opt[&quot;answer&quot;] }}&quot; class=&quot;inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700&quot;&gt;</span>
-<span class="x">            &lt;div class=&quot;block&quot;&gt;</span>
-<span class="w">              </span><span class="x">&lt;div class=&quot;w-full text-lg font-semibold&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
-<span class="w">              </span><span class="x">&lt;div class=&quot;w-full&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
-<span class="w">            </span><span class="x">&lt;/div&gt;</span>
-<span class="x">            &lt;svg class=&quot;w-5 h-5 ms-3 rtl:rotate-180&quot; aria-hidden=&quot;true&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; fill=&quot;none&quot; viewBox=&quot;0 0 14 10&quot;&gt;</span>
-<span class="w">              </span><span class="x">&lt;path stroke=&quot;currentColor&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot; d=&quot;M1 5h12m0 0L9 1m4 4L9 9&quot;/&gt;</span>
-<span class="x">            &lt;/svg&gt;</span>
-<span class="w">          </span><span class="x">&lt;/label&gt;</span>
-<span class="x">        &lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">      </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">    &lt;/div&gt;</span>
-<span class="w">    </span><span class="x">&lt;div class=&quot;pt-8 flex justify-center&quot;&gt;</span>
-<span class="x">      &lt;button type=&quot;submit&quot; class=&quot;text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-2xl w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800&quot;&gt;</span><span class="nc">Vote</span><span class="x">&lt;/button&gt;</span>
-<span class="x">    &lt;/div&gt;</span>
-<span class="w">  </span><span class="x">&lt;/form&gt;</span>
-<span class="x">)</span>
-</pre></div>
-</div>
-<p>Wren does not have a
-<a class="reference external" href="https://wren.io/classes.html#constructors">default constructor</a>, we use the
-<code class="docutils literal notranslate"><span class="pre">construct</span></code> keyword on any method and use that method to create the object.
-Naming the method <code class="docutils literal notranslate"><span class="pre">new</span></code> is a good practice.</p>
-<p>We will handle the form. We usually handle it in the same page the form is on.
-This way if we need to show an error we don’t need to go back to the form. Once
-we know the form was correctly validated we can redirect to the results page.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="c1">// Redirect to the results page and stop the script</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span>
-<span class="p">}</span>
-
-<span class="c1">// Remember to change the action attribute in the form!</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;form action=&quot;/&quot; method=&quot;post&quot;&gt;</span>
-<span class="x">  ...</span>
-<span class="x">  &lt;/form&gt;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>With <code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> we check if the request is a POST request.</p>
-<p>We get the request data with the method <code class="docutils literal notranslate"><span class="pre">Request.post</span></code>.</p>
-<p>We use <code class="docutils literal notranslate"><span class="pre">Response.redirect</span></code> to redirect to the results page. After a redirect we
-use <code class="docutils literal notranslate"><span class="pre">return</span></code> outside a method to stop the script.</p>
-<p>Back to the results page we create a Poll instance. Remember, this will be
-created each time the page is called. But first add a <code class="docutils literal notranslate"><span class="pre">percentage</span></code> method and a
-<code class="docutils literal notranslate"><span class="pre">totalVotes</span></code> property to the poll class.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// ...</span>
-<span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="sb">`SELECT SUM(votes) as total FROM poll`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;total&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">totalVotes</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>All the variables we receive from the database are strings. We need to convert
-them to numbers with the <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> method before we can use them.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
-
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="x">&lt;main&gt;</span>
-<span class="x">  &lt;h2 class=&quot;mb-5 text-2xl font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">    &lt;h3 class=&quot;mt-2 mb-5 text-lg font-medium text-gray-900 dark:text-white&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
-<span class="x">    &lt;div class=&quot;w-full bg-gray-200 h-8 mb-6 rounded-full dark:bg-gray-700&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;div class=&quot;bg-blue-600 text-xl h-8 font-medium text-blue-100 text-center p-1 leading-none rounded-full&quot; style=&quot;width: {{ poll.percentage(opt) }}%&quot;&gt; {{ poll.percentage(opt) }}%&lt;/div&gt;</span>
-<span class="w">    </span><span class="x">&lt;/div&gt;</span>
-<span class="x">    &lt;p class=&quot;mb-5 text-md font-medium text-gray-700 dark:text-gray-400&quot;&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="nc">Votes</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="x">&lt;/main&gt;</span>
-<span class="x">))</span>
-</pre></div>
-</div>
-<p>We are almost done. Let’s list the problems we need to fix:</p>
-<ol class="arabic simple">
-<li><p>What happened to the red color in No?</p></li>
-<li><p>We are doing multiples queries to the same data.</p></li>
-<li><p>Add rounding to the percentage.</p></li>
-<li><p>Results is failing when there are no votes.</p></li>
-</ol>
-<p>For the colors we add two new migrations:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color column&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  ALTER TABLE poll ADD COLUMN color TEXT</span>
-<span class="sb">`</span><span class="p">)</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color data&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  UPDATE poll SET color = &quot;blue&quot; WHERE answer = &quot;Yes&quot;;</span>
-<span class="sb">  UPDATE poll SET color = &quot;red&quot; WHERE answer = &quot;No&quot;;</span>
-<span class="sb">`</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>All the other problems will be fixed in the Poll class, here is the final
-version:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Fetch the options from the database into the `_opts` property.</span>
-<span class="w">  </span><span class="c1">// Queries are part of Bialet.</span>
-<span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_opts</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Add parameters to the query like a prepared statement.</span>
-<span class="w">  </span><span class="c1">// Also reset the cached options to null to force re-fetching them.</span>
-<span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="sb">`UPDATE poll SET votes = votes + 1 WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
-<span class="w">    </span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Getter to get the total number of votes.</span>
-<span class="w">  </span><span class="n">totalVotes</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">options</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nc">Fn</span><span class="o">.</span><span class="n">new</span><span class="p">{</span><span class="o">|</span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)})</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Calculate the percentage of votes for an option</span>
-<span class="w">  </span><span class="n">percentage</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">totalVotes</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">((</span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">totalVotes</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Use the method to get the votes as a number.</span>
-<span class="w">  </span><span class="c1">// There is no access modifier in Wren. Add an underscore at the end</span>
-<span class="w">  </span><span class="c1">// of the method name to identify it as private.</span>
-<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>We define the <code class="docutils literal notranslate"><span class="pre">_opts</span></code> property in the constructor.</p></li>
-<li><p>We use <code class="docutils literal notranslate"><span class="pre">||</span></code> to set the value of a property in a one-liner.</p></li>
-<li><p>We use <code class="docutils literal notranslate"><span class="pre">Fn.new</span></code> to create a function object for the <code class="docutils literal notranslate"><span class="pre">reduce</span></code> callback.</p></li>
-<li><p>We use <code class="docutils literal notranslate"><span class="pre">votes_</span></code> to get the votes as a number. This is a private method
-convention.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(votes_(opt)</span> <span class="pre">/</span> <span class="pre">totalVotes</span> <span class="pre">*</span> <span class="pre">100).round</span></code> will call the round property on the
-Number. Remember that Wren is object oriented!</p></li>
-</ul>
-<p><strong>We are done!</strong></p>
-<p><a class="reference external" href="https://poll.bialet.dev/">See the final result working</a></p>
-<p>Here are the final files:</p>
-<ul class="simple">
-<li><p><a class="reference download internal" download="" href="_downloads/6cc0d341aba8af806066cf4e4bf27315/_app.wren"><span class="xref download myst">_app.wren</span></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/71802f126f258b9d04ae410b1d8f6784/_migration.wren"><span class="xref download myst">_migration.wren</span></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/5a49b851be650549dc5f16f2924af81c/index.wren"><span class="xref download myst">index.wren</span></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/5bd9612139630143594b1710588d391f/results.wren"><span class="xref download myst">results.wren</span></a></p></li>
-</ul>
-</section>
-</section>
+  <p>.. raw:: html</p>
+   <meta http-equiv="refresh" content="0; url=getting-started/index.html">
+   <p>Redirecting to <a href="getting-started/index.html">Getting Started</a>&hellip;</p>
 
 
                 </article>
@@ -852,24 +425,6 @@ Number. Remember that Wren is object oriented!</p></li>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="index.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Bialet</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="installation.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation and Usage</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -886,13 +441,9 @@ Number. Remember that Wren is object oriented!</p></li>
     <i class="fa-solid fa-list"></i> Contents
   </div>
   <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-with-docker-compose">Install with Docker Compose</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#our-first-wren-file">Our first Wren file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template">Template</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logic-and-database">Logic and database</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#put-it-all-together">Put it all together</a></li>
+    <ul class="simple visible nav section-nav flex-column">
 </ul>
+
   </nav></div>
 
 </div></div>
@@ -935,6 +486,8 @@ By Rodrigo Arce
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
   <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
 <script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
 
   <footer class="bd-footer">
   </footer>
