@@ -69,7 +69,6 @@ green "==> Latest version: ${TAG#v}"
 # ── Download ───────────────────────────────────────────────────
 ZIPNAME="${BIN_NAME}-${TAG}-${PLATFORM}-${ARCH_NORM}.zip"
 DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$ZIPNAME"
-echo $DOWNLOAD_URL
 
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
@@ -87,10 +86,11 @@ echo "==> Installing to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR"
 
 unzip -qo "$TMPDIR/$ZIPNAME" -d "$TMPDIR"
-if [ ! -f "$TMPDIR/$BIN_NAME" ]; then
+BIN_PATH=$(find "$TMPDIR" -name "$BIN_NAME" -type f | head -1)
+if [ -z "$BIN_PATH" ]; then
   abort "Extraction failed: binary not found in archive."
 fi
-cp "$TMPDIR/$BIN_NAME" "$INSTALL_DIR/$BIN_NAME"
+cp "$BIN_PATH" "$INSTALL_DIR/$BIN_NAME"
 chmod +x "$INSTALL_DIR/$BIN_NAME"
 
 # ── PATH hint ──────────────────────────────────────────────────
