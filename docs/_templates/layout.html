@@ -1,25 +1,39 @@
 {#-
-   Custom layout that gives the index page a standalone landing appearance
-   without the documentation theme chrome (navbar, sidebars, etc.).
+   Custom layout: standalone landing for the index page.
+   Other pages use the normal sphinx_book_theme chrome.
 -#}
 {% extends "sphinx_book_theme/layout.html" %}
+{%- import "static/webpack-macros.html" as _webpack with context %}
 
 {% block content %}
   {% if pagename == master_doc %}
-    {#- Standalone landing: no nav, no sidebars, full-width body -#}
-    <main id="main-content" class="landing-main" role="main">
-      <div class="landing-content">
-        {% block body %}{% endblock %}
+    <div class="landing-page">
+      <div class="landing-nav">
+        <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only"
+                aria-label="Color mode">
+          <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+          <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+          <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+        </button>
       </div>
-      <footer class="landing-footer">
-        <div style="text-align:center;padding:2em 0;color:var(--pst-color-text-muted)">
-          &copy; {{ copyright }} &mdash;
-          <a href="https://github.com/bialet/bialet">GitHub</a>
-          &mdash;
-          <a href="https://bialet.dev">bialet.dev</a>
+
+      <main class="landing-main" role="main">
+        <div class="landing-content">
+          {% block body %}{% endblock %}
         </div>
-      </footer>
-    </main>
+        <footer class="landing-footer">
+          <p>
+            &copy; {{ copyright }} &nbsp;&middot;&nbsp;
+            <a href="https://github.com/bialet/bialet">GitHub</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://bialet.dev">bialet.dev</a>
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    {#- Theme JS must load for the toggle to work -#}
+    {{ _webpack.body_post() }}
   {% else %}
     {{ super() }}
   {% endif %}
