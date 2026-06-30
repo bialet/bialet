@@ -287,3 +287,4 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
    reference
    examples
    faq
+   why-bialet

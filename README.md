@@ -9,6 +9,12 @@
   <strong>Enhance HTML with a native integration to a persistent database</strong>
 </p>
 
+<p align="center">
+  <a href="https://github.com/bialet/bialet/releases"><img src="https://img.shields.io/github/v/release/bialet/bialet?color=%237c3aed&label=version" alt="Version"></a>
+  <a href="https://github.com/bialet/bialet/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://github.com/bialet/bialet/stargazers"><img src="https://img.shields.io/github/stars/bialet/bialet?style=social" alt="Stars"></a>
+</p>
+
 ```wren
 var users = `SELECT id, name FROM users`.fetch
 var title = "🗂️ Users list"
