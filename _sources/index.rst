@@ -38,11 +38,11 @@ Bialet is a full-stack web framework that integrates the object-oriented `Wren l
 Installation
 ------------
 
-Use `Homebrew <https://brew.sh/>`_ to install Bialet:
+Install Bialet with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
 
 .. code-block:: shell
 
-  brew install bialet/bialet/bialet
+  curl -sSL https://get.bialet.dev | sh
 
 ----------
 Quickstart
