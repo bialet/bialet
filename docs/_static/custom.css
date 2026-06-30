@@ -4,37 +4,118 @@ html[data-theme="light"] .highlight .x { color: #04B1D5 } /* Other */
 html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Backtick */
 
 /* ── Landing page ─────────────────────────────────────────── */
+
+.landing-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%,
+      var(--pst-color-primary-highlight, rgba(124,58,237,0.06)) 0%,
+      transparent 60%);
+}
+
+.landing-nav {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1.5rem;
+}
+
+.landing-nav .theme-switch-button {
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--pst-color-surface);
+  cursor: pointer;
+}
+
+.landing-nav .theme-switch-button:hover {
+  background: var(--pst-color-on-surface);
+}
+
 .landing-main {
-  max-width: 56rem;
+  flex: 1;
+  max-width: 52rem;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1rem 1.5rem 3rem;
 }
 
 .landing-content {
   font-size: 1.05rem;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .landing-content h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   margin-top: 0;
+  font-weight: 700;
 }
 
 .landing-content h2 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   margin-top: 2.5rem;
+  font-weight: 600;
 }
 
-.landing-content .sd-card {
-  border-radius: 0.5rem;
+.landing-content hr {
+  margin: 2.5rem 0;
+  opacity: 0.25;
 }
 
 .landing-content .highlight {
+  border-radius: 0.75rem;
+  border: 1px solid var(--pst-color-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.landing-content .sd-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--pst-color-border);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.landing-content .sd-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.landing-content .sd-btn {
   border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.6em 1.4em;
+}
+
+/* Code block line numbers */
+.landing-content .linenos {
+  color: var(--pst-color-text-muted);
+  opacity: 0.5;
+  user-select: none;
 }
 
 .landing-footer {
-  margin-top: 3rem;
+  margin-top: 2rem;
+  padding: 2rem 0 1rem;
+  text-align: center;
   border-top: 1px solid var(--pst-color-border);
-  padding-top: 1.5rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Hide redundant heading anchors on landing */
+.landing-content .headerlink {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .landing-content h1 {
+    font-size: 1.6rem;
+  }
+  .landing-content h2 {
+    font-size: 1.25rem;
+  }
+  .landing-main {
+    padding: 0.5rem 1rem 2rem;
+  }
 }
