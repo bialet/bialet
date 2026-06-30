@@ -12,10 +12,9 @@ database server.
 
 ### Why the name "Bialet"?
 
-Bialet is named after the
-[Bialetti Moka pot](https://en.wikipedia.org/wiki/Moka_pot) — a simple,
-elegant device that does one thing well. The framework aims for the same
-ethos: straightforward, reliable, and a pleasure to use.
+Bialet is named after [Juan Bialet Massé](https://es.wikipedia.org/wiki/Juan_Bialet_Mass%C3%A9),
+an Argentine physician, lawyer, and educator known for his practical,
+no-nonsense approach to solving problems.
 
 ### Is Bialet production-ready?
 
@@ -147,7 +146,7 @@ Yes, using `import` with a GitHub path:
 import "gh:bialet/extra/mcp" for Mcp
 ```
 
-See [Structure & Routing](structure.md#external-imports).
+See [Structure & Routing](structure.md).
 
 ### Does Bialet support HTTPS?
 
