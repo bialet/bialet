@@ -69,54 +69,6 @@ files and run.
 
 ----
 
-🚲 The Bialet Manifesto
-========================
-
-.. grid:: 1 2 3 3
-   :gutter: 2
-
-   .. grid-item-card::
-      :shadow: sm
-
-      **1. Web development should be fun again**
-      ^^^
-      No build steps, no SDKs, no hundreds of dependencies. If you can write
-      HTML, you're already building.
-
-   .. grid-item-card::
-      :shadow: sm
-
-      **2. HTML and CSS are the real frontend**
-      ^^^
-      JS is welcome, but never required. Use HTML and CSS directly — they're
-      all you need to build something beautiful.
-
-   .. grid-item-card::
-      :shadow: sm
-
-      **3. A database and zero configuration are the default**
-      ^^^
-      One binary. No YAMLs, no JSONs, no mysteries. SQLite is already there,
-      and it works out of the box.
-
-   .. grid-item-card::
-      :shadow: sm
-
-      **4. Deploy it means copying the files**
-      ^^^
-      Your app is ready as soon as your files are uploaded. No need for
-      complex CI tools.
-
-   .. grid-item-card::
-      :shadow: sm
-
-      **5. Do you really need a spaceship?**
-      ^^^
-      Bialet is a bicycle — simple, fast, and under your control. Build real
-      apps without the weight.
-
-----
-
 Features
 ========
 
@@ -130,7 +82,7 @@ Features
       :octicon:`zap;2em;sd-text-info`
       ^^^
       **Zero Configuration**
-      ^^^
+
       No YAML, no JSON, no setup files. Run ``bialet`` in any directory.
 
    .. grid-item-card::
@@ -140,7 +92,7 @@ Features
       :octicon:`database;2em;sd-text-info`
       ^^^
       **SQLite Built-in**
-      ^^^
+
       Full database engine included. Migrations, queries, and CRUD — ready to go.
 
    .. grid-item-card::
@@ -150,7 +102,7 @@ Features
       :octicon:`package;2em;sd-text-info`
       ^^^
       **Single Binary**
-      ^^^
+
       \~2 MB. No runtime, no package manager, no external services needed.
 
    .. grid-item-card::
@@ -160,7 +112,7 @@ Features
       :octicon:`rocket;2em;sd-text-info`
       ^^^
       **No Build Step**
-      ^^^
+
       Edit a ``.wren`` file, refresh the browser. That's the entire workflow.
 
 ----
@@ -172,32 +124,35 @@ Who is Bialet for?
    :gutter: 2
 
    .. grid-item-card::
+      :text-align: center
       :shadow: sm
 
       :octicon:`beaker;2em;sd-text-warning`
       ^^^
       **Prototyping & Internal Tools**
-      ^^^
+
       Spin up a data-driven dashboard or admin panel in minutes. Bialet's
       all-in-one design means zero infrastructure overhead.
 
    .. grid-item-card::
+      :text-align: center
       :shadow: sm
 
       :octicon:`mortar-board;2em;sd-text-warning`
       ^^^
       **Learning Web Development**
-      ^^^
+
       Focus on HTML, SQL, and basic logic — not webpack configs, package
       managers, or ORM abstractions.
 
    .. grid-item-card::
+      :text-align: center
       :shadow: sm
 
       :octicon:`heart;2em;sd-text-warning`
       ^^^
       **Developers Who Value Simplicity**
-      ^^^
+
       If you prefer a single tool that does one thing well over a dozen
       micro-libraries, Bialet is for you.
 
