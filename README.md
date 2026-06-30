@@ -43,12 +43,6 @@ Install Bialet with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
 curl -sSL https://get.bialet.dev | sh
 ```
 
-Alternatively, use [Homebrew](https://brew.sh):
-
-```bash
-brew install bialet/bialet/bialet
-```
-
 ## Quickstart
 
 1. Create an `index.wren` file in your app directory and run it:

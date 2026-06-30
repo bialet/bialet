@@ -44,12 +44,6 @@ Install Bialet with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
 
   curl -sSL https://get.bialet.dev | sh
 
-Alternatively, use `Homebrew <https://brew.sh/>`_:
-
-.. code-block:: shell
-
-  brew install bialet/bialet/bialet
-
 ----------
 Quickstart
 ----------
