@@ -1,0 +1,26 @@
+{#-
+   Custom layout that gives the index page a standalone landing appearance
+   without the documentation theme chrome (navbar, sidebars, etc.).
+-#}
+{% extends "sphinx_book_theme/layout.html" %}
+
+{% block content %}
+  {% if pagename == master_doc %}
+    {#- Standalone landing: no nav, no sidebars, full-width body -#}
+    <main id="main-content" class="landing-main" role="main">
+      <div class="landing-content">
+        {% block body %}{% endblock %}
+      </div>
+      <footer class="landing-footer">
+        <div style="text-align:center;padding:2em 0;color:var(--pst-color-text-muted)">
+          &copy; {{ copyright }} &mdash;
+          <a href="https://github.com/bialet/bialet">GitHub</a>
+          &mdash;
+          <a href="https://bialet.dev">bialet.dev</a>
+        </div>
+      </footer>
+    </main>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
