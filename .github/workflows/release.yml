@@ -37,22 +37,20 @@ jobs:
   build-linux-arm64:
     name: Linux arm64
     runs-on: ubuntu-24.04-arm
+    container:
+      image: ubuntu:22.04
     steps:
-      - uses: actions/checkout@v4
-
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev
-
+          apt-get update
+          apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git
+      - uses: actions/checkout@v4
       - name: Build
         run: make clean && make
-
       - name: Package
         run: |
           mkdir -p dist
           tar czf dist/bialet-${{ github.ref_name }}-linux-arm64.tar.gz -C build bialet
-
       - uses: actions/upload-artifact@v4
         with:
           name: bialet-linux-arm64
