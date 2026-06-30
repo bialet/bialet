@@ -97,6 +97,24 @@ To run Bialet in development mode, you can use the `PATH_RUN` environment variab
 make dev PATH_RUN=/path/to/dev-app
 ```
 
+## Documentation
+
+Full documentation at [bialet.dev](https://bialet.dev):
+
+- [Getting Started](https://bialet.dev/getting-started.html) — Build a poll app from scratch
+- [Installation](https://bialet.dev/installation.html) — Script, Homebrew, Docker, or source
+- [Database](https://bialet.dev/database.html) — Queries, migrations, and mappings
+- [API Reference](https://bialet.dev/reference.html) — Complete class documentation
+- [FAQ](https://bialet.dev/faq.html) — Common questions and answers
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for planned features and improvements.
+
 ## License
 
 Bialet is released under the MIT license, allowing users to freely use, modify, and distribute the software with fewer restrictions.
