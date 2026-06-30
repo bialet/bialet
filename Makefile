@@ -74,4 +74,16 @@ clean:
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: all clean wren_files install uninstall check html
+# Static build — self-contained Linux binary with all deps linked in
+ifeq ($(OS),Linux)
+CURL_STATIC_LIBS := $(shell curl-config --static-libs 2>/dev/null || echo '-lcurl')
+static: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 -lm -lpthread -ldl \
+		-Wl,-Bstatic -lsqlite3 $(CURL_STATIC_LIBS) -Wl,-Bdynamic
+else
+static:
+	@echo "Static build is not supported on $(OS). Use 'make' instead."
+	@exit 1
+endif
+
+.PHONY: all clean wren_files install uninstall check html static
