@@ -202,10 +202,10 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
 
    <div class="community-banner">
      <p style="font-size: 1.3em; margin: 0 0 0.5em 0">🚲 <strong>Let's build together</strong></p>
-     <p style="margin: 0; max-width: 36em">
+     <p style="padding: 0.5em">
        Bialet is maintained by a solo developer, but the community is open to everyone.
        Whether you're stuck on a query, have a feature idea, or want to show off your
        project, GitHub Discussions is the place. Search first, ask second, and be kind.
      </p>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/discussions" style="margin-top: 1em; display: inline-block">Join the discussion →</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
    </div>
