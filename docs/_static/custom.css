@@ -107,6 +107,25 @@ html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Bac
   display: none;
 }
 
+/* ── Community banner ─────────────────────────────────────── */
+
+.community-banner {
+  margin: 3rem 0 1rem;
+  padding: 2rem 2.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--pst-color-border);
+  background: var(--pst-color-on-background);
+  text-align: center;
+}
+
+html[data-theme="dark"] .community-banner {
+  background: color-mix(in srgb, var(--pst-color-primary) 8%, var(--pst-color-background));
+}
+
+html[data-theme="light"] .community-banner {
+  background: color-mix(in srgb, var(--pst-color-primary) 4%, var(--pst-color-background));
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .landing-content h1 {
