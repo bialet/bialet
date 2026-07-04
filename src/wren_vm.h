@@ -142,6 +142,10 @@ WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
                               bool isExpression, bool printErrors);
 
+// Runs [closure] in a new fiber using the same interpreter setup as
+// wrenInterpret(). This keeps runInterpreter file-static.
+WrenInterpretResult wrenRunClosure(WrenVM* vm, ObjClosure* closure);
+
 // Looks up a variable from a previously-loaded module.
 //
 // Aborts the current fiber if the module or variable could not be found.

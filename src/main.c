@@ -79,10 +79,22 @@ static void migrate() {
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
            MIGRATION_FILE_ALT);
   if((code = readFile(path)) || (code = readFile(altPath))) {
-    struct BialetResponse r = bialetRun("migration", code, 0);
+    struct BialetWrenCode wcode;
+    wcode.type = BIALET_CODE_SOURCE;
+    wcode.module = "migration";
+    wcode.source = code;
+    wcode.bc_data = NULL;
+    wcode.bc_length = 0;
+    struct BialetResponse  r = bialetRun(&wcode, 0);
     message(yellow("Running migration"), r.body);
   } else {
-    bialetRun("migration", "Db.init", 0);
+    struct BialetWrenCode wcode;
+    wcode.type = BIALET_CODE_SOURCE;
+    wcode.module = "migration";
+    wcode.source = "Db.init";
+    wcode.bc_data = NULL;
+    wcode.bc_length = 0;
+    bialetRun(&wcode, 0);
   }
 }
 
@@ -102,7 +114,13 @@ static void cron_install() {
 
 static void cron_run() {
   if(cron_installed) {
-    bialetRun("cron", cron_code, 0);
+    struct BialetWrenCode wcode;
+    wcode.type = BIALET_CODE_SOURCE;
+    wcode.module = "cron";
+    wcode.source = cron_code;
+    wcode.bc_data = NULL;
+    wcode.bc_length = 0;
+    bialetRun(&wcode, 0);
   }
 }
 
@@ -189,6 +207,7 @@ int main(int argc, char* argv[]) {
   char*            code = "";
   char*            validate_file = NULL;
   char*            test_dir = NULL;
+  char*            bytecode_file = NULL;
   int              run_tests = 0;
   struct sigaction sa;
   sa.sa_handler = sigintHandler;
@@ -230,7 +249,7 @@ int main(int argc, char* argv[]) {
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:Tvw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:TB:vw")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -309,6 +328,9 @@ int main(int argc, char* argv[]) {
           optind++;
         }
         break;
+      case 'B':
+        bytecode_file = optarg;
+        break;
       case 'v':
         printf("bialet %s\n", BIALET_VERSION);
         exit(0);
@@ -373,6 +395,12 @@ int main(int argc, char* argv[]) {
     bialetCleanup();
     unlink(temp_db_path);
 
+    exit(result);
+  }
+
+  if(bytecode_file != NULL) {
+    int result = bialetTestBytecode(bytecode_file, bialet_config.root_dir);
+    bialetCleanup();
     exit(result);
   }
 

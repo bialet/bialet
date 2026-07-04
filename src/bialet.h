@@ -40,6 +40,7 @@
 
 #else
 
+#include <stdint.h>
 #include <stdio.h>
 
 #endif
@@ -82,6 +83,19 @@ struct BialetResponse {
   char* header;
   char* body;
   int   length;
+};
+
+typedef enum {
+  BIALET_CODE_SOURCE,
+  BIALET_CODE_BYTECODE
+} BialetCodeType;
+
+struct BialetWrenCode {
+  BialetCodeType type;
+  char*          module;
+  char*          source;
+  uint8_t*       bc_data;
+  size_t         bc_length;
 };
 
 typedef enum {

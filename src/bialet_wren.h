@@ -19,14 +19,19 @@ void bialetCleanup();
 
 const char* bialetGetFullRootDir();
 
-struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
+struct BialetResponse bialetRun(struct BialetWrenCode* code, struct HttpMessage* hm);
 
 char* readFile(const char* path);
 char* bialetReadFile(const char* path);
 
-int bialetRunCli(char* code);
+struct BialetWrenCode* bialetLoadWrenCode(const char* filePath);
+void bialetFreeWrenCode(struct BialetWrenCode* code);
+void bialetSaveBytecodeIfNeeded(const char* wrenPath, const char* source);
+
+int bialetRunCli(char* source);
 int bialetValidateSyntax(const char* filePath);
 int bialetRunTests(const char* testDir, const char* rootDir);
+int bialetTestBytecode(const char* wrenFile, const char* rootDir);
 
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 

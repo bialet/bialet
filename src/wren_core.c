@@ -1337,9 +1337,14 @@ DEF_PRIMITIVE(test_runRequest) {
   hm->routes = create_string("", 0);
   
   // Call bialetRun to execute the route handler
-  extern struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
   snprintf(filePath, sizeof(filePath), "%s%s", rootDir, route);
-  struct BialetResponse response = bialetRun(filePath, code, hm);
+  struct BialetWrenCode wcode;
+  wcode.type = BIALET_CODE_SOURCE;
+  wcode.module = (char*)filePath;
+  wcode.source = code;
+  wcode.bc_data = NULL;
+  wcode.bc_length = 0;
+  struct BialetResponse response = bialetRun(&wcode, hm);
   
   // Free HttpMessage fields
   free(hm->method.str);

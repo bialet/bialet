@@ -3,6 +3,7 @@ build/
 
 # Bialet generated files
 **/_db.sqlite3*
+**/*.wrenc
 
 # Docs files
 .venv/

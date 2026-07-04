@@ -611,8 +611,12 @@ void handle_client(int client_socket) {
   fclose(file);
 
   if(is_wren_file) {
-    file_content[read_bytes] = '\0';
-    response = bialetRun(path, file_content, hm);
+    struct BialetWrenCode* wcode = bialetLoadWrenCode(path);
+    if(wcode != NULL) {
+      response = bialetRun(wcode, hm);
+      bialetFreeWrenCode(wcode);
+    }
+    file_content[read_bytes] = '\0'; // still needed for free below
     if(response.length == 0 && response.body) {
       response.length = strlen(response.body);
     }

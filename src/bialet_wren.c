@@ -20,6 +20,7 @@
 #include <sqlite3.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <time.h>
 
 // Portable case-insensitive substring search (avoids _GNU_SOURCE dependency)
@@ -267,6 +268,9 @@ void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
     } break;
     case WREN_ERROR_RUNTIME: {
       message(red("Runtime Error"), (char*)msg);
+    } break;
+    case WREN_ERROR_LOAD: {
+      message(red("Bytecode Load Error"), lineMessage, (char*)msg);
     } break;
   }
 }
@@ -624,7 +628,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
   return 1;
 }
 
-struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm) {
+struct BialetResponse bialetRun(struct BialetWrenCode* code, struct HttpMessage* hm) {
   struct BialetResponse r;
   r.status = HTTP_OK;
   r.header = NULL;
@@ -632,6 +636,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   r.length = 0;
   int     error = 0;
   WrenVM* vm = 0;
+  char*   module = code->module;
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
@@ -658,8 +663,27 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   }
   /* Run user code */
   if(!error) {
-    WrenInterpretResult result = wrenInterpret(vm, module, code);
-    error = result != WREN_RESULT_SUCCESS;
+    WrenInterpretResult result;
+    if(code->type == BIALET_CODE_BYTECODE) {
+      result = wrenInterpretBytecode(vm, module, code->bc_data,
+                                     code->bc_length);
+      if(result != WREN_RESULT_SUCCESS) {
+        // Bytecode failed; try source if we have it.
+        // For now, just report the error.
+        error = 1;
+      }
+    } else {
+      result = wrenInterpret(vm, module, code->source);
+      error = result != WREN_RESULT_SUCCESS;
+      // Save bytecode for next request (best effort, ignore failures).
+      // Skip files with 'import' — v1 bytecode doesn't support cross-module
+      // symbol remapping for imported method names.
+      if(!error && strchr(module, '/') != NULL &&
+         !(strncmp(code->source, "import", 6) == 0 ||
+           strstr(code->source, "\nimport") != NULL)) {
+        bialetSaveBytecodeIfNeeded(module, code->source);
+      }
+    }
   }
   if(!error) {
     wrenEnsureSlots(vm, 1);
@@ -748,8 +772,14 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   return r;
 }
 
-int bialetRunCli(char* code) {
-  struct BialetResponse response = bialetRun(CLI_MODULE_NAME, code, NULL);
+int bialetRunCli(char* source) {
+  struct BialetWrenCode code;
+  code.type = BIALET_CODE_SOURCE;
+  code.module = CLI_MODULE_NAME;
+  code.source = source;
+  code.bc_data = NULL;
+  code.bc_length = 0;
+  struct BialetResponse response = bialetRun(&code, NULL);
   if(response.status == HTTP_ERROR)
     return 1;
   printf("%s", response.body);
@@ -1052,4 +1082,167 @@ void freeBialetQuery(BialetQuery* query) {
 
   // Finally, free the BialetQuery structure itself
   free(query);
+}
+
+void bialetSaveBytecodeIfNeeded(const char* wrenPath, const char* source) {
+  char wrencPath[MAX_MODULE_LEN + 2];
+  snprintf(wrencPath, sizeof(wrencPath), "%sc", wrenPath);
+
+  WrenSerializeResult serialized = wrenSerializeModule(&wren_config, wrenPath,
+                                                       source, true);
+  if(serialized.bytes == NULL) return;
+
+  FILE* f = fopen(wrencPath, "wb");
+  if(f != NULL) {
+    fwrite(serialized.bytes, 1, serialized.length, f);
+    fclose(f);
+  }
+  wrenFreeSerializeResult(&wren_config, serialized);
+}
+
+struct BialetWrenCode* bialetLoadWrenCode(const char* filePath) {
+  struct BialetWrenCode* code = calloc(1, sizeof(struct BialetWrenCode));
+  if(code == NULL) return NULL;
+
+  code->module = strdup(filePath);
+
+  char wrencPath[MAX_MODULE_LEN + 2];
+  snprintf(wrencPath, sizeof(wrencPath), "%sc", filePath);
+
+  struct stat st_src, st_bc;
+  if(stat(wrencPath, &st_bc) == 0 &&
+     stat(filePath, &st_src) == 0 &&
+     st_bc.st_mtime >= st_src.st_mtime) {
+    FILE* f = fopen(wrencPath, "rb");
+    if(f != NULL) {
+      fseek(f, 0, SEEK_END);
+      long flen = ftell(f);
+      if(flen > 0) {
+        fseek(f, 0, SEEK_SET);
+        uint8_t* bytes = malloc((size_t)flen);
+        if(bytes != NULL && fread(bytes, 1, (size_t)flen, f) == (size_t)flen) {
+          code->type = BIALET_CODE_BYTECODE;
+          code->bc_data = bytes;
+          code->bc_length = (size_t)flen;
+        } else {
+          free(bytes);
+        }
+      }
+      fclose(f);
+    }
+  }
+
+  if(code->type == BIALET_CODE_BYTECODE) return code;
+
+  char* source = readFile(filePath);
+  if(source == NULL) {
+    free(code->module);
+    free(code);
+    return NULL;
+  }
+
+  code->type = BIALET_CODE_SOURCE;
+  code->source = source;
+  return code;
+}
+
+void bialetFreeWrenCode(struct BialetWrenCode* code) {
+  if(code == NULL) return;
+  free(code->module);
+  if(code->type == BIALET_CODE_SOURCE) {
+    free(code->source);
+  } else if(code->type == BIALET_CODE_BYTECODE) {
+    free(code->bc_data);
+  }
+  free(code);
+}
+
+int bialetTestBytecode(const char* wrenFile, const char* rootDir) {
+  (void)rootDir;
+
+  char filePath[MAX_MODULE_LEN];
+  snprintf(filePath, sizeof(filePath), "%s", wrenFile);
+
+  char* source = readFile(filePath);
+  if(source == NULL) {
+    fprintf(stderr, "Cannot read Wren file: %s\n", filePath);
+    return 1;
+  }
+
+  printf("\n--- Bytecode Test ---\n");
+  printf("Source file: %s\n", filePath);
+  printf("Source size: %zu bytes\n\n", strlen(source));
+
+  // Capture serialize errors. The serializer creates its own VM internally
+  // and compiles; if compilation fails we want to see the error.
+  fprintf(stderr, "--- Serializer output ---\n");
+
+  printf("1. Serializing %s to bytecode...\n", filePath);
+  WrenSerializeResult serialized = wrenSerializeModule(&wren_config, "main", source,
+                                                       true);
+  fprintf(stderr, "--- End serializer output ---\n");
+
+  if(serialized.bytes == NULL) {
+    fprintf(stderr, "   FAIL — serialization failed\n");
+    free(source);
+    return 1;
+  }
+  printf("   OK — %zu bytes produced\n", serialized.length);
+
+  char wrencPath[MAX_MODULE_LEN + 2];
+  snprintf(wrencPath, sizeof(wrencPath), "%sc", filePath);
+  printf("2. Saving bytecode to %s...\n", wrencPath);
+
+  FILE* f = fopen(wrencPath, "wb");
+  if(f == NULL) {
+    fprintf(stderr, "   FAIL — cannot create file\n");
+    wrenFreeSerializeResult(&wren_config, serialized);
+    free(source);
+    return 1;
+  }
+  size_t written = fwrite(serialized.bytes, 1, serialized.length, f);
+  fclose(f);
+  printf("   OK — %zu bytes written\n", written);
+
+  printf("3. Loading bytecode into fresh VM with Bialet init...\n");
+
+  f = fopen(wrencPath, "rb");
+  fseek(f, 0, SEEK_END);
+  long flen = ftell(f);
+  if(flen < 0) { fclose(f); wrenFreeSerializeResult(&wren_config, serialized); free(source); return 1; }
+  fseek(f, 0, SEEK_SET);
+  uint8_t* fileBytes = (uint8_t*)malloc((size_t)flen);
+  if(fileBytes == NULL || fread(fileBytes, 1, (size_t)flen, f) != (size_t)flen) {
+    if(fileBytes) free(fileBytes);
+    fclose(f);
+    wrenFreeSerializeResult(&wren_config, serialized);
+    free(source);
+    return 1;
+  }
+  fclose(f);
+
+  WrenVM* loadVM = wrenNewVM(&wren_config);
+  if(loadVM == NULL) {
+    free(fileBytes);
+    wrenFreeSerializeResult(&wren_config, serialized);
+    free(source);
+    return 1;
+  }
+
+  printf("4. Executing bytecode...\n");
+  wrenSetUserData(loadVM, filePath);
+  WrenInterpretResult result = wrenInterpretBytecode(loadVM, filePath,
+                                                      fileBytes, (size_t)flen);
+  int status = (result == WREN_RESULT_SUCCESS) ? 0 : 1;
+
+  printf("   %s\n\n", status == 0 ? "OK — bytecode executed successfully"
+                                  : "FAIL — bytecode execution error");
+
+  wrenFreeVM(loadVM);
+  free(fileBytes);
+  wrenFreeSerializeResult(&wren_config, serialized);
+  free(source);
+
+  printf("--- Result: %s ---\n", status == 0 ? "PASS" : "FAIL");
+  return status;
 }
