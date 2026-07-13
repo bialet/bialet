@@ -3,4 +3,4 @@
 `INSERT INTO nums_test (num) VALUES (42)`.query
 
 var num = `SELECT num FROM nums_test`.toNum
-Response.out((num + 8).toString)
+return (num + 8).toString

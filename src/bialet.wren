@@ -140,7 +140,9 @@ class Response {
 
   static json(data) {
     header("Content-Type", "application/json; charset=UTF-8")
-    out(Json.stringify(data))
+    var body = Json.stringify(data)
+    __out = __out + "\r\n" + body
+    return body
   }
 
   static cors(origin, methods, headers) {
@@ -159,8 +161,18 @@ class Response {
 
   static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }
   static pageHtml(title, messageHtml) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( Util.htmlEscape(title) )</h1><p>%( messageHtml )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
-  static end(code, title, message) { status(code) && out(page(title, message)) }
-  static endHtml(code, title, messageHtml) { status(code) && out(pageHtml(title, messageHtml)) }
+  static end(code, title, message) {
+    status(code)
+    var content = page(title, message)
+    __out = __out + "\r\n" + content
+    return content
+  }
+  static endHtml(code, title, messageHtml) {
+    status(code)
+    var content = pageHtml(title, messageHtml)
+    __out = __out + "\r\n" + content
+    return content
+  }
 
   static redirect(url) {
     header("Location", url)

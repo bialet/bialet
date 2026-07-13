@@ -1,1 +1,1 @@
-Response.out("Oops, something went wrong")
+return "Oops, something went wrong"

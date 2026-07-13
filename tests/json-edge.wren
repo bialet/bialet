@@ -30,7 +30,7 @@ for (r in results) {
 }
 
 if (allPassed) {
-  Response.out("all-passed")
+  return "all-passed"
 } else {
-  Response.out(results.join(","))
+  return results.join(",")
 }

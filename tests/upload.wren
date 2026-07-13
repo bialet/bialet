@@ -3,7 +3,7 @@ if (Request.isPost) {
   if (uploadedFile == null) {
     return Response.end(400, "Upload Error", "No file was uploaded")
   }
-  return Response.out("%(uploadedFile.name)|%(uploadedFile.type)|%(uploadedFile.size)")
+  return "%(uploadedFile.name)|%(uploadedFile.type)|%(uploadedFile.size)"
 }
 
-Response.out("upload-ready")
+return "upload-ready"

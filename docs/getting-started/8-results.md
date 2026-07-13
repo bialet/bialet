@@ -49,7 +49,7 @@ import "_app" for Template, Poll
 
 var poll = Poll.new()
 
-Response.out(Template.layout(
+return Template.layout(
 <main>
   <h2>Has web development become overly complex?</h2>
   {{ poll.options.map {|opt| <section>

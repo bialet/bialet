@@ -60,7 +60,7 @@ files.
 - Inline HTML: `{{ ... }}` interpolation inside `<...>` blocks
 - Queries: Use backticks `` `SELECT ...` `` for prepared Query objects with `?`
   placeholders
-- Request handling: `Request.isPost`, `Request.post(name)`, `Response.out(...)`,
+- Request handling: `Request.isPost`, `Request.post(name)`, `return` for response body,
   `Response.redirect(path)`
 - DB values come back as strings - convert with `Num.fromString(...)` before
   numeric math or use `query.num` for direct numeric retrieval.

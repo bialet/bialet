@@ -1,1 +1,1 @@
-Response.out(Request.method)
+return Request.method

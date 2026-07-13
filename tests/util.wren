@@ -5,4 +5,4 @@ var encoded = "hello+world"
 var decoded = Util.urlDecode(encoded)
 var num = Util.toNum("42")
 
-Response.out(verified.toString + "," + (random.count == 10).toString + "," + decoded + "," + num.toString)
+return verified.toString + "," + (random.count == 10).toString + "," + decoded + "," + num.toString

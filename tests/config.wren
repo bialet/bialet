@@ -6,4 +6,4 @@ var str = Config.get("test_key")
 var num = Config.num("test_num")
 var bool = Config.bool("test_bool")
 
-Response.out(str + "," + num.toString + "," + bool.toString)
+return str + "," + num.toString + "," + bool.toString

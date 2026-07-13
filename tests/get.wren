@@ -1,1 +1,1 @@
-Response.out(Request.get("foo"))
+return Request.get("foo")

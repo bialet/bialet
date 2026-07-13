@@ -83,12 +83,12 @@ var id = Request.route(1)       // Second dynamic segment
 if (segment == "users") {
   var userId = Num.fromString(id)
   var user = `SELECT * FROM users WHERE id = ?`.first([userId])
-  Response.out(user)
+  return user
 
 } else if (segment == "posts") {
   var slug = id
   var post = `SELECT * FROM posts WHERE slug = ?`.first([slug])
-  Response.out(post)
+  return post
 }
 ```
 
@@ -183,12 +183,12 @@ var post = `
 
 if (!post) {
   Response.status(404)
-  Response.out("<h1>Post not found</h1>")
+  return "<h1>Post not found</h1>"
   return
 }
 
 // Render using App template
-Response.out(App.render {
+return App.render {
   <article>
     <h1>{{post["title"]}}</h1>
     <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
