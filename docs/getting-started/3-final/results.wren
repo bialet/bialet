@@ -3,7 +3,7 @@ import "_app" for Template, Poll
 var poll = Poll.new()
 System.log(poll.options)
 
-Response.out(Template.layout(
+return Template.layout(
 <main>
   <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
   {{ poll.options.map{ |opt| <section>
@@ -18,4 +18,4 @@ Response.out(Template.layout(
     </p>
   </section> } }}
 </main>
-))
+)

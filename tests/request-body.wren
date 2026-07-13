@@ -1,10 +1,10 @@
 if (Request.isPost) {
   if (Request.isJson) {
     var data = Request.json()
-    Response.out(data["key"])
+    return data["key"]
   } else {
-    Response.out("not-json")
+    return "not-json"
   }
 } else {
-  Response.out("not-post")
+  return "not-post"
 }

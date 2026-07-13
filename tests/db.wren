@@ -5,4 +5,4 @@ Db.save('users', {
   "last_name": "Doe",
 })
 var user = `SELECT * FROM users`.first
-Response.out("%(user['first_name']) %(user['last_name'])")
+return "%(user['first_name']) %(user['last_name'])"

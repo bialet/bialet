@@ -44,4 +44,4 @@ Lorem ipsum
 }
 
 // Doctype is a special case, it will end on a close HTML tag: `</html>`
-Response.out(<!doctype html><html><body>{{ content }}{{ Template.html }}</body></html>)
+return <!doctype html><html><body>{{ content }}{{ Template.html }}</body></html>

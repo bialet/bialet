@@ -1,1 +1,1 @@
-Response.out(Request.post("foo"))
+return Request.post("foo")

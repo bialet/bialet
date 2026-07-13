@@ -15,7 +15,7 @@ if (Request.isPost) {
 var options = `SELECT * FROM simple_poll`.fetch
 System.log(options)
 
-Response.out( <!doctype html>
+return  <!doctype html>
 <html>
   <body>
     <h1>Has web development become overly complex?</h1>
@@ -44,4 +44,4 @@ Response.out( <!doctype html>
       View <a href="https://github.com/bialet/bialet/tree/main/docs/getting-started">source code</a>.
     </footer>
   </body>
-</html> )
+</html>

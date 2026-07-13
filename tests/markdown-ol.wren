@@ -5,4 +5,4 @@ var md = "
 3. Prepare release notes
 "
 
-Response.out(Markdown.html(md))
+return Markdown.html(md)

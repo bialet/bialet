@@ -1,6 +1,6 @@
 import "_app" for Template
 
-Response.out(Template.layout('
+return Template.layout('
 
   <h2 class="mb-5 text-2xl font-medium text-gray-900 dark:text-white">Has web development become overly complex?</h2>
 
@@ -18,4 +18,4 @@ Response.out(Template.layout('
   </div>
   <p class="mb-5 text-md font-medium text-gray-700 dark:text-gray-400">Total Votes: 110</p>
 
-'))
+')

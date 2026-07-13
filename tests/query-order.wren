@@ -5,4 +5,4 @@
 `INSERT INTO test_items (name, score) VALUES ('item3', 15)`.query
 
 var items = `SELECT * FROM test_items`.order("score", "desc", ["id", "name", "score"]).fetch
-Response.out(items[0]["name"] + "," + items[1]["name"] + "," + items[2]["name"])
+return items[0]["name"] + "," + items[1]["name"] + "," + items[2]["name"]
