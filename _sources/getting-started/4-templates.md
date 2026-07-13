@@ -33,10 +33,10 @@ Now use the template in `index.wren`:
 import "_app" for Template
 
 var html = Template.layout("So far, so good.")
-Response.out(html)
+return html
 ```
 
-`Response.out()` appends to the response body. `Template.layout()` wraps
+`return` sets the response body. `Template.layout()` wraps
 content in the shared HTML shell.
 
 ## Refining the template

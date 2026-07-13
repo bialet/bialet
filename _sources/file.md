@@ -26,11 +26,10 @@ if (Request.isPost) {
   System.print("Uploaded file: %(file.name)")
 
   // Return a message indicating the file was uploaded
-  return Response.out("<p>File uploaded and saved: {{ file.name }}</p>")
+  return "<p>File uploaded and saved: {{ file.name }}</p>"
 }
 
-Response.out(
-<!doctype html>
+return <!doctype html>
   <html>
     <body>
       <h1>Upload a File</h1>
@@ -40,7 +39,6 @@ Response.out(
       </form>
     </body>
   </html>
-)
 ```
 
 ### Example 2: Temporary File Upload
@@ -92,7 +90,7 @@ var file = File.create("temporary.txt", "text/plain", content)
 // Delete the file manually
 file.destroy()
 
-Response.out("<p>File was created and then deleted.</p>")
+return "<p>File was created and then deleted.</p>"
 ```
 
 ## Showing a File in the Browser
@@ -127,6 +125,6 @@ if (imageData) {
 } else {
   // Return a 404 error if the image is not found
   Response.status(404)
-  Response.out("<h1>404 - File Not Found</h1>")
+  return "<h1>404 - File Not Found</h1>"
 }
 ```

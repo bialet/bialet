@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68f60be9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -526,12 +526,12 @@ your project without exposing them.</p>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">userId</span><span class="p">])</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">user</span>
 
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;posts&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE slug = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">slug</span><span class="p">])</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">post</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -679,12 +679,12 @@ separate <code class="docutils literal notranslate"><span class="pre">_route.wre
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
 <span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="c1">// Render using App template</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="w"> </span><span class="p">{</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="x">&lt;article&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>

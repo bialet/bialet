@@ -134,7 +134,7 @@ class Template {
 ```wren
 // index.wren
 Site.head()
-Response.out("<h1>Hello</h1>")
+return "<h1>Hello</h1>"
 Site.body()
 ```
 

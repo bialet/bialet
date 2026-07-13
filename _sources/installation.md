@@ -181,7 +181,7 @@ bialet -r 'System.log("Hello, World!")'
 The response will be printed directly.
 
 ```bash
-bialet -r 'Response.out("No log, plain response")'
+bialet -r 'return "No log, plain response"'
 ```
 
 You have to respect new lines in the code.
