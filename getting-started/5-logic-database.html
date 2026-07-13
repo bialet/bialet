@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68f60be9" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b73fc98b" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -434,8 +434,7 @@ CLI</a> and run:</p>
 <p>Create <code class="docutils literal notranslate"><span class="pre">simple_poll.wren</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="x">&lt;html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;body&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
 <span class="w">    </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
@@ -449,7 +448,6 @@ CLI</a> and run:</p>
 <span class="x">    &lt;/form&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-<span class="p">)</span>
 </pre></div>
 </div>
 <p>The backtick string <code class="docutils literal notranslate"><span class="pre">`SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">simple_poll`</span></code> is a <strong>Query object</strong>

@@ -23,8 +23,7 @@ Create `simple_poll.wren`:
 ```wren
 var options = `SELECT * FROM simple_poll`.fetch()
 
-Response.out(
-<html>
+return <html>
   <body>
     <h1>Has web development become overly complex?</h1>
     <form method="post">
@@ -38,7 +37,6 @@ Response.out(
     </form>
   </body>
 </html>
-)
 ```
 
 The backtick string `` `SELECT * FROM simple_poll` `` is a **Query object**

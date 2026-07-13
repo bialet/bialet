@@ -175,40 +175,6 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0 0.35em">All Install Options</a>
    </div>
 
-----
-
-.. grid:: 3
-
-    .. grid-item-card::
-        :text-align: center
-        :link: https://github.com/bialet/bialet/
-
-        :octicon:`mark-github;2em;sd-text-info`
-
-        View repository
-        +++++++++++++++++++++++
-        *In GitHub*
-
-    .. grid-item-card::
-        :text-align: center
-        :link: https://github.com/bialet/bialet/archive/refs/tags/v0.9.zip
-
-        :octicon:`file-zip;2em;sd-text-info`
-
-        Download source
-        +++++++++++++++
-        *use it with Docker or compile it*
-
-    .. grid-item-card::
-        :text-align: center
-        :link: https://raw.githubusercontent.com/bialet/bialet/main/prompt.md
-
-        :octicon:`download;2em;sd-text-info`
-
-        AI Development Guide
-        ++++++++++++++++++++
-        *prompt.md for AI assistants*
-
 .. toctree::
    :hidden:
    :maxdepth: 2
@@ -229,3 +195,17 @@ Visit `127.0.0.1:7001 <http://127.0.0.1:7001>`_ in your browser.
    examples
    faq
    why-bialet
+
+----
+
+.. raw:: html
+
+   <div class="community-banner">
+     <p style="font-size: 1.3em; margin: 0 0 0.5em 0">🚲 <strong>Let's build together</strong></p>
+     <p style="padding: 0.5em">
+       Bialet is maintained by a solo developer, but the community is open to everyone.
+       Whether you're stuck on a query, have a feature idea, or want to show off your
+       project, GitHub Discussions is the place. Search first, ask second, and be kind.
+     </p>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
+   </div>

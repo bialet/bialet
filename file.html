@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68f60be9" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -446,11 +446,10 @@ error message. This limit is configurable in the source code through the
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="w">  </span><span class="c1">// Return a message indicating the file was uploaded</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;&quot;</span>
 <span class="p">}</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span>
-<span class="x">&lt;!doctype html&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">  </span><span class="x">&lt;html&gt;</span>
 <span class="x">    &lt;body&gt;</span>
 <span class="w">      </span><span class="x">&lt;h1&gt;Upload a File&lt;/h1&gt;</span>
@@ -460,7 +459,6 @@ error message. This limit is configurable in the source code through the
 <span class="x">      &lt;/form&gt;</span>
 <span class="w">    </span><span class="x">&lt;/body&gt;</span>
 <span class="x">  &lt;/html&gt;</span>
-<span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -509,7 +507,7 @@ works for uploaded and dynamically created files.</p>
 <span class="c1">// Delete the file manually</span>
 <span class="n">file</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
 
-<span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;File was created and then deleted.&lt;/p&gt;&quot;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;File was created and then deleted.&lt;/p&gt;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -540,7 +538,7 @@ browser.</p>
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Return a 404 error if the image is not found</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;404 - File Not Found&lt;/h1&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;404 - File Not Found&lt;/h1&gt;&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
