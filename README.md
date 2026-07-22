@@ -39,11 +39,11 @@ return <!doctype html>
   </html>
 ```
 
-Bialet is a full-stack web framework that integrates the object-oriented [Wren language](https://wren.io) with a single HTTP server and a built-in SQLite database, creating a unified environment for web development
+Bialet is a single self-contained binary (under 1 MB) that embeds the object-oriented [Wren language](https://wren.io), an HTTP server, and a built-in SQLite database. Requests are routed from the filesystem: each `.wren` file is a handler that returns a response body. It is written in C17 and runs on Linux and macOS (and Windows via cross-compilation).
 
 ## Install
 
-Install Bialet with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
+Install a prebuilt binary with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
 
 ```bash
 curl -sSL https://get.bialet.dev | sh
@@ -51,7 +51,7 @@ curl -sSL https://get.bialet.dev | sh
 
 ## Quickstart
 
-1. Create an `index.wren` file in your app directory and run it:
+1. Create an `index.wren` file in your app directory and start the server:
 
 ```bash
 bialet
@@ -59,49 +59,98 @@ bialet
 
 2. Visit [127.0.0.1:7001](http://127.0.0.1:7001) in your browser.
 
-## Build
+## Build from source
 
-To build Bialet from source, you'll need to install certain dependencies and run the build process.
+### Prerequisites
+
+- A C17-compatible compiler (`gcc` or `clang`) and `make`
+- `git`
+- Development headers for SQLite, libcurl, and OpenSSL (see below)
+- `python3` — only needed to regenerate the embedded Wren sources (`make wren_files`)
 
 ### Dependencies
 
-#### Debian/Ubuntu
+**Debian/Ubuntu**
 
 ```bash
-sudo apt install -y libsqlite3-dev libssl-dev 
-# Optional, but recommended for production
-sudo apt install -y libcurl4-openssl-dev
+sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
 ```
 
-#### MacOS
+**macOS**
 
 ```bash
-brew install sqlite3 curl
-# Optional, but recommended for production
-brew install openssl
+brew install sqlite3 curl openssl pkg-config
 ```
 
-### Windows
+**Windows** — Bialet is cross-compiled from Linux with MinGW (`CC=x86_64-w64-mingw32-gcc make`). The resulting binary needs these DLLs alongside it at runtime:
 
-* libcrypto-3-x64.dll
-* libsqlite3-0.dll
-* libssl-3-x64.dll (Optional, but recommended for production)
+- `libsqlite3-0.dll`
+- `libcrypto-3-x64.dll`
+- `libssl-3-x64.dll`
 
-### Building the Project
+OpenSSL is optional but recommended for production (enables TLS). The build auto-detects it and defines `HAVE_SSL` when present; on macOS it is located via `pkg-config`.
 
-After installing the dependencies, compile the project and install it:
+### Compile and install
 
 ```bash
-make clean && make && make install
+git clone https://github.com/bialet/bialet.git
+cd bialet
+make               # compiles to ./build/bialet
+make install       # copies the binary to ~/.local/bin
 ```
+
+The default build uses `-Wall -Wextra -Werror` and links against `libsqlite3`, `libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto` when OpenSSL is detected).
+
+### Make targets
+
+| Target             | Description                                                        |
+| ------------------ | ------------------------------------------------------------------ |
+| `make` / `make all`| Build the binary to `./build/bialet`                               |
+| `make install`     | Copy the binary to `~/.local/bin`                                  |
+| `make uninstall`   | Remove the installed binary                                        |
+| `make check`       | Build and run the test suite                                       |
+| `make installcheck`| Install, then run the tests against the installed binary           |
+| `make static`      | Linux only — produce a statically linked, self-contained binary    |
+| `make wren_files`  | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
+| `make html`        | Build the documentation with Sphinx                                |
+| `make clean`       | Remove `build/` and test databases                                 |
 
 ## Development
 
-To run Bialet in development mode, you can use the `PATH_RUN` environment variable to specify the path to the app directory:
+Run the freshly built binary against an app directory (the last positional argument is the app root, defaulting to the current directory):
 
 ```bash
-make dev PATH_RUN=/path/to/dev-app
+make                        # rebuild after editing C sources
+./build/bialet /path/to/dev-app
 ```
+
+If you change any embedded `.wren` source under `src/`, regenerate the C string includes before rebuilding:
+
+```bash
+make wren_files && make
+```
+
+### Command-line options
+
+```
+Usage: bialet [-h host] [-p port] [-l log] [-d database] [-t file] [-T] root_dir
+```
+
+| Option        | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `-h host`     | Host to bind (default `127.0.0.1`)                   |
+| `-p port`     | Port to listen on                                    |
+| `-l log`      | Write logs to a file (disables colored output)       |
+| `-d database` | SQLite database file (default `_db.sqlite3`)         |
+| `-w`          | Enable SQLite WAL mode                               |
+| `-i files`    | Glob of files to ignore                              |
+| `-m` / `-M`   | Memory soft / hard limit in MB                       |
+| `-c` / `-C`   | CPU soft / hard limit in seconds                     |
+| `-r code`     | Run an inline Wren snippet and exit                  |
+| `-t file`     | Validate the syntax of a `.wren` file                |
+| `-T [dir]`    | Run the test suite                                   |
+| `-v`          | Print the version and exit                           |
+| `root_dir`    | App directory to serve (default `.`)                 |
 
 ## Documentation
 
