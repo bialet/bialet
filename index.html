@@ -12,7 +12,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/index.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet integrates the object-oriented Wren language with a HTTP server and a built-in SQLite database — in a single binary. No configuration files, no dependencies, no build step. Just write.wren f..." />
+<meta property="og:description" content="Install Bialet with a single command — macOS ARM, Ubuntu x86_64, or Ubuntu ARM: Features: Zero Configuration Start coding in seconds — no YAML, no JSON, no setup files. Run bialet in any directory ..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
 
@@ -92,48 +92,23 @@
 <div style="text-align: center; margin: 2em 0 1em 0">
     <img src="_static/logo.png" alt="Bialet" style="width: 140px; margin-bottom: 0.5em" />
     <h1 style="font-size: 2.5em; font-weight: 700; margin: 0 0 0.25em 0">
-        Craft web apps with plain HTML and real simplicity
+        Web apps from HTML and SQL. Nothing else.
     </h1>
     <p style="font-size: 1.15em; color: var(--sd-color-secondary); max-width: 32em; margin: 0 auto 1.25em auto">
-        Bialet is a full-stack web framework that brings back the joy of web
-        development: write HTML, use a built-in SQLite database, and ship fast —
-        <strong>no complex toolchains, no drama.</strong>
+        One binary under 1 MB with a built-in database. No build step, no
+        dependencies, no config — <strong>write a file, refresh the browser.</strong>
     </p>
-</div><div style="text-align: center; margin-bottom: 2em">
+</div><p>Install Bialet with a single command — macOS ARM, Ubuntu x86_64, or Ubuntu ARM:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</pre></div>
+</div>
+<div style="text-align: center; margin: 1.5em 0 2em 0">
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0 0.35em">Get Started</a>
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet" style="margin: 0 0.35em">
     <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
     View on GitHub
   </a>
-</div><hr class="docutils" />
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="linenos"> 2</span><span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
-<span class="linenos"> 3</span>
-<span class="linenos"> 4</span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="linenos"> 5</span><span class="w">  </span><span class="x">&lt;html&gt;</span>
-<span class="linenos"> 6</span><span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="linenos"> 7</span><span class="x">    &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
-<span class="linenos"> 8</span><span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="linenos"> 9</span><span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="linenos">10</span><span class="w">        </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
-<span class="linenos">11</span><span class="x">          {{ users.map{|user| &lt;li&gt;</span>
-<span class="linenos">12</span><span class="w">            </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
-<span class="linenos">13</span><span class="x">              👋 {{ user[&quot;name&quot;] }}</span>
-<span class="linenos">14</span><span class="x">            &lt;/a&gt;</span>
-<span class="linenos">15</span><span class="w">          </span><span class="x">&lt;/li&gt; } }}</span>
-<span class="linenos">16</span><span class="x">        &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="linenos">17</span><span class="w">        </span><span class="cm">/* Users table is empty */</span>
-<span class="linenos">18</span><span class="w">        </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
-<span class="linenos">19</span><span class="w">      </span><span class="si">}}</span>
-<span class="linenos">20</span><span class="w">    </span><span class="x">&lt;/body&gt;</span>
-<span class="linenos">21</span><span class="x">  &lt;/html&gt;</span>
-</pre></div>
-</div>
-<p>Bialet integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with
-a HTTP server and a built-in SQLite database — <strong>in a single binary</strong>.
-No configuration files, no dependencies, no build step. Just write <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
-files and run.</p>
-</section>
+</div></section>
 <hr class="docutils" />
 <section id="features">
 <h1>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h1>
@@ -146,7 +121,8 @@ files and run.</p>
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>Zero Configuration</strong></p>
-<p class="sd-card-text">No YAML, no JSON, no setup files. Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> in any directory.</p>
+<p class="sd-card-text">Start coding in seconds — no YAML, no JSON, no setup files. Run
+<code class="docutils literal notranslate"><span class="pre">bialet</span></code> in any directory and it just works.</p>
 </div>
 </div>
 </div>
@@ -157,7 +133,8 @@ files and run.</p>
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>SQLite Built-in</strong></p>
-<p class="sd-card-text">Full database engine included. Migrations, queries, and CRUD — ready to go.</p>
+<p class="sd-card-text">Store and query real data with zero setup — no separate DB to install
+or connect. Migrations, queries, and CRUD work out of the box.</p>
 </div>
 </div>
 </div>
@@ -168,7 +145,8 @@ files and run.</p>
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>Single Binary</strong></p>
-<p class="sd-card-text">~2 MB. No runtime, no package manager, no external services needed.</p>
+<p class="sd-card-text">Deploy by copying one file under 1 MB — no runtime, no package manager,
+no external services to provision. Ship anywhere in one step.</p>
 </div>
 </div>
 </div>
@@ -179,12 +157,75 @@ files and run.</p>
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>No Build Step</strong></p>
-<p class="sd-card-text">Edit a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, refresh the browser. That’s the entire workflow.</p>
+<p class="sd-card-text">See changes instantly — edit a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, refresh the browser,
+done. No compile, no bundler, no watch process.</p>
 </div>
 </div>
 </div>
 </div>
 </div>
+</section>
+<hr class="docutils" />
+<section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<p>Once installed, run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> in your project folder and open <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a>. Here’s a complete app in one <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Bialet is a single-binary web framework: Wren scripting + SQLite, file-based routing.</span>
+<span class="c1">// Drop `.wren` files in a folder, run `bialet`, and you have a server-rendered app.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🚲 Welcome to Bialet showcase&quot;</span>
+
+<span class="c1">// Normally, table creation goes in `_migration.wren` (run once at startup).</span>
+<span class="c1">// Placed here so this showcase file is fully self-contained.</span>
+<span class="sb">`CREATE TABLE IF NOT EXISTS items (phrase TEXT)`</span><span class="o">.</span><span class="n">query</span>
+
+<span class="c1">// POST handling</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;items&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;phrase&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">})</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;✅ Item saved&#39;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// Querying</span>
+<span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM items`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="c1">// Inline HTML with `{{ … }}`</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">  &lt;h2&gt;</span><span class="nc">Items</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">  {{ items.count &gt; 0 ?</span>
+<span class="x">    &lt;ul&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;phrase&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;/ul&gt; :</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">items</span><span class="p">,</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">one</span><span class="o">!.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="p">}}</span>
+<span class="x">&lt;/section&gt;</span>
+
+<span class="x">// Every `.wren` file is a handler; `return` sends the response body to the client.</span>
+<span class="x">// Use `&lt;!doctype html&gt;</span><span class="err">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="nc">HTML</span><span class="w"> </span><span class="n">pages</span><span class="o">.</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;head&gt;</span>
+<span class="w">    </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.fluid.classless.min.css&quot;&gt;</span>
+<span class="x">  &lt;/head&gt;</span>
+<span class="w">  </span><span class="x">&lt;body&gt;</span>
+<span class="x">    &lt;main&gt;</span>
+<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">        &lt;input name=&quot;input&quot; placeholder=&quot;Write some text..&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type=&quot;submit&quot; value=&quot;Add new item&quot;&gt;</span>
+<span class="x">      &lt;/form&gt;</span>
+<span class="w">      </span><span class="x">&lt;hr&gt;</span>
+<span class="x">      {{ content }}</span>
+<span class="x">    &lt;/main&gt;</span>
+<span class="w">    </span><span class="x">&lt;footer&gt;Made with &lt;a href=&quot;https://bialet.dev&quot;&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;&lt;/footer&gt;</span>
+<span class="w">  </span><span class="x">&lt;/body&gt;</span>
+<span class="x">&lt;/html&gt;</span>
+</pre></div>
+</div>
+<p>Bialet integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with
+a HTTP server and a built-in SQLite database — <strong>in a single binary</strong>.
+No configuration files, no dependencies, no build step. Just write <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
+files and run.</p>
 </section>
 <hr class="docutils" />
 <section id="who-is-bialet-for">
@@ -229,21 +270,9 @@ micro-libraries, Bialet is for you.</p>
 </div>
 </div>
 </div>
-</section>
 <hr class="docutils" />
-<section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
-<p>Install Bialet with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</pre></div>
-</div>
-<p>Then create an <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> file and run it:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>bialet
-</pre></div>
-</div>
-<p>Visit <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> in your browser.</p>
 <div style="text-align: center; margin: 1.5em 0">
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0 0.35em">📖 Full Tutorial</a>
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0 0.35em">📖 Documentation</a>
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0 0.35em">All Install Options</a>
 </div><div class="toctree-wrapper compound">
 </div>
