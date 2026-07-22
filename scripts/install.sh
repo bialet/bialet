@@ -56,46 +56,46 @@ case "$pm" in
 esac
 
 # ── Installer dependencies (needed by this script) ──────────────
-REQUIRED=(curl tar mktemp)
-missing=()
-for cmd in "${REQUIRED[@]}"; do
-  command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+missing=""
+for cmd in curl tar mktemp; do
+  command -v "$cmd" >/dev/null 2>&1 || missing="$missing $cmd"
 done
+missing="${missing# }"
 
-if [ ${#missing[@]} -gt 0 ]; then
-  yellow "==> Installing installer dependencies: ${missing[*]}"
+if [ -n "$missing" ]; then
+  yellow "==> Installing installer dependencies: $missing"
   case "$pm" in
     dnf)
-      $sudo_cmd dnf install -y "${missing[@]}"
+      $sudo_cmd dnf install -y $missing
       ;;
     yum)
-      $sudo_cmd yum install -y "${missing[@]}"
+      $sudo_cmd yum install -y $missing
       ;;
     apt-get)
       $sudo_cmd apt-get update -qq
-      DEBIAN_FRONTEND=noninteractive $sudo_cmd apt-get install -y -q "${missing[@]}"
+      DEBIAN_FRONTEND=noninteractive $sudo_cmd apt-get install -y -q $missing
       ;;
     apk)
-      $sudo_cmd apk add --no-cache "${missing[@]}"
+      $sudo_cmd apk add --no-cache $missing
       ;;
     pacman)
-      $sudo_cmd pacman -Sy --noconfirm "${missing[@]}"
+      $sudo_cmd pacman -Sy --noconfirm $missing
       ;;
     zypper)
-      $sudo_cmd zypper -n install "${missing[@]}"
+      $sudo_cmd zypper -n install $missing
       ;;
     brew)
-      brew install "${missing[@]}"
+      brew install $missing
       ;;
     macos-nobrew)
-      echo "Error: missing ${missing[*]} on macOS without Homebrew." >&2
+      echo "Error: missing $missing on macOS without Homebrew." >&2
       echo "Install Homebrew from https://brew.sh and re-run, or install the packages manually." >&2
       exit 1
       ;;
     unknown|*)
       echo "Error: could not detect a supported package manager." >&2
       echo "Detected: OS=$(uname -s), Arch=$(uname -m)" >&2
-      echo "Install ${missing[*]} manually and re-run." >&2
+      echo "Install $missing manually and re-run." >&2
       exit 1
       ;;
   esac
