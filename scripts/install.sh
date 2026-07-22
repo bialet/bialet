@@ -36,10 +36,9 @@ detect_package_manager() {
     command -v brew >/dev/null 2>&1 && echo "brew" || echo "macos-nobrew"
     return
   fi
-  local pm
-  for pm in dnf apt-get apk pacman zypper yum; do
-    if command -v "$pm" >/dev/null 2>&1; then
-      echo "$pm"
+  for _pm in dnf apt-get apk pacman zypper yum; do
+    if command -v "$_pm" >/dev/null 2>&1; then
+      echo "$_pm"
       return
     fi
   done
