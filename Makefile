@@ -82,9 +82,10 @@ static: $(OBJS)
 		-lm -lpthread -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
 else ifeq ($(OS),Linux)
 CURL_STATIC_LIBS := $(shell curl-config --static-libs 2>/dev/null || echo '-lcurl')
+CURL_DEPS := $(filter-out -lcurl,$(CURL_STATIC_LIBS))
 static: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 -lm -lpthread -ldl \
-		-Wl,-Bstatic -lsqlite3 $(CURL_STATIC_LIBS) -Wl,-Bdynamic
+		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS)
 else
 static:
 	@echo "Static build is not supported on $(OS). Use 'make' instead."
