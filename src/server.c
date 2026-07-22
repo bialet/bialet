@@ -14,23 +14,37 @@
 #include "bialet_wren.h"
 #include "favicon.h"
 #include "messages.h"
+
+#if IS_WIN
+#include <ws2tcpip.h>
+#define bialet_socket_t SOCKET
+#define BIALET_INVALID_SOCKET INVALID_SOCKET
+#define socket_close(s) closesocket(s)
+#define setsockopt_val(v) ((const char*)(v))
+#else
 #include <arpa/inet.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include <unistd.h>
+typedef int bialet_socket_t;
+#define BIALET_INVALID_SOCKET (-1)
+#define socket_close(s) close(s)
+#define setsockopt_val(v) (v)
+#endif
+
 #include <ctype.h>
 #include <errno.h>
-#include <poll.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #define BUFFER_SIZE (BUFSIZ * 4)
 #define PATH_SIZE (1024 * 2)
 
-int                        server_fd = -1;
+bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
 
 // Portable case-insensitive string search
@@ -50,7 +64,7 @@ static const char* stristr(const char* haystack, const char* needle) {
   return NULL;
 }
 
-static ssize_t send_all(int fd, const void* buf, size_t count) {
+static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
   while(sent < count) {
@@ -64,20 +78,27 @@ static ssize_t send_all(int fd, const void* buf, size_t count) {
   return (ssize_t)sent;
 }
 
-void handle_client(int client_socket);
+void handle_client(bialet_socket_t client_socket);
 
 int start_server(struct BialetConfig* config) {
+#if IS_WIN
+  WSADATA wsaData;
+  if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    fprintf(stderr, "WSAStartup failed\n");
+    exit(EXIT_FAILURE);
+  }
+#endif
   bialet_config = *config;
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if(server_fd == -1) {
+  if(server_fd == BIALET_INVALID_SOCKET) {
     perror("Failed to create socket");
     exit(EXIT_FAILURE);
   }
   // Enable SO_REUSEADDR option
   int opt = 1;
-  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, setsockopt_val(&opt), sizeof(opt)) == -1) {
     perror("Failed to set SO_REUSEADDR");
-    close(server_fd);
+    socket_close(server_fd);
     exit(EXIT_FAILURE);
   }
 
@@ -115,15 +136,15 @@ int start_server(struct BialetConfig* config) {
     message("Ports from", magenta(initial_port_str), "to", magenta(last_port_str),
             "tried");
   }
-  close(server_fd);
+  socket_close(server_fd);
   exit(EXIT_FAILURE);
   return -1;
 }
 
 void stop_server() {
-  if(server_fd != -1) {
-    close(server_fd);
-    server_fd = -1;
+  if(server_fd != BIALET_INVALID_SOCKET) {
+    socket_close(server_fd);
+    server_fd = BIALET_INVALID_SOCKET;
     message(magenta("Server stopped"));
   }
 }
@@ -329,15 +350,15 @@ void write_response(int client_socket, struct BialetResponse* response) {
     (void)send_all(client_socket, response->body, body_len);
   }
 
-  close(client_socket);
+  socket_close(client_socket);
 }
 
-void handle_client(int client_socket) {
+void handle_client(bialet_socket_t client_socket) {
   char    buffer[BUFFER_SIZE];
   ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
   if(bytes_read <= 0) {
     perror("Error reading request");
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   buffer[bytes_read] = '\0';
@@ -357,7 +378,7 @@ void handle_client(int client_socket) {
     long  cl_value = strtol(cl_header + 15, &endptr, 10);
     if(cl_value < 0 || cl_value > MAX_REQUEST_SIZE) {
       message(red("Request Error"), "Content-Length too large or invalid");
-      close(client_socket);
+      socket_close(client_socket);
       return;
     }
     content_length = (size_t)cl_value;
@@ -377,14 +398,14 @@ void handle_client(int client_socket) {
       // Additional safety check
       if(full_size > MAX_REQUEST_SIZE) {
         message(red("Request Error"), "Request size exceeds maximum allowed");
-        close(client_socket);
+        socket_close(client_socket);
         return;
       }
 
       full_request = (char*)malloc(full_size + 1);
       if(!full_request) {
         perror("Failed to allocate memory for large request");
-        close(client_socket);
+        socket_close(client_socket);
         return;
       }
 
@@ -416,7 +437,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
 
@@ -495,7 +516,7 @@ void handle_client(int client_socket) {
       clean_http_message(hm);
       if(should_free_request)
         free(full_request);
-      close(client_socket);
+      socket_close(client_socket);
       return;
     }
     while(1) {
@@ -556,7 +577,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   if(fseek(file, 0, SEEK_END) != 0) {
@@ -565,7 +586,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   long file_size_l = ftell(file);
@@ -575,7 +596,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   size_t file_size = (size_t)file_size_l;
@@ -594,7 +615,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   size_t read_bytes = fread(file_content, 1, file_size, file);
@@ -605,7 +626,7 @@ void handle_client(int client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    close(client_socket);
+    socket_close(client_socket);
     return;
   }
   fclose(file);
@@ -634,28 +655,48 @@ void handle_client(int client_socket) {
 }
 
 int server_poll(int delay) {
+#if IS_WIN
+  fd_set readfds;
+  FD_ZERO(&readfds);
+  FD_SET(server_fd, &readfds);
+  struct timeval tv;
+  tv.tv_sec = delay / 1000;
+  tv.tv_usec = (delay % 1000) * 1000;
+  int ret = select(0, &readfds, NULL, NULL, delay >= 0 ? &tv : NULL);
+  if(ret < 0) {
+    if(server_fd != BIALET_INVALID_SOCKET) {
+      perror("Select error");
+    }
+    return -1;
+  } else if(ret == 0) {
+    return 0;
+  }
+#else
   struct pollfd fds[1];
   fds[0].fd = server_fd;
   fds[0].events = POLLIN;
 
   int poll_result = poll(fds, 1, delay);
   if(poll_result < 0) {
-    if(server_fd != -1) {
+    if(server_fd != BIALET_INVALID_SOCKET) {
       perror("Poll error");
     }
     return -1;
   } else if(poll_result == 0) {
-    return 0; // Timeout occurred
+    return 0;
   }
 
-  if(fds[0].revents & POLLIN) {
-    int client_socket = accept(server_fd, NULL, NULL);
-    if(client_socket == -1) {
-      perror("Failed to accept connection");
-      return -1;
-    }
-    handle_client(client_socket);
+  if(!(fds[0].revents & POLLIN)) {
+    return 0;
   }
+#endif
+
+  bialet_socket_t client_socket = accept(server_fd, NULL, NULL);
+  if(client_socket == BIALET_INVALID_SOCKET) {
+    perror("Failed to accept connection");
+    return -1;
+  }
+  handle_client(client_socket);
 
   return 0;
 }

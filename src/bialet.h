@@ -30,6 +30,16 @@
 #endif
 #endif
 
+#if IS_WIN
+#include <stdlib.h>
+#ifndef PATH_MAX
+#define PATH_MAX _MAX_PATH
+#endif
+static inline char* realpath(const char* path, char* resolved) {
+    return _fullpath(resolved, path, _MAX_PATH);
+}
+#endif
+
 #ifdef _WIN64
 
 #include <winsock2.h>

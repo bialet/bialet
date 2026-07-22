@@ -155,7 +155,9 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
         }
         headers = new_headers;
         strncat(headers, line, line_len);
-        strncat(headers, "\n", 1);
+        size_t headers_len = strlen(headers);
+        headers[headers_len] = '\n';
+        headers[headers_len + 1] = '\0';
         headers_size = new_size;
       }
     } else {
@@ -170,7 +172,9 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
       }
       body = new_body;
       strncat(body, line, line_len);
-      strncat(body, "\n", 1);
+      size_t body_len = strlen(body);
+      body[body_len] = '\n';
+      body[body_len + 1] = '\0';
       body_size = new_size;
     }
     line = strtok(NULL, "\n");
@@ -356,7 +360,6 @@ void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response)
 
     int result = SSL_connect(ssl);
     if(result != 1) {
-      int ssl_err = errno;
       response->error = 5; // SSL connection failed
       SSL_free(ssl);
       closesocket(sockfd);

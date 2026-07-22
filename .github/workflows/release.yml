@@ -111,8 +111,8 @@ jobs:
           tar xf "openssl-${{ env.OPENSSL_VERSION }}.tar.gz"
           cd "openssl-${{ env.OPENSSL_VERSION }}"
           ./Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- \
-            --prefix=/usr/x86_64-w64-mingw32 \
-            no-shared no-docs no-tests
+            --prefix=/usr/x86_64-w64-mingw32 --libdir=lib \
+            no-shared no-tests
           make -j$(nproc)
           sudo make install_sw
 

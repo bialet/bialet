@@ -1375,7 +1375,7 @@ DEF_PRIMITIVE(date_current) {
   char       fullDate[20];
   time_t     now = time(NULL);
   struct tm* local = localtime(&now);
-  strftime(fullDate, 20, "%F %T", local);
+  strftime(fullDate, 20, "%Y-%m-%d %H:%M:%S", local);
   RETURN_VAL(wrenNewString(vm, fullDate));
 }
 
