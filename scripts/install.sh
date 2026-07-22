@@ -30,13 +30,89 @@ case "$ARCH" in
   *)              abort "Unsupported architecture: $ARCH" ;;
 esac
 
-# ── Check dependencies ─────────────────────────────────────────
-require() {
-  command -v "$1" >/dev/null 2>&1 || abort "$1 is required but not installed."
+# ── Detect package manager ─────────────────────────────────────
+detect_package_manager() {
+  if [ "$(uname -s)" = "Darwin" ]; then
+    command -v brew >/dev/null 2>&1 && echo "brew" || echo "macos-nobrew"
+    return
+  fi
+  local pm
+  for pm in dnf apt-get apk pacman zypper yum; do
+    if command -v "$pm" >/dev/null 2>&1; then
+      echo "$pm"
+      return
+    fi
+  done
+  echo "unknown"
 }
-require curl
-require tar
-require mktemp
+
+pm="$(detect_package_manager)"
+
+sudo_cmd=""
+case "$pm" in
+  macos-nobrew|unknown) ;;
+  brew) ;;
+  *) command -v sudo >/dev/null 2>&1 && sudo_cmd="sudo" ;;
+esac
+
+# ── Installer dependencies (needed by this script) ──────────────
+REQUIRED=(curl tar mktemp)
+missing=()
+for cmd in "${REQUIRED[@]}"; do
+  command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+done
+
+if [ ${#missing[@]} -gt 0 ]; then
+  yellow "==> Installing installer dependencies: ${missing[*]}"
+  case "$pm" in
+    dnf)
+      $sudo_cmd dnf install -y "${missing[@]}"
+      ;;
+    yum)
+      $sudo_cmd yum install -y "${missing[@]}"
+      ;;
+    apt-get)
+      $sudo_cmd apt-get update -qq
+      DEBIAN_FRONTEND=noninteractive $sudo_cmd apt-get install -y -q "${missing[@]}"
+      ;;
+    apk)
+      $sudo_cmd apk add --no-cache "${missing[@]}"
+      ;;
+    pacman)
+      $sudo_cmd pacman -Sy --noconfirm "${missing[@]}"
+      ;;
+    zypper)
+      $sudo_cmd zypper -n install "${missing[@]}"
+      ;;
+    brew)
+      brew install "${missing[@]}"
+      ;;
+    macos-nobrew)
+      echo "Error: missing ${missing[*]} on macOS without Homebrew." >&2
+      echo "Install Homebrew from https://brew.sh and re-run, or install the packages manually." >&2
+      exit 1
+      ;;
+    unknown|*)
+      echo "Error: could not detect a supported package manager." >&2
+      echo "Detected: OS=$(uname -s), Arch=$(uname -m)" >&2
+      echo "Install ${missing[*]} manually and re-run." >&2
+      exit 1
+      ;;
+  esac
+fi
+
+# ── App runtime dependencies (macOS only; Linux binary is static) ─
+if [ "$OS" = "Darwin" ]; then
+  case "$pm" in
+    brew)
+      brew install sqlite3 curl openssl 2>/dev/null || true
+      ;;
+    macos-nobrew)
+      yellow "==> Warning: cannot install app dependencies without Homebrew."
+      yellow "    Install sqlite3, openssl, and curl manually."
+      ;;
+  esac
+fi
 
 # ── Fetch latest release tag ───────────────────────────────────
 echo "==> Fetching latest Bialet release..."
