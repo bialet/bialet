@@ -1,4 +1,5 @@
 TARGET_EXEC := bialet
+LSP_EXEC := bialet-lsp
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 DOCS_DIRS := ./docs
@@ -38,6 +39,18 @@ endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
+# LSP binary - reuses Wren compiler/VM .o files, excludes main.c
+LSP_OBJS := $(BUILD_DIR)/bialet-lsp.c.o
+LSP_OBJS += $(filter-out %/main.c.o, $(OBJS))
+
+$(BUILD_DIR)/bialet-lsp: $(LSP_OBJS)
+	$(CC) $(CFLAGS) $(LSP_OBJS) -o $@ $(LDFLAGS)
+
+$(BUILD_DIR)/bialet-lsp.c.o: bialet-lsp.c | $(OBJ_DIRS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+lsp: $(BUILD_DIR)/$(LSP_EXEC)
+
 wren_files:
 	python3 tools/wren_to_c_string.py src/bialet.wren.inc src/bialet.wren
 	python3 tools/wren_to_c_string.py src/bialet_test.wren.inc src/bialet_test.wren
@@ -71,6 +84,10 @@ install-hooks:
 	git config core.hooksPath .githooks
 	@echo "Pre-commit hook installed (clang-format validation + make check)."
 
+lsp-install: $(BUILD_DIR)/$(LSP_EXEC)
+	mkdir -p $(INSTALL_DIR)
+	cp $(BUILD_DIR)/$(LSP_EXEC) $(INSTALL_DIR)
+
 uninstall:
 	rm -f $(INSTALL_DIR)/$(TARGET_EXEC)
 
@@ -101,4 +118,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files install uninstall check html static install-hooks
+.PHONY: all clean wren_files install uninstall check html static install-hooks lsp lsp-install

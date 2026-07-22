@@ -288,6 +288,9 @@ typedef enum {
   WREN_RESULT_RUNTIME_ERROR
 } WrenInterpretResult;
 
+typedef void (*WrenCheckErrorFn)(int line, int col, const char* message,
+                                  void* userData);
+
 // The type of an object stored in a slot.
 //
 // This is not necessarily the object's *class*, but instead its low level
@@ -332,6 +335,9 @@ WREN_API void wrenCollectGarbage(WrenVM* vm);
 // context of resolved [module].
 WREN_API WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
                                            const char* source);
+
+WREN_API bool wrenCheckSyntax(WrenVM* vm, const char* source,
+                               WrenCheckErrorFn onError, void* userData);
 
 // Creates a handle that can be used to invoke a method with [signature] on
 // using a receiver and arguments that are set up on the stack.

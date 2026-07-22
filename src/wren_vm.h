@@ -109,6 +109,11 @@ struct WrenVM {
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+
+  // Temporary storage for syntax-check error callback (set by wrenCheckSyntax,
+  // picked up by wrenCompile).
+  WrenCheckErrorFn checkErrorFn;
+  void*            checkErrorUserData;
 };
 
 // A generic allocation function that handles all explicit memory management.

@@ -144,6 +144,64 @@ detected).
 | `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
 | `make html`         | Build the documentation with Sphinx                                                     |
 | `make clean`        | Remove `build/` and test databases                                                      |
+| `make lsp`          | Build the language server binary to `./build/bialet-lsp`                                |
+| `make lsp-install`  | Copy the language server binary to `~/.local/bin`                                       |
+| `make install-hooks`| Enable the pre-commit hook (clang-format validation + make check)                       |
+
+### Building the Language Server
+
+Build the LSP binary:
+
+```bash
+make lsp
+```
+
+Optionally install it alongside `bialet`:
+
+```bash
+make lsp-install
+```
+
+## Editor Integration
+
+### Visual Studio Code
+
+Add to your `.vscode/settings.json` or user settings:
+
+```json
+{
+  "bialet.lsp.path": "bialet-lsp"
+}
+```
+
+Create a simple extension or use a generic LSP client extension like
+[glint](https://marketplace.visualstudio.com/items?itemName=glint.bialet)
+to connect to `bialet-lsp`. The server speaks standard LSP over stdio and
+provides diagnostics, completions, and go-to-definition.
+
+### Neovim
+
+Using `nvim-lspconfig`:
+
+```lua
+local lspconfig = require('lspconfig')
+local configs = require('lspconfig.configs')
+
+if not configs.bialet then
+  configs.bialet = {
+    default_config = {
+      cmd = { 'bialet-lsp' },
+      filetypes = { 'wren' },
+      root_dir = lspconfig.util.root_pattern('.git', '_app.wren', 'index.wren'),
+      single_file_support = true,
+    },
+  }
+end
+
+lspconfig.bialet.setup({})
+```
+
+Using `lsp-zero` / `mason.nvim`: point the `cmd` to your `bialet-lsp` binary.
 
 ## Development
 

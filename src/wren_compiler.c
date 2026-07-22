@@ -206,6 +206,10 @@ typedef struct {
 
   // If a syntax or compile error has occurred.
   bool hasError;
+
+  // Optional callback for syntax-check-only error reporting.
+  WrenCheckErrorFn checkErrorFn;
+  void*            checkErrorUserData;
 } Parser;
 
 typedef struct {
@@ -411,15 +415,16 @@ static const int stackEffects[] = {
 #undef OPCODE
 };
 
+static int getColumn(const char* source, const char* position) {
+  const char* p = position;
+  while(p > source && *(p - 1) != '\n')
+    p--;
+  return (int)(position - p);
+}
+
 static void printError(Parser* parser, int line, const char* label,
                        const char* format, va_list args) {
   parser->hasError = true;
-  if(!parser->printErrors)
-    return;
-
-  // Only report errors if there is a WrenErrorFn to handle them.
-  if(parser->vm->config.errorFn == NULL)
-    return;
 
   // Format the label and message.
   char message[ERROR_MESSAGE_SIZE];
@@ -438,6 +443,21 @@ static void printError(Parser* parser, int line, const char* label,
 
   // Ensure null termination
   message[ERROR_MESSAGE_SIZE - 1] = '\0';
+
+  int col = getColumn(parser->source, parser->previous.start);
+
+  // If a syntax-check callback is set, report through that.
+  if(parser->checkErrorFn != NULL) {
+    parser->checkErrorFn(line, col, message, parser->checkErrorUserData);
+    return;
+  }
+
+  if(!parser->printErrors)
+    return;
+
+  // Only report errors if there is a WrenErrorFn to handle them.
+  if(parser->vm->config.errorFn == NULL)
+    return;
 
   ObjString*  module = parser->module->name;
   const char* module_name = module ? module->value : "<unknown>";
@@ -3872,6 +3892,8 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
 
   parser.printErrors = printErrors;
   parser.hasError = false;
+  parser.checkErrorFn = vm->checkErrorFn;
+  parser.checkErrorUserData = vm->checkErrorUserData;
 
   // Read the first token into next
   nextToken(&parser);

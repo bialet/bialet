@@ -1441,6 +1441,35 @@ ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source
   return closure;
 }
 
+bool wrenCheckSyntax(WrenVM* vm, const char* source, WrenCheckErrorFn onError,
+                     void* userData) {
+  Value moduleName = wrenNewString(vm, "_lsp_check");
+  wrenPushRoot(vm, AS_OBJ(moduleName));
+
+  ObjModule* module = wrenNewModule(vm, AS_STRING(moduleName));
+  wrenPushRoot(vm, (Obj*)module);
+
+  ObjModule* coreModule = getModule(vm, NULL_VAL);
+  for(int i = 0; i < coreModule->variables.count; i++) {
+    wrenDefineVariable(vm, module, coreModule->variableNames.data[i]->value,
+                       coreModule->variableNames.data[i]->length,
+                       coreModule->variables.data[i], NULL);
+  }
+
+  vm->checkErrorFn = onError;
+  vm->checkErrorUserData = userData;
+
+  ObjFn* fn = wrenCompile(vm, module, source, false, false);
+
+  vm->checkErrorFn = NULL;
+  vm->checkErrorUserData = NULL;
+
+  wrenPopRoot(vm); // module
+  wrenPopRoot(vm); // moduleName
+
+  return fn != NULL;
+}
+
 Value wrenGetModuleVariable(WrenVM* vm, Value moduleName, Value variableName) {
   ObjModule* module = getModule(vm, moduleName);
   if(module == NULL) {

@@ -35,6 +35,9 @@ typedef struct sCompiler Compiler;
 ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
                    bool isExpression, bool printErrors);
 
+bool wrenCheckSyntax(WrenVM* vm, const char* source, WrenCheckErrorFn onError,
+                     void* userData);
+
 // When a class is defined, its superclass is not known until runtime since
 // class definitions are just imperative statements. Most of the bytecode for a
 // a method doesn't care, but there are two places where it matters:
