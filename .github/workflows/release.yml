@@ -79,6 +79,56 @@ jobs:
           name: bialet-macos-arm64
           path: dist/
 
+  # ── Windows x86_64 (cross-compiled, static) ─────────────────────
+  build-windows:
+    name: Windows x86_64
+    runs-on: ubuntu-22.04
+    env:
+      SQLITE_YEAR: 2024
+      SQLITE_VERSION: 3460100
+      OPENSSL_VERSION: 3.0.15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64-posix
+
+      - name: Build SQLite (static, for Windows)
+        run: |
+          curl -fsSLO "https://www.sqlite.org/${{ env.SQLITE_YEAR }}/sqlite-amalgamation-${{ env.SQLITE_VERSION }}.zip"
+          unzip -q "sqlite-amalgamation-${{ env.SQLITE_VERSION }}.zip"
+          cd "sqlite-amalgamation-${{ env.SQLITE_VERSION }}"
+          x86_64-w64-mingw32-gcc -c sqlite3.c -O2 -o sqlite3.o
+          x86_64-w64-mingw32-ar rcs libsqlite3.a sqlite3.o
+          sudo install -Dm644 libsqlite3.a /usr/x86_64-w64-mingw32/lib/libsqlite3.a
+          sudo install -Dm644 sqlite3.h sqlite3ext.h -t /usr/x86_64-w64-mingw32/include/
+
+      - name: Build OpenSSL (static, for Windows)
+        run: |
+          curl -fsSLO "https://www.openssl.org/source/openssl-${{ env.OPENSSL_VERSION }}.tar.gz"
+          tar xf "openssl-${{ env.OPENSSL_VERSION }}.tar.gz"
+          cd "openssl-${{ env.OPENSSL_VERSION }}"
+          ./Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- \
+            --prefix=/usr/x86_64-w64-mingw32 \
+            no-shared no-docs no-tests
+          make -j$(nproc)
+          sudo make install_sw
+
+      - name: Build bialet (static)
+        run: make clean && CC=x86_64-w64-mingw32-gcc make static
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          zip -j dist/bialet-${{ github.ref_name }}-windows-x86_64.zip build/bialet.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bialet-windows-x86_64
+          path: dist/
+
   # ── GitHub Release ─────────────────────────────────────────────
   release:
     name: Create GitHub Release
@@ -86,6 +136,7 @@ jobs:
       - build-linux
       - build-linux-arm64
       - build-macos-arm64
+      - build-windows
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -100,5 +151,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}
-          files: dist/*.tar.gz
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
           generate_release_notes: true

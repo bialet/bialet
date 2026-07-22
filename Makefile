@@ -74,8 +74,13 @@ clean:
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
-# Static build — self-contained Linux binary with all deps linked in
-ifeq ($(OS),Linux)
+# Static build — self-contained binary with all deps linked in
+# MinGW cross-compilation (Windows) — uses -static, no libcurl on Windows
+ifneq (,$(findstring mingw32,$(CC)))
+static: $(OBJS)
+	$(CC) -static $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 \
+		-lm -lpthread -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
+else ifeq ($(OS),Linux)
 CURL_STATIC_LIBS := $(shell curl-config --static-libs 2>/dev/null || echo '-lcurl')
 static: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 -lm -lpthread -ldl \
