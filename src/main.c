@@ -26,8 +26,10 @@
 #include <windows.h>
 
 #include "getopt.h"
+#include <signal.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <time.h>
 
 #define DIV 1048576
 #define WIDTH 7
@@ -190,6 +192,7 @@ int main(int argc, char* argv[]) {
   char*            validate_file = NULL;
   char*            test_dir = NULL;
   int              run_tests = 0;
+#if !IS_WIN
   struct sigaction sa;
   sa.sa_handler = sigintHandler;
   sa.sa_flags = 0;
@@ -198,6 +201,11 @@ int main(int argc, char* argv[]) {
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);
+#else
+  signal(SIGINT, sigintHandler);
+  signal(SIGTERM, sigintHandler);
+  signal(SIGABRT, sigintHandler);
+#endif
 
 #if IS_LINUX
   pid_t         pid;
