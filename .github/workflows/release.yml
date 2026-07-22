@@ -19,7 +19,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev \
-            libnghttp2-dev libidn2-dev librtmp-dev libssh2-1-dev libpsl-dev \
+            libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev
 
       - name: Build (static)
@@ -46,7 +46,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git \
-            libnghttp2-dev libidn2-dev librtmp-dev libssh2-1-dev libpsl-dev \
+            libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev
       - uses: actions/checkout@v4
       - name: Build (static)
