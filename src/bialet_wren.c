@@ -93,7 +93,7 @@ char* bialetReadFile(const char* path) {
 
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
-     (resolved[root_len] != '/' && resolved[root_len] != '\0')) {
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' && resolved[root_len] != '\0')) {
     message(red("Error"), "Path traversal attempt in bialetReadFile");
     return NULL;
   }
@@ -240,7 +240,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
 
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
-     (resolved[root_len] != '/' && resolved[root_len] != '\0')) {
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' && resolved[root_len] != '\0')) {
     return result;
   }
 

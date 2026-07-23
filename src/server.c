@@ -553,7 +553,7 @@ void handle_client(bialet_socket_t client_socket) {
   if(realpath(path, resolved_path) != NULL) {
     size_t root_len = strlen(bialet_config.full_root_dir);
     if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
-       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\0')) {
+       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' && resolved_path[root_len] != '\0')) {
       message(red("Security Error"), "Path traversal blocked", path);
       clean_http_message(hm);
       response.status = 403;
