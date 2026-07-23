@@ -67,6 +67,14 @@
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
+// Bialet logo is a bycicle however tehre is no emoji support on Windows terminal.
+// We will use a dot instead, empty logo looks bad as well.
+#if IS_WIN
+#define BIALET_LOGO "•"
+#else
+#define BIALET_LOGO "🚲"
+# endif
+
 struct BialetConfig    bialet_config;
 time_t                 last_reload = 0;
 static volatile int8_t keep_running = 1;
@@ -178,7 +186,7 @@ char* serverUrl(int port) {
 }
 
 void welcome(int port) {
-  message("🚲", green("bialet"), "is riding on", blue(serverUrl(port)));
+  message(BIALET_LOGO, green("bialet"), "is riding on", blue(serverUrl(port)));
 }
 
 void sigintHandler(int signum) {
