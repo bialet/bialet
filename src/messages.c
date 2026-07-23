@@ -8,6 +8,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#if IS_WIN
+#include <windows.h>
+#endif
+
 #define GREEN_COLOR 32
 #define RED_COLOR 31
 #define YELLOW_COLOR 33
@@ -21,6 +25,13 @@ int   apply_color = 0;
 void messageInit(struct BialetConfig* config) {
   log_file = config->log_file;
   apply_color = config->output_color;
+#if IS_WIN
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  DWORD mode = 0;
+  if(GetConsoleMode(hOut, &mode)) {
+    SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+  }
+#endif
   if(!isatty(1))
     apply_color = 0;
 }
