@@ -1,4 +1,4 @@
-// Generated automatically from ./src/wren_core.wren. Do not edit.
+// Generated automatically from src/wren_core.wren. Do not edit.
 static const char* coreModuleSource =
 "class Bool {\n"
 "  [key] { null }\n"
@@ -512,5 +512,27 @@ static const char* coreModuleSource =
 "      return Query.new(\"%(this) ORDER BY %(col) %(dir.upper) LIMIT %(limit)\")\n"
 "    }\n"
 "    return Query.new(\"%(this) ORDER BY %(col) %(dir.upper)\")\n"
+"  }\n"
+"  save(values) {\n"
+"    if (this.toString.trim().upper.startsWith(\"BIALET_\")) return false\n"
+"    var keys = []\n"
+"    var bind = []\n"
+"    var params = []\n"
+"    var v\n"
+"    for (val in values) {\n"
+"      v = val\n"
+"      if (v is MapEntry) {\n"
+"        v = val.value\n"
+"        keys.add(val.key)\n"
+"      }\n"
+"      if (v is Query) {\n"
+"        bind.add(v.toString)\n"
+"      } else {\n"
+"        bind.add(\"?\")\n"
+"        params.add(v)\n"
+"      }\n"
+"    }\n"
+"    var k = keys.count > 0 ? \"(%(keys.join(\",\")))\" : \"\"\n"
+"    return Query.fromString(\"REPLACE INTO `%(this)` %(k) VALUES (%(bind.join(',')))\", params)\n"
 "  }\n"
 "}\n";

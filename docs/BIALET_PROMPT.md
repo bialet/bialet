@@ -21,7 +21,7 @@ Bialet applications follow a **classic web development approach**, similar to tr
 // CORRECT - single line, implicit return
 static count() { `SELECT COUNT(*) FROM users`.toNum }
 static all() { `SELECT * FROM users`.fetch.to(User) }
-save() { _id = Db.save("users", this) }
+save() { _id = `users`.save(this) }
 
 // AVOID - multi-line requires explicit return
 static count() {
@@ -281,7 +281,7 @@ class User {
   isValid { _email.contains("@") && _name.count > 0 }
 
   // Save to database
-  save() { _id = Db.save("users", this) }
+  save() { _id = `users`.save(this) }
 
   // Delete from database
   destroy() { `DELETE FROM users WHERE id = ?`.query(_id) }
@@ -688,14 +688,14 @@ var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(name, email)
 // Delete
 `DELETE FROM users WHERE id = ?`.query(id)
 
-// Using Db.save for insert/update
+// Using `.save()` on table queries for insert/update
 var userData = {"name": "John", "email": "john@example.com"}
-var id = Db.save("users", userData)
+var id = `users`.save(userData)
 
 // Update existing record
 userData["id"] = id
 userData["name"] = "John Doe"
-Db.save("users", userData)
+`users`.save(userData)
 ```
 
 ### Query Methods
@@ -932,7 +932,7 @@ Keep simple methods on one line to leverage implicit returns:
 ```wren
 // Good
 static all() { `SELECT * FROM users`.fetch.to(User) }
-save() { _id = Db.save("users", this) }
+save() { _id = `users`.save(this) }
 name { _name }
 
 // Avoid unless complex logic requires multiple lines
@@ -1038,7 +1038,7 @@ class Email {
     return e
   }
 
-  save() { _id = Db.save("emails", this) }
+  save() { _id = `emails`.save(this) }
 
   static find(id) { `SELECT * FROM emails WHERE id = ?`.first(id).to(Email) }
   static pending() { `SELECT * FROM emails WHERE status = 'pending'`.fetch.to(Email) }
@@ -1066,7 +1066,7 @@ class Template {
   body=(val) { _body = val }
   variables=(val) { _variables = val is List ? val.join(",") : val }
 
-  save() { _id = Db.save("templates", this) }
+  save() { _id = `templates`.save(this) }
 
   static all() { `SELECT * FROM templates ORDER BY name`.fetch.to(Template) }
   static find(id) { `SELECT * FROM templates WHERE id = ?`.first(id).to(Template) }

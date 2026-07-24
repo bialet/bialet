@@ -155,7 +155,7 @@ Your whole app in one file (``app.wren``)
 
    // 2. Handle POST requests and save data
    if (Request.isPost) {
-     Db.save("messages", {"text": Request.post("msg")})
+     `messages`.save({"text": Request.post("msg")})
    }
 
    // 3. Fetch data using pure SQL

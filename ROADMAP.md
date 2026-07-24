@@ -9,7 +9,7 @@ improvements. Priorities may shift based on community feedback.
 - Inline HTML strings with interpolation (`{{ }}`)
 - Built-in SQLite with migrations, Query objects, `.fetch()`, `.first()`,
   `.val()`, `.toNum()`, `.toBool()`
-- CRUD operations via `Db.save()` and `Db.delete()`
+- CRUD operations via `.save()` on table queries and `Db.delete()`
 - Sessions, cookies, CSRF protection
 - CORS support for REST APIs
 - Cron-style scheduled tasks (`Cron.every`, `Cron.at`)

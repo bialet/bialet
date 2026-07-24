@@ -620,4 +620,26 @@ class Query {
     }
     return Query.new("%(this) ORDER BY %(col) %(dir.upper)")
   }
+  save(values) {
+    if (this.toString.trim().upper.startsWith("BIALET_")) return false
+    var keys = []
+    var bind = []
+    var params = []
+    var v
+    for (val in values) {
+      v = val
+      if (v is MapEntry) {
+        v = val.value
+        keys.add(val.key)
+      }
+      if (v is Query) {
+        bind.add(v.toString)
+      } else {
+        bind.add("?")
+        params.add(v)
+      }
+    }
+    var k = keys.count > 0 ? "(%(keys.join(",")))" : ""
+    return Query.fromString("REPLACE INTO `%(this)` %(k) VALUES (%(bind.join(',')))", params)
+  }
 }

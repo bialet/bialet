@@ -38,6 +38,7 @@ run_test "Database save and fetch     " "db"              200 "John Doe"
 run_test "Query order by              " "query-order"     200 "item2,item3,item1"
 run_test "Query val method            " "query-val"       200 "testvalue"
 run_test "Query toNum method          " "query-tonum"     200 "50"
+run_test "Query save method            " "save"            200 "hello updated"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"

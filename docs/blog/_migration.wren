@@ -9,7 +9,7 @@ Db.migrate("Posts Table", `
 `)
 
 Db.migrate("Posts Data", Fn.new{
-  Db.save("posts", {
+  `posts`.save({
   "title": "Lorem ipsum",
   "slug": "lorem-ipsum",
   "content": <div>
@@ -18,7 +18,7 @@ Db.migrate("Posts Data", Fn.new{
       <p>Aliquam erat volutpat. Nunc vitae fringilla massa, eget laoreet nunc.</p>
     </div>,
   })
-  Db.save("posts", {
+  `posts`.save({
     "title": "Journey to the Cloud",
     "slug": "journey-to-the-cloud",
     "content": <div>
@@ -27,7 +27,7 @@ Db.migrate("Posts Data", Fn.new{
         <p>Security, compliance, and downtime are just a few challenges that may arise during the process.</p>
       </div>,
   })
-  Db.save("posts", {
+  `posts`.save({
     "title": "The Art of Coffee Brewing",
     "slug": "art-of-coffee-brewing",
     "content": <div>
