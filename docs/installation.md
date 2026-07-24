@@ -11,9 +11,11 @@ curl -fsSL https://get.bialet.dev | sh
 
 ## For Windows
 
-Download the latest `bialet.exe` from the [releases
-page](https://github.com/bialet/bialet/releases/latest) and run it directly —
-no installation required:
+Download the latest `bialet.exe` (inside the zip) directly:
+
+- **[bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})**
+
+Extract and run — no installation required:
 
 ```bash
 bialet.exe
@@ -22,21 +24,21 @@ bialet.exe
 ## Releases
 
 Pre-built binaries for all supported platforms are available on the [releases
-page](https://github.com/bialet/bialet/releases/latest):
+page](https://github.com/bialet/bialet/releases):
 
-| Platform       | Asset                                                               |
-| -------------- | ------------------------------------------------------------------- |
-| macOS ARM64    | `bialet-v*.*.*-macos-arm64.tar.gz`                                  |
-| Linux x86\_64  | `bialet-v*.*.*-linux-x86_64.tar.gz`                                 |
-| Linux ARM64    | `bialet-v*.*.*-linux-arm64.tar.gz`                                  |
-| Windows x86\_64| `bialet-v*.*.*-windows-x86_64.zip`                                  |
+| Platform        | Download                                                                       |
+| --------------- | ------------------------------------------------------------------------------ |
+| macOS ARM64     | [bialet-{{release_tag}}-macos-arm64.tar.gz]({{release_macos_arm64_url}})       |
+| Linux x86\_64   | [bialet-{{release_tag}}-linux-x86_64.tar.gz]({{release_linux_x64_url}})        |
+| Linux ARM64     | [bialet-{{release_tag}}-linux-arm64.tar.gz]({{release_linux_arm64_url}})       |
+| Windows x86\_64 | [bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})           |
 
 Download the archive for your platform, extract it, and place the binary
 (`bialet` on macOS/Linux, `bialet.exe` on Windows) in your `PATH`:
 
 ```bash
 # macOS / Linux
-tar xzf bialet-v*-linux-x86_64.tar.gz
+tar xzf bialet-{{release_tag}}-linux-x86_64.tar.gz
 sudo mv bialet /usr/local/bin/
 ```
 
