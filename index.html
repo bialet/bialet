@@ -7,12 +7,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="Bialet is a full-stack web framework made to enhance HTML with a native integration to a persistent database" name="description" />
+<meta content="A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.." name="description" />
 <meta property="og:title" content="Bialet" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/index.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Install Bialet with a single command — macOS ARM, Ubuntu x86_64, or Ubuntu ARM: Features: Zero Configuration Start coding in seconds — no YAML, no JSON, no setup files. Run bialet in any directory ..." />
+<meta property="og:description" content="Features: A Tiny Single Binary Drop the gigabytes of node_modules. Bialet is a small, self-contained executable. Copy it to your server, and your app is deployed. SQLite is Built-in Forget about pr..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
 
@@ -64,7 +64,7 @@
     <link rel="next" title="Getting Started" href="getting-started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10" />
+  <meta name="docsearch:version" content="0.10.4" />
   </head>
   
   
@@ -91,20 +91,79 @@
 <h1>Bialet<a class="headerlink" href="#bialet" title="Link to this heading">#</a></h1>
 <div style="text-align: center; margin: 2em 0 1em 0">
     <img src="_static/logo.png" alt="Bialet" style="width: 140px; margin-bottom: 0.5em" />
-    <h1 style="font-size: 2.5em; font-weight: 700; margin: 0 0 0.25em 0">
-        Web apps from HTML and SQL. Nothing else.
+    <h1 style="font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 700; margin: 0 0 0.25em 0">
+        Web development became a spaceship. Bialet is a bicycle.
     </h1>
-    <p style="font-size: 1.15em; color: var(--sd-color-secondary); max-width: 32em; margin: 0 auto 1.25em auto">
-        One binary under 1 MB with a built-in database. No build step, no
-        dependencies, no config — <strong>write a file, refresh the browser.</strong>
+    <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: var(--sd-color-secondary); max-width: 34em; margin: 0 auto 1.25em auto">
+        Build data-driven web apps from a single file. No NPM, no YAML,
+        no separate database servers. Just a <strong>tiny binary</strong> with
+        a built-in HTTP server, a lightweight scripting language, and SQLite.
     </p>
-</div><p>Install Bialet with a single command — macOS ARM, Ubuntu x86_64, or Ubuntu ARM:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</pre></div>
+</div><div id="bialet-download" style="text-align: center; margin: 1.5em 0 2em 0">
+
+  <!-- Unix (Linux / macOS): curl command with copy button -->
+  <div id="download-unix" style="display: none">
+    <span id="download-os-label-unix" style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em"></span>
+    <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
+      <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
+      <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Windows: download button -->
+  <div id="download-win" style="display: none">
+    <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-windows-x86_64.zip" style="font-size: 1.05em; padding: 0.55em 1.5em">
+       Download for Windows (.zip)
+    </a>
+    <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
+      Zero installation required. Just extract and run.<br/>
+    </p>
+  </div>
+
+  <!-- Fallback: curl + all platforms -->
+  <div id="download-other" style="display: block">
+    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
+      Download Binaries
+    </a>
+    <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
+      Zero installation required. Just extract and run.<br/>
+    </p>
+  </div>
+
+  <div>
+    <p style="margin-top: 0.6em; font-size: 0.9em;">
+      <a href="installation.html">All platforms & install options</a>
+    </p>
+  </div>
+
 </div>
-<div style="text-align: center; margin: 1.5em 0 2em 0">
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0 0.35em">Get Started</a>
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet" style="margin: 0 0.35em">
+
+<script>
+  (function() {
+    var unix = document.getElementById('download-unix');
+    var win = document.getElementById('download-win');
+    var other = document.getElementById('download-other');
+    var label = document.getElementById('download-os-label-unix');
+    if (!unix || !win || !other) return;
+    var ua = navigator.userAgent || '';
+    if (/windows/i.test(ua)) {
+      win.style.display = 'block';
+      other.style.display = 'none';
+    } else if (/linux|mac/i.test(ua)) {
+      var osName = /mac/i.test(ua) ? 'Install for macOS' : 'Install for Linux';
+      if (label) label.textContent = osName;
+      unix.style.display = 'block';
+      other.style.display = 'none';
+    }
+  })();
+</script>
+
+<div style="text-align: center; margin: 1.5em 0 1.5em 0">
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Get Started</a>
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet" style="margin: 0.35em">
     <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
     View on GitHub
   </a>
@@ -117,12 +176,13 @@
 <div class="sd-col sd-d-flex-row docutils">
 <div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
 <div class="sd-card-header docutils">
-<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-zap sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M16.168 2.924L4.51 13.061a.25.25 0 00.164.439h5.45a.75.75 0 01.692 1.041l-2.559 6.066 11.215-9.668a.25.25 0 00-.164-.439H14a.75.75 0 01-.687-1.05l2.855-6.526zm-.452-1.595a1.341 1.341 0 012.109 1.55L15.147 9h4.161c1.623 0 2.372 2.016 1.143 3.075L8.102 22.721a1.149 1.149 0 01-1.81-1.317L8.996 15H4.674c-1.619 0-2.37-2.008-1.148-3.07l12.19-10.6z"></path></svg></p>
+<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-package sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.876.64a1.75 1.75 0 00-1.75 0l-8.25 4.762a1.75 1.75 0 00-.875 1.515v9.525c0 .625.334 1.203.875 1.515l8.25 4.763a1.75 1.75 0 001.75 0l8.25-4.762a1.75 1.75 0 00.875-1.516V6.917a1.75 1.75 0 00-.875-1.515L12.876.639zm-1 1.298a.25.25 0 01.25 0l7.625 4.402-7.75 4.474-7.75-4.474 7.625-4.402zM3.501 7.64v8.803c0 .09.048.172.125.216l7.625 4.402v-8.947L3.501 7.64zm9.25 13.421l7.625-4.402a.25.25 0 00.125-.216V7.639l-7.75 4.474v8.947z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Zero Configuration</strong></p>
-<p class="sd-card-text">Start coding in seconds — no YAML, no JSON, no setup files. Run
-<code class="docutils literal notranslate"><span class="pre">bialet</span></code> in any directory and it just works.</p>
+<p class="sd-card-text"><strong>A Tiny Single Binary</strong></p>
+<p class="sd-card-text">Drop the gigabytes of <code class="docutils literal notranslate"><span class="pre">node_modules</span></code>. Bialet is a small,
+self-contained executable. Copy it to your server, and your app
+is deployed.</p>
 </div>
 </div>
 </div>
@@ -132,21 +192,9 @@
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-database sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 1.25c-2.487 0-4.774.402-6.466 1.079-.844.337-1.577.758-2.112 1.264C2.886 4.1 2.5 4.744 2.5 5.5v12.987l.026.013H2.5c0 .756.386 1.4.922 1.907.535.506 1.268.927 2.112 1.264 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079c.844-.337 1.577-.758 2.112-1.264.536-.507.922-1.151.922-1.907h-.026l.026-.013V5.5c0-.756-.386-1.4-.922-1.907-.535-.506-1.268-.927-2.112-1.264C16.773 1.652 14.487 1.25 12 1.25zM4 5.5c0-.21.104-.487.453-.817.35-.332.899-.666 1.638-.962C7.566 3.131 9.655 2.75 12 2.75c2.345 0 4.434.382 5.909.971.74.296 1.287.63 1.638.962.35.33.453.606.453.817 0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962C4.103 5.987 4 5.711 4 5.5zM20 12V7.871a7.842 7.842 0 01-1.534.8C16.773 9.348 14.487 9.75 12 9.75s-4.774-.402-6.466-1.079A7.843 7.843 0 014 7.871V12c0 .21.104.487.453.817.35.332.899.666 1.638.961 1.475.59 3.564.972 5.909.972 2.345 0 4.434-.382 5.909-.972.74-.295 1.287-.629 1.638-.96.35-.33.453-.607.453-.818zM4 14.371c.443.305.963.572 1.534.8 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079a7.842 7.842 0 001.534-.8v4.116l.013.013H20c0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962-.35-.33-.453-.606-.453-.817h-.013L4 18.487V14.37z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>SQLite Built-in</strong></p>
-<p class="sd-card-text">Store and query real data with zero setup — no separate DB to install
-or connect. Migrations, queries, and CRUD work out of the box.</p>
-</div>
-</div>
-</div>
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
-<div class="sd-card-header docutils">
-<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-package sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.876.64a1.75 1.75 0 00-1.75 0l-8.25 4.762a1.75 1.75 0 00-.875 1.515v9.525c0 .625.334 1.203.875 1.515l8.25 4.763a1.75 1.75 0 001.75 0l8.25-4.762a1.75 1.75 0 00.875-1.516V6.917a1.75 1.75 0 00-.875-1.515L12.876.639zm-1 1.298a.25.25 0 01.25 0l7.625 4.402-7.75 4.474-7.75-4.474 7.625-4.402zM3.501 7.64v8.803c0 .09.048.172.125.216l7.625 4.402v-8.947L3.501 7.64zm9.25 13.421l7.625-4.402a.25.25 0 00.125-.216V7.639l-7.75 4.474v8.947z"></path></svg></p>
-</div>
-<div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Single Binary</strong></p>
-<p class="sd-card-text">Deploy by copying one file under 1 MB — no runtime, no package manager,
-no external services to provision. Ship anywhere in one step.</p>
+<p class="sd-card-text"><strong>SQLite is Built-in</strong></p>
+<p class="sd-card-text">Forget about provisioning databases or writing connection strings.
+Real data persistence works completely out of the box.</p>
 </div>
 </div>
 </div>
@@ -156,9 +204,21 @@ no external services to provision. Ship anywhere in one step.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-rocket sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M20.322.75a10.75 10.75 0 00-7.373 2.926l-1.304 1.23A23.743 23.743 0 0010.103 6.5H5.066a1.75 1.75 0 00-1.5.85l-2.71 4.514a.75.75 0 00.49 1.12l4.571.963c.039.049.082.096.129.14L8.04 15.96l1.872 1.994c.044.047.091.09.14.129l.963 4.572a.75.75 0 001.12.488l4.514-2.709a1.75 1.75 0 00.85-1.5v-5.038a23.741 23.741 0 001.596-1.542l1.228-1.304a10.75 10.75 0 002.925-7.374V2.499A1.75 1.75 0 0021.498.75h-1.177zM16 15.112c-.333.248-.672.487-1.018.718l-3.393 2.262.678 3.223 3.612-2.167a.25.25 0 00.121-.214v-3.822zm-10.092-2.7L8.17 9.017c.23-.346.47-.685.717-1.017H5.066a.25.25 0 00-.214.121l-2.167 3.612 3.223.679zm8.07-7.644a9.25 9.25 0 016.344-2.518h1.177a.25.25 0 01.25.25v1.176a9.25 9.25 0 01-2.517 6.346l-1.228 1.303a22.248 22.248 0 01-3.854 3.257l-3.288 2.192-1.743-1.858a.764.764 0 00-.034-.034l-1.859-1.744 2.193-3.29a22.248 22.248 0 013.255-3.851l1.304-1.23zM17.5 8a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm-11 13c.9-.9.9-2.6 0-3.5-.9-.9-2.6-.9-3.5 0-1.209 1.209-1.445 3.901-1.49 4.743a.232.232 0 00.247.247c.842-.045 3.534-.281 4.743-1.49z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>No Build Step</strong></p>
-<p class="sd-card-text">See changes instantly — edit a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, refresh the browser,
-done. No compile, no bundler, no watch process.</p>
+<p class="sd-card-text"><strong>Zero Build Step</strong></p>
+<p class="sd-card-text">Write a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, save it, and refresh your browser.
+No compilers, no bundlers, no watch processes.</p>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card-header docutils">
+<p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-code sd-text-info" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8.78 4.97a.75.75 0 010 1.06L2.81 12l5.97 5.97a.75.75 0 11-1.06 1.06l-6.5-6.5a.75.75 0 010-1.06l6.5-6.5a.75.75 0 011.06 0zm6.44 0a.75.75 0 000 1.06L21.19 12l-5.97 5.97a.75.75 0 101.06 1.06l6.5-6.5a.75.75 0 000-1.06l-6.5-6.5a.75.75 0 00-1.06 0z"></path></svg></p>
+</div>
+<div class="sd-card-body docutils">
+<p class="sd-card-text"><strong>HTML is the Real Frontend</strong></p>
+<p class="sd-card-text">Use standard HTML and CSS. Bialet lets you build server-rendered
+apps the classic, straightforward way. Add JS only if you want to.</p>
 </div>
 </div>
 </div>
@@ -166,66 +226,58 @@ done. No compile, no bundler, no watch process.</p>
 </div>
 </section>
 <hr class="docutils" />
-<section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
-<p>Once installed, run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> in your project folder and open <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a>. Here’s a complete app in one <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Bialet is a single-binary web framework: Wren scripting + SQLite, file-based routing.</span>
-<span class="c1">// Drop `.wren` files in a folder, run `bialet`, and you have a server-rendered app.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🚲 Welcome to Bialet showcase&quot;</span>
+<section id="your-whole-app-in-one-file-app-wren">
+<h1>Your whole app in one file (<code class="docutils literal notranslate"><span class="pre">app.wren</span></code>)<a class="headerlink" href="#your-whole-app-in-one-file-app-wren" title="Link to this heading">#</a></h1>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// 1. Create your database table automatically</span>
+<span class="sb">`CREATE TABLE IF NOT EXISTS messages (text TEXT)`</span><span class="o">.</span><span class="n">query</span>
 
-<span class="c1">// Normally, table creation goes in `_migration.wren` (run once at startup).</span>
-<span class="c1">// Placed here so this showcase file is fully self-contained.</span>
-<span class="sb">`CREATE TABLE IF NOT EXISTS items (phrase TEXT)`</span><span class="o">.</span><span class="n">query</span>
-
-<span class="c1">// POST handling</span>
+<span class="c1">// 2. Handle POST requests and save data</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;items&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;phrase&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">})</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;✅ Item saved&#39;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)})</span>
 <span class="p">}</span>
 
-<span class="c1">// Querying</span>
-<span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM items`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="c1">// 3. Fetch data using pure SQL</span>
+<span class="k">var</span><span class="w"> </span><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM messages`</span><span class="o">.</span><span class="n">fetch</span>
 
-<span class="c1">// Inline HTML with `{{ … }}`</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">  &lt;h2&gt;</span><span class="nc">Items</span><span class="x">&lt;/h2&gt;</span>
-<span class="x">  {{ items.count &gt; 0 ?</span>
-<span class="x">    &lt;ul&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;phrase&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;/ul&gt; :</span>
-<span class="x">    &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">items</span><span class="p">,</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">one</span><span class="o">!.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">  </span><span class="p">}}</span>
-<span class="x">&lt;/section&gt;</span>
+<span class="c1">// 4. Return HTML directly</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="nc">Guestbook</span><span class="x">&lt;/h1&gt;</span>
 
-<span class="x">// Every `.wren` file is a handler; `return` sends the response body to the client.</span>
-<span class="x">// Use `&lt;!doctype html&gt;</span><span class="err">`</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="nc">HTML</span><span class="w"> </span><span class="n">pages</span><span class="o">.</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="x">&lt;html&gt;</span>
-<span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.fluid.classless.min.css&quot;&gt;</span>
-<span class="x">  &lt;/head&gt;</span>
-<span class="w">  </span><span class="x">&lt;body&gt;</span>
-<span class="x">    &lt;main&gt;</span>
-<span class="w">      </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">        &lt;input name=&quot;input&quot; placeholder=&quot;Write some text..&quot;&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;submit&quot; value=&quot;Add new item&quot;&gt;</span>
-<span class="x">      &lt;/form&gt;</span>
-<span class="w">      </span><span class="x">&lt;hr&gt;</span>
-<span class="x">      {{ content }}</span>
-<span class="x">    &lt;/main&gt;</span>
-<span class="w">    </span><span class="x">&lt;footer&gt;Made with &lt;a href=&quot;https://bialet.dev&quot;&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;&lt;/footer&gt;</span>
-<span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span>
+<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name=&quot;msg&quot; placeholder=&quot;Write a message...&quot;&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="w">  </span><span class="x">&lt;hr&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>Bialet integrates the object-oriented <a class="reference external" href="https://wren.io/">Wren language</a> with
+<p>Bialet integrates the <a class="reference external" href="https://wren.io/">Wren language</a> with
 a HTTP server and a built-in SQLite database — <strong>in a single binary</strong>.
 No configuration files, no dependencies, no build step. Just write <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
 files and run.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> in your project folder and open <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a>.</p>
+</section>
+<hr class="docutils" />
+<section id="the-bialet-manifesto-ride-light">
+<h1>The Bialet Manifesto — Ride Light 🚲<a class="headerlink" href="#the-bialet-manifesto-ride-light" title="Link to this heading">#</a></h1>
+<div class="tip admonition">
+<p class="admonition-title">Ride Light</p>
+<ol class="arabic simple">
+<li><p><strong>Simplicity is a superpower.</strong> Every line of tooling you don’t write
+is a line of your app that ships faster.</p></li>
+<li><p><strong>Standards, not frameworks.</strong> HTML, SQL, and HTTP have outlived every
+framework. Master them and your knowledge stays relevant.</p></li>
+<li><p><strong>One file to deploy.</strong> No containers, no orchestration, no
+<code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>. Copy the binary — that’s it.</p></li>
+<li><p><strong>Batteries included.</strong> Server, database, templating — all in one
+binary under 1 MB. No external services to provision.</p></li>
+<li><p><strong>Ride light.</strong> Complexity is a choice. Choose less, and you’ll go
+further than you think.</p></li>
+</ol>
+</div>
 </section>
 <hr class="docutils" />
 <section id="who-is-bialet-for">
@@ -238,9 +290,9 @@ files and run.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-beaker sd-text-warning" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8 8.807V3.5h-.563a.75.75 0 010-1.5h9.125a.75.75 0 010 1.5H16v5.307l5.125 9.301c.964 1.75-.302 3.892-2.299 3.892H5.174c-1.998 0-3.263-2.142-2.3-3.892L8 8.807zM14.5 3.5h-5V9a.75.75 0 01-.093.362L7.127 13.5h9.746l-2.28-4.138A.75.75 0 0114.5 9V3.5zM4.189 18.832L6.3 15h11.4l2.111 3.832a1.125 1.125 0 01-.985 1.668H5.174a1.125 1.125 0 01-.985-1.668z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Prototyping &amp; Internal Tools</strong></p>
-<p class="sd-card-text">Spin up a data-driven dashboard or admin panel in minutes. Bialet’s
-all-in-one design means zero infrastructure overhead.</p>
+<p class="sd-card-text"><strong>Internal Tools &amp; Dashboards</strong></p>
+<p class="sd-card-text">Spin up a data-driven admin panel in minutes with zero
+infrastructure overhead.</p>
 </div>
 </div>
 </div>
@@ -250,9 +302,9 @@ all-in-one design means zero infrastructure overhead.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-mortar-board sd-text-warning" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.292 2.06a.75.75 0 00-.584 0L.458 6.81a.75.75 0 000 1.38L4.25 9.793v3.803a2.901 2.901 0 00-1.327.757c-.579.58-.923 1.41-.923 2.43v4.5c0 .248.128.486.335.624.06.04.117.073.22.124.124.062.297.138.52.213.448.149 1.09.288 1.925.288s1.477-.14 1.925-.288c.223-.075.396-.15.52-.213a2.11 2.11 0 00.21-.117A.762.762 0 008 21.28v-4.5c0-1.018-.344-1.85-.923-2.428a2.9 2.9 0 00-1.327-.758v-3.17l5.958 2.516a.75.75 0 00.584 0l5.208-2.2v4.003a2.552 2.552 0 01-.079.085 4.057 4.057 0 01-.849.65c-.826.488-2.255 1.021-4.572 1.021-.612 0-1.162-.037-1.654-.1a.75.75 0 00-.192 1.487c.56.072 1.173.113 1.846.113 2.558 0 4.254-.592 5.334-1.23.538-.316.914-.64 1.163-.896a2.84 2.84 0 00.392-.482h.001A.75.75 0 0019 15v-4.892l4.542-1.917a.75.75 0 000-1.382l-11.25-4.75zM5 15c-.377 0-.745.141-1.017.413-.265.265-.483.7-.483 1.368v4.022c.299.105.797.228 1.5.228s1.201-.123 1.5-.228V16.78c0-.669-.218-1.103-.483-1.368A1.431 1.431 0 005 15zm7-3.564L2.678 7.5 12 3.564 21.322 7.5 12 11.436z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Learning Web Development</strong></p>
-<p class="sd-card-text">Focus on HTML, SQL, and basic logic — not webpack configs, package
-managers, or ORM abstractions.</p>
+<p class="sd-card-text"><strong>Learning &amp; Teaching</strong></p>
+<p class="sd-card-text">Focus on HTML, SQL, and core logic. Skip the webpack configs
+and ORM abstractions.</p>
 </div>
 </div>
 </div>
@@ -262,9 +314,9 @@ managers, or ORM abstractions.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-heart sd-text-warning" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.736 4C4.657 4 2.5 5.88 2.5 8.514c0 3.107 2.324 5.96 4.861 8.12a29.66 29.66 0 004.566 3.175l.073.041.073-.04c.271-.153.661-.38 1.13-.674.94-.588 2.19-1.441 3.436-2.502 2.537-2.16 4.861-5.013 4.861-8.12C21.5 5.88 19.343 4 17.264 4c-2.106 0-3.801 1.389-4.553 3.643a.75.75 0 01-1.422 0C10.537 5.389 8.841 4 6.736 4zM12 20.703l.343.667a.75.75 0 01-.686 0l.343-.667zM1 8.513C1 5.053 3.829 2.5 6.736 2.5 9.03 2.5 10.881 3.726 12 5.605 13.12 3.726 14.97 2.5 17.264 2.5 20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262a31.146 31.146 0 01-5.233 3.576l-.025.013-.007.003-.002.001-.344-.666-.343.667-.003-.002-.007-.003-.025-.013A29.308 29.308 0 0110 20.408a31.147 31.147 0 01-3.611-2.632C3.8 15.573 1 12.332 1 8.514z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Developers Who Value Simplicity</strong></p>
-<p class="sd-card-text">If you prefer a single tool that does one thing well over a dozen
-micro-libraries, Bialet is for you.</p>
+<p class="sd-card-text"><strong>Lovers of Simplicity</strong></p>
+<p class="sd-card-text">If you prefer one tool that does its job perfectly over a chaotic
+stack of micro-libraries, hop on.</p>
 </div>
 </div>
 </div>
@@ -272,8 +324,8 @@ micro-libraries, Bialet is for you.</p>
 </div>
 <hr class="docutils" />
 <div style="text-align: center; margin: 1.5em 0">
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0 0.35em">📖 Documentation</a>
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0 0.35em">All Install Options</a>
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Full Documentation</a>
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
 </div><div class="toctree-wrapper compound">
 </div>
 <hr class="docutils" />

@@ -213,7 +213,7 @@ planned features and improvements.
 Not yet, but you can install and run it in seconds:
 
 ```bash
-curl -sSL https://get.bialet.dev | sh
+curl -fsSL https://get.bialet.dev | sh
 echo 'return <h1>Hello!</h1>' > index.wren
 bialet
 ```
