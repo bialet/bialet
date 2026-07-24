@@ -9,6 +9,37 @@ x86_64, Ubuntu ARM) is with the install script:
 curl -fsSL https://get.bialet.dev | sh
 ```
 
+## For Windows
+
+Download the latest `bialet.exe` from the [releases
+page](https://github.com/bialet/bialet/releases/latest) and run it directly —
+no installation required:
+
+```bash
+bialet.exe
+```
+
+## Releases
+
+Pre-built binaries for all supported platforms are available on the [releases
+page](https://github.com/bialet/bialet/releases/latest):
+
+| Platform       | Asset                                                               |
+| -------------- | ------------------------------------------------------------------- |
+| macOS ARM64    | `bialet-v*.*.*-macos-arm64.tar.gz`                                  |
+| Linux x86\_64  | `bialet-v*.*.*-linux-x86_64.tar.gz`                                 |
+| Linux ARM64    | `bialet-v*.*.*-linux-arm64.tar.gz`                                  |
+| Windows x86\_64| `bialet-v*.*.*-windows-x86_64.zip`                                  |
+
+Download the archive for your platform, extract it, and place the binary
+(`bialet` on macOS/Linux, `bialet.exe` on Windows) in your `PATH`:
+
+```bash
+# macOS / Linux
+tar xzf bialet-v*-linux-x86_64.tar.gz
+sudo mv bialet /usr/local/bin/
+```
+
 ## With Brew
 
 Use [Homebrew](https://brew.sh/) to install Bialet on macOS or Linux:

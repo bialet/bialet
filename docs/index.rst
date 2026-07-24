@@ -31,9 +31,6 @@ Bialet
            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
          </button>
        </div>
-       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-         Prefer a manual download? <a href="https://github.com/bialet/bialet/releases">Get the tarball</a> &middot; <a href="installation.html">All platforms</a>
-       </p>
      </div>
 
      <!-- Windows: download button -->
@@ -44,22 +41,23 @@ Bialet
        </a>
        <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
          Zero installation required. Just extract and run.<br/>
-         <a href="installation.html">See all platforms</a>
        </p>
      </div>
 
      <!-- Fallback: curl + all platforms -->
      <div id="download-other" style="display: block">
-       <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
-         <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
-         <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
-           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
-         </button>
-       </div>
-       <p style="margin-top: 0.5em; margin-bottom: 0.5em; font-size: 0.85em; color: var(--sd-color-secondary)">
-         macOS ARM &bull; Ubuntu x86_64 &bull; Ubuntu ARM
+       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
+         Download Binaries
+       </a>
+       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
+         Zero installation required. Just extract and run.<br/>
        </p>
-       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="installation.html">Other platforms</a>
+     </div>
+
+     <div>
+       <p style="margin-top: 0.6em; font-size: 0.9em;">
+         <a href="installation.html">All platforms & install options</a>
+       </p>
      </div>
 
    </div>
