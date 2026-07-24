@@ -369,7 +369,7 @@ class CreateUser {
       "created_at": Date.now
     }
 
-    var userId = Db.save("users", userData)
+    var userId = `users`.save(userData)
 
     return {
       "status": "success",
