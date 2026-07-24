@@ -158,21 +158,21 @@ var userParams = ["John Doe", "john@example.com"]
 var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(userParams)
 ```
 
-But you can also use the `Db.save` method, sending the table name and the a Map
+But you can also use the `save` method on a table Query, sending a Map
 object with the values.
 
 ```wren
 var user = {"name": "John Doe", "email": "john@example.com"}
-var id = Db.save("users", user)
+var id = `users`.save(user)
 ```
 
-The same method also work for updating the row.
+The same method also works for updating the row.
 
 ```wren
 var user = {"name": "John Doe", "email": "john@example.com"}
 user["id"] = 1
 // This will update the row
-Db.save("users", user)
+`users`.save(user)
 ```
 
 ## Data Types and BLOB Support

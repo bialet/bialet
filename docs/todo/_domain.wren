@@ -14,7 +14,7 @@ class Task {
   createdAt { Date.new(_createdAt) }
   description=(val) { _description = val.toString.trim() }
 
-  save() { Db.save(type, this) }
+  save() { `Task`.save(this) }
 
   toggle() {
     _finished = `

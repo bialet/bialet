@@ -41,6 +41,7 @@ all: $(BUILD_DIR)/$(TARGET_EXEC)
 wren_files:
 	python3 tools/wren_to_c_string.py src/bialet.wren.inc src/bialet.wren
 	python3 tools/wren_to_c_string.py src/bialet_test.wren.inc src/bialet_test.wren
+	python3 tools/wren_to_c_string.py src/wren_core.wren.inc src/wren_core.wren
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)

@@ -1005,27 +1005,16 @@ class Db {
     Db.clean
   }
   static save(table, values) {
-    var keys = []
-    var bind = []
-    var params = []
-    var v
+    var converted = {}
     for (val in values) {
-      v = val
+      var v = val
       if (v is MapEntry) {
         v = val.value
-        keys.add(val.key)
       }
       if (v is Date) v = v.toString.replace("T", " ")
-      if (v is Query) {
-        // add raw query string
-        bind.add(v.toString)
-      } else {
-        bind.add("?")
-        params.add(v)
-      }
+      converted[val.key] = v
     }
-    var k = keys.count > 0 ? "(%(keys.join(",")))" : ""
-    return Query.fromString("REPLACE INTO `%(table)` %(k) VALUES (%(bind.join(',')))", params)
+    return `%(table)`.save(converted)
   }
   static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
