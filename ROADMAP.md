@@ -1,76 +1,44 @@
 # Roadmap
 
 Bialet is in active development. This roadmap tracks planned features and
-improvements. Priorities may shift based on community feedback.
+improvements.
 
-## Current Status — v0.10
+## Near Term
 
-- File-based routing with `.wren` and `.html`
-- Inline HTML strings with interpolation (`{{ }}`)
-- Built-in SQLite with migrations, Query objects, `.fetch()`, `.first()`,
-  `.val()`, `.toNum()`, `.toBool()`
-- CRUD operations via `.save()` on table queries and `Db.delete()`
-- Sessions, cookies, CSRF protection
-- CORS support for REST APIs
-- Cron-style scheduled tasks (`Cron.every`, `Cron.at`)
-- File upload and serving from database
-- JSON parsing/stringifying, Base64, URL encoding
-- HTTP client (GET, POST, PUT, DELETE) with libcurl
-- Password hashing (`Util.hash`, `Util.verify`)
-- Date/time formatting and arithmetic
-- Markdown to HTML conversion
-- External module imports via GitHub (`gh:bialet/extra/mcp`)
-- MCP (Model Context Protocol) server support
-- Built-in test framework with `bialet -T`
-- Docker and Docker Compose support
-- Cross-compilation for Windows (MinGW)
-
-## Short Term
-
-### v0.11
-
-- [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
-  proxy needed for basic deployments)
-- [ ] **macOS live-reload** — File watching on macOS (currently Linux-only
-  via inotify)
-- [ ] **Request body size limits** — Configurable max upload size
-- [ ] **Error page customization** — Override default 404/500 pages per app
-
-### v0.12
-
-- [ ] **Email sending** — SMTP client for transactional emails
-- [ ] **Improved pagination** — Built-in offset/limit helpers for queries
-- [ ] **Rate limiting** — Per-IP and per-route request rate limiting
-- [ ] **Logging controls** — Configurable log levels and file output
-
-## Medium Term
-
-- [ ] **WebSocket support** — Basic WebSocket for real-time features
-- [ ] **Background job queue** — Async task processing beyond Cron
-- [ ] **Multi-app virtual hosting** — Serve multiple apps from one Bialet
-  instance based on hostname
-- [ ] **Template inheritance** — Nested layouts and partials in `_app.wren`
-- [ ] **CLI scaffolding** — `bialet new <app>` to generate a starter project
-- [ ] **Database migrations CLI** — `bialet migrate` commands for rollback
-  and status
-
-## Long Term / Ideas
-
-- [ ] **PostgreSQL support** — Optional alternative database backend
-- [ ] **Static file cache headers** — ETag / Last-Modified for `.css`, `.js`,
-  images
-- [ ] **i18n / localization** — Translation helpers and locale-aware
-  formatting
-- [ ] **Plugin system** — Community-contributed plugins installable via URL
+- [ ] **Editor syntax highlighting** — Add support for major editors (VS Code,
+      Sublime, etc.)
+- [ ] **AI development skills** — Create skills/prompts for AI-assisted Bialet
+      development
+- [ ] **Documentation review** — Audit and fill gaps in existing docs, ensure
+      all features are properly covered (e.g. custom errors)
+- [ ] **Wren programming guide** — Document how to write and integrate Wren
+      scripts in Bialet apps
+- [ ] **Production deployment guide** — Document how to deploy on a VPS with
+      systemd, reverse proxy setup, and environment configuration
+- [ ] **Documentation improvements** — General cleanup, better structure, and
+      more examples
+- [ ] **i18n / localization** — Translation helpers and locale-aware formatting
 - [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
-  logs
-- [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge
-  deployment
+      logs
+- [ ] **Data filtering lib** — Query sanitization and type-safe filtering
+      utilities
+
+## Longer Term
+
+- [ ] **Live-reload** — Watch files and auto-refresh browser via WebSocket on
+      changes
+- [ ] **LSP support** — Language Server Protocol implementation with
+      autocomplete, go-to-definition, and diagnostics for VS Code
+- [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
+      proxy needed for basic deployments)
+- [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
+- [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
+- [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
+      handling
 
 ## How to Contribute
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
 
-Feature requests and feedback are welcome. Open an issue with the
-"enhancement" label on
-[GitHub Issues](https://github.com/bialet/bialet/issues).
+Feature requests and feedback are welcome. Open an issue with the "enhancement"
+label on [GitHub Issues](https://github.com/bialet/bialet/issues).
