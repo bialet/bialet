@@ -32,7 +32,7 @@ Bialet
          </button>
        </div>
        <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-         Prefer a manual download? <a href="https://github.com/bialet/bialet/releases">Get the tarball</a>.
+         Prefer a manual download? <a href="https://github.com/bialet/bialet/releases">Get the tarball</a> &middot; <a href="installation.html">All platforms</a>
        </p>
      </div>
 
@@ -43,7 +43,8 @@ Bialet
          Download for Windows (.zip)
        </a>
        <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-         Zero installation required. Just extract and run.
+         Zero installation required. Just extract and run.<br/>
+         <a href="installation.html">See all platforms</a>
        </p>
      </div>
 
