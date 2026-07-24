@@ -36,8 +36,8 @@ Bialet
      <!-- Windows: download button -->
      <div id="download-win" style="display: none">
        <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
-       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
-         Download for Windows (.zip)
+        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="{{release_windows_url}}" style="font-size: 1.05em; padding: 0.55em 1.5em">
+          Download for Windows (.zip)
        </a>
        <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
          Zero installation required. Just extract and run.<br/>
