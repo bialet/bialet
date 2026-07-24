@@ -25,10 +25,10 @@ Bialet
      <!-- Unix (Linux / macOS): curl command with copy button -->
      <div id="download-unix" style="display: none">
        <span id="download-os-label-unix" style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em"></span>
-       <div style="background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border); border-radius: 0.75rem; padding: 1em 1.25em; display: inline-flex; align-items: center; gap: 0.6em">
-         <code style="font-size: 1.05em; background: none; word-break: break-all">curl -fsSL https://get.bialet.dev | sh</code>
-         <button onclick="navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh')" style="background: none; border: 1px solid var(--pst-color-border); border-radius: 0.4rem; padding: 0.3em 0.55em; cursor: pointer; color: var(--pst-color-text-muted); flex-shrink: 0" title="Copy to clipboard" aria-label="Copy to clipboard">
-           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+       <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
+         <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
+         <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
+           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
          </button>
        </div>
        <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
@@ -38,7 +38,7 @@ Bialet
 
      <!-- Windows: download button -->
      <div id="download-win" style="display: none">
-       <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Detected: Windows</span>
+       <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
          Download for Windows (.zip)
        </a>
@@ -50,10 +50,10 @@ Bialet
 
      <!-- Fallback: curl + all platforms -->
      <div id="download-other" style="display: block">
-       <div style="background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border); border-radius: 0.75rem; padding: 1em 1.25em; display: inline-flex; align-items: center; gap: 0.6em">
-         <code style="font-size: 1.05em; background: none; word-break: break-all">curl -fsSL https://get.bialet.dev | sh</code>
-         <button onclick="navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh')" style="background: none; border: 1px solid var(--pst-color-border); border-radius: 0.4rem; padding: 0.3em 0.55em; cursor: pointer; color: var(--pst-color-text-muted); flex-shrink: 0" title="Copy to clipboard" aria-label="Copy to clipboard">
-           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+       <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
+         <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
+         <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
+           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
          </button>
        </div>
        <p style="margin-top: 0.5em; margin-bottom: 0.5em; font-size: 0.85em; color: var(--sd-color-secondary)">
@@ -76,7 +76,7 @@ Bialet
          win.style.display = 'block';
          other.style.display = 'none';
        } else if (/linux|mac/i.test(ua)) {
-         var osName = /mac/i.test(ua) ? 'Detected: macOS' : 'Detected: Linux';
+         var osName = /mac/i.test(ua) ? 'Install for macOS' : 'Install for Linux';
          if (label) label.textContent = osName;
          unix.style.display = 'block';
          other.style.display = 'none';
