@@ -18,40 +18,65 @@ Bialet
        </p>
    </div>
 
-.. code-block:: shell
-
-   curl -sSL https://get.bialet.dev | sh
-
 .. raw:: html
 
-   <div id="bialet-download" style="text-align: center; margin: 0.5em 0 1.5em 0">
-     <p id="download-platform-unix" style="display: none; margin: 0; font-size: 0.9em; color: var(--sd-color-secondary)">
-       Prefer a manual download? <a href="https://github.com/bialet/bialet/releases">Get the tarball</a>.
-     </p>
-     <p id="download-platform-win" style="display: none; margin: 0">
+   <div id="bialet-download" style="text-align: center; margin: 1.5em 0 2em 0">
+
+     <!-- Unix (Linux / macOS): curl command with copy button -->
+     <div id="download-unix" style="display: none">
+       <span id="download-os-label-unix" style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em"></span>
+       <div style="background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border); border-radius: 0.75rem; padding: 1em 1.25em; display: inline-flex; align-items: center; gap: 0.6em">
+         <code style="font-size: 1.05em; background: none; word-break: break-all">curl -sSL https://get.bialet.dev | sh</code>
+         <button onclick="navigator.clipboard.writeText('curl -sSL https://get.bialet.dev | sh')" style="background: none; border: 1px solid var(--pst-color-border); border-radius: 0.4rem; padding: 0.3em 0.55em; cursor: pointer; color: var(--pst-color-text-muted); flex-shrink: 0" title="Copy to clipboard" aria-label="Copy to clipboard">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+         </button>
+       </div>
+       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
+         Prefer a manual download? <a href="https://github.com/bialet/bialet/releases">Get the tarball</a>.
+       </p>
+     </div>
+
+     <!-- Windows: download button -->
+     <div id="download-win" style="display: none">
+       <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Detected: Windows</span>
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
          Download for Windows (.zip)
        </a>
-       <span style="display: block; margin-top: 0.3em; font-size: 0.85em; color: var(--sd-color-secondary)">
+       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
          Zero installation required. Just extract and run.
-       </span>
-     </p>
-     <p id="download-platform-other" style="display: block; margin: 0; font-size: 0.9em; color: var(--sd-color-secondary)">
-       macOS ARM &bull; Ubuntu x86_64 &bull; Ubuntu ARM
-       &bull; <a href="installation.html">Other platforms</a>
-     </p>
+       </p>
+     </div>
+
+     <!-- Fallback: curl + all platforms -->
+     <div id="download-other" style="display: block">
+       <div style="background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border); border-radius: 0.75rem; padding: 1em 1.25em; display: inline-flex; align-items: center; gap: 0.6em">
+         <code style="font-size: 1.05em; background: none; word-break: break-all">curl -sSL https://get.bialet.dev | sh</code>
+         <button onclick="navigator.clipboard.writeText('curl -sSL https://get.bialet.dev | sh')" style="background: none; border: 1px solid var(--pst-color-border); border-radius: 0.4rem; padding: 0.3em 0.55em; cursor: pointer; color: var(--pst-color-text-muted); flex-shrink: 0" title="Copy to clipboard" aria-label="Copy to clipboard">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+         </button>
+       </div>
+       <p style="margin-top: 0.5em; margin-bottom: 0.5em; font-size: 0.85em; color: var(--sd-color-secondary)">
+         macOS ARM &bull; Ubuntu x86_64 &bull; Ubuntu ARM
+       </p>
+       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="installation.html">Other platforms</a>
+     </div>
+
    </div>
+
    <script>
      (function() {
-       var unix = document.getElementById('download-platform-unix');
-       var win = document.getElementById('download-platform-win');
-       var other = document.getElementById('download-platform-other');
+       var unix = document.getElementById('download-unix');
+       var win = document.getElementById('download-win');
+       var other = document.getElementById('download-other');
+       var label = document.getElementById('download-os-label-unix');
        if (!unix || !win || !other) return;
        var ua = navigator.userAgent || '';
        if (/windows/i.test(ua)) {
          win.style.display = 'block';
          other.style.display = 'none';
        } else if (/linux|mac/i.test(ua)) {
+         var osName = /mac/i.test(ua) ? 'Detected: macOS' : 'Detected: Linux';
+         if (label) label.textContent = osName;
          unix.style.display = 'block';
          other.style.display = 'none';
        }
