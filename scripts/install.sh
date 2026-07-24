@@ -1,5 +1,5 @@
 #!/bin/sh
-# Bialet installer — curl -sSL https://get.bialet.dev | sh
+# Bialet installer — curl -fsSL https://get.bialet.dev | sh
 set -e
 
 # ── Configuration ──────────────────────────────────────────────
@@ -116,7 +116,7 @@ fi
 # ── Fetch latest release tag ───────────────────────────────────
 echo "==> Fetching latest Bialet release..."
 RELEASE_URL="https://api.github.com/repos/$REPO/releases/latest"
-TAG=$(curl -sSLf "$RELEASE_URL" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+TAG=$(curl -fsSLf "$RELEASE_URL" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
 
 if [ -z "$TAG" ]; then
   yellow "Could not determine latest release. Using default version."
@@ -132,7 +132,7 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "==> Downloading $TARNAME..."
-curl -sSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
+curl -fsSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
 
 # ── Verify tar ──────────────────────────────────────────────────
 if ! tar tzf "$TMPDIR/$TARNAME" > /dev/null 2>&1; then

@@ -46,7 +46,7 @@ Bialet is a single self-contained binary (under 1 MB) that embeds the object-ori
 Install a prebuilt binary with a single command (macOS ARM, Ubuntu x86_64, Ubuntu ARM):
 
 ```bash
-curl -sSL https://get.bialet.dev | sh
+curl -fsSL https://get.bialet.dev | sh
 ```
 
 ## Quickstart
