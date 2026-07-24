@@ -159,3 +159,17 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
           generate_release_notes: true
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION="${{ github.ref_name }}"
+          SHA256=$(curl -sL "https://github.com/bialet/bialet/archive/refs/tags/${VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}')
+          git clone "https://${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/bialet/homebrew-bialet.git" /tmp/homebrew-bialet
+          sed -i "s|/v[0-9.]*\.tar\.gz|/${VERSION}.tar.gz|" /tmp/homebrew-bialet/bialet.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|" /tmp/homebrew-bialet/bialet.rb
+          cd /tmp/homebrew-bialet
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bialet.rb
+          git commit -m "bump to ${VERSION}" || true
+          git push
