@@ -64,7 +64,7 @@
     <link rel="next" title="Getting Started" href="getting-started/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.4" />
+  <meta name="docsearch:version" content="0.10.5" />
   </head>
   
   
@@ -115,7 +115,7 @@
   <!-- Windows: download button -->
   <div id="download-win" style="display: none">
     <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-windows-x86_64.zip" style="font-size: 1.05em; padding: 0.55em 1.5em">
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/download/v0.10.5/bialet-v0.10.5-windows-x86_64.zip" style="font-size: 1.05em; padding: 0.55em 1.5em">
        Download for Windows (.zip)
     </a>
     <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
@@ -233,7 +233,7 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 
 <span class="c1">// 2. Handle POST requests and save data</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">Db</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;messages&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)})</span>
+<span class="w">  </span><span class="sb">`messages`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;text&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)})</span>
 <span class="p">}</span>
 
 <span class="c1">// 3. Fetch data using pure SQL</span>
