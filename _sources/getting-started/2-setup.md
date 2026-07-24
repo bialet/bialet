@@ -5,7 +5,7 @@
 The quickest way is the install script:
 
 ```bash
-curl -sSL https://get.bialet.dev | sh
+curl -fsSL https://get.bialet.dev | sh
 ```
 
 For other options (Homebrew, Docker, building from source), see

@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: With Brew: Use Homebrew to install Bialet on mac..." />
+<meta property="og:description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: For Windows: Download the latest bialet.exe(insi..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: With Brew: Use Homebrew to install Bialet on mac..." />
+<meta name="description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: For Windows: Download the latest bialet.exe(insi..." />
 
     <title>Installation and Usage &#8212; Bialet  documentation</title>
   
@@ -65,7 +65,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10" />
+  <meta name="docsearch:version" content="0.10.4" />
   </head>
   
   
@@ -399,6 +399,8 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
@@ -447,7 +449,52 @@
 <h2>With the Install Script<a class="headerlink" href="#with-the-install-script" title="Link to this heading">#</a></h2>
 <p>The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
 x86_64, Ubuntu ARM) is with the install script:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</pre></div>
+</div>
+</section>
+<section id="for-windows">
+<h2>For Windows<a class="headerlink" href="#for-windows" title="Link to this heading">#</a></h2>
+<p>Download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> (inside the zip) directly:</p>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-windows-x86_64.zip">bialet-v0.10.4-windows-x86_64.zip</a></strong></p></li>
+</ul>
+<p>Extract and run — no installation required:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet.exe
+</pre></div>
+</div>
+</section>
+<section id="releases">
+<h2>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h2>
+<p>Pre-built binaries for all supported platforms are available on the <a class="reference external" href="https://github.com/bialet/bialet/releases">releases
+page</a>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Platform</p></th>
+<th class="head"><p>Download</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>macOS ARM64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-macos-arm64.tar.gz">bialet-v0.10.4-macos-arm64.tar.gz</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux x86_64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-linux-x86_64.tar.gz">bialet-v0.10.4-linux-x86_64.tar.gz</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Linux ARM64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-linux-arm64.tar.gz">bialet-v0.10.4-linux-arm64.tar.gz</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Windows x86_64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.10.4/bialet-v0.10.4-windows-x86_64.zip">bialet-v0.10.4-windows-x86_64.zip</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Download the archive for your platform, extract it, and place the binary
+(<code class="docutils literal notranslate"><span class="pre">bialet</span></code> on macOS/Linux, <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> on Windows) in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS / Linux</span>
+tar<span class="w"> </span>xzf<span class="w"> </span>bialet-v0.10.4-linux-x86_64.tar.gz
+sudo<span class="w"> </span>mv<span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/
 </pre></div>
 </div>
 </section>
@@ -742,6 +789,8 @@ bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker-compose">With Docker Compose</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
