@@ -15,10 +15,10 @@ Wren cron file. These methods receive a block that is called at the specified
 time.
 
 ```wren
-import "/_domain" for Task
+import "_app/domain" for Task
 
 // Every 2 minutes
-Cron.every(2) { |date| "Hello, from Cron!" }
+Cron.every(2) { |date| System.log("Hello, from Cron!") }
 
 // At 2:00 AM
 Cron.at(2, 0) { |date| Task.clearAll() }
@@ -34,22 +34,28 @@ evaluation. You can ignore it if not needed.
 Runs the job when the current minute is divisible by `minutes`.
 
 ```wren
-Cron.every(10) { |d| "Runs every 10 minutes" }
+Cron.every(10) { |d| System.log("Runs every 10 minutes") }
 ```
+
+> **Important:** `Cron.every(n)` uses divisibility, not elapsed time.
+> `Cron.every(7)` fires at minutes 0, 7, 14, 21, 28, 35, 42, 49, 56,
+> then skips 4 minutes to 0 again. `Cron.every(90)` **never** fires because
+> 90 does not divide 60. Use these safe values: 1, 2, 3, 4, 5, 6, 10, 12,
+> 15, 20, 30.
 
 #### `Cron.at(hour, minute, dayOfWeek)`
 
 Runs the job when the current time matches the given `hour` and `minute`.
 
 ```wren
-Cron.at(3, 15) { |d| "Runs at 03:15 every day" }
+Cron.at(3, 15) { |d| System.log("Runs at 03:15 every day") }
 ```
 
 Runs the job when the current time matches the given hour, minute, and day of
 week. Days of week: 0 (Sunday) to 6 (Saturday)
 
 ```wren
-Cron.at(4, 30, 1) { |d| "Runs at 04:30 every Monday" }
+Cron.at(4, 30, 1) { |d| System.log("Runs at 04:30 every Monday") }
 ```
 
 ## Custom Rules
@@ -60,7 +66,7 @@ custom rules.
 ```wren
 Cron.every(1) { |d|
   if (d.day == 1 && d.hour == 0) {
-    "It's the first of the month!"
+    System.log("It's the first of the month!")
   }
 }
 ```

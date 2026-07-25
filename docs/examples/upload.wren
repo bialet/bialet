@@ -7,13 +7,14 @@ if (Request.isPost) {
   System.print("File: %(uploadedFile.name)")
   // Make it temporal, it will be deleted soon
   // You can still use it in the rest of the request
-  uploadedFile.temp()
+  uploadedFile.temp
   // Return the file to the browser
   return Response.file(uploadedFile.id)
 }
 
 var title = "Upload File"
 return <!doctype html>
+<html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -32,7 +32,8 @@ myapp/
 
 ### `_tests/_init.wren` (Optional)
 
-If present, this file runs once before each test file. Use it for common setup:
+If present, this file runs once at the start of each test run (before any
+test files execute). Use it for common setup:
 
 ```wren
 // _tests/_init.wren
@@ -352,7 +353,7 @@ Test.post("/login", {"user": "admin", "pass": "wrong"})
 Tests run against a **temporary database file** that is created fresh for each test run:
 
 1. A temporary database file is created
-2. Migrations are automatically run (`_migration.wren` or `/_app/migration.wren`)
+2. Migrations are automatically run (`_migration.wren` or `_app/migration.wren`)
 3. `_tests/_init.wren` runs (if exists)
 4. Test files execute
 5. Temporary database is deleted

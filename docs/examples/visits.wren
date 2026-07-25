@@ -2,7 +2,7 @@
 // In this case we create a table named `counter` with two columns: `name` and `value`.
 // Then we insert a row with the name `visits` and a value of 0, if there is no row
 // with the name `visits`.
-// This should be do it with migrations, here it is added to the script to be self-contained.
+// This should be done with migrations; it's included here so the example is self-contained.
 `CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query
 `INSERT OR IGNORE INTO counter (name, value) VALUES ("visits", 0)`.query
 

@@ -733,7 +733,7 @@ Returns the day of the week as a number (0 for Sunday, 6 for Saturday).
 
 ### dayOfYear
 
-Returns the day of the year (1-365).
+Returns the day of the year (1-366).
 
 ### date
 
@@ -749,7 +749,7 @@ Returns the Unix timestamp of the date.
 
 ### iso
 
-Returns the date as an ISO 8601 formatted string (`YYYY-MM-DD HH:MM:SS`). Alias for `toString`.
+Returns the date as an ISO 8601 formatted string (`YYYY-MM-DDTHH:MM:SS`). Alias for `toString`.
 
 ### inUtc
 

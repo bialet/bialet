@@ -21,12 +21,14 @@ error message. This limit is configurable in the source code through the
 ```wren
 
 if (Request.isPost) {
-  // Get the uploaded file and save it as permanent
+  // Check if a file was uploaded
   var file = Request.file("upload_file")
-  System.print("Uploaded file: %(file.name)")
+  if (!file) {
+    return <p>No file was uploaded.</p>
+  }
 
   // Return a message indicating the file was uploaded
-  return "<p>File uploaded and saved: {{ file.name }}</p>"
+  return <p>File uploaded and saved: {{ file.name }}</p>
 }
 
 return <!doctype html>
@@ -49,7 +51,7 @@ it as temporary and it will be deleted after a short period of time.
 ```wren
 // Get the uploaded file and mark it as temporary
 var file = Request.file("upload_file")
-file.temp()
+file.temp
 System.print("Uploaded temporary file: %(file.name)")
 ```
 
@@ -62,7 +64,7 @@ System.print("Uploaded temporary file: %(file.name)")
 You can also dynamically create files and save them in the database. Created
 files, like uploaded files, can be marked as temporary or permanent. Temporary
 files will be automatically deleted after a short period of time. To manually
-delete a file, use the `fileObject.destroy()` method.
+delete a file, use the `file.destroy` getter.
 
 ### Example 1: Creating a Permanent File
 
@@ -78,7 +80,7 @@ Response.file(file.id)
 
 ### Example 2: Deleting a File Manually
 
-You can also delete files manually using the `fileObject.destroy()` method. It
+You can also delete files manually using the `file.destroy` getter. It
 works for uploaded and dynamically created files.
 
 ```wren
@@ -88,7 +90,7 @@ var content = "This is a temporary file that will be deleted."
 var file = File.create("temporary.txt", "text/plain", content)
 
 // Delete the file manually
-file.destroy()
+file.destroy
 
 return "<p>File was created and then deleted.</p>"
 ```

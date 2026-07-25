@@ -1,5 +1,4 @@
-var markdown = "
-
+var markdown = """
 # Markdown Example
 
 This is written in Markdown.
@@ -7,7 +6,7 @@ This is written in Markdown.
 [Back ↩️](.)
 
 This is the example.md file:
-"
+"""
 
 return <!doctype html>
 <html>
@@ -18,7 +17,7 @@ return <!doctype html>
   </head>
   <body>
 
-    {{ Markdown.html(markdown) }}</p>
+    {{ Markdown.html(markdown) }}
 
     <div style="text-align: left">
       {{ Markdown.file("example.md") }}

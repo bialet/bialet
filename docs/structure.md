@@ -184,11 +184,10 @@ var post = `
 if (!post) {
   Response.status(404)
   return "<h1>Post not found</h1>"
-  return
 }
 
 // Render using App template
-return App.render {
+return App.render({
   <article>
     <h1>{{post["title"]}}</h1>
     <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>

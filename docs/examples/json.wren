@@ -1,9 +1,9 @@
-// This line imports the Response class for managing HTTP interactions.
-// The import lines are write at the top of the script.
+// Response and Db are built-in classes — no imports needed.
 
-// We use the `query()` method to execute SQL statements.
-// In this case we create a table named `counter` with two columns: `name` and `value`.
-// This should be do it with migrations, here it is added to the script to be self-contained.
+// Use the `query()` method to execute SQL statements.
+// This creates a table named `counter` with two columns: `name` and `value`.
+// In production this should be done with migrations; it's included here
+// so the example is self-contained.
 `CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query()
 
 // We use the `fetch()` method to get the query result as an array of objects.

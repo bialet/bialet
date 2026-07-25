@@ -17,8 +17,8 @@ Db.migrate("Create Poll table", `
 
 Db.migrate("Add initial data", `
   INSERT INTO poll (answer, comment) VALUES
-    ("Yes", "We need to go back to the good old times"),
-    ("No", "You are just old")
+    ('Yes', 'We need to go back to the good old times'),
+    ('No', 'You are just old')
 `)
 ```
 

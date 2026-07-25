@@ -11,7 +11,7 @@ return <!doctype html>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <h1>Show all the users from the JSONPlaceholder API</h1>
+    <h1>Show all the users from the DummyJSON API</h1>
     {{ /* The interpolated string can have comments on it */
       users.count > 0 ?
       <table>

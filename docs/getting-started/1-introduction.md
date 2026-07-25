@@ -8,7 +8,7 @@ The app has two pages:
 - A **results page** showing vote counts and percentages
 
 The HTML is built with [Flowbite](https://flowbite.com/) and
-[TwitterCSS](https://tailwindcss.com/). Download the starting files:
+[Tailwind CSS](https://tailwindcss.com/). Download the starting files:
 
 - [vote.html](1-html/vote.html)
   ![Poll Vote](../_static/poll-vote.png)

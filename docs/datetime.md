@@ -4,7 +4,7 @@ This page demonstrates the usage of the `Date` class. It covers basic date and
 time manipulations, formatting, and how to handle date inputs in various
 contexts.
 
-See more details in the [Date class reference](date-reference).
+See more details in the [Date class reference](reference.html#date).
 
 ## Creating a Date Object
 
@@ -12,37 +12,32 @@ You can create a `Date` object in several ways, representing both the current
 and specific dates:
 
 ```wren
-var now = Date.now
+var now = Date.new()
 var specificDate = Date.new(2024, 9, 13, 15, 45, 30)
 var justDate = Date.new(2024, 9, 13)
 ```
 
-- `Date.now` creates a new `Date` object representing the current date and time.
+- `Date.new()` creates a new `Date` object representing the current date and time.
 - `Date.new(year, month, day, hour, minute, second)` allows you to create a
   specific date and time.
 - `Date.new(year, month, day)` creates a date object with the specified year,
   month, and day at midnight.
 
-## Global UTC Handling
+## Per-Instance Timezone Handling
 
-You can set the global UTC offset for all date objects:
+You can set the timezone offset for individual `Date` instances:
 
 ```wren
-Date.utc = -3 // Set global UTC to GMT-3 (Argentina)
-var dateInUtc = Date.now
-System.print("Current Date in UTC-3: %(dateInUtc)")
+var date = Date.new(2024, 9, 13, 15, 45, 30, -3)
+System.print("Date with timezone: %(date)")
 ```
 
-This sets the global UTC offset for all subsequent date manipulations.
-
-## Per-Instance UTC Handling
-
-You can also set the UTC offset for individual `Date` instances:
+Or set it after creation:
 
 ```wren
 var date = Date.new(2024, 9, 13, 15, 45, 30)
-date.utc = -5 // Set UTC offset for this specific instance to GMT-5
-System.print("Date with specific UTC: %(date)")
+date.tz = -5 // Set timezone offset for this specific instance to GMT-5
+System.print("Date with specific timezone: %(date)")
 ```
 
 This lets you control the UTC offset at the instance level without affecting
@@ -53,7 +48,7 @@ other `Date` objects.
 You can access various components of a `Date` object:
 
 ```wren
-var date = Date.now
+var date = Date.new()
 System.print("Year: %(date.year)")
 System.print("Month: %(date.month)")
 System.print("Day: %(date.day)")
@@ -82,7 +77,7 @@ Date objects can be compared using standard operators:
 
 ```wren
 var date1 = Date.new(2024, 9, 13)
-var date2 = Date.now
+var date2 = Date.new()
 
 System.print(date1 > date2 ? "Date1 is in the future" : "Date1 is not in the future")
 System.print(date1 < date2 ? "Date1 is in the past" : "Date1 is not in the past")
@@ -110,11 +105,11 @@ Refer to the table below for available format options.
 | `#F`        | ISO 8601 full date format: YYYY-MM-DD                               |
 | `#G`        | ISO 8601 year that corresponds to the ISO week number `#V`          |
 | `#g`        | Two-digit ISO 8601 year corresponding to the ISO week number `#V`   |
-| `#H`        | Hour in 24-hour format with leading zero: 00-24                     |
+| `#H`        | Hour in 24-hour format with leading zero: 00-23                     |
 | `#I`        | Hour in 12-hour clock format with leading zero: 01-12               |
 | `#j`        | Day of the year with leading zero: 001-366                          |
 | `#J`        | Julian day number (fractional)                                      |
-| `#k`        | Hour in 24-hour format without leading zero: 0-24                   |
+| `#k`        | Hour in 24-hour format without leading zero: 0-23                   |
 | `#l`        | Hour in 12-hour clock format without leading zero: 1-12             |
 | `#m`        | Month with leading zero: 01-12                                      |
 | `#M`        | Minute with leading zero: 00-59                                     |

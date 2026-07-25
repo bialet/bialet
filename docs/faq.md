@@ -71,9 +71,10 @@ Pre-built binaries for:
 - macOS ARM (Apple Silicon)
 - Linux x86_64
 - Linux ARM64
+- Windows x86_64
 
-You can also build from source on any platform with a C17 compiler, SQLite3,
-and libcurl (see [Installation](installation.md)).
+You can also build from source on any platform with a C17 compiler and SQLite3.
+libcurl is optional but recommended for production (see [Installation](installation.md)).
 
 ### Can I use CSS frameworks?
 
@@ -93,8 +94,7 @@ file in a directory and use `Request.route(pos)` to read URL segments. See
 
 Use `Request.isPost` to check the method and `Request.post("field")` to read
 submitted values. Redirect after processing with
-`Response.redirect("/path")`. See the [Getting Started](getting-started/index) tutorial.
-tutorial for a complete example.
+`Response.redirect("/path")`. See the [Getting Started](getting-started/index) tutorial for a complete example.
 
 ### How do database queries work?
 
@@ -121,22 +121,32 @@ var age = Num.fromString(row["age"])
 
 Create an `_app.wren` file with a `Template` class. This file is
 automatically loaded and its class is available to all pages in your app.
-Use the `Site` variable to access it:
+Import it and use `App.render` to wrap your content:
 
 ```wren
 // _app.wren
 class Template {
-  static head() { return "<head>...</head>" }
-  static body() { return "</body></html>" }
+  static layout(content) {
+    return <html>
+      <head><title>My App</title></head>
+      <body>
+        <nav>...</nav>
+        {{ content }}
+        <footer>...</footer>
+      </body>
+    </html>
+  }
 }
 ```
 
 ```wren
 // index.wren
-Site.head()
-return "<h1>Hello</h1>"
-Site.body()
+import "_app" for Template as App
+
+return App.layout(<h1>Hello</h1>)
 ```
+
+See [Structure & Routing](structure.md) for more layout patterns.
 
 ### Can I import external Wren modules?
 
@@ -163,12 +173,11 @@ That's it. No build pipeline, no CI/CD required. Use Docker Compose
 
 ### Can I run multiple apps on one server?
 
-Yes. Run `bialet` with different `-p` (port) and `-A` (app directory)
-flags:
+Yes. Run `bialet` with different ports and app directories:
 
 ```bash
-bialet -A /apps/site1 -p 7001 &
-bialet -A /apps/site2 -p 7002 &
+bialet -p 7001 /apps/site1 &
+bialet -p 7002 /apps/site2 &
 ```
 
 ### Does Bialet support WebSockets?
