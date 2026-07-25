@@ -31,14 +31,19 @@ run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Parsing error               " "parsing-error"   500
+# Tests - Markdown
 run_test "Markdown ordered list       " "markdown-ol"    200 "<ol>"
+run_test "Markdown file rendering     " "md-file"        200 "<h1>Test Heading</h1>"
 
 # Tests - Database
 run_test "Database save and fetch     " "db"              200 "John Doe"
 run_test "Query order by              " "query-order"     200 "item2,item3,item1"
 run_test "Query val method            " "query-val"       200 "testvalue"
 run_test "Query toNum method          " "query-tonum"     200 "50"
-run_test "Query save method            " "save"            200 "hello updated 2024-09-13 10:30:00"
+run_test "Query save method           " "save"            200 "hello updated 2024-09-13 10:30:00"
+run_test "Query toBool method         " "db-tobool"       200 "true,false,true,true,true"
+run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
+run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"
@@ -46,6 +51,9 @@ run_test "Third party modules         " "emoji"           200 "❤️"
 
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"
+run_test "Date now and components     " "date-now"        200 "true"
+run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true"
+run_test "Date parse from string      " "date-parse"      200 "2024-12-25 14:30:45,UTC"
 
 # Tests - Util functions
 run_test "Util functions              " "util"            200 "true"
@@ -53,6 +61,8 @@ run_test "Util functions              " "util"            200 "true"
 # Tests - Cookie & Session
 run_test "Cookie set                  " "cookie?set=1"    200 "set"
 run_test "Session get empty           " "session?get=1"   200 "empty"
+run_test "Session CSRF token render   " "csrf"            200 "_bialet_csrf"
+run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 
 # Tests - Config
 run_test "Config operations           " "config"          200 "test_value,42,true"
@@ -60,6 +70,10 @@ run_test "Config operations           " "config"          200 "test_value,42,tru
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
+run_test "String trim edge cases      " "string-trim"     200 "hello,trim,no-whitespace,,123,trimleft,trimright,hello"
+
+# Tests - Random
+run_test "Random sample               " "randomsample"    200 "true,true,true"
 
 # Tests - CORS
 run_test "CORS enabled                " "cors"            200 "cors"
