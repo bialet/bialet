@@ -242,9 +242,6 @@ import "gh:owner/repo/path/to/file@branch-or-tag" for ClassName
 **Examples:**
 
 ```wren
-// Import from main branch (recommended for latest version)
-import "gh:bialet/extra/mcp" for Mcp
-
 // Import emoji utilities from main branch
 import "gh:4lb0/emoji/emoji" for Emoji
 
@@ -327,9 +324,6 @@ CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (
 -- Clear all cached external modules (forces re-download on next import)
 DELETE FROM BIALET_REMOTE_MODULES;
 
--- Clear a specific module
-DELETE FROM BIALET_REMOTE_MODULES WHERE module = 'gh:bialet/extra/mcp';
-
 -- View all cached modules
 SELECT module, createdAt FROM BIALET_REMOTE_MODULES;
 
@@ -353,7 +347,6 @@ https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path.wren
 
 | Import Statement             | Generated URL                                                               |
 | ---------------------------- | --------------------------------------------------------------------------- |
-| `gh:bialet/extra/mcp`        | `https://raw.githubusercontent.com/bialet/extra/refs/heads/main/mcp.wren`   |
 | `gh:user/lib/utils@dev`      | `https://raw.githubusercontent.com/user/lib/refs/heads/dev/utils.wren`      |
 | `gh:org/pkg/sub/module@v1.0` | `https://raw.githubusercontent.com/org/pkg/refs/heads/v1.0/sub/module.wren` |
 
@@ -407,48 +400,11 @@ Only import modules from trusted sources.
 **Best Practices:**
 
 ```wren
-// ✅ Good: Using a specific version tag
-import "gh:bialet/extra/mcp@v1.0.0" for Mcp
-
-// ⚠️ Caution: Using main branch (may change over time)
-import "gh:bialet/extra/mcp" for Mcp
-
 // ✅ Good: Well-known, maintained library
 import "gh:4lb0/emoji/emoji@1.0" for Emoji
 
 // ❌ Avoid: Unknown sources without verification
 import "gh:random-user/suspicious-lib/module" for SomeClass
-```
-
-### Example Usage
-
-Here's a complete example using external imports:
-
-```wren
-// Import external MCP module from a specific version
-import "gh:bialet/extra/mcp@v1.0" for Mcp
-
-// Import emoji library from main branch
-import "gh:4lb0/emoji/emoji" for Emoji
-
-#!doc = "A greeting tool with emojis"
-class Greet {
-  construct new(params) {
-    _name = params["name"]
-  }
-
-  #!doc = "Name of the person to greet"
-  #!required
-  name(name) { _name = name }
-
-  call() {
-    return "%(Emoji.wave) Hello, %(_name)! %(Emoji.heart)"
-  }
-}
-
-var mcp = Mcp.new('emoji-greeter', '1.0.0')
-mcp.addTool(Greet)
-mcp.serve
 ```
 
 ### Multiple Versions

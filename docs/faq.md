@@ -142,10 +142,6 @@ Site.body()
 
 Yes, using `import` with a GitHub path:
 
-```wren
-import "gh:bialet/extra/mcp" for Mcp
-```
-
 See [Structure & Routing](structure.md).
 
 ### Does Bialet support HTTPS?

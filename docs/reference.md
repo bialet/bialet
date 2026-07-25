@@ -22,12 +22,6 @@ The following classes are available by default in all Bialet applications withou
 
 External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md) section on External Imports for details on how to import external modules.
 
-Available external modules:
-
-- **Mcp** - Model Context Protocol server support
-  - Import: `import "gh:bialet/extra/mcp" for Mcp`
-  - Documentation: [MCP Documentation](mcp.md)
-
 ---
 
 ## Request
@@ -889,93 +883,6 @@ Runs the job at a specific hour, minute, and day of the week.
 
 ```wren
 Cron.at(9, 0, 1) { |d| System.log("Running Monday at 9:00 AM") }
-```
-
-## Mcp
-
-**External Class** - Must be imported: `import "gh:bialet/extra/mcp" for Mcp`
-
-A class for creating Model Context Protocol (MCP) servers that expose tools,
-resources, and prompts to AI assistants.
-
-For complete documentation and examples, see [MCP Documentation](mcp.md).
-
-### new(name, version)
-
-Creates a new MCP server instance.
-
-- `name` (String): The name of the MCP server.
-- `version` (String): The version number of the server.
-- Returns: A new `Mcp` instance.
-
-```wren
-import "gh:bialet/extra/mcp" for Mcp
-
-var mcp = Mcp.new('my-server', '1.0.0')
-```
-
-### addTool(toolClass)
-
-Adds a tool class to the MCP server. The tool class must have a
-`construct new(params)` constructor and a `call()` method.
-
-- `toolClass` (Class): The class that implements the tool. Must include
-  annotations (`#!doc`, `#!required`, `#!type`, etc.) to describe the tool and
-  its parameters.
-
-```wren
-mcp.addTool(Greet)
-mcp.addTool(SearchFlights)
-```
-
-### addPrompt(prompt)
-
-Sets the system prompt for the MCP server. This prompt guides the AI assistant
-on how to use the tools.
-
-- `prompt` (String): The system prompt text.
-
-```wren
-mcp.addPrompt("You are a helpful assistant that can greet people.")
-```
-
-### serve
-
-Starts the MCP server and begins listening for requests. This must be the last
-call in your `_route.wren` file.
-
-```wren
-mcp.serve
-```
-
-### Tool Class Annotations
-
-MCP tools use special comment annotations to describe their behavior:
-
-- `#!doc = "description"`: Describes the tool or parameter
-- `#!required`: Marks a parameter as required
-- `#!type = TypeName`: Specifies the parameter type (String, Number, Boolean,
-  Array, Object)
-- `#!format = "format"`: Specifies the format for strings ("date", "date-time",
-  "email", "uri", "uuid")
-
-Example tool class:
-
-```wren
-import "gh:bialet/extra/mcp" for Mcp
-
-#!doc = "A simple greeting tool"
-class Greet {
-  construct new(params) {
-    _name = params["name"]
-  }
-
-  #!doc = "Name of the person to greet"
-  #!required
-  name(name) { _name = name }
-
-  call() { "Hello, %(_name)!" }
-}
 ```
 
 ## Wren Core Extensions
