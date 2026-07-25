@@ -984,6 +984,8 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    // Run again the initiliziation once we know the table exists
+    Date.init(Config.get("BIALET_TIMEZONE"))
   }
 
   static clean {
@@ -1004,18 +1006,7 @@ class Db {
     }
     Db.clean
   }
-  static save(table, values) {
-    var converted = {}
-    for (val in values) {
-      var v = val
-      if (v is MapEntry) {
-        v = val.value
-      }
-      if (v is Date) v = v.toString.replace("T", " ")
-      converted[val.key] = v
-    }
-    return `%(table)`.save(converted)
-  }
+  static save(table, values) { Query.fromString(table).save(values) }
   static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
 
@@ -1105,82 +1096,6 @@ class Http {
   static put(url, data) { put(url, data, {}) }
   static put(url) { put(url, "", {}) }
   static delete(url) { delete(url, {}) }
-}
-
-class Date {
-  static init {
-    __tz = null
-  }
-  static tz {
-    if (__tz is Null) {
-       __tz = Config.get("BIALET_TIMEZONE") 
-    }
-    return __tz
-  }
-
-  static fromString(date) { Date.fromString(date, Date.tz) }
-  construct fromString(date, tz) {
-    _tz = tz
-    var f = date.split(" ")
-    var d = f[0].split("-")
-    var t = (f.count > 1 ? f[1] : "00:00:00").split(":")
-    _seconds = t[2].toNum
-    _minutes = t[1].toNum
-    _hours = t[0].toNum
-    _day = d[2].toNum
-    _month = d[1].toNum
-    _year = d[0].toNum
-  }
-  construct new(year, month, day, hours, minutes, seconds, tz) {
-    _tz = tz
-    _year = toNum_(year)
-    _month = toNum_(month)
-    _day = toNum_(day)
-    _hours = toNum_(hours)
-    _minutes = toNum_(minutes)
-    _seconds = toNum_(seconds)
-  }
-  static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
-  static new(date) { Date.new(date, Date.tz) }
-  static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
-  static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
-  static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
-  static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }
-  static now { Date.new() }
-
-  toNum_(n) { n is Num ? n : (!n ? 0 : "%(n)".toNum) }
-
-  seconds { _seconds }
-  minutes { _minutes }
-  hours { _hours }
-  day { _day }
-  month { _month }
-  year { _year }
-  tz { _tz }
-
-  yyyy { _year.toString }
-  yy { _year.toString.substring(2, 4) }
-  mo { _month > 9 ? _month.toString : "0%(month)" }
-  dd { _day > 9 ? _day.toString : "0%(day)" }
-  hh { _hours > 9 ? _hours.toString : "0%(hours)" }
-  mi { _minutes > 9 ? _minutes.toString : "0%(minutes)" }
-  ss { _seconds > 9 ? _seconds.toString : "0%(seconds)" }
-
-  dayOfWeek { Date.format_("\%w", year, month, day, hours, minutes, seconds, tz).toNum }
-  weekOfYear { Date.format_("\%V", year, month, day, hours, minutes, seconds, tz).toNum }
-  dayOfYear { Date.format_("\%j", year, month, day, hours, minutes, seconds, tz).toNum }
-  unix { Date.unix_(year, month, day, hours, minutes, seconds, tz) }
-  format(format) { Date.format_(format.replace("#", "\%"), year, month, day, hours, minutes, seconds, tz) }
-  iso { toString }
-  toString { "%(year)-%(mo)-%(dd) %(hh):%(mi):%(ss)" }
-  diff(otherDate) { unix - otherDate.unix }
-  cmp_(o) { diff(o) }
-  < (o) { cmp_(o) <  0 }
-  > (o) { cmp_(o) >  0 }
-  <=(o) { cmp_(o) <= 0 }
-  >=(o) { cmp_(o) >= 0 }
-  ==(o) { cmp_(o) == 0 }
-  !=(o) { cmp_(o) != 0 }
 }
 
 class Cron {

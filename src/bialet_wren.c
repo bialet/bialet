@@ -60,6 +60,7 @@ static const char* bialet_strcasestr(const char* haystack, const char* needle) {
 #define BIALET_REMOTE_MODULE_DEFAULT_BRANCH "main"
 
 #define MAIN_MODULE_NAME "main"
+#define MAIN_MODULE_SOURCE "Response.init\nDate.init(\"\")"
 #define CLI_MODULE_NAME "bialet_cli"
 
 WrenConfiguration          wren_config;
@@ -635,7 +636,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
-  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init\nDate.init");
+  wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
   if(hm) {
     /* Initialize request */
     wrenEnsureSlots(vm, 4);
@@ -808,7 +809,7 @@ static int runTestFile(const char* testPath, const char* testName,
   WrenVM* vm = wrenNewVM(&wren_config);
 
   // Initialize Response and Date in main module
-  wrenInterpret(vm, MAIN_MODULE_NAME, "Response.init\nDate.init");
+  wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
 
   // Run init file if provided
   if(initPath != NULL) {

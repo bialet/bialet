@@ -1364,6 +1364,11 @@ DEF_PRIMITIVE(test_runRequest) {
 }
 
 void setTimezone(const char* tz) {
+  if(tz == NULL || tz[0] == '\0') {
+    unsetenv("TZ");
+    tzset();
+    return;
+  }
   char tz_env[64];
   snprintf(tz_env, sizeof(tz_env), "TZ=%s", tz);
   putenv(tz_env);
@@ -1757,6 +1762,11 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(systemClass->obj.classObj, "gc()", system_gc);
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
 
+  ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
+  PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
+  PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
+  PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
+
   // While bootstrapping the core types and running the core module, a number
   // of string objects have been created, many of which were instantiated
   // before stringClass was stored in the VM. Some of them *must* be created
@@ -1783,11 +1793,6 @@ void wrenInitializeCore(WrenVM* vm) {
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);
-
-  ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
-  PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
-  PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
-  PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
 
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
   PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
