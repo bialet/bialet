@@ -38,18 +38,11 @@
 
 #else
 
-#if !IS_MAC
-#include <sys/inotify.h>
-#endif
-
 #include <ftw.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
-
-#define EVENT_SIZE (sizeof(struct inotify_event))
-#define BUF_LEN (1024 * (EVENT_SIZE + 16))
 
 #endif
 
@@ -135,49 +128,24 @@ static void triggerReloadFiles() {
   }
 }
 
-#if IS_LINUX
-static void* fileWatcher(void* arg) {
-  (void)arg;
-  pthread_detach(pthread_self());
-  int   length, i = 0;
-  char  buffer[BUF_LEN];
-  int   fd = inotify_init();
-  char* ext;
-  if(fd < 0) {
-    perror("inotify_init");
-  }
-  /* Note: This only watches the root directory. To properly watch subdirectories,
-   * we would need to either:
-   * 1. Recursively add inotify watches for all subdirectories at startup
-   * 2. Listen for IN_CREATE events and dynamically add watches for new directories
-   * For now, only files directly in root_dir will trigger auto-reload. */
-  int wd = inotify_add_watch(fd, bialet_config.root_dir, IN_MODIFY);
-  if(wd < 0) {
-    perror("inotify_add_watch");
-  }
-  for(;;) {
-    length = read(fd, buffer, BUF_LEN);
+#define DMON_IMPL
+#include "dmon.h"
 
-    if(length < 0) {
-      perror("read");
+static void dmonCallback(dmon_watch_id watch_id, dmon_action action,
+                          const char* rootdir, const char* filepath,
+                          const char* oldfilepath, void* user) {
+  (void)watch_id;
+  (void)action;
+  (void)rootdir;
+  (void)oldfilepath;
+  (void)user;
+  if(filepath) {
+    const char* ext = strrchr(filepath, '.');
+    if(ext && !strcmp(ext, BIALET_EXTENSION)) {
+      triggerReloadFiles();
     }
-
-    while(i < length) {
-      struct inotify_event* event = (struct inotify_event*)&buffer[i];
-      if(event->len) {
-        ext = strrchr(event->name, '.');
-        // Only reload .wren files
-        if(ext && !strcmp(ext, BIALET_EXTENSION)) {
-          triggerReloadFiles();
-        }
-      }
-      i += EVENT_SIZE + event->len;
-    }
-    i = 0;
   }
-  pthread_exit(NULL);
 }
-#endif
 
 char* serverUrl(int port) {
   static char url[MAX_URL];
@@ -219,7 +187,6 @@ int main(int argc, char* argv[]) {
   pid_t         pid;
   struct rlimit mem_limit;
   struct rlimit cpu_limit;
-  pthread_t     thread_id;
 
 #endif
   /* Default config values */
@@ -405,7 +372,9 @@ int main(int argc, char* argv[]) {
   int       status;
   pthread_t cron_tid;
   pthread_create(&cron_tid, NULL, cron_thread, NULL);
-  pthread_create(&thread_id, NULL, fileWatcher, NULL);
+
+  dmon_init();
+  dmon_watch(bialet_config.full_root_dir, dmonCallback, DMON_WATCHFLAGS_RECURSIVE, NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;
@@ -438,9 +407,14 @@ int main(int argc, char* argv[]) {
       exit(1);
     }
   }
+
+  dmon_deinit();
 #endif
 
 #if !IS_LINUX
+  dmon_init();
+  dmon_watch(bialet_config.full_root_dir, dmonCallback, DMON_WATCHFLAGS_RECURSIVE, NULL);
+
   time_t last_cron = time(NULL);
   while(keep_running) {
     server_poll(SERVER_POLL_DELAY);
@@ -450,6 +424,8 @@ int main(int argc, char* argv[]) {
       last_cron = now;
     }
   }
+
+  dmon_deinit();
 #endif
 
   return 0;
