@@ -28,7 +28,7 @@ class Task {
 
   static list() { `
     SELECT * FROM Task WHERE session = ? ORDER BY createdAt ASC
-  `.fetch(Session.id).map{ |task| Task.new(task) } }
+  `.fetch(Session.id).to(Task) }
 
   static clear() { `
     DELETE FROM Task WHERE finished = 1 AND session = ?
