@@ -18,6 +18,7 @@ var justDate = Date.new(2024, 9, 13)
 ```
 
 - `Date.new()` creates a new `Date` object representing the current date and time.
+- `Date.now` is a static getter equivalent to `Date.new()`, returning the current date and time.
 - `Date.new(year, month, day, hour, minute, second)` allows you to create a
   specific date and time.
 - `Date.new(year, month, day)` creates a date object with the specified year,
