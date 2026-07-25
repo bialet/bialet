@@ -119,12 +119,23 @@ void* cron_thread(void* arg) {
 }
 
 /* Reload files */
-static void triggerReloadFiles() {
+static void triggerReloadFiles(const char* filepath) {
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
-    migrate();
-    cron_install();
+    if(filepath == NULL) {
+      migrate();
+      cron_install();
+      return;
+    }
+    if(!strcmp(filepath, "_migration" BIALET_EXTENSION) ||
+       !strcmp(filepath, "_app/migration" BIALET_EXTENSION)) {
+      migrate();
+    }
+    if(!strcmp(filepath, "_cron" BIALET_EXTENSION) ||
+       !strcmp(filepath, "_app/cron" BIALET_EXTENSION)) {
+      cron_install();
+    }
   }
 }
 
@@ -142,7 +153,7 @@ static void dmonCallback(dmon_watch_id watch_id, dmon_action action,
   if(filepath) {
     const char* ext = strrchr(filepath, '.');
     if(ext && !strcmp(ext, BIALET_EXTENSION)) {
-      triggerReloadFiles();
+      triggerReloadFiles(filepath);
     }
   }
 }
@@ -366,7 +377,7 @@ int main(int argc, char* argv[]) {
   }
 
   welcome(port);
-  triggerReloadFiles();
+  triggerReloadFiles(NULL);
 
 #if IS_LINUX
   int       status;
