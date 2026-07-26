@@ -13,6 +13,12 @@ PORT="${3:-7001}"
 
 source "$(dirname "$0")/util.sh"
 
+# Tests - Syntax validation (-t flag)
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
+  test_syntax "Syntax validation fails        " "syntax_err.wren" 1
+fi
+
 # Tests - Request & Response
 run_test "Get the URL parameter       " "get?foo=bar"     200 "bar"
 run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"

@@ -90,6 +90,29 @@ read_file() {
     cat "$(dirname "$0")/$file_path"
 }
 
+test_syntax() {
+    description=$1
+    file=$2
+    expected_exit=$3
+
+    total_tests=$((total_tests + 1))
+    echo -e -n "$description\t"
+    filepath="$(dirname "$0")/$file"
+
+    "$TARGET_EXEC" -t "$filepath" > /dev/null 2>&1
+    actual_exit=$?
+
+    if [[ "$actual_exit" -ne "$expected_exit" ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected exit: ${expected_exit}\tActual: $actual_exit\n"
+        return 1
+    fi
+
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+}
+
 # Function to print the final result
 print_summary() {
     echo -e "\nSummary:\n"
