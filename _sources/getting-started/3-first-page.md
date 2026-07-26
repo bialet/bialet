@@ -28,6 +28,11 @@ Everything inside `{{ }}` is evaluated as Wren code and the result is
 inserted into the HTML. You can use variables, conditionals, loops — any
 valid Wren expression.
 
+> **Security note:** `{{ }}` does **not** escape HTML by default. When
+> displaying user-generated content, use `.safe` to escape it:
+> `{{ userContent.safe }}`. See [Inline HTML Strings](../html-strings.md)
+> for details.
+
 ```wren
 var items = ["apples", "oranges", "bananas"]
 return <ul>

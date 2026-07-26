@@ -65,7 +65,7 @@
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -477,7 +476,8 @@ bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class
 <h2>Test Initialization<a class="headerlink" href="#test-initialization" title="Link to this heading">#</a></h2>
 <section id="tests-init-wren-optional">
 <h3><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)<a class="headerlink" href="#tests-init-wren-optional" title="Link to this heading">#</a></h3>
-<p>If present, this file runs once before each test file. Use it for common setup:</p>
+<p>If present, this file runs once at the start of each test run (before any
+test files execute). Use it for common setup:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/_init.wren</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Setting up test environment&quot;</span><span class="p">)</span>
 
@@ -841,7 +841,7 @@ bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class
 <p>Tests run against a <strong>temporary database file</strong> that is created fresh for each test run:</p>
 <ol class="arabic simple">
 <li><p>A temporary database file is created</p></li>
-<li><p>Migrations are automatically run (<code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">/_app/migration.wren</span></code>)</p></li>
+<li><p>Migrations are automatically run (<code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> runs (if exists)</p></li>
 <li><p>Test files execute</p></li>
 <li><p>Temporary database is deleted</p></li>

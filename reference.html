@@ -62,10 +62,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
-    <link rel="prev" title="Model Context Protocol (MCP)" href="mcp.html" />
+    <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -516,6 +515,7 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
@@ -545,6 +545,11 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-string">html(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-path">file(path)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-data">new(data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
@@ -567,12 +572,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek-job">Cron.at(hour, minute, dayOfWeek, job)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">Mcp</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-name-version">new(name, version)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addtool-toolclass">addTool(toolClass)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addprompt-prompt">addPrompt(prompt)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve">serve</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-class-annotations">Tool Class Annotations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#system">System</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#print">print()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#print-obj">print(obj)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#printall-sequence">printAll(sequence)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-obj">write(obj)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writeall-sequence">writeAll(sequence)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-obj">log(obj)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">
@@ -626,20 +632,13 @@
 <li><p><strong>Http</strong> - Perform HTTP requests</p></li>
 <li><p><strong>Date</strong> - Date and time operations</p></li>
 <li><p><strong>File</strong> - File operations</p></li>
+<li><p><strong>Markdown</strong> - Render Markdown content to HTML</p></li>
+<li><p><strong>System</strong> - Logging and output utilities</p></li>
 </ul>
 </section>
 <section id="external-classes">
 <h2>External Classes<a class="headerlink" href="#external-classes" title="Link to this heading">#</a></h2>
 <p>External classes must be imported explicitly using the GitHub shorthand or full URLs. See the <a class="reference internal" href="structure.html"><span class="std std-doc">structure documentation</span></a> section on External Imports for details on how to import external modules.</p>
-<p>Available external modules:</p>
-<ul class="simple">
-<li><p><strong>Mcp</strong> - Model Context Protocol server support</p>
-<ul>
-<li><p>Import: <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;gh:bialet/extra/mcp&quot;</span> <span class="pre">for</span> <span class="pre">Mcp</span></code></p></li>
-<li><p>Documentation: <a class="reference internal" href="mcp.html"><span class="std std-doc">MCP Documentation</span></a></p></li>
-</ul>
-</li>
-</ul>
 </section>
 <hr class="docutils" />
 <section id="request">
@@ -1303,6 +1302,15 @@ various types of HTTP requests.</p>
 <span id="date-reference"></span><h2>Date<a class="headerlink" href="#date" title="Link to this heading">#</a></h2>
 <p>A class for managing date and time operations, supporting multiple constructors
 and methods for formatting, comparing, and manipulating dates relative to UTC.</p>
+<section id="now">
+<h3>now<a class="headerlink" href="#now" title="Link to this heading">#</a></h3>
+<p>Static getter that returns a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> instance representing the current date
+and time in UTC. Equivalent to <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Current time: </span><span class="si">%(</span><span class="n">current</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="id8">
 <h3>new()<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in UTC.</p>
@@ -1418,7 +1426,7 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 </section>
 <section id="dayofyear">
 <h3>dayOfYear<a class="headerlink" href="#dayofyear" title="Link to this heading">#</a></h3>
-<p>Returns the day of the year (1-365).</p>
+<p>Returns the day of the year (1-366).</p>
 </section>
 <section id="id9">
 <h3>date<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
@@ -1434,7 +1442,7 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 </section>
 <section id="iso">
 <h3>iso<a class="headerlink" href="#iso" title="Link to this heading">#</a></h3>
-<p>Returns the date as an ISO 8601 formatted string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code>). Alias for <code class="docutils literal notranslate"><span class="pre">toString</span></code>.</p>
+<p>Returns the date as an ISO 8601 formatted string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SS</span></code>). Alias for <code class="docutils literal notranslate"><span class="pre">toString</span></code>.</p>
 </section>
 <section id="inutc">
 <h3>inUtc<a class="headerlink" href="#inutc" title="Link to this heading">#</a></h3>
@@ -1464,6 +1472,33 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">otherDate</span></code>: The <code class="docutils literal notranslate"><span class="pre">Date</span></code> object to compare against.</p></li>
 </ul>
+</section>
+</section>
+<section id="markdown">
+<h2>Markdown<a class="headerlink" href="#markdown" title="Link to this heading">#</a></h2>
+<p>A class for rendering Markdown content to HTML, providing static methods to
+process both inline strings and Markdown files.</p>
+<section id="html-string">
+<h3>html(string)<a class="headerlink" href="#html-string" title="Link to this heading">#</a></h3>
+<p>Renders a Markdown string to HTML.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">string</span></code>: The Markdown-formatted string to render.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;## Hello **World**!&quot;</span><span class="p">)</span>
+<span class="c1">// Renders: &lt;h2&gt;Hello &lt;strong&gt;World&lt;/strong&gt;!&lt;/h2&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="file-path">
+<h3>file(path)<a class="headerlink" href="#file-path" title="Link to this heading">#</a></h3>
+<p>Reads a <code class="docutils literal notranslate"><span class="pre">.md</span></code> file from disk and renders its content to HTML.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: The path to the Markdown file to render.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span>
+<span class="c1">// Reads about.md from the app directory and renders its Markdown to HTML</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="file">
@@ -1580,85 +1615,68 @@ the given value.</p>
 </div>
 </section>
 </section>
-<section id="mcp">
-<h2>Mcp<a class="headerlink" href="#mcp" title="Link to this heading">#</a></h2>
-<p><strong>External Class</strong> - Must be imported: <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;gh:bialet/extra/mcp&quot;</span> <span class="pre">for</span> <span class="pre">Mcp</span></code></p>
-<p>A class for creating Model Context Protocol (MCP) servers that expose tools,
-resources, and prompts to AI assistants.</p>
-<p>For complete documentation and examples, see <a class="reference internal" href="mcp.html"><span class="std std-doc">MCP Documentation</span></a>.</p>
-<section id="new-name-version">
-<h3>new(name, version)<a class="headerlink" href="#new-name-version" title="Link to this heading">#</a></h3>
-<p>Creates a new MCP server instance.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> (String): The name of the MCP server.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> (String): The version number of the server.</p></li>
-<li><p>Returns: A new <code class="docutils literal notranslate"><span class="pre">Mcp</span></code> instance.</p></li>
-</ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;my-server&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
+<section id="system">
+<h2>System<a class="headerlink" href="#system" title="Link to this heading">#</a></h2>
+<p>A class providing static methods for printing output to the server’s standard
+output stream. Useful for logging, debugging, and tracing application behavior.</p>
+<section id="print">
+<h3>print()<a class="headerlink" href="#print" title="Link to this heading">#</a></h3>
+<p>Prints an empty line.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
-<section id="addtool-toolclass">
-<h3>addTool(toolClass)<a class="headerlink" href="#addtool-toolclass" title="Link to this heading">#</a></h3>
-<p>Adds a tool class to the MCP server. The tool class must have a
-<code class="docutils literal notranslate"><span class="pre">construct</span> <span class="pre">new(params)</span></code> constructor and a <code class="docutils literal notranslate"><span class="pre">call()</span></code> method.</p>
+<section id="print-obj">
+<h3>print(obj)<a class="headerlink" href="#print-obj" title="Link to this heading">#</a></h3>
+<p>Prints an object to stdout followed by a newline, then returns the object.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">toolClass</span></code> (Class): The class that implements the tool. Must include
-annotations (<code class="docutils literal notranslate"><span class="pre">#!doc</span></code>, <code class="docutils literal notranslate"><span class="pre">#!required</span></code>, <code class="docutils literal notranslate"><span class="pre">#!type</span></code>, etc.) to describe the tool and
-its parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obj</span></code>: The object to print.</p></li>
 </ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchFlights</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="mf">42</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="addprompt-prompt">
-<h3>addPrompt(prompt)<a class="headerlink" href="#addprompt-prompt" title="Link to this heading">#</a></h3>
-<p>Sets the system prompt for the MCP server. This prompt guides the AI assistant
-on how to use the tools.</p>
+<section id="printall-sequence">
+<h3>printAll(sequence)<a class="headerlink" href="#printall-sequence" title="Link to this heading">#</a></h3>
+<p>Prints each element of a sequence on its own line.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">prompt</span></code> (String): The system prompt text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sequence</span></code>: A list or other sequence to print.</p></li>
 </ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a helpful assistant that can greet people.&quot;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">printAll</span><span class="p">([</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
-<section id="serve">
-<h3>serve<a class="headerlink" href="#serve" title="Link to this heading">#</a></h3>
-<p>Starts the MCP server and begins listening for requests. This must be the last
-call in your <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
+<section id="write-obj">
+<h3>write(obj)<a class="headerlink" href="#write-obj" title="Link to this heading">#</a></h3>
+<p>Writes an object to stdout without a trailing newline, then returns the object.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">obj</span></code>: The object to write.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Loading...&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="tool-class-annotations">
-<h3>Tool Class Annotations<a class="headerlink" href="#tool-class-annotations" title="Link to this heading">#</a></h3>
-<p>MCP tools use special comment annotations to describe their behavior:</p>
+<section id="writeall-sequence">
+<h3>writeAll(sequence)<a class="headerlink" href="#writeall-sequence" title="Link to this heading">#</a></h3>
+<p>Writes each element of a sequence without newlines between them.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">#!doc</span> <span class="pre">=</span> <span class="pre">&quot;description&quot;</span></code>: Describes the tool or parameter</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">#!required</span></code>: Marks a parameter as required</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">#!type</span> <span class="pre">=</span> <span class="pre">TypeName</span></code>: Specifies the parameter type (String, Number, Boolean,
-Array, Object)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">#!format</span> <span class="pre">=</span> <span class="pre">&quot;format&quot;</span></code>: Specifies the format for strings (“date”, “date-time”,
-“email”, “uri”, “uuid”)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sequence</span></code>: A list or other sequence to write.</p></li>
 </ul>
-<p>Example tool class:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="cs">#!doc = &quot;A simple greeting tool&quot;</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
-
-<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">!&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">writeAll</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;c&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="log-obj">
+<h3>log(obj)<a class="headerlink" href="#log-obj" title="Link to this heading">#</a></h3>
+<p>Writes an object to stdout followed by a newline, then returns the object. Same
+behavior as <code class="docutils literal notranslate"><span class="pre">print(obj)</span></code>. Supports Wren’s string interpolation syntax <code class="docutils literal notranslate"><span class="pre">%(var)</span></code>
+for formatted output.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">obj</span></code>: The object to log.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Request from </span><span class="si">%(</span><span class="nc">Request</span><span class="o">.</span><span class="n">uri</span><span class="si">)</span><span class="s2"> at </span><span class="si">%(</span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;User </span><span class="si">%(</span><span class="n">name</span><span class="si">)</span><span class="s2"> logged in&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1779,12 +1797,12 @@ Array, Object)</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mcp.html"
+       href="cron.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model Context Protocol (MCP)</p>
+        <p class="prev-next-title">Cron Tasks</p>
       </div>
     </a>
     <a class="right-next"
@@ -1931,6 +1949,7 @@ Array, Object)</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
@@ -1960,6 +1979,11 @@ Array, Object)</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-string">html(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-path">file(path)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-data">new(data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
@@ -1982,12 +2006,13 @@ Array, Object)</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cron-at-hour-minute-dayofweek-job">Cron.at(hour, minute, dayOfWeek, job)</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">Mcp</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-name-version">new(name, version)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addtool-toolclass">addTool(toolClass)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#addprompt-prompt">addPrompt(prompt)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve">serve</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tool-class-annotations">Tool Class Annotations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#system">System</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#print">print()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#print-obj">print(obj)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#printall-sequence">printAll(sequence)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-obj">write(obj)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writeall-sequence">writeAll(sequence)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-obj">log(obj)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">

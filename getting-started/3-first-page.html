@@ -65,7 +65,7 @@
     <link rel="prev" title="2. Setup" href="2-setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -435,6 +434,12 @@ instead of objects. You can embed Wren expressions with <code class="docutils li
 <p>Everything inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is evaluated as Wren code and the result is
 inserted into the HTML. You can use variables, conditionals, loops — any
 valid Wren expression.</p>
+<blockquote>
+<div><p><strong>Security note:</strong> <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> does <strong>not</strong> escape HTML by default. When
+displaying user-generated content, use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> to escape it:
+<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">userContent.safe</span> <span class="pre">}}</span></code>. See <a class="reference internal" href="../html-strings.html"><span class="std std-doc">Inline HTML Strings</span></a>
+for details.</p>
+</div></blockquote>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;apples&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;oranges&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bananas&quot;</span><span class="p">]</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;ul&gt;</span>
 <span class="x">  {{ items.map {|item| &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt; } }}</span>

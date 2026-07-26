@@ -94,7 +94,7 @@ it bundles the essentials, nothing more.
 | ORM             | Raw SQL with Query objects       | ActiveRecord / Django ORM         |
 | Admin panel     | Build your own                   | Built-in (Django admin) / gems    |
 | Migrations      | `_migration.wren` file           | Versioned migration files         |
-| Scaling         | Single process                   | Horizontally via workers/load bal |
+| Scaling         | Single process                   | Horizontally via workers / load balancer |
 | Ecosystem       | Minimal                          | Massive (gems / packages)         |
 
 If you're building a complex, long-lived application with a team, Rails or

@@ -16,14 +16,19 @@ To change the name of the database, set the `-d` option.
 
 Use backticks to surround SQL statements `` ` ` ``.
 
-The Query object has 6 methods. All the methods accept the same parameters.
+The Query object provides several methods to retrieve results:
 
-- `query()`: Returns the last inserted id if the query was a `INSERT` statement.
+- `query()`: Returns the last inserted id if the query was an `INSERT` statement.
 - `fetch()`: Returns the result of the query as an array (List object).
 - `first()`: Returns the first result of the query as an object (Map object).
-- `val()`: Returns the value of the first result.
-- `toNum()`: Returns the value of the first result as a number.
-- `toBool()`: Returns the value of the first result as a boolean.
+- `val()`: Returns the value of the first column as a string.
+- `toNum()`: Returns the value of the first column as a number.
+- `toBool()`: Returns the value of the first column as a boolean.
+
+Additional methods available on Query objects:
+- `save(values)`: Insert or update a row in the table. See [Insert and update](#insert-and-update).
+- `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
+- `to(Class)`: Map results to domain class instances. See [Mapping Results](#mapping-results-to-domain-classes).
 
 The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
 
@@ -178,11 +183,21 @@ user["id"] = 1
 ## Data Types and BLOB Support
 
 SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
-NULL. Bialet handles most of these types automatically:
+NULL.
 
-- **TEXT**: Returned as strings
-- **INTEGER** and **REAL**: Returned as numbers
-- **NULL**: Returned as null values
+**Important**: When accessing column values from query results (`.fetch()`,
+`.first()`), all values are returned as **strings**. Use the following methods
+for numeric access:
+
+- `.toNum()` — returns the first column value as a number
+- `.val()` + `Num.fromString()` — manually convert a string column to a number
+- `.toBool()` — returns the first column value as a boolean
+
+```wren
+var count = `SELECT COUNT(*) as c FROM votes`.toNum    // returns a number
+var age = Num.fromString(row["age"])                    // manual conversion
+var active = `SELECT active FROM users WHERE id = ?`.toBool(1)  // returns boolean
+```
 
 **Note on BLOB data**: While BLOB (Binary Large Object) data is retrieved
 correctly from SQLite, it may not be properly handled when passed to Wren code

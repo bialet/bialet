@@ -65,7 +65,7 @@
     <link rel="prev" title="Inline HTML Strings" href="html-strings.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -430,14 +429,20 @@
 <section id="query-object">
 <h2>Query Object<a class="headerlink" href="#query-object" title="Link to this heading">#</a></h2>
 <p>Use backticks to surround SQL statements <code class="docutils literal notranslate"><span class="pre">`</span> <span class="pre">`</span></code>.</p>
-<p>The Query object has 6 methods. All the methods accept the same parameters.</p>
+<p>The Query object provides several methods to retrieve results:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">query()</span></code>: Returns the last inserted id if the query was a <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> statement.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">query()</span></code>: Returns the last inserted id if the query was an <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> statement.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fetch()</span></code>: Returns the result of the query as an array (List object).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">first()</span></code>: Returns the first result of the query as an object (Map object).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">val()</span></code>: Returns the value of the first result.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">toNum()</span></code>: Returns the value of the first result as a number.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">toBool()</span></code>: Returns the value of the first result as a boolean.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val()</span></code>: Returns the value of the first column as a string.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toNum()</span></code>: Returns the value of the first column as a number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toBool()</span></code>: Returns the value of the first column as a boolean.</p></li>
+</ul>
+<p>Additional methods available on Query objects:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row in the table. See <a class="reference internal" href="#insert-and-update"><span class="xref myst">Insert and update</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order"><span class="xref myst">Safe Sorting</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes"><span class="xref myst">Mapping Results</span></a>.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a LIMIT clause.</p>
 <p>You can’t concatenate strings or use interpolations with the Query object. When
@@ -579,12 +584,20 @@ object with the values.</p>
 <section id="data-types-and-blob-support">
 <h2>Data Types and BLOB Support<a class="headerlink" href="#data-types-and-blob-support" title="Link to this heading">#</a></h2>
 <p>SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
-NULL. Bialet handles most of these types automatically:</p>
+NULL.</p>
+<p><strong>Important</strong>: When accessing column values from query results (<code class="docutils literal notranslate"><span class="pre">.fetch()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.first()</span></code>), all values are returned as <strong>strings</strong>. Use the following methods
+for numeric access:</p>
 <ul class="simple">
-<li><p><strong>TEXT</strong>: Returned as strings</p></li>
-<li><p><strong>INTEGER</strong> and <strong>REAL</strong>: Returned as numbers</p></li>
-<li><p><strong>NULL</strong>: Returned as null values</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.toNum()</span></code> — returns the first column value as a number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.val()</span></code> + <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> — manually convert a string column to a number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.toBool()</span></code> — returns the first column value as a boolean</p></li>
 </ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as c FROM votes`</span><span class="o">.</span><span class="n">toNum</span><span class="w">    </span><span class="c1">// returns a number</span>
+<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">])</span><span class="w">                    </span><span class="c1">// manual conversion</span>
+<span class="k">var</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT active FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">toBool</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">  </span><span class="c1">// returns boolean</span>
+</pre></div>
+</div>
 <p><strong>Note on BLOB data</strong>: While BLOB (Binary Large Object) data is retrieved
 correctly from SQLite, it may not be properly handled when passed to Wren code
 due to Wren’s string representation. If you need to work with binary data,

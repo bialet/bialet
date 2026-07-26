@@ -65,7 +65,7 @@
     <link rel="prev" title="Examples" href="examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">FAQ</a></li>
@@ -524,9 +523,10 @@ copy your files, and the database comes along.</p>
 <li><p>macOS ARM (Apple Silicon)</p></li>
 <li><p>Linux x86_64</p></li>
 <li><p>Linux ARM64</p></li>
+<li><p>Windows x86_64</p></li>
 </ul>
-<p>You can also build from source on any platform with a C17 compiler, SQLite3,
-and libcurl (see <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a>).</p>
+<p>You can also build from source on any platform with a C17 compiler and SQLite3.
+libcurl is optional but recommended for production (see <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a>).</p>
 </section>
 <section id="can-i-use-css-frameworks">
 <h3>Can I use CSS frameworks?<a class="headerlink" href="#can-i-use-css-frameworks" title="Link to this heading">#</a></h3>
@@ -546,8 +546,7 @@ file in a directory and use <code class="docutils literal notranslate"><span cla
 <h3>How do I handle forms?<a class="headerlink" href="#how-do-i-handle-forms" title="Link to this heading">#</a></h3>
 <p>Use <code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> to check the method and <code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code> to read
 submitted values. Redirect after processing with
-<code class="docutils literal notranslate"><span class="pre">Response.redirect(&quot;/path&quot;)</span></code>. See the <a class="reference internal" href="getting-started/index.html"><span class="doc std std-doc">Getting Started</span></a> tutorial.
-tutorial for a complete example.</p>
+<code class="docutils literal notranslate"><span class="pre">Response.redirect(&quot;/path&quot;)</span></code>. See the <a class="reference internal" href="getting-started/index.html"><span class="doc std std-doc">Getting Started</span></a> tutorial for a complete example.</p>
 </section>
 <section id="how-do-database-queries-work">
 <h3>How do database queries work?<a class="headerlink" href="#how-do-database-queries-work" title="Link to this heading">#</a></h3>
@@ -571,27 +570,33 @@ for manual conversion:</p>
 <h3>How do I create reusable layouts?<a class="headerlink" href="#how-do-i-create-reusable-layouts" title="Link to this heading">#</a></h3>
 <p>Create an <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> file with a <code class="docutils literal notranslate"><span class="pre">Template</span></code> class. This file is
 automatically loaded and its class is available to all pages in your app.
-Use the <code class="docutils literal notranslate"><span class="pre">Site</span></code> variable to access it:</p>
+Import it and use <code class="docutils literal notranslate"><span class="pre">App.render</span></code> to wrap your content:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">head</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;head&gt;...&lt;/head&gt;&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">body</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
+<span class="x">      &lt;head&gt;&lt;title&gt;My App&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="x">&lt;nav&gt;...&lt;/nav&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;footer&gt;...&lt;/footer&gt;</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
-<span class="nc">Site</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-<span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Hello&lt;/h1&gt;&quot;</span>
-<span class="nc">Site</span><span class="o">.</span><span class="n">body</span><span class="p">()</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">App</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;h1&gt;Hello&lt;/h1&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>See <a class="reference internal" href="structure.html"><span class="std std-doc">Structure &amp; Routing</span></a> for more layout patterns.</p>
 </section>
 <section id="can-i-import-external-wren-modules">
 <h3>Can I import external Wren modules?<a class="headerlink" href="#can-i-import-external-wren-modules" title="Link to this heading">#</a></h3>
 <p>Yes, using <code class="docutils literal notranslate"><span class="pre">import</span></code> with a GitHub path:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-</pre></div>
-</div>
 <p>See <a class="reference internal" href="structure.html"><span class="std std-doc">Structure &amp; Routing</span></a>.</p>
 </section>
 <section id="does-bialet-support-https">
@@ -611,10 +616,9 @@ like nginx or Caddy in front of it. For local development, HTTP on
 </section>
 <section id="can-i-run-multiple-apps-on-one-server">
 <h3>Can I run multiple apps on one server?<a class="headerlink" href="#can-i-run-multiple-apps-on-one-server" title="Link to this heading">#</a></h3>
-<p>Yes. Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> with different <code class="docutils literal notranslate"><span class="pre">-p</span></code> (port) and <code class="docutils literal notranslate"><span class="pre">-A</span></code> (app directory)
-flags:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-A<span class="w"> </span>/apps/site1<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span><span class="p">&amp;</span>
-bialet<span class="w"> </span>-A<span class="w"> </span>/apps/site2<span class="w"> </span>-p<span class="w"> </span><span class="m">7002</span><span class="w"> </span><span class="p">&amp;</span>
+<p>Yes. Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> with different ports and app directories:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/apps/site1<span class="w"> </span><span class="p">&amp;</span>
+bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7002</span><span class="w"> </span>/apps/site2<span class="w"> </span><span class="p">&amp;</span>
 </pre></div>
 </div>
 </section>

@@ -61,11 +61,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Model Context Protocol (MCP)" href="mcp.html" />
+    <link rel="next" title="Reference" href="reference.html" />
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -430,10 +429,10 @@ sending emails, or syncing external data.</p>
 <p>To schedule a task, use the <code class="docutils literal notranslate"><span class="pre">Cron.every</span></code> or <code class="docutils literal notranslate"><span class="pre">Cron.at</span></code> helpers methods inside the
 Wren cron file. These methods receive a block that is called at the specified
 time.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;/_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="c1">// Every 2 minutes</span>
-<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Hello, from Cron!&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Hello, from Cron!&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// At 2:00 AM</span>
 <span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">clearAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
@@ -446,19 +445,26 @@ evaluation. You can ignore it if not needed.</p>
 <section id="cron-every-minutes">
 <h4><code class="docutils literal notranslate"><span class="pre">Cron.every(minutes)</span></code><a class="headerlink" href="#cron-every-minutes" title="Link to this heading">#</a></h4>
 <p>Runs the job when the current minute is divisible by <code class="docutils literal notranslate"><span class="pre">minutes</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs every 10 minutes&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">10</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Runs every 10 minutes&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
+<blockquote>
+<div><p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">Cron.every(n)</span></code> uses divisibility, not elapsed time.
+<code class="docutils literal notranslate"><span class="pre">Cron.every(7)</span></code> fires at minutes 0, 7, 14, 21, 28, 35, 42, 49, 56,
+then skips 4 minutes to 0 again. <code class="docutils literal notranslate"><span class="pre">Cron.every(90)</span></code> <strong>never</strong> fires because
+90 does not divide 60. Use these safe values: 1, 2, 3, 4, 5, 6, 10, 12,
+15, 20, 30.</p>
+</div></blockquote>
 </section>
 <section id="cron-at-hour-minute-dayofweek">
 <h4><code class="docutils literal notranslate"><span class="pre">Cron.at(hour,</span> <span class="pre">minute,</span> <span class="pre">dayOfWeek)</span></code><a class="headerlink" href="#cron-at-hour-minute-dayofweek" title="Link to this heading">#</a></h4>
 <p>Runs the job when the current time matches the given <code class="docutils literal notranslate"><span class="pre">hour</span></code> and <code class="docutils literal notranslate"><span class="pre">minute</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 03:15 every day&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Runs at 03:15 every day&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Runs the job when the current time matches the given hour, minute, and day of
 week. Days of week: 0 (Sunday) to 6 (Saturday)</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;Runs at 04:30 every Monday&quot;</span><span class="w"> </span><span class="p">}</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Runs at 04:30 every Monday&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -470,7 +476,7 @@ week. Days of week: 0 (Sunday) to 6 (Saturday)</p>
 custom rules.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">d</span><span class="o">|</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">hour</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="s2">&quot;It&#39;s the first of the month!&quot;</span>
+<span class="w">    </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;It&#39;s the first of the month!&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -499,11 +505,11 @@ custom rules.</p>
       </div>
     </a>
     <a class="right-next"
-       href="mcp.html"
+       href="reference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Model Context Protocol (MCP)</p>
+        <p class="prev-next-title">Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

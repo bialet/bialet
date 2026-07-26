@@ -80,8 +80,9 @@ space before the closing slash.
 ### Example
 
 ```wren
+var userInput = "Hello"
 var inputField = <input value="{{ userInput }}" />
-System.log(inputField) // Outputs: "<input value='{{ userInput }}'>"
+System.log(inputField) // Outputs: "<input value='Hello'>"
 ```
 
 ## Common Errors
@@ -116,6 +117,31 @@ line.
 var multiLineAttr = <div class="example"
                          data-value="example"></div>
 ```
+
+## Escaping and Security
+
+**The `{{ }}` interpolation does NOT escape HTML by default.** When displaying
+user-generated content, you must use `.safe` to escape special HTML characters
+and prevent XSS attacks:
+
+```wren
+var userInput = "<script>alert('xss')</script>"
+var safe = <p>{{ userInput.safe }}</p>
+// Outputs: "<p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>"
+
+// Without .safe — dangerous!
+var dangerous = <p>{{ userInput }}</p>
+// Outputs: "<p><script>alert('xss')</script></p>"  ← XSS vulnerable!
+```
+
+You can also use `Util.htmlEscape()` for manual escaping:
+
+```wren
+var escaped = Util.htmlEscape(userInput)
+```
+
+**Rule:** Always use `.safe` on any string that comes from user input,
+database queries, or URL parameters before inserting it into HTML.
 
 ## Advanced Features
 

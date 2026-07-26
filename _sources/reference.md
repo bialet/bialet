@@ -17,16 +17,12 @@ The following classes are available by default in all Bialet applications withou
 - **Http** - Perform HTTP requests
 - **Date** - Date and time operations
 - **File** - File operations
+- **Markdown** - Render Markdown content to HTML
+- **System** - Logging and output utilities
 
 ## External Classes
 
 External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md) section on External Imports for details on how to import external modules.
-
-Available external modules:
-
-- **Mcp** - Model Context Protocol server support
-  - Import: `import "gh:bialet/extra/mcp" for Mcp`
-  - Documentation: [MCP Documentation](mcp.md)
 
 ---
 
@@ -632,6 +628,16 @@ Performs a simple DELETE request to the specified URL.
 A class for managing date and time operations, supporting multiple constructors
 and methods for formatting, comparing, and manipulating dates relative to UTC.
 
+### now
+
+Static getter that returns a new `Date` instance representing the current date
+and time in UTC. Equivalent to `Date.new()`.
+
+```wren
+var current = Date.now
+System.log("Current time: %(current)")
+```
+
 ### new()
 
 Creates a new `Date` object representing the current date and time in UTC.
@@ -739,7 +745,7 @@ Returns the day of the week as a number (0 for Sunday, 6 for Saturday).
 
 ### dayOfYear
 
-Returns the day of the year (1-365).
+Returns the day of the year (1-366).
 
 ### date
 
@@ -755,7 +761,7 @@ Returns the Unix timestamp of the date.
 
 ### iso
 
-Returns the date as an ISO 8601 formatted string (`YYYY-MM-DD HH:MM:SS`). Alias for `toString`.
+Returns the date as an ISO 8601 formatted string (`YYYY-MM-DDTHH:MM:SS`). Alias for `toString`.
 
 ### inUtc
 
@@ -782,6 +788,33 @@ Subtracts a date or time interval from the date.
 Returns the difference between the current date and `otherDate`.
 
 - `otherDate`: The `Date` object to compare against.
+
+## Markdown
+
+A class for rendering Markdown content to HTML, providing static methods to
+process both inline strings and Markdown files.
+
+### html(string)
+
+Renders a Markdown string to HTML.
+
+- `string`: The Markdown-formatted string to render.
+
+```wren
+var content = Markdown.html("## Hello **World**!")
+// Renders: <h2>Hello <strong>World</strong>!</h2>
+```
+
+### file(path)
+
+Reads a `.md` file from disk and renders its content to HTML.
+
+- `path`: The path to the Markdown file to render.
+
+```wren
+var content = Markdown.file("about.md")
+// Reads about.md from the app directory and renders its Markdown to HTML
+```
 
 ## File
 
@@ -891,91 +924,71 @@ Runs the job at a specific hour, minute, and day of the week.
 Cron.at(9, 0, 1) { |d| System.log("Running Monday at 9:00 AM") }
 ```
 
-## Mcp
+## System
 
-**External Class** - Must be imported: `import "gh:bialet/extra/mcp" for Mcp`
+A class providing static methods for printing output to the server's standard
+output stream. Useful for logging, debugging, and tracing application behavior.
 
-A class for creating Model Context Protocol (MCP) servers that expose tools,
-resources, and prompts to AI assistants.
+### print()
 
-For complete documentation and examples, see [MCP Documentation](mcp.md).
-
-### new(name, version)
-
-Creates a new MCP server instance.
-
-- `name` (String): The name of the MCP server.
-- `version` (String): The version number of the server.
-- Returns: A new `Mcp` instance.
+Prints an empty line.
 
 ```wren
-import "gh:bialet/extra/mcp" for Mcp
-
-var mcp = Mcp.new('my-server', '1.0.0')
+System.print()
 ```
 
-### addTool(toolClass)
+### print(obj)
 
-Adds a tool class to the MCP server. The tool class must have a
-`construct new(params)` constructor and a `call()` method.
+Prints an object to stdout followed by a newline, then returns the object.
 
-- `toolClass` (Class): The class that implements the tool. Must include
-  annotations (`#!doc`, `#!required`, `#!type`, etc.) to describe the tool and
-  its parameters.
+- `obj`: The object to print.
 
 ```wren
-mcp.addTool(Greet)
-mcp.addTool(SearchFlights)
+System.print("Hello World")
+System.print(42)
 ```
 
-### addPrompt(prompt)
+### printAll(sequence)
 
-Sets the system prompt for the MCP server. This prompt guides the AI assistant
-on how to use the tools.
+Prints each element of a sequence on its own line.
 
-- `prompt` (String): The system prompt text.
+- `sequence`: A list or other sequence to print.
 
 ```wren
-mcp.addPrompt("You are a helpful assistant that can greet people.")
+System.printAll([1, 2, 3])
 ```
 
-### serve
+### write(obj)
 
-Starts the MCP server and begins listening for requests. This must be the last
-call in your `_route.wren` file.
+Writes an object to stdout without a trailing newline, then returns the object.
+
+- `obj`: The object to write.
 
 ```wren
-mcp.serve
+System.write("Loading...")
 ```
 
-### Tool Class Annotations
+### writeAll(sequence)
 
-MCP tools use special comment annotations to describe their behavior:
+Writes each element of a sequence without newlines between them.
 
-- `#!doc = "description"`: Describes the tool or parameter
-- `#!required`: Marks a parameter as required
-- `#!type = TypeName`: Specifies the parameter type (String, Number, Boolean,
-  Array, Object)
-- `#!format = "format"`: Specifies the format for strings ("date", "date-time",
-  "email", "uri", "uuid")
-
-Example tool class:
+- `sequence`: A list or other sequence to write.
 
 ```wren
-import "gh:bialet/extra/mcp" for Mcp
+System.writeAll(["a", "b", "c"])
+```
 
-#!doc = "A simple greeting tool"
-class Greet {
-  construct new(params) {
-    _name = params["name"]
-  }
+### log(obj)
 
-  #!doc = "Name of the person to greet"
-  #!required
-  name(name) { _name = name }
+Writes an object to stdout followed by a newline, then returns the object. Same
+behavior as `print(obj)`. Supports Wren's string interpolation syntax `%(var)`
+for formatted output.
 
-  call() { "Hello, %(_name)!" }
-}
+- `obj`: The object to log.
+
+```wren
+System.log("Request from %(Request.uri) at %(Date.now)")
+System.log("User %(name) logged in")
 ```
 
 ## Wren Core Extensions

@@ -65,7 +65,7 @@
     <link rel="prev" title="7. Forms &amp; Voting" href="7-forms-voting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -477,7 +476,7 @@ We clear the cache after voting so the results refresh.</p></li>
 <span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;p&gt;&lt;a href=&quot;/&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">&lt;/main&gt;</span>
-<span class="x">))</span>
+<span class="x">)</span>
 </pre></div>
 </div>
 </section>
@@ -490,8 +489,8 @@ We clear the cache after voting so the results refresh.</p></li>
 <span class="sb">`</span><span class="p">)</span>
 
 <span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Set colors&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  UPDATE poll SET color = &quot;blue&quot; WHERE answer = &quot;Yes&quot;;</span>
-<span class="sb">  UPDATE poll SET color = &quot;red&quot; WHERE answer = &quot;No&quot;;</span>
+<span class="sb">  UPDATE poll SET color = &#39;blue&#39; WHERE answer = &#39;Yes&#39;;</span>
+<span class="sb">  UPDATE poll SET color = &#39;red&#39; WHERE answer = &#39;No&#39;;</span>
 <span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>

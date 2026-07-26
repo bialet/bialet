@@ -65,7 +65,7 @@
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -410,7 +409,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">MCP</a></li>
 </ul>
             </nav>
         </div>
@@ -498,7 +496,7 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `visits` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `visits`.</span>
-<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
+<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
 <span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;visits&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
 
@@ -538,7 +536,7 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `clicks` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `clicks`.</span>
-<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
+<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
 <span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;clicks&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
 
@@ -585,7 +583,7 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `form` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `form`.</span>
-<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
+<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
 <span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;form&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
 
@@ -632,12 +630,12 @@
 </section>
 <section id="json-response">
 <h2>JSON Response<a class="headerlink" href="#json-response" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This line imports the Response class for managing HTTP interactions.</span>
-<span class="c1">// The import lines are write at the top of the script.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Response and Db are built-in classes — no imports needed.</span>
 
-<span class="c1">// We use the `query()` method to execute SQL statements.</span>
-<span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
-<span class="c1">// This should be do it with migrations, here it is added to the script to be self-contained.</span>
+<span class="c1">// Use the `query()` method to execute SQL statements.</span>
+<span class="c1">// This creates a table named `counter` with two columns: `name` and `value`.</span>
+<span class="c1">// In production this should be done with migrations; it&#39;s included here</span>
+<span class="c1">// so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
 
 <span class="c1">// We use the `fetch()` method to get the query result as an array of objects.</span>
@@ -665,27 +663,28 @@
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;File: </span><span class="si">%(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="c1">// Make it temporal, it will be deleted soon</span>
 <span class="w">  </span><span class="c1">// You can still use it in the rest of the request</span>
-<span class="w">  </span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">temp</span><span class="p">()</span>
+<span class="w">  </span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">temp</span>
 <span class="w">  </span><span class="c1">// Return the file to the browser</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Upload File&quot;</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">  </span><span class="x">&lt;head&gt;</span>
-<span class="x">    &lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
-<span class="x">    &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">    &lt;style&gt;</span><span class="n">body</span><span class="p">{</span><span class="w"> </span><span class="n">font</span><span class="o">:</span><span class="w"> </span><span class="mf">1.3</span><span class="n">em</span><span class="w"> </span><span class="n">system</span><span class="o">-</span><span class="n">ui</span><span class="err">;</span><span class="w"> </span><span class="n">text</span><span class="o">-</span><span class="n">align</span><span class="o">:</span><span class="w"> </span><span class="n">center</span><span class="w"> </span><span class="p">}</span><span class="x">&lt;/style&gt;</span>
-<span class="x">  &lt;/head&gt;</span>
-<span class="w">  </span><span class="x">&lt;body&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">    &lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;input type=&quot;file&quot; name=&quot;form_file_name&quot;&gt;</span>
-<span class="x">      &lt;input type=&quot;submit&quot; value=&quot;{{ title }}&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;/form&gt;</span>
-<span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
-<span class="x">  &lt;/body&gt;</span>
+<span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;head&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="w">    </span><span class="x">&lt;style&gt;body{ font: 1.3em system-ui; text-align: center }&lt;/style&gt;</span>
+<span class="w">  </span><span class="x">&lt;/head&gt;</span>
+<span class="x">  &lt;body&gt;</span>
+<span class="w">    </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
+<span class="x">      &lt;input type=&quot;file&quot; name=&quot;form_file_name&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type=&quot;submit&quot; value=&quot;{{ title }}&quot;&gt;</span>
+<span class="x">    &lt;/form&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
@@ -722,7 +721,7 @@
 <span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">JSONPlaceholder</span><span class="w"> </span><span class="nc">API</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">DummyJSON</span><span class="w"> </span><span class="nc">API</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    {{ /* The interpolated string can have comments on it */</span>
 <span class="x">      users.count &gt; 0 ?</span>
 <span class="x">      &lt;table&gt;</span>
@@ -788,13 +787,13 @@
 <span class="w">        </span><span class="x">&lt;label for=&quot;password&quot;&gt;Password&lt;/label&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">      &lt;p&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;text&quot; name=&quot;password&quot; value=&quot;{{password}}&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type=&quot;password&quot; name=&quot;password&quot; value=&quot;{{password}}&quot;&gt;</span>
 <span class="x">      &lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;</span>
 <span class="x">        &lt;label for=&quot;password-check&quot;&gt;</span><span class="nc">Password</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">check</span><span class="x">&lt;/label&gt;</span>
 <span class="x">      &lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;</span>
-<span class="x">        &lt;input type=&quot;text&quot; name=&quot;password-check&quot; value=&quot;{{passwordCheck}}&quot;&gt;</span>
+<span class="x">        &lt;input type=&quot;password&quot; name=&quot;password-check&quot; value=&quot;{{passwordCheck}}&quot;&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">      &lt;p&gt;</span>
 <span class="w">        </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
@@ -844,16 +843,15 @@
 </section>
 <section id="markdown">
 <h2>Markdown<a class="headerlink" href="#markdown" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markdown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markdown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;</span>
+<span class="s"># Markdown Example</span>
 
-<span class="s2"># Markdown Example</span>
+<span class="s">This is written in Markdown.</span>
 
-<span class="s2">This is written in Markdown.</span>
+<span class="s">[Back ↩️](.)</span>
 
-<span class="s2">[Back ↩️](.)</span>
-
-<span class="s2">This is the example.md file:</span>
-<span class="s2">&quot;</span>
+<span class="s">This is the example.md file:</span>
+<span class="s">&quot;&quot;&quot;</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
@@ -864,65 +862,14 @@
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 
-<span class="x">    {{ Markdown.html(markdown) }}&lt;/p&gt;</span>
+<span class="x">    {{ Markdown.html(markdown) }}</span>
 
-<span class="w">    </span><span class="x">&lt;div style=&quot;text-align: left&quot;&gt;</span>
-<span class="x">      {{ Markdown.file(&quot;example.md&quot;) }}</span>
-<span class="x">    &lt;/div&gt;</span>
+<span class="x">    &lt;div style=&quot;text-align: left&quot;&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;example.md&quot;</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;/div&gt;</span>
 
-<span class="w">  </span><span class="x">&lt;/body&gt;</span>
+<span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
-</pre></div>
-</div>
-</section>
-<section id="mcp">
-<h2>MCP<a class="headerlink" href="#mcp" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="cs">#!doc = &quot;A simple greeting tool&quot;</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
-
-<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">!&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="cs">#!doc = &quot;Search for available flights&quot;</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SearchFlights</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_origin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;origin&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_destination</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;destination&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="cs">#!doc = &quot;Departure city&quot;</span>
-<span class="w">  </span><span class="cs">#!type = String</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">origin</span><span class="p">{}</span>
-
-<span class="w">  </span><span class="cs">#!doc = &quot;Arrival city&quot;</span>
-<span class="w">  </span><span class="cs">#!type = String</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">destination</span><span class="p">{}</span>
-
-<span class="w">  </span><span class="cs">#!doc = &quot;Travel date&quot;</span>
-<span class="w">  </span><span class="cs">#!type = String</span>
-<span class="w">  </span><span class="cs">#!format = &quot;date&quot;</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">date</span><span class="p">{}</span>
-
-<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;from&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_origin</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;to&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_destination</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;date&quot;</span><span class="o">:</span><span class="w"> </span><span class="vi">_date</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;flights&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Flight 101&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Flight 202&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Flight 303&quot;</span><span class="p">]}</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;bialet-mcp-server&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">SearchFlights</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">addPrompt</span><span class="p">(</span><span class="s2">&quot;You are a helpful assistant that can greet people and search for flights.&quot;</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
 </pre></div>
 </div>
 </section>
@@ -986,7 +933,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mcp">MCP</a></li>
 </ul>
   </nav></div>
 

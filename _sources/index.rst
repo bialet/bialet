@@ -270,7 +270,6 @@ Who is Bialet for?
    file
    datetime
    cron
-   mcp
    reference
    examples
    faq

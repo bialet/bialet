@@ -64,7 +64,7 @@ return Template.layout(
   </section> } }}
   <p><a href="/">Vote again</a></p>
 </main>
-))
+)
 ```
 
 ## Final polish
@@ -78,8 +78,8 @@ Db.migrate("Add color column", `
 `)
 
 Db.migrate("Set colors", `
-  UPDATE poll SET color = "blue" WHERE answer = "Yes";
-  UPDATE poll SET color = "red" WHERE answer = "No";
+  UPDATE poll SET color = 'blue' WHERE answer = 'Yes';
+  UPDATE poll SET color = 'red' WHERE answer = 'No';
 `)
 ```
 

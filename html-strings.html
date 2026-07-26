@@ -65,7 +65,7 @@
     <link rel="prev" title="Project Structure and Routing" href="structure.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -420,6 +419,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-line-attributes">Multi-line Attributes</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-and-security">Escaping and Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-features">Advanced Features</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nesting-interpolations">Nesting Interpolations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iteration-with-map">Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code></a></li>
@@ -519,8 +519,9 @@ this: <code class="docutils literal notranslate"><span class="pre">&lt;hr&gt;</s
 </div></blockquote>
 <section id="id2">
 <h3>Example<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value=&quot;{{ userInput }}&quot; /&gt;</span>
-<span class="x">System.log(inputField) // Outputs: &quot;&lt;input value=&#39;{{ userInput }}&#39;&gt;</span><span class="s2">&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value=&quot;{{ userInput }}&quot; /&gt;</span>
+<span class="x">System.log(inputField) // Outputs: &quot;&lt;input value=&#39;Hello&#39;&gt;</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -555,6 +556,27 @@ line.</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="escaping-and-security">
+<h2>Escaping and Security<a class="headerlink" href="#escaping-and-security" title="Link to this heading">#</a></h2>
+<p><strong>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation does NOT escape HTML by default.</strong> When displaying
+user-generated content, you must use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> to escape special HTML characters
+and prevent XSS attacks:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Outputs: &quot;&lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;&quot;</span>
+
+<span class="c1">// Without .safe — dangerous!</span>
+<span class="k">var</span><span class="w"> </span><span class="n">dangerous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Outputs: &quot;&lt;p&gt;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&lt;/p&gt;&quot;  ← XSS vulnerable!</span>
+</pre></div>
+</div>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> for manual escaping:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">htmlEscape</span><span class="p">(</span><span class="n">userInput</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Rule:</strong> Always use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on any string that comes from user input,
+database queries, or URL parameters before inserting it into HTML.</p>
 </section>
 <section id="advanced-features">
 <h2>Advanced Features<a class="headerlink" href="#advanced-features" title="Link to this heading">#</a></h2>
@@ -687,6 +709,7 @@ ternary operators to simplify your code.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-line-attributes">Multi-line Attributes</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-and-security">Escaping and Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-features">Advanced Features</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nesting-interpolations">Nesting Interpolations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iteration-with-map">Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code></a></li>

@@ -119,10 +119,10 @@ if (id && Request.method == "PUT") {
 
 // DELETE /api/users?id=1 - Delete a user
 if (id && Request.method == "DELETE") {
-  var result = `DELETE FROM users WHERE id = ?`.query([id])
+  `DELETE FROM users WHERE id = ?`.query([id])
   
   Response.status(204)
-  return Response.json({})
+  return
 }
 
 // 404 for unknown operations
@@ -285,8 +285,8 @@ if (!session) {
 ```wren
 // GET /api/users?page=1&limit=20
 
-var page = Util.toNum(Request.get("page")) || 1
-var limit = Util.toNum(Request.get("limit")) || 20
+var page = Util.toNum(Request.get("page") ? Request.get("page") : "1")
+var limit = Util.toNum(Request.get("limit") ? Request.get("limit") : "20")
 var offset = (page - 1) * limit
 
 // Get total count
@@ -423,8 +423,8 @@ if (id && Request.method == "GET") {
 
 // GET /api/products - List products with pagination
 if (!id && Request.method == "GET") {
-  var page = Util.toNum(Request.get("page")) || 1
-  var limit = Util.toNum(Request.get("limit")) || 20
+  var page = Util.toNum(Request.get("page") ? Request.get("page") : "1")
+  var limit = Util.toNum(Request.get("limit") ? Request.get("limit") : "20")
   var offset = (page - 1) * limit
   
   var total = `SELECT COUNT(*) as count FROM products`.first()["count"]
@@ -510,7 +510,7 @@ if (id && Request.method == "DELETE") {
   `DELETE FROM products WHERE id = ?`.query([id])
   
   Response.status(204)
-  return Response.json({})
+  return
 }
 
 // 404 for unknown operations

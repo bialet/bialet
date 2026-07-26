@@ -65,7 +65,7 @@
     <link rel="prev" title="Installation and Usage" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -425,7 +424,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
@@ -680,11 +678,10 @@ separate <code class="docutils literal notranslate"><span class="pre">_route.wre
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
-<span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="c1">// Render using App template</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="w"> </span><span class="p">{</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="p">({</span>
 <span class="w">  </span><span class="x">&lt;article&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
@@ -733,10 +730,7 @@ specify a different branch or tag:</p>
 </pre></div>
 </div>
 <p><strong>Examples:</strong></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import from main branch (recommended for latest version)</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="c1">// Import emoji utilities from main branch</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import emoji utilities from main branch</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 
 <span class="c1">// Import from specific version/branch (recommended for stability)</span>
@@ -813,9 +807,6 @@ cleared</p></li>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Clear all cached external modules (forces re-download on next import)</span>
 <span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
 
-<span class="c1">-- Clear a specific module</span>
-<span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;gh:bialet/extra/mcp&#39;</span><span class="p">;</span>
-
 <span class="c1">-- View all cached modules</span>
 <span class="k">SELECT</span><span class="w"> </span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="n">createdAt</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
 
@@ -841,13 +832,10 @@ re-download the modules.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:bialet/extra/mcp</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/bialet/extra/refs/heads/main/mcp.wren</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gh:user/lib/utils&#64;dev</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:user/lib/utils&#64;dev</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/user/lib/refs/heads/dev/utils.wren</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:org/pkg/sub/module&#64;v1.0</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gh:org/pkg/sub/module&#64;v1.0</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/org/pkg/refs/heads/v1.0/sub/module.wren</span></code></p></td>
 </tr>
 </tbody>
@@ -900,47 +888,11 @@ automatically - this is a security feature</p></li>
 application</p></li>
 </ul>
 <p><strong>Best Practices:</strong></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good: Using a specific version tag</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp@v1.0.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="c1">// ⚠️ Caution: Using main branch (may change over time)</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="c1">// ✅ Good: Well-known, maintained library</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good: Well-known, maintained library</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji@1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 
 <span class="c1">// ❌ Avoid: Unknown sources without verification</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:random-user/suspicious-lib/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">SomeClass</span>
-</pre></div>
-</div>
-</section>
-<section id="example-usage">
-<h3>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h3>
-<p>Here’s a complete example using external imports:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import external MCP module from a specific version</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:bialet/extra/mcp@v1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Mcp</span>
-
-<span class="c1">// Import emoji library from main branch</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
-
-<span class="cs">#!doc = &quot;A greeting tool with emojis&quot;</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Greet</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="cs">#!doc = &quot;Name of the person to greet&quot;</span>
-<span class="w">  </span><span class="cs">#!required</span>
-<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">}</span>
-
-<span class="w">  </span><span class="n">call</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">%(</span><span class="nc">Emoji</span><span class="o">.</span><span class="n">wave</span><span class="si">)</span><span class="s2"> Hello, </span><span class="si">%(</span><span class="vi">_name</span><span class="si">)</span><span class="s2">! </span><span class="si">%(</span><span class="nc">Emoji</span><span class="o">.</span><span class="n">heart</span><span class="si">)</span><span class="s2">&quot;</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">mcp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Mcp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;emoji-greeter&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;1.0.0&#39;</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">addTool</span><span class="p">(</span><span class="nc">Greet</span><span class="p">)</span>
-<span class="n">mcp</span><span class="o">.</span><span class="n">serve</span>
 </pre></div>
 </div>
 </section>
@@ -1076,7 +1028,6 @@ load</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>

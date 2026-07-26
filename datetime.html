@@ -65,7 +65,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -399,8 +398,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-date-object">Creating a Date Object</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#global-utc-handling">Global UTC Handling</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-utc-handling">Per-Instance UTC Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-timezone-handling">Per-Instance Timezone Handling</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displaying-date-and-time-components">Displaying Date and Time Components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-and-subtracting-dates">Adding and Subtracting Dates</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-dates">Comparing Dates</a></li>
@@ -422,40 +420,36 @@
 <p>This page demonstrates the usage of the <code class="docutils literal notranslate"><span class="pre">Date</span></code> class. It covers basic date and
 time manipulations, formatting, and how to handle date inputs in various
 contexts.</p>
-<p>See more details in the <a class="reference internal" href="reference.html#date-reference"><span class="std std-ref">Date class reference</span></a>.</p>
+<p>See more details in the <a class="reference internal" href="#reference.html#date"><span class="xref myst">Date class reference</span></a>.</p>
 <section id="creating-a-date-object">
 <h2>Creating a Date Object<a class="headerlink" href="#creating-a-date-object" title="Link to this heading">#</a></h2>
 <p>You can create a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object in several ways, representing both the current
 and specific dates:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="k">var</span><span class="w"> </span><span class="n">specificDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">justDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Date.now</span></code> creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.new()</span></code> creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.now</span></code> is a static getter equivalent to <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>, returning the current date and time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day,</span> <span class="pre">hour,</span> <span class="pre">minute,</span> <span class="pre">second)</span></code> allows you to create a
 specific date and time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day)</span></code> creates a date object with the specified year,
 month, and day at midnight.</p></li>
 </ul>
 </section>
-<section id="global-utc-handling">
-<h2>Global UTC Handling<a class="headerlink" href="#global-utc-handling" title="Link to this heading">#</a></h2>
-<p>You can set the global UTC offset for all date objects:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">3</span><span class="w"> </span><span class="c1">// Set global UTC to GMT-3 (Argentina)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">dateInUtc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Current Date in UTC-3: </span><span class="si">%(</span><span class="n">dateInUtc</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<section id="per-instance-timezone-handling">
+<h2>Per-Instance Timezone Handling<a class="headerlink" href="#per-instance-timezone-handling" title="Link to this heading">#</a></h2>
+<p>You can set the timezone offset for individual <code class="docutils literal notranslate"><span class="pre">Date</span></code> instances:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">3</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Date with timezone: </span><span class="si">%(</span><span class="n">date</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This sets the global UTC offset for all subsequent date manipulations.</p>
-</section>
-<section id="per-instance-utc-handling">
-<h2>Per-Instance UTC Handling<a class="headerlink" href="#per-instance-utc-handling" title="Link to this heading">#</a></h2>
-<p>You can also set the UTC offset for individual <code class="docutils literal notranslate"><span class="pre">Date</span></code> instances:</p>
+<p>Or set it after creation:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">)</span>
-<span class="n">date</span><span class="o">.</span><span class="n">utc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">5</span><span class="w"> </span><span class="c1">// Set UTC offset for this specific instance to GMT-5</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Date with specific UTC: </span><span class="si">%(</span><span class="n">date</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">date</span><span class="o">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mf">5</span><span class="w"> </span><span class="c1">// Set timezone offset for this specific instance to GMT-5</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Date with specific timezone: </span><span class="si">%(</span><span class="n">date</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This lets you control the UTC offset at the instance level without affecting
@@ -464,7 +458,7 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 <section id="displaying-date-and-time-components">
 <h2>Displaying Date and Time Components<a class="headerlink" href="#displaying-date-and-time-components" title="Link to this heading">#</a></h2>
 <p>You can access various components of a <code class="docutils literal notranslate"><span class="pre">Date</span></code> object:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Year: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Month: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Day: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">day</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -491,7 +485,7 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 <h2>Comparing Dates<a class="headerlink" href="#comparing-dates" title="Link to this heading">#</a></h2>
 <p>Date objects can be compared using standard operators:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">date1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">date2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="k">var</span><span class="w"> </span><span class="n">date2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">date1</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">date2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;Date1 is in the future&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Date1 is not in the future&quot;</span><span class="p">)</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">date1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">date2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;Date1 is in the past&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Date1 is not in the past&quot;</span><span class="p">)</span>
@@ -536,7 +530,7 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 <td><p>Two-digit ISO 8601 year corresponding to the ISO week number <code class="docutils literal notranslate"><span class="pre">#V</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#H</span></code></p></td>
-<td><p>Hour in 24-hour format with leading zero: 00-24</p></td>
+<td><p>Hour in 24-hour format with leading zero: 00-23</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#I</span></code></p></td>
 <td><p>Hour in 12-hour clock format with leading zero: 01-12</p></td>
@@ -548,7 +542,7 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 <td><p>Julian day number (fractional)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#k</span></code></p></td>
-<td><p>Hour in 24-hour format without leading zero: 0-24</p></td>
+<td><p>Hour in 24-hour format without leading zero: 0-23</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#l</span></code></p></td>
 <td><p>Hour in 12-hour clock format without leading zero: 1-12</p></td>
@@ -648,8 +642,7 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-date-object">Creating a Date Object</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#global-utc-handling">Global UTC Handling</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-utc-handling">Per-Instance UTC Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-timezone-handling">Per-Instance Timezone Handling</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displaying-date-and-time-components">Displaying Date and Time Components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-and-subtracting-dates">Adding and Subtracting Dates</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-dates">Comparing Dates</a></li>

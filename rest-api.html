@@ -65,7 +65,7 @@
     <link rel="prev" title="Database" href="database.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -556,10 +555,10 @@
 
 <span class="c1">// DELETE /api/users?id=1 - Delete a user</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;DELETE&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`DELETE FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="w">  </span><span class="sb">`DELETE FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
 <span class="w">  </span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">204</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({})</span>
+<span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="c1">// 404 for unknown operations</span>
@@ -725,8 +724,8 @@
 <h2>Pagination<a class="headerlink" href="#pagination" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?page=1&amp;limit=20</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1</span>
-<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
 
 <span class="c1">// Get total count</span>
@@ -859,8 +858,8 @@
 
 <span class="c1">// GET /api/products - List products with pagination</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
 <span class="w">  </span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as count FROM products`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
@@ -946,7 +945,7 @@
 <span class="w">  </span><span class="sb">`DELETE FROM products WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
 <span class="w">  </span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">204</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({})</span>
+<span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="c1">// 404 for unknown operations</span>

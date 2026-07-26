@@ -11,9 +11,9 @@ Browser](https://sqlitebrowser.org/) or the [SQLite
 CLI](https://sqlite.org/cli.html) and run:
 
 ```sql
-CREATE TABLE simple_poll (answer TEXT PRIMARY KEY, votes INT);
-INSERT INTO simple_poll VALUES ("Yes", 0);
-INSERT INTO simple_poll VALUES ("No", 0);
+CREATE TABLE simple_poll (answer TEXT PRIMARY KEY, votes INTEGER);
+INSERT INTO simple_poll VALUES ('Yes', 0);
+INSERT INTO simple_poll VALUES ('No', 0);
 ```
 
 ## Query and display

@@ -65,7 +65,7 @@
     <link rel="prev" title="6. Migrations" href="6-migrations.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -448,9 +447,9 @@
 <span class="x">    &lt;h2&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="x">&lt;ul&gt;</span>
 <span class="x">      {{ poll.options.map {|opt| &lt;li&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;radio&quot; id=&quot;{{ opt[&quot;answer&quot;] }}&quot; name=&quot;vote&quot;</span>
+<span class="w">        </span><span class="x">&lt;input type=&quot;radio&quot; id=&quot;opt{{ opt[&quot;id&quot;] }}&quot; name=&quot;vote&quot;</span>
 <span class="x">               value=&quot;{{ opt[&quot;id&quot;] }}&quot; required /&gt;</span>
-<span class="x">        &lt;label for=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
+<span class="x">        &lt;label for=&quot;opt{{ opt[&quot;id&quot;] }}&quot;&gt;</span>
 <span class="w">          </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;</span>
 <span class="w">          </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="w">        </span><span class="x">&lt;/label&gt;</span>

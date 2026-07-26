@@ -65,7 +65,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.5" />
+  <meta name="docsearch:version" content="0.10.6" />
   </head>
   
   
@@ -184,7 +184,6 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -441,12 +440,14 @@ error message. This limit is configurable in the source code through the
 <section id="example-1-permanent-file-upload">
 <h3>Example 1: Permanent File Upload<a class="headerlink" href="#example-1-permanent-file-upload" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// Get the uploaded file and save it as permanent</span>
+<span class="w">  </span><span class="c1">// Check if a file was uploaded</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;No file was uploaded.&lt;/p&gt;</span>
+<span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="c1">// Return a message indicating the file was uploaded</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;File uploaded and saved: {{ file.name }}&lt;/p&gt;</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
@@ -468,7 +469,7 @@ error message. This limit is configurable in the source code through the
 it as temporary and it will be deleted after a short period of time.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get the uploaded file and mark it as temporary</span>
 <span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
-<span class="n">file</span><span class="o">.</span><span class="n">temp</span><span class="p">()</span>
+<span class="n">file</span><span class="o">.</span><span class="n">temp</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Uploaded temporary file: </span><span class="si">%(</span><span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -484,7 +485,7 @@ be deleted within a day or less.</p>
 <p>You can also dynamically create files and save them in the database. Created
 files, like uploaded files, can be marked as temporary or permanent. Temporary
 files will be automatically deleted after a short period of time. To manually
-delete a file, use the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method.</p>
+delete a file, use the <code class="docutils literal notranslate"><span class="pre">file.destroy</span></code> getter.</p>
 <section id="example-1-creating-a-permanent-file">
 <h3>Example 1: Creating a Permanent File<a class="headerlink" href="#example-1-creating-a-permanent-file" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a text file with dynamic content</span>
@@ -498,14 +499,14 @@ delete a file, use the <code class="docutils literal notranslate"><span class="p
 </section>
 <section id="example-2-deleting-a-file-manually">
 <h3>Example 2: Deleting a File Manually<a class="headerlink" href="#example-2-deleting-a-file-manually" title="Link to this heading">#</a></h3>
-<p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">fileObject.destroy()</span></code> method. It
+<p>You can also delete files manually using the <code class="docutils literal notranslate"><span class="pre">file.destroy</span></code> getter. It
 works for uploaded and dynamically created files.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create a text file with dynamic content</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is a temporary file that will be deleted.&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;temporary.txt&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;text/plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span>
 
 <span class="c1">// Delete the file manually</span>
-<span class="n">file</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+<span class="n">file</span><span class="o">.</span><span class="n">destroy</span>
 
 <span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;File was created and then deleted.&lt;/p&gt;&quot;</span>
 </pre></div>

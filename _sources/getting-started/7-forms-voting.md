@@ -37,9 +37,9 @@ return Template.layout(
     <h2>Has web development become overly complex?</h2>
     <ul>
       {{ poll.options.map {|opt| <li>
-        <input type="radio" id="{{ opt["answer"] }}" name="vote"
+        <input type="radio" id="opt{{ opt["id"] }}" name="vote"
                value="{{ opt["id"] }}" required />
-        <label for="{{ opt["answer"] }}">
+        <label for="opt{{ opt["id"] }}">
           <strong>{{ opt["answer"] }}</strong>
           <p>{{ opt["comment"] }}</p>
         </label>
