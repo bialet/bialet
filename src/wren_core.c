@@ -1365,7 +1365,7 @@ DEF_PRIMITIVE(test_runRequest) {
 
 void setTimezone(const char* tz) {
   if(tz == NULL || tz[0] == '\0') {
-    unsetenv("TZ");
+    putenv("TZ=");
     tzset();
     return;
   }
