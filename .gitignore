@@ -1,5 +1,6 @@
 # Build generated files
 build/
+build-cross/
 
 # Bialet generated files
 **/_db.sqlite3*
