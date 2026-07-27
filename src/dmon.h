@@ -216,11 +216,7 @@ DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
 #    include <dirent.h>
 #    include <errno.h>
 #    include <fcntl.h>
-#    if __FreeBSD__
-#        include <sys/limits.h>
-#    else
-#        include <linux/limits.h>
-#    endif
+#    include <limits.h>
 #    include <pthread.h>
 #    include <sys/inotify.h>
 #    include <sys/stat.h>
