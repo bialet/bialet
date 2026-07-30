@@ -270,6 +270,7 @@ Who is Bialet for?
    file
    datetime
    cron
+   deployment
    reference
    examples
    faq

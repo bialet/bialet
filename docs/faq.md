@@ -162,14 +162,11 @@ like nginx or Caddy in front of it. For local development, HTTP on
 
 ### How do I deploy a Bialet app?
 
-Copy your app directory and the `bialet` binary to a server, then run:
+See the full [Deployment Guide](deployment.md) covering reverse proxies
+(nginx, Apache, Caddy), systemd services, Docker, and TLS setup.
 
-```bash
-bialet /path/to/app
-```
-
-That's it. No build pipeline, no CI/CD required. Use Docker Compose
-(see [Installation](installation.md)) if you prefer containers.
+The short version: copy your app directory and the `bialet` binary to a
+server, run `bialet /path/to/app`, and put a reverse proxy in front of it.
 
 ### Can I run multiple apps on one server?
 

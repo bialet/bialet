@@ -10,6 +10,10 @@ The default database name is `_db.sqlite3` placed in the root directory.
 
 To change the name of the database, set the `-d` option.
 
+For production, enable Write-Ahead Logging with the `-w` flag to allow
+concurrent reads and writes without blocking. See the
+[Deployment Guide](deployment.md#sqlite-wal-mode-production) for details.
+
 **There is no integration with other databases at the moment.**
 
 ## Query Object
