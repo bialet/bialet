@@ -12,7 +12,7 @@ To change the name of the database, set the `-d` option.
 
 For production, enable Write-Ahead Logging with the `-w` flag to allow
 concurrent reads and writes without blocking. See the
-[Deployment Guide](deployment.md#sqlite-wal-mode-production) for details.
+[Deployment Guide](sqlite-wal-mode-production) for details.
 
 **There is no integration with other databases at the moment.**
 
@@ -75,6 +75,8 @@ var name = `SELECT name FROM users WHERE id = ?`.val(id)
 var day = `SELECT strftime('%j', 'now')`.toNum
 ```
 
+(safe-sorting-with-order)=
+
 ## Safe Sorting with .order()
 
 The `.order()` method provides a safe way to add ORDER BY clauses to your queries by validating column names against an allowed list and normalizing the sort direction.
@@ -126,6 +128,8 @@ var users = `SELECT * FROM users`
 
 This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.
 
+(mapping-results-to-domain-classes)=
+
 ## Mapping Results to Domain Classes
 
 Query results can be automatically mapped to domain classes using the `.to(Class)` method. This is useful for converting database rows into instances of your domain models.
@@ -157,6 +161,8 @@ The `.to(Class)` method works with:
 - Query results from `.fetch()` (returns a List of class instances)
 - Single results from `.first()` (returns a single class instance)
 - Any Map or List of Maps
+
+(insert-and-update)=
 
 ## Insert and update
 

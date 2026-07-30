@@ -297,6 +297,7 @@ services:
     restart: unless-stopped
 ```
 
+(sqlite-wal-mode-production)=
 ## SQLite WAL Mode (Production)
 
 Enable WAL with the `-w` flag:
