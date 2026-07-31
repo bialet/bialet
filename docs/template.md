@@ -1,0 +1,871 @@
+# Template
+
+Bialet renders pages using Inline HTML Strings — HTML written directly inside
+your Wren `.wren` files. No template engine, no separate files, no build step.
+Write a `.wren` file, return an HTML string, and that's your page.
+
+---
+
+## View: Inline HTML Strings
+
+Inline HTML Strings are delimited by angle brackets `<` and `>`. The string
+must begin and end with the same tag. Tag names must be lowercase, start with a
+letter, and contain only letters and numbers.
+
+```wren
+// A simple HTML string assigned to a variable
+var str = <p>Hello World</p>
+```
+
+### Interpolation
+
+Use `{{ }}` to embed any Wren expression inside HTML. The expression is
+evaluated and its result is inserted into the string.
+
+```wren
+var name = "John"
+var greeting = <h1>Hello, {{ name }}!</h1>
+// Output: <h1>Hello, John!</h1>
+
+var sum = <p>{{ 5 + 3 }}</p>
+// Output: <p>8</p>
+```
+
+### `return` sends the response
+
+Inside a `.wren` file, `return` sends the value as the HTTP response body
+and **stops execution immediately**. Nothing after `return` runs. This is how
+every page in Bialet works — the last statement is a `return` with the HTML.
+
+```wren
+// index.wren
+return <html>
+  <head><title>My Page</title></head>
+  <body>
+    <h1>Hello World</h1>
+  </body>
+</html>
+```
+
+### Attributes
+
+Attributes follow the same rules as regular HTML — lowercase names, quoted
+values. You can interpolate values with `{{ }}`.
+
+```wren
+var url = "/about"
+var label = "Learn more"
+var link = <a href="{{ url }}" class="nav-link">{{ label }}</a>
+```
+
+### Self-Closing Tags
+
+Certain HTML tags are self-closing. In Bialet, these must include a space
+before the closing slash. The final output omits the slash.
+
+- Correct: `<hr />`, `<br />`, `<input value="{{ val }}" />`, `<meta charset="utf-8" />`
+- Incorrect: `<hr/>`, `<br/>`
+
+```wren
+var inputField = <input value="{{ userInput }}" />
+// Renders: <input value='Hello'>
+```
+
+### Multi-line Inline HTML
+
+An inline HTML string can span as many lines as you need. The newlines inside
+the tags become part of the HTML output.
+
+```wren
+var card = <article>
+  <h2>Title</h2>
+  <p>{{ description.safe }}</p>
+</article>
+```
+
+### Pitfalls
+
+**Same-tag nesting is a parse error.** A tag cannot directly contain another
+tag with the same name:
+
+```wren
+// Wrong — parse error
+var bad = <div><div>Hello</div></div>
+var alsoBad = <section><section>Nested</section></section>
+
+// Correct — use a different tag
+var good = <div><section>Hello</section></div>
+```
+
+**Mismatched tags fail.** Opening and closing tags must match:
+
+```wren
+// Wrong
+var bad = <div><span>Hello</div>
+
+// Correct
+var good = <div><span>Hello</span></div>
+```
+
+**Invalid tag names.** Only lowercase letters and numbers are allowed. No
+hyphens, underscores, or uppercase:
+
+```wren
+// Wrong
+var bad1 = <custom-tag>Invalid</custom-tag>
+var bad2 = <my_component>Invalid</my_component>
+
+// Correct
+var good = <span class="badge">Valid</span>
+```
+
+**Interpolation depth** is limited to 9 nested levels.
+
+**Forgetting `return`.** Without `return`, the response body is empty. The page
+renders as blank.
+
+**Files starting with `_` or `.` are private** — they return 403 if accessed
+directly. Use them for imports and internal logic only.
+
+---
+
+## Conditional Rendering with `&&`
+
+Wren's `&&` operator is the primary tool for conditional rendering. When the
+left side is truthy, the right side is returned; otherwise the expression
+evaluates empty.
+
+### Class toggling
+
+```wren
+// filter is a query parameter string
+var filter = Request.get("filter") || "all"
+
+<a href="/" class="filter-tab {{ filter == "all" && "active" }}">All</a>
+<a href="/?filter=active" class="filter-tab {{ filter == "active" && "active" }}">Active</a>
+<a href="/?filter=completed" class="filter-tab {{ filter == "completed" && "active" }}">Completed</a>
+```
+
+When `filter == "all"` is true, `"active"` is inserted as the class value.
+When false, nothing is inserted.
+
+### Conditional HTML blocks
+
+You can conditionally render entire chunks of HTML. The right side of `&&` can
+be an inline HTML string. The `{{ }}` interpolation must always appear inside
+an HTML tag (`{{ }}` outside an HTML tag is parsed as Wren map syntax).
+
+```wren
+return <main>
+  {{ showClear && <form method="post" action="/clear" class="clear-form">
+    <button class="clear-btn">Clear completed</button>
+  </form> }}
+</main>
+```
+
+```wren
+return <main>
+  {{ tasks.count == 0 && <section class="empty-state">
+    <span class="empty-icon" aria-hidden="true">🎉</span>
+    <p class="empty-text">Nothing here yet.</p>
+  </section> }}
+</main>
+```
+
+```wren
+// Conditional text
+<span class="stats-count">
+  <strong>{{ activeCount }}</strong>
+  task{{ activeCount != 1 && "s" }} remaining
+</span>
+```
+
+### Pitfall
+
+**Newlines outside HTML tags produce unexpected output.** The Wren code
+inside `{{ }}` must start on the same line as `{{`. Newlines belong inside
+the HTML string (between `<tag>` and `</tag>`), not in the surrounding Wren
+code. Breaking the Wren expression with newlines can cause parsing
+ambiguities and empty output.
+
+```wren
+// Wrong — Wren code spans lines outside the HTML tags
+return <div>{{
+  showClear &&
+  <form method="post" action="/clear">
+    <button>Clear</button>
+  </form>
+}}</div>
+
+// Correct — Wren code starts on the same line as {{
+return <div>{{ showClear && <form method="post" action="/clear">
+  <button>Clear</button>
+</form> }}</div>
+```
+
+The same rule applies to ternary expressions and `map` — keep the Wren
+expression on the same line as `{{`, let only the HTML string span lines.
+
+---
+
+## Ternary Expressions
+
+Ternary operators are essential for switching attributes, classes, and entire
+blocks of HTML based on a condition.
+
+### Attribute switching
+
+```wren
+<button class="{{ task.finished ? "checkbox-btn checked" : "checkbox-btn" }}"
+        title="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"
+        aria-label="{{ task.finished ? "Mark incomplete" : "Mark complete" }}">
+</button>
+```
+
+### Nested ternaries for multi-value decisions
+
+```wren
+<span class="priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? "high" : Num.fromString(task.id.toString) % 3 == 2 ? "medium" : "low" }}"
+      aria-hidden="true"></span>
+```
+
+### Ternary with HTML operands
+
+Each branch of a ternary can be an inline HTML string that spans multiple
+lines. The `{{ }}` must be inside an HTML tag context:
+
+```wren
+return <main>{{ task.finished ? <span class="task-text completed">
+  {{ task.description.safe }}
+</span> : <span class="task-text">
+  {{ task.description.safe }}
+</span> }}</main>
+```
+
+### Pitfall
+
+**Deeply nested ternaries hurt readability.** For complex logic, compute the
+value above the template and use a simple variable instead:
+
+```wren
+// Compute before the template
+var taskClass = "task-text"
+if (task.finished) {
+  taskClass = "task-text completed"
+}
+
+// Clean template
+<span class="{{ taskClass }}">{{ task.description.safe }}</span>
+```
+
+**Newlines outside HTML tags** — same rule as `&&`:
+
+```wren
+// Wrong — Wren code broken across lines outside the HTML string
+return <div>{{
+  task.finished ?
+  <span class="completed">Done</span> :
+  <span class="pending">Pending</span>
+}}</div>
+
+// Correct — one expression, newlines inside the HTML strings
+return <div>{{ task.finished ? <span class="completed">
+  Done
+</span> : <span class="pending">
+  Pending
+</span> }}</div>
+```
+
+---
+
+## Iteration with `map`
+
+Wren's `map` function transforms each element of a list into an HTML string.
+The callback body is a single Wren expression — but the inline HTML string
+inside it can span many visual lines.
+
+### Simple list
+
+```wren
+var items = ["Apple", "Banana", "Cherry"]
+var html = <ul>{{ items.map { |item| <li>{{ item }}</li> } }}</ul>
+// Output: <ul><li>Apple</li><li>Banana</li><li>Cherry</li></ul>
+```
+
+### Multiline items
+
+The callback is one expression (`|task| <li>...</li>`), but the `<li>` inline
+HTML string spans multiple lines. The Wren code stays on one line of Wren, but
+the HTML inside the tags has newlines.
+
+```wren
+<ul class="task-list">
+  {{ tasks.map{ |task| <li class="task-item {{ task.finished && "completed" }}">
+    <section class="task-item-row">
+      <form method="post" action="/toggle" class="checkbox-form">
+        <input type="hidden" name="id" value="{{ task.id }}" />
+        <button class="{{ task.finished ? "checkbox-btn checked" : "checkbox-btn" }}"
+                title="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"
+                aria-label="{{ task.finished ? "Mark incomplete" : "Mark complete" }}">
+        </button>
+      </form>
+      <span class="task-content">
+        <span class="{{ task.finished ? "task-text completed" : "task-text" }}">
+          <span class="priority-dot low" aria-hidden="true"></span>
+          {{ task.description.safe }}
+        </span>
+        <span class="task-meta">{{ task.createdAt.hh }}:{{ task.createdAt.mi }}</span>
+      </span>
+      <form method="post" action="/delete" class="delete-form">
+        <input type="hidden" name="id" value="{{ task.id }}" />
+        <button class="delete-btn" title="Delete task" aria-label="Delete task">✕</button>
+      </form>
+    </section>
+  </li> } }}
+</ul>
+```
+
+### Pitfalls
+
+**The callback must be a single expression.** You cannot have multiple Wren
+statements or variable declarations inside a `map` callback:
+
+```wren
+// Wrong — multiple statements inside map
+{{ tasks.map { |task|
+  var icon = task.finished ? "✓" : "○"
+  <li>{{ icon }} {{ task.description }}</li>
+} }}
+```
+
+If you need pre-computed values, prepare them before `map` (e.g. add computed
+properties to your model class, or pre-process the list).
+
+**Empty lists produce empty output.** Pair `map` with `&&` to show an empty
+state:
+
+```wren
+return <main>
+  <ul>
+    {{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+  </ul>
+  {{ tasks.count == 0 && <section class="empty-state">
+    <p>No tasks yet. Add your first one above.</p>
+  </section> }}
+</main>
+```
+
+**Large lists hurt performance.** Paginate or limit results in the controller —
+`map` iterates everything you give it.
+
+**Newlines outside HTML tags** — same rule:
+
+```wren
+// Wrong — Wren code broken across lines outside the HTML string
+return <div>{{
+  tasks.map { |task|
+  <li>{{ task.description }}</li>
+} }}</div>
+
+// Correct — the expression starts on the {{ line
+return <div>{{ tasks.map{ |task| <li>
+  {{ task.description }}
+</li> } }}</div>
+```
+
+---
+
+## Bialet MVC: File Structure
+
+Now that you know how to write HTML, here's how a complete `.wren` file is
+organized. Bialet follows an MVC-like pattern within a single file:
+
+- **Model** — Wren classes in separate files (e.g. `_domain.wren`), imported at
+  the top
+- **Controller** — the logic at the top of the `.wren` file: routing decisions,
+  POST handling, data fetching, redirects
+- **View** — the inline HTML at the bottom, passed to `return` to send the
+  response and end the script
+
+```wren
+// === Controller ===
+import "_template" for Template
+import "_domain" for Post
+
+if (Request.isPost) {
+  var post = Post.new()
+  post.title = Request.post("title")
+  post.save()
+  return Response.redirect("/")
+}
+
+var posts = Post.list()
+
+// === View ===
+return Template.new().layout(<main>
+  <h1>Posts</h1>
+  <ul>
+    {{ posts.map{ |p| <li><a href="/posts/{{ p.id }}">{{ p.title.safe }}</a></li> } }}
+  </ul>
+</main>)
+```
+
+### Pitfall
+
+**`return` terminates immediately.** Code after `return` never executes.
+This means you cannot `return` and then run more logic. Put all controller
+logic before the view.
+
+---
+
+## Model: Wren Classes
+
+Wren classes serve as the Model layer. They encapsulate data, database queries,
+and domain logic — keeping it out of your template code.
+
+```wren
+// _domain.wren
+class Post {
+  construct new(row) {
+    _id = row["id"]
+    _title = row["title"]
+    _body = row["body"]
+    _createdAt = row["createdAt"] || Date.now
+  }
+
+  static new() { Post.new({}) }
+
+  id { _id }
+  title { _title }
+  title=(val) { _title = val.toString.trim() }
+  body { _body }
+  body=(val) { _body = val.toString() }
+  createdAt { Date.new(_createdAt) }
+
+  save() { `Post`.save(this) }
+
+  static list() { `
+    SELECT * FROM Post ORDER BY createdAt DESC
+  `.fetch.to(Post) }
+
+  static find(id) { `
+    SELECT * FROM Post WHERE id = ?
+  `.first(id).to(Post) }
+}
+```
+
+Now the controller imports this class and the view iterates over `Post`
+instances — clean, testable, and separated from presentation.
+
+### Pitfall
+
+**Database values come back as strings.** Always convert before numeric
+operations:
+
+```wren
+var count = Num.fromString(row["cnt"])
+// Wrong: row["cnt"] + 1  —  this concatenates strings
+```
+
+---
+
+## Controller: Logic at the Top
+
+The top of each `.wren` file handles the request. This is where you:
+
+1. Check the HTTP method (`Request.isPost`)
+2. Read form data (`Request.post("field")`)
+3. Read query parameters (`Request.get("key")`)
+4. Call model methods
+5. Redirect or prepare data for the view
+
+```wren
+import "_template" for Template
+import "_domain" for Post
+
+if (Request.isPost) {
+  var post = Post.new()
+  post.title = Request.post("title")
+  post.body = Request.post("body")
+  post.save()
+  return Response.redirect("/posts/" + post.id.toString)
+}
+
+var postId = Request.route(1)
+var post = Post.find(postId)
+```
+
+Use `return Response.redirect(path)` to redirect after POST — this follows
+the Post/Redirect/Get pattern and prevents duplicate form submissions.
+
+### Pitfall
+
+**Forgetting `return` before `Response.redirect()`** causes a double-response
+error. The redirect sends headers, then the code below still executes and
+tries to send a body. Always `return Response.redirect(...)`.
+
+```wren
+// Wrong — missing return
+if (Request.isPost) {
+  task.save()
+  Response.redirect("/")  // redirect sends headers...
+}
+// ...then this still runs, trying to send a second response
+return Template.new().layout(...)
+```
+
+---
+
+## Template Classes / Components
+
+Extract shared HTML into Wren classes. Each method returns an inline HTML
+string, turning your class into a library of reusable components.
+
+### Layout template
+
+Create `_template.wren` and import it from your pages:
+
+```wren
+class Template {
+  construct new() {
+    _title = "My App"
+    _subtitle = "A Bialet application"
+  }
+
+  layout(content) { <!doctype html>
+    <html lang="en">
+      {{ head(_title) }}
+      <body>
+        <header class="app-header">
+          <h1>{{ _title }}</h1>
+          <p class="app-subtitle">{{ _subtitle }}</p>
+        </header>
+        <main>{{ content }}</main>
+        {{ footer }}
+      </body>
+    </html> }
+
+  head(title) { <head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+  </head> }
+
+  footer { <footer class="app-footer">
+    <p>Built with <a href="https://bialet.dev">Bialet</a>.</p>
+  </footer> }
+}
+```
+
+### Using the template
+
+```wren
+// index.wren
+import "_template" for Template
+
+return Template.new().layout(<main>
+  <h1>Welcome</h1>
+  <p>This content goes into {{ content }}.</p>
+</main>)
+```
+
+A Wren block that contains a single expression implicitly returns that
+expression — no `return` keyword needed in the method body.
+
+### Pitfalls
+
+**Instance methods need `new()`.** If your methods are not `static`, you
+must instantiate the class:
+
+```wren
+// Wrong — calls static layout, doesn't exist
+return Template.layout(...)
+
+// Correct — creates an instance first
+return Template.new().layout(...)
+```
+
+**Don't over-engineer.** A template class with a handful of methods (`layout`,
+`head`, `footer`, plus one or two component helpers) covers most needs.
+Nested class hierarchies and deep abstraction layers work against Bialet's
+simplicity.
+
+---
+
+## Semantic HTML
+
+Prefer semantic elements that describe their purpose. Bialet's inline HTML is
+plain HTML — the browser treats it exactly as if you'd written an `.html` file.
+Use the right element for the job.
+
+| Instead of `<div>` | Use |
+|---|---|
+| Page header / branding | `<header>` |
+| Navigation links | `<nav>` |
+| Main content area | `<main>` |
+| Self-contained content block | `<article>` |
+| Thematic grouping | `<section>` |
+| Sidebar or complementary content | `<aside>` |
+| Page footer | `<footer>` |
+
+A real-world page using semantic elements:
+
+```wren
+return Template.new().layout(<main>
+  <form method="post">
+    <section class="input-group">
+      <input name="task" placeholder="What needs to be done?" required autofocus />
+      <button type="submit">Add</button>
+    </section>
+  </form>
+
+  <nav class="filters" aria-label="Task filters">
+    <a href="/" class="filter-tab active">All</a>
+    <a href="/?filter=active" class="filter-tab">Active</a>
+    <a href="/?filter=completed" class="filter-tab">Completed</a>
+  </nav>
+
+  <aside class="stats-bar">
+    <span><strong>3</strong> tasks remaining</span>
+  </aside>
+
+  <article class="task-card">
+    <h2>Buy groceries</h2>
+    <p>Added 10 minutes ago</p>
+  </article>
+
+  <footer class="app-footer">
+    <p>Built with Bialet</p>
+  </footer>
+</main>)
+```
+
+Semantic HTML improves accessibility (screen readers understand page structure),
+SEO (crawlers parse meaningful sections), and readability (future you will
+thank you).
+
+### Pitfall
+
+**Same-tag nesting applies to semantic tags too.**
+
+```wren
+// Wrong — parse error
+var bad = <section><section>Nested section</section></section>
+
+// Correct — use different semantic tags
+var good = <section><article>Nested content</article></section>
+```
+
+---
+
+## Styling & CSS
+
+Bialet outputs plain HTML. CSS works exactly as it does with static HTML files.
+If you're coming from React and haven't written vanilla CSS in a while, here's
+what you need to know.
+
+### Adding a stylesheet
+
+Place your `.css` file in the app root (next to your `.wren` files) and link it
+in your template's `<head>`:
+
+```wren
+head { <head>
+  <title>{{ _title }}</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/style.css" />
+</head> }
+```
+
+### Writing CSS
+
+Use CSS custom properties for theming and write class-based selectors targeting
+your semantic HTML elements. Here's a minimal starting point:
+
+```css
+/* style.css */
+:root {
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --accent: #14b8a6;
+  --radius: 14px;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 2rem 1rem;
+}
+
+main {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+```
+
+### Semantic CSS first (Bialet philosophy)
+
+Target elements directly by tag name where possible, then add classes for
+variants. This keeps both your HTML and CSS lean:
+
+```css
+/* Base: all nav elements get a consistent look */
+nav {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+/* Variant: only the filter nav gets extra styling */
+nav.filters {
+  margin-bottom: 1.25rem;
+}
+```
+
+### PicoCSS
+
+PicoCSS is a classless CSS framework that styles semantic HTML elements
+automatically. It pairs perfectly with Bialet's semantic HTML approach — you
+write `<nav>`, `<main>`, `<article>`, and PicoCSS handles the styling with zero
+classes.
+
+```wren
+head { <head>
+  <title>{{ _title }}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+</head> }
+```
+
+With PicoCSS loaded, your semantic HTML gets a clean, consistent look without
+writing any CSS. Add a custom stylesheet alongside it for app-specific
+overrides.
+
+### Tailwind CSS
+
+Tailwind works in Bialet — it's just classes on HTML elements. For prototyping,
+use the CDN script:
+
+```wren
+head { <head>
+  <title>{{ _title }}</title>
+  <meta charset="utf-8" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head> }
+```
+
+Then use utility classes directly:
+
+```wren
+<main class="max-w-lg mx-auto py-8 px-4">
+  <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+  <article class="bg-white rounded-xl shadow-sm p-4">
+    <p class="text-gray-600">Hello World</p>
+  </article>
+</main>
+```
+
+For production, self-host the compiled CSS. Run Tailwind's CLI or PostCSS build
+against the app directory — the class names in your `.wren` files are standard
+HTML attributes, so any CSS processing tool works.
+
+### Pitfalls
+
+**No CSS preprocessors built in.** Bialet doesn't bundle Sass, Less, or
+PostCSS. Write vanilla CSS, or use a separate build step for preprocessing.
+
+**`_`-prefixed CSS files are not served.** Files starting with `_` or `.`
+return 403. Name your stylesheets without a leading underscore:
+
+```wren
+// ✓ Served
+<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="/theme.css" />
+
+// ✗ Returns 403
+<link rel="stylesheet" href="/_style.css" />
+```
+
+**Framework CDNs add an external dependency.** For production, download the CSS
+file and serve it from your app directory alongside your other static assets.
+
+---
+
+## Escaping & Security
+
+The `{{ }}` interpolation does **not** escape HTML by default. When displaying
+user-generated content, database values, or URL parameters, you must use the
+`.safe` property to escape special HTML characters and prevent XSS attacks.
+
+```wren
+var userInput = "<script>alert('xss')</script>"
+
+// Dangerous — XSS vulnerability
+var dangerous = <p>{{ userInput }}</p>
+// Renders: <p><script>alert('xss')</script></p>
+
+// Safe — HTML characters are escaped
+var safe = <p>{{ userInput.safe }}</p>
+// Renders: <p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>
+```
+
+You can also use `Util.htmlEscape()` for manual escaping:
+
+```wren
+var escaped = Util.htmlEscape(userInput)
+```
+
+**Rule:** Always use `.safe` on any string that comes from user input, database
+queries, or URL parameters before inserting it into HTML.
+
+### Pitfall
+
+**Forgetting `.safe` is an XSS vulnerability.** Every user-supplied string
+embedded in HTML must be escaped. There is no automatic escaping.
+
+---
+
+## Common Pitfalls
+
+- **Same-tag nesting:** `<div><div>Hello</div></div>` is a parse error — use
+  different tag names for nesting.
+- **Mismatched tags:** `<div><span>Hello</div>` fails — opening and closing
+  tags must match.
+- **Invalid tag names:** Only lowercase letters and numbers — no hyphens,
+  underscores, or uppercase. Use classes and semantic tags instead.
+- **Interpolation depth:** Maximum 9 nested `{{ }}` levels.
+- **Forgetting `return`:** Without `return`, the response body is empty.
+- **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
+- **Newlines outside HTML tags in `{{ }}`:** Keep Wren code on the same line
+  as the opening `{{`. Only HTML strings can span lines.
+- **Map callback is a single expression:** No multiple statements, no variable
+  declarations inside the callback.
+- **Empty lists in `map`:** Produce empty output — pair with `&&` for empty
+  states.
+- **`return` terminates immediately:** Code after `return` never executes.
+- **DB values are strings:** Convert with `Num.fromString()` before math.
+- **Forgetting `return` before `Response.redirect()`:** Causes double-response
+  errors.
+- **Instance vs static methods:** Instance methods need `new()`; static methods
+  don't.
+- **`_`-prefixed CSS is not served:** Name stylesheets without leading `_`.
+- **CSS preprocessors not built in:** Write vanilla CSS or use a build step.
+- **Framework CDNs in production:** Self-host CSS files for reliability.
+- **`{{ }}` does not escape HTML:** Always use `.safe` on untrusted strings.

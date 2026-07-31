@@ -30,7 +30,7 @@ valid Wren expression.
 
 > **Security note:** `{{ }}` does **not** escape HTML by default. When
 > displaying user-generated content, use `.safe` to escape it:
-> `{{ userContent.safe }}`. See [Inline HTML Strings](../html-strings.md)
+> `{{ userContent.safe }}`. See [HTML Template](../template.md)
 > for details.
 
 ```wren
@@ -40,7 +40,7 @@ return <ul>
 </ul>
 ```
 
-For more details, see [Inline HTML Strings](../html-strings.md).
+For more details, see [HTML Template](../template.md).
 
 ---
 **Previous:** [2. Setup](2-setup) &nbsp; | &nbsp; **Next:** [4. Templates](4-templates)

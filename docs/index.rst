@@ -263,7 +263,7 @@ Who is Bialet for?
    getting-started/index
    installation
    structure
-   html-strings
+   template
    database
    rest-api
    tests
