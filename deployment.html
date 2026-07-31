@@ -1,0 +1,981 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Deployment" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/deployment.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet is a single binary — copy it to your server alongside your.wren files and you’re deployed. This guide covers setting up a production-ready environment with a reverse proxy, systemd, and Dock..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet is a single binary — copy it to your server alongside your.wren files and you’re deployed. This guide covers setting up a production-ready environment with a reverse proxy, systemd, and Dock..." />
+
+    <title>Deployment &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Cron Tasks" href="cron.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.6" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/deployment.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fdeployment.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/deployment.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Deployment</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-a-reverse-proxy">Why a Reverse Proxy?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-restart-needed-on-deploy">No Restart Needed on Deploy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-bialet-as-a-service">Running Bialet as a Service</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-ubuntu-debian">systemd (Ubuntu / Debian)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-apps-on-one-server">Multiple Apps on One Server</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-port-and-app-directory">Custom Port and App Directory</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dockerfile-from-scratch">Dockerfile (from scratch)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose">Docker Compose</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-wal-mode-production">SQLite WAL Mode (Production)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-wal">What Is WAL?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-matters-for-a-web-server">Why It Matters for a Web Server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disk-footprint">Disk Footprint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-you-can-skip-it">When You Can Skip It</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-resource-limits">Server Resource Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-deploy-checklist">Quick Deploy Checklist</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">#</a></h1>
+<p>Bialet is a single binary — copy it to your server alongside your <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
+files and you’re deployed. This guide covers setting up a production-ready
+environment with a reverse proxy, systemd, and Docker.</p>
+<section id="why-a-reverse-proxy">
+<h2>Why a Reverse Proxy?<a class="headerlink" href="#why-a-reverse-proxy" title="Link to this heading">#</a></h2>
+<p>Bialet speaks <strong>HTTP/1.0</strong> and does not support HTTPS natively. Running it
+behind a reverse proxy (nginx, Apache, or Caddy) gives you:</p>
+<ul class="simple">
+<li><p><strong>TLS termination</strong> — HTTPS for your users</p></li>
+<li><p><strong>HTTP/1.1 or HTTP/2</strong> between the client and the proxy</p></li>
+<li><p><strong>Static file caching and gzip</strong> — the proxy can compress and cache assets</p></li>
+<li><p><strong>Security</strong> — Bialet only needs to listen on <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, not the public
+internet</p></li>
+</ul>
+<p>You <em>can</em> expose Bialet directly with <code class="docutils literal notranslate"><span class="pre">-h</span> <span class="pre">0.0.0.0</span></code>, but this is not
+recommended for production.</p>
+</section>
+<section id="no-restart-needed-on-deploy">
+<h2>No Restart Needed on Deploy<a class="headerlink" href="#no-restart-needed-on-deploy" title="Link to this heading">#</a></h2>
+<p>When you push new code to your server, the Bialet server <strong>does not need to
+be restarted</strong>. It watches <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files for changes and picks them up
+automatically.</p>
+<section id="auto-migration">
+<h3>Auto-Migration<a class="headerlink" href="#auto-migration" title="Link to this heading">#</a></h3>
+<p>If your app has a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file (or <code class="docutils literal notranslate"><span class="pre">/_app/migration.wren</span></code>), any
+pending database migrations run automatically <strong>each time the migration file
+is created or modified</strong>. Just deploy the new file and Bialet runs the
+migrations before serving the next request. No manual steps, no downtime.</p>
+<p>This means your deploy flow is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scp<span class="w"> </span>-r<span class="w"> </span>./src/*<span class="w"> </span>user@your-server:/www/your-app/
+<span class="c1"># Done. Migrations run, code reloads, server keeps running.</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="static-files">
+<h2>Static Files<a class="headerlink" href="#static-files" title="Link to this heading">#</a></h2>
+<p>Bialet serves static files (CSS, JS, images, fonts) directly. For better
+performance, configure your reverse proxy to:</p>
+<ul class="simple">
+<li><p><strong>Cache</strong> static assets (add <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> headers)</p></li>
+<li><p><strong>Gzip</strong> or <strong>brotli</strong> compress text-based assets (CSS, JS, HTML, SVG)</p></li>
+</ul>
+<p>It’s also safe to serve static files from the proxy directly instead of
+proxying to Bialet — just add a <code class="docutils literal notranslate"><span class="pre">location</span></code> block pointing to your app
+directory.</p>
+</section>
+<section id="reverse-proxy-setups">
+<h2>Reverse Proxy Setups<a class="headerlink" href="#reverse-proxy-setups" title="Link to this heading">#</a></h2>
+<section id="nginx">
+<h3>nginx<a class="headerlink" href="#nginx" title="Link to this heading">#</a></h3>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="s">[::]:80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">example.com</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Serve static files directly from disk (optional, faster)</span>
+<span class="w">    </span><span class="kn">root</span><span class="w"> </span><span class="s">/www/example.com</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1"># Try static file first, fall back to Bialet</span>
+<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">@bialet</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1"># Gzip static assets</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">immutable&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For Let’s Encrypt TLS, wrap with:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">443</span><span class="w"> </span><span class="s">ssl</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="s">[::]:443</span><span class="w"> </span><span class="s">ssl</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">example.com</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kn">ssl_certificate</span><span class="w">     </span><span class="s">/etc/letsencrypt/live/example.com/fullchain.pem</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">ssl_certificate_key</span><span class="w"> </span><span class="s">/etc/letsencrypt/live/example.com/privkey.pem</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># ... same location blocks as above ...</span>
+<span class="p">}</span>
+
+<span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="s">[::]:80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">example.com</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">return</span><span class="w"> </span><span class="mi">301</span><span class="w"> </span><span class="s">https://</span><span class="nv">$host$request_uri</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="apache">
+<h3>Apache<a class="headerlink" href="#apache" title="Link to this heading">#</a></h3>
+<p>Enable the required modules:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>a2enmod<span class="w"> </span>proxy<span class="w"> </span>proxy_http<span class="w"> </span>rewrite<span class="w"> </span>headers<span class="w"> </span>expires
+</pre></div>
+</div>
+<p>Virtual host configuration:</p>
+<div class="highlight-apache notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+
+<span class="w">    </span><span class="c"># Gzip</span>
+<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_deflate.c</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/javascript
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/javascript<span class="w"> </span>application/json
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
+<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
+
+<span class="w">    </span><span class="c"># Cache static assets</span>
+<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">&quot;access plus 30 days&quot;</span>
+<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
+
+<span class="w">    </span><span class="c"># Serve static files directly</span>
+<span class="w">    </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="sx">/www/example.com</span>
+
+<span class="w">    </span><span class="nb">RewriteEngine</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="c"># If the file exists, serve it</span>
+<span class="w">    </span><span class="nb">RewriteCond</span><span class="w"> </span>%{DOCUMENT_ROOT}%{REQUEST_URI}<span class="w"> </span>-f
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^<span class="w"> </span>-<span class="w"> </span>[L]
+<span class="w">    </span><span class="c"># Otherwise proxy to Bialet</span>
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^/(.*)$<span class="w"> </span>http://127.0.0.1:7001/$1<span class="w"> </span>[P,L]
+
+<span class="w">    </span><span class="nb">ProxyPreserveHost</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="nb">ProxyPassReverse</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="caddy">
+<h3>Caddy<a class="headerlink" href="#caddy" title="Link to this heading">#</a></h3>
+<p>Caddy is the simplest option — it handles TLS automatically:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">encode</span><span class="w"> </span><span class="n">gzip</span><span class="w"> </span><span class="n">zstd</span>
+
+<span class="w">    </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">file</span>
+<span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">&quot;public, max-age=604800, immutable&quot;</span>
+
+<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>That’s it. Caddy obtains and renews certificates automatically.</p>
+</section>
+</section>
+<section id="running-bialet-as-a-service">
+<h2>Running Bialet as a Service<a class="headerlink" href="#running-bialet-as-a-service" title="Link to this heading">#</a></h2>
+<section id="systemd-ubuntu-debian">
+<h3>systemd (Ubuntu / Debian)<a class="headerlink" href="#systemd-ubuntu-debian" title="Link to this heading">#</a></h3>
+<p>Create a unit file to keep Bialet running and auto-start on boot.</p>
+<p>First, create a group service (optional — useful if you run multiple apps):</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/bialet.service</span></code></strong></p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Bialet group</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/bin/true</span>
+<span class="na">RemainAfterExit</span><span class="o">=</span><span class="s">yes</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</pre></div>
+</div>
+<p>Then create one unit per app:</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/example.com.service</span></code></strong></p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">example.com in Bialet</span>
+<span class="na">PartOf</span><span class="o">=</span><span class="s">bialet.service</span>
+<span class="na">After</span><span class="o">=</span><span class="s">bialet.service</span>
+
+<span class="k">[Service]</span>
+<span class="na">User</span><span class="o">=</span><span class="s">root</span>
+<span class="na">WorkingDirectory</span><span class="o">=</span><span class="s">/www/example.com</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">bialet -p 7001 -m 1024 -M 2048 -l /var/log/bialet/example.com.log -d /www/example.com.sqlite /www/example.com</span>
+<span class="na">Restart</span><span class="o">=</span><span class="s">on-failure</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">bialet.service</span>
+</pre></div>
+</div>
+<p>Enable and start:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/log/bialet<span class="w"> </span>/www/example.com
+sudo<span class="w"> </span>systemctl<span class="w"> </span>daemon-reload
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>bialet.service<span class="w"> </span>example.com.service
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>bialet.service<span class="w"> </span>example.com.service
+</pre></div>
+</div>
+</section>
+<section id="multiple-apps-on-one-server">
+<h3>Multiple Apps on One Server<a class="headerlink" href="#multiple-apps-on-one-server" title="Link to this heading">#</a></h3>
+<p>Run each app on a different port and proxy by hostname:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/site-a<span class="w">     </span><span class="c1"># proxied from site-a.com</span>
+bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7002</span><span class="w"> </span>/www/site-b<span class="w">     </span><span class="c1"># proxied from site-b.com</span>
+</pre></div>
+</div>
+<p>Point each nginx <code class="docutils literal notranslate"><span class="pre">proxy_pass</span></code> / Apache <code class="docutils literal notranslate"><span class="pre">ProxyPass</span></code> / Caddy <code class="docutils literal notranslate"><span class="pre">reverse_proxy</span></code> to
+the matching port.</p>
+</section>
+</section>
+<section id="docker">
+<h2>Docker<a class="headerlink" href="#docker" title="Link to this heading">#</a></h2>
+<p>Use the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> as a starting
+point:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>myapp
+<span class="nb">cd</span><span class="w"> </span>myapp
+</pre></div>
+</div>
+<p>The skeleton includes a <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> and <code class="docutils literal notranslate"><span class="pre">compose.yml</span></code>. Build and run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+<section id="custom-port-and-app-directory">
+<h3>Custom Port and App Directory<a class="headerlink" href="#custom-port-and-app-directory" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BIALET_PORT</span><span class="o">=</span><span class="m">8080</span><span class="w"> </span><span class="nv">BIALET_DIR</span><span class="o">=</span>/app/mysite<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+</section>
+<section id="dockerfile-from-scratch">
+<h3>Dockerfile (from scratch)<a class="headerlink" href="#dockerfile-from-scratch" title="Link to this heading">#</a></h3>
+<p>If you prefer a minimal setup:</p>
+<div class="highlight-dockerfile notranslate"><div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:22.04</span>
+
+<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-0<span class="w"> </span>libcurl4<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+
+<span class="k">COPY</span><span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/bialet
+<span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>/app
+<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+
+<span class="k">EXPOSE</span><span class="w"> </span><span class="s">7001</span>
+<span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;bialet&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;7001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/app&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Build:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>myapp<span class="w"> </span>.
+docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:7001:7001<span class="w"> </span>-v<span class="w"> </span>./data:/www/myapp.sqlite<span class="w"> </span>myapp
+</pre></div>
+</div>
+</section>
+<section id="docker-compose">
+<h3>Docker Compose<a class="headerlink" href="#docker-compose" title="Link to this heading">#</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">app</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myapp</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;127.0.0.1:7001:7001&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data:/www/myapp.sqlite</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="sqlite-wal-mode-production">
+<span id="id1"></span><h2>SQLite WAL Mode (Production)<a class="headerlink" href="#sqlite-wal-mode-production" title="Link to this heading">#</a></h2>
+<p>Enable WAL with the <code class="docutils literal notranslate"><span class="pre">-w</span></code> flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-w<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<section id="what-is-wal">
+<h3>What Is WAL?<a class="headerlink" href="#what-is-wal" title="Link to this heading">#</a></h3>
+<p>WAL (Write-Ahead Logging) is an alternative journal mode for SQLite.
+Instead of writing changes directly to the main database file, SQLite
+appends them to a separate <code class="docutils literal notranslate"><span class="pre">-wal</span></code> file first, then periodically merges
+them back (a process called <em>checkpointing</em>).</p>
+</section>
+<section id="why-it-matters-for-a-web-server">
+<h3>Why It Matters for a Web Server<a class="headerlink" href="#why-it-matters-for-a-web-server" title="Link to this heading">#</a></h3>
+<p>By default, SQLite uses a <em>rollback journal</em>. In that mode, <strong>readers block
+writers and writers block readers</strong>. On a web server handling concurrent
+requests, this means:</p>
+<ul class="simple">
+<li><p>A page loading data (<code class="docutils literal notranslate"><span class="pre">SELECT</span></code>) blocks a form submission (<code class="docutils literal notranslate"><span class="pre">INSERT</span></code>)</p></li>
+<li><p>Two simultaneous form submissions queue up behind each other</p></li>
+<li><p>Under any real traffic, you get <code class="docutils literal notranslate"><span class="pre">SQLITE_BUSY</span></code> errors</p></li>
+</ul>
+<p>WAL fixes this by decoupling reads from writes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Rollback Journal (default)</p></th>
+<th class="head"><p>WAL mode (<code class="docutils literal notranslate"><span class="pre">-w</span></code>)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Readers vs. writers</p></td>
+<td><p>Block each other</p></td>
+<td><p>Work concurrently</p></td>
+</tr>
+<tr class="row-odd"><td><p>Multiple readers</p></td>
+<td><p>OK</p></td>
+<td><p>OK</p></td>
+</tr>
+<tr class="row-even"><td><p>Multiple writers</p></td>
+<td><p>One at a time (queued)</p></td>
+<td><p>One at a time (queued)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Write performance</p></td>
+<td><p>Baseline</p></td>
+<td><p>Often faster</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In practice, this means a user submitting a comment form won’t stall another
+user browsing the page, and your cron tasks (which may write to the DB) won’t
+interfere with normal traffic.</p>
+</section>
+<section id="disk-footprint">
+<h3>Disk Footprint<a class="headerlink" href="#disk-footprint" title="Link to this heading">#</a></h3>
+<p>WAL mode creates two extra files alongside your database:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite3-wal</span></code> — the write-ahead log (grows during writes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite3-shm</span></code> — shared memory index (small, fixed size)</p></li>
+</ul>
+<p>The WAL file shrinks automatically on checkpoint. For most apps, it stays
+under a few megabytes.</p>
+</section>
+<section id="when-you-can-skip-it">
+<h3>When You Can Skip It<a class="headerlink" href="#when-you-can-skip-it" title="Link to this heading">#</a></h3>
+<p>WAL is not strictly necessary if:</p>
+<ul class="simple">
+<li><p>Your app is read-only or single-user</p></li>
+<li><p>Traffic is extremely low (a handful of requests per minute)</p></li>
+<li><p>You’re prototyping locally</p></li>
+</ul>
+<p>For anything serving real users, enable it with <code class="docutils literal notranslate"><span class="pre">-w</span></code>. The overhead is
+negligible and the concurrency benefit is immediate.</p>
+</section>
+</section>
+<section id="server-resource-limits">
+<h2>Server Resource Limits<a class="headerlink" href="#server-resource-limits" title="Link to this heading">#</a></h2>
+<p>Use CLI flags to constrain resources per app:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<td><p>Soft memory limit (MB)</p></td>
+<td><p>50</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">1024</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code></p></td>
+<td><p>Hard memory limit (MB)</p></td>
+<td><p>100</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-M</span> <span class="pre">2048</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Soft CPU limit (%)</p></td>
+<td><p>15</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">25</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code></p></td>
+<td><p>Hard CPU limit (%)</p></td>
+<td><p>30</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-C</span> <span class="pre">50</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<td><p>SQLite WAL mode</p></td>
+<td><p>off</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Example for a production app:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>-w<span class="w"> </span>-l<span class="w"> </span>/var/log/bialet/app.log<span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+</section>
+<section id="quick-deploy-checklist">
+<h2>Quick Deploy Checklist<a class="headerlink" href="#quick-deploy-checklist" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Copy the binary</strong> — <code class="docutils literal notranslate"><span class="pre">scp</span> <span class="pre">bialet</span> <span class="pre">user&#64;host:/usr/local/bin/</span></code></p></li>
+<li><p><strong>Copy your app</strong> — <code class="docutils literal notranslate"><span class="pre">scp</span> <span class="pre">-r</span> <span class="pre">*.wren</span> <span class="pre">static/</span> <span class="pre">user&#64;host:/www/myapp/</span></code></p></li>
+<li><p><strong>Set up the reverse proxy</strong> — nginx, Apache, or Caddy (see above)</p></li>
+<li><p><strong>Create the systemd unit</strong> — so it starts on boot and restarts on crash</p></li>
+<li><p><strong>Point your DNS</strong> — A/AAAA record to your server’s IP</p></li>
+<li><p><strong>Add TLS</strong> — Let’s Encrypt via certbot (nginx/Apache) or Caddy’s auto-TLS</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="cron.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Cron Tasks</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-a-reverse-proxy">Why a Reverse Proxy?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-restart-needed-on-deploy">No Restart Needed on Deploy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-bialet-as-a-service">Running Bialet as a Service</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-ubuntu-debian">systemd (Ubuntu / Debian)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-apps-on-one-server">Multiple Apps on One Server</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-port-and-app-directory">Custom Port and App Directory</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dockerfile-from-scratch">Dockerfile (from scratch)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose">Docker Compose</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-wal-mode-production">SQLite WAL Mode (Production)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-wal">What Is WAL?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-matters-for-a-web-server">Why It Matters for a Web Server</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disk-footprint">Disk Footprint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-you-can-skip-it">When You Can Skip It</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-resource-limits">Server Resource Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-deploy-checklist">Quick Deploy Checklist</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

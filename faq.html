@@ -177,13 +177,14 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">FAQ</a></li>
@@ -607,12 +608,10 @@ like nginx or Caddy in front of it. For local development, HTTP on
 </section>
 <section id="how-do-i-deploy-a-bialet-app">
 <h3>How do I deploy a Bialet app?<a class="headerlink" href="#how-do-i-deploy-a-bialet-app" title="Link to this heading">#</a></h3>
-<p>Copy your app directory and the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary to a server, then run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>/path/to/app
-</pre></div>
-</div>
-<p>That’s it. No build pipeline, no CI/CD required. Use Docker Compose
-(see <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a>) if you prefer containers.</p>
+<p>See the full <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment Guide</span></a> covering reverse proxies
+(nginx, Apache, Caddy), systemd services, Docker, and TLS setup.</p>
+<p>The short version: copy your app directory and the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary to a
+server, run <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">/path/to/app</span></code>, and put a reverse proxy in front of it.</p>
 </section>
 <section id="can-i-run-multiple-apps-on-one-server">
 <h3>Can I run multiple apps on one server?<a class="headerlink" href="#can-i-run-multiple-apps-on-one-server" title="Link to this heading">#</a></h3>

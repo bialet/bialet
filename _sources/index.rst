@@ -263,13 +263,14 @@ Who is Bialet for?
    getting-started/index
    installation
    structure
-   html-strings
+   template
    database
    rest-api
    tests
    file
    datetime
    cron
+   deployment
    reference
    examples
    faq

@@ -62,7 +62,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Building REST APIs" href="rest-api.html" />
-    <link rel="prev" title="Inline HTML Strings" href="html-strings.html" />
+    <link rel="prev" title="Template" href="template.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.10.6" />
@@ -177,13 +177,14 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="html-strings.html">Inline HTML Strings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -424,6 +425,9 @@
 <p>There is no configuration other than naming the database file.</p>
 <p>The default database name is <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> placed in the root directory.</p>
 <p>To change the name of the database, set the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option.</p>
+<p>For production, enable Write-Ahead Logging with the <code class="docutils literal notranslate"><span class="pre">-w</span></code> flag to allow
+concurrent reads and writes without blocking. See the
+<a class="reference internal" href="deployment.html#sqlite-wal-mode-production"><span class="std std-ref">Deployment Guide</span></a> for details.</p>
 <p><strong>There is no integration with other databases at the moment.</strong></p>
 </section>
 <section id="query-object">
@@ -440,9 +444,9 @@
 </ul>
 <p>Additional methods available on Query objects:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row in the table. See <a class="reference internal" href="#insert-and-update"><span class="xref myst">Insert and update</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order"><span class="xref myst">Safe Sorting</span></a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes"><span class="xref myst">Mapping Results</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row in the table. See <a class="reference internal" href="#insert-and-update">Insert and update</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes">Mapping Results</a>.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a LIMIT clause.</p>
 <p>You can’t concatenate strings or use interpolations with the Query object. When
@@ -482,7 +486,7 @@ method.</p>
 </div>
 </section>
 <section id="safe-sorting-with-order">
-<h2>Safe Sorting with .order()<a class="headerlink" href="#safe-sorting-with-order" title="Link to this heading">#</a></h2>
+<span id="id1"></span><h2>Safe Sorting with .order()<a class="headerlink" href="#safe-sorting-with-order" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">.order()</span></code> method provides a safe way to add ORDER BY clauses to your queries by validating column names against an allowed list and normalizing the sort direction.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">order</span><span class="p">(</span><span class="n">column</span><span class="p">,</span><span class="w"> </span><span class="n">direction</span><span class="p">,</span><span class="w"> </span><span class="n">allowedColumns</span><span class="p">)</span>
 <span class="n">order</span><span class="p">(</span><span class="n">column</span><span class="p">,</span><span class="w"> </span><span class="n">direction</span><span class="p">,</span><span class="w"> </span><span class="n">allowedColumns</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span>
@@ -530,7 +534,7 @@ method.</p>
 <p>This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.</p>
 </section>
 <section id="mapping-results-to-domain-classes">
-<h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
+<span id="id2"></span><h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
 <p>Query results can be automatically mapped to domain classes using the <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method. This is useful for converting database rows into instances of your domain models.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Define a domain class with a constructor that accepts a Map</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
@@ -561,7 +565,7 @@ method.</p>
 </ul>
 </section>
 <section id="insert-and-update">
-<h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
+<span id="id3"></span><h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
 <p>You can use a regular SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statement.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">]</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">userParams</span><span class="p">)</span>
@@ -650,12 +654,12 @@ correctly.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="html-strings.html"
+       href="template.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Inline HTML Strings</p>
+        <p class="prev-next-title">Template</p>
       </div>
     </a>
     <a class="right-next"

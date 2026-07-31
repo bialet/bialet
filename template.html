@@ -1,0 +1,1459 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Template" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/template.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet renders pages using Inline HTML Strings — HTML written directly inside your Wren.wren files. No template engine, no separate files, no build step. Write a.wren file, return an HTML string, a..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet renders pages using Inline HTML Strings — HTML written directly inside your Wren.wren files. No template engine, no separate files, no build step. Write a.wren file, return an HTML string, a..." />
+
+    <title>Template &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Database" href="database.html" />
+    <link rel="prev" title="Project Structure and Routing" href="structure.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.6" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/template.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Ftemplate.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/template.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Template</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#view-inline-html-strings">View: Inline HTML Strings</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation">Interpolation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#return-sends-the-response"><code class="docutils literal notranslate"><span class="pre">return</span></code> sends the response</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#self-closing-tags">Self-Closing Tags</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-line-inline-html">Multi-line Inline HTML</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-rendering-with">Conditional Rendering with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#class-toggling">Class toggling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-html-blocks">Conditional HTML blocks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfall">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ternary-expressions">Ternary Expressions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attribute-switching">Attribute switching</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nested-ternaries-for-multi-value-decisions">Nested ternaries for multi-value decisions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ternary-with-html-operands">Ternary with HTML operands</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#iteration-with-map">Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-list">Simple list</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiline-items">Multiline items</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-mvc-file-structure">Bialet MVC: File Structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-wren-classes">Model: Wren Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#controller-logic-at-the-top">Controller: Logic at the Top</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-classes-components">Template Classes / Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout-template">Layout template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-template">Using the template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-html">Semantic HTML</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#styling-css">Styling &amp; CSS</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-stylesheet">Adding a stylesheet</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-css">Writing CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-css-first-bialet-philosophy">Semantic CSS first (Bialet philosophy)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#picocss">PicoCSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="template">
+<h1>Template<a class="headerlink" href="#template" title="Link to this heading">#</a></h1>
+<p>Bialet renders pages using Inline HTML Strings — HTML written directly inside
+your Wren <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files. No template engine, no separate files, no build step.
+Write a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, return an HTML string, and that’s your page.</p>
+<hr class="docutils" />
+<section id="view-inline-html-strings">
+<h2>View: Inline HTML Strings<a class="headerlink" href="#view-inline-html-strings" title="Link to this heading">#</a></h2>
+<p>Inline HTML Strings are delimited by angle brackets <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>. The string
+must begin and end with the same tag. Tag names must be lowercase, start with a
+letter, and contain only letters and numbers.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// A simple HTML string assigned to a variable</span>
+<span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;Hello World&lt;/p&gt;</span>
+</pre></div>
+</div>
+<section id="interpolation">
+<h3>Interpolation<a class="headerlink" href="#interpolation" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> to embed any Wren expression inside HTML. The expression is
+evaluated and its result is inserted into the string.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">greeting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;h1&gt;Hello, {{ name }}!&lt;/h1&gt;</span>
+<span class="c1">// Output: &lt;h1&gt;Hello, John!&lt;/h1&gt;</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="mf">5</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Output: &lt;p&gt;8&lt;/p&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="return-sends-the-response">
+<h3><code class="docutils literal notranslate"><span class="pre">return</span></code> sends the response<a class="headerlink" href="#return-sends-the-response" title="Link to this heading">#</a></h3>
+<p>Inside a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, <code class="docutils literal notranslate"><span class="pre">return</span></code> sends the value as the HTTP response body
+and <strong>stops execution immediately</strong>. Nothing after <code class="docutils literal notranslate"><span class="pre">return</span></code> runs. This is how
+every page in Bialet works — the last statement is a <code class="docutils literal notranslate"><span class="pre">return</span></code> with the HTML.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
+<span class="x">  &lt;head&gt;&lt;title&gt;My Page&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">  &lt;body&gt;</span>
+<span class="w">    </span><span class="x">&lt;h1&gt;Hello World&lt;/h1&gt;</span>
+<span class="w">  </span><span class="x">&lt;/body&gt;</span>
+<span class="x">&lt;/html&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h3>
+<p>Attributes follow the same rules as regular HTML — lowercase names, quoted
+values. You can interpolate values with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/about&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Learn more&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;a href=&quot;{{ url }}&quot; class=&quot;nav-link&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="self-closing-tags">
+<h3>Self-Closing Tags<a class="headerlink" href="#self-closing-tags" title="Link to this heading">#</a></h3>
+<p>Certain HTML tags are self-closing. In Bialet, these must include a space
+before the closing slash. The final output omits the slash.</p>
+<ul class="simple">
+<li><p>Correct: <code class="docutils literal notranslate"><span class="pre">&lt;hr</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;br</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;{{</span> <span class="pre">val</span> <span class="pre">}}&quot;</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;meta</span> <span class="pre">charset=&quot;utf-8&quot;</span> <span class="pre">/&gt;</span></code></p></li>
+<li><p>Incorrect: <code class="docutils literal notranslate"><span class="pre">&lt;hr/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;br/&gt;</span></code></p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value=&quot;{{ userInput }}&quot; /&gt;</span>
+<span class="x">// Renders: &lt;input value=&#39;Hello&#39;&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="multi-line-inline-html">
+<h3>Multi-line Inline HTML<a class="headerlink" href="#multi-line-inline-html" title="Link to this heading">#</a></h3>
+<p>An inline HTML string can span as many lines as you need. The newlines inside
+the tags become part of the HTML output.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">card</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;article&gt;</span>
+<span class="x">  &lt;h2&gt;</span><span class="nc">Title</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">  &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">&lt;/article&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="pitfalls">
+<h3>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h3>
+<p><strong>Same-tag nesting is a parse error.</strong> A tag cannot directly contain another
+tag with the same name:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — parse error</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
+
+<span class="c1">// Correct — use a different tag</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;section&gt;</span><span class="nc">Hello</span><span class="x">&lt;/section&gt;&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p><strong>Mismatched tags fail.</strong> Opening and closing tags must match:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
+
+<span class="x">// Correct</span>
+<span class="x">var good = &lt;div&gt;&lt;span&gt;Hello&lt;/span&gt;&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p><strong>Invalid tag names.</strong> Only lowercase letters and numbers are allowed. No
+hyphens, underscores, or uppercase:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;custom-tag&gt;Invalid&lt;/custom-tag&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my_component&gt;Invalid&lt;/my_component&gt;</span>
+
+<span class="c1">// Correct</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;span class=&quot;badge&quot;&gt;Valid&lt;/span&gt;</span>
+</pre></div>
+</div>
+<p><strong>Interpolation depth</strong> is limited to 9 nested levels.</p>
+<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code>.</strong> Without <code class="docutils literal notranslate"><span class="pre">return</span></code>, the response body is empty. The page
+renders as blank.</p>
+<p><strong>Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are private</strong> — they return 403 if accessed
+directly. Use them for imports and internal logic only.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="conditional-rendering-with">
+<h2>Conditional Rendering with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code><a class="headerlink" href="#conditional-rendering-with" title="Link to this heading">#</a></h2>
+<p>Wren’s <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> operator is the primary tool for conditional rendering. When the
+left side is truthy, the right side is returned; otherwise the expression
+evaluates empty.</p>
+<section id="class-toggling">
+<h3>Class toggling<a class="headerlink" href="#class-toggling" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// filter is a query parameter string</span>
+<span class="k">var</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+
+<span class="x">&lt;a href=&quot;/&quot; class=&quot;filter-tab {{ filter == &quot;all&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;All&lt;/a&gt;</span>
+<span class="x">&lt;a href=&quot;/?filter=active&quot; class=&quot;filter-tab {{ filter == &quot;active&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;Active&lt;/a&gt;</span>
+<span class="x">&lt;a href=&quot;/?filter=completed&quot; class=&quot;filter-tab {{ filter == &quot;completed&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;Completed&lt;/a&gt;</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">==</span> <span class="pre">&quot;all&quot;</span></code> is true, <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code> is inserted as the class value.
+When false, nothing is inserted.</p>
+</section>
+<section id="conditional-html-blocks">
+<h3>Conditional HTML blocks<a class="headerlink" href="#conditional-html-blocks" title="Link to this heading">#</a></h3>
+<p>You can conditionally render entire chunks of HTML. The right side of <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> can
+be an inline HTML string. The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation must always appear inside
+an HTML tag (<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> outside an HTML tag is parsed as Wren map syntax).</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  {{ showClear &amp;&amp; &lt;form method=&quot;post&quot; action=&quot;/clear&quot; class=&quot;clear-form&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;button class=&quot;clear-btn&quot;&gt;Clear completed&lt;/button&gt;</span>
+<span class="w">  </span><span class="x">&lt;/form&gt; }}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;span class=&quot;empty-icon&quot; aria-hidden=&quot;true&quot;&gt;🎉&lt;/span&gt;</span>
+<span class="w">    </span><span class="x">&lt;p class=&quot;empty-text&quot;&gt;Nothing here yet.&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Conditional text</span>
+<span class="x">&lt;span class=&quot;stats-count&quot;&gt;</span>
+<span class="x">  &lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">activeCount</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;</span>
+<span class="x">  task{{ activeCount != 1 &amp;&amp; &quot;s&quot; }} remaining</span>
+<span class="x">&lt;/span&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="pitfall">
+<h3>Pitfall<a class="headerlink" href="#pitfall" title="Link to this heading">#</a></h3>
+<p><strong>Newlines outside HTML tags produce unexpected output.</strong> The Wren code
+inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must start on the same line as <code class="docutils literal notranslate"><span class="pre">{{</span></code>. Newlines belong inside
+the HTML string (between <code class="docutils literal notranslate"><span class="pre">&lt;tag&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;/tag&gt;</span></code>), not in the surrounding Wren
+code. Breaking the Wren expression with newlines can cause parsing
+ambiguities and empty output.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — Wren code spans lines outside the HTML tags</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// Correct — Wren code starts on the same line as {{</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="x">  &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
+<span class="x">&lt;/form&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>The same rule applies to ternary expressions and <code class="docutils literal notranslate"><span class="pre">map</span></code> — keep the Wren
+expression on the same line as <code class="docutils literal notranslate"><span class="pre">{{</span></code>, let only the HTML string span lines.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="ternary-expressions">
+<h2>Ternary Expressions<a class="headerlink" href="#ternary-expressions" title="Link to this heading">#</a></h2>
+<p>Ternary operators are essential for switching attributes, classes, and entire
+blocks of HTML based on a condition.</p>
+<section id="attribute-switching">
+<h3>Attribute switching<a class="headerlink" href="#attribute-switching" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;</span>
+<span class="x">        title=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;</span>
+<span class="x">        aria-label=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;&gt;</span>
+<span class="x">&lt;/button&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="nested-ternaries-for-multi-value-decisions">
+<h3>Nested ternaries for multi-value decisions<a class="headerlink" href="#nested-ternaries-for-multi-value-decisions" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;span class=&quot;priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? &quot;high&quot; : Num.fromString(task.id.toString) % 3 == 2 ? &quot;medium&quot; : &quot;low&quot; }}&quot;</span>
+<span class="x">      aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="ternary-with-html-operands">
+<h3>Ternary with HTML operands<a class="headerlink" href="#ternary-with-html-operands" title="Link to this heading">#</a></h3>
+<p>Each branch of a ternary can be an inline HTML string that spans multiple
+lines. The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must be inside an HTML tag context:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text completed&quot;&gt;</span>
+<span class="x">  {{ task.description.safe }}</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text&quot;&gt;</span>
+<span class="x">  {{ task.description.safe }}</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Pitfall<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p><strong>Deeply nested ternaries hurt readability.</strong> For complex logic, compute the
+value above the template and use a simple variable instead:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Compute before the template</span>
+<span class="k">var</span><span class="w"> </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;task-text&quot;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;task-text completed&quot;</span>
+<span class="p">}</span>
+
+<span class="c1">// Clean template</span>
+<span class="x">&lt;span class=&quot;{{ taskClass }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+</pre></div>
+</div>
+<p><strong>Newlines outside HTML tags</strong> — same rule as <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — Wren code broken across lines outside the HTML string</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span>
+<span class="w">  </span><span class="x">&lt;span class=&quot;completed&quot;&gt;Done&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">  </span><span class="x">&lt;span class=&quot;pending&quot;&gt;Pending&lt;/span&gt;</span>
+<span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// Correct — one expression, newlines inside the HTML strings</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class=&quot;completed&quot;&gt;</span>
+<span class="x">  Done</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class=&quot;pending&quot;&gt;</span>
+<span class="x">  Pending</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="iteration-with-map">
+<h2>Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code><a class="headerlink" href="#iteration-with-map" title="Link to this heading">#</a></h2>
+<p>Wren’s <code class="docutils literal notranslate"><span class="pre">map</span></code> function transforms each element of a list into an HTML string.
+The callback body is a single Wren expression — but the inline HTML string
+inside it can span many visual lines.</p>
+<section id="simple-list">
+<h3>Simple list<a class="headerlink" href="#simple-list" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cherry&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="c1">// Output: &lt;ul&gt;&lt;li&gt;Apple&lt;/li&gt;&lt;li&gt;Banana&lt;/li&gt;&lt;li&gt;Cherry&lt;/li&gt;&lt;/ul&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="multiline-items">
+<h3>Multiline items<a class="headerlink" href="#multiline-items" title="Link to this heading">#</a></h3>
+<p>The callback is one expression (<code class="docutils literal notranslate"><span class="pre">|task|</span> <span class="pre">&lt;li&gt;...&lt;/li&gt;</span></code>), but the <code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code> inline
+HTML string spans multiple lines. The Wren code stays on one line of Wren, but
+the HTML inside the tags has newlines.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;ul class=&quot;task-list&quot;&gt;</span>
+<span class="x">  {{ tasks.map{ |task| &lt;li class=&quot;task-item {{ task.finished &amp;&amp; &quot;completed&quot; }}&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;section class=&quot;task-item-row&quot;&gt;</span>
+<span class="x">      &lt;form method=&quot;post&quot; action=&quot;/toggle&quot; class=&quot;checkbox-form&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
+<span class="x">        &lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;</span>
+<span class="x">                title=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;</span>
+<span class="x">                aria-label=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;/button&gt;</span>
+<span class="x">      &lt;/form&gt;</span>
+<span class="w">      </span><span class="x">&lt;span class=&quot;task-content&quot;&gt;</span>
+<span class="x">        &lt;span class=&quot;{{ task.finished ? &quot;task-text completed&quot; : &quot;task-text&quot; }}&quot;&gt;</span>
+<span class="w">          </span><span class="x">&lt;span class=&quot;priority-dot low&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;/span&gt;</span>
+<span class="x">        &lt;span class=&quot;task-meta&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">hh</span><span class="w"> </span><span class="si">}}</span><span class="o">:</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">mi</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">      &lt;/span&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/delete&quot; class=&quot;delete-form&quot;&gt;</span>
+<span class="x">        &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
+<span class="w">        </span><span class="x">&lt;button class=&quot;delete-btn&quot; title=&quot;Delete task&quot; aria-label=&quot;Delete task&quot;&gt;✕&lt;/button&gt;</span>
+<span class="w">      </span><span class="x">&lt;/form&gt;</span>
+<span class="x">    &lt;/section&gt;</span>
+<span class="w">  </span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Pitfalls<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p><strong>The callback must be a single expression.</strong> You cannot have multiple Wren
+statements or variable declarations inside a <code class="docutils literal notranslate"><span class="pre">map</span></code> callback:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — multiple statements inside map</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span>
+<span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="si">}}</span><span class="x"> {{ task.description }}&lt;/li&gt;</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+</pre></div>
+</div>
+<p>If you need pre-computed values, prepare them before <code class="docutils literal notranslate"><span class="pre">map</span></code> (e.g. add computed
+properties to your model class, or pre-process the list).</p>
+<p><strong>Empty lists produce empty output.</strong> Pair <code class="docutils literal notranslate"><span class="pre">map</span></code> with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> to show an empty
+state:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;No tasks yet. Add your first one above.&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p><strong>Large lists hurt performance.</strong> Paginate or limit results in the controller —
+<code class="docutils literal notranslate"><span class="pre">map</span></code> iterates everything you give it.</p>
+<p><strong>Newlines outside HTML tags</strong> — same rule:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — Wren code broken across lines outside the HTML string</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
+<span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// Correct — the expression starts on the {{ line</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span>
+<span class="x">  {{ task.description }}</span>
+<span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="bialet-mvc-file-structure">
+<h2>Bialet MVC: File Structure<a class="headerlink" href="#bialet-mvc-file-structure" title="Link to this heading">#</a></h2>
+<p>Now that you know how to write HTML, here’s how a complete <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is
+organized. Bialet follows an MVC-like pattern within a single file:</p>
+<ul class="simple">
+<li><p><strong>Model</strong> — Wren classes in separate files (e.g. <code class="docutils literal notranslate"><span class="pre">_domain.wren</span></code>), imported at
+the top</p></li>
+<li><p><strong>Controller</strong> — the logic at the top of the <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file: routing decisions,
+POST handling, data fetching, redirects</p></li>
+<li><p><strong>View</strong> — the inline HTML at the bottom, passed to <code class="docutils literal notranslate"><span class="pre">return</span></code> to send the
+response and end the script</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// === Controller ===</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+
+<span class="c1">// === View ===</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Posts</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/posts/{{ p.id }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">&lt;/main&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Pitfall<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<p><strong><code class="docutils literal notranslate"><span class="pre">return</span></code> terminates immediately.</strong> Code after <code class="docutils literal notranslate"><span class="pre">return</span></code> never executes.
+This means you cannot <code class="docutils literal notranslate"><span class="pre">return</span></code> and then run more logic. Put all controller
+logic before the view.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="model-wren-classes">
+<h2>Model: Wren Classes<a class="headerlink" href="#model-wren-classes" title="Link to this heading">#</a></h2>
+<p>Wren classes serve as the Model layer. They encapsulate data, database queries,
+and domain logic — keeping it out of your template code.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _domain.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">title</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">title</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">body</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_body</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">body</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">createdAt</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="vi">_createdAt</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">save</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`Post`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">    SELECT * FROM Post ORDER BY createdAt DESC</span>
+<span class="sb">  `</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">find</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">    SELECT * FROM Post WHERE id = ?</span>
+<span class="sb">  `</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Now the controller imports this class and the view iterates over <code class="docutils literal notranslate"><span class="pre">Post</span></code>
+instances — clean, testable, and separated from presentation.</p>
+<section id="id4">
+<h3>Pitfall<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<p><strong>Database values come back as strings.</strong> Always convert before numeric
+operations:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;cnt&quot;</span><span class="p">])</span>
+<span class="c1">// Wrong: row[&quot;cnt&quot;] + 1  —  this concatenates strings</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="controller-logic-at-the-top">
+<h2>Controller: Logic at the Top<a class="headerlink" href="#controller-logic-at-the-top" title="Link to this heading">#</a></h2>
+<p>The top of each <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file handles the request. This is where you:</p>
+<ol class="arabic simple">
+<li><p>Check the HTTP method (<code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code>)</p></li>
+<li><p>Read form data (<code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code>)</p></li>
+<li><p>Read query parameters (<code class="docutils literal notranslate"><span class="pre">Request.get(&quot;key&quot;)</span></code>)</p></li>
+<li><p>Call model methods</p></li>
+<li><p>Redirect or prepare data for the view</p></li>
+</ol>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/posts/&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">post</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">toString</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">postId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">postId</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(path)</span></code> to redirect after POST — this follows
+the Post/Redirect/Get pattern and prevents duplicate form submissions.</p>
+<section id="id5">
+<h3>Pitfall<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> causes a double-response
+error. The redirect sends headers, then the code below still executes and
+tries to send a body. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — missing return</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// redirect sends headers...</span>
+<span class="p">}</span>
+<span class="c1">// ...then this still runs, trying to send a second response</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="template-classes-components">
+<h2>Template Classes / Components<a class="headerlink" href="#template-classes-components" title="Link to this heading">#</a></h2>
+<p>Extract shared HTML into Wren classes. Each method returns an inline HTML
+string, turning your class into a library of reusable components.</p>
+<section id="layout-template">
+<h3>Layout template<a class="headerlink" href="#layout-template" title="Link to this heading">#</a></h3>
+<p>Create <code class="docutils literal notranslate"><span class="pre">_template.wren</span></code> and import it from your pages:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span>
+<span class="w">    </span><span class="vi">_subtitle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;A Bialet application&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="x">      {{ head(_title) }}</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="x">&lt;header class=&quot;app-header&quot;&gt;</span>
+<span class="x">          &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">          &lt;p class=&quot;app-subtitle&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_subtitle</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">        &lt;/header&gt;</span>
+<span class="w">        </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">footer</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">head</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
+<span class="x">    &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="x">    &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;</span>
+<span class="x">    &lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;/head&gt; }</span>
+
+<span class="x">  footer { &lt;footer class=&quot;app-footer&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;Built with &lt;a href=&quot;https://bialet.dev&quot;&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/footer&gt; }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+</section>
+<section id="using-the-template">
+<h3>Using the template<a class="headerlink" href="#using-the-template" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p&gt;</span><span class="nc">This</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="n">goes</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="x">&lt;/main&gt;)</span>
+</pre></div>
+</div>
+<p>A Wren block that contains a single expression implicitly returns that
+expression — no <code class="docutils literal notranslate"><span class="pre">return</span></code> keyword needed in the method body.</p>
+</section>
+<section id="id6">
+<h3>Pitfalls<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<p><strong>Instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>.</strong> If your methods are not <code class="docutils literal notranslate"><span class="pre">static</span></code>, you
+must instantiate the class:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — calls static layout, doesn&#39;t exist</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1">// Correct — creates an instance first</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Don’t over-engineer.</strong> A template class with a handful of methods (<code class="docutils literal notranslate"><span class="pre">layout</span></code>,
+<code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">footer</span></code>, plus one or two component helpers) covers most needs.
+Nested class hierarchies and deep abstraction layers work against Bialet’s
+simplicity.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="semantic-html">
+<h2>Semantic HTML<a class="headerlink" href="#semantic-html" title="Link to this heading">#</a></h2>
+<p>Prefer semantic elements that describe their purpose. Bialet’s inline HTML is
+plain HTML — the browser treats it exactly as if you’d written an <code class="docutils literal notranslate"><span class="pre">.html</span></code> file.
+Use the right element for the job.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Instead of <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code></p></th>
+<th class="head"><p>Use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Page header / branding</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;header&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Navigation links</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;nav&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Main content area</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;main&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Self-contained content block</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Thematic grouping</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;section&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Sidebar or complementary content</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;aside&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Page footer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;footer&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A real-world page using semantic elements:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;section class=&quot;input-group&quot;&gt;</span>
+<span class="x">      &lt;input name=&quot;task&quot; placeholder=&quot;What needs to be done?&quot; required autofocus /&gt;</span>
+<span class="w">      </span><span class="x">&lt;button type=&quot;submit&quot;&gt;Add&lt;/button&gt;</span>
+<span class="w">    </span><span class="x">&lt;/section&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+
+<span class="w">  </span><span class="x">&lt;nav class=&quot;filters&quot; aria-label=&quot;Task filters&quot;&gt;</span>
+<span class="x">    &lt;a href=&quot;/&quot; class=&quot;filter-tab active&quot;&gt;</span><span class="nc">All</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href=&quot;/?filter=active&quot; class=&quot;filter-tab&quot;&gt;</span><span class="nc">Active</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href=&quot;/?filter=completed&quot; class=&quot;filter-tab&quot;&gt;</span><span class="nc">Completed</span><span class="x">&lt;/a&gt;</span>
+<span class="x">  &lt;/nav&gt;</span>
+
+<span class="w">  </span><span class="x">&lt;aside class=&quot;stats-bar&quot;&gt;</span>
+<span class="x">    &lt;span&gt;&lt;strong&gt;3&lt;/strong&gt;</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="n">remaining</span><span class="x">&lt;/span&gt;</span>
+<span class="x">  &lt;/aside&gt;</span>
+
+<span class="w">  </span><span class="x">&lt;article class=&quot;task-card&quot;&gt;</span>
+<span class="x">    &lt;h2&gt;</span><span class="nc">Buy</span><span class="w"> </span><span class="n">groceries</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Added</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="n">minutes</span><span class="w"> </span><span class="n">ago</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/article&gt;</span>
+
+<span class="w">  </span><span class="x">&lt;footer class=&quot;app-footer&quot;&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Built</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="nc">Bialet</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/footer&gt;</span>
+<span class="x">&lt;/main&gt;)</span>
+</pre></div>
+</div>
+<p>Semantic HTML improves accessibility (screen readers understand page structure),
+SEO (crawlers parse meaningful sections), and readability (future you will
+thank you).</p>
+<section id="id7">
+<h3>Pitfall<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<p><strong>Same-tag nesting applies to semantic tags too.</strong></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — parse error</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="w"> </span><span class="n">section</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
+
+<span class="c1">// Correct — use different semantic tags</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;article&gt;</span><span class="nc">Nested</span><span class="w"> </span><span class="n">content</span><span class="x">&lt;/article&gt;&lt;/section&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="styling-css">
+<h2>Styling &amp; CSS<a class="headerlink" href="#styling-css" title="Link to this heading">#</a></h2>
+<p>Bialet outputs plain HTML. CSS works exactly as it does with static HTML files.
+If you’re coming from React and haven’t written vanilla CSS in a while, here’s
+what you need to know.</p>
+<section id="adding-a-stylesheet">
+<h3>Adding a stylesheet<a class="headerlink" href="#adding-a-stylesheet" title="Link to this heading">#</a></h3>
+<p>Place your <code class="docutils literal notranslate"><span class="pre">.css</span></code> file in the app root (next to your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files) and link it
+in your template’s <code class="docutils literal notranslate"><span class="pre">&lt;head&gt;</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
+<span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">&lt;/head&gt;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="writing-css">
+<h3>Writing CSS<a class="headerlink" href="#writing-css" title="Link to this heading">#</a></h3>
+<p>Use CSS custom properties for theming and write class-based selectors targeting
+your semantic HTML elements. Here’s a minimal starting point:</p>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="c">/* style.css */</span>
+<span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">--bg</span><span class="p">:</span><span class="w"> </span><span class="mh">#f8fafc</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--card-bg</span><span class="p">:</span><span class="w"> </span><span class="mh">#ffffff</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--text</span><span class="p">:</span><span class="w"> </span><span class="mh">#1e293b</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--accent</span><span class="p">:</span><span class="w"> </span><span class="mh">#14b8a6</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--radius</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="kt">px</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">body</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">font-family</span><span class="p">:</span><span class="w"> </span><span class="n">system-ui</span><span class="p">,</span><span class="w"> </span><span class="kc">sans-serif</span><span class="p">;</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--bg</span><span class="p">);</span>
+<span class="w">  </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--text</span><span class="p">);</span>
+<span class="w">  </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="kt">rem</span><span class="w"> </span><span class="mi">1</span><span class="kt">rem</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">main</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">max-width</span><span class="p">:</span><span class="w"> </span><span class="mi">540</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">  </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="kc">auto</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">header</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">margin-bottom</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="kt">rem</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="p">.</span><span class="nc">card</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--card-bg</span><span class="p">);</span>
+<span class="w">  </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--radius</span><span class="p">);</span>
+<span class="w">  </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">rem</span><span class="p">;</span>
+<span class="w">  </span><span class="k">box-shadow</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="mi">3</span><span class="kt">px</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.06</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="semantic-css-first-bialet-philosophy">
+<h3>Semantic CSS first (Bialet philosophy)<a class="headerlink" href="#semantic-css-first-bialet-philosophy" title="Link to this heading">#</a></h3>
+<p>Target elements directly by tag name where possible, then add classes for
+variants. This keeps both your HTML and CSS lean:</p>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="c">/* Base: all nav elements get a consistent look */</span>
+<span class="nt">nav</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">flex</span><span class="p">;</span>
+<span class="w">  </span><span class="k">gap</span><span class="p">:</span><span class="w"> </span><span class="mf">0.25</span><span class="kt">rem</span><span class="p">;</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--card-bg</span><span class="p">);</span>
+<span class="w">  </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--radius</span><span class="p">);</span>
+<span class="w">  </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mf">0.25</span><span class="kt">rem</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c">/* Variant: only the filter nav gets extra styling */</span>
+<span class="nt">nav</span><span class="p">.</span><span class="nc">filters</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">margin-bottom</span><span class="p">:</span><span class="w"> </span><span class="mf">1.25</span><span class="kt">rem</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="picocss">
+<h3>PicoCSS<a class="headerlink" href="#picocss" title="Link to this heading">#</a></h3>
+<p>PicoCSS is a classless CSS framework that styles semantic HTML elements
+automatically. It pairs perfectly with Bialet’s semantic HTML approach — you
+write <code class="docutils literal notranslate"><span class="pre">&lt;nav&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;main&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code>, and PicoCSS handles the styling with zero
+classes.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
+<span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;</span>
+<span class="x">  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css&quot; /&gt;</span>
+<span class="x">&lt;/head&gt; }</span>
+</pre></div>
+</div>
+<p>With PicoCSS loaded, your semantic HTML gets a clean, consistent look without
+writing any CSS. Add a custom stylesheet alongside it for app-specific
+overrides.</p>
+</section>
+<section id="tailwind-css">
+<h3>Tailwind CSS<a class="headerlink" href="#tailwind-css" title="Link to this heading">#</a></h3>
+<p>Tailwind works in Bialet — it’s just classes on HTML elements. For prototyping,
+use the CDN script:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
+<span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;script src=&quot;https://cdn.tailwindcss.com&quot;&gt;&lt;/script&gt;</span>
+<span class="x">&lt;/head&gt; }</span>
+</pre></div>
+</div>
+<p>Then use utility classes directly:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main class=&quot;max-w-lg mx-auto py-8 px-4&quot;&gt;</span>
+<span class="x">  &lt;h1 class=&quot;text-2xl font-bold mb-6&quot;&gt;</span><span class="nc">Dashboard</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;article class=&quot;bg-white rounded-xl shadow-sm p-4&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;p class=&quot;text-gray-600&quot;&gt;Hello World&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/article&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>For production, self-host the compiled CSS. Run Tailwind’s CLI or PostCSS build
+against the app directory — the class names in your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files are standard
+HTML attributes, so any CSS processing tool works.</p>
+</section>
+<section id="id8">
+<h3>Pitfalls<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<p><strong>No CSS preprocessors built in.</strong> Bialet doesn’t bundle Sass, Less, or
+PostCSS. Write vanilla CSS, or use a separate build step for preprocessing.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS files are not served.</strong> Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>
+return 403. Name your stylesheets without a leading underscore:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✓ Served</span>
+<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/theme.css&quot; /&gt;</span>
+
+<span class="c1">// ✗ Returns 403</span>
+<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/_style.css&quot; /&gt;</span>
+</pre></div>
+</div>
+<p><strong>Framework CDNs add an external dependency.</strong> For production, download the CSS
+file and serve it from your app directory alongside your other static assets.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="escaping-security">
+<h2>Escaping &amp; Security<a class="headerlink" href="#escaping-security" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation does <strong>not</strong> escape HTML by default. When displaying
+user-generated content, database values, or URL parameters, you must use the
+<code class="docutils literal notranslate"><span class="pre">.safe</span></code> property to escape special HTML characters and prevent XSS attacks.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+
+<span class="c1">// Dangerous — XSS vulnerability</span>
+<span class="k">var</span><span class="w"> </span><span class="n">dangerous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Renders: &lt;p&gt;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&lt;/p&gt;</span>
+
+<span class="c1">// Safe — HTML characters are escaped</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
+</pre></div>
+</div>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> for manual escaping:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">htmlEscape</span><span class="p">(</span><span class="n">userInput</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Rule:</strong> Always use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on any string that comes from user input, database
+queries, or URL parameters before inserting it into HTML.</p>
+<section id="id9">
+<h3>Pitfall<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is an XSS vulnerability.</strong> Every user-supplied string
+embedded in HTML must be escaped. There is no automatic escaping.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="common-pitfalls">
+<h2>Common Pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Same-tag nesting:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;div&gt;Hello&lt;/div&gt;&lt;/div&gt;</span></code> is a parse error — use
+different tag names for nesting.</p></li>
+<li><p><strong>Mismatched tags:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> fails — opening and closing
+tags must match.</p></li>
+<li><p><strong>Invalid tag names:</strong> Only lowercase letters and numbers — no hyphens,
+underscores, or uppercase. Use classes and semantic tags instead.</p></li>
+<li><p><strong>Interpolation depth:</strong> Maximum 9 nested <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> levels.</p></li>
+<li><p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code>:</strong> Without <code class="docutils literal notranslate"><span class="pre">return</span></code>, the response body is empty.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>-prefixed files:</strong> Private, return 403 if accessed directly.</p></li>
+<li><p><strong>Newlines outside HTML tags in <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>:</strong> Keep Wren code on the same line
+as the opening <code class="docutils literal notranslate"><span class="pre">{{</span></code>. Only HTML strings can span lines.</p></li>
+<li><p><strong>Map callback is a single expression:</strong> No multiple statements, no variable
+declarations inside the callback.</p></li>
+<li><p><strong>Empty lists in <code class="docutils literal notranslate"><span class="pre">map</span></code>:</strong> Produce empty output — pair with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> for empty
+states.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">return</span></code> terminates immediately:</strong> Code after <code class="docutils literal notranslate"><span class="pre">return</span></code> never executes.</p></li>
+<li><p><strong>DB values are strings:</strong> Convert with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> before math.</p></li>
+<li><p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code>:</strong> Causes double-response
+errors.</p></li>
+<li><p><strong>Instance vs static methods:</strong> Instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>; static methods
+don’t.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS is not served:</strong> Name stylesheets without leading <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p></li>
+<li><p><strong>CSS preprocessors not built in:</strong> Write vanilla CSS or use a build step.</p></li>
+<li><p><strong>Framework CDNs in production:</strong> Self-host CSS files for reliability.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> does not escape HTML:</strong> Always use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on untrusted strings.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="structure.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Project Structure and Routing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="database.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Database</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#view-inline-html-strings">View: Inline HTML Strings</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation">Interpolation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#return-sends-the-response"><code class="docutils literal notranslate"><span class="pre">return</span></code> sends the response</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#self-closing-tags">Self-Closing Tags</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-line-inline-html">Multi-line Inline HTML</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-rendering-with">Conditional Rendering with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#class-toggling">Class toggling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-html-blocks">Conditional HTML blocks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfall">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ternary-expressions">Ternary Expressions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attribute-switching">Attribute switching</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nested-ternaries-for-multi-value-decisions">Nested ternaries for multi-value decisions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ternary-with-html-operands">Ternary with HTML operands</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#iteration-with-map">Iteration with <code class="docutils literal notranslate"><span class="pre">map</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-list">Simple list</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiline-items">Multiline items</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-mvc-file-structure">Bialet MVC: File Structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-wren-classes">Model: Wren Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#controller-logic-at-the-top">Controller: Logic at the Top</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-classes-components">Template Classes / Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout-template">Layout template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-template">Using the template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-html">Semantic HTML</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#styling-css">Styling &amp; CSS</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-stylesheet">Adding a stylesheet</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-css">Writing CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-css-first-bialet-philosophy">Semantic CSS first (Bialet philosophy)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#picocss">PicoCSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Pitfall</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
