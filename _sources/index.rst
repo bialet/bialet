@@ -200,7 +200,7 @@ The Bialet Manifesto — Ride Light 🚲
       ``docker-compose.yml``. Copy the binary — that's it.
 
    4. **Batteries included.** Server, database, templating — all in one
-      binary under 1 MB. No external services to provision.
+      small binary. No external services to provision.
 
    5. **Ride light.** Complexity is a choice. Choose less, and you'll go
       further than you think.
