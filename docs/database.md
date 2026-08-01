@@ -160,7 +160,7 @@ Response.json({
 })
 ```
 
-> **Note:** column values from queries come back as **strings**. Use `.toNum` to get a numeric value directly (as with `COUNT` above), or `Num.fromString()` to convert individual columns. See [Data Types](#data-types-and-blob-support) for details.
+> **Note:** column values from queries come back as **strings**. Use `.toNum` to get a numeric value directly (as with `COUNT` above), or `Num.fromString()` to convert individual columns. See the Data Types section below for details.
 
 For a quick "top N" query without counting, use `.order()` with its optional limit parameter instead of manual `LIMIT`/`OFFSET`:
 

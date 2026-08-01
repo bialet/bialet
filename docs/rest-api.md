@@ -34,7 +34,7 @@ Response.json(users)
 
 Visit `http://localhost:7001/api/users` to list all users, or `http://localhost:7001/api/users?id=1` to get a specific user.
 
-> **Note:** The backtick `` ` `` query syntax and `?` placeholders are covered in the [Query Object](database.md#query-object) section. For pagination, filtering, and sorting see [Pagination](database.md#pagination) and [Safe Sorting](database.md#safe-sorting-with-order).
+> **Note:** The backtick `` ` `` query syntax and `?` placeholders are covered in the *Query Object* section of the [Database](database.md) guide. Pagination, filtering, and sorting patterns are covered there as well.
 
 ## Project Structure
 
@@ -286,7 +286,7 @@ if (!session) {
 
 ## Complete Example: Products API
 
-Here's a complete REST API for managing products. This example brings together CORS, authentication, request parsing, and CRUD operations covered in the sections above. The pagination logic uses the `LIMIT`/`OFFSET` pattern described in the [Pagination](database.md#pagination) section — combine it with [Safe Sorting](database.md#safe-sorting-with-order) for sortable, paginated lists.
+Here's a complete REST API for managing products. This example brings together CORS, authentication, request parsing, and CRUD operations covered in the sections above. The pagination logic uses the `LIMIT`/`OFFSET` pattern described in the [Database](database.md) guide — combine it with the safe sorting techniques there for sortable, paginated lists.
 
 ```wren
 // api/products.wren
@@ -495,9 +495,8 @@ await fetch('http://localhost:7001/api/products?id=1', {
 
 ## Next Steps
 
-- See [Pagination](database.md#pagination) and [Safe Sorting](database.md#safe-sorting-with-order) for handling large datasets
-- Learn about [Database operations](database.md) including the [Query object](database.md#query-object), [inserts and updates](database.md#insert-and-update), and [migrations](database.md#migrations)
-- Set up [Database migrations](database.md#migrations) to define your API's schema
+- Learn about [Database operations](database.md) — the Query object, pagination, sorting, inserts, updates, and migrations
+- Set up database [migrations](database.md) to define your API's schema
 - Explore [Session management](reference.md)
 - Read about [File uploads](file.md)
 - Understand [Routing](routing.md) — when to use query parameters vs `_route.wren`
