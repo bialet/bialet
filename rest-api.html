@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/rest-api.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. Quick Start: Create an API endpoint by making a.wren file in your project: Visit http://loc..." />
+<meta property="og:description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. For database-specific patterns like pagination, filtering, sorting, and migrations, see the..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. Quick Start: Create an API endpoint by making a.wren file in your project: Visit http://loc..." />
+<meta name="description" content="This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. For database-specific patterns like pagination, filtering, sorting, and migrations, see the..." />
 
     <title>Building REST APIs &#8212; Bialet  documentation</title>
   
@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=04181c56" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -164,6 +164,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -189,7 +190,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 </ul>
 
     </div>
@@ -421,9 +421,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token-authentication">Bearer Token Authentication</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-and-sorting">Filtering and Sorting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-migrations">Database Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-products-api">Complete Example: Products API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-api">Testing Your API</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-curl">Using curl</a></li>
@@ -444,7 +441,7 @@
                   
   <section id="building-rest-apis">
 <h1>Building REST APIs<a class="headerlink" href="#building-rest-apis" title="Link to this heading">#</a></h1>
-<p>This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication.</p>
+<p>This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. For database-specific patterns like pagination, filtering, sorting, and migrations, see the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p>
 <section id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <p>Create an API endpoint by making a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file in your project:</p>
@@ -474,6 +471,9 @@
 </pre></div>
 </div>
 <p>Visit <code class="docutils literal notranslate"><span class="pre">http://localhost:7001/api/users</span></code> to list all users, or <code class="docutils literal notranslate"><span class="pre">http://localhost:7001/api/users?id=1</span></code> to get a specific user.</p>
+<blockquote>
+<div><p><strong>Note:</strong> The backtick <code class="docutils literal notranslate"><span class="pre">`</span></code> query syntax and <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders are covered in the <em>Query Object</em> section of the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide. Pagination, filtering, and sorting patterns are covered there as well.</p>
+</div></blockquote>
 </section>
 <section id="project-structure">
 <h2>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading">#</a></h2>
@@ -568,6 +568,7 @@
 <span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid request&quot;</span><span class="p">})</span>
 </pre></div>
 </div>
+<p>This single-file pattern — one <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p>
 </section>
 <section id="cors-configuration">
 <h2>CORS Configuration<a class="headerlink" href="#cors-configuration" title="Link to this heading">#</a></h2>
@@ -670,7 +671,7 @@
 <h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading">#</a></h2>
 <section id="api-key-authentication">
 <h3>API Key Authentication<a class="headerlink" href="#api-key-authentication" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/_route.wren</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/users.wren</span>
 
 <span class="c1">// Enable CORS</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
@@ -722,111 +723,10 @@
 </div>
 </section>
 </section>
-<section id="pagination">
-<h2>Pagination<a class="headerlink" href="#pagination" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?page=1&amp;limit=20</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
-
-<span class="c1">// Get total count</span>
-<span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as count FROM users`</span><span class="o">.</span><span class="n">first</span><span class="p">()[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span>
-
-<span class="c1">// Get paginated results</span>
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, email FROM users LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">])</span>
-
-<span class="c1">// Return with pagination metadata</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
-<span class="w">  </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">,</span>
-<span class="w">  </span><span class="s2">&quot;pagination&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span>
-<span class="w">    </span><span class="s2">&quot;limit&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span>
-<span class="w">    </span><span class="s2">&quot;total&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">),</span>
-<span class="w">    </span><span class="s2">&quot;pages&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="nc">Util</span><span class="o">.</span><span class="n">toNum</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">})</span>
-</pre></div>
-</div>
-</section>
-<section id="filtering-and-sorting">
-<h2>Filtering and Sorting<a class="headerlink" href="#filtering-and-sorting" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// GET /api/users?search=john&amp;status=active&amp;sort=name&amp;order=asc</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;id&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;asc&quot;</span>
-
-<span class="c1">// Define allowed columns for sorting</span>
-<span class="k">var</span><span class="w"> </span><span class="n">allowedSorts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;created_at&quot;</span><span class="p">]</span>
-
-<span class="c1">// Use parameterized queries with conditional logic and safe sorting</span>
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  SELECT * FROM users </span>
-<span class="sb">  WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)</span>
-<span class="sb">    AND (? = &#39;&#39; OR status = ?)</span>
-<span class="sb">`</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sort</span><span class="p">,</span><span class="w"> </span><span class="n">order</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">])</span>
-
-<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">.order()</span></code> method validates the sort column against the allowed list and normalizes the direction (case-insensitive “asc” or “desc”), preventing SQL injection through column name manipulation. You can also pass an optional fourth parameter to add a LIMIT clause:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Top 10 users by score</span>
-<span class="k">var</span><span class="w"> </span><span class="n">topUsers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
-<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;desc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">],</span><span class="w"> </span><span class="mf">10</span><span class="p">)</span>
-<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
-</pre></div>
-</div>
-</section>
-<section id="database-migrations">
-<h2>Database Migrations<a class="headerlink" href="#database-migrations" title="Link to this heading">#</a></h2>
-<p>Create a <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file for your API database:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _migration.wren</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;001_create_users&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  CREATE TABLE users (</span>
-<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
-<span class="sb">    name TEXT NOT NULL,</span>
-<span class="sb">    email TEXT UNIQUE NOT NULL,</span>
-<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
-<span class="sb">    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP</span>
-<span class="sb">  );</span>
-<span class="sb">  </span>
-<span class="sb">  CREATE INDEX idx_users_email ON users(email);</span>
-<span class="sb">`</span><span class="p">)</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;002_create_api_keys&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  CREATE TABLE api_keys (</span>
-<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
-<span class="sb">    key TEXT UNIQUE NOT NULL,</span>
-<span class="sb">    user_id INTEGER NOT NULL,</span>
-<span class="sb">    active INTEGER DEFAULT 1,</span>
-<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
-<span class="sb">    FOREIGN KEY (user_id) REFERENCES users(id)</span>
-<span class="sb">  );</span>
-<span class="sb">  </span>
-<span class="sb">  CREATE INDEX idx_api_keys_key ON api_keys(key);</span>
-<span class="sb">`</span><span class="p">)</span>
-
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;003_create_products&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  CREATE TABLE products (</span>
-<span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
-<span class="sb">    name TEXT NOT NULL,</span>
-<span class="sb">    description TEXT,</span>
-<span class="sb">    price REAL NOT NULL,</span>
-<span class="sb">    stock INTEGER DEFAULT 0,</span>
-<span class="sb">    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,</span>
-<span class="sb">    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP</span>
-<span class="sb">  );</span>
-<span class="sb">`</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
 <section id="complete-example-products-api">
 <h2>Complete Example: Products API<a class="headerlink" href="#complete-example-products-api" title="Link to this heading">#</a></h2>
-<p>Here’s a complete REST API for managing products:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/_route.wren</span>
+<p>Here’s a complete REST API for managing products. This example brings together CORS, authentication, request parsing, and CRUD operations covered in the sections above. The pagination logic uses the <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> pattern described in the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide — combine it with the safe sorting techniques there for sortable, paginated lists.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// api/products.wren</span>
 
 <span class="c1">// Enable CORS</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
@@ -1035,10 +935,11 @@ curl<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/pro
 <section id="next-steps">
 <h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Learn about <a class="reference internal" href="database.html"><span class="std std-doc">Database operations</span></a></p></li>
+<li><p>Learn about <a class="reference internal" href="database.html"><span class="std std-doc">Database operations</span></a> — the Query object, pagination, sorting, inserts, updates, and migrations</p></li>
+<li><p>Set up database <a class="reference internal" href="database.html"><span class="std std-doc">migrations</span></a> to define your API’s schema</p></li>
 <li><p>Explore <a class="reference internal" href="reference.html"><span class="std std-doc">Session management</span></a></p></li>
 <li><p>Read about <a class="reference internal" href="file.html"><span class="std std-doc">File uploads</span></a></p></li>
-<li><p>Check out <a class="reference internal" href="routing.html"><span class="std std-doc">External imports</span></a> for using external libraries</p></li>
+<li><p>Understand <a class="reference internal" href="routing.html"><span class="std std-doc">Routing</span></a> — when to use query parameters vs <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></p></li>
 </ul>
 </section>
 </section>
@@ -1111,9 +1012,6 @@ curl<span class="w"> </span><span class="s2">&quot;http://localhost:7001/api/pro
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token-authentication">Bearer Token Authentication</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-and-sorting">Filtering and Sorting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-migrations">Database Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-products-api">Complete Example: Products API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-your-api">Testing Your API</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-curl">Using curl</a></li>

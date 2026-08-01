@@ -5,6 +5,10 @@ html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Bac
 
 /* ── Landing page ─────────────────────────────────────────── */
 
+#bialet > h1 {
+  display: none;
+}
+
 .landing-page {
   min-height: 100vh;
   display: flex;

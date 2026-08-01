@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b73fc98b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=04181c56" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -164,6 +164,7 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -189,7 +190,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 </ul>
 
     </div>
@@ -402,6 +402,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
@@ -532,10 +533,48 @@ method.</p>
 <span class="c1">// Will use &quot;id&quot; instead of &quot;malicious_col&quot;</span>
 </pre></div>
 </div>
-<p>This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.</p>
+<p>This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation. For paginating sorted results, combine with <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> as shown in the <a class="reference internal" href="#pagination">Pagination</a> section.</p>
+</section>
+<section id="pagination">
+<span id="id2"></span><h2>Pagination<a class="headerlink" href="#pagination" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> and <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> with parameterized queries to paginate results. Always pass <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> and <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> as <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders — never concatenate them into the query string — to prevent SQL injection through user-controlled numeric values.</p>
+<p>Count total rows separately when you need metadata like total pages:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Read page/limit from request (defaults: page 1, 20 per page)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
+
+<span class="c1">// Count total rows</span>
+<span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) FROM users`</span><span class="o">.</span><span class="n">toNum</span>
+
+<span class="c1">// Fetch one page</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">])</span>
+
+<span class="c1">// Common REST API pattern: return data + pagination metadata</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
+<span class="w">  </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;pagination&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;limit&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;total&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">total</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;pages&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="n">total</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><strong>Note:</strong> column values from queries come back as <strong>strings</strong>. Use <code class="docutils literal notranslate"><span class="pre">.toNum</span></code> to get a numeric value directly (as with <code class="docutils literal notranslate"><span class="pre">COUNT</span></code> above), or <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> to convert individual columns. See the Data Types section below for details.</p>
+</div></blockquote>
+<p>For a quick “top N” query without counting, use <code class="docutils literal notranslate"><span class="pre">.order()</span></code> with its optional limit parameter instead of manual <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">topUsers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;desc&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;created_at&quot;</span><span class="p">],</span><span class="w"> </span><span class="mf">10</span><span class="p">)</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a> for the full <code class="docutils literal notranslate"><span class="pre">.order()</span></code> API, which validates sort columns against an allowed list — essential when sort parameters come from user input.</p>
 </section>
 <section id="mapping-results-to-domain-classes">
-<span id="id2"></span><h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
+<span id="id3"></span><h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
 <p>Query results can be automatically mapped to domain classes using the <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method. This is useful for converting database rows into instances of your domain models.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Define a domain class with a constructor that accepts a Map</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
@@ -566,7 +605,7 @@ method.</p>
 </ul>
 </section>
 <section id="insert-and-update">
-<span id="id3"></span><h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
+<span id="id4"></span><h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
 <p>You can use a regular SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statement.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">]</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">userParams</span><span class="p">)</span>
@@ -594,7 +633,8 @@ NULL.</p>
 <code class="docutils literal notranslate"><span class="pre">.first()</span></code>), all values are returned as <strong>strings</strong>. Use the following methods
 for numeric access:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">.toNum()</span></code> — returns the first column value as a number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.toNum()</span></code> — returns the first column value as a number. Most common for
+<code class="docutils literal notranslate"><span class="pre">COUNT(*)</span></code>, <code class="docutils literal notranslate"><span class="pre">SUM()</span></code>, and other aggregate queries.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.val()</span></code> + <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> — manually convert a string column to a number</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.toBool()</span></code> — returns the first column value as a boolean</p></li>
 </ul>
@@ -603,6 +643,9 @@ for numeric access:</p>
 <span class="k">var</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT active FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">toBool</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">  </span><span class="c1">// returns boolean</span>
 </pre></div>
 </div>
+<p>The <a class="reference internal" href="#pagination">Pagination</a> section shows this in practice: <code class="docutils literal notranslate"><span class="pre">.toNum</span></code> for
+<code class="docutils literal notranslate"><span class="pre">COUNT</span></code> totals, <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> for converting <code class="docutils literal notranslate"><span class="pre">page</span></code>/<code class="docutils literal notranslate"><span class="pre">limit</span></code> parameters
+from the query string.</p>
 <p><strong>Note on BLOB data</strong>: While BLOB (Binary Large Object) data is retrieved
 correctly from SQLite, it may not be properly handled when passed to Wren code
 due to Wren’s string representation. If you need to work with binary data,
@@ -613,7 +656,8 @@ consider encoding it as base64 or using another text-based representation.</p>
 <p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be
 inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
 <p>This script will be run every time the application starts and also when a Wren
-file is updated.</p>
+file is updated. For a complete migration example in the context of a REST API,
+see the <a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a> guide.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Name of the migration&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`SOME QUERY`</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -622,7 +666,7 @@ descriptive name.</p>
 <p>You can have multiples queries separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>.</p>
 <p>Use migration to insert non-transactional data. You can interact with the
 <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code> tables.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default title&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES (&quot;title&quot;, &quot;Bialet example page&quot;)`</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default title&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES (&#39;title&#39;, &#39;Bialet example page&#39;)`</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -692,6 +736,7 @@ correctly.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
