@@ -1,6 +1,6 @@
 # Building REST APIs
 
-This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication.
+This guide shows you how to create RESTful APIs with Bialet, including routing, CORS, and authentication. For database-specific patterns like pagination, filtering, sorting, and migrations, see the [Database](database.md) guide.
 
 ## Quick Start
 
@@ -33,6 +33,8 @@ Response.json(users)
 ```
 
 Visit `http://localhost:7001/api/users` to list all users, or `http://localhost:7001/api/users?id=1` to get a specific user.
+
+> **Note:** The backtick `` ` `` query syntax and `?` placeholders are covered in the *Query Object* section of the [Database](database.md) guide. Pagination, filtering, and sorting patterns are covered there as well.
 
 ## Project Structure
 
@@ -129,6 +131,8 @@ if (id && Request.method == "DELETE") {
 Response.status(404)
 Response.json({"error": "Invalid request"})
 ```
+
+This single-file pattern — one `.wren` file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No `_route.wren` needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the [Database](database.md) guide.
 
 ## CORS Configuration
 
@@ -230,7 +234,7 @@ Response.json({
 ### API Key Authentication
 
 ```wren
-// api/_route.wren
+// api/users.wren
 
 // Enable CORS
 if (Response.cors) return
@@ -280,116 +284,12 @@ if (!session) {
 }
 ```
 
-## Pagination
-
-```wren
-// GET /api/users?page=1&limit=20
-
-var page = Util.toNum(Request.get("page") ? Request.get("page") : "1")
-var limit = Util.toNum(Request.get("limit") ? Request.get("limit") : "20")
-var offset = (page - 1) * limit
-
-// Get total count
-var total = `SELECT COUNT(*) as count FROM users`.first()["count"]
-
-// Get paginated results
-var users = `SELECT id, name, email FROM users LIMIT ? OFFSET ?`.fetch([limit, offset])
-
-// Return with pagination metadata
-Response.json({
-  "data": users,
-  "pagination": {
-    "page": page,
-    "limit": limit,
-    "total": Util.toNum(total),
-    "pages": ((Util.toNum(total) + limit - 1) / limit).floor
-  }
-})
-```
-
-## Filtering and Sorting
-
-```wren
-// GET /api/users?search=john&status=active&sort=name&order=asc
-
-var search = Request.get("search") || ""
-var status = Request.get("status") || ""
-var sort = Request.get("sort") || "id"
-var order = Request.get("order") || "asc"
-
-// Define allowed columns for sorting
-var allowedSorts = ["id", "name", "email", "created_at"]
-
-// Use parameterized queries with conditional logic and safe sorting
-var users = `
-  SELECT * FROM users 
-  WHERE (? = '' OR name LIKE '%' || ? || '%')
-    AND (? = '' OR status = ?)
-`.order(sort, order, allowedSorts).fetch([search, search, status, status])
-
-Response.json(users)
-```
-
-The `.order()` method validates the sort column against the allowed list and normalizes the direction (case-insensitive "asc" or "desc"), preventing SQL injection through column name manipulation. You can also pass an optional fourth parameter to add a LIMIT clause:
-
-```wren
-// Top 10 users by score
-var topUsers = `SELECT * FROM users`
-  .order("score", "desc", ["score", "name"], 10)
-  .fetch
-```
-
-## Database Migrations
-
-Create a `_migration.wren` file for your API database:
-
-```wren
-// _migration.wren
-
-Db.migrate("001_create_users", `
-  CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  
-  CREATE INDEX idx_users_email ON users(email);
-`)
-
-Db.migrate("002_create_api_keys", `
-  CREATE TABLE api_keys (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    key TEXT UNIQUE NOT NULL,
-    user_id INTEGER NOT NULL,
-    active INTEGER DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-  
-  CREATE INDEX idx_api_keys_key ON api_keys(key);
-`)
-
-Db.migrate("003_create_products", `
-  CREATE TABLE products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    price REAL NOT NULL,
-    stock INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`)
-```
-
 ## Complete Example: Products API
 
-Here's a complete REST API for managing products:
+Here's a complete REST API for managing products. This example brings together CORS, authentication, request parsing, and CRUD operations covered in the sections above. The pagination logic uses the `LIMIT`/`OFFSET` pattern described in the [Database](database.md) guide — combine it with the safe sorting techniques there for sortable, paginated lists.
 
 ```wren
-// api/_route.wren
+// api/products.wren
 
 // Enable CORS
 if (Response.cors) return
@@ -595,7 +495,8 @@ await fetch('http://localhost:7001/api/products?id=1', {
 
 ## Next Steps
 
-- Learn about [Database operations](database.md)
+- Learn about [Database operations](database.md) — the Query object, pagination, sorting, inserts, updates, and migrations
+- Set up database [migrations](database.md) to define your API's schema
 - Explore [Session management](reference.md)
 - Read about [File uploads](file.md)
-- Check out [External imports](structure.md) for using external libraries
+- Understand [Routing](routing.md) — when to use query parameters vs `_route.wren`

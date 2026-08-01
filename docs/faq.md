@@ -5,7 +5,7 @@
 ### What is Bialet?
 
 Bialet is a full-stack web framework that integrates the
-[Wren language](https://wren.io) with an HTTP server and a built-in SQLite
+[Wren language](wren.md) (based on [wren.io](https://wren.io)) with an HTTP server and a built-in SQLite
 database in a single binary. You write HTML with embedded queries and logic
 in `.wren` files — no build steps, no configuration files, no separate
 database server.
@@ -88,7 +88,7 @@ but [Pico CSS](https://picocss.com), Bootstrap, or plain CSS work fine.
 Bialet uses file-based routing. A request to `/about` maps to
 `about.wren` (or `about.html`). For dynamic routes, create a `_route.wren`
 file in a directory and use `Request.route(pos)` to read URL segments. See
-[Structure & Routing](structure.md).
+[Routing](routing.md).
 
 ### How do I handle forms?
 
@@ -146,13 +146,13 @@ import "_app" for Template as App
 return App.layout(<h1>Hello</h1>)
 ```
 
-See [Structure & Routing](structure.md) for more layout patterns.
+See [Routing](routing.md) for more layout patterns.
 
 ### Can I import external Wren modules?
 
 Yes, using `import` with a GitHub path:
 
-See [Structure & Routing](structure.md).
+See [Routing](routing.md).
 
 ### Does Bialet support HTTPS?
 
@@ -162,14 +162,11 @@ like nginx or Caddy in front of it. For local development, HTTP on
 
 ### How do I deploy a Bialet app?
 
-Copy your app directory and the `bialet` binary to a server, then run:
+See the full [Deployment Guide](deployment.md) covering reverse proxies
+(nginx, Apache, Caddy), systemd services, Docker, and TLS setup.
 
-```bash
-bialet /path/to/app
-```
-
-That's it. No build pipeline, no CI/CD required. Use Docker Compose
-(see [Installation](installation.md)) if you prefer containers.
+The short version: copy your app directory and the `bialet` binary to a
+server, run `bialet /path/to/app`, and put a reverse proxy in front of it.
 
 ### Can I run multiple apps on one server?
 

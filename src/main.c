@@ -60,10 +60,10 @@
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
-// Bialet logo is a bycicle however tehre is no emoji support on Windows terminal.
-// We will use a dot instead, empty logo looks bad as well.
+// Bialet logo is a bycicle however there is no emoji support on Windows terminal.
+// We will use a dash instead, empty logo looks bad as well.
 #if IS_WIN
-#define BIALET_LOGO "•"
+#define BIALET_LOGO "-"
 #else
 #define BIALET_LOGO "🚲"
 # endif

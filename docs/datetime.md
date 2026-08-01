@@ -4,7 +4,7 @@ This page demonstrates the usage of the `Date` class. It covers basic date and
 time manipulations, formatting, and how to handle date inputs in various
 contexts.
 
-See more details in the [Date class reference](reference.html#date).
+See more details in the [Date class reference](date-reference).
 
 ## Creating a Date Object
 

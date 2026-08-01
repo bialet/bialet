@@ -180,6 +180,7 @@ class Response {
     return endHtml(302, "➡️ Redirect to", '<a href="%(safeUrl)">%(safeUrl)</a>')
   }
   static forbidden() { end(403, "🚫 Forbidden", "Sorry, you don't have permission to access this page") }
+  static notFound() { end(404, "⚠️ Not found", "Uh-oh! No route found.") }
   static login() {
     header("WWW-Authenticate", 'Basic realm="Login required"')
     return endHtml(401, "🔒 Needs login", '<a href="javascript:location.reload()">Sign in</a> to access this page')

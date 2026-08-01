@@ -3,6 +3,7 @@ Bialet
 
 .. meta::
     :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light..
+    :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 .. raw:: html
 
@@ -145,8 +146,8 @@ Features
 
 ----
 
-Your whole app in one file (``app.wren``)
-=========================================
+A script that stays out of your way:
+====================================
 
 .. code-block:: wren
 
@@ -175,7 +176,8 @@ Your whole app in one file (``app.wren``)
      </ul>
    </main>
 
-Bialet integrates the `Wren language <https://wren.io/>`_ with
+Bialet integrates the :doc:`Wren language <wren>` (based on
+`wren.io <https://wren.io/>`_) with
 a HTTP server and a built-in SQLite database — **in a single binary**.
 No configuration files, no dependencies, no build step. Just write ``.wren``
 files and run.
@@ -200,7 +202,7 @@ The Bialet Manifesto — Ride Light 🚲
       ``docker-compose.yml``. Copy the binary — that's it.
 
    4. **Batteries included.** Server, database, templating — all in one
-      binary under 1 MB. No external services to provision.
+      small binary. No external services to provision.
 
    5. **Ride light.** Complexity is a choice. Choose less, and you'll go
       further than you think.
@@ -251,7 +253,7 @@ Who is Bialet for?
 .. raw:: html
 
    <div style="text-align: center; margin: 1.5em 0">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Full Documentation</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html" style="margin: 0.35em">Full Documentation</a>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
    </div>
 
@@ -260,20 +262,22 @@ Who is Bialet for?
    :maxdepth: 2
 
    self
+   why-bialet
    getting-started/index
    installation
-   structure
-   html-strings
+   wren
+   routing
+   template
    database
    rest-api
    tests
    file
    datetime
    cron
+   deployment
    reference
    examples
    faq
-   why-bialet
 
 ----
 
