@@ -9,13 +9,13 @@ improvements.
       Sublime, etc.)
 - [ ] **AI development skills** — Create skills/prompts for AI-assisted Bialet
       development
-- [ ] **Documentation review** — Audit and fill gaps in existing docs, ensure
+- [x] **Documentation review** — Audit and fill gaps in existing docs, ensure
       all features are properly covered (e.g. custom errors)
-- [ ] **Wren programming guide** — Document how to write and integrate Wren
+- [x] **Wren programming guide** — Document how to write and integrate Wren
       scripts in Bialet apps
-- [ ] **Production deployment guide** — Document how to deploy on a VPS with
+- [x] **Production deployment guide** — Document how to deploy on a VPS with
       systemd, reverse proxy setup, and environment configuration
-- [ ] **Documentation improvements** — General cleanup, better structure, and
+- [x] **Documentation improvements** — General cleanup, better structure, and
       more examples
 - [ ] **i18n / localization** — Translation helpers and locale-aware formatting
 - [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
