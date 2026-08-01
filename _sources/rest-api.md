@@ -598,4 +598,4 @@ await fetch('http://localhost:7001/api/products?id=1', {
 - Learn about [Database operations](database.md)
 - Explore [Session management](reference.md)
 - Read about [File uploads](file.md)
-- Check out [External imports](structure.md) for using external libraries
+- Check out [External imports](routing.md) for using external libraries

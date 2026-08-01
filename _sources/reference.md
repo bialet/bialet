@@ -22,7 +22,7 @@ The following classes are available by default in all Bialet applications withou
 
 ## External Classes
 
-External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [structure documentation](structure.md) section on External Imports for details on how to import external modules.
+External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [routing documentation](routing.md) section on External Imports for details on how to import external modules.
 
 ---
 
@@ -251,6 +251,10 @@ Redirects the client to a specified URL.
 ### forbidden()
 
 Sends a 403 Forbidden response.
+
+### notFound()
+
+Sends a 404 Not Found response.
 
 ### login()
 

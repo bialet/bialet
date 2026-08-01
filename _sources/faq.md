@@ -88,7 +88,7 @@ but [Pico CSS](https://picocss.com), Bootstrap, or plain CSS work fine.
 Bialet uses file-based routing. A request to `/about` maps to
 `about.wren` (or `about.html`). For dynamic routes, create a `_route.wren`
 file in a directory and use `Request.route(pos)` to read URL segments. See
-[Structure & Routing](structure.md).
+[Routing](routing.md).
 
 ### How do I handle forms?
 
@@ -146,13 +146,13 @@ import "_app" for Template as App
 return App.layout(<h1>Hello</h1>)
 ```
 
-See [Structure & Routing](structure.md) for more layout patterns.
+See [Routing](routing.md) for more layout patterns.
 
 ### Can I import external Wren modules?
 
 Yes, using `import` with a GitHub path:
 
-See [Structure & Routing](structure.md).
+See [Routing](routing.md).
 
 ### Does Bialet support HTTPS?
 

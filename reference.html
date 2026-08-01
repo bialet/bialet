@@ -176,7 +176,7 @@
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure and Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
@@ -437,6 +437,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forbidden">forbidden()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notfound">notFound()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login">login()</a></li>
 </ul>
 </li>
@@ -639,7 +640,7 @@
 </section>
 <section id="external-classes">
 <h2>External Classes<a class="headerlink" href="#external-classes" title="Link to this heading">#</a></h2>
-<p>External classes must be imported explicitly using the GitHub shorthand or full URLs. See the <a class="reference internal" href="structure.html"><span class="std std-doc">structure documentation</span></a> section on External Imports for details on how to import external modules.</p>
+<p>External classes must be imported explicitly using the GitHub shorthand or full URLs. See the <a class="reference internal" href="routing.html"><span class="std std-doc">routing documentation</span></a> section on External Imports for details on how to import external modules.</p>
 </section>
 <hr class="docutils" />
 <section id="request">
@@ -883,6 +884,10 @@ appropriate headers.</p>
 <section id="forbidden">
 <h3>forbidden()<a class="headerlink" href="#forbidden" title="Link to this heading">#</a></h3>
 <p>Sends a 403 Forbidden response.</p>
+</section>
+<section id="notfound">
+<h3>notFound()<a class="headerlink" href="#notfound" title="Link to this heading">#</a></h3>
+<p>Sends a 404 Not Found response.</p>
 </section>
 <section id="login">
 <h3>login()<a class="headerlink" href="#login" title="Link to this heading">#</a></h3>
@@ -1871,6 +1876,7 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#end-code-title-message">end(code, title, message)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#redirect-url">redirect(url)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forbidden">forbidden()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notfound">notFound()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login">login()</a></li>
 </ul>
 </li>
