@@ -26,7 +26,7 @@
   </a>
 </p>
 
-Your whole app in one file (`app.wren`):
+A script that stays out of your way:
 
 ```wren
 // 1. Create your database table automatically

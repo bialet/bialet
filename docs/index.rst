@@ -3,6 +3,7 @@ Bialet
 
 .. meta::
     :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light..
+    :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 .. raw:: html
 
@@ -145,8 +146,8 @@ Features
 
 ----
 
-Your whole app in one file (``app.wren``)
-=========================================
+A script that stays out of your way:
+====================================
 
 .. code-block:: wren
 
@@ -252,7 +253,7 @@ Who is Bialet for?
 .. raw:: html
 
    <div style="text-align: center; margin: 1.5em 0">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Full Documentation</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html" style="margin: 0.35em">Full Documentation</a>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
    </div>
 
@@ -261,6 +262,7 @@ Who is Bialet for?
    :maxdepth: 2
 
    self
+   why-bialet
    getting-started/index
    installation
    wren
@@ -276,7 +278,6 @@ Who is Bialet for?
    reference
    examples
    faq
-   why-bialet
 
 ----
 
