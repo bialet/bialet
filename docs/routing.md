@@ -40,8 +40,14 @@ extension, is its URL.
 // Handles: /article?id=42
 
 var id = Request.get("id")
-var article = `SELECT title, body FROM articles WHERE id = ?`.first([id])
-return article
+var article = `SELECT title, body_html FROM articles WHERE id = ?`.first([id])
+
+if (!article) return Response.notFound()
+
+return <main>
+    <h1>{{ article["title"]}}
+    {{ article["body_html"] }}
+</main>
 ```
 
 No new file, no special name, no `_route.wren` — just a normal `.wren`

@@ -252,6 +252,10 @@ Redirects the client to a specified URL.
 
 Sends a 403 Forbidden response.
 
+### notFound()
+
+Sends a 404 Not Found response.
+
 ### login()
 
 Generates a login page response.
