@@ -1,7 +1,7 @@
 # Getting Started
 
 In this tutorial we'll build a working poll application with Bialet. You'll
-learn how to write Wren files, query a SQLite database, handle form
+learn how to write [Wren](../wren.md) files, query a SQLite database, handle form
 submissions, and render dynamic HTML — all with zero configuration.
 
 ## What we'll build
