@@ -79,6 +79,16 @@ files.
 - Documentation built with Sphinx (`docs/`); workflow in
   `.github/workflows/sphinx.yml`
 
+## Documentation Tone
+
+`docs/` is plain, technical, and no-nonsense — short declarative sentences,
+minimal hedging, and open about limitations rather than marketing around them
+(e.g. the "When NOT to Use Bialet" sections). Instructional in style:
+second-person, code-first, with recurring "Pitfall" callouts that anticipate
+common mistakes instead of only documenting the happy path. Security- and
+correctness-conscious (repeated XSS/SQL-injection warnings). Match this voice
+when editing or adding docs.
+
 ## Debugging
 
 - Use `System.print(...)` inside Wren files for runtime logs on server stdout
