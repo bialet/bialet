@@ -175,7 +175,8 @@ Your whole app in one file (``app.wren``)
      </ul>
    </main>
 
-Bialet integrates the `Wren language <https://wren.io/>`_ with
+Bialet integrates the :doc:`Wren language <wren>` (based on
+`wren.io <https://wren.io/>`_) with
 a HTTP server and a built-in SQLite database — **in a single binary**.
 No configuration files, no dependencies, no build step. Just write ``.wren``
 files and run.
@@ -262,6 +263,7 @@ Who is Bialet for?
    self
    getting-started/index
    installation
+   wren
    routing
    template
    database

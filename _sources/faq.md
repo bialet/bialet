@@ -5,7 +5,7 @@
 ### What is Bialet?
 
 Bialet is a full-stack web framework that integrates the
-[Wren language](https://wren.io) with an HTTP server and a built-in SQLite
+[Wren language](wren.md) (based on [wren.io](https://wren.io)) with an HTTP server and a built-in SQLite
 database in a single binary. You write HTML with embedded queries and logic
 in `.wren` files — no build steps, no configuration files, no separate
 database server.
