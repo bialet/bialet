@@ -7,7 +7,7 @@ improvements.
 
 - [ ] **Editor syntax highlighting** — Add support for major editors (VS Code,
       Sublime, etc.)
-- [ ] **AI development skills** — Create skills/prompts for AI-assisted Bialet
+- [x] **AI development skills** — Create skills/prompts for AI-assisted Bialet
       development
 - [x] **Documentation review** — Audit and fill gaps in existing docs, ensure
       all features are properly covered (e.g. custom errors)

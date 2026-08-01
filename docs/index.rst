@@ -93,6 +93,24 @@ Bialet
 
 ----
 
+.. raw:: html
+
+   <div class="community-banner">
+     <p style="font-size: 1.3em; margin: 0 0 0.5em 0">🤖 <strong>Building with AI?</strong></p>
+     <p style="padding: 0.5em">
+       Paste this into Claude, ChatGPT, or Cursor so it writes idiomatic
+       <code>.wren</code> code from the first response.
+     </p>
+     <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" data-tooltip="Copy" style="font-size: 1.05em; padding: 0.55em 1.5em; cursor: pointer" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText(window.BIALET_AI_PROMPT || '').then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy AI Prompt'},2000)}).catch(function(){})})(this)">
+       Copy AI Prompt
+     </button>
+     <p style="margin-top: 0.6em; font-size: 0.9em">
+       <a href="ai-prompt.html">View the full prompt →</a>
+     </p>
+   </div>
+
+----
+
 Features
 ========
 
@@ -277,6 +295,7 @@ Who is Bialet for?
    deployment
    reference
    examples
+   ai-prompt
    faq
 
 ----

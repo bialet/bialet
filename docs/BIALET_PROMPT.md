@@ -1,323 +1,291 @@
 # Bialet Project Development Prompt
 
-You are an expert in **Bialet**, a full-stack web framework that integrates the object-oriented Wren language with an HTTP server and a built-in SQLite database in a single application.
+You are an expert in **Bialet**, a full-stack web framework that integrates the
+object-oriented **Wren** language with an HTTP server and a built-in SQLite
+database in a single binary — no build step, no config files, no ORM.
+
+Use this document as your complete reference for writing Bialet applications.
+Everything here reflects the actual framework behavior — don't invent syntax
+or conventions that aren't described below.
+
+## Step 0: Make Sure Bialet Is Installed
+
+Before writing any code, confirm the `bialet` binary is installed and on the
+`PATH` — everything below assumes you can run `bialet` in a project
+directory.
+
+- **macOS / Linux:**
+
+  ```bash
+  curl -fsSL https://get.bialet.dev | sh
+  ```
+
+- **Windows:** download the latest zip from the
+  [releases page](https://github.com/bialet/bialet/releases/latest),
+  extract it, and run `bialet.exe` directly — no installation required.
+
+Verify it works before continuing:
+
+```bash
+bialet -r 'System.log("Hello, World!")'
+```
+
+If that prints `Hello, World!`, you're ready to build.
 
 ## Framework Philosophy
 
-Bialet applications follow a **classic web development approach**, similar to traditional PHP applications:
+Bialet applications follow a **classic web development approach**, similar to
+early PHP: files map directly to URLs, and the server renders full HTML pages.
 
 - **Multi-page applications** with full page reloads (avoid SPAs)
-- **File-based routing** where each `.wren` file corresponds to a URL path
-- **Server-side rendering** with minimal JavaScript
-- **Direct SQL queries** instead of ORMs
-- **Semantic HTML** styled with PicoCSS for classless, accessible design
+- **File-based routing** — a file's path, minus `.wren`, is its URL
+- **Query parameters are the default way to make a page dynamic** —
+  `article.wren` reading `?id=42` via `Request.get("id")`. Reach for a
+  `_route.wren` path-based route only when the value must live in the URL
+  path itself (SEO slugs, REST-style resource paths) — treat it as an
+  advanced escape hatch, not the starting point.
+- **Server-side rendering** with inline HTML strings, minimal JavaScript
+- **Direct SQL queries** with parameterized placeholders instead of an ORM
+- **Semantic HTML**, optionally styled with a classless framework like PicoCSS
+
+## Wren Language Essentials
+
+Bialet embeds a modified dialect of Wren (see [wren.io](https://wren.io) for
+the upstream language). A few things you need to know to write correct code:
+
+```wren
+// Comments use //
+
+// Variables
+var name = "Alice"
+var count = 42
+
+// Classes: construct, getters (no parens), setters, static methods
+class User {
+  construct new(data) {
+    _name = data["name"]
+  }
+  name { _name }              // getter
+  name=(val) { _name = val }  // setter
+  static count() { 0 }        // static method
+}
+
+// A block (method or class body) ending in an expression returns it
+// automatically — no `return` keyword needed for single-expression bodies.
+class Math {
+  static square(n) { n * n }          // implicit return
+  static classify(n) {
+    if (n > 0) return "positive"      // explicit return needed for early exit
+    return "non-positive"
+  }
+}
+
+// String interpolation with %(...) in regular strings
+System.log("Hello %(name), you have %(count) items")
+
+// Closures / block arguments
+[1, 2, 3].map { |n| n * 2 }
+items.where { |item| item != null }
+
+// The `is` operator checks instance type
+user is User   // true
+
+// Privacy convention: no `private` keyword, prefix with _ instead
+class Poll {
+  votes_(opt) { Num.fromString(opt["votes"]) }
+}
+
+// null is safe: accessing a key or method on null returns null, not an error
+```
+
+**Inline HTML strings** are Wren's template mechanism — no separate template
+language:
+
+```wren
+var greeting = <h1>Hello, {{ name }}!</h1>
+```
+
+- Delimited by `<tag>...</tag>`; the string must open and close with the
+  **same** tag name.
+- Tag names: lowercase letters/numbers only — no hyphens, underscores, or
+  uppercase.
+- A tag cannot directly nest another tag of the **same** name
+  (`<div><div>...` is a parse error) — use a different tag for the inner one.
+- Self-closing tags need a space before the slash: `<br />`, `<input ... />`.
+- `{{ expr }}` inside an inline HTML string evaluates any Wren expression —
+  it's sugar for `%(...)` interpolation inside an HTML block.
+- Inside a `.wren` file, `return` sends the value as the HTTP response body
+  and **stops execution immediately**. Without `return`, the response body is
+  empty.
+
+**Conditional rendering** uses `&&` (truthy left side renders the right side,
+otherwise nothing) and ternaries — both are the idiomatic way to toggle
+classes, attributes, or whole HTML blocks:
+
+```wren
+<a class="filter-tab {{ filter == "all" && "active" }}">All</a>
+<span>{{ activeCount }} task{{ activeCount != 1 && "s" }} remaining</span>
+{{ showClear && <button class="clear-btn">Clear completed</button> }}
+<span class="{{ task.finished ? "done" : "pending" }}">{{ task.description.safe }}</span>
+```
+
+**Iteration** uses `map`, and the callback must be a **single expression**
+(no multi-statement blocks, no `var` declarations inside it):
+
+```wren
+{{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+```
+
+> **Pitfall:** the Wren expression inside `{{ }}` must start on the same line
+> as the opening `{{`. Only the HTML *inside* the tags may span multiple
+> lines — breaking the Wren expression itself across lines (e.g. `{{\n  cond &&\n  <div>`) causes parsing ambiguities and empty output.
 
 ## Code Style
 
-- Use **2 spaces** for indentation
-- **Single-line methods** when possible to avoid explicit `return`:
+- Use **2 spaces** for indentation.
+- **Single-line methods** when possible, to lean on Wren's implicit return:
 
 ```wren
-// CORRECT - single line, implicit return
+// CORRECT
 static count() { `SELECT COUNT(*) FROM users`.toNum }
 static all() { `SELECT * FROM users`.fetch.to(User) }
 save() { _id = `users`.save(this) }
 
-// AVOID - multi-line requires explicit return
-static count() {
-  return `SELECT COUNT(*) FROM users`.toNum
+// Only use explicit multi-line + return when the logic truly needs it
+static footer {
+  if (hasVoted) return <footer>Thanks for voting!</footer>
+  return <footer>Cast your vote above.</footer>
 }
 ```
 
 ## Project Structure
 
+Bialet supports two equivalent conventions for protected, app-wide files —
+this guide uses the **`_app/` folder**, which keeps the project root clean:
+
 ```
 my-app/
-├── _app/                    # Protected folder for app configuration
+├── _app/                    # Protected folder (never served directly)
 │   ├── template.wren        # Site-wide layout (header, footer, nav)
 │   ├── migration.wren       # Database schema migrations
-│   └── domain.wren          # Domain classes (models)
+│   ├── domain.wren          # Domain classes (models)
+│   └── cron.wren            # Scheduled tasks (optional)
 │
 ├── _db.sqlite3              # SQLite database (auto-created)
 │
 ├── index.wren               # Homepage (/)
-├── about.wren               # About page (/about)
-├── contact.wren             # Contact page (/contact)
+├── about.wren                # About page (/about)
+├── article.wren              # Single item, via ?id= (/article?id=42)
 │
 ├── users/
 │   ├── index.wren           # Users list (/users)
-│   └── _route.wren          # Dynamic routes (/users/:id)
+│   └── _route.wren          # Path-based route (/users/:id) — advanced, optional
 │
 ├── api/
-│   └── _route.wren          # API endpoints (/api/*)
+│   └── users.wren           # API endpoint (/api/users)
 │
 └── css/
     └── style.css            # Static CSS files
 ```
 
+> **Note:** Bialet also allows flat root-level files instead —
+> `_template.wren`, `_migration.wren`, `_domain.wren`, `_cron.wren`. Both
+> conventions work identically; pick one and stay consistent within a
+> project. This guide uses `_app/` throughout.
+
 ### What Bialet Does NOT Have
 
 Bialet is intentionally simple. These concepts **do not exist**:
 
-- **No `main.wren` entry point** - Each `.wren` file is executed based on the URL
-- **No `routes/` folder** - Files ARE the routes (file-based routing)
-- **No middleware system** - Put shared logic in `_app/` helper classes
-- **No `validators/` folder** - Validation goes in domain classes or inline
-- **No `static/` folder convention** - Static files (css, js, images) go anywhere
-- **No `db/schema.sql`** - Schema is defined in `_app/migration.wren`
-- **No `.env` files** - Configuration is stored in the database (`Config` class)
+- **No `main.wren` entry point** — each `.wren` file is executed based on the URL
+- **No `routes/` folder** — files ARE the routes (file-based routing)
+- **No middleware system** — put shared logic in `_app/` helper classes
+- **No `validators/` folder** — validation goes in domain classes or inline
+- **No `static/` folder convention** — static files (css, js, images) go anywhere, as long as they don't start with `_` or `.`
+- **No `db/schema.sql`** — schema is defined in `_app/migration.wren`
+- **No `.env` files** — configuration is stored in the database (`BIALET_CONFIG` table, via the `Config` class)
+
+### Protected and Ignored Files
+
+- Files/folders starting with `_` or `.` are **protected**: they return
+  **403 Forbidden** if requested directly, but can be imported.
+- `README*`, `AGENTS*`, `LICENSE*`, `*.json`, `*.yml`, `*.yaml` are **ignored**
+  entirely — never served, protected or not. Safe place for docs and config.
 
 ### Git Configuration
 
-Always add the database to `.gitignore`. SQLite uses WAL mode, so multiple files are created:
+Always add the database to `.gitignore`. SQLite uses WAL mode, so multiple
+files are created:
 
 ```text
 # .gitignore
 _db.sqlite3*
 ```
 
-### File Naming Conventions
+## Routing
 
-- `index.wren` - Main page for a directory
-- `_app/template.wren` - Shared layout template
-- `_app/migration.wren` - Database migrations
-- `_app/domain.wren` - Model classes (can split into multiple files)
-- `_route.wren` - Dynamic route handler for variable URL segments
-- Files starting with `_` or `.` are protected (403 Forbidden if accessed directly)
-
-### Routing Rules
-
-The URL path maps directly to the file path:
+The URL path maps directly to the file path, exactly like serving static
+HTML — no route table, no `app.get(...)` calls.
 
 | File                      | URL                  |
 |---------------------------|----------------------|
 | `index.wren`              | `/`                  |
-| `about.wren`              | `/about`             |
+| `about.wren`              | `/about` (and `/about.wren`) |
 | `users/index.wren`        | `/users`             |
-| `users/_route.wren`       | `/users/:id`         |
-| `api/_route.wren`         | `/api/*`             |
-| `send.wren`               | `/send`              |
-| `template/_route.wren`    | `/template/:name`    |
+| `article.wren`            | `/article` (dynamic via `?id=`) |
+| `users/_route.wren`       | `/users/:id` (path-based, advanced) |
+| `api/users.wren`          | `/api/users`         |
 
-**Important**: Do NOT create a `routes/` folder. The file structure IS the routing.
-
-## Architecture Pattern: MVC-like Structure
-
-### Controllers (Page Files)
-
-Each `.wren` file acts as a controller. Structure them with:
-1. **Logic at the top** - Handle requests, process data
-2. **HTML view at the bottom** - Render the response
+### Default: Query Parameters
 
 ```wren
-// users/index.wren - Controller for /users
-
+// article.wren — handles /article?id=42
 import "_app/template" for Layout
-import "_app/domain" for User
 
-// === CONTROLLER LOGIC ===
-var users = User.all()
+var id = Request.get("id")
+var article = `SELECT * FROM articles WHERE id = ?`.first(id)
 
-// Handle POST for creating new user
-if (Request.isPost) {
-  var user = User.new()
-  user.name = Request.post("name")
-  user.email = Request.post("email")
-  user.save()
-  return Response.redirect("/users")
+if (!article) {
+  Response.status(404)
+  return "<h1>Not found</h1>"
 }
 
-// === VIEW ===
-return Layout.render(
-  <main class="container">
-    <h1>Users</h1>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ users.map{|u| <tr>
-          <td>{{ u.name }}</td>
-          <td>{{ u.email }}</td>
-          <td><a href="/users/{{ u.id }}">View</a></td>
-        </tr>} }}
-      </tbody>
-    </table>
-
-    <h2>Add User</h2>
-    <form method="post">
-      <label>
-        Name
-        <input type="text" name="name" required />
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" required />
-      </label>
-      <button type="submit">Create User</button>
-    </form>
-  </main>
-)
+return Layout.render(<article>
+  <h1>{{ article["title"] }}</h1>
+  {{ article["body"] }}
+</article>)
 ```
 
-### Shared Logic (Instead of Middleware)
+One file serves every article — `/article?id=1`, `/article?id=2`, etc. — with
+no additional files or routing config.
 
-There is no middleware in Bialet. For shared logic like authentication or rate limiting, create helper classes in `_app/`:
+### Advanced: Path-Based Routes (`_route.wren`)
+
+Use this **only** when the dynamic value must live in the URL path — a
+human-readable slug, a REST-style resource path, or a URL structure you
+inherited and can't change:
 
 ```wren
-// _app/auth.wren
+// users/_route.wren — handles /users/:id
+var userId = Request.route(0)  // first segment after this file's directory
 
-class Auth {
-  // Check API key and return the associated account, or null
-  static check(apiKey) {
-    if (!apiKey) return null
-    return `SELECT * FROM api_keys WHERE key = ? AND active = 1`.first(apiKey)
-  }
+if (!userId) return Response.redirect("/users")
 
-  // Require authentication - returns error response or null
-  static require() {
-    var apiKey = Request.header("X-Api-Key")
-    var account = Auth.check(apiKey)
-    if (!account) {
-      Response.status(401)
-      return Response.json({"error": "Unauthorized"})
-    }
-    return account
-  }
-}
-
-class RateLimit {
-  // Check rate limit for an API key, returns true if allowed
-  static check(apiKey, limit, window) {
-    var count = `
-      SELECT COUNT(*) FROM requests
-      WHERE apiKey = ? AND createdAt > datetime('now', ?)
-    `.toNum(apiKey, "-" + window.toString + " seconds")
-    return count < limit
-  }
+var user = User.find(userId)
+if (!user) {
+  Response.status(404)
+  return Layout.render(<main><h1>User not found</h1></main>)
 }
 ```
 
-Then use it at the top of your controllers:
+`Request.route(n)` never matches across a `/` — each segment is one path
+component. You can have multiple `_route.wren` files, one per directory that
+needs path-based handling.
 
-```wren
-// send.wren - POST /send
-
-import "_app/auth" for Auth, RateLimit
-import "_app/domain" for Email
-
-// Authentication check (instead of middleware)
-var account = Auth.require()
-if (account is String) return account  // Error response
-
-// Rate limiting check
-if (!RateLimit.check(account["id"], 100, 3600)) {
-  Response.status(429)
-  return Response.json({"error": "Rate limit exceeded"})
-}
-
-// Main logic
-if (!Request.isPost) {
-  Response.status(405)
-  return Response.json({"error": "Method not allowed"})
-}
-
-var to = Request.post("to")
-var subject = Request.post("subject")
-var body = Request.post("body")
-
-// Validation (inline, no separate validators folder)
-if (!to || !to.contains("@")) {
-  Response.status(400)
-  return Response.json({"error": "Invalid email address"})
-}
-
-var email = Email.new()
-email.to = to
-email.subject = subject
-email.body = body
-email.accountId = account["id"]
-email.save()
-
-return Response.json({"success": true, "id": email.id})
-```
-
-### Models (Domain Classes)
-
-Create model classes in `_app/domain.wren` to encapsulate data logic.
-
-Use `.to(Class)` to automatically map query results to domain class instances:
-
-```wren
-// _app/domain.wren
-
-class User {
-  construct new(data) {
-    _id = data["id"]
-    _name = data["name"] || ""
-    _email = data["email"] || ""
-    _createdAt = data["createdAt"]
-  }
-
-  // Factory constructor for empty user
-  static new() { User.new({}) }
-
-  // Getters (single line)
-  id { _id }
-  name { _name }
-  email { _email }
-  createdAt { _createdAt ? Date.new(_createdAt) : null }
-
-  // Setters (single line)
-  name=(val) { _name = val.toString.trim() }
-  email=(val) { _email = val.toString.trim() }
-
-  // Validation (in the model, not separate validators)
-  isValid { _email.contains("@") && _name.count > 0 }
-
-  // Save to database
-  save() { _id = `users`.save(this) }
-
-  // Delete from database
-  destroy() { `DELETE FROM users WHERE id = ?`.query(_id) }
-
-  // Static query methods using .to(Class) for automatic mapping
-  static all() { `SELECT * FROM users ORDER BY name ASC`.fetch.to(User) }
-  static find(id) { `SELECT * FROM users WHERE id = ?`.first(id).to(User) }
-  static findByEmail(email) { `SELECT * FROM users WHERE email = ?`.first(email).to(User) }
-  static count() { `SELECT COUNT(*) FROM users`.toNum }
-}
-```
-
-### The `.to(Class)` Method
-
-Query results can be automatically mapped to domain classes:
-
-```wren
-// Map multiple results (returns List of class instances)
-var posts = `SELECT * FROM posts`.fetch.to(Post)
-
-// Map single result (returns single class instance or null)
-var user = `SELECT * FROM users WHERE id = ?`.first(1).to(User)
-
-// Works with any query
-var recentPosts = `SELECT * FROM posts WHERE createdAt > ? ORDER BY createdAt DESC`.fetch(lastWeek).to(Post)
-```
-
-The class must have a `construct new(data)` that accepts a Map.
-
-### Views (Layout Template)
-
-Create a reusable layout in `_app/template.wren`:
+## Views: Templates in `_app/template.wren`
 
 ```wren
 // _app/template.wren
-
 class Layout {
   static render(content) { Layout.render(content, "My App") }
 
@@ -332,19 +300,14 @@ class Layout {
       <body>
         <header class="container">
           <nav>
-            <ul>
-              <li><strong>My App</strong></li>
-            </ul>
+            <ul><li><strong>My App</strong></li></ul>
             <ul>
               <li><a href="/">Home</a></li>
-              <li><a href="/users">Users</a></li>
               <li><a href="/about">About</a></li>
             </ul>
           </nav>
         </header>
-
         {{ content }}
-
         <footer class="container">
           <small>Built with <a href="https://bialet.dev">Bialet</a></small>
         </footer>
@@ -353,13 +316,111 @@ class Layout {
 }
 ```
 
-### Migrations
+```wren
+// index.wren
+import "_app/template" for Layout
 
-Define database schema in `_app/migration.wren`:
+return Layout.render(
+  <main class="container">
+    <h1>Welcome</h1>
+  </main>
+)
+```
+
+> **Pitfall:** if `Layout`'s methods are `static` (as above), call
+> `Layout.render(...)` directly. If you instead define instance methods, you
+> must instantiate first: `Layout.new().render(...)`.
+
+## Database
+
+Use backticks to write SQL — the Query object never allows string
+concatenation or interpolation; use `?` placeholders and pass parameters to
+the query method.
+
+```wren
+// Fetch multiple rows
+var users = `SELECT * FROM users WHERE active = 1`.fetch
+
+// Fetch multiple rows mapped to class instances
+var users = `SELECT * FROM users WHERE active = 1`.fetch.to(User)
+
+// Fetch first row (adds LIMIT automatically)
+var user = `SELECT * FROM users WHERE id = ?`.first(userId)
+var user = `SELECT * FROM users WHERE id = ?`.first(userId).to(User)
+
+// Single value
+var count = `SELECT COUNT(*) FROM users`.toNum
+var name = `SELECT name FROM users WHERE id = ?`.val(userId)
+var active = `SELECT active FROM users WHERE id = ?`.toBool(userId)
+
+// Insert (returns the last inserted id)
+var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(name, email)
+
+// Update / delete
+`UPDATE users SET name = ? WHERE id = ?`.query(name, id)
+`DELETE FROM users WHERE id = ?`.query(id)
+
+// save() on a bare table name — insert if no "id" key, update otherwise
+var user = {"name": "John", "email": "john@example.com"}
+var id = `users`.save(user)
+user["id"] = id
+user["name"] = "John Doe"
+`users`.save(user)  // updates
+```
+
+```wren
+// WRONG — never interpolate values into SQL
+`SELECT * FROM users WHERE id = %(id)`.first(id)
+
+// CORRECT
+`SELECT * FROM users WHERE id = ?`.first(id)
+```
+
+**Column values always come back as strings.** Convert before doing math:
+
+```wren
+var count = `SELECT COUNT(*) FROM users`.toNum   // number, direct
+var age = Num.fromString(row["age"])              // manual conversion
+```
+
+### Safe Sorting with `.order()`
+
+```wren
+var allowedSorts = ["id", "name", "email", "createdAt"]
+var sortCol = Request.get("sort") || "id"
+var sortDir = Request.get("order") || "asc"
+
+var users = `SELECT * FROM users`
+  .order(sortCol, sortDir, allowedSorts)
+  .fetch
+```
+
+Invalid columns fall back to the first entry in `allowedColumns` — this
+prevents SQL injection through user-controlled sort parameters. Pass a limit
+as a 4th argument for quick "top N" queries.
+
+### Pagination
+
+Always pass `LIMIT`/`OFFSET` as `?` placeholders:
+
+```wren
+var page = Num.fromString(Request.get("page") || "1")
+var limit = Num.fromString(Request.get("limit") || "20")
+var offset = (page - 1) * limit
+
+var total = `SELECT COUNT(*) FROM users`.toNum
+var users = `SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?`.fetch(limit, offset)
+
+Response.json({
+  "data": users,
+  "pagination": {"page": page, "limit": limit, "total": total, "pages": ((total + limit - 1) / limit).floor}
+})
+```
+
+### Migrations
 
 ```wren
 // _app/migration.wren
-
 Db.migrate("Create users table", `
   CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -376,61 +437,353 @@ Db.migrate("Create posts table", `
     title TEXT NOT NULL,
     content TEXT,
     userId INTEGER REFERENCES users(id),
-    published BOOLEAN DEFAULT 0,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `)
 
-Db.migrate("Add index on posts userId", `
-  CREATE INDEX IF NOT EXISTS idx_posts_userId ON posts(userId)
-`)
+// Multiple statements in one migration: separate with `;`
+Db.migrate("Add default config", `INSERT INTO BIALET_CONFIG VALUES ('title', 'My App')`)
+
+// Seed data across multiple inserts: wrap in Fn.new{ ... }
+Db.migrate("Seed sample posts", Fn.new{
+  `posts`.save({"title": "First post", "content": "Hello world", "userId": 1})
+  `posts`.save({"title": "Second post", "content": "More content", "userId": 1})
+})
+```
+
+- Runs on every app start and every file update.
+- The migration **name** is the dedup key — it only runs once. Use a
+  descriptive name.
+- `_migration.wren` (root) and `_app/migration.wren` are equivalent — this
+  guide uses the `_app/` form.
+
+### `BIALET_*` System Tables
+
+`BIALET_CONFIG`, `BIALET_MIGRATIONS`, `BIALET_SESSIONS`, `BIALET_FILES`,
+`BIALET_LOGS`, `BIALET_REMOTE_MODULES`. You may read/write rows in these with
+caution, but never drop or restructure them.
+
+## Models (Domain Classes)
+
+```wren
+// _app/domain.wren
+class User {
+  construct new(data) {
+    _id = data["id"]
+    _name = data["name"] || ""
+    _email = data["email"] || ""
+    _createdAt = data["createdAt"]
+  }
+  static new() { User.new({}) }
+
+  id { _id }
+  name { _name }
+  email { _email }
+  createdAt { _createdAt ? Date.new(_createdAt) : null }
+
+  name=(val) { _name = val.toString.trim() }
+  email=(val) { _email = val.toString.trim() }
+
+  isValid { _email.contains("@") && _name.count > 0 }
+
+  save() { _id = `users`.save(this) }
+  destroy() { `DELETE FROM users WHERE id = ?`.query(_id) }
+
+  static all() { `SELECT * FROM users ORDER BY name ASC`.fetch.to(User) }
+  static find(id) { `SELECT * FROM users WHERE id = ?`.first(id).to(User) }
+  static count() { `SELECT COUNT(*) FROM users`.toNum }
+}
+```
+
+`.to(Class)` maps query results (`.fetch`, `.first`, or any Map/List of Maps)
+to instances of a class whose `construct new(data)` accepts a Map.
+
+## Controllers: Logic at the Top, View at the Bottom
+
+Each `.wren` page file is a controller: handle the request first, then render.
+
+```wren
+// users/index.wren — controller for /users
+import "_app/template" for Layout
+import "_app/domain" for User
+
+// === CONTROLLER ===
+if (Request.isPost) {
+  var user = User.new()
+  user.name = Request.post("name")
+  user.email = Request.post("email")
+  user.save()
+  return Response.redirect("/users")
+}
+
+var users = User.all()
+
+// === VIEW ===
+return Layout.render(
+  <main class="container">
+    <h1>Users</h1>
+    <table>
+      <thead><tr><th>Name</th><th>Email</th></tr></thead>
+      <tbody>
+        {{ users.map{|u| <tr><td>{{ u.name.safe }}</td><td>{{ u.email.safe }}</td></tr>} }}
+      </tbody>
+    </table>
+    <form method="post">
+      <input type="text" name="name" required />
+      <input type="email" name="email" required />
+      <button type="submit">Create User</button>
+    </form>
+  </main>
+)
+```
+
+> **Pitfall:** always `return Response.redirect(...)`. A bare
+> `Response.redirect(...)` without `return` sets the redirect headers but lets
+> execution continue — the code below then tries to send a second response
+> body, causing a double-response error.
+
+## Shared Logic (Instead of Middleware)
+
+There's no middleware in Bialet. Put shared logic — auth checks, rate
+limiting — in a helper class under `_app/`:
+
+```wren
+// _app/auth.wren
+class Auth {
+  static check(apiKey) {
+    if (!apiKey) return null
+    return `SELECT * FROM api_keys WHERE key = ? AND active = 1`.first(apiKey)
+  }
+
+  static require() {
+    var account = Auth.check(Request.header("X-Api-Key"))
+    if (!account) {
+      Response.status(401)
+      return Response.json({"error": "Unauthorized"})
+    }
+    return account
+  }
+}
+```
+
+```wren
+// send.wren — POST /send
+import "_app/auth" for Auth
+
+var account = Auth.require()
+if (account is Map == false) return account  // Auth.require() returned an error response
+
+// ... main logic
+```
+
+## Request Handling
+
+```wren
+// Query parameters
+var id = Request.get("id")
+var page = Request.get("page") || "1"
+Request.query("id")   // alias for Request.get("id")
+
+// POST form fields
+if (Request.isPost) {
+  var name = Request.post("name")
+}
+
+// JSON body
+if (Request.isJson) {
+  var data = Request.json()   // == Json.parse(Request.body)
+  var name = data["name"]
+}
+
+// Headers
+var apiKey = Request.header("X-Api-Key")
+
+// HTTP method
+Request.method     // "GET", "POST", "PUT", "DELETE", ...
+Request.isPost      // true for POST
+
+// Path segments (only inside _route.wren)
+var id = Request.route(0)
+
+// Basic auth
+if (Request.login("admin", "secret") == false) {
+  // authenticated
+}
+```
+
+## Response Handling
+
+```wren
+Response.json({"success": true, "id": user.id})
+Response.status(404)
+return Response.redirect("/users")
+Response.notFound()
+Response.forbidden()
+
+// CORS
+if (Response.cors) return                              // allow all origins
+if (Response.cors("https://myapp.com")) return          // specific origin
+if (Response.cors("https://myapp.com", "GET, POST", "Content-Type")) return
+```
+
+`Response.cors` handles OPTIONS preflight automatically (204 response,
+returns `true` so you can `return` early); returns `false` for other methods
+so processing continues.
+
+## Sessions and Authentication
+
+```wren
+// Login
+if (Request.isPost) {
+  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email"))
+  if (user && Util.verify(Request.post("password"), user["password"])) {
+    Session.set("userId", user["id"])
+    return Response.redirect("/dashboard")
+  }
+}
+
+// Check logged in (on protected pages)
+if (!Session.get("userId")) return Response.redirect("/login")
+
+// Logout
+Session.destroy()
+return Response.redirect("/")
+```
+
+`Session` is also useful to scope data to an anonymous visitor without any
+login system — e.g. a per-visitor todo list:
+
+```wren
+class Task {
+  construct new(data) {
+    _id = data["id"]
+    _session = data["session"] || Session.id
+  }
+  save() { _id = `Task`.save(this) }
+  static list() { `SELECT * FROM Task WHERE session = ?`.fetch(Session.id).to(Task) }
+}
+```
+
+CSRF: `Session.csrf` renders a hidden input field with a token; check it with
+`Session.csrfOk` when processing the form submission.
+
+## Cron
+
+```wren
+// _app/cron.wren
+import "_app/domain" for Task
+
+// Runs when the current minute is divisible by the given value
+// (safe values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 — anything that
+// doesn't divide 60, like 90, never fires)
+Cron.every(5) { |date| System.log("👋 Hello, from Cron!") }
+
+// Runs daily at 02:00
+Cron.at(2, 0) { |date| Task.clearAll() }
+
+// Runs every Monday at 04:30 (dayOfWeek: 0=Sunday .. 6=Saturday)
+Cron.at(4, 30, 1) { |date| System.log("Monday task") }
+```
+
+## File Uploads
+
+Files are always stored in the SQLite database, never on disk.
+
+```wren
+if (Request.isPost) {
+  var file = Request.file("upload_file")
+  if (!file) return <p>No file was uploaded.</p>
+  return <p>Uploaded: {{ file.name }}</p>
+}
+
+return <form method="post" enctype="multipart/form-data">
+  <input type="file" name="upload_file" />
+  <button type="submit">Upload</button>
+</form>
+```
+
+Files handled via `Request.file()` are permanent by default. Create files
+dynamically with `File.create(name, type, content)`; serve any stored file
+with `Response.file(id)`. Unprocessed uploads and files marked with
+`file.temp` are deleted automatically after a short period.
+
+## External Imports
+
+Import community Wren modules straight from GitHub — no package manager:
+
+```wren
+import "gh:owner/repo/path/to/file" for ClassName             // main branch
+import "gh:owner/repo/path/to/file@v1.0" for ClassName as V1  // pinned tag
+import "https://raw.githubusercontent.com/owner/repo/main/module.wren" for ClassName
+```
+
+The `.wren` extension is auto-appended for `gh:` imports (required for full
+URLs). Modules are downloaded once and cached in `BIALET_REMOTE_MODULES` —
+they never auto-update, so pin a tag for anything beyond a quick experiment.
+
+## Markdown
+
+```wren
+Markdown.html("## Hello **World**!")   // renders to HTML
+Markdown.file("about.md")              // reads and renders a file from the app dir
+```
+
+## Security Checklist
+
+1. **Never concatenate or interpolate values into SQL** — always use `?`
+   placeholders and pass parameters to the query method.
+2. **Always escape untrusted output with `.safe`** — `{{ }}` does **not**
+   escape HTML automatically. Escape any string from user input, the
+   database, or the URL before interpolating it into HTML.
+3. **Always `return` before `Response.redirect(...)`** to avoid
+   double-response errors.
+4. **Validate input** in domain classes (`isValid`, `errors`) or inline
+   before saving.
+5. **Pin external imports** to a tag, not `main`, for anything beyond local
+   experiments.
+
+```wren
+// WRONG — SQL injection
+`SELECT * FROM users WHERE name = '%(name)'`.fetch
+
+// WRONG — XSS
+<p>{{ userInput }}</p>
+
+// CORRECT
+`SELECT * FROM users WHERE name = ?`.fetch(name)
+<p>{{ userInput.safe }}</p>
 ```
 
 ## JSON APIs
 
-For API endpoints that return JSON instead of HTML:
-
 ```wren
-// api/_route.wren - Handles /api/*
+// api/users.wren — handles /api/users
 
-import "_app/domain" for User, Post
-
-// Enable CORS for all origins (simplest form)
-// This allows the API to be accessed from any web application
 if (Response.cors) return
 
-var resource = Request.route(0)  // "users", "posts", etc.
-var id = Request.route(1)        // optional ID
+var id = Request.get("id")
 
-// GET /api/users
-if (resource == "users" && Request.isGet) {
-  var users = User.all()
-  return Response.json(users.map{|u| {
-    "id": u.id,
-    "name": u.name,
-    "email": u.email
-  }}.toList)
-}
-
-// GET /api/users/:id
-if (resource == "users" && id && Request.isGet) {
+// GET /api/users?id=1
+if (id && Request.method == "GET") {
   var user = User.find(id)
   if (!user) {
     Response.status(404)
     return Response.json({"error": "User not found"})
   }
-  return Response.json({
-    "id": user.id,
-    "name": user.name,
-    "email": user.email
-  })
+  return Response.json({"id": user.id, "name": user.name, "email": user.email})
+}
+
+// GET /api/users
+if (!id && Request.method == "GET") {
+  return Response.json(User.all().map{|u| {"id": u.id, "name": u.name, "email": u.email}}.toList)
 }
 
 // POST /api/users
-if (resource == "users" && Request.isPost) {
+if (Request.method == "POST") {
+  var data = Request.json()
   var user = User.new()
-  user.name = Request.post("name")
-  user.email = Request.post("email")
+  user.name = data["name"]
+  user.email = data["email"]
 
   if (!user.isValid) {
     Response.status(400)
@@ -442,708 +795,184 @@ if (resource == "users" && Request.isPost) {
   return Response.json({"id": user.id, "name": user.name})
 }
 
-// 404 for unknown routes
 Response.status(404)
 return Response.json({"error": "Not found"})
 ```
 
-### CORS (Cross-Origin Resource Sharing)
-
-When building APIs that need to be accessed from web browsers on different domains,
-you need to enable CORS. Bialet provides several convenient ways to do this:
-
-```wren
-// Simplest form - allow all origins with default settings
-if (Response.cors) return
-
-// Allow specific origin with default methods and headers
-if (Response.cors("https://myapp.com")) return
-
-// Full control over CORS settings
-if (Response.cors("https://myapp.com", "GET, POST, PUT", "Content-Type, X-API-Key")) return
-```
-
-The `Response.cors` method automatically handles OPTIONS preflight requests by:
-1. Setting the appropriate CORS headers
-2. Responding with a 204 No Content status for OPTIONS requests
-3. Returning `true` for OPTIONS requests (so you can return early)
-4. Returning `false` for other requests (so processing continues)
-
-**Default CORS settings:**
-- Methods: `GET, POST, PUT, DELETE, OPTIONS`
-- Headers: `Content-Type, Authorization`
-
-**Example with CORS in a full API:**
-
-```wren
-// api/_route.wren
-import "_app/domain" for User
-
-// Enable CORS for specific frontend domain
-if (Response.cors("https://app.example.com")) return
-
-var resource = Request.route(0)
-var id = Request.route(1)
-
-if (resource == "users" && Request.method == "GET") {
-  var users = `SELECT id, name, email FROM users`.fetch()
-  return Response.json(users)
-}
-
-Response.status(404)
-return Response.json({"error": "Not found"})
-```
-
-### Simple API Endpoint
-
-For a single-purpose API endpoint:
-
-```wren
-// health.wren - GET /health
-
-return Response.json({
-  "status": "ok",
-  "timestamp": Date.new().timestamp
-})
-```
-
-```wren
-// send.wren - POST /send (email sending API)
-
-import "_app/auth" for Auth
-import "_app/domain" for Email
-
-var account = Auth.require()
-if (account is String) return account
-
-if (!Request.isPost) {
-  Response.status(405)
-  return Response.json({"error": "Method not allowed"})
-}
-
-var email = Email.new()
-email.to = Request.post("to")
-email.subject = Request.post("subject")
-email.body = Request.post("body")
-email.accountId = account["id"]
-
-if (!email.isValid) {
-  Response.status(400)
-  return Response.json({"error": "Invalid email data", "details": email.errors})
-}
-
-email.save()
-return Response.json({"success": true, "id": email.id})
-```
-
-## HTML and Styling Guidelines
-
-### Use Semantic HTML with PicoCSS
-
-PicoCSS provides beautiful default styling for semantic HTML elements without classes:
-
-```wren
-return Layout.render(
-  <main class="container">
-    <article>
-      <header>
-        <h1>{{ post.title }}</h1>
-        <small>By {{ post.user.name }} on {{ post.createdAt.format("Y-m-d") }}</small>
-      </header>
-
-      <p>{{ post.content }}</p>
-
-      <footer>
-        <a href="/posts" role="button" class="secondary">Back to Posts</a>
-      </footer>
-    </article>
-  </main>
-)
-```
-
-### Semantic HTML Elements
-
-Use proper HTML5 semantic elements:
-
-- `<header>` - Page or section header
-- `<nav>` - Navigation links
-- `<main>` - Main content (use `class="container"` for centered layout)
-- `<article>` - Self-contained content (blog post, comment, card)
-- `<section>` - Thematic grouping of content
-- `<aside>` - Sidebar content
-- `<footer>` - Page or section footer
-- `<details>` / `<summary>` - Expandable content
-
-### Forms with PicoCSS
-
-```wren
-<form method="post">
-  <label>
-    Username
-    <input type="text" name="username" placeholder="Enter username" required />
-  </label>
-
-  <label>
-    Email
-    <input type="email" name="email" placeholder="Enter email" required />
-  </label>
-
-  <label>
-    Password
-    <input type="password" name="password" placeholder="Enter password" required />
-  </label>
-
-  <label>
-    <input type="checkbox" name="remember" />
-    Remember me
-  </label>
-
-  <label>
-    Role
-    <select name="role">
-      <option value="user">User</option>
-      <option value="admin">Admin</option>
-    </select>
-  </label>
-
-  <label>
-    Bio
-    <textarea name="bio" placeholder="Tell us about yourself"></textarea>
-  </label>
-
-  <button type="submit">Create Account</button>
-</form>
-```
-
-### Tables
-
-```wren
-<table>
-  <thead>
-    <tr>
-      <th scope="col">Name</th>
-      <th scope="col">Email</th>
-      <th scope="col">Role</th>
-      <th scope="col">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{ users.map{|u| <tr>
-      <td>{{ u.name }}</td>
-      <td>{{ u.email }}</td>
-      <td>{{ u.role }}</td>
-      <td>
-        <a href="/users/{{ u.id }}">Edit</a>
-      </td>
-    </tr>} }}
-  </tbody>
-</table>
-```
-
-### Cards with Article
-
-```wren
-<div class="grid">
-  {{ posts.map{|p| <article>
-    <header>
-      <h3>{{ p.title }}</h3>
-    </header>
-    <p>{{ p.content.take(150) }}...</p>
-    <footer>
-      <a href="/posts/{{ p.id }}" role="button" class="outline">Read more</a>
-    </footer>
-  </article>} }}
-</div>
-```
-
-## Database Operations
-
-### Direct SQL Queries (No ORM)
-
-Always use parameterized queries with `?` placeholders:
-
-```wren
-// Fetch multiple rows
-var users = `SELECT * FROM users WHERE active = 1`.fetch
-
-// Fetch multiple rows as class instances
-var users = `SELECT * FROM users WHERE active = 1`.fetch.to(User)
-
-// Fetch first row
-var user = `SELECT * FROM users WHERE id = ?`.first(userId)
-
-// Fetch first row as class instance
-var user = `SELECT * FROM users WHERE id = ?`.first(userId).to(User)
-
-// Get single value
-var count = `SELECT COUNT(*) FROM users`.toNum
-var name = `SELECT name FROM users WHERE id = ?`.val(userId)
-
-// Insert
-var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(name, email)
-
-// Update
-`UPDATE users SET name = ?, email = ? WHERE id = ?`.query(name, email, id)
-
-// Delete
-`DELETE FROM users WHERE id = ?`.query(id)
-
-// Using `.save()` on table queries for insert/update
-var userData = {"name": "John", "email": "john@example.com"}
-var id = `users`.save(userData)
-
-// Update existing record
-userData["id"] = id
-userData["name"] = "John Doe"
-`users`.save(userData)
-```
-
-### Query Methods
-
-- `.query(params)` - Execute query, returns last insert ID for INSERT
-- `.fetch(params)` - Returns array of rows (List of Maps)
-- `.first(params)` - Returns first row (Map) with automatic LIMIT 1
-- `.val(params)` - Returns first value of first row
-- `.toNum(params)` - Returns first value as number
-- `.to(Class)` - Maps results to class instances (works with `.fetch` and `.first`)
-
-## Request Handling
-
-### GET Parameters
-
-```wren
-var id = Request.get("id")
-var page = Request.get("page") || "1"
-var search = Request.get("q")
-```
-
-### POST Parameters
-
-```wren
-if (Request.isPost) {
-  var name = Request.post("name")
-  var email = Request.post("email")
-  // Process form...
-  return Response.redirect("/success")
-}
-```
-
-### Headers
-
-```wren
-var apiKey = Request.header("X-Api-Key")
-var contentType = Request.header("Content-Type")
-```
-
-### HTTP Methods
-
-```wren
-Request.isGet     // true for GET requests
-Request.isPost    // true for POST requests
-Request.method    // "GET", "POST", "PUT", "DELETE", etc.
-```
-
-### Dynamic Routes
-
-Use `_route.wren` for dynamic URL segments:
-
-```wren
-// users/_route.wren
-// Handles /users/:id
-
-import "_app/template" for Layout
-import "_app/domain" for User
-
-var userId = Request.route(0)
-
-if (!userId) return Response.redirect("/users")
-
-var user = User.find(userId)
-
-if (!user) {
-  Response.status(404)
-  return Layout.render(<main class="container"><h1>User not found</h1></main>)
-}
-
-// Handle update
-if (Request.isPost) {
-  user.name = Request.post("name")
-  user.email = Request.post("email")
-  user.save()
-  return Response.redirect("/users/" + userId)
-}
-
-return Layout.render(
-  <main class="container">
-    <h1>{{ user.name }}</h1>
-    <form method="post">
-      <label>
-        Name
-        <input type="text" name="name" value="{{ user.name }}" required />
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" value="{{ user.email }}" required />
-      </label>
-      <button type="submit">Update</button>
-    </form>
-  </main>
-)
-```
-
-## Session and Authentication
-
-```wren
-// Login example
-if (Request.isPost) {
-  var email = Request.post("email")
-  var password = Request.post("password")
-
-  var user = `SELECT * FROM users WHERE email = ?`.first(email)
-
-  if (user && Util.verify(password, user["password"])) {
-    Session["userId"] = user["id"]
-    Session["userName"] = user["name"]
-    return Response.redirect("/dashboard")
-  }
-
-  var error = "Invalid email or password"
-}
-
-// Check if logged in (in other pages)
-if (!Session["userId"]) return Response.redirect("/login")
-
-// Logout
-Session.destroy()
-return Response.redirect("/")
-```
+This single-file pattern — one `.wren` file handling GET/POST/PUT/DELETE via
+`Request.method`, with the resource id from a query parameter — is the
+idiomatic way to build a REST endpoint in Bialet. Reach for `_route.wren`
+only when the id truly needs to live in the URL path.
 
 ## HTMX Integration (Optional)
 
-When you need dynamic updates without full page reloads, use HTMX sparingly:
+Full page reloads are the default. Add HTMX sparingly, only where it clearly
+improves UX (inline delete, edit-in-place):
 
 ```wren
-// In your layout, add HTMX
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-// Delete button with confirmation
-<button
-  hx-delete="/users/{{ user.id }}"
-  hx-confirm="Are you sure?"
-  hx-target="closest tr"
-  hx-swap="outerHTML">
-  Delete
-</button>
-
-// Load more content
-<button
-  hx-get="/posts?page={{ nextPage }}"
-  hx-target="#posts-list"
-  hx-swap="beforeend">
-  Load More
-</button>
-
-// Inline editing
-<span
-  hx-get="/users/{{ user.id }}/edit"
-  hx-trigger="click"
-  hx-swap="outerHTML">
-  {{ user.name }}
-</span>
+<button hx-delete="/users/{{ user.id }}" hx-confirm="Are you sure?"
+        hx-target="closest tr" hx-swap="outerHTML">Delete</button>
 ```
 
-### HTMX Endpoint Example
+## Semantic HTML & Styling
 
-```wren
-// users/_route.wren
-var userId = Request.route(0)
-var action = Request.route(1)
+Use proper elements — `<header>`, `<nav>`, `<main class="container">`,
+`<article>`, `<section>`, `<aside>`, `<footer>` — and let a classless CSS
+framework like [PicoCSS](https://picocss.com) style them with zero classes.
+Tailwind (via CDN for prototyping) and vanilla CSS also work — Bialet just
+outputs plain HTML, so any CSS approach applies unchanged. Stylesheets go
+anywhere except behind a `_`/`.` prefix (those return 403).
 
-if (action == "edit") {
-  var user = User.find(userId)
-  return <form hx-put="/users/{{ userId }}" hx-swap="outerHTML">
-    <input type="text" name="name" value="{{ user.name }}" />
-    <button type="submit">Save</button>
-  </form>
-}
-
-// Handle PUT for HTMX
-if (Request.method == "PUT") {
-  var user = User.find(userId)
-  user.name = Request.post("name")
-  user.save()
-  return <span hx-get="/users/{{ userId }}/edit" hx-trigger="click" hx-swap="outerHTML">{{ user.name }}</span>
-}
-```
-
-## Best Practices
-
-### 1. Keep Controllers Simple
-Put business logic in domain classes, not in page files.
-
-### 2. Use Semantic HTML
-Let PicoCSS handle styling through proper HTML structure.
-
-### 3. Direct SQL is Fine
-Write clear, readable SQL queries. Avoid complex abstractions.
-
-### 4. Full Page Reloads by Default
-Only use HTMX when it genuinely improves user experience.
-
-### 5. Validate Input
-Always validate and sanitize user input in domain classes:
-
-```wren
-class User {
-  // ... properties ...
-
-  isValid { _email.contains("@") && _name.count > 0 }
-
-  errors {
-    var e = []
-    if (!_email.contains("@")) e.add("Invalid email")
-    if (_name.count == 0) e.add("Name is required")
-    return e
-  }
-}
-```
-
-### 6. Use Prepared Statements
-Never concatenate user input into SQL queries:
-
-```wren
-// WRONG - SQL injection vulnerability
-`SELECT * FROM users WHERE name = '%(name)'`.fetch
-
-// CORRECT - Use parameterized queries
-`SELECT * FROM users WHERE name = ?`.fetch(name)
-```
-
-### 7. Escape Output
-Use `.safe` for user-generated content in HTML:
-
-```wren
-<p>{{ user.bio.safe }}</p>
-```
-
-### 8. Single-Line Methods
-Keep simple methods on one line to leverage implicit returns:
-
-```wren
-// Good
-static all() { `SELECT * FROM users`.fetch.to(User) }
-save() { _id = `users`.save(this) }
-name { _name }
-
-// Avoid unless complex logic requires multiple lines
-static all() {
-  return `SELECT * FROM users`.fetch.to(User)
-}
-```
-
-### 9. No Unnecessary Folders
-Don't create `routes/`, `validators/`, `middleware/`, or `static/` folders. Keep it simple.
-
-## Complete Example: Email API Service
+## Complete Example: Todo List App
 
 ```
-email-api/
+todo-app/
 ├── _app/
+│   ├── template.wren
 │   ├── migration.wren
-│   ├── domain.wren
-│   └── auth.wren
+│   └── domain.wren
 ├── .gitignore
-├── index.wren            # GET / - Documentation page
-├── send.wren             # POST /send - Send email
-├── templates.wren        # GET /templates - List templates
-├── template/
-│   └── _route.wren       # GET/POST /template/:name
-└── health.wren           # GET /health - Health check
+├── index.wren        # / — list + add form
+├── toggle.wren        # POST /toggle — mark done/undone
+├── delete.wren         # POST /delete — remove a task
+└── css/
+    └── style.css
 ```
 
-### .gitignore
-```text
-_db.sqlite3*
-```
-
-### _app/migration.wren
 ```wren
-Db.migrate("Create api_keys table", `
-  CREATE TABLE api_keys (
+// _app/migration.wren
+Db.migrate("Create tasks table", `
+  CREATE TABLE tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    key TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    active BOOLEAN DEFAULT 1,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`)
-
-Db.migrate("Create emails table", `
-  CREATE TABLE emails (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    apiKeyId INTEGER REFERENCES api_keys(id),
-    toAddress TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    body TEXT,
-    status TEXT DEFAULT 'pending',
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`)
-
-Db.migrate("Create templates table", `
-  CREATE TABLE templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    subject TEXT NOT NULL,
-    body TEXT NOT NULL,
-    variables TEXT,
+    description TEXT NOT NULL,
+    finished BOOLEAN DEFAULT 0,
+    session TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `)
 ```
 
-### _app/domain.wren
 ```wren
-class Email {
+// _app/domain.wren
+class Task {
   construct new(data) {
     _id = data["id"]
-    _apiKeyId = data["apiKeyId"]
-    _to = data["toAddress"] || ""
-    _subject = data["subject"] || ""
-    _body = data["body"] || ""
-    _status = data["status"] || "pending"
+    _description = data["description"] || ""
+    _finished = data["finished"] || false
+    _session = data["session"] || Session.id
     _createdAt = data["createdAt"]
   }
-
-  static new() { Email.new({}) }
-
-  id { _id }
-  to { _to }
-  subject { _subject }
-  body { _body }
-  status { _status }
-  apiKeyId { _apiKeyId }
-
-  to=(val) { _to = val.toString.trim() }
-  subject=(val) { _subject = val.toString.trim() }
-  body=(val) { _body = val }
-  apiKeyId=(val) { _apiKeyId = val }
-
-  isValid { _to.contains("@") && _subject.count > 0 }
-
-  errors {
-    var e = []
-    if (!_to.contains("@")) e.add("Invalid email address")
-    if (_subject.count == 0) e.add("Subject is required")
-    return e
-  }
-
-  save() { _id = `emails`.save(this) }
-
-  static find(id) { `SELECT * FROM emails WHERE id = ?`.first(id).to(Email) }
-  static pending() { `SELECT * FROM emails WHERE status = 'pending'`.fetch.to(Email) }
-}
-
-class Template {
-  construct new(data) {
-    _id = data["id"]
-    _name = data["name"] || ""
-    _subject = data["subject"] || ""
-    _body = data["body"] || ""
-    _variables = data["variables"] || ""
-  }
-
-  static new() { Template.new({}) }
+  static new() { Task.new({}) }
 
   id { _id }
-  name { _name }
-  subject { _subject }
-  body { _body }
-  variables { _variables.split(",").map{|v| v.trim()}.toList }
+  description { _description }
+  finished { _finished == "1" || _finished == true }
+  description=(val) { _description = val.toString.trim() }
 
-  name=(val) { _name = val.toString.trim() }
-  subject=(val) { _subject = val.toString.trim() }
-  body=(val) { _body = val }
-  variables=(val) { _variables = val is List ? val.join(",") : val }
+  save() { _id = `tasks`.save(this) }
 
-  save() { _id = `templates`.save(this) }
-
-  static all() { `SELECT * FROM templates ORDER BY name`.fetch.to(Template) }
-  static find(id) { `SELECT * FROM templates WHERE id = ?`.first(id).to(Template) }
-  static findByName(name) { `SELECT * FROM templates WHERE name = ?`.first(name).to(Template) }
-}
-```
-
-### _app/auth.wren
-```wren
-class Auth {
-  static check(apiKey) {
-    if (!apiKey) return null
-    return `SELECT * FROM api_keys WHERE key = ? AND active = 1`.first(apiKey)
+  toggle() {
+    _finished = `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ? RETURNING finished`
+      .toBool(_id, Session.id)
   }
 
-  static require() {
-    var apiKey = Request.header("X-Api-Key")
-    var account = Auth.check(apiKey)
-    if (!account) {
-      Response.status(401)
-      return Response.json({"error": "Unauthorized"})
-    }
-    return account
-  }
+  static list() { `SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC`.fetch(Session.id).to(Task) }
+  static delete(id) { `DELETE FROM tasks WHERE id = ? AND session = ?`.query(id, Session.id) }
 }
 ```
 
-### send.wren
 ```wren
-import "_app/auth" for Auth
-import "_app/domain" for Email
-
-var account = Auth.require()
-if (account is String) return account
-
-if (!Request.isPost) {
-  Response.status(405)
-  return Response.json({"error": "Method not allowed"})
+// _app/template.wren
+class Layout {
+  static render(content) { <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>Todo</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+      </head>
+      <body>
+        <main class="container">{{ content }}</main>
+      </body>
+    </html> }
 }
-
-var email = Email.new()
-email.to = Request.post("to")
-email.subject = Request.post("subject")
-email.body = Request.post("body")
-email.apiKeyId = account["id"]
-
-if (!email.isValid) {
-  Response.status(400)
-  return Response.json({"error": "Validation failed", "details": email.errors})
-}
-
-email.save()
-return Response.json({"success": true, "id": email.id})
 ```
 
-### health.wren
 ```wren
-return Response.json({
-  "status": "ok",
-  "timestamp": Date.new().timestamp
-})
+// index.wren
+import "_app/template" for Layout
+import "_app/domain" for Task
+
+if (Request.isPost) {
+  var task = Task.new()
+  task.description = Request.post("description")
+  task.save()
+  return Response.redirect("/")
+}
+
+var tasks = Task.list()
+
+return Layout.render(<main>
+  <h1>Todo List</h1>
+  <form method="post">
+    <input name="description" placeholder="What needs to be done?" required />
+    <button type="submit">Add</button>
+  </form>
+  <ul>
+    {{ tasks.map{|task| <li>
+      <form method="post" action="/toggle" style="display:inline">
+        <input type="hidden" name="id" value="{{ task.id }}" />
+        <button>{{ task.finished ? "✓" : "○" }}</button>
+      </form>
+      <span class="{{ task.finished ? "done" : "" }}">{{ task.description.safe }}</span>
+      <form method="post" action="/delete" style="display:inline">
+        <input type="hidden" name="id" value="{{ task.id }}" />
+        <button>✕</button>
+      </form>
+    </li>} }}
+  </ul>
+  {{ tasks.isEmpty && <p>No tasks yet. Add your first one above.</p> }}
+</main>)
 ```
 
----
+```wren
+// toggle.wren
+import "_app/domain" for Task
+
+Task.new({"id": Request.post("id")}).toggle()
+return Response.redirect("/")
+```
+
+```wren
+// delete.wren
+import "_app/domain" for Task
+
+Task.delete(Request.post("id"))
+return Response.redirect("/")
+```
+
+## Running the App
+
+```bash
+bialet              # runs the current directory on 127.0.0.1:7001
+bialet -p 7001 .    # explicit port and directory
+bialet -t index.wren  # validate a file's syntax without running it
+```
 
 ## Summary
 
-When building Bialet applications:
-
 1. **Code Style**: 2-space indentation, single-line methods when possible
-2. **Structure**: Use `_app/` folder for template, migrations, and domain classes
-3. **No Extra Folders**: No `routes/`, `validators/`, `middleware/`, `static/`
-4. **Controllers**: Each `.wren` file IS a route with logic at top, view at bottom
-5. **Models**: Domain classes with validation, `.to(Class)` for query mapping
-6. **Shared Logic**: Helper classes in `_app/` instead of middleware
-7. **Database**: Direct SQL with parameterized queries in `_app/migration.wren`
-8. **APIs**: Use `Response.json()` for JSON responses
-9. **Routing**: File-based - the file path IS the URL path
-10. **HTML**: Semantic markup with PicoCSS, minimal JavaScript
-11. **Git**: Always add `_db.sqlite3*` to `.gitignore`
+2. **Structure**: `_app/` folder for template, migrations, and domain classes
+3. **No extra folders**: no `routes/`, `validators/`, `middleware/`, `static/`
+4. **Routing**: query parameters by default (`Request.get`); `_route.wren` +
+   `Request.route(n)` only for path-based URLs, as an exception
+5. **Controllers**: each `.wren` file IS a route — logic at the top, view at
+   the bottom, always `return Response.redirect(...)`
+6. **Models**: domain classes with validation and `.to(Class)` mapping
+7. **Database**: backtick SQL, `?` placeholders, `_app/migration.wren` for schema
+8. **Security**: parameterized queries always; `.safe` on every untrusted string
+9. **APIs**: `Response.json()`, one file per resource, method + query param
+   for the id, rather than per-verb files
+10. **Git**: always add `_db.sqlite3*` to `.gitignore`

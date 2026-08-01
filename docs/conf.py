@@ -3,6 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import json
 import os
 import re
 
@@ -51,8 +52,23 @@ def _replace_placeholders(app, docname, source):
         source[0] = source[0].replace('{{' + key + '}}', value)
 
 
+def _generate_ai_prompt_js(app):
+    """Build _static/ai-prompt.js from BIALET_PROMPT.md so the homepage's
+    "Copy AI Prompt" button can copy it without duplicating the text."""
+    src = os.path.join(os.path.dirname(__file__), 'BIALET_PROMPT.md')
+    dest_dir = os.path.join(os.path.dirname(__file__), '_static')
+    dest = os.path.join(dest_dir, 'ai-prompt.js')
+    with open(src, encoding='utf-8') as f:
+        content = f.read()
+    os.makedirs(dest_dir, exist_ok=True)
+    with open(dest, 'w', encoding='utf-8') as f:
+        f.write('// Auto-generated from BIALET_PROMPT.md during the docs build. Do not edit directly.\n')
+        f.write('window.BIALET_AI_PROMPT = ' + json.dumps(content) + ';\n')
+
+
 def setup(app):
     app.connect('source-read', _replace_placeholders)
+    app.connect('builder-inited', _generate_ai_prompt_js)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -74,6 +90,7 @@ suppress_warnings = ['misc.highlighting_failure']
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
+html_js_files = ["ai-prompt.js"]
 html_favicon = '../src/favicon.ico'
 html_theme_options = {
     "logo": {
