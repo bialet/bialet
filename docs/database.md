@@ -126,7 +126,51 @@ var users = `SELECT * FROM users`
 // Will use "id" instead of "malicious_col"
 ```
 
-This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation.
+This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation. For paginating sorted results, combine with `LIMIT`/`OFFSET` as shown in the [Pagination](#pagination) section.
+
+(pagination)=
+
+## Pagination
+
+Use `LIMIT` and `OFFSET` with parameterized queries to paginate results. Always pass `LIMIT` and `OFFSET` as `?` placeholders — never concatenate them into the query string — to prevent SQL injection through user-controlled numeric values.
+
+Count total rows separately when you need metadata like total pages:
+
+```wren
+// Read page/limit from request (defaults: page 1, 20 per page)
+var page = Num.fromString(Request.get("page") ? Request.get("page") : "1")
+var limit = Num.fromString(Request.get("limit") ? Request.get("limit") : "20")
+var offset = (page - 1) * limit
+
+// Count total rows
+var total = `SELECT COUNT(*) FROM users`.toNum
+
+// Fetch one page
+var users = `SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?`.fetch([limit, offset])
+
+// Common REST API pattern: return data + pagination metadata
+Response.json({
+  "data": users,
+  "pagination": {
+    "page": page,
+    "limit": limit,
+    "total": total,
+    "pages": ((total + limit - 1) / limit).floor
+  }
+})
+```
+
+> **Note:** column values from queries come back as **strings**. Use `.toNum` to get a numeric value directly (as with `COUNT` above), or `Num.fromString()` to convert individual columns. See [Data Types](#data-types-and-blob-support) for details.
+
+For a quick "top N" query without counting, use `.order()` with its optional limit parameter instead of manual `LIMIT`/`OFFSET`:
+
+```wren
+var topUsers = `SELECT * FROM users`
+  .order("score", "desc", ["score", "created_at"], 10)
+  .fetch
+```
+
+See [Safe Sorting](#safe-sorting-with-order) for the full `.order()` API, which validates sort columns against an allowed list — essential when sort parameters come from user input.
 
 (mapping-results-to-domain-classes)=
 
@@ -199,7 +243,8 @@ NULL.
 `.first()`), all values are returned as **strings**. Use the following methods
 for numeric access:
 
-- `.toNum()` — returns the first column value as a number
+- `.toNum()` — returns the first column value as a number. Most common for
+  `COUNT(*)`, `SUM()`, and other aggregate queries.
 - `.val()` + `Num.fromString()` — manually convert a string column to a number
 - `.toBool()` — returns the first column value as a boolean
 
@@ -208,6 +253,10 @@ var count = `SELECT COUNT(*) as c FROM votes`.toNum    // returns a number
 var age = Num.fromString(row["age"])                    // manual conversion
 var active = `SELECT active FROM users WHERE id = ?`.toBool(1)  // returns boolean
 ```
+
+The [Pagination](#pagination) section shows this in practice: `.toNum` for
+`COUNT` totals, `Num.fromString` for converting `page`/`limit` parameters
+from the query string.
 
 **Note on BLOB data**: While BLOB (Binary Large Object) data is retrieved
 correctly from SQLite, it may not be properly handled when passed to Wren code
@@ -220,7 +269,8 @@ The migration file can be in the root and be called `_migration.wren` or be
 inside the `_app` folder, `_app/migration.wren`.
 
 This script will be run every time the application starts and also when a Wren
-file is updated.
+file is updated. For a complete migration example in the context of a REST API,
+see the [Building REST APIs](rest-api.md) guide.
 
 ```wren
 
@@ -236,7 +286,7 @@ Use migration to insert non-transactional data. You can interact with the
 `BIALET_*` tables.
 
 ```wren
-Db.migrate("Add default title", `INSERT INTO BIALET_CONFIG VALUES ("title", "Bialet example page")`)
+Db.migrate("Add default title", `INSERT INTO BIALET_CONFIG VALUES ('title', 'Bialet example page')`)
 ```
 
 ## Bialet tables
