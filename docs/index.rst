@@ -262,7 +262,7 @@ Who is Bialet for?
    self
    getting-started/index
    installation
-   structure
+   routing
    template
    database
    rest-api
