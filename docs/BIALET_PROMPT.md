@@ -93,6 +93,11 @@ class Math {
 // String interpolation with %(...) in regular strings
 System.log("Hello %(name), you have %(count) items")
 
+// The % character triggers interpolation — any % inside a Wren
+// string is parsed as %(...) start. Use \x25 for a literal %.
+var pct = "99.9\x25"   // renders "99.9%"
+var msg = "Save 17\x25"
+
 // Closures / block arguments
 [1, 2, 3].map { |n| n * 2 }
 items.where { |item| item != null }
