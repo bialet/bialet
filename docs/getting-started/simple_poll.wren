@@ -7,7 +7,7 @@
 var vote
 
 if (Request.isPost) {
-  vote = Request.post("vote")
+  vote = Request.post("vote") || ""
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
   System.log("Voted for %(vote)")
 }

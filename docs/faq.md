@@ -93,7 +93,8 @@ file in a directory and use `Request.route(pos)` to read URL segments. See
 ### How do I handle forms?
 
 Use `Request.isPost` to check the method and `Request.post("field")` to read
-submitted values. Redirect after processing with
+submitted values (returns `null` when missing — always provide a fallback with `|| ""`).
+Redirect after processing with
 `Response.redirect("/path")`. See the [Getting Started](getting-started/index) tutorial for a complete example.
 
 ### How do database queries work?

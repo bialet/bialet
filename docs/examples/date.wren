@@ -3,10 +3,10 @@ var current = Date.now
 
 // We use the `isPost` property to check if the request method is POST
 if (Request.isPost) {
-  // Update the date
-  var d = Request.post("date")
-  var t = Request.post("time")
-  date = Date.new("%(d) %(t)", Request.post("tz"))
+  // Update the date — `||` works because `null` is falsey in Wren
+  var d = Request.post("date") || ""
+  var t = Request.post("time") || ""
+  date = Date.new("%(d) %(t)", Request.post("tz") || "")
 }
 
 // Log the dates

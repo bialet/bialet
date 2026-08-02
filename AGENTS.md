@@ -61,7 +61,8 @@ files.
 - Queries: Use backticks `` `SELECT ...` `` for prepared Query objects with `?`
   placeholders
 - Request handling: `Request.isPost`, `Request.post(name)`, `return` for response body,
-  `Response.redirect(path)`
+  `Response.redirect(path)`. **IMPORTANT: `Request.post(name)` returns `null` when
+  the key is missing — always use `|| ""` or a null check before string operations.**
 - DB values come back as strings - convert with `Num.fromString(...)` before
   numeric math or use `query.num` for direct numeric retrieval.
 

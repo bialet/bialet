@@ -8,6 +8,16 @@ Use this document as your complete reference for writing Bialet applications.
 Everything here reflects the actual framework behavior — don't invent syntax
 or conventions that aren't described below.
 
+> ⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**
+> It returns `null` when the requested key is not present in the POST payload.
+> **NEVER assume the field exists. ALWAYS provide a default with `|| ""` or
+> check `if (value != null)` before any string operation.** Calling `.toString`,
+> `.count`, `.trim`, interpolation, or concatenation on a null value crashes at
+> runtime — this is the #1 production crash cause in Bialet apps.
+>
+> *"Every code example using `Request.post()` **must** include a null-handling
+> strategy (`|| fallback` or `if (value != null)`) by default."*
+
 ## Step 0: Make Sure Bialet Is Installed
 
 Before writing any code, confirm the `bialet` binary is installed and on the
@@ -510,8 +520,8 @@ import "_app/domain" for User
 // === CONTROLLER ===
 if (Request.isPost) {
   var user = User.new()
-  user.name = Request.post("name")
-  user.email = Request.post("email")
+  user.name = Request.post("name") || ""
+  user.email = Request.post("email") || ""
   user.save()
   return Response.redirect("/users")
 }
@@ -586,7 +596,7 @@ Request.query("id")   // alias for Request.get("id")
 
 // POST form fields
 if (Request.isPost) {
-  var name = Request.post("name")
+  var name = Request.post("name") || ""
 }
 
 // JSON body
@@ -635,8 +645,8 @@ so processing continues.
 ```wren
 // Login
 if (Request.isPost) {
-  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email"))
-  if (user && Util.verify(Request.post("password"), user["password"])) {
+  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email") || "")
+  if (user && Util.verify(Request.post("password") || "", user["password"])) {
     Session.set("userId", user["id"])
     return Response.redirect("/dashboard")
   }
@@ -907,7 +917,7 @@ import "_app/domain" for Task
 
 if (Request.isPost) {
   var task = Task.new()
-  task.description = Request.post("description")
+  task.description = Request.post("description") || ""
   task.save()
   return Response.redirect("/")
 }
@@ -941,7 +951,7 @@ return Layout.render(<main>
 // toggle.wren
 import "_app/domain" for Task
 
-Task.new({"id": Request.post("id")}).toggle()
+Task.new({"id": Request.post("id") || ""}).toggle()
 return Response.redirect("/")
 ```
 
@@ -949,7 +959,7 @@ return Response.redirect("/")
 // delete.wren
 import "_app/domain" for Task
 
-Task.delete(Request.post("id"))
+Task.delete(Request.post("id") || "")
 return Response.redirect("/")
 ```
 

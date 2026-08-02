@@ -34,7 +34,8 @@ A script that stays out of your way:
 
 // 2. Handle POST requests and save data
 if (Request.isPost) {
-  `messages`.save({"text": Request.post("msg")})
+  var msg = Request.post("msg") || ""
+  `messages`.save({"text": msg})
 }
 
 // 3. Fetch data using pure SQL

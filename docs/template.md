@@ -405,7 +405,7 @@ import "_domain" for Post
 
 if (Request.isPost) {
   var post = Post.new()
-  post.title = Request.post("title")
+  post.title = Request.post("title") || ""
   post.save()
   return Response.redirect("/")
 }
@@ -485,8 +485,8 @@ var count = Num.fromString(row["cnt"])
 The top of each `.wren` file handles the request. This is where you:
 
 1. Check the HTTP method (`Request.isPost`)
-2. Read form data (`Request.post("field")`)
-3. Read query parameters (`Request.get("key")`)
+2. Read form data (`Request.post("field")` — returns `null` when missing, use `|| ""`)
+3. Read query parameters (`Request.get("key")` — also returns `null`, handle accordingly)
 4. Call model methods
 5. Redirect or prepare data for the view
 
@@ -496,8 +496,8 @@ import "_domain" for Post
 
 if (Request.isPost) {
   var post = Post.new()
-  post.title = Request.post("title")
-  post.body = Request.post("body")
+  post.title = Request.post("title") || ""
+  post.body = Request.post("body") || ""
   post.save()
   return Response.redirect("/posts/" + post.id.toString)
 }

@@ -1,6 +1,7 @@
 // We use the `post()` method to get a parameter from the POST request.
-var password = Request.post('password')
-var passwordCheck = Request.post('password-check')
+// `|| ""` guards against `null`: `Request.post()` returns `null` when the key is missing.
+var password = Request.post('password') || ""
+var passwordCheck = Request.post('password-check') || ""
 // Set up the hash and verify variables
 var encrypted
 var verify

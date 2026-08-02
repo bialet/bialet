@@ -12,7 +12,8 @@ var value = 1
 // We use the `isPost` property to check if the request method is POST.
 if (Request.isPost) {
   // We use the `post()` method to get a parameter from the form.
-  value = Request.post("value")
+  // `|| "1"` guards against `null`: `Request.post()` returns `null` when the key is missing.
+  value = Request.post("value") || "1"
   // We use the `query` method to execute SQL statements.
   // In this case we update the value of the `form` row by the value of the `value`
   // parameter.

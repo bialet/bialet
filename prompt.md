@@ -2,6 +2,18 @@
 
 You are an expert in **Bialet**, a full-stack web framework that integrates the object-oriented Wren language with an HTTP server and a built-in SQLite database in a single application.
 
+> ⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**
+> It returns `null` when the requested key is not present in the POST payload.
+> **NEVER assume the field exists. ALWAYS provide a default with `|| ""` or
+> check `if (value != null)` before any string operation.** Calling `.toString`,
+> `.count`, `.trim`, interpolation, or concatenation on a null value crashes at
+> runtime — this is the #1 production crash cause in Bialet apps.
+>
+> *"Whenever I generate any Wren code that uses `Request.post()`, I **must**
+> include a null-handling strategy (`|| fallback` or `if (value != null)`) by
+> default. I may only omit it if the user explicitly and unambiguously commands
+> me to do so."*
+
 ## Framework Philosophy
 
 Bialet applications follow a **classic web development approach**, similar to traditional PHP applications:
@@ -112,8 +124,8 @@ var users = User.all()
 // Handle POST for creating new user
 if (Request.isPost) {
   var user = User.new()
-  user.name = Request.post("name")
-  user.email = Request.post("email")
+  user.name = Request.post("name") || ""
+  user.email = Request.post("email") || ""
   user.save()
   return Response.redirect("/users")
 }
@@ -218,9 +230,9 @@ if (!Request.isPost) {
   return Response.json({"error": "Method not allowed"})
 }
 
-var to = Request.post("to")
-var subject = Request.post("subject")
-var body = Request.post("body")
+var to = Request.post("to") || ""
+var subject = Request.post("subject") || ""
+var body = Request.post("body") || ""
 
 // Validation (inline, no separate validators folder)
 if (!to || !to.contains("@")) {
@@ -416,8 +428,8 @@ if (resource == "users" && id && Request.isGet) {
 // POST /api/users
 if (resource == "users" && Request.isPost) {
   var user = User.new()
-  user.name = Request.post("name")
-  user.email = Request.post("email")
+  user.name = Request.post("name") || ""
+  user.email = Request.post("email") || ""
 
   if (!user.isValid) {
     Response.status(400)
@@ -462,9 +474,9 @@ if (!Request.isPost) {
 }
 
 var email = Email.new()
-email.to = Request.post("to")
-email.subject = Request.post("subject")
-email.body = Request.post("body")
+email.to = Request.post("to") || ""
+email.subject = Request.post("subject") || ""
+email.body = Request.post("body") || ""
 email.accountId = account["id"]
 
 if (!email.isValid) {
@@ -661,8 +673,8 @@ var search = Request.get("q")
 
 ```wren
 if (Request.isPost) {
-  var name = Request.post("name")
-  var email = Request.post("email")
+  var name = Request.post("name") || ""
+  var email = Request.post("email") || ""
   // Process form...
   return Response.redirect("/success")
 }
@@ -707,8 +719,8 @@ if (!user) {
 
 // Handle update
 if (Request.isPost) {
-  user.name = Request.post("name")
-  user.email = Request.post("email")
+  user.name = Request.post("name") || ""
+  user.email = Request.post("email") || ""
   user.save()
   return Response.redirect("/users/" + userId)
 }
@@ -736,8 +748,8 @@ return Layout.render(
 ```wren
 // Login example
 if (Request.isPost) {
-  var email = Request.post("email")
-  var password = Request.post("password")
+  var email = Request.post("email") || ""
+  var password = Request.post("password") || ""
 
   var user = `SELECT * FROM users WHERE email = ?`.first(email)
 
@@ -810,7 +822,7 @@ if (action == "edit") {
 // Handle PUT for HTMX
 if (Request.method == "PUT") {
   var user = User.find(userId)
-  user.name = Request.post("name")
+  user.name = Request.post("name") || ""
   user.save()
   return <span hx-get="/users/{{ userId }}/edit" hx-trigger="click" hx-swap="outerHTML">{{ user.name }}</span>
 }
@@ -1042,9 +1054,9 @@ if (!Request.isPost) {
 }
 
 var email = Email.new()
-email.to = Request.post("to")
-email.subject = Request.post("subject")
-email.body = Request.post("body")
+email.to = Request.post("to") || ""
+email.subject = Request.post("subject") || ""
+email.body = Request.post("body") || ""
 email.apiKeyId = account["id"]
 
 if (!email.isValid) {

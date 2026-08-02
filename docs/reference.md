@@ -98,9 +98,16 @@ Alias for `get(name)`. Returns the value of a specified query parameter.
 
 ### post(name)
 
-Returns the value of a specified POST parameter.
+> ⚠️ **CRITICAL: Returns `Null` when the key is not present.**
+> The return type is `String | Null`. You **MUST** handle `null`
+> before calling any string method (`.toString`, `.count`, `.trim`,
+> concatenation, interpolation). This is the #1 production crash cause.
+> **NEVER assume the field exists. ALWAYS provide a default or null check.**
+
+Returns the value of a specified POST parameter, or `null` if not found.
 
 - `name`: The name of the POST parameter.
+- **Returns**: `String` if the key exists in the POST body, `Null` otherwise.
 
 ### route(pos)
 

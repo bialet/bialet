@@ -8,7 +8,8 @@ var title = "🚲 Welcome to Bialet showcase"
 
 // POST handling
 if (Request.isPost) {
-  `items`.save({"phrase": Request.post("input").trim() })
+  var phrase = Request.post("input") || ""
+  `items`.save({"phrase": phrase.trim()})
   System.log('✅ Item saved')
 }
 

@@ -61,7 +61,7 @@ import "_app" for Template, Poll
 var poll = Poll.new()
 
 if (Request.isPost) {
-  var vote = Request.post("vote")
+  var vote = Request.post("vote") || ""
   poll.vote(vote)
   Response.redirect("/results")
   return
@@ -76,7 +76,7 @@ return Template.layout(
 
 Key points:
 - `Request.isPost` detects form submissions
-- `Request.post("vote")` reads the submitted value
+- `Request.post("vote")` reads the submitted value — use `|| ""` since it returns `null` when missing
 - `Response.redirect("/results")` sends the browser to the results page
 - `return` after redirect stops further script execution
 
