@@ -94,12 +94,17 @@ test_syntax() {
     description=$1
     file=$2
     expected_exit=$3
+    root_path=${4:-}
 
     total_tests=$((total_tests + 1))
     echo -e -n "$description\t"
     filepath="$(dirname "$0")/$file"
 
-    "$TARGET_EXEC" -t "$filepath" > /dev/null 2>&1
+    if [[ -n "$root_path" ]]; then
+        "$TARGET_EXEC" -t "$filepath" "$root_path" > /dev/null 2>&1
+    else
+        "$TARGET_EXEC" -t "$filepath" > /dev/null 2>&1
+    fi
     actual_exit=$?
 
     if [[ "$actual_exit" -ne "$expected_exit" ]]; then

@@ -216,6 +216,13 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
     snprintf(module, MAX_URL_LEN, "%s", bialet_config.full_root_dir);
   } else {
     char* calledFrom = string_safe_copy(wrenGetUserData(vm));
+    if(calledFrom == NULL) {
+      fprintf(stderr,
+              "Error: Cannot resolve relative import '%s' without application "
+              "context.\n       Use: bialet -t <file> <app_root>\n",
+              name);
+      return result;
+    }
     lastSlash = strrchr(calledFrom, '/');
     if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
        MAX_MODULE_LEN) {
@@ -758,14 +765,30 @@ int bialetRunCli(char* code) {
 }
 
 int bialetValidateSyntax(const char* filePath) {
-  char* code = readFile(filePath);
+  char abs_path[MAX_URL_LEN];
+
+  if(realpath(filePath, abs_path) == NULL) {
+    fprintf(stderr, "Error: Cannot resolve file '%s'\n", filePath);
+    return 1;
+  }
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(abs_path, bialet_config.full_root_dir, root_len) != 0 ||
+     (abs_path[root_len] != '/' && abs_path[root_len] != '\0')) {
+    fprintf(stderr, "Error: File '%s' is outside the application root directory\n",
+            filePath);
+    return 1;
+  }
+
+  char* code = readFile(abs_path);
   if(code == NULL) {
     fprintf(stderr, "Error: Cannot read file '%s'\n", filePath);
     return 1;
   }
 
   WrenVM*             vm = wrenNewVM(&wren_config);
-  WrenInterpretResult result = wrenInterpret(vm, filePath, code);
+  wrenSetUserData(vm, abs_path);
+  WrenInterpretResult result = wrenInterpret(vm, abs_path, code);
   wrenFreeVM(vm);
   free(code);
 

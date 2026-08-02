@@ -17,6 +17,8 @@ source "$(dirname "$0")/util.sh"
 if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
+  test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
+  test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
 fi
 
 # Tests - Request & Response

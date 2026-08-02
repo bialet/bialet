@@ -968,7 +968,8 @@ return Response.redirect("/")
 ```bash
 bialet              # runs the current directory on 127.0.0.1:7001
 bialet -p 7001 .    # explicit port and directory
-bialet -t index.wren  # validate a file's syntax without running it
+bialet -t index.wren              # validate a standalone file's syntax
+bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports)
 ```
 
 ## Summary
