@@ -58,6 +58,7 @@
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/5-logic-database';</script>
+    <script src="../_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
 </ul>
 
@@ -459,7 +461,7 @@ list of maps.</p>
 <h2>Handle POST<a class="headerlink" href="#handle-post" title="Link to this heading">#</a></h2>
 <p>Add vote handling above the query:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
 <span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="p">}</span>
@@ -469,7 +471,8 @@ list of maps.</p>
 </div>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> checks if the form was submitted</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;vote&quot;)</span></code> reads the form field</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;vote&quot;)</span></code> reads the form field — it returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when missing, so we use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> as a fallback</p></li>
+<li><p><strong>ALWAYS handle the null case:</strong> <code class="docutils literal notranslate"><span class="pre">null</span></code> is falsey in Wren, so <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> is a safe default</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.query(vote)</span></code> executes a parameterized UPDATE</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders prevent SQL injection — never concatenate user input</p></li>
 </ul>
@@ -480,7 +483,7 @@ list of maps.</p>
 <p>Use a ternary to switch between the form and the results view:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">vote</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
 <span class="p">}</span>
 

@@ -58,6 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
@@ -719,9 +721,17 @@ convenient access to their components.</p>
 </section>
 <section id="post-name">
 <h3>post(name)<a class="headerlink" href="#post-name" title="Link to this heading">#</a></h3>
-<p>Returns the value of a specified POST parameter.</p>
+<blockquote>
+<div><p>⚠️ <strong>CRITICAL: Returns <code class="docutils literal notranslate"><span class="pre">Null</span></code> when the key is not present.</strong>
+The return type is <code class="docutils literal notranslate"><span class="pre">String</span> <span class="pre">|</span> <span class="pre">Null</span></code>. You <strong>MUST</strong> handle <code class="docutils literal notranslate"><span class="pre">null</span></code>
+before calling any string method (<code class="docutils literal notranslate"><span class="pre">.toString</span></code>, <code class="docutils literal notranslate"><span class="pre">.count</span></code>, <code class="docutils literal notranslate"><span class="pre">.trim</span></code>,
+concatenation, interpolation). This is the #1 production crash cause.
+<strong>NEVER assume the field exists. ALWAYS provide a default or null check.</strong></p>
+</div></blockquote>
+<p>Returns the value of a specified POST parameter, or <code class="docutils literal notranslate"><span class="pre">null</span></code> if not found.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the POST parameter.</p></li>
+<li><p><strong>Returns</strong>: <code class="docutils literal notranslate"><span class="pre">String</span></code> if the key exists in the POST body, <code class="docutils literal notranslate"><span class="pre">Null</span></code> otherwise.</p></li>
 </ul>
 </section>
 <section id="route-pos">

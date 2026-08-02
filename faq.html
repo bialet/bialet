@@ -58,10 +58,11 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Examples" href="examples.html" />
+    <link rel="prev" title="AI Coding Prompt" href="ai-prompt.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.10.6" />
@@ -188,6 +189,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">FAQ</a></li>
 </ul>
 
@@ -546,7 +548,8 @@ file in a directory and use <code class="docutils literal notranslate"><span cla
 <section id="how-do-i-handle-forms">
 <h3>How do I handle forms?<a class="headerlink" href="#how-do-i-handle-forms" title="Link to this heading">#</a></h3>
 <p>Use <code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> to check the method and <code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code> to read
-submitted values. Redirect after processing with
+submitted values (returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when missing — always provide a fallback with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code>).
+Redirect after processing with
 <code class="docutils literal notranslate"><span class="pre">Response.redirect(&quot;/path&quot;)</span></code>. See the <a class="reference internal" href="getting-started/index.html"><span class="doc std std-doc">Getting Started</span></a> tutorial for a complete example.</p>
 </section>
 <section id="how-do-database-queries-work">
@@ -681,12 +684,12 @@ bialet
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="examples.html"
+       href="ai-prompt.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Examples</p>
+        <p class="prev-next-title">AI Coding Prompt</p>
       </div>
     </a>
 </div>

@@ -34,6 +34,10 @@ percentage bars.
 Already familiar with Bialet? Jump to [Installation](../installation.md) or the
 [API Reference](../reference.md).
 
+Building with an AI assistant instead? Paste the [AI Coding Prompt](../ai-prompt.md)
+into Claude, ChatGPT, or Cursor before you start — it teaches the assistant
+Bialet's conventions in one message.
+
 ## Source files
 
 The complete source for each step is available:

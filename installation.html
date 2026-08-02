@@ -58,6 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'installation';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
@@ -726,13 +728,26 @@ bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class
 </section>
 <section id="validate-syntax-of-a-wren-file">
 <h2>Validate Syntax of a Wren File<a class="headerlink" href="#validate-syntax-of-a-wren-file" title="Link to this heading">#</a></h2>
-<p>To check the syntax of a Wren file without executing it, use the <code class="docutils literal notranslate"><span class="pre">-t</span></code> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-t<span class="w"> </span>myfile.wren
+<p>To check the syntax of a Wren file without executing it, use the <code class="docutils literal notranslate"><span class="pre">-t</span></code> command.
+Run it the same way you run the server:</p>
+<p>If you start your server from the app directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/app
+bialet<span class="w">               </span><span class="c1"># starts server</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w"> </span><span class="c1"># validates syntax</span>
 </pre></div>
 </div>
-<p>This will validate the syntax and exit with code <code class="docutils literal notranslate"><span class="pre">0</span></code> if the syntax is valid, or code <code class="docutils literal notranslate"><span class="pre">1</span></code> if there are compilation errors. This is useful for CI/CD pipelines and pre-commit hooks.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: Check syntax before deploying</span>
-<span class="k">if</span><span class="w"> </span>bialet<span class="w"> </span>-t<span class="w"> </span>app.wren<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<p>If you start your server with an explicit root path:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>/path/to/app<span class="w">                         </span><span class="c1"># starts server</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/index.wren<span class="w"> </span>/path/to/app<span class="w"> </span><span class="c1"># validates syntax</span>
+</pre></div>
+</div>
+<p>The root path is required when your file imports from <code class="docutils literal notranslate"><span class="pre">_app/</span></code> or uses relative
+imports. If you omit it for such files, the validator will exit with an error.</p>
+<p>This will validate the syntax and exit with code <code class="docutils literal notranslate"><span class="pre">0</span></code> if the syntax is valid, or
+code <code class="docutils literal notranslate"><span class="pre">1</span></code> if there are compilation errors. Useful for CI/CD pipelines and
+pre-commit hooks.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: Check syntax before deploying (explicit root path)</span>
+<span class="k">if</span><span class="w"> </span>bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/main.wren<span class="w"> </span>/path/to/app<span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax OK, deploying...&quot;</span>
 <span class="k">else</span>
 <span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax errors found, aborting deployment&quot;</span>

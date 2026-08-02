@@ -49,7 +49,7 @@ Add vote handling above the query:
 
 ```wren
 if (Request.isPost) {
-  var vote = Request.post("vote")
+  var vote = Request.post("vote") || ""
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
   System.log("Voted for %(vote)")
 }
@@ -58,7 +58,8 @@ var options = `SELECT * FROM simple_poll`.fetch()
 ```
 
 - `Request.isPost` checks if the form was submitted
-- `Request.post("vote")` reads the form field
+- `Request.post("vote")` reads the form field — it returns `null` when missing, so we use `|| ""` as a fallback
+- **ALWAYS handle the null case:** `null` is falsey in Wren, so `|| ""` is a safe default
 - `.query(vote)` executes a parameterized UPDATE
 - `?` placeholders prevent SQL injection — never concatenate user input
 
@@ -71,7 +72,7 @@ Use a ternary to switch between the form and the results view:
 ```wren
 var vote
 if (Request.isPost) {
-  vote = Request.post("vote")
+  vote = Request.post("vote") || ""
   `UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`.query(vote)
 }
 

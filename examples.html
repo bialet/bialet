@@ -58,10 +58,11 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="FAQ" href="faq.html" />
+    <link rel="next" title="AI Coding Prompt" href="ai-prompt.html" />
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
@@ -595,7 +597,8 @@
 <span class="c1">// We use the `isPost` property to check if the request method is POST.</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// We use the `post()` method to get a parameter from the form.</span>
-<span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">// `|| &quot;1&quot;` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
+<span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span>
 <span class="w">  </span><span class="c1">// We use the `query` method to execute SQL statements.</span>
 <span class="w">  </span><span class="c1">// In this case we update the value of the `form` row by the value of the `value`</span>
 <span class="w">  </span><span class="c1">// parameter.</span>
@@ -749,8 +752,9 @@
 <section id="password-utilities">
 <h2>Password utilities<a class="headerlink" href="#password-utilities" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `post()` method to get a parameter from the POST request.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">passwordCheck</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password-check&#39;</span><span class="p">)</span>
+<span class="c1">// `|| &quot;&quot;` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">passwordCheck</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password-check&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="c1">// Set up the hash and verify variables</span>
 <span class="k">var</span><span class="w"> </span><span class="n">encrypted</span>
 <span class="k">var</span><span class="w"> </span><span class="n">verify</span>
@@ -898,11 +902,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="faq.html"
+       href="ai-prompt.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">FAQ</p>
+        <p class="prev-next-title">AI Coding Prompt</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

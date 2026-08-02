@@ -58,6 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
@@ -403,8 +405,9 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-and-methods">Properties and Methods</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
@@ -448,7 +451,7 @@ concurrent reads and writes without blocking. See the
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row in the table. See <a class="reference internal" href="#insert-and-update">Insert and update</a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes">Mapping Results</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes">Mapping to Domain Classes</a>.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a LIMIT clause.</p>
 <p>You can’t concatenate strings or use interpolations with the Query object. When
@@ -573,57 +576,92 @@ method.</p>
 </div>
 <p>See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a> for the full <code class="docutils literal notranslate"><span class="pre">.order()</span></code> API, which validates sort columns against an allowed list — essential when sort parameters come from user input.</p>
 </section>
-<section id="mapping-results-to-domain-classes">
-<span id="id3"></span><h2>Mapping Results to Domain Classes<a class="headerlink" href="#mapping-results-to-domain-classes" title="Link to this heading">#</a></h2>
-<p>Query results can be automatically mapped to domain classes using the <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method. This is useful for converting database rows into instances of your domain models.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Define a domain class with a constructor that accepts a Map</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
+<section id="mapping-to-domain-classes">
+<span id="mapping-results-to-domain-classes"></span><h2>Mapping to Domain Classes<a class="headerlink" href="#mapping-to-domain-classes" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> to convert query results into instances of a domain class.
+The method calls <code class="docutils literal notranslate"><span class="pre">Class.new(row)</span></code> for each row, where <code class="docutils literal notranslate"><span class="pre">row</span></code> is a Map whose
+keys are column names and values are the column values returned by the query.</p>
+<p>The constructor receives the Map and assigns fields. Each column in the query
+maps to a property with the same name in the class.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span>
 <span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">title</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_content</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">name</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">email</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_email</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="c1">// Map a single result to a domain class</span>
-<span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span>
+<span class="c1">// Single result — returns a class instance or null</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">User</span><span class="p">)</span>
 
-<span class="c1">// Map multiple results to domain classes</span>
-<span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts`</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span>
-<span class="c1">// Returns a List where each element is a Post instance</span>
+<span class="c1">// Multiple results — returns a List of class instances</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">User</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method works with:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method works on:</p>
 <ul class="simple">
-<li><p>Query results from <code class="docutils literal notranslate"><span class="pre">.fetch()</span></code> (returns a List of class instances)</p></li>
-<li><p>Single results from <code class="docutils literal notranslate"><span class="pre">.first()</span></code> (returns a single class instance)</p></li>
-<li><p>Any Map or List of Maps</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.first()</span></code> results — calls <code class="docutils literal notranslate"><span class="pre">Class.new(map)</span></code>, returns the instance or null</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.fetch()</span></code> results — maps each row through <code class="docutils literal notranslate"><span class="pre">Class.new(row)</span></code>, returns a List</p></li>
+<li><p>Any Map directly — <code class="docutils literal notranslate"><span class="pre">someMap.to(User)</span></code> creates a single instance</p></li>
+<li><p>Any List of Maps — <code class="docutils literal notranslate"><span class="pre">listOfMaps.to(User)</span></code> creates a List of instances</p></li>
 </ul>
 </section>
 <section id="insert-and-update">
-<span id="id4"></span><h2>Insert and update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
-<p>You can use a regular SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statement.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">]</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">userParams</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>But you can also use the <code class="docutils literal notranslate"><span class="pre">save</span></code> method on a table Query, sending a Map
-object with the values.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
+<span id="id3"></span><h2>Insert and Update<a class="headerlink" href="#insert-and-update" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">save()</span></code> on a table name to persist an object. The method inspects the
+<code class="docutils literal notranslate"><span class="pre">id</span></code> field:</p>
+<ul class="simple">
+<li><p><strong>No <code class="docutils literal notranslate"><span class="pre">id</span></code></strong> → INSERT (creates a new row)</p></li>
+<li><p><strong>Has <code class="docutils literal notranslate"><span class="pre">id</span></code></strong> → UPDATE (replaces the existing row)</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">save()</span></code> works with both Map objects and class instances. It returns the
+row id.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// INSERT — new object, no id</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="nc">User</span><span class="p">()</span>
+<span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John&quot;</span>
+<span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The same method also works for updating the row.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
-<span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
-<span class="c1">// This will update the row</span>
+
+<span class="c1">// UPDATE — fetch existing, modify, save</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">User</span><span class="p">)</span>
+<span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span>
 <span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>You can also use raw SQL <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> or <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code> statements:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="properties-and-methods">
+<span id="id4"></span><h2>Properties and Methods<a class="headerlink" href="#properties-and-methods" title="Link to this heading">#</a></h2>
+<p>When you call <code class="docutils literal notranslate"><span class="pre">save()</span></code>, every field of the object is persisted to the
+database. This means <strong>computed values must be methods, not fields</strong>.
+Declaring a computed value as a <code class="docutils literal notranslate"><span class="pre">var</span></code> would cause <code class="docutils literal notranslate"><span class="pre">save()</span></code> to try to write
+it as a database column.</p>
+<p><strong>Wrong</strong> — <code class="docutils literal notranslate"><span class="pre">area</span></code> is a <code class="docutils literal notranslate"><span class="pre">var</span></code>, so <code class="docutils literal notranslate"><span class="pre">save()</span></code> would treat it as a column:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">width</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">height</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">area</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Correct</strong> — <code class="docutils literal notranslate"><span class="pre">area()</span></code> is a method, it does not participate in the save:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">width</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">height</span>
+
+<span class="w">  </span><span class="n">area</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Methods stay out of the mapping and can be used freely for business logic.
+Only <code class="docutils literal notranslate"><span class="pre">var</span></code> fields declared in the constructor participate in persistence.</p>
 </section>
 <section id="data-types-and-blob-support">
 <h2>Data Types and BLOB Support<a class="headerlink" href="#data-types-and-blob-support" title="Link to this heading">#</a></h2>
@@ -737,8 +775,9 @@ correctly.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-results-to-domain-classes">Mapping Results to Domain Classes</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-and-methods">Properties and Methods</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>

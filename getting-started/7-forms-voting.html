@@ -58,6 +58,7 @@
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/7-forms-voting';</script>
+    <script src="../_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
 </ul>
 
@@ -472,7 +474,7 @@ on success:</p>
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span>
@@ -488,7 +490,7 @@ on success:</p>
 <p>Key points:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code> detects form submissions</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;vote&quot;)</span></code> reads the submitted value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;vote&quot;)</span></code> reads the submitted value — use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> since it returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when missing</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Response.redirect(&quot;/results&quot;)</span></code> sends the browser to the results page</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return</span></code> after redirect stops further script execution</p></li>
 </ul>

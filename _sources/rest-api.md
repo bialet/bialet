@@ -174,9 +174,14 @@ if (Request.isJson) {
 
 ### Form Data
 
+> ⚠️ **CRITICAL: `Request.post()` returns `null` when the key is missing.**
+> ALWAYS provide a fallback or null check — never call string methods on the raw result.
+
 ```wren
-var name = Request.post("name")
-var email = Request.post("email")
+// `||` works because `null` is falsey in Wren;
+// if an empty string ("") is valid input, use a separate `if` check instead.
+var name = Request.post("name") || ""
+var email = Request.post("email") || ""
 ```
 
 ### Query Parameters

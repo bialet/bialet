@@ -3,7 +3,7 @@ import "_app" for Template, Poll
 var poll = Poll.new()
 
 if (Request.isPost) {
-  var vote = Request.post("vote")
+  var vote = Request.post("vote") || ""
   poll.vote(vote)
   System.log("Voted for %(vote)")
   // Redirect to the results page and stop the script

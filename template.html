@@ -58,6 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -189,6 +190,7 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 </ul>
 
@@ -553,14 +555,25 @@ the tags become part of the HTML output.</p>
 </section>
 <section id="pitfalls">
 <h3>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h3>
-<p><strong>Same-tag nesting is a parse error.</strong> A tag cannot directly contain another
-tag with the same name:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — parse error</span>
+<p><strong>The opening tag cannot nest itself.</strong> The outermost tag of an inline HTML
+string must not appear as a direct child tag at any nesting level. Once the
+tree starts with a <em>different</em> tag, the original tag can be used freely below
+it. The parser checks this on the <em>whole</em> string, not just the first level.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — &lt;div&gt; is the outermost tag AND a direct child</span>
 <span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
 
-<span class="c1">// Correct — use a different tag</span>
+<span class="c1">// Correct — use a different tag as the outermost wrapper</span>
 <span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;section&gt;</span><span class="nc">Hello</span><span class="x">&lt;/section&gt;&lt;/div&gt;</span>
+
+<span class="c1">// Also correct — wrapping with a different tag breaks the conflict</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">  &lt;div style=&quot;border:1px solid #ccc&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;div style=&quot;background:#eee&quot;&gt;</span>
+<span class="x">      Deeply nested same tags work once the outer tag differs.</span>
+<span class="x">    &lt;/div&gt;</span>
+<span class="w">  </span><span class="x">&lt;/div&gt;</span>
+<span class="x">&lt;/section&gt;</span>
 </pre></div>
 </div>
 <p><strong>Mismatched tags fail.</strong> Opening and closing tags must match:</p>
@@ -832,7 +845,7 @@ response and end the script</p></li>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 <span class="p">}</span>
@@ -908,8 +921,8 @@ operations:</p>
 <p>The top of each <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file handles the request. This is where you:</p>
 <ol class="arabic simple">
 <li><p>Check the HTTP method (<code class="docutils literal notranslate"><span class="pre">Request.isPost</span></code>)</p></li>
-<li><p>Read form data (<code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code>)</p></li>
-<li><p>Read query parameters (<code class="docutils literal notranslate"><span class="pre">Request.get(&quot;key&quot;)</span></code>)</p></li>
+<li><p>Read form data (<code class="docutils literal notranslate"><span class="pre">Request.post(&quot;field&quot;)</span></code> — returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when missing, use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code>)</p></li>
+<li><p>Read query parameters (<code class="docutils literal notranslate"><span class="pre">Request.get(&quot;key&quot;)</span></code> — also returns <code class="docutils literal notranslate"><span class="pre">null</span></code>, handle accordingly)</p></li>
 <li><p>Call model methods</p></li>
 <li><p>Redirect or prepare data for the view</p></li>
 </ol>
@@ -918,8 +931,8 @@ operations:</p>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/posts/&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">post</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">toString</span><span class="p">)</span>
 <span class="p">}</span>
@@ -1090,12 +1103,18 @@ SEO (crawlers parse meaningful sections), and readability (future you will
 thank you).</p>
 <section id="id7">
 <h3>Pitfall<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
-<p><strong>Same-tag nesting applies to semantic tags too.</strong></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — parse error</span>
+<p><strong>Same-tag nesting rule still applies.</strong> The outermost tag of the inline
+HTML string cannot repeat at any nesting level:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — &lt;section&gt; is outermost and repeats deeper</span>
 <span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="w"> </span><span class="n">section</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
 
-<span class="c1">// Correct — use different semantic tags</span>
-<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;article&gt;</span><span class="nc">Nested</span><span class="w"> </span><span class="n">content</span><span class="x">&lt;/article&gt;&lt;/section&gt;</span>
+<span class="c1">// Correct — wrap with a different semantic tag</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;article&gt;</span>
+<span class="w">    </span><span class="x">&lt;section&gt;One block&lt;/section&gt;</span>
+<span class="w">    </span><span class="x">&lt;section&gt;Another block&lt;/section&gt;</span>
+<span class="w">  </span><span class="x">&lt;/article&gt;</span>
+<span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -1269,8 +1288,9 @@ embedded in HTML must be escaped. There is no automatic escaping.</p>
 <section id="common-pitfalls">
 <h2>Common Pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Same-tag nesting:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;div&gt;Hello&lt;/div&gt;&lt;/div&gt;</span></code> is a parse error — use
-different tag names for nesting.</p></li>
+<li><p><strong>Opening-tag nesting:</strong> The outermost tag of an inline HTML string cannot
+appear again as a child at any level. This means <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;</span></code> fails because <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> is both the outermost and a nested tag. Wrap with a different tag (e.g. <code class="docutils literal notranslate"><span class="pre">&lt;section&gt;</span></code>) and nest freely below it:
+<code class="docutils literal notranslate"><span class="pre">&lt;section&gt;&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;</span></code>.</p></li>
 <li><p><strong>Mismatched tags:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> fails — opening and closing
 tags must match.</p></li>
 <li><p><strong>Invalid tag names:</strong> Only lowercase letters and numbers — no hyphens,
