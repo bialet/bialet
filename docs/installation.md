@@ -231,31 +231,33 @@ bialet -T docs/examples      # Run tests in specific directory
 ## Validate Syntax of a Wren File
 
 To check the syntax of a Wren file without executing it, use the `-t` command.
+Run it the same way you run the server:
 
-For **standalone files** with no app imports, run from the same directory:
+If you start your server from the app directory:
 
 ```bash
 cd /path/to/app
-bialet -t myfile.wren
+bialet               # starts server
+bialet -t index.wren # validates syntax
 ```
 
-For files that **import from `_app/`** or use relative imports within a project,
-you must provide the application root path as a second argument:
+If you start your server with an explicit root path:
 
 ```bash
-bialet -t app/main.wren /path/to/your/app
+bialet /path/to/app                         # starts server
+bialet -t /path/to/app/index.wren /path/to/app # validates syntax
 ```
 
-If you omit the root path for a file with `_app/` imports, the validator will
-exit with an error indicating the missing application context.
+The root path is required when your file imports from `_app/` or uses relative
+imports. If you omit it for such files, the validator will exit with an error.
 
 This will validate the syntax and exit with code `0` if the syntax is valid, or
 code `1` if there are compilation errors. Useful for CI/CD pipelines and
 pre-commit hooks.
 
 ```bash
-# Example: Check syntax before deploying
-if bialet -t app/main.wren /path/to/app; then
+# Example: Check syntax before deploying (explicit root path)
+if bialet -t /path/to/app/main.wren /path/to/app; then
     echo "Syntax OK, deploying..."
 else
     echo "Syntax errors found, aborting deployment"
