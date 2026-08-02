@@ -85,16 +85,27 @@ var card = <article>
 
 ### Pitfalls
 
-**Same-tag nesting is a parse error.** A tag cannot directly contain another
-tag with the same name:
+**The opening tag cannot nest itself.** The outermost tag of an inline HTML
+string must not appear as a direct child tag at any nesting level. Once the
+tree starts with a *different* tag, the original tag can be used freely below
+it. The parser checks this on the *whole* string, not just the first level.
 
 ```wren
-// Wrong — parse error
+// Wrong — <div> is the outermost tag AND a direct child
 var bad = <div><div>Hello</div></div>
 var alsoBad = <section><section>Nested</section></section>
 
-// Correct — use a different tag
+// Correct — use a different tag as the outermost wrapper
 var good = <div><section>Hello</section></div>
+
+// Also correct — wrapping with a different tag breaks the conflict
+var fine = <section>
+  <div style="border:1px solid #ccc">
+    <div style="background:#eee">
+      Deeply nested same tags work once the outer tag differs.
+    </div>
+  </div>
+</section>
 ```
 
 **Mismatched tags fail.** Opening and closing tags must match:
@@ -647,14 +658,20 @@ thank you).
 
 ### Pitfall
 
-**Same-tag nesting applies to semantic tags too.**
+**Same-tag nesting rule still applies.** The outermost tag of the inline
+HTML string cannot repeat at any nesting level:
 
 ```wren
-// Wrong — parse error
+// Wrong — <section> is outermost and repeats deeper
 var bad = <section><section>Nested section</section></section>
 
-// Correct — use different semantic tags
-var good = <section><article>Nested content</article></section>
+// Correct — wrap with a different semantic tag
+var good = <main>
+  <article>
+    <section>One block</section>
+    <section>Another block</section>
+  </article>
+</main>
 ```
 
 ---
@@ -844,8 +861,9 @@ embedded in HTML must be escaped. There is no automatic escaping.
 
 ## Common Pitfalls
 
-- **Same-tag nesting:** `<div><div>Hello</div></div>` is a parse error — use
-  different tag names for nesting.
+- **Opening-tag nesting:** The outermost tag of an inline HTML string cannot
+  appear again as a child at any level. This means `<div><div>...</div></div>` fails because `<div>` is both the outermost and a nested tag. Wrap with a different tag (e.g. `<section>`) and nest freely below it:
+  `<section><div><div>...</div></div></section>`.
 - **Mismatched tags:** `<div><span>Hello</div>` fails — opening and closing
   tags must match.
 - **Invalid tag names:** Only lowercase letters and numbers — no hyphens,
