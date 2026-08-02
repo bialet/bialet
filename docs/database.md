@@ -32,7 +32,7 @@ The Query object provides several methods to retrieve results:
 Additional methods available on Query objects:
 - `save(values)`: Insert or update a row in the table. See [Insert and update](#insert-and-update).
 - `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
-- `to(Class)`: Map results to domain class instances. See [Mapping Results](#mapping-results-to-domain-classes).
+- `to(Class)`: Map results to domain class instances. See [Mapping to Domain Classes](#mapping-results-to-domain-classes).
 
 The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
 
@@ -174,65 +174,106 @@ See [Safe Sorting](#safe-sorting-with-order) for the full `.order()` API, which 
 
 (mapping-results-to-domain-classes)=
 
-## Mapping Results to Domain Classes
+## Mapping to Domain Classes
 
-Query results can be automatically mapped to domain classes using the `.to(Class)` method. This is useful for converting database rows into instances of your domain models.
+Use `.to(Class)` to convert query results into instances of a domain class.
+The method calls `Class.new(row)` for each row, where `row` is a Map whose
+keys are column names and values are the column values returned by the query.
+
+The constructor receives the Map and assigns fields. Each column in the query
+maps to a property with the same name in the class.
 
 ```wren
-// Define a domain class with a constructor that accepts a Map
-class Post {
+class User {
   construct new(data) {
     _id = data["id"]
-    _title = data["title"]
-    _content = data["content"]
+    _name = data["name"] || ""
+    _email = data["email"] || ""
   }
   
   id { _id }
-  title { _title }
-  content { _content }
+  name { _name }
+  email { _email }
 }
 
-// Map a single result to a domain class
-var post = `SELECT * FROM posts WHERE id = ?`.first(1).to(Post)
+// Single result — returns a class instance or null
+var user = `SELECT * FROM users WHERE id = ?`.first(1).to(User)
 
-// Map multiple results to domain classes
-var posts = `SELECT * FROM posts`.fetch.to(Post)
-// Returns a List where each element is a Post instance
+// Multiple results — returns a List of class instances
+var users = `SELECT * FROM users`.fetch.to(User)
 ```
 
-The `.to(Class)` method works with:
+The `.to(Class)` method works on:
 
-- Query results from `.fetch()` (returns a List of class instances)
-- Single results from `.first()` (returns a single class instance)
-- Any Map or List of Maps
+- `.first()` results — calls `Class.new(map)`, returns the instance or null
+- `.fetch()` results — maps each row through `Class.new(row)`, returns a List
+- Any Map directly — `someMap.to(User)` creates a single instance
+- Any List of Maps — `listOfMaps.to(User)` creates a List of instances
 
 (insert-and-update)=
 
-## Insert and update
+## Insert and Update
 
-You can use a regular SQL `INSERT` or `UPDATE` statement.
+Use `save()` on a table name to persist an object. The method inspects the
+`id` field:
+
+- **No `id`** → INSERT (creates a new row)
+- **Has `id`** → UPDATE (replaces the existing row)
+
+`save()` works with both Map objects and class instances. It returns the
+row id.
 
 ```wren
-var userParams = ["John Doe", "john@example.com"]
-var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query(userParams)
-```
-
-But you can also use the `save` method on a table Query, sending a Map
-object with the values.
-
-```wren
-var user = {"name": "John Doe", "email": "john@example.com"}
+// INSERT — new object, no id
+var user = new User()
+user.name = "John"
+user.email = "john@example.com"
 var id = `users`.save(user)
-```
 
-The same method also works for updating the row.
-
-```wren
-var user = {"name": "John Doe", "email": "john@example.com"}
-user["id"] = 1
-// This will update the row
+// UPDATE — fetch existing, modify, save
+var user = `SELECT * FROM users WHERE id = ?`.first(1).to(User)
+user.name = "John Doe"
 `users`.save(user)
 ```
+
+You can also use raw SQL `INSERT` or `UPDATE` statements:
+
+```wren
+var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query("John", "john@example.com")
+```
+
+(properties-and-methods)=
+
+## Properties and Methods
+
+When you call `save()`, every field of the object is persisted to the
+database. This means **computed values must be methods, not fields**.
+Declaring a computed value as a `var` would cause `save()` to try to write
+it as a database column.
+
+**Wrong** — `area` is a `var`, so `save()` would treat it as a column:
+
+```wren
+class Rectangle {
+  var width
+  var height
+  var area
+}
+```
+
+**Correct** — `area()` is a method, it does not participate in the save:
+
+```wren
+class Rectangle {
+  var width
+  var height
+
+  area() { width * height }
+}
+```
+
+Methods stay out of the mapping and can be used freely for business logic.
+Only `var` fields declared in the constructor participate in persistence.
 
 ## Data Types and BLOB Support
 
