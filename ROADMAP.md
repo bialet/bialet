@@ -15,16 +15,32 @@ improvements.
       scripts in Bialet apps
 - [x] **Production deployment guide** — Document how to deploy on a VPS with
       systemd, reverse proxy setup, and environment configuration
-- [x] **Documentation improvements** — General cleanup, better structure, and
-      more examples
-- [ ] **i18n / localization** — Translation helpers and locale-aware formatting
-- [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
-      logs
 - [ ] **Data filtering lib** — Query sanitization and type-safe filtering
       utilities
+- [ ] **Forms guide** — Document POST handling, basic validation, redirect after
+      POST (PRG), and simple file uploads.
+- [ ] **Security guide** — Central page covering XSS prevention, SQL injection
+      reminders, secure configuration, and any built-in protections (e.g.,
+      CSRF).
+- [ ] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
+      environment-specific settings, and server options (port, host).
+- [ ] **Error handling & logging** — Custom 404/500 pages, `System.print` usage,
+      and debugging best practices.
+- [ ] **Static assets** — Serving CSS, JS, and images; MIME types and cache
+      headers (could be a small section or appendix).
+- [ ] **Reorganise documentation into groups** — Reduce sidebar length by
+      grouping related pages:
+  - Getting started (Why Bialet?, Tutorial, Installation)
+  - Core concepts (Wren, Routing, Templates, Database)
+  - Web development (Forms, REST APIs, File handling, Date/time)
+  - Operations (Security, Configuration, Cron, Deployment)
+  - Reference (API Reference, Examples, FAQ)
 
 ## Longer Term
 
+- [ ] **i18n / localization** — Translation helpers and locale-aware formatting
+- [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
+      logs
 - [ ] **Live-reload** — Watch files and auto-refresh browser via WebSocket on
       changes
 - [ ] **LSP support** — Language Server Protocol implementation with
