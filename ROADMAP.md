@@ -3,10 +3,17 @@
 Bialet is in active development. This roadmap tracks planned features and
 improvements.
 
+## Editors/IDE Support
+
+- [ ] VS Code (syntax JSON, language-configuration)
+- [ ] Sublime Text (.sublime-syntax and .tmPreferences)
+- [x] Vim / Neovim (ftdetect, syntax)
+- [ ] JetBrains (IntelliJ) (TextMate bundle or custom plugin)
+
 ## Near Term
 
-- [ ] **Editor syntax highlighting** — Add support for major editors (VS Code,
-      Sublime, etc.)
+### 0.11.0
+
 - [x] **AI development skills** — Create skills/prompts for AI-assisted Bialet
       development
 - [x] **Documentation review** — Audit and fill gaps in existing docs, ensure
@@ -24,10 +31,6 @@ improvements.
       CSRF).
 - [ ] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
       environment-specific settings, and server options (port, host).
-- [ ] **Error handling & logging** — Custom 404/500 pages, `System.print` usage,
-      and debugging best practices.
-- [ ] **Static assets** — Serving CSS, JS, and images; MIME types and cache
-      headers (could be a small section or appendix).
 - [ ] **Reorganise documentation into groups** — Reduce sidebar length by
       grouping related pages:
   - Getting started (Why Bialet?, Tutorial, Installation)
@@ -36,21 +39,31 @@ improvements.
   - Operations (Security, Configuration, Cron, Deployment)
   - Reference (API Reference, Examples, FAQ)
 
-## Longer Term
+### 0.12.0
 
-- [ ] **i18n / localization** — Translation helpers and locale-aware formatting
+- [ ] **Error handling & logging** — Custom 404/500 pages, `System.print` usage,
+      and debugging best practices.
 - [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
       logs
+
+### 0.13.0
+
 - [ ] **Live-reload** — Watch files and auto-refresh browser via WebSocket on
       changes
-- [ ] **LSP support** — Language Server Protocol implementation with
-      autocomplete, go-to-definition, and diagnostics for VS Code
-- [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
-      proxy needed for basic deployments)
-- [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
-- [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
+
+## Longer Term / Ideas
+
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
       handling
+- [ ] **Static assets** — Serving CSS, JS, and images; MIME types and cache
+      headers (could be a small section or appendix).
+- [ ] **i18n / localization** — Translation helpers and locale-aware formatting
+- [ ] **LSP support** — Language Server Protocol implementation with
+      autocomplete, go-to-definition, and diagnostics for VS Code
+- [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
+- [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
+- [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
+      proxy needed for basic deployments)
 
 ## How to Contribute
 
