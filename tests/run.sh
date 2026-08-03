@@ -28,6 +28,7 @@ run_test "Get the route parameter     " "route/baz/qux"   200 "bazqux"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
 run_test "This URL not exists         " "donotexists"     404
+run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
@@ -39,6 +40,7 @@ run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Parsing error               " "parsing-error"   500
+run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"
 # Tests - Markdown
 run_test "Markdown ordered list       " "markdown-ol"    200 "<ol>"
 run_test "Markdown file rendering     " "md-file"        200 "<h1>Test Heading</h1>"

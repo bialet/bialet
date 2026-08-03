@@ -287,6 +287,7 @@ Who is Bialet for?
    wren
    routing
    template
+   errors
    database
    rest-api
    tests
