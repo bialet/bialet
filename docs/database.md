@@ -30,7 +30,7 @@ The Query object provides several methods to retrieve results:
 - `toBool()`: Returns the value of the first column as a boolean.
 
 Additional methods available on Query objects:
-- `save(values)`: Insert or update a row in the table. See [Insert and update](#insert-and-update).
+- `save(values)`: Insert or update a row. Called on a table name: `` `users`.save(values) ``. See [Insert and Update](#insert-and-update).
 - `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
 - `to(Class)`: Map results to domain class instances. See [Mapping to Domain Classes](#mapping-results-to-domain-classes).
 
@@ -73,6 +73,9 @@ var name = `SELECT name FROM users WHERE id = ?`.val(id)
 
 // Give the current day of the year
 var day = `SELECT strftime('%j', 'now')`.toNum
+
+// Save a Map to a table — INSERT if no id, UPDATE if id present
+var id = `users`.save({"name": "John", "email": "john@example.com"})
 ```
 
 (safe-sorting-with-order)=
@@ -180,8 +183,10 @@ Use `.to(Class)` to convert query results into instances of a domain class.
 The method calls `Class.new(row)` for each row, where `row` is a Map whose
 keys are column names and values are the column values returned by the query.
 
-The constructor receives the Map and assigns fields. Each column in the query
-maps to a property with the same name in the class.
+The constructor receives the Map and assigns fields. Each key in the Map
+is a column name — the constructor reads the values it needs by name. See
+[Model Requirements](#model-requirements) for the conventions classes must
+follow.
 
 ```wren
 class User {
@@ -242,38 +247,53 @@ You can also use raw SQL `INSERT` or `UPDATE` statements:
 var id = `INSERT INTO users (name, email) VALUES (?, ?)`.query("John", "john@example.com")
 ```
 
-(properties-and-methods)=
+(model-requirements)=
 
-## Properties and Methods
+## Model Requirements
 
-When you call `save()`, every field of the object is persisted to the
-database. This means **computed values must be methods, not fields**.
-Declaring a computed value as a `var` would cause `save()` to try to write
-it as a database column.
+Classes used with `.to(Class)` and `save()` must follow two conventions.
+These are Bialet requirements — Wren itself imposes no such rules.
 
-**Wrong** — `area` is a `var`, so `save()` would treat it as a column:
-
-```wren
-class Rectangle {
-  var width
-  var height
-  var area
-}
-```
-
-**Correct** — `area()` is a method, it does not participate in the save:
+**The constructor must accept a Map.** `.to(Class)` calls `Class.new(row)`,
+passing the row data as a Map whose keys are column names. The constructor
+is responsible for reading the values it needs from that Map:
 
 ```wren
 class Rectangle {
-  var width
-  var height
+  construct new(data) {
+    _width = data["width"]
+    _height = data["height"]
+  }
 
-  area() { width * height }
+  area() { _width * _height }
 }
 ```
 
-Methods stay out of the mapping and can be used freely for business logic.
-Only `var` fields declared in the constructor participate in persistence.
+**Every field represents a database column.** When `save()` is called, it
+persists every field of the object. Computed values must therefore be
+methods, not fields. A method does not participate in persistence and can be
+used freely for business logic.
+
+```wren
+// Wrong — "area" is a field, save() would try to write it as a column
+class Rectangle {
+  construct new(data) {
+    _width = data["width"]
+    _height = data["height"]
+    _area = data["area"]
+  }
+}
+
+// Correct — area() is a method, not persisted
+class Rectangle {
+  construct new(data) {
+    _width = data["width"]
+    _height = data["height"]
+  }
+
+  area() { _width * _height }
+}
+```
 
 ## Data Types and BLOB Support
 
