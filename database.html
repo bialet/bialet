@@ -407,7 +407,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-and-methods">Properties and Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-requirements">Model Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
@@ -449,7 +449,7 @@ concurrent reads and writes without blocking. See the
 </ul>
 <p>Additional methods available on Query objects:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row in the table. See <a class="reference internal" href="#insert-and-update">Insert and update</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save(values)</span></code>: Insert or update a row. Called on a table name: <code class="docutils literal notranslate"><span class="pre">`users`.save(values)</span></code>. See <a class="reference internal" href="#insert-and-update">Insert and Update</a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes">Mapping to Domain Classes</a>.</p></li>
 </ul>
@@ -487,6 +487,9 @@ method.</p>
 
 <span class="c1">// Give the current day of the year</span>
 <span class="k">var</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT strftime(&#39;%j&#39;, &#39;now&#39;)`</span><span class="o">.</span><span class="n">toNum</span>
+
+<span class="c1">// Save a Map to a table — INSERT if no id, UPDATE if id present</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
@@ -581,8 +584,10 @@ method.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> to convert query results into instances of a domain class.
 The method calls <code class="docutils literal notranslate"><span class="pre">Class.new(row)</span></code> for each row, where <code class="docutils literal notranslate"><span class="pre">row</span></code> is a Map whose
 keys are column names and values are the column values returned by the query.</p>
-<p>The constructor receives the Map and assigns fields. Each column in the query
-maps to a property with the same name in the class.</p>
+<p>The constructor receives the Map and assigns fields. Each key in the Map
+is a column name — the constructor reads the values it needs by name. See
+<a class="reference internal" href="#model-requirements">Model Requirements</a> for the conventions classes must
+follow.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
@@ -637,31 +642,47 @@ row id.</p>
 </pre></div>
 </div>
 </section>
-<section id="properties-and-methods">
-<span id="id4"></span><h2>Properties and Methods<a class="headerlink" href="#properties-and-methods" title="Link to this heading">#</a></h2>
-<p>When you call <code class="docutils literal notranslate"><span class="pre">save()</span></code>, every field of the object is persisted to the
-database. This means <strong>computed values must be methods, not fields</strong>.
-Declaring a computed value as a <code class="docutils literal notranslate"><span class="pre">var</span></code> would cause <code class="docutils literal notranslate"><span class="pre">save()</span></code> to try to write
-it as a database column.</p>
-<p><strong>Wrong</strong> — <code class="docutils literal notranslate"><span class="pre">area</span></code> is a <code class="docutils literal notranslate"><span class="pre">var</span></code>, so <code class="docutils literal notranslate"><span class="pre">save()</span></code> would treat it as a column:</p>
+<section id="model-requirements">
+<span id="id4"></span><h2>Model Requirements<a class="headerlink" href="#model-requirements" title="Link to this heading">#</a></h2>
+<p>Classes used with <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> and <code class="docutils literal notranslate"><span class="pre">save()</span></code> must follow two conventions.
+These are Bialet requirements — Wren itself imposes no such rules.</p>
+<p><strong>The constructor must accept a Map.</strong> <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> calls <code class="docutils literal notranslate"><span class="pre">Class.new(row)</span></code>,
+passing the row data as a Map whose keys are column names. The constructor
+is responsible for reading the values it needs from that Map:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">width</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">height</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">area</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p><strong>Correct</strong> — <code class="docutils literal notranslate"><span class="pre">area()</span></code> is a method, it does not participate in the save:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">width</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">height</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
 
-<span class="w">  </span><span class="n">area</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">area</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_width</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="vi">_height</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Methods stay out of the mapping and can be used freely for business logic.
-Only <code class="docutils literal notranslate"><span class="pre">var</span></code> fields declared in the constructor participate in persistence.</p>
+<p><strong>Every field represents a database column.</strong> When <code class="docutils literal notranslate"><span class="pre">save()</span></code> is called, it
+persists every field of the object. Computed values must therefore be
+methods, not fields. A method does not participate in persistence and can be
+used freely for business logic.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — &quot;area&quot; is a field, save() would try to write it as a column</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;area&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Correct — area() is a method, not persisted</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Rectangle</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="vi">_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">area</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_width</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="vi">_height</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </section>
 <section id="data-types-and-blob-support">
 <h2>Data Types and BLOB Support<a class="headerlink" href="#data-types-and-blob-support" title="Link to this heading">#</a></h2>
@@ -777,7 +798,7 @@ correctly.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-and-methods">Properties and Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-requirements">Model Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
