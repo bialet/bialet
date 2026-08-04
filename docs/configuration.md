@@ -1,13 +1,48 @@
 # Configuration
 
-Bialet stores configuration in the SQLite database, not in `.env` files or
-YAML. Each environment gets its own database file, so environment-specific
-settings follow naturally — the database you point to *is* the environment.
+Bialet stores configuration in the SQLite database — every setting is a row
+in a simple key/value table. There are no `.env` files, no YAML, no
+environment variables to set.
 
-## The BIALET_CONFIG Table
+## Reading and Writing
 
-Configuration lives in the `BIALET_CONFIG` table, created automatically by
-the database initialization:
+```wren
+Config.set("app_name", "My App")
+var name = Config.get("app_name")  // "My App"
+```
+
+### Typed Access
+
+All values are stored as strings. Use typed getters for numbers, booleans,
+and JSON:
+
+```wren
+Config.set("items_per_page", "20")
+var limit = Config.num("items_per_page")  // 20 as a number
+
+Config.set("maintenance_mode", "1")
+var on = Config.bool("maintenance_mode")  // true
+
+Config.json("features", {"darkMode": true, "notifications": false})
+var features = Config.json("features")     // { "darkMode": true, ... }
+```
+
+`Config.bool` returns `true` for `"1"` and `"true"` (case-insensitive),
+`false` for everything else including missing keys.
+
+### Delete
+
+```wren
+Config.delete("old_setting")
+```
+
+> ⚠️ Pitfall: `Config.get()` returns `null` for missing keys. Always
+> provide a fallback: `Config.get("title") || "Default Title"`.
+
+## How It Works
+
+Under the hood, `Config` reads and writes to the `BIALET_CONFIG` table, a
+two-column table created automatically when the database initializes:
 
 ```sql
 CREATE TABLE IF NOT EXISTS BIALET_CONFIG (
@@ -16,225 +51,112 @@ CREATE TABLE IF NOT EXISTS BIALET_CONFIG (
 )
 ```
 
-Use the `Config` class to read and write values:
+`Config.set("key", "value")` runs an `INSERT OR REPLACE`. `Config.get("key")`
+does a `SELECT value FROM BIALET_CONFIG WHERE key = ?`. `.num`, `.bool`, and
+`.json` convert the string result into the right type in Wren — the database
+still stores everything as `TEXT`.
 
-```wren
-// Read a value
-var title = Config.get("title")
+Because configuration is just rows in SQLite, changes persist across server
+restarts with no extra work. There's no file to parse, no cache to
+invalidate, and no separate config server to run.
 
-// Set a value
-Config.set("title", "My Bialet App")
+## Seeding Configuration
 
-// Delete a value
-Config.delete("old_setting")
+### With `-r` at startup
+
+The `-r` flag runs Wren code before the server starts and then exits. Use
+it in deployment scripts to seed secrets and settings:
+
+```bash
+bialet -r 'Config.set("stripe_key", "sk_live_...")' /www/myapp
+bialet -r 'Config.set("mail_host", "smtp.example.com")' /www/myapp
 ```
 
-> ⚠️ Pitfall: `Config.get()` returns `null` for missing keys. Always provide
-> a fallback: `Config.get("title") || "Default Title"`.
-
-## Reading and Writing Config
-
-### Strings
+`-r` can run any Wren code, so you can set multiple values in one call or
+even build a setup script:
 
 ```wren
-Config.set("app_name", "My App")
-var name = Config.get("app_name")  // "My App"
-```
-
-### Numbers
-
-```wren
+// setup.wren — run with: bialet -r "$(cat setup.wren)" /www/myapp
+Config.set("title", "My App")
 Config.set("items_per_page", "20")
-var limit = Config.num("items_per_page")  // 20 as a number
-```
-
-### Booleans
-
-```wren
-Config.set("maintenance_mode", "1")
-var maintenance = Config.bool("maintenance_mode")  // true
-```
-
-`Config.bool` returns `true` for `"1"` and `"true"` (case-insensitive),
-`false` for everything else including missing keys.
-
-### JSON
-
-```wren
-// Store a structured value
 Config.json("features", {"darkMode": true, "notifications": false})
-
-// Read it back as a map
-var features = Config.json("features")
-var darkMode = features["darkMode"]  // true
 ```
 
-## Migration-Set Configuration
+> Use `-r` for one-off provisioning — secrets, API keys, and
+> environment-specific overrides that shouldn't live in migrations.
 
-Set configuration values in migrations for reliable, version-controlled
-defaults:
+### With migrations for defaults
+
+For defaults that ship with the application and should exist in every
+environment, write them in a migration:
 
 ```wren
 // _migration.wren
-Db.migrate("Add default config values", [
-  `INSERT INTO BIALET_CONFIG VALUES ('title', 'My App')`,
-  `INSERT INTO BIALET_CONFIG VALUES ('items_per_page', '20')`,
-  `INSERT INTO BIALET_CONFIG VALUES ('admin_email', 'admin@example.com')`
+Db.migrate("Add default config", [
+  `INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('title', 'My App')`,
+  `INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('items_per_page', '20')`,
+  `INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('admin_email', 'admin@example.com')`
 ])
 ```
 
-Use `INSERT OR IGNORE` to set defaults that won't overwrite existing values:
+`INSERT OR IGNORE` sets a fallback value — it only inserts if the key
+doesn't already exist. This lets `-r` overrides from deployment scripts
+take precedence over migration defaults.
 
-```wren
-`INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('title', 'My App')`.query
-```
+## Working with Environments
 
-## Environment-Specific Configuration
-
-Bialet has no concept of "environments" — there is no `development`,
-`staging`, or `production` mode in the framework. Each environment is
-simply a different database file with its own configuration.
+Bialet has no `development`, `staging`, or `production` mode. Each
+environment is a different database file with its own `BIALET_CONFIG`
+table. The database *is* the environment.
 
 ```text
 dev/
-├── _db.sqlite3          # Dev config in BIALET_CONFIG
+├── _db.sqlite3          # Dev config
 ├── _migration.wren
 └── index.wren
 
 prod/
-├── _db.sqlite3          # Prod config in BIALET_CONFIG
+├── _db.sqlite3          # Prod config
 ├── _migration.wren
 └── index.wren
 ```
 
-You can override the database path at startup to point to different
-environments:
+Migrations and application code are identical across environments — only
+the database file differs, and therefore only the configuration and data
+differ. Pointing Bialet at a different `_db.sqlite3` switches environments.
 
-```bash
-# Development
-bialet -d dev/_db.sqlite3 dev/
+## Comparison with Other Frameworks
 
-# Production
-bialet -d prod/_db.sqlite3 prod/
-```
+Most frameworks layer configuration from multiple sources: `.env` files,
+environment variables, YAML configs, command-line flags, and sometimes a
+configuration database. They merge them with precedence rules (env vars
+beat `.env`, flags beat env vars, etc.), and you need to know which source
+wins in which context.
 
-The database file is the only thing separating environments. Migrations and
-application code are the same across environments — only the data (and
-therefore the config) differs.
+Bialet removes that entire stack. There is one source: the database.
 
-## Server CLI Options
-
-Start Bialet with:
-
-```bash
-bialet [options] [root_dir]
-```
-
-| Flag | Option | Default | Description |
+| | Bialet | Rails / Django / Laravel | Express / Next.js |
 |---|---|---|---|
-| `-h` | host | `127.0.0.1` | Host address to bind to |
-| `-p` | port | `7001` | Port number (0–65535) |
-| `-l` | log | *stdout* | Append log output to a file |
-| `-d` | database | `_db.sqlite3` | SQLite database file path |
-| `-w` | — | *off* | Enable WAL mode for SQLite |
-| `-m` | soft memory | *unlimited* | Soft memory limit in MB |
-| `-M` | hard memory | *unlimited* | Hard memory limit in MB |
-| `-c` | soft CPU | *unlimited* | Soft CPU limit in percent |
-| `-C` | hard CPU | *unlimited* | Hard CPU limit in percent |
-| `-i` | ignored | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` | Glob patterns for ignored files |
-| `-v` | — | — | Print version and exit |
+| Config storage | SQLite rows | `.env` + YAML/rb/py + ENV | `.env` + ENV |
+| Precedence rules | None | Multi-layer (env beats file, etc.) | Multi-layer |
+| Persists across restarts | Yes (it's a DB row) | No (env vars are per-process) | No |
+| Programmatic write | `Config.set()` | Usually read-only from code | Usually read-only |
+| Environment switching | Point to a different `_db.sqlite3` | `RAILS_ENV`, `NODE_ENV`, etc. | `NODE_ENV` |
+| Configuration UI | Possible — just writes to SQLite | Needs a backing store | Needs a backing store |
+| Secrets at deploy time | `bialet -r 'Config.set(...)'` | `.env` file or CI env vars | `.env` file or CI env vars |
 
-The `root_dir` positional argument sets the application directory. Defaults
-to the current directory.
-
-### Host and Port
-
-```bash
-# Listen on all interfaces, port 8080
-bialet -h 0.0.0.0 -p 8080 /www/myapp
-
-# Listen only on localhost (default)
-bialet /www/myapp
-```
-
-> For production, bind to `127.0.0.1` and place a reverse proxy (nginx,
-> Caddy) in front. See [Deployment](deployment.md).
-
-### WAL Mode
-
-Write-Ahead Logging allows concurrent reads and writes without blocking.
-Enable it for production workloads:
-
-```bash
-bialet -w /www/myapp
-```
-
-### Resource Limits
-
-Cap memory and CPU to contain runaway scripts:
-
-```bash
-# Soft limit 128 MB, hard limit 256 MB
-# Soft limit 25% CPU, hard limit 50% CPU
-bialet -m 128 -M 256 -c 25 -C 50 /www/myapp
-```
-
-When the soft limit is exceeded, the server logs a warning. When the hard
-limit is exceeded, the process is killed.
-
-### Logging
-
-Route all output to a file:
-
-```bash
-bialet -l /var/log/bialet.log /www/myapp
-```
-
-When logging to a file, ANSI color codes are automatically disabled. For
-live monitoring, leave `-l` out and pipe `stdout` or use `systemd`'s journal.
-
-### Custom Ignored Files
-
-Override the default ignored-file patterns:
-
-```bash
-bialet -i "*.md,*.txt,Dockerfile*" /www/myapp
-```
-
-Files matching these patterns are never served through HTTP. The `_` and
-`.` prefix protection is separate and always active — ignored files is an
-additional layer on top.
-
-## No .env Files
-
-Bialet does not read `.env` files. Configuration is database-backed by
-design. This means:
-
-- No parsing, no precedence rules, no "which `.env` file is active?"
-- Configuration is environment-specific because each environment has its
-  own database
-- Config changes persist across server restarts — they're just rows in
-  SQLite
-- You can build config UIs by writing to `BIALET_CONFIG` from your app
-
-If you need to inject secrets at startup (API keys, tokens), seed them into
-the database from your deployment script:
-
-```bash
-# In your deploy script
-bialet -r 'Config.set("stripe_key", "sk_live_...")' /www/myapp
-```
-
-The `-r` flag executes the given Wren code and exits before starting the
-server.
+The trade-off: you can't configure Bialet through environment variables or
+`.env` files. If your deployment pipeline relies on those, you'll need to
+translate them into `-r` calls or migration defaults. The benefit: no
+precedence bugs, no runtime parsing overhead, and a single table to query
+for every setting in the system.
 
 ## Common Patterns
 
 ### Feature Flags
 
 ```wren
-var betaEnabled = Config.bool("beta_features") || false
-if (betaEnabled) {
+if (Config.bool("beta_features")) {
   // Show beta UI
 }
 ```
@@ -260,9 +182,6 @@ var offset = (page - 1) * limit
 
 ```wren
 var title = Config.get("site_title") || "My Site"
-return Template.new(title).layout(<main>
-  <h1>Welcome</h1>
-</main>)
 ```
 
 ## Pitfalls
@@ -271,19 +190,18 @@ return Template.new(title).layout(<main>
   fallback: `Config.get("key") || "default"`.
 - **Config values are strings** — use `Config.num()` and `Config.bool()`
   for typed access. `Config.get("port")` returns `"7001"`, not `7001`.
-- **No environment variables** — Bialet doesn't read `process.env` or
-  `.env` files. Everything is in the database.
-- **Database-specific environments** — swapping `-d` changes your config
-  table. Keep your production database file out of version control.
-- **CLI flags override nothing in the database** — CLI flags set the server
-  environment (port, host, limits). Config values in `BIALET_CONFIG` are
-  app-level settings (titles, feature flags, pagination). They don't
-  conflict because they address different concerns.
+- **No `.env` files or environment variables** — everything lives in
+  `BIALET_CONFIG`. If you need inject values from outside, use `-r`.
+- **`-r` runs once and exits** — it's for provisioning, not for setting
+  values that the server reads on every request. Those belong in migrations
+  or are set once via `-r` and then read via `Config.get()` at runtime.
+- **Keep your production database out of version control** — it contains
+  your config, user data, and sessions.
 
 ## Next Steps
 
 - Learn about [Database](database.md) — the Query object, migrations, and
-  configuration defaults
+  how `BIALET_CONFIG` sits alongside your application tables
 - Set up a production environment with [Deployment](deployment.md)
 - See the [Security](security.md) guide for CSRF, headers, and secure
   configuration
