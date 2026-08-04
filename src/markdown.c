@@ -139,8 +139,8 @@ static bool render_inline(const char* src, MdBuf* b) {
       }
     } else if(strncmp(src, "![", 2) == 0) {
       const char* alt_end = strchr(src + 2, ']');
-      const char* url_start = strchr(alt_end, '(');
-      const char* url_end = strchr(url_start, ')');
+      const char* url_start = alt_end ? strchr(alt_end, '(') : NULL;
+      const char* url_end = url_start ? strchr(url_start, ')') : NULL;
       if(alt_end && url_start && url_end) {
         if(!md_printf(b, "<img alt=\"%.*s\" src=\"%.*s\">",
                       (int)(alt_end - (src + 2)), src + 2,
