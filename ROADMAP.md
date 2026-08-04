@@ -17,6 +17,7 @@ improvements.
 
 ## Longer Term / Ideas
 
+- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
 - [ ] **Data filtering lib** — Query sanitization and type-safe filtering
       utilities
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
@@ -30,7 +31,6 @@ improvements.
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
       proxy needed for basic deployments)
-- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
 
 ## How to Contribute
 
