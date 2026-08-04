@@ -1440,7 +1440,9 @@ DEF_PRIMITIVE(markdown_html) {
   char* html = markdown_to_html(AS_CSTRING(args[1]));
   if(html == NULL)
     RETURN_ERROR("Markdown output too large");
-  RETURN_VAL(wrenNewString(vm, html));
+  Value result = wrenNewString(vm, html);
+  free(html);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(markdown_file) {
@@ -1448,9 +1450,12 @@ DEF_PRIMITIVE(markdown_file) {
   if(content == NULL)
     RETURN_FALSE;
   char* html = markdown_to_html(content);
+  free(content);
   if(html == NULL)
     RETURN_ERROR("Markdown output too large");
-  RETURN_VAL(wrenNewString(vm, html));
+  Value result = wrenNewString(vm, html);
+  free(html);
+  RETURN_VAL(result);
 };
 
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
