@@ -174,6 +174,11 @@ Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
 
+The table is keyed on `(id, key)`: `Session.set` replaces the row for a key
+instead of appending, and `Session.get` always returns the latest value
+written. Older databases that lack the primary key are rebuilt in place on
+startup.
+
 > ⚠️ Pitfall: `Request.post(name)` returns `null` when the key is missing.
 > Calling string methods on it crashes the request. Always guard with `|| ""`
 > or a null check:
