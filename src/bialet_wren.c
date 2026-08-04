@@ -1062,12 +1062,12 @@ void add_result_row(BialetQuery* query, int resultIndex, const char* name,
   result->rows = (BialetQueryRow*)realloc(result->rows,
                                           result->rowCount * sizeof(BialetQueryRow));
   BialetQueryRow* newRow = &result->rows[result->rowCount - 1];
-  newRow->name = name != NULL ? string_safe_copy(name) : "";
+  newRow->name = string_safe_copy(name != NULL ? name : "");
   if(value != NULL && size > 0) {
     newRow->value = safe_malloc(size);
     memcpy(newRow->value, value, size);
   } else {
-    newRow->value = "";
+    newRow->value = string_safe_copy("");
   }
   newRow->size = size;
   newRow->type = type;

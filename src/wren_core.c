@@ -1480,22 +1480,27 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 }
 
 DEF_PRIMITIVE(query_fetch) {
-  BialetQuery* q = create_bialet_query();
-  if(q == NULL)
+  BialetQuery* query = create_bialet_query();
+  if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
-  BialetQuery query = *q;
-  query.queryString = AS_CSTRING(args[1]);
-  queryPrepare(vm, &query, AS_LIST(args[2]));
-  ObjList* list = wrenNewList(vm, query.resultsCount);
-  for(int i = 0; i < query.resultsCount; i++) {
+  char* qs = strdup(AS_CSTRING(args[1]));
+  if(qs == NULL) {
+    free_bialet_query(query);
+    RETURN_ERROR("Out of memory allocating query string");
+  }
+  query->queryString = qs;
+  queryPrepare(vm, query, AS_LIST(args[2]));
+  ObjList* list = wrenNewList(vm, query->resultsCount);
+  for(int i = 0; i < query->resultsCount; i++) {
     ObjMap*           row = wrenNewMap(vm);
-    BialetQueryResult res = query.results[i];
+    BialetQueryResult res = query->results[i];
     for(int j = 0; j < res.rowCount; j++) {
       wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name),
                  wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size));
     }
     list->elements.data[i] = OBJ_VAL(row);
   }
+  free_bialet_query(query);
   RETURN_OBJ(list);
 }
 
