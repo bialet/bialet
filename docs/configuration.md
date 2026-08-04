@@ -39,6 +39,10 @@ instead of hand-writing the `"1"`/`"0"` strings:
 Config.enable("beta_features")   // stores "1"
 Config.disable("beta_features")  // stores "0"
 Config.bool("beta_features")     // false
+
+if (Config.bool("live_reload")) {
+  // feature is on
+}
 ```
 
 `enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
