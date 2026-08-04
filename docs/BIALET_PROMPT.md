@@ -122,8 +122,8 @@ var greeting = <h1>Hello, {{ name }}!</h1>
 
 - Delimited by `<tag>...</tag>`; the string must open and close with the
   **same** tag name.
-- Tag names: lowercase letters/numbers only — no hyphens, underscores, or
-  uppercase.
+- Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
+  Hyphens enable custom elements like `<my-element>`.
 - A tag cannot directly nest another tag of the **same** name
   (`<div><div>...` is a parse error) — use a different tag for the inner one.
 - Self-closing tags need a space before the slash: `<br />`, `<input ... />`.

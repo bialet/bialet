@@ -10,7 +10,8 @@ Write a `.wren` file, return an HTML string, and that's your page.
 
 Inline HTML Strings are delimited by angle brackets `<` and `>`. The string
 must begin and end with the same tag. Tag names must be lowercase, start with a
-letter, and contain only letters and numbers.
+letter, and contain only letters, numbers, and hyphens (hyphens enable custom
+elements like `<my-element>`).
 
 ```wren
 // A simple HTML string assigned to a variable
@@ -118,16 +119,17 @@ var bad = <div><span>Hello</div>
 var good = <div><span>Hello</span></div>
 ```
 
-**Invalid tag names.** Only lowercase letters and numbers are allowed. No
-hyphens, underscores, or uppercase:
+**Invalid tag names.** Tag names must be lowercase, start with a letter, and
+contain only letters, numbers, and hyphens. No underscores or uppercase:
 
 ```wren
 // Wrong
-var bad1 = <custom-tag>Invalid</custom-tag>
-var bad2 = <my_component>Invalid</my_component>
+var bad1 = <my_component>Invalid</my_component>
+var bad2 = <MyElement>Invalid</MyElement>
 
 // Correct
 var good = <span class="badge">Valid</span>
+var good2 = <my-element class="badge">Custom element</my-element>
 ```
 
 **Interpolation depth** is limited to 9 nested levels.
@@ -866,8 +868,10 @@ embedded in HTML must be escaped. There is no automatic escaping.
   `<section><div><div>...</div></div></section>`.
 - **Mismatched tags:** `<div><span>Hello</div>` fails — opening and closing
   tags must match.
-- **Invalid tag names:** Only lowercase letters and numbers — no hyphens,
-  underscores, or uppercase. Use classes and semantic tags instead.
+- **Invalid tag names:** Tag names must be lowercase, start with a letter, and
+  contain only letters, numbers, and hyphens — no underscores or uppercase.
+  Hyphens enable custom elements like `<my-element>`. Use classes and semantic
+  tags otherwise.
 - **Interpolation depth:** Maximum 9 nested `{{ }}` levels.
 - **Forgetting `return`:** Without `return`, the response body is empty.
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
