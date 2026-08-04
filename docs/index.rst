@@ -309,6 +309,7 @@ Who is Bialet for?
 
    template
    forms
+   markdown
    errors
 
 .. toctree::

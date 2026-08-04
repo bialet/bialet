@@ -41,6 +41,8 @@ improvements.
 
 ### 0.12.0
 
+- [ ] **Markdown XSS fix** — Escape raw HTML and validate link/image URLs in the
+      built-in Markdown renderer so untrusted input cannot inject markup.
 - [ ] **Error handling & logging** — Custom 404/500 pages, `System.print` usage,
       and debugging best practices.
 - [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
