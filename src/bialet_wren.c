@@ -741,6 +741,22 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
       }
       wrenReleaseHandle(vm, headersMethod);
     }
+    /* Check if an error method was called for custom error pages */
+    wrenEnsureSlots(vm, 1);
+    wrenGetVariable(vm, module, "Response", 0);
+    WrenHandle* useErrorHandle = wrenGetSlotHandle(vm, 0);
+    WrenHandle* useErrorFallback =
+        wrenMakeCallHandle(vm, "useErrorFallback()");
+    wrenSetSlotHandle(vm, 0, useErrorHandle);
+    if(wrenCall(vm, useErrorFallback) == WREN_RESULT_SUCCESS) {
+      if(wrenGetSlotBool(vm, 0) &&
+         (r.status == 403 || r.status == 404 || r.status == 413 ||
+          r.status == 429 || r.status == 500)) {
+        custom_error(r.status, &r);
+      }
+    }
+    wrenReleaseHandle(vm, useErrorFallback);
+    wrenReleaseHandle(vm, useErrorHandle);
     /* Clean Wren vm */
     wrenReleaseHandle(vm, responseClass);
   }

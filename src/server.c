@@ -216,6 +216,10 @@ const char* get_http_status_description(int status_code) {
       return "Forbidden";
     case 404:
       return "Not Found";
+    case 413:
+      return "Payload Too Large";
+    case 429:
+      return "Too Many Requests";
     case 405:
       return "Method Not Allowed";
     case 406:
@@ -469,10 +473,7 @@ void handle_client(bialet_socket_t client_socket) {
   if(strstr(hm->uri.str, "..") != NULL) {
     message(red("Security Error"), "Path traversal attempt blocked", hm->uri.str);
     clean_http_message(hm);
-    response.status = 403;
-    response.body = BIALET_FORBIDDEN_PAGE;
-    response.length = strlen(BIALET_FORBIDDEN_PAGE);
-    response.header = BIALET_HEADERS;
+    custom_error(403, &response);
     write_response(client_socket, &response);
     if(should_free_request)
       free(full_request);
@@ -510,10 +511,7 @@ void handle_client(bialet_socket_t client_socket) {
   if(strncmp(hm->uri.str, "/_", 2) == 0 || strstr(hm->uri.str, "/.") != NULL) {
     // Ignore files starting with _ or .
     clean_http_message(hm);
-    response.status = 403;
-    response.body = BIALET_FORBIDDEN_PAGE;
-    response.length = strlen(BIALET_FORBIDDEN_PAGE);
-    response.header = BIALET_HEADERS;
+    custom_error(403, &response);
     write_response(client_socket, &response);
     if(should_free_request)
       free(full_request);
@@ -568,10 +566,7 @@ void handle_client(bialet_socket_t client_socket) {
        (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' && resolved_path[root_len] != '\0')) {
       message(red("Security Error"), "Path traversal blocked", path);
       clean_http_message(hm);
-      response.status = 403;
-      response.body = BIALET_FORBIDDEN_PAGE;
-      response.length = strlen(BIALET_FORBIDDEN_PAGE);
-      response.header = BIALET_HEADERS;
+      custom_error(403, &response);
       write_response(client_socket, &response);
       if(should_free_request)
         free(full_request);
@@ -716,11 +711,55 @@ int server_poll(int delay) {
   return 0;
 }
 
+static int custom_error_recursing = 0;
+
 void custom_error(int status, struct BialetResponse* response) {
   response->header = BIALET_HEADERS;
   response->status = status;
   char        path[PATH_SIZE];
   struct stat file_stat;
+
+  if(!custom_error_recursing) {
+    snprintf(path, PATH_SIZE, "%s/%d.wren", bialet_config.root_dir, status);
+    if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
+      FILE* file = fopen(path, "rb");
+      if(file != NULL) {
+        if(fseek(file, 0, SEEK_END) == 0) {
+          long file_size = ftell(file);
+          if(file_size >= 0) {
+            rewind(file);
+            char* file_content = (char*)malloc((size_t)file_size + 1);
+            if(file_content != NULL) {
+              size_t read_bytes =
+                  fread(file_content, 1, (size_t)file_size, file);
+              fclose(file);
+              file_content[read_bytes] = '\0';
+              custom_error_recursing = 1;
+              struct BialetResponse wren_response =
+                  bialetRun(path, file_content, NULL);
+              custom_error_recursing = 0;
+              free(file_content);
+              if(wren_response.body && wren_response.length == 0)
+                wren_response.length = strlen(wren_response.body);
+              if(wren_response.status != 0) {
+                *response = wren_response;
+                if(!response->header)
+                  response->header = BIALET_HEADERS;
+                return;
+              }
+            } else {
+              fclose(file);
+            }
+          } else {
+            fclose(file);
+          }
+        } else {
+          fclose(file);
+        }
+      }
+    }
+  }
+
   snprintf(path, PATH_SIZE, "%s/%d.html", bialet_config.root_dir, status);
   if(stat(path, &file_stat) == 0) {
     FILE* file = fopen(path, "rb");
@@ -745,6 +784,15 @@ void custom_error(int status, struct BialetResponse* response) {
   if(status == 404) {
     response->body = BIALET_NOT_FOUND_PAGE;
     response->length = strlen(BIALET_NOT_FOUND_PAGE);
+  } else if(status == 403) {
+    response->body = BIALET_FORBIDDEN_PAGE;
+    response->length = strlen(BIALET_FORBIDDEN_PAGE);
+  } else if(status == 413) {
+    response->body = BIALET_PAYLOAD_TOO_LARGE_PAGE;
+    response->length = strlen(BIALET_PAYLOAD_TOO_LARGE_PAGE);
+  } else if(status == 429) {
+    response->body = BIALET_TOO_MANY_REQUESTS_PAGE;
+    response->length = strlen(BIALET_TOO_MANY_REQUESTS_PAGE);
   } else if(status == 500) {
     response->body = BIALET_ERROR_PAGE;
     response->length = strlen(BIALET_ERROR_PAGE);

@@ -163,5 +163,12 @@ void freeBialetQuery(BialetQuery* query);
   BIALET_HEADER_PAGE                                                                \
   "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                        \
   "access this page." BIALET_FOOTER_PAGE
+#define BIALET_PAYLOAD_TOO_LARGE_PAGE                                               \
+  BIALET_HEADER_PAGE                                                                \
+  "📦 Payload Too Large</h1><p>The request body is too large." BIALET_FOOTER_PAGE
+#define BIALET_TOO_MANY_REQUESTS_PAGE                                               \
+  BIALET_HEADER_PAGE                                                                \
+  "⏳ Too Many Requests</h1><p>Please slow down and try again "                     \
+  "later." BIALET_FOOTER_PAGE
 
 #endif

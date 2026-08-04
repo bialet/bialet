@@ -116,6 +116,7 @@ class Response {
     __cookies = []
     __status = 200
     __out = ""
+    __useErrorFallback = false
     Cookie.init
   }
 
@@ -126,6 +127,7 @@ class Response {
 
   static out(out) { __out = __out + "\r\n" + out }
   static status(status) { __status = status }
+  static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
   static header(header, value) { __headers[Util.headerName(header)] = Util.headerValue(value) }
   static file(id) {
@@ -179,8 +181,26 @@ class Response {
     var safeUrl = Util.htmlEscape(url)
     return endHtml(302, "➡️ Redirect to", '<a href="%(safeUrl)">%(safeUrl)</a>')
   }
-  static forbidden() { end(403, "🚫 Forbidden", "Sorry, you don't have permission to access this page") }
-  static notFound() { end(404, "⚠️ Not found", "Uh-oh! No route found.") }
+  static forbidden() {
+    __useErrorFallback = true
+    end(403, "🚫 Forbidden", "Sorry, you don't have permission to access this page")
+  }
+  static notFound() {
+    __useErrorFallback = true
+    end(404, "⚠️ Not found", "Uh-oh! No route found.")
+  }
+  static internalError() {
+    __useErrorFallback = true
+    end(500, "🚨 Internal Server Error", "Oops! Something broke.")
+  }
+  static payloadTooLarge() {
+    __useErrorFallback = true
+    end(413, "📦 Payload Too Large", "The request body is too large.")
+  }
+  static tooManyRequests() {
+    __useErrorFallback = true
+    end(429, "⏳ Too Many Requests", "Please slow down and try again later.")
+  }
   static login() {
     header("WWW-Authenticate", 'Basic realm="Login required"')
     return endHtml(401, "🔒 Needs login", '<a href="javascript:location.reload()">Sign in</a> to access this page')
