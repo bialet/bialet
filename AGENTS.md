@@ -25,9 +25,20 @@ make check
 # Install (copies build/bialet to ~/.local/bin)
 make install
 
+# Enable pre-commit hook (clang-format validation + tests)
+make install-hooks
+
 # Clean build
 make clean && make
 ```
+
+## Pre-commit Hook
+
+- `.githooks/pre-commit` runs on every commit: clang-format validation on staged
+  C/H files (vendored `wren_*`, `dmon.h`, `getopt.*`, `favicon.h` excluded) and
+  the full `make check` suite.
+- Enable it with `make install-hooks` (sets `core.hooksPath` to `.githooks`).
+- Bypass selectively with `SKIP_CLANG_FORMAT=1` and/or `SKIP_BIALET_TESTS=1`.
 
 ## Runtime & Development Notes
 

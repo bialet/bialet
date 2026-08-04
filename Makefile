@@ -63,6 +63,10 @@ install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
 	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)
 
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Pre-commit hook installed (clang-format validation + make check)."
+
 uninstall:
 	rm -f $(INSTALL_DIR)/$(TARGET_EXEC)
 
@@ -93,4 +97,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files install uninstall check html static
+.PHONY: all clean wren_files install uninstall check html static install-hooks
