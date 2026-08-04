@@ -67,7 +67,7 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
-static void bialetWrenWrite(WrenVM* vm, const char* message) {
+static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
   message(yellow("Log"), message);
   sqlite3_stmt* stmt;
@@ -78,7 +78,7 @@ static void bialetWrenWrite(WrenVM* vm, const char* message) {
   sqlite3_finalize(stmt);
 }
 
-char* bialetReadFile(const char* path) {
+char* bialet_read_file(const char* path) {
   char fullPath[MAX_URL_LEN];
   int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", 
                      bialet_config.full_root_dir, path);
@@ -99,10 +99,10 @@ char* bialetReadFile(const char* path) {
     return NULL;
   }
 
-  return readFile(resolved);
+  return read_file(resolved);
 }
 
-char* readFile(const char* path) {
+char* read_file(const char* path) {
   char* buffer = 0;
   long  length;
   FILE* f = fopen(path, "rb");
@@ -124,7 +124,7 @@ char* readFile(const char* path) {
   return buffer;
 }
 
-static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
+static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name) {
 
   char                 module[MAX_URL_LEN];
   char*                lastSlash;
@@ -185,7 +185,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
       req.raw_headers = string_safe_copy("");
       req.postData = string_safe_copy("");
       req.url = string_safe_copy(url);
-      httpCallPerform(&req, &resp);
+      http_call_perform(&req, &resp);
       // Check if HTTP request was successful (2xx status codes)
       if(resp.status >= 200 && resp.status < 300 && !resp.error) {
         // File found, save it in cache
@@ -252,7 +252,7 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
     return result;
   }
 
-  char* buffer = readFile(module);
+  char* buffer = read_file(module);
   result.source = NULL;
 
   if(buffer) {
@@ -261,8 +261,8 @@ static WrenLoadModuleResult bialetWrenLoadModule(WrenVM* vm, const char* name) {
   return result;
 }
 
-void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
-                     const int line, const char* msg) {
+void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
+                       const int line, const char* msg) {
   (void)vm;
   char lineMessage[MAX_LINE_ERROR_LEN];
   snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
@@ -279,7 +279,7 @@ void bialetWrenError(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
 }
 
-static char* sqliteIntToString(sqlite3_int64 value) {
+static char* sqlite_int_to_string(sqlite3_int64 value) {
   char* str = (char*)malloc(21 * sizeof(char));
   if(str == NULL)
     return NULL;
@@ -287,7 +287,7 @@ static char* sqliteIntToString(sqlite3_int64 value) {
   return str;
 }
 
-static void queryExecute(WrenVM* vm, BialetQuery* query) {
+static void query_execute(WrenVM* vm, BialetQuery* query) {
   (void)vm;
   sqlite3_stmt* stmt;
   char*         columns[MAX_COLUMNS];
@@ -349,7 +349,7 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
       }
     }
 
-    addResult(query);
+    add_result(query);
     for(int i = 0; i < colCount; i++) {
       colType = sqlite3_column_type(stmt, i);
       switch(colType) {
@@ -382,7 +382,7 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
           message(red("Query Error"), "Uknown type on binding result");
           break;
       }
-      addResultRow(query, rowCount, columns[i], value, size, type);
+      add_result_row(query, rowCount, columns[i], value, size, type);
     }
     rowCount++;
   }
@@ -399,10 +399,10 @@ static void queryExecute(WrenVM* vm, BialetQuery* query) {
   if(result != SQLITE_DONE && result != SQLITE_OK) {
     message(red("SQL Error"), sqlite3_errmsg(db));
   }
-  query->lastInsertId = sqliteIntToString(sqlite3_last_insert_rowid(db));
+  query->lastInsertId = sqlite_int_to_string(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);
 }
-char* escapeSpecialChars(const char* input) {
+char* escape_special_chars(const char* input) {
   size_t i, j = 0, len = strlen(input);
   char* output = malloc(len * 2 + 1);
   if(output == NULL)
@@ -418,7 +418,7 @@ char* escapeSpecialChars(const char* input) {
   return output;
 }
 
-int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
+int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
   filesIds[0] = '\0'; // Initialize empty string
 
   // Find Content-Type header to check if it's multipart/form-data
@@ -632,7 +632,7 @@ int saveUploadedFiles(struct HttpMessage* hm, char* filesIds) {
   return 1;
 }
 
-struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm) {
+struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm) {
   struct BialetResponse r;
   r.status = HTTP_OK;
   r.header = NULL;
@@ -656,7 +656,7 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
 
     char filesIds[MAX_URL_LEN] = "";
     // Save uploaded files with size validation (max_upload_size config)
-    saveUploadedFiles(hm, filesIds);
+    save_uploaded_files(hm, filesIds);
     wrenSetSlotString(vm, 3, filesIds);
 
     if((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
@@ -772,15 +772,15 @@ struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm
   return r;
 }
 
-int bialetRunCli(char* code) {
-  struct BialetResponse response = bialetRun(CLI_MODULE_NAME, code, NULL);
+int bialet_run_cli(char* code) {
+  struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
   if(response.status == HTTP_ERROR)
     return 1;
   printf("%s", response.body);
   return 0;
 }
 
-int bialetValidateSyntax(const char* filePath) {
+int bialet_validate_syntax(const char* filePath) {
   char abs_path[MAX_URL_LEN];
 
   if(realpath(filePath, abs_path) == NULL) {
@@ -796,7 +796,7 @@ int bialetValidateSyntax(const char* filePath) {
     return 1;
   }
 
-  char* code = readFile(abs_path);
+  char* code = read_file(abs_path);
   if(code == NULL) {
     fprintf(stderr, "Error: Cannot read file '%s'\n", filePath);
     return 1;
@@ -821,11 +821,11 @@ int bialetValidateSyntax(const char* filePath) {
 #define TEST_INIT_FILE "_init.wren"
 #define MAX_TEST_FILES 100
 
-const char* bialetGetFullRootDir() {
+const char* bialet_get_full_root_dir() {
   return bialet_config.full_root_dir;
 }
 
-static int isTestFile(const char* name) {
+static int is_test_file(const char* name) {
   size_t len = strlen(name);
   if(len < 6)
     return 0; // min: x.wren
@@ -836,10 +836,10 @@ static int isTestFile(const char* name) {
   return 1;
 }
 
-static int runTestFile(const char* testPath, const char* testName,
-                       const char* initPath) {
+static int run_test_file(const char* testPath, const char* testName,
+                         const char* initPath) {
   (void)testName;
-  char* code = readFile(testPath);
+  char* code = read_file(testPath);
   if(code == NULL) {
     fprintf(stderr, "  ✗ Cannot read test file: %s\n", testPath);
     return 1;
@@ -852,7 +852,7 @@ static int runTestFile(const char* testPath, const char* testName,
 
   // Run init file if provided
   if(initPath != NULL) {
-    char* initCode = readFile(initPath);
+    char* initCode = read_file(initPath);
     if(initCode != NULL) {
       wrenInterpret(vm, MAIN_MODULE_NAME, initCode);
       free(initCode);
@@ -868,7 +868,7 @@ static int runTestFile(const char* testPath, const char* testName,
   return (result == WREN_RESULT_SUCCESS) ? 0 : 1;
 }
 
-int bialetRunTests(const char* testDir, const char* rootDir) {
+int bialet_run_tests(const char* testDir, const char* rootDir) {
   (void)rootDir;
   char testsPath[MAX_MODULE_LEN];
   snprintf(testsPath, sizeof(testsPath), "%s/%s", testDir, TESTS_DIR);
@@ -893,7 +893,7 @@ int bialetRunTests(const char* testDir, const char* rootDir) {
 
   struct dirent* entry;
   while((entry = readdir(dir)) != NULL && testCount < MAX_TEST_FILES) {
-    if(isTestFile(entry->d_name)) {
+    if(is_test_file(entry->d_name)) {
       testFiles[testCount] = strdup(entry->d_name);
       testCount++;
     }
@@ -920,7 +920,7 @@ int bialetRunTests(const char* testDir, const char* rootDir) {
 
     printf("  Running %s...\n", testFiles[i]);
 
-    int result = runTestFile(testPath, testFiles[i], initPathPtr);
+    int result = run_test_file(testPath, testFiles[i], initPathPtr);
     if(result == 0) {
       passed++;
       printf("    ✓ Passed\n");
@@ -935,7 +935,7 @@ int bialetRunTests(const char* testDir, const char* rootDir) {
   printf("\n%d passed, %d failed\n", passed, failed);
   return (failed > 0) ? 1 : 0;
 }
-void bialetInit(struct BialetConfig* config) {
+void bialet_init(struct BialetConfig* config) {
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
   if(config->db_path[0] == '/') {
@@ -988,23 +988,23 @@ void bialetInit(struct BialetConfig* config) {
 
   bialet_config = *config;
   wrenInitConfiguration(&wren_config);
-  wren_config.writeFn = &bialetWrenWrite;
-  wren_config.errorFn = &bialetWrenError;
-  wren_config.queryFn = &queryExecute;
-  wren_config.loadModuleFn = &bialetWrenLoadModule;
+  wren_config.writeFn = &bialet_wren_write;
+  wren_config.errorFn = &bialet_wren_error;
+  wren_config.queryFn = &query_execute;
+  wren_config.loadModuleFn = &bialet_wren_load_module;
   wren_config.enableTests = config->enable_tests;
 
-  httpCallInit(&bialet_config);
+  http_call_init(&bialet_config);
 }
 
-void bialetCleanup() {
+void bialet_cleanup() {
   if(db) {
     sqlite3_close(db);
     db = NULL;
   }
 }
 
-BialetQuery* createBialetQuery() {
+BialetQuery* create_bialet_query() {
   BialetQuery* query = (BialetQuery*)malloc(sizeof(BialetQuery));
   query->results = NULL;
   query->resultsCount = 0;
@@ -1013,7 +1013,7 @@ BialetQuery* createBialetQuery() {
   return query;
 }
 
-void addResult(BialetQuery* query) {
+void add_result(BialetQuery* query) {
   query->resultsCount++;
   query->results = (BialetQueryResult*)realloc(
       query->results, query->resultsCount * sizeof(BialetQueryResult));
@@ -1022,8 +1022,8 @@ void addResult(BialetQuery* query) {
   newResult->rowCount = 0;
 }
 
-void addResultRow(BialetQuery* query, int resultIndex, const char* name,
-                  const char* value, int size, BialetQueryType type) {
+void add_result_row(BialetQuery* query, int resultIndex, const char* name,
+                    const char* value, int size, BialetQueryType type) {
   if(resultIndex < 0 || resultIndex >= query->resultsCount)
     return;
 
@@ -1043,7 +1043,7 @@ void addResultRow(BialetQuery* query, int resultIndex, const char* name,
   newRow->type = type;
 }
 
-void addParameter(BialetQuery* query, const char* value, BialetQueryType type) {
+void add_parameter(BialetQuery* query, const char* value, BialetQueryType type) {
   query->parametersCount++;
   query->parameters = (BialetQueryParameter*)realloc(
       query->parameters, query->parametersCount * sizeof(BialetQueryParameter));
@@ -1053,7 +1053,7 @@ void addParameter(BialetQuery* query, const char* value, BialetQueryType type) {
   newParameter->type = type;
 }
 
-void freeBialetQuery(BialetQuery* query) {
+void free_bialet_query(BialetQuery* query) {
   if(!query)
     return; // Guard clause to prevent dereferencing a NULL pointer
 

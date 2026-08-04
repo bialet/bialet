@@ -1,6 +1,6 @@
 #ifndef MARKDOWN_H
 #define MARKDOWN_H
 
-char* markdownToHtml(const char* markdown);
+char* markdown_to_html(const char* markdown);
 
 #endif

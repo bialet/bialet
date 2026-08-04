@@ -641,7 +641,7 @@ void handle_client(bialet_socket_t client_socket) {
 
   if(is_wren_file) {
     file_content[read_bytes] = '\0';
-    response = bialetRun(path, file_content, hm);
+    response = bialet_run(path, file_content, hm);
     if(response.length == 0 && response.body) {
       response.length = strlen(response.body);
     }
@@ -737,7 +737,7 @@ void custom_error(int status, struct BialetResponse* response) {
               file_content[read_bytes] = '\0';
               custom_error_recursing = 1;
               struct BialetResponse wren_response =
-                  bialetRun(path, file_content, NULL);
+                  bialet_run(path, file_content, NULL);
               custom_error_recursing = 0;
               free(file_content);
               if(wren_response.body && wren_response.length == 0)

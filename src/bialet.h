@@ -128,12 +128,12 @@ typedef struct {
   char*                 lastInsertId;
 } BialetQuery;
 
-BialetQuery* createBialetQuery();
-void         addResultRow(BialetQuery* query, int resultIndex, const char* name,
-                          const char* value, int size, BialetQueryType type);
-void         addResult(BialetQuery* query);
-void addParameter(BialetQuery* query, const char* value, BialetQueryType type);
-void freeBialetQuery(BialetQuery* query);
+BialetQuery* create_bialet_query();
+void         add_result_row(BialetQuery* query, int resultIndex, const char* name,
+                            const char* value, int size, BialetQueryType type);
+void         add_result(BialetQuery* query);
+void add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
+void free_bialet_query(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
   "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "              \

@@ -24,7 +24,7 @@
 #define HASH_LENGTH 64
 #define HASH_AND_SALT_LENGTH 98
 
-int  verifyPassword(char* password, char* hash_and_salt);
-void hashPassword(char* password, char* output);
+int  verify_password(char* password, char* hash_and_salt);
+void hash_password(char* password, char* output);
 
 #endif

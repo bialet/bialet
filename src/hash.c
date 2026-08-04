@@ -36,7 +36,7 @@ void generate_salt(char* salt, size_t length) {
 }
 #endif
 
-void hashPassword(char* password, char* output) {
+void hash_password(char* password, char* output) {
 #ifdef OPENSSL_OK
   unsigned char salt[16];
   if(!RAND_bytes(salt, sizeof(salt))) {
@@ -87,7 +87,7 @@ void hashPassword(char* password, char* output) {
   output[HASH_AND_SALT_LENGTH - 1] = '\0';
 }
 
-int verifyPassword(char* password, char* hash_and_salt) {
+int verify_password(char* password, char* hash_and_salt) {
   int result = 0;
 #ifdef OPENSSL_OK
 

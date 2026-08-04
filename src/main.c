@@ -82,21 +82,21 @@ static void migrate() {
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
            MIGRATION_FILE_ALT);
-  if((code = readFile(path)) || (code = readFile(altPath))) {
-    struct BialetResponse r = bialetRun("migration", code, 0);
+  if((code = read_file(path)) || (code = read_file(altPath))) {
+    struct BialetResponse r = bialet_run("migration", code, 0);
     message(yellow("Running migration"), r.body);
   } else {
-    bialetRun("migration", "Db.init", 0);
+    bialet_run("migration", "Db.init", 0);
   }
 }
 
-static void cron_install() {
+static void install_cron() {
   char path[MAX_PATH_LEN];
   char altPath[MAX_PATH_LEN];
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
            CRON_FILE_ALT);
-  if((cron_code = readFile(path)) || (cron_code = readFile(altPath))) {
+  if((cron_code = read_file(path)) || (cron_code = read_file(altPath))) {
     message(yellow("Installing cron"));
     cron_installed = 1;
   } else {
@@ -106,7 +106,7 @@ static void cron_install() {
 
 static void cron_run() {
   if(cron_installed) {
-    bialetRun("cron", cron_code, 0);
+    bialet_run("cron", cron_code, 0);
   }
 }
 
@@ -120,13 +120,13 @@ void* cron_thread(void* arg) {
 }
 
 /* Reload files */
-static void triggerReloadFiles(const char* filepath) {
+static void trigger_reload_files(const char* filepath) {
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
     if(filepath == NULL) {
       migrate();
-      cron_install();
+      install_cron();
       return;
     }
     if(!strcmp(filepath, "_migration" BIALET_EXTENSION) ||
@@ -135,7 +135,7 @@ static void triggerReloadFiles(const char* filepath) {
     }
     if(!strcmp(filepath, "_cron" BIALET_EXTENSION) ||
        !strcmp(filepath, "_app/cron" BIALET_EXTENSION)) {
-      cron_install();
+      install_cron();
     }
   }
 }
@@ -143,7 +143,7 @@ static void triggerReloadFiles(const char* filepath) {
 #define DMON_IMPL
 #include "dmon.h"
 
-static void dmonCallback(dmon_watch_id watch_id, dmon_action action,
+static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
                           const char* rootdir, const char* filepath,
                           const char* oldfilepath, void* user) {
   (void)watch_id;
@@ -155,22 +155,22 @@ static void dmonCallback(dmon_watch_id watch_id, dmon_action action,
     livereload_notify();
     const char* ext = strrchr(filepath, '.');
     if(ext && !strcmp(ext, BIALET_EXTENSION)) {
-      triggerReloadFiles(filepath);
+      trigger_reload_files(filepath);
     }
   }
 }
 
-char* serverUrl(int port) {
+char* server_url(int port) {
   static char url[MAX_URL];
   snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, port);
   return url;
 }
 
 void welcome(int port) {
-  message(BIALET_LOGO, green("bialet"), "is riding on", blue(serverUrl(port)));
+  message(BIALET_LOGO, green("bialet"), "is riding on", blue(server_url(port)));
 }
 
-void sigintHandler(int signum) {
+void sigint_handler(int signum) {
   (void)signum;
   keep_running = 0;
   stop_server();
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
   int              run_tests = 0;
 #if !IS_WIN
   struct sigaction sa;
-  sa.sa_handler = sigintHandler;
+  sa.sa_handler = sigint_handler;
   sa.sa_flags = 0;
   sigemptyset(&sa.sa_mask);
 
@@ -191,9 +191,9 @@ int main(int argc, char* argv[]) {
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGABRT, &sa, NULL);
 #else
-  signal(SIGINT, sigintHandler);
-  signal(SIGTERM, sigintHandler);
-  signal(SIGABRT, sigintHandler);
+  signal(SIGINT, sigint_handler);
+  signal(SIGTERM, sigint_handler);
+  signal(SIGABRT, sigint_handler);
 #endif
 
 #if IS_LINUX
@@ -339,14 +339,14 @@ int main(int argc, char* argv[]) {
   }
   bialet_config.full_root_dir = resolved_root;
 
-  messageInit(&bialet_config);
-  bialetInit(&bialet_config);
+  message_init(&bialet_config);
+  bialet_init(&bialet_config);
   if(strcmp(code, "") != 0) {
-    exit(bialetRunCli(code));
+    exit(bialet_run_cli(code));
   }
 
   if(validate_file != NULL) {
-    int result = bialetValidateSyntax(validate_file);
+    int result = bialet_validate_syntax(validate_file);
     if(result == 0) {
       printf("✓ Syntax OK: %s\n", validate_file);
     } else {
@@ -363,10 +363,10 @@ int main(int argc, char* argv[]) {
     if(test_dir == NULL) {
       test_dir = bialet_config.root_dir;
     }
-    int result = bialetRunTests(test_dir, bialet_config.root_dir);
+    int result = bialet_run_tests(test_dir, bialet_config.root_dir);
 
     // Clean up temp database
-    bialetCleanup();
+    bialet_cleanup();
     unlink(temp_db_path);
 
     exit(result);
@@ -379,7 +379,7 @@ int main(int argc, char* argv[]) {
   }
 
   welcome(port);
-  triggerReloadFiles(NULL);
+  trigger_reload_files(NULL);
   livereload_init();
 
 #if IS_LINUX
@@ -388,7 +388,8 @@ int main(int argc, char* argv[]) {
   pthread_create(&cron_tid, NULL, cron_thread, NULL);
 
   dmon_init();
-  dmon_watch(bialet_config.full_root_dir, dmonCallback, DMON_WATCHFLAGS_RECURSIVE, NULL);
+  dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
+             NULL);
 
   mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;
@@ -427,7 +428,8 @@ int main(int argc, char* argv[]) {
 
 #if !IS_LINUX
   dmon_init();
-  dmon_watch(bialet_config.full_root_dir, dmonCallback, DMON_WATCHFLAGS_RECURSIVE, NULL);
+  dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
+             NULL);
 
   time_t last_cron = time(NULL);
   while(keep_running) {

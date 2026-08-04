@@ -184,14 +184,14 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
 }
 #endif
 
-void httpCallInit(struct BialetConfig* config) {
+void http_call_init(struct BialetConfig* config) {
   (void)config;
 #if IS_UNIX
   curl_global_init(CURL_GLOBAL_ALL);
 #endif
 }
 
-void httpCallPerform(struct HttpRequest* request, struct HttpResponse* response) {
+void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
 #if IS_UNIX
   struct memory      chunk = {0};
   struct memory      header_chunk = {0};

@@ -1177,14 +1177,14 @@ DEF_PRIMITIVE(system_writeString) {
 DEF_PRIMITIVE(util_hash) {
   char* password = AS_CSTRING(args[1]);
   char  hash[HASH_AND_SALT_LENGTH] = {0};
-  hashPassword(password, hash);
+  hash_password(password, hash);
   RETURN_VAL(wrenNewString(vm, hash));
 }
 
 DEF_PRIMITIVE(util_verify) {
   char* password = AS_CSTRING(args[1]);
   char* hash_and_salt = AS_CSTRING(args[2]);
-  int   result = verifyPassword(password, hash_and_salt);
+  int   result = verify_password(password, hash_and_salt);
   RETURN_BOOL(result);
 }
 
@@ -1225,7 +1225,7 @@ DEF_PRIMITIVE(http_call) {
   response.headers = "Content-Type: text/json";
   response.body = "{}";
 
-  httpCallPerform(&request, &response);
+  http_call_perform(&request, &response);
 
   ObjList* res = wrenNewList(vm, 4);
   res->elements.data[0] = NUM_VAL(response.status);
@@ -1241,8 +1241,8 @@ DEF_PRIMITIVE(test_runRequest) {
   const char* message = AS_CSTRING(args[2]);
   
   // Get root directory from bialet config
-  extern const char* bialetGetFullRootDir();
-  const char* rootDir = bialetGetFullRootDir();
+  extern const char* bialet_get_full_root_dir();
+  const char* rootDir = bialet_get_full_root_dir();
   
   // Strip query string from route for file lookup
   const char* qmark = strchr(route, '?');
@@ -1259,14 +1259,14 @@ DEF_PRIMITIVE(test_runRequest) {
   }
   
   // Check if file exists, otherwise try index.wren
-  extern char* readFile(const char* path);
-  char* code = readFile(path);
+  extern char* read_file(const char* path);
+  char* code = read_file(path);
   if (code == NULL) {
     char tmp2[4096];
     snprintf(tmp2, sizeof(tmp2), "%s%.*s/index.wren", rootDir, routePathLen, route);
     strncpy(path, tmp2, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
-    code = readFile(path);
+    code = read_file(path);
   }
   
   if (code == NULL) {
@@ -1337,9 +1337,9 @@ DEF_PRIMITIVE(test_runRequest) {
   hm->routes = create_string("", 0);
   
   // Call bialetRun to execute the route handler
-  extern struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
+  extern struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm);
   snprintf(filePath, sizeof(filePath), "%s%s", rootDir, route);
-  struct BialetResponse response = bialetRun(filePath, code, hm);
+  struct BialetResponse response = bialet_run(filePath, code, hm);
   
   // Free HttpMessage fields
   free(hm->method.str);
@@ -1430,15 +1430,15 @@ DEF_PRIMITIVE(date_unix) {
 };
 
 DEF_PRIMITIVE(markdown_html) {
-  char* html = markdownToHtml(AS_CSTRING(args[1]));
+  char* html = markdown_to_html(AS_CSTRING(args[1]));
   RETURN_VAL(wrenNewString(vm, html));
 }
 
 DEF_PRIMITIVE(markdown_file) {
-  char* content = bialetReadFile(AS_CSTRING(args[1]));
+  char* content = bialet_read_file(AS_CSTRING(args[1]));
   if(content == NULL)
     RETURN_FALSE;
-  char* html = markdownToHtml(content);
+  char* html = markdown_to_html(content);
   RETURN_VAL(wrenNewString(vm, html));
 };
 
@@ -1448,15 +1448,15 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
     for(int i = 0; i < params->elements.count; i++) {
       val = params->elements.data[i];
       if(IS_NULL(val)) {
-        addParameter(query, 0, BIALETQUERYTYPE_NULL);
+        add_parameter(query, 0, BIALETQUERYTYPE_NULL);
       } else if(IS_BOOL(val)) {
-        addParameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
+        add_parameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
       } else if(IS_NUM(val)) {
         char num[MAX_NUMBER_LENGTH];
         sprintf(num, "%f", AS_NUM(val));
-        addParameter(query, num, BIALETQUERYTYPE_NUMBER);
+        add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else {
-        addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
+        add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       }
     }
     vm->config.queryFn(vm, query);
@@ -1464,7 +1464,7 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 }
 
 DEF_PRIMITIVE(query_fetch) {
-  BialetQuery query = *createBialetQuery();
+  BialetQuery query = *create_bialet_query();
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
   ObjList* list = wrenNewList(vm, query.resultsCount);
@@ -1481,7 +1481,7 @@ DEF_PRIMITIVE(query_fetch) {
 }
 
 DEF_PRIMITIVE(query_execute) {
-  BialetQuery query = *createBialetQuery();
+  BialetQuery query = *create_bialet_query();
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
   if(query.lastInsertId) {

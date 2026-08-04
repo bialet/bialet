@@ -18,7 +18,7 @@ static const char* skip_ordered_list_prefix(const char* line) {
   return line + 2;
 }
 
-static char* escapeHtml(const char* src, char* out) {
+static char* escape_html(const char* src, char* out) {
   while(*src) {
     switch(*src) {
       case '&':
@@ -39,7 +39,7 @@ static char* escapeHtml(const char* src, char* out) {
   return out;
 }
 
-static char* renderInline(const char* src, char* out) {
+static char* render_inline(const char* src, char* out) {
   while(*src) {
     if(strncmp(src, "**", 2) == 0) {
       out += sprintf(out, "<strong>");
@@ -64,7 +64,7 @@ static char* renderInline(const char* src, char* out) {
       const char* end = strchr(src, '`');
       if(end) {
         out += sprintf(out, "<code>");
-        out = escapeHtml(src, out);
+        out = escape_html(src, out);
         out += sprintf(out, "</code>");
         src = end + 1;
         continue;
@@ -97,7 +97,7 @@ static char* renderInline(const char* src, char* out) {
   return out;
 }
 
-char* markdownToHtml(const char* markdown) {
+char* markdown_to_html(const char* markdown) {
   char* html = calloc(1, MAX_OUTPUT);
   char* out = html;
   char* input = strdup(markdown);
@@ -182,7 +182,7 @@ char* markdownToHtml(const char* markdown) {
     }
 
     if(in_codeblock) {
-      out = escapeHtml(line, out);
+      out = escape_html(line, out);
       out += sprintf(out, "\n");
       i++;
       continue;
@@ -193,7 +193,7 @@ char* markdownToHtml(const char* markdown) {
         out += sprintf(out, "<blockquote>\n");
         in_blockquote = true;
       }
-      out = renderInline(line + 2, out);
+      out = render_inline(line + 2, out);
       out += sprintf(out, "<br>\n");
       i++;
       continue;
@@ -233,7 +233,7 @@ char* markdownToHtml(const char* markdown) {
           *end-- = '\0';
 
         out += sprintf(out, table_header_parsed ? "<td>" : "<th>");
-        out = renderInline(cell, out);
+        out = render_inline(cell, out);
         out += sprintf(out, table_header_parsed ? "</td>" : "</th>");
         cell = strtok(NULL, "|");
       }
@@ -257,7 +257,7 @@ char* markdownToHtml(const char* markdown) {
         in_olist = true;
       }
       out += sprintf(out, "<li>");
-      out = renderInline(skip_ordered_list_prefix(line), out);
+      out = render_inline(skip_ordered_list_prefix(line), out);
       out += sprintf(out, "</li>\n");
       i++;
       continue;
@@ -276,7 +276,7 @@ char* markdownToHtml(const char* markdown) {
         in_list = true;
       }
       out += sprintf(out, "<li>");
-      out = renderInline(line + 2, out);
+      out = render_inline(line + 2, out);
       out += sprintf(out, "</li>\n");
       i++;
       continue;
@@ -291,7 +291,7 @@ char* markdownToHtml(const char* markdown) {
         level++;
       if(line[level] == ' ') {
         out += sprintf(out, "<h%d>", level);
-        out = renderInline(line + level + 1, out);
+        out = render_inline(line + level + 1, out);
         out += sprintf(out, "</h%d>\n", level);
         i++;
         continue;
@@ -300,7 +300,7 @@ char* markdownToHtml(const char* markdown) {
 
     if(*line != '\0') {
       out += sprintf(out, "<p>");
-      out = renderInline(line, out);
+      out = render_inline(line, out);
 
       // Collect consecutive non-empty lines into the same paragraph
       i++;
@@ -330,7 +330,7 @@ char* markdownToHtml(const char* markdown) {
 
         // Add space and continue the paragraph
         out += sprintf(out, " ");
-        out = renderInline(next_line, out);
+        out = render_inline(next_line, out);
         i++;
       }
 
