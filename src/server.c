@@ -45,6 +45,10 @@ typedef int bialet_socket_t;
 #define BUFFER_SIZE (BUFSIZ * 4)
 #define PATH_SIZE (1024 * 2)
 
+// Idle/read/write timeout for accepted client sockets. The server is
+// single-threaded, so a stalled peer must not be able to park it forever.
+#define BIALET_SOCKET_TIMEOUT_MS (15000)
+
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
 
@@ -91,12 +95,31 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   while(sent < count) {
     ssize_t n = send(fd, p + sent, count - sent, 0);
     if(n < 0)
-      return n; // error
+      return n; // error (including SO_SNDTIMEO expiry)
     if(n == 0)
       break; // peer closed
     sent += (size_t)n;
   }
   return (ssize_t)sent;
+}
+
+// Applies receive/send timeouts so a half-open or stalling connection is
+// dropped after BIALET_SOCKET_TIMEOUT_MS instead of blocking the
+// single-threaded accept/handle loop forever.
+static void set_socket_timeout(bialet_socket_t fd) {
+#if IS_WIN
+  DWORD timeout_ms = BIALET_SOCKET_TIMEOUT_MS;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, setsockopt_val(&timeout_ms),
+             sizeof(timeout_ms));
+  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, setsockopt_val(&timeout_ms),
+             sizeof(timeout_ms));
+#else
+  struct timeval tv;
+  tv.tv_sec = BIALET_SOCKET_TIMEOUT_MS / 1000;
+  tv.tv_usec = (BIALET_SOCKET_TIMEOUT_MS % 1000) * 1000;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
 }
 
 void handle_client(bialet_socket_t client_socket);
@@ -731,6 +754,7 @@ int server_poll(int delay) {
     perror("Failed to accept connection");
     return -1;
   }
+  set_socket_timeout(client_socket);
   handle_client(client_socket);
 
   return 0;
