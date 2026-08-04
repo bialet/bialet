@@ -26,7 +26,7 @@ improvements.
       utilities
 - [ ] **Forms guide** — Document POST handling, basic validation, redirect after
       POST (PRG), and simple file uploads.
-- [ ] **Security guide** — Central page covering XSS prevention, SQL injection
+- [x] **Security guide** — Central page covering XSS prevention, SQL injection
       reminders, secure configuration, and any built-in protections (e.g.,
       CSRF).
 - [ ] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
