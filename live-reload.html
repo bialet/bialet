@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Error Pages" />
+<meta property="og:title" content="Live Reload" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://bialet.dev/errors.html" />
+<meta property="og:url" content="https://bialet.dev/live-reload.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet ships with built-in pages for the situations where no route is found and for when your code fails. You can replace both with your own HTML files — no Wren required. Default Pages: When a req..." />
+<meta property="og:description" content="When enabled, Bialet injects a small polling script into every HTML response. The script checks for file changes once per second and reloads the page automatically — no browser extensions, no WebSo..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet ships with built-in pages for the situations where no route is found and for when your code fails. You can replace both with your own HTML files — no Wren required. Default Pages: When a req..." />
+<meta name="description" content="When enabled, Bialet injects a small polling script into every HTML response. The script checks for file changes once per second and reloads the page automatically — no browser extensions, no WebSo..." />
 
-    <title>Error Pages &#8212; Bialet  documentation</title>
+    <title>Live Reload &#8212; Bialet  documentation</title>
   
   
   
@@ -57,13 +57,13 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'errors';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'live-reload';</script>
     <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Advanced Routing" href="advanced-routing.html" />
-    <link rel="prev" title="Forms" href="forms.html" />
+    <link rel="next" title="Security" href="security.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.11.0" />
@@ -191,10 +191,10 @@
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Error Pages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
 <ul class="nav bd-sidenav">
@@ -202,9 +202,9 @@
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
@@ -292,7 +292,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/edit/main/docs/errors.md" target="_blank"
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/live-reload.md" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -309,7 +309,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Ferrors.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Flive-reload.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -339,7 +339,7 @@
       
       
       
-      <li><a href="_sources/errors.md" target="_blank"
+      <li><a href="_sources/live-reload.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -415,7 +415,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Error Pages</h1>
+    <h1>Live Reload</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -425,9 +425,14 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-pages">Default Pages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-error-pages">Custom Error Pages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling">Enabling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#script-injection">Script injection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-livereload-endpoint">The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-watching">File watching</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
 </ul>
             </nav>
         </div>
@@ -439,80 +444,83 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="error-pages">
-<h1>Error Pages<a class="headerlink" href="#error-pages" title="Link to this heading">#</a></h1>
-<p>Bialet ships with built-in pages for the situations where no route is found
-and for when your code fails. You can replace both with your own HTML files —
-no Wren required.</p>
-<section id="default-pages">
-<h2>Default Pages<a class="headerlink" href="#default-pages" title="Link to this heading">#</a></h2>
-<p>When a request fails, Bialet returns a plain HTML page:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Situation</p></th>
-<th class="head"><p>Status</p></th>
-<th class="head"><p>Default page</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>No route matches the URL</p></td>
-<td><p>404</p></td>
-<td><p>Not found page</p></td>
-</tr>
-<tr class="row-odd"><td><p>A <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file fails to parse or throws</p></td>
-<td><p>500</p></td>
-<td><p>Internal server error</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>The welcome page shown at <code class="docutils literal notranslate"><span class="pre">/</span></code> when the root has no <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> or
-<code class="docutils literal notranslate"><span class="pre">index.html</span></code> is a separate page and cannot be customized this way.</p>
-</section>
-<section id="custom-error-pages">
-<h2>Custom Error Pages<a class="headerlink" href="#custom-error-pages" title="Link to this heading">#</a></h2>
-<p>Drop an HTML file named after the status code in your app root directory.
-The server looks for it every time that error is produced:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-site/
-├── index.wren
-├── 404.html   # served on every 404
-└── 500.html   # served on every 500
+  <section id="live-reload">
+<h1>Live Reload<a class="headerlink" href="#live-reload" title="Link to this heading">#</a></h1>
+<p>When enabled, Bialet injects a small polling script into every HTML response.
+The script checks for file changes once per second and reloads the page
+automatically — no browser extensions, no WebSocket server, no extra process.</p>
+<section id="enabling">
+<h2>Enabling<a class="headerlink" href="#enabling" title="Link to this heading">#</a></h2>
+<p>Live reload is controlled by the <code class="docutils literal notranslate"><span class="pre">BIALET_LIVE_RELOAD</span></code> configuration key.
+Set it once in your development database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.enable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>Any file named <code class="docutils literal notranslate"><span class="pre">&lt;status-code&gt;.html</span></code> in the root is used when Bialet renders
-that error. In practice that means <code class="docutils literal notranslate"><span class="pre">404.html</span></code> and <code class="docutils literal notranslate"><span class="pre">500.html</span></code>:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cm">&lt;!-- 404.html --&gt;</span>
-<span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&quot;en&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&quot;UTF-8&quot;</span><span class="p">&gt;&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Page not found<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Lost? This page went missing.<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="p">&gt;</span>Back to the homepage<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+<p>Or directly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;BIALET_LIVE_RELOAD&quot;, &quot;1&quot;)&#39;</span><span class="w"> </span>.
 </pre></div>
 </div>
-<p>When a file is missing or an error occurs, Bialet reads the matching file and
-serves it with the correct HTTP status code and <code class="docutils literal notranslate"><span class="pre">Content-Type:</span> <span class="pre">text/html</span></code>.</p>
-<blockquote>
-<div><p>⚠️ Pitfall: the <code class="docutils literal notranslate"><span class="pre">&lt;status&gt;.html</span></code> file is only read for errors Bialet
-generates itself. If a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file calls <code class="docutils literal notranslate"><span class="pre">Response.status(404)</span></code> and
-returns its own body, that body wins and <code class="docutils literal notranslate"><span class="pre">404.html</span></code> is not used.</p>
-</div></blockquote>
+<p>Disable it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.disable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
+</pre></div>
+</div>
+<p>Since configuration lives in the SQLite database, enabling it in dev has no
+effect on production — each environment has its own <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and its own
+<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> table.</p>
+<p>To check if it’s currently active:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;BIALET_LIVE_RELOAD&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Live reload is on&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </section>
-<section id="scope">
-<h2>Scope<a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
-<p>Custom error pages are <strong>static HTML only</strong>. The file is served verbatim:</p>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<section id="script-injection">
+<h3>Script injection<a class="headerlink" href="#script-injection" title="Link to this heading">#</a></h3>
+<p>When live reload is enabled, Bialet appends a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag to every HTML
+response, right before <code class="docutils literal notranslate"><span class="pre">&lt;/body&gt;</span></code> (or at the end if no <code class="docutils literal notranslate"><span class="pre">&lt;/body&gt;</span></code> is present).
+The script polls the <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint every second.</p>
+</section>
+<section id="the-livereload-endpoint">
+<h3>The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint<a class="headerlink" href="#the-livereload-endpoint" title="Link to this heading">#</a></h3>
+<p>This is an internal route handled by the server before any Wren code runs.
+It returns a plain-text version number that updates whenever a file in the
+app directory changes.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">GET</span><span class="w"> </span><span class="o">/</span><span class="vi">_livereload</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="mf">200</span><span class="w"> </span><span class="nc">OK</span>
+<span class="nc">Content</span><span class="o">-</span><span class="nc">Type</span><span class="o">:</span><span class="w"> </span><span class="n">text</span><span class="o">/</span><span class="n">plain</span>
+
+<span class="mf">1746554321</span>
+</pre></div>
+</div>
+<p>When the browser sees a different version number from its last poll, it calls
+<code class="docutils literal notranslate"><span class="pre">location.reload()</span></code>.</p>
+</section>
+<section id="file-watching">
+<h3>File watching<a class="headerlink" href="#file-watching" title="Link to this heading">#</a></h3>
+<p>Bialet uses inotify (on Linux) to watch the app directory for changes. When
+any file is created, modified, or deleted, the version number updates and the
+next poll picks it up.</p>
+<p>The Wren VM also reloads automatically on <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file changes — this is
+independent of live reload and happens regardless of the config setting.</p>
+</section>
+</section>
+<section id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>No <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code> interpolation</p></li>
-<li><p>No <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> template wrapping</p></li>
-<li><p>No Wren execution</p></li>
+<li><p><strong>Polling, not push.</strong> There’s a 1-second delay between saving a file and
+the browser reloading. For CSS-only changes, consider a tool that injects
+stylesheets directly.</p></li>
+<li><p><strong>No WebSocket.</strong> Bialet speaks HTTP/1.0 and runs in a single process.
+Polling is the simplest approach that works everywhere without adding
+dependencies.</p></li>
+<li><p><strong>Full page reload only.</strong> The script calls <code class="docutils literal notranslate"><span class="pre">location.reload()</span></code>. State
+in JavaScript variables or form inputs is lost.</p></li>
 </ul>
 <blockquote>
-<div><p>⚠️ Pitfall: don’t name the file <code class="docutils literal notranslate"><span class="pre">500.wren</span></code> expecting it to run. Bialet
-does not execute <code class="docutils literal notranslate"><span class="pre">.wren</span></code> error pages; it only reads <code class="docutils literal notranslate"><span class="pre">.html</span></code> files. If your
-error page must be dynamic, serve the error through your own <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route
-with <code class="docutils literal notranslate"><span class="pre">Response.status(...)</span></code> instead.</p>
+<div><p>⚠️ Pitfall: Enabling live reload on a production database injects the
+script into every page served to real users. The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint
+becomes publicly accessible. Only enable it in development.</p>
 </div></blockquote>
 </section>
 </section>
@@ -529,20 +537,20 @@ with <code class="docutils literal notranslate"><span class="pre">Response.statu
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="forms.html"
+       href="configuration.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Forms</p>
+        <p class="prev-next-title">Configuration</p>
       </div>
     </a>
     <a class="right-next"
-       href="advanced-routing.html"
+       href="security.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Advanced Routing</p>
+        <p class="prev-next-title">Security</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -563,9 +571,14 @@ with <code class="docutils literal notranslate"><span class="pre">Response.statu
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-pages">Default Pages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-error-pages">Custom Error Pages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling">Enabling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#script-injection">Script injection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-livereload-endpoint">The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-watching">File watching</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
 </ul>
   </nav></div>
 

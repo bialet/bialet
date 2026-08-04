@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.7" />
+  <meta name="docsearch:version" content="0.11.0" />
   </head>
   
   
@@ -204,6 +204,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
@@ -517,6 +518,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">set(key, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-key">enable(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disable-key">disable(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>
@@ -1198,6 +1201,30 @@ delete configuration options.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
 </ul>
+</section>
+<section id="enable-key">
+<h3>enable(key)<a class="headerlink" href="#enable-key" title="Link to this heading">#</a></h3>
+<p>Sets a configuration option to <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>. Convenience method for enabling a
+feature flag — equivalent to <code class="docutils literal notranslate"><span class="pre">Config.set(key,</span> <span class="pre">&quot;1&quot;)</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option to enable.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// same as Config.set(&quot;beta_features&quot;, &quot;1&quot;)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">    </span><span class="c1">// true</span>
+</pre></div>
+</div>
+</section>
+<section id="disable-key">
+<h3>disable(key)<a class="headerlink" href="#disable-key" title="Link to this heading">#</a></h3>
+<p>Sets a configuration option to <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>. Convenience method for disabling a
+feature flag — equivalent to <code class="docutils literal notranslate"><span class="pre">Config.set(key,</span> <span class="pre">&quot;0&quot;)</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option to disable.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// same as Config.set(&quot;maintenance_mode&quot;, &quot;0&quot;)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1">// false</span>
+</pre></div>
+</div>
 </section>
 <section id="delete-key">
 <h3>delete(key)<a class="headerlink" href="#delete-key" title="Link to this heading">#</a></h3>
@@ -1964,6 +1991,8 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">set(key, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-key">enable(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#disable-key">disable(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>

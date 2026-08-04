@@ -62,11 +62,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Security" href="security.html" />
+    <link rel="next" title="Live Reload" href="live-reload.html" />
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.10.7" />
+  <meta name="docsearch:version" content="0.11.0" />
   </head>
   
   
@@ -204,6 +204,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
@@ -426,6 +427,7 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-and-writing">Reading and Writing</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#typed-access">Typed Access</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-disable">Enable / Disable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">Delete</a></li>
 </ul>
 </li>
@@ -484,6 +486,22 @@ and JSON:</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Config.bool</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code> (case-insensitive),
 <code class="docutils literal notranslate"><span class="pre">false</span></code> for everything else including missing keys.</p>
+</section>
+<section id="enable-disable">
+<h3>Enable / Disable<a class="headerlink" href="#enable-disable" title="Link to this heading">#</a></h3>
+<p>For on/off flags, use the <code class="docutils literal notranslate"><span class="pre">enable</span></code> and <code class="docutils literal notranslate"><span class="pre">disable</span></code> convenience methods
+instead of hand-writing the <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> strings:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// stores &quot;1&quot;</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// stores &quot;0&quot;</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1">// false</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;live_reload&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// feature is on</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">enable</span></code> sets the value to <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">disable</span></code> sets it to <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>. Both are
+equivalent to <code class="docutils literal notranslate"><span class="pre">Config.set(&quot;key&quot;,</span> <span class="pre">&quot;1&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">Config.set(&quot;key&quot;,</span> <span class="pre">&quot;0&quot;)</span></code>.</p>
 </section>
 <section id="delete">
 <h3>Delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h3>
@@ -644,6 +662,11 @@ for every setting in the system.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>Toggle flags with <code class="docutils literal notranslate"><span class="pre">Config.enable()</span></code> / <code class="docutils literal notranslate"><span class="pre">Config.disable()</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// turn on</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// turn off</span>
+</pre></div>
+</div>
 </section>
 <section id="maintenance-mode">
 <h3>Maintenance Mode<a class="headerlink" href="#maintenance-mode" title="Link to this heading">#</a></h3>
@@ -719,11 +742,11 @@ configuration</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="security.html"
+       href="live-reload.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Security</p>
+        <p class="prev-next-title">Live Reload</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -746,6 +769,7 @@ configuration</p></li>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-and-writing">Reading and Writing</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#typed-access">Typed Access</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-disable">Enable / Disable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">Delete</a></li>
 </ul>
 </li>

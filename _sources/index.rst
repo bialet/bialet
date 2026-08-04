@@ -325,6 +325,7 @@ Who is Bialet for?
    :caption: Running It
 
    configuration
+   live-reload
    security
    cron
    tests
