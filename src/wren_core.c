@@ -1463,7 +1463,12 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
         add_parameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
       } else if(IS_NUM(val)) {
         char num[MAX_NUMBER_LENGTH];
-        sprintf(num, "%f", AS_NUM(val));
+        // %.17g keeps full double precision and renders compactly (DBL_MAX
+        // is ~24 chars); %f expands to hundreds of chars and overflowed
+        // this fixed stack buffer.
+        int written = snprintf(num, sizeof(num), "%.17g", AS_NUM(val));
+        if(written < 0 || written >= (int)sizeof(num))
+          continue;
         add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else {
         add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
