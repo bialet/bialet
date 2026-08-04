@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=04181c56" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=0b90f31a" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -425,7 +425,6 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-ll-build">What we’ll build</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-are-routes">Files are routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chapters">Chapters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-files">Source files</a></li>
 </ul>
@@ -442,12 +441,24 @@
   <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
 <p>In this tutorial we’ll build a working poll application with Bialet. You’ll
-learn how to write <a class="reference internal" href="../wren.html"><span class="std std-doc">Wren</span></a> files, query a SQLite database, handle form
-submissions, and render dynamic HTML — all with zero configuration.</p>
+learn how to write <a class="reference internal" href="../wren.html"><span class="std std-doc">Wren</span></a> files, query a SQLite database, handle
+form submissions, and render dynamic HTML — all with zero configuration.</p>
+<blockquote>
+<div><p>ℹ️ <strong>Bialet has no router to configure.</strong> Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a URL at the
+same path, just like a static HTML file: <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/about</span></code>.</p>
+<p>Use the query string for dynamic data <code class="docutils literal notranslate"><span class="pre">article.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/article?id=123</span></code> with
+<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">id</span> <span class="pre">=</span> <span class="pre">Request.get(&quot;id&quot;)</span></code>. See <a class="reference internal" href="../advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a>
+for the full routing model.</p>
+</div></blockquote>
+<p>Already familiar with Bialet? Jump to <a class="reference internal" href="../installation.html"><span class="std std-doc">Installation</span></a> or the
+<a class="reference internal" href="../reference.html"><span class="std std-doc">API Reference</span></a>.</p>
+<p>Building with an AI assistant instead? Paste the
+<a class="reference internal" href="../ai-prompt.html"><span class="std std-doc">AI Coding Prompt</span></a> into Claude, ChatGPT, or Cursor before you
+start — it teaches the assistant Bialet’s conventions in one message.</p>
 <section id="what-we-ll-build">
 <h2>What we’ll build<a class="headerlink" href="#what-we-ll-build" title="Link to this heading">#</a></h2>
 <p>A simple poll that lets users vote “Yes” or “No” and see live results with
-percentage bars.</p>
+percentage bars. <a class="reference external" href="https://poll.bialet.dev/">Check it live</a>.</p>
 <ul class="simple">
 <li><p><strong>Vote page</strong> — Form with radio buttons, styled with Tailwind</p></li>
 <li><p><strong>Results page</strong> — Progress bars showing vote distribution</p></li>
@@ -455,17 +466,6 @@ percentage bars.</p>
 </ul>
 <p><img alt="Poll Vote" src="../_images/poll-vote.png" />
 <img alt="Poll Results" src="../_images/poll-results.png" /></p>
-</section>
-<section id="files-are-routes">
-<h2>Files are routes<a class="headerlink" href="#files-are-routes" title="Link to this heading">#</a></h2>
-<p>Bialet has no router to configure. Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a URL at the same
-path, just like a static HTML file: <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/about</span></code>.</p>
-<p>Use the query string for dynamic data:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Article {{ id }}&lt;/p&gt;</span>
-</pre></div>
-</div>
-<p>See <a class="reference internal" href="../advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> for the full routing model.</p>
 </section>
 <section id="chapters">
 <h2>Chapters<a class="headerlink" href="#chapters" title="Link to this heading">#</a></h2>
@@ -481,11 +481,6 @@ path, just like a static HTML file: <code class="docutils literal notranslate"><
 <li class="toctree-l1"><a class="reference internal" href="8-results.html">8. Results</a></li>
 </ul>
 </div>
-<p>Already familiar with Bialet? Jump to <a class="reference internal" href="../installation.html"><span class="std std-doc">Installation</span></a> or the
-<a class="reference internal" href="../reference.html"><span class="std std-doc">API Reference</span></a>.</p>
-<p>Building with an AI assistant instead? Paste the <a class="reference internal" href="../ai-prompt.html"><span class="std std-doc">AI Coding Prompt</span></a>
-into Claude, ChatGPT, or Cursor before you start — it teaches the assistant
-Bialet’s conventions in one message.</p>
 </section>
 <section id="source-files">
 <h2>Source files<a class="headerlink" href="#source-files" title="Link to this heading">#</a></h2>
@@ -545,7 +540,6 @@ Bialet’s conventions in one message.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-ll-build">What we’ll build</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-are-routes">Files are routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chapters">Chapters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-files">Source files</a></li>
 </ul>

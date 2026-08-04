@@ -130,6 +130,17 @@ html[data-theme="light"] .community-banner {
   background: color-mix(in srgb, var(--pst-color-primary) 4%, var(--pst-color-background));
 }
 
+/* ── Two-column poll images ────────────────────────────────── */
+
+#what-we-ll-build p:has(img) {
+  display: flex;
+  gap: 1rem;
+}
+
+#what-we-ll-build p:has(img) img {
+  width: 50%;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .landing-content h1 {
@@ -140,5 +151,13 @@ html[data-theme="light"] .community-banner {
   }
   .landing-main {
     padding: 0.5rem 1rem 2rem;
+  }
+
+  #what-we-ll-build p:has(img) {
+    flex-direction: column;
+  }
+
+  #what-we-ll-build p:has(img) img {
+    width: 100%;
   }
 }
