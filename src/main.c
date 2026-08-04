@@ -10,6 +10,7 @@
  */
 #include "bialet.h"
 #include "bialet_wren.h"
+#include "livereload.h"
 #include "messages.h"
 #include "server.h"
 #include <errno.h>
@@ -151,6 +152,7 @@ static void dmonCallback(dmon_watch_id watch_id, dmon_action action,
   (void)oldfilepath;
   (void)user;
   if(filepath) {
+    livereload_notify();
     const char* ext = strrchr(filepath, '.');
     if(ext && !strcmp(ext, BIALET_EXTENSION)) {
       triggerReloadFiles(filepath);
@@ -378,6 +380,7 @@ int main(int argc, char* argv[]) {
 
   welcome(port);
   triggerReloadFiles(NULL);
+  livereload_init();
 
 #if IS_LINUX
   int       status;

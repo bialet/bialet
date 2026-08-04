@@ -30,6 +30,8 @@ var features = Config.json("features")     // { "darkMode": true, ... }
 `Config.bool` returns `true` for `"1"` and `"true"` (case-insensitive),
 `false` for everything else including missing keys.
 
+### Enable / Disable
+
 For on/off flags, use the `enable` and `disable` convenience methods
 instead of hand-writing the `"1"`/`"0"` strings:
 
@@ -38,6 +40,9 @@ Config.enable("beta_features")   // stores "1"
 Config.disable("beta_features")  // stores "0"
 Config.bool("beta_features")     // false
 ```
+
+`enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
+equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.
 
 ### Delete
 
