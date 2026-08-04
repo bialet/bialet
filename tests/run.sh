@@ -82,6 +82,9 @@ run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
 run_test "String trim edge cases      " "string-trim"     200 "hello,trim,no-whitespace,,123,trimleft,trimright,hello"
 
+# Tests - safe method on basic types
+run_test "Safe method basic types     " "safe"            200 "true,42,{html: &lt;b&gt;bold&lt;/b&gt;}"
+
 # Tests - Random
 run_test "Random sample               " "randomsample"    200 "true,true,true"
 

@@ -2,10 +2,11 @@ class Bool {
   [key] { null }
   map(f) { List.new() }
   count { 0 }
+  safe { toString.safe }
 }
-class Fiber {}
-class Fn {}
-class Num {}
+class Fiber { safe { toString.safe } }
+class Fn { safe { toString.safe } }
+class Num { safe { toString.safe } }
 
 // Null is widely used in Bialet in the templates.
 // This way allow calling methods on null like a List or a Map
@@ -15,6 +16,7 @@ class Null {
   map(f) { List.new() }
   count { 0 }
   to(Class) { this }
+  safe { toString.safe }
 }
 
 class Sequence {
@@ -152,6 +154,8 @@ class Sequence {
     }
     return result
   }
+
+  safe { toString.safe }
 }
 
 class MapSequence is Sequence {
@@ -499,6 +503,7 @@ class MapEntry {
   value { _value }
 
   toString { "%(_key):%(_value)" }
+  safe { toString.safe }
 }
 
 class MapKeySequence is Sequence {
