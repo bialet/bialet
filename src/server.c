@@ -13,6 +13,7 @@
 #include "bialet.h"
 #include "bialet_wren.h"
 #include "favicon.h"
+#include "livereload.h"
 #include "messages.h"
 
 #if IS_WIN
@@ -441,6 +442,17 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
+  {
+    struct BialetResponse lr_response = {0, "", "", 0};
+    if(livereload_try_handle(hm->uri.str, &lr_response)) {
+      write_response(client_socket, &lr_response);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+  }
+
   struct BialetResponse response = {0, "", "", 0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
@@ -644,9 +656,12 @@ void handle_client(bialet_socket_t client_socket) {
     response.header = get_content_type(path);
   }
 
+  int body_injected = livereload_inject_response(&response);
   clean_http_message(hm);
   write_response(client_socket, &response);
-  free(file_content);
+  if(!body_injected || is_wren_file) {
+    free(file_content);
+  }
 
   // Free allocated memory if we had to read a large request
   if(full_request != buffer) {

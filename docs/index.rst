@@ -297,6 +297,7 @@ Who is Bialet for?
    cron
    deployment
    configuration
+   live-reload
    security
    reference
    examples

@@ -30,6 +30,22 @@ var features = Config.json("features")     // { "darkMode": true, ... }
 `Config.bool` returns `true` for `"1"` and `"true"` (case-insensitive),
 `false` for everything else including missing keys.
 
+### Enable / Disable
+
+Convenience methods for toggling boolean flags:
+
+```wren
+Config.enable("live_reload")    // Config.set("live_reload", "1")
+Config.disable("live_reload")   // Config.set("live_reload", "0")
+
+if (Config.bool("live_reload")) {
+  // feature is on
+}
+```
+
+`enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
+equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.
+
 ### Delete
 
 ```wren
