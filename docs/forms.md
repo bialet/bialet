@@ -81,10 +81,10 @@ For search or filtering, use `GET` and read query parameters with
 ```wren
 // search.wren
 
-var q = Request.get("q")
+var q = Request.get("q") || ""
 var results = []
 
-if (q) {
+if (q != "") {
   results = `SELECT * FROM posts WHERE title LIKE ?`.fetch("%" + q + "%")
 }
 
@@ -95,7 +95,7 @@ return <main>
     <button>Search</button>
   </form>
 
-  {{ q && <section>
+  {{ q != "" && <section>
     <p>{{ results.count }} results for "{{ q.safe }}"</p>
     <ul>
       {{ results.map {|r| <li><a href="/post?id={{ r["id"] }}">{{ r["title"].safe }}</a></li> } }}
@@ -106,9 +106,11 @@ return <main>
 
 Key points:
 - `method="get"` puts the query in the URL (`/search?q=term`)
-- `Request.get("q")` reads it — no need for `Request.post()`
+- `Request.get("q") || ""` avoids null — use `|| ""` so `.safe` doesn't crash
+- `if (q != "")` checks if there's a search term (empty string is truthy in
+  Wren, so `if (q)` doesn't work as a presence check)
 - No redirect needed — GET forms are safe to refresh
-- Pre-fill the input with `value="{{ q.safe }}"` so the term stays visible
+- `value="{{ q.safe }}"` preserves the search term
 - Escape all user input with `.safe` when outputting to HTML
 
 ## Login Form (POST + CSRF + Password)
