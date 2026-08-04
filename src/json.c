@@ -8,6 +8,10 @@
 
 #define JSON_ERROR UNDEFINED_VAL
 
+// Maximum container nesting depth. Deeply nested JSON exhausts the C stack
+// via parse_value/parse_array/parse_object recursion; reject it instead.
+#define MAX_JSON_DEPTH 128
+
 static void skip_ws(const char** p) {
   while(**p == ' ' || **p == '\t' || **p == '\n' || **p == '\r') {
     (*p)++;
@@ -63,7 +67,7 @@ static int utf8_encode(int cp, char* buf) {
   return -1;
 }
 
-static Value parse_value(WrenVM* vm, const char** p);
+static Value parse_value(WrenVM* vm, const char** p, int depth);
 
 static Value parse_string(WrenVM* vm, const char** p) {
   const char* s = *p;
@@ -188,7 +192,7 @@ static Value parse_number(__attribute__((unused)) WrenVM* vm, const char** p) {
   return NUM_VAL(num);
 }
 
-static Value parse_array(WrenVM* vm, const char** p) {
+static Value parse_array(WrenVM* vm, const char** p, int depth) {
   const char* s = *p;
   if(*s != '[')
     return JSON_ERROR;
@@ -204,7 +208,7 @@ static Value parse_array(WrenVM* vm, const char** p) {
   }
 
   for(;;) {
-    Value val = parse_value(vm, &s);
+    Value val = parse_value(vm, &s, depth + 1);
     if(IS_UNDEFINED(val))
       return JSON_ERROR;
     wrenValueBufferWrite(vm, &list->elements, val);
@@ -224,7 +228,7 @@ static Value parse_array(WrenVM* vm, const char** p) {
   return OBJ_VAL(list);
 }
 
-static Value parse_object(WrenVM* vm, const char** p) {
+static Value parse_object(WrenVM* vm, const char** p, int depth) {
   const char* s = *p;
   if(*s != '{')
     return JSON_ERROR;
@@ -253,7 +257,7 @@ static Value parse_object(WrenVM* vm, const char** p) {
       return JSON_ERROR;
     s++;
 
-    Value val = parse_value(vm, &s);
+    Value val = parse_value(vm, &s, depth + 1);
     if(IS_UNDEFINED(val))
       return JSON_ERROR;
 
@@ -273,7 +277,9 @@ static Value parse_object(WrenVM* vm, const char** p) {
   return OBJ_VAL(map);
 }
 
-static Value parse_value(WrenVM* vm, const char** p) {
+static Value parse_value(WrenVM* vm, const char** p, int depth) {
+  if(depth > MAX_JSON_DEPTH)
+    return JSON_ERROR;
   skip_ws(p);
   const char* s = *p;
 
@@ -283,9 +289,9 @@ static Value parse_value(WrenVM* vm, const char** p) {
     case '"':
       return parse_string(vm, p);
     case '{':
-      return parse_object(vm, p);
+      return parse_object(vm, p, depth);
     case '[':
-      return parse_array(vm, p);
+      return parse_array(vm, p, depth);
     case 't':
       if(s[1] == 'r' && s[2] == 'u' && s[3] == 'e') {
         *p = s + 4;
@@ -317,7 +323,7 @@ bool prim_json_parse_primitive(WrenVM* vm, Value* args) {
     RETURN_ERROR("Invalid JSON: empty input");
   }
   const char* p = json;
-  Value       result = parse_value(vm, &p);
+  Value       result = parse_value(vm, &p, 0);
   if(IS_UNDEFINED(result)) {
     RETURN_ERROR("Invalid JSON");
   }
