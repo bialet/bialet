@@ -11,7 +11,7 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#define BIALET_VERSION "0.10.6"
+#define BIALET_VERSION "0.10.7"
 
 #ifdef _WIN32
 #define IS_WIN 1
