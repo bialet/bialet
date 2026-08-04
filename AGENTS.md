@@ -114,6 +114,35 @@ when editing or adding docs.
 - Prefer small, focused changes
 - Run `make` then `make check` to validate
 
+### C Naming Conventions
+
+All user-defined identifiers use snake_case. CamelCase is prohibited for
+functions, global variables, and static globals.
+
+- **Functions:** snake_case, verb-first (action then object).
+  - `install_cron()`, `trigger_reload_files()`, `create_bialet_query()`
+  - Module-prefix names stay: `livereload_init()`, `bialet_run()`,
+    `server_poll()`
+- **Variables:** global and static-global variables are snake_case. Local
+  variables keep their current names unless clearly poorly named.
+- **Structs/typedefs:** keep their existing style (e.g. `BialetConfig`) — do
+  not rename them.
+- **Never rename:** standard C/POSIX functions, macros (`#define`), enum
+  constants, strings, comments, or vendored third-party code (`wren_*`,
+  `dmon.h`, `getopt.c`, `getopt.h`, `favicon.h`).
+
+When renaming a function, update the definition, the header declaration, and
+every callsite in the same change.
+
+### clang-format
+
+- Run `clang-format -i --style=file <files>` on every C/H file you touch.
+- `.clang-format` enforces LLVM-based style: 2-space indent, 85-char column
+  limit, `PointerAlignment: Left`, `SpaceBeforeParens: Never`.
+- The pre-commit hook runs `clang-format --dry-run --Werror` on staged C/H
+  files (vendored `wren_*`, `dmon.h`, `getopt.*`, `favicon.h` excluded) and
+  rejects unformatted commits.
+
 ## C Security Rules
 
 These rules prevent the most common and severe C vulnerabilities. Violations

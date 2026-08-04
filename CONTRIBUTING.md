@@ -71,17 +71,67 @@ Key C entrypoints:
 ## Development Workflow
 
 1. Fork the repository and create a feature branch
-2. Make your changes following the code style guidelines below
-3. Add tests if applicable
-4. Run `make` and `make check` to validate
-5. Submit a pull request
+2. Enable the pre-commit hook: `make install-hooks`
+3. Make your changes following the naming and style guidelines below
+4. Add tests if applicable
+5. Run `make` and `make check` to validate
+6. Submit a pull request
+
+The pre-commit hook (`.githooks/pre-commit`) validates clang-format on staged
+C/H files and runs `make check` on every commit. Skip it selectively with
+`SKIP_CLANG_FORMAT=1` and/or `SKIP_BIALET_TESTS=1`.
 
 ## Code Style
 
 ### C Code
 
-- Follow the existing style (`.clang-format` in the root — LLVM-based,
-  2-space indent, 85-char column limit)
+Bialet enforces two standards on C code: **naming conventions** and
+**clang-format** (the `.clang-format` file in the repo root). Both are checked
+automatically by the pre-commit hook.
+
+#### Naming Conventions
+
+All user-defined identifiers follow snake_case. This applies to functions,
+global variables, and static globals. It does not apply to:
+
+- Standard C library and POSIX functions (`printf`, `fopen`, `pthread_create`)
+- Macros (`#define`) and enum constants (these are `UPPER_CASE`)
+- Strings, comments, and Wren-side identifiers
+- Vendored third-party code (`wren_*`, `dmon.h`, `getopt.c`, `getopt.h`,
+  `favicon.h`)
+
+**Function names:**
+
+- snake_case (lowercase with underscores) — CamelCase is prohibited
+- Verb-first ordering (action then object): `install_cron()`,
+  `trigger_reload_files()`, `start_server()`, `create_bialet_query()`
+- Module-prefix names are fine and stay put: `livereload_init()`,
+  `bialet_run()`, `server_poll()`
+
+**Variables:**
+
+- Global and static-global variables are snake_case
+- Struct/typedef names keep their existing style (e.g. `BialetConfig`) — do not
+  rename them
+- Local variables keep their current names unless clearly poorly named
+
+When you rename a function, update every definition, declaration in `src/*.h`,
+and callsite in the same commit. The pre-commit hook enforces this
+consistently.
+
+#### clang-format
+
+- Run `clang-format -i --style=file <files>` on every file you touch before
+  committing
+- Formatting follows `.clang-format` (LLVM-based, 2-space indent, 85-char
+  column limit, `PointerAlignment: Left`, `SpaceBeforeParens: Never`)
+- The pre-commit hook validates staged C/H files with
+  `clang-format --dry-run --Werror` and rejects unformatted commits
+- Vendored files are excluded from validation: `wren_*`, `dmon.h`, `getopt.c`,
+  `getopt.h`, `favicon.h`
+
+#### Other C Rules
+
 - Use `size_t` for lengths, not `int`
 - Prefer `snprintf` over `sprintf`
 - Check every `malloc`, `realloc`, `calloc`, and `strdup` for NULL
