@@ -1,0 +1,858 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Security" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/security.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet keeps the framework small, and that extends to security: there is no magic that escapes your output for you, and no ORM that hides your SQL. The good news is that the sharp edges are explici..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet keeps the framework small, and that extends to security: there is no magic that escapes your output for you, and no ORM that hides your SQL. The good news is that the sharp edges are explici..." />
+
+    <title>Security &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=04181c56" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'security';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.6" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/security.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fsecurity.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/security.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Security</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sql-injection">SQL Injection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protection">CSRF Protection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-limits">Resource Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-defaults">Other Defaults</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security-checklist">Security Checklist</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="security">
+<h1>Security<a class="headerlink" href="#security" title="Link to this heading">#</a></h1>
+<p>Bialet keeps the framework small, and that extends to security: there is no
+magic that escapes your output for you, and no ORM that hides your SQL. The
+good news is that the sharp edges are explicit and few. This page is the
+central reference for keeping a Bialet app safe.</p>
+<p>Three rules cover most real-world damage:</p>
+<ol class="arabic simple">
+<li><p><strong>Escape untrusted output</strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> does not escape. Use <code class="docutils literal notranslate"><span class="pre">.safe</span></code>.</p></li>
+<li><p><strong>Parameterize SQL</strong> — never build a query from string concatenation.</p></li>
+<li><p><strong>Validate state-changing requests</strong> — check <code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code> on POSTs.</p></li>
+</ol>
+<section id="built-in-protections">
+<h2>Built-in Protections<a class="headerlink" href="#built-in-protections" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Protection</p></th>
+<th class="head"><p>Where</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Parameterized SQL</p></td>
+<td><p>Backtick Query objects</p></td>
+<td><p>String interpolation is rejected by the compiler</p></td>
+</tr>
+<tr class="row-odd"><td><p>HTML escaping</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.safe</span></code>, <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code></p></td>
+<td><p>You must call it — never automatic</p></td>
+</tr>
+<tr class="row-even"><td><p>CSRF tokens</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Session.csrf</span></code> / <code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code></p></td>
+<td><p>Constant-time comparison</p></td>
+</tr>
+<tr class="row-odd"><td><p>HttpOnly + SameSite cookies</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Cookie.set</span></code> defaults</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Secure</span></code> added automatically behind TLS</p></td>
+</tr>
+<tr class="row-even"><td><p>Private file blocking</p></td>
+<td><p>Server</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_</span></code> and <code class="docutils literal notranslate"><span class="pre">.</span></code> prefixed files return 403</p></td>
+</tr>
+<tr class="row-odd"><td><p>Salted password hashes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> / <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code></p></td>
+<td><p>Never store plaintext</p></td>
+</tr>
+<tr class="row-even"><td><p>Constant-time compare</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Util.secureEquals</span></code></p></td>
+<td><p>Used by <code class="docutils literal notranslate"><span class="pre">csrfOk</span></code>, available to you</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="cross-site-scripting-xss">
+<h2>Cross-Site Scripting (XSS)<a class="headerlink" href="#cross-site-scripting-xss" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation <strong>does not escape HTML by default</strong>. When you
+display user-generated content, database values, or URL parameters, you must
+escape them yourself. This is deliberate: it keeps inline HTML readable and
+fast, and it makes the escaping explicit where it matters.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+
+<span class="c1">// WRONG — XSS vulnerability</span>
+<span class="k">var</span><span class="w"> </span><span class="n">dangerous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Renders: &lt;p&gt;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&lt;/p&gt;</span>
+
+<span class="c1">// CORRECT — HTML characters are escaped</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.safe</span></code> replaces <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">'</span></code> with their HTML entities. The
+equivalent helper <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape(str)</span></code> returns the same result as a plain
+string:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">htmlEscape</span><span class="p">(</span><span class="n">userInput</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: <strong>Forgetting <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is an XSS vulnerability.</strong> Every string
+that comes from user input, the database, or the URL must be escaped before
+it reaches HTML. There is no automatic escaping — not even for values pulled
+from <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code>.</p>
+</div></blockquote>
+<p>Escaping applies in attributes too, not just element bodies:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — break out of the attribute, inject an event handler</span>
+<span class="x">&lt;a href=&quot;{{ url }}&quot;&gt;link&lt;/a&gt;</span>
+
+<span class="c1">// CORRECT</span>
+<span class="x">&lt;a href=&quot;{{ url.safe }}&quot;&gt;link&lt;/a&gt;</span>
+</pre></div>
+</div>
+<p>If you generate HTML in Wren code rather than inline blocks, escape with
+<code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> before concatenating it into a template string.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">.safe</span></code> escapes for HTML text and attribute contexts. It does
+not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted input
+into a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> block or a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> URL — restructure the page so it
+cannot happen.</p>
+</div></blockquote>
+</section>
+<section id="sql-injection">
+<h2>SQL Injection<a class="headerlink" href="#sql-injection" title="Link to this heading">#</a></h2>
+<p>Backtick Query objects use <strong>prepared statements</strong> with <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders.
+The query string and the values are sent to SQLite separately, so values
+cannot change the structure of the SQL.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// CORRECT — parameterized</span>
+<span class="sb">`SELECT * FROM users WHERE name = ? AND active = 1`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+<span class="c1">// CORRECT — multiple parameters</span>
+<span class="sb">`INSERT INTO messages (text, session) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<span class="c1">// WRONG — never build SQL from strings</span>
+<span class="sb">`SELECT * FROM users WHERE name = &#39;%(name)&#39;`</span><span class="o">.</span><span class="n">fetch</span>
+</pre></div>
+</div>
+<p>You cannot concatenate or interpolate into a backtick Query object — the
+compiler rejects it. That constraint removes the most common injection path
+entirely. Stay inside it.</p>
+<p>Two places tempt people out of it:</p>
+<ul>
+<li><p><strong>Dynamic <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> columns.</strong> Column names cannot be placeholders. Use
+the <code class="docutils literal notranslate"><span class="pre">order()</span></code> method with an allow-list of column names:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="sb">`SELECT * FROM products`</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;ASC&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;createdAt&quot;</span><span class="p">],</span><span class="w"> </span><span class="mf">50</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> / <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>.</strong> These accept only integers. Parameterize them —
+never concatenate user input:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="sb">`SELECT * FROM products LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<blockquote>
+<div><p>⚠️ Pitfall: database values come back as strings. Before using one as a
+number, convert with <code class="docutils literal notranslate"><span class="pre">Num.fromString(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">query.num</span></code>. This is a
+correctness concern, but it also stops “it works when I type a number”
+bugs from becoming injection-adjacent string handling.</p>
+</div></blockquote>
+<p>See the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> and <a class="reference internal" href="routing.html"><span class="std std-doc">Routing</span></a> guides for more
+Query examples.</p>
+</section>
+<section id="csrf-protection">
+<h2>CSRF Protection<a class="headerlink" href="#csrf-protection" title="Link to this heading">#</a></h2>
+<p>Bialet ships built-in CSRF tokens via <code class="docutils literal notranslate"><span class="pre">Session</span></code>. A token is generated per
+session, stored server-side, and rendered as a hidden form field. On
+submission, the token in the request is compared against the stored token
+using <code class="docutils literal notranslate"><span class="pre">Util.secureEquals</span></code> — a constant-time comparison that does not leak
+timing information.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">verified</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">verified</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">session</span><span class="o">.</span><span class="n">csrfOk</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">verified</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`INSERT INTO messages (text) VALUES (?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;POST&quot;&gt;</span>
+<span class="x">  {{ session.csrf }}</span>
+<span class="x">  &lt;input name=&quot;msg&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
+<span class="x">&lt;/form&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.csrf</span></code> returns a <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">type=&quot;hidden&quot;</span> <span class="pre">name=&quot;_bialet_csrf&quot;</span> <span class="pre">...&gt;</span></code>
+field. Put it inside every form that changes state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> when the submitted token matches the stored
+one. Check it on every POST (and PUT/DELETE via <code class="docutils literal notranslate"><span class="pre">Request.method</span></code>).</p></li>
+</ul>
+<blockquote>
+<div><p>⚠️ Pitfall: the session cookie is <code class="docutils literal notranslate"><span class="pre">SameSite=Lax</span></code>, which already stops most
+cross-site POSTs. Do not treat that as enough. SameSite is advisory
+(older browsers ignore it) and it does nothing for same-site subdomain
+attacks. Keep the explicit token check on any form that writes data.</p>
+</div></blockquote>
+</section>
+<section id="sessions-cookies">
+<h2>Sessions &amp; Cookies<a class="headerlink" href="#sessions-cookies" title="Link to this heading">#</a></h2>
+<p>Cookies set through <code class="docutils literal notranslate"><span class="pre">Cookie.set</span></code> get secure defaults:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HttpOnly</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Not readable from JavaScript</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SameSite</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Lax</span></code></p></td>
+<td><p>Blocks most cross-site cookie sending</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Secure</span></code></p></td>
+<td><p>auto</p></td>
+<td><p>Added when the request arrives over HTTPS</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>You can override any of these by passing an options map, for example
+<code class="docutils literal notranslate"><span class="pre">Cookie.set(&quot;pref&quot;,</span> <span class="pre">&quot;dark&quot;,</span> <span class="pre">{&quot;SameSite&quot;:</span> <span class="pre">&quot;Strict&quot;})</span></code>. Be careful overriding
+<code class="docutils literal notranslate"><span class="pre">HttpOnly</span></code> or <code class="docutils literal notranslate"><span class="pre">Secure</span></code> — both are there for a reason.</p>
+<p>Sessions are stored in SQLite in the <code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code> table. The session
+cookie (<code class="docutils literal notranslate"><span class="pre">BIALETSESSID</span></code> by default) holds only a 40-character random ID; all
+data lives server-side. Clear a session with <code class="docutils literal notranslate"><span class="pre">Session.destroy()</span></code>.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when the key is missing.
+Calling string methods on it crashes the request. Always guard with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code>
+or a null check:</p>
+</div></blockquote>
+<blockquote>
+<div><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Cookie names and values are validated (<code class="docutils literal notranslate"><span class="pre">Util.cookieToken</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Util.cookieValue</span></code>) and reject characters that could break out of the
+<code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> header, so a user-controlled value cannot inject headers.</p>
+</section>
+<section id="password-storage">
+<h2>Password Storage<a class="headerlink" href="#password-storage" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> and <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code> instead of rolling your own:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">stored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">hash</span><span class="p">(</span><span class="n">password</span><span class="p">)</span><span class="w">          </span><span class="c1">// store this in the database</span>
+<span class="k">var</span><span class="w"> </span><span class="n">ok</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span><span class="w"> </span><span class="n">stored</span><span class="p">)</span><span class="w"> </span><span class="c1">// true if the password matches</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hash</span></code> produces a salted SHA-256 digest in <code class="docutils literal notranslate"><span class="pre">hash$salt</span></code> format. The salt is
+random per password, so identical passwords produce different stored values,
+and the stored format is all you need to keep — <code class="docutils literal notranslate"><span class="pre">verify</span></code> parses it back out.</p>
+<p>Be honest about the limits: this is salted SHA-256, a fast hash. It is fine
+for internal tools and low-stakes apps. For user-facing accounts that face
+real attackers, consider a deliberately slow KDF (bcrypt, scrypt, argon2)
+implemented at the app or proxy layer.</p>
+</section>
+<section id="secure-configuration-deployment">
+<h2>Secure Configuration &amp; Deployment<a class="headerlink" href="#secure-configuration-deployment" title="Link to this heading">#</a></h2>
+<section id="tls">
+<h3>TLS<a class="headerlink" href="#tls" title="Link to this heading">#</a></h3>
+<p>Bialet speaks <strong>HTTP/1.0</strong> and has no native HTTPS. Run it behind a reverse
+proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
+setup, and it also lets you bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> so only the proxy
+talks to it. See <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for configs.</p>
+<p>When requests arrive through a proxy, Bialet detects HTTPS from the
+<code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> / <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code> headers. That is how the <code class="docutils literal notranslate"><span class="pre">Secure</span></code> cookie
+attribute is decided. Only set those headers from a proxy you trust — never
+forward user-supplied ones unchanged.</p>
+</section>
+<section id="private-files">
+<h3>Private Files<a class="headerlink" href="#private-files" title="Link to this heading">#</a></h3>
+<p>Files and directories whose name starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are forbidden from
+direct HTTP access — the server returns 403. This is what protects
+<code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, and your configuration from
+being downloaded. Name anything private with a leading <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> contains your data and your session table.
+It is already blocked from HTTP access, but the app directory on disk is
+not a sandbox. Keep it out of version control backups you share, and
+restrict filesystem access to the user that runs the server.</p>
+</div></blockquote>
+</section>
+<section id="resource-limits">
+<h3>Resource Limits<a class="headerlink" href="#resource-limits" title="Link to this heading">#</a></h3>
+<p>The server can enforce memory and CPU ceilings per app with CLI flags, which
+limits the blast radius of a runaway script or a memory-exhaustion attack:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> — soft / hard memory limit in MB</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> — soft / hard CPU limit in percent</p></li>
+</ul>
+<p>See the resource limits table in <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for defaults.</p>
+</section>
+<section id="other-defaults">
+<h3>Other Defaults<a class="headerlink" href="#other-defaults" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>SQLite <code class="docutils literal notranslate"><span class="pre">PRAGMA</span> <span class="pre">foreign_keys</span></code> is <strong>on</strong> by default, so orphaned rows
+cannot accumulate through a careless delete.</p></li>
+<li><p>File uploads are stored inside the SQLite database, not on disk — they
+are never served from a writable directory. See the <code class="docutils literal notranslate"><span class="pre">File</span></code> class in the
+<a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a>.</p></li>
+<li><p>Validate user input before trusting it: check types and ranges, convert
+with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code>, and reject values you did not expect. Do this in
+your domain classes before saving, and again in the form handler.</p></li>
+</ul>
+</section>
+</section>
+<section id="security-checklist">
+<h2>Security Checklist<a class="headerlink" href="#security-checklist" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Escape every string from user input, the database, or the URL with <code class="docutils literal notranslate"><span class="pre">.safe</span></code>
+before interpolating into HTML.</p></li>
+<li><p>Never build SQL from strings — use <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders and pass values as
+parameters.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">.order()</span></code> with an allow-list for sortable columns.</p></li>
+<li><p>Put <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">session.csrf</span> <span class="pre">}}</span></code> in every state-changing form and check
+<code class="docutils literal notranslate"><span class="pre">session.csrfOk</span></code> on POST.</p></li>
+<li><p>Guard <code class="docutils literal notranslate"><span class="pre">Request.post(...)</span></code> with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string operations.</p></li>
+<li><p>Store passwords with <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> / <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code>, never plaintext.</p></li>
+<li><p>Run behind a reverse proxy with TLS; bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>.</p></li>
+<li><p>Keep private files (<code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed) out of shared backups and repositories.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> / <code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> to cap memory and CPU.</p></li>
+<li><p>Validate and convert input with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> before numeric math.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="deployment.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Deployment</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="reference.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sql-injection">SQL Injection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protection">CSRF Protection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-limits">Resource Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-defaults">Other Defaults</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security-checklist">Security Checklist</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
