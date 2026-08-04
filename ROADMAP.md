@@ -31,7 +31,7 @@ improvements.
       CSRF).
 - [x] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
       environment-specific settings, and server options (port, host).
-- [ ] **Reorganise documentation into groups** — Reduce sidebar length by
+- [x] **Reorganise documentation into groups** — Reduce sidebar length by
       grouping related pages:
   - Getting started (Why Bialet?, Tutorial, Installation)
   - Core concepts (Wren, Routing, Templates, Database)
