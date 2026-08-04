@@ -12,49 +12,13 @@ improvements.
 
 ## Near Term
 
-### 0.11.0
-
-- [x] **AI development skills** — Create skills/prompts for AI-assisted Bialet
-      development
-- [x] **Documentation review** — Audit and fill gaps in existing docs, ensure
-      all features are properly covered (e.g. custom errors)
-- [x] **Wren programming guide** — Document how to write and integrate Wren
-      scripts in Bialet apps
-- [x] **Production deployment guide** — Document how to deploy on a VPS with
-      systemd, reverse proxy setup, and environment configuration
-- [ ] **Data filtering lib** — Query sanitization and type-safe filtering
-      utilities
-- [x] **Forms guide** — Document POST handling, basic validation, redirect after
-      POST (PRG), and simple file uploads.
-- [x] **Security guide** — Central page covering XSS prevention, SQL injection
-      reminders, secure configuration, and any built-in protections (e.g.,
-      CSRF).
-- [x] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
-      environment-specific settings, and server options (port, host).
-- [x] **Reorganise documentation into groups** — Reduce sidebar length by
-      grouping related pages:
-  - Getting started (Why Bialet?, Tutorial, Installation)
-  - Core concepts (Wren, Routing, Templates, Database)
-  - Web development (Forms, REST APIs, File handling, Date/time)
-  - Operations (Security, Configuration, Cron, Deployment)
-  - Reference (API Reference, Examples, FAQ)
-
-### 0.12.0
-
-- [ ] **Markdown XSS fix** — Escape raw HTML and validate link/image URLs in the
-      built-in Markdown renderer so untrusted input cannot inject markup.
-- [ ] **Error handling & logging** — Custom 404/500 pages, `System.print` usage,
-      and debugging best practices.
 - [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
       logs
 
-### 0.13.0
-
-- [ ] **Live-reload** — Watch files and auto-refresh browser via WebSocket on
-      changes
-
 ## Longer Term / Ideas
 
+- [ ] **Data filtering lib** — Query sanitization and type-safe filtering
+      utilities
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
       handling
 - [ ] **Static assets** — Serving CSS, JS, and images; MIME types and cache
