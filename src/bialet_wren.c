@@ -1032,10 +1032,14 @@ void bialet_cleanup() {
 
 BialetQuery* create_bialet_query() {
   BialetQuery* query = (BialetQuery*)malloc(sizeof(BialetQuery));
+  if(query == NULL)
+    return NULL;
   query->results = NULL;
   query->resultsCount = 0;
   query->parameters = NULL;
   query->parametersCount = 0;
+  query->queryString = NULL;
+  query->lastInsertId = NULL;
   return query;
 }
 

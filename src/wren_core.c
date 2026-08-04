@@ -1480,7 +1480,10 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 }
 
 DEF_PRIMITIVE(query_fetch) {
-  BialetQuery query = *create_bialet_query();
+  BialetQuery* q = create_bialet_query();
+  if(q == NULL)
+    RETURN_ERROR("Out of memory allocating query");
+  BialetQuery query = *q;
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
   ObjList* list = wrenNewList(vm, query.resultsCount);
@@ -1497,7 +1500,10 @@ DEF_PRIMITIVE(query_fetch) {
 }
 
 DEF_PRIMITIVE(query_execute) {
-  BialetQuery query = *create_bialet_query();
+  BialetQuery* q = create_bialet_query();
+  if(q == NULL)
+    RETURN_ERROR("Out of memory allocating query");
+  BialetQuery query = *q;
   query.queryString = AS_CSTRING(args[1]);
   queryPrepare(vm, &query, AS_LIST(args[2]));
   if(query.lastInsertId) {
