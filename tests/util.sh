@@ -85,6 +85,78 @@ run_test() {
     fi
 }
 
+# Function to run and assert a request using HTTP basic auth
+test_auth() {
+    description=$1
+    url_path=$2
+    user=$3
+    pass=$4
+    expected_status=$5
+    expected_body=${6:-}
+
+    total_tests=$((total_tests + 1))
+    echo -e -n "$description\t"
+    response=$(curl -s -o /dev/null -w "%{http_code}" -u "$user:$pass" "http://$HOST:$PORT/$url_path")
+    body=$(curl -s -u "$user:$pass" "http://$HOST:$PORT/$url_path")
+
+    if [[ "$response" -ne "$expected_status" ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_status}\tActual: $response\n"
+        return 1
+    fi
+
+    if [[ -n "$expected_body" && "$body" != *"$expected_body"* ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_body}\tActual: $body\n"
+        return 1
+    fi
+
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+}
+
+# Function to run and assert an arbitrary HTTP method (status + header + body)
+test_method() {
+    description=$1
+    method=$2
+    url_path=$3
+    expected_status=$4
+    expected_header=${5:-}
+    expected_body=${6:-}
+
+    total_tests=$((total_tests + 1))
+    echo -e -n "$description\t"
+    response=$(curl -s -o /dev/null -w "%{http_code}" -X "$method" "http://$HOST:$PORT/$url_path")
+    headers=$(curl -s -D- -o /dev/null -X "$method" "http://$HOST:$PORT/$url_path")
+    body=$(curl -s -X "$method" "http://$HOST:$PORT/$url_path")
+
+    if [[ "$response" -ne "$expected_status" ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_status}\tActual: $response\n"
+        return 1
+    fi
+
+    if [[ -n "$expected_header" && "$headers" != *"$expected_header"* ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected header: ${expected_header}\tActual headers: $headers\n"
+        return 1
+    fi
+
+    if [[ -n "$expected_body" && "$body" != *"$expected_body"* ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected: ${expected_body}\tActual: $body\n"
+        return 1
+    fi
+
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+}
+
 read_file() {
     file_path=$1
     cat "$(dirname "$0")/$file_path"

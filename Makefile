@@ -46,7 +46,11 @@ wren_files:
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
-$(BUILD_DIR)/%.c.o: %.c | $(OBJ_DIRS)
+# The Wren sources are embedded as C strings via the .inc files, so any object
+# file must be rebuilt when one of them changes.
+WREN_INCS := $(WREN_FILES:%.wren=%.wren.inc)
+
+$(BUILD_DIR)/%.c.o: %.c $(WREN_INCS) | $(OBJ_DIRS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIRS):

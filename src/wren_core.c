@@ -1409,6 +1409,11 @@ DEF_PRIMITIVE(date_format) {
   t.tm_min = minute;
   t.tm_sec = second;
 
+  // mktime fills in tm_wday and tm_yday, which strftime() needs for %w, %j
+  // and %V. Without it, those directives always read the zero-initialized
+  // struct fields.
+  mktime(&t);
+
   char buf[64];
   strftime(buf, sizeof(buf), format, &t);
   RETURN_VAL(wrenNewString(vm, buf));

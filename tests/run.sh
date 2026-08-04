@@ -10,8 +10,16 @@
 TARGET_EXEC="${1:-./build/bialet}"
 HOST="${2:-127.0.0.1}"
 PORT="${3:-7001}"
+ECHO_PORT="${4:-7100}"
 
 source "$(dirname "$0")/util.sh"
+
+# Start echo server used by the Http.* method tests (POST/PUT/DELETE targets)
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  $TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log "$(dirname "$0")/echo" > /dev/null 2>&1 &
+  disown
+  sleep 1
+fi
 
 # Tests - Syntax validation (-t flag)
 if [[ "$TARGET_EXEC" != "-" ]]; then
@@ -34,6 +42,29 @@ run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 run_test "Response headers            " "headers"         200 "headers-set"
 
+# Tests - Request & Response (extended coverage)
+run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
+run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
+run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
+run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
+run_test "Response out buffer         " "response-out"  200 "out:[first"
+run_test "Response headers getter     " "response-headers" 200 "custom:true|cookie:true"
+run_test "Response forbidden          " "response-errors?forbidden=1" 403
+run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom-404-page"
+run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallback:fallback-value|missing:null"
+run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
+run_test "Directory index resolution  " "route"           200 "route-index"
+run_test "Directory index trailing /  " "route/"          200 "route-index"
+run_test "Wren extension is optional  " "method-check.wren" 200 "GET"
+
+test_method "PUT method                " "PUT"    "method-check" 200 "" "PUT"
+test_method "DELETE method             " "DELETE" "method-check" 200 "" "DELETE"
+test_method "PATCH method              " "PATCH"  "method-check" 200 "" "PATCH"
+test_method "OPTIONS CORS preflight    " "OPTIONS" "cors" 204 "Access-Control-Allow-Origin: *" ""
+test_auth   "Login without credentials " "login-check" "" "" 401
+test_auth   "Login invalid credentials " "login-check" "admin" "wrong" 401
+test_auth   "Login valid credentials   " "login-check" "admin" "secret" 200 "authenticated"
+
 # Tests - JSON & Parsing
 run_test "JSON response               " "json"            200 '{"foo":"bar"}'
 run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
@@ -54,19 +85,23 @@ run_test "Query save method           " "save"            200 "hello updated 202
 run_test "Query toBool method         " "db-tobool"       200 "true,false,true,true,true"
 run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
+run_test "Db save delete migrate      " "db-more"         200 "inserted:"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"
 run_test "Third party modules         " "emoji"           200 "❤️"
+run_test "Http POST PUT DELETE        " "http-methods?target=http://$HOST:$ECHO_PORT" 200 "POST|PUT|DELETE|GET|GET"
 
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"
 run_test "Date now and components     " "date-now"        200 "true"
 run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true"
 run_test "Date parse from string      " "date-parse"      200 "2024-12-25 14:30:45,UTC"
+run_test "Date constructors and get   " "date-more"       200 "dow:5|doy:366|woy:37|diff:86400|fmt:2024-09-13"
 
 # Tests - Util functions
 run_test "Util functions              " "util"            200 "true"
+run_test "Util encoding and helpers   " "util-more"       200 "hex:255|hexLower:26|toHex:FF|lpad:007|rev:cba"
 
 # Tests - Cookie & Session
 run_test "Cookie set                  " "cookie?set=1"    200 "set"
@@ -76,11 +111,16 @@ run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 
 # Tests - Config
 run_test "Config operations           " "config"          200 "test_value,42,true,false,true"
+run_test "Config json and delete      " "config-json"     200 "a:1|b:2|raw:{\"b\":2}|gone:true"
 
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
 run_test "String trim edge cases      " "string-trim"     200 "hello,trim,no-whitespace,,123,trimleft,trimright,hello"
+run_test "More extensions             " "extensions-more" 200 "toNum:42,null|map:Alice|list:2,A,B|take:1,2"
+
+# Tests - File handling
+run_test "File create get destroy     " "file-more"       200 "tempBlocksGet:true|saveRestores:true|destroy:true"
 
 # Tests - safe method on basic types
 run_test "Safe method basic types     " "safe"            200 "true,42,{html: &lt;b&gt;bold&lt;/b&gt;}"
@@ -90,6 +130,10 @@ run_test "Random sample               " "randomsample"    200 "true,true,true"
 
 # Tests - CORS
 run_test "CORS enabled                " "cors"            200 "cors"
+
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+fi
 
 finish
 print_summary >&2

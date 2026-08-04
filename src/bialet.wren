@@ -25,6 +25,8 @@ class Request {
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
       __get = parseQuery(__fullUri[uriSeparator+1...__fullUri.count])
+    } else {
+      __uri = __fullUri
     }
     var startBody = false
     var headerName
@@ -933,12 +935,12 @@ class Util {
 }
 
 class Config {
-  static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"].toString }
+  static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"] }
   static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
   static bool(key) { get(key) != "0" }
   static num(key) { Num.fromString(get(key)) }
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
-  static json(key) { set(key, Json.parse(get(key))) }
+  static json(key) { Json.parse(get(key)) }
   static json(key, val) { set(key, Json.stringify(val)) }
   static enable(key) { set(key, "1") }
   static disable(key) { set(key, "0") }
@@ -1029,7 +1031,7 @@ class Db {
     }
     Db.clean
   }
-  static save(table, values) { Query.fromString(table).save(values) }
+  static save(table, values) { Query.new(table).save(values) }
   static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
 
