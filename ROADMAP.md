@@ -64,6 +64,7 @@ improvements.
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
       proxy needed for basic deployments)
+- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
 
 ## How to Contribute
 
