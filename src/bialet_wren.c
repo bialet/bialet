@@ -63,6 +63,11 @@ static const char* bialet_strcasestr(const char* haystack, const char* needle) {
 #define MAIN_MODULE_SOURCE "Response.init\nDate.init(\"\")"
 #define CLI_MODULE_NAME "bialet_cli"
 
+// Maximum number of file parts accepted per multipart request. Without this
+// cap a 10MB body split into tens of thousands of tiny parts would force that
+// many synchronous INSERT statements and unbounded WAL/disk growth.
+#define MAX_UPLOAD_FILES 100
+
 WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
@@ -472,6 +477,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
   // Parse multipart parts
   const char* part = body;
   int         firstFile = 1;
+  int         uploadedFiles = 0;
 
   while(part && part < body + bodyLen) {
     // Find next boundary
@@ -591,13 +597,22 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
       continue;
     }
 
+    // Skip further parts once the per-request file count cap is reached so a
+    // single request cannot insert an unbounded number of rows into
+    // BIALET_FILES (CPU/disk amplification).
+    if(uploadedFiles >= MAX_UPLOAD_FILES) {
+      message(red("Upload Error"), "Too many files in request, skipping rest");
+      part = fileData;
+      continue;
+    }
+
     // Save file to database
     sqlite3_stmt* stmt;
-    int result = sqlite3_prepare_v2(db,
-                                    "INSERT INTO BIALET_FILES (name, "
-                                    "originalFileName, type, file, size, isTemp) "
-                                    "VALUES (?, ?, ?, ?, ?, 1)",
-                                    -1, &stmt, 0);
+    int           result = sqlite3_prepare_v2(db,
+                                              "INSERT INTO BIALET_FILES (name, "
+                                                        "originalFileName, type, file, size, isTemp) "
+                                                        "VALUES (?, ?, ?, ?, ?, 1)",
+                                              -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -627,6 +642,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
         }
       }
       sqlite3_finalize(stmt);
+      uploadedFiles++;
     }
 
     part = fileData;
