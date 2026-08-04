@@ -151,8 +151,8 @@ static bool render_inline(const char* src, MdBuf* b) {
       }
     } else if(*src == '[') {
       const char* text_end = strchr(src, ']');
-      const char* url_start = strchr(text_end, '(');
-      const char* url_end = strchr(url_start, ')');
+      const char* url_start = text_end ? strchr(text_end, '(') : NULL;
+      const char* url_end = url_start ? strchr(url_start, ')') : NULL;
       if(text_end && url_start && url_end) {
         if(!md_printf(b, "<a href=\"%.*s\">%.*s</a>", (int)(url_end - url_start - 1),
                       url_start + 1, (int)(text_end - (src + 1)), src + 1))
