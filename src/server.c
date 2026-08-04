@@ -65,6 +65,26 @@ static const char* stristr(const char* haystack, const char* needle) {
   return NULL;
 }
 
+// Returns 1 when any path component of [uri] starts with '_' or '.', closing
+// the private-file boundary for "//_db.sqlite3", "/sub/_route.wren" and
+// "/./..." style requests that the old prefix/strstr checks missed.
+static int has_forbidden_uri_component(const char* uri) {
+  if(!uri)
+    return 0;
+  const char* c = uri;
+  while(*c) {
+    while(*c == '/' || *c == '\\')
+      c++;
+    if(!*c)
+      break;
+    if(*c == '_' || *c == '.')
+      return 1;
+    while(*c && *c != '/' && *c != '\\')
+      c++;
+  }
+  return 0;
+}
+
 static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
@@ -464,6 +484,18 @@ void handle_client(bialet_socket_t client_socket) {
   char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
 
+  // Reject any URI whose decoded path component starts with '_' or '.'
+  // (private files such as _db.sqlite3, _route.wren, .env). This runs before
+  // any stat/fopen so "/sub/_route.wren" and "//_db.sqlite3" cannot bypass it.
+  if(has_forbidden_uri_component(hm->uri.str)) {
+    clean_http_message(hm);
+    custom_error(403, &response);
+    write_response(client_socket, &response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
+
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
   // Remove query parameters if present
   char* query_start = strchr(path, '?');
@@ -508,16 +540,6 @@ void handle_client(bialet_socket_t client_socket) {
         strncpy(path + L - 5, ".html", 6);
       }
     }
-  }
-
-  if(strncmp(hm->uri.str, "/_", 2) == 0 || strstr(hm->uri.str, "/.") != NULL) {
-    // Ignore files starting with _ or .
-    clean_http_message(hm);
-    custom_error(403, &response);
-    write_response(client_socket, &response);
-    if(should_free_request)
-      free(full_request);
-    return;
   }
 
   if(stat(path, &file_stat) != 0) {
