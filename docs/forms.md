@@ -39,8 +39,8 @@ A simple email subscription form with basic validation:
 if (Request.isPost) {
   var email = Request.post("email") || ""
 
-  if (email == "") {
-    return <p class="error">Email is required.</p>
+  if (!email.contains("@")) {
+    return <p class="error">Enter a valid email.</p>
   }
 
   `INSERT INTO subscribers (email) VALUES (?)`.query(email)
@@ -59,7 +59,8 @@ return <main>
 
 Key points:
 - `Request.post("email") || ""` reads the field safely
-- `if (email == "")` is the validation — keep it simple
+- `!email.contains("@")` is a quick sanity check — real email validation is
+  complex; this catches most typos and empty submissions in one line
 - `return Response.redirect(...)` prevents resubmission on refresh
 - `Request.get("ok")` shows a success message after redirect
 - `type="email"` and `required` give free browser-side validation
