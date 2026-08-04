@@ -920,6 +920,8 @@ class Config {
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
   static json(key) { set(key, Json.parse(get(key))) }
   static json(key, val) { set(key, Json.stringify(val)) }
+  static enable(key) { set(key, "1") }
+  static disable(key) { set(key, "0") }
 }
 
 class File {
