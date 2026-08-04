@@ -3,7 +3,7 @@
 // conditional rendering (&&, ternary), iteration (map), semantic HTML.
 // Change `var isAnnual = true` below to see annual pricing toggle.
 
-var showBanner = true
+var showBanner = Request.get("showBanner") != "no"
 var isAnnual = false
 
 var heroTitle = "Build faster with the tools you already know"
@@ -675,7 +675,19 @@ main section, main article, main aside {
 <body>
   {{ showBanner && <aside class="promo-banner">
     <span>Limited-time offer — 50% off annual plans for new customers!</span>
-    <button class="promo-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>
+    <!--
+
+      Use the Popover API, no need to Wren nor JavaScript code
+
+      https://developer.mozilla.org/en-US/docs/Web/API/Popover_API
+
+      <div id="promo-banner" popover="auto" class="promo-banner">
+        <span>Limited-time offer — 50% off annual plans for new customers!</span>
+        <button popovertarget="promo-banner" popovertargetaction="hide" class="promo-close" aria-label="Dismiss">&times;</button>
+      </div>
+
+    -->
+    <a href="landing?showBanner=no" class="promo-close" aria-label="Dismiss">&times;</a>
   </aside> }}
 
   <header class="site-header">
