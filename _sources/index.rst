@@ -279,29 +279,66 @@ Who is Bialet for?
 .. toctree::
    :hidden:
    :maxdepth: 2
+   :caption: Before You Start
 
    self
    why-bialet
-   getting-started/index
    installation
    wren
-   routing
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: First Steps
+
+   getting-started/index
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Data & Storage
+
+   database
+   file
+   datetime
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: User Interfaces
+
    template
    forms
    errors
-   database
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Connecting Things
+
+   routing
    rest-api
-   tests
-   file
-   datetime
-   cron
-   deployment
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Running It
+
    configuration
    security
+   cron
+   tests
+   deployment
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Help & Reference
+
    reference
    examples
-   ai-prompt
    faq
+   ai-prompt
 
 ----
 
