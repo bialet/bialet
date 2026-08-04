@@ -119,42 +119,34 @@ A login form with CSRF protection and password verification:
 // login.wren
 
 var session = Session.new()
+var email = Request.post("email") || ""
+var error = null
 
 if (Request.isPost) {
   if (!session.csrfOk) {
-    Response.status(403)
-    return <p>Invalid form submission.</p>
+    error = "Invalid form submission."
+  } else {
+    var password = Request.post("password") || ""
+    var user = `SELECT * FROM users WHERE email = ?`.first(email)
+
+    if (user && Util.verify(password, user["password"])) {
+      session.login(user["id"])
+      return Response.redirect("/dashboard")
+    }
+    error = "Invalid email or password."
   }
-
-  var email = Request.post("email") || ""
-  var password = Request.post("password") || ""
-
-  var user = `SELECT * FROM users WHERE email = ?`.first(email)
-
-  if (user && Util.verify(password, user["password"])) {
-    session.login(user["id"])
-    return Response.redirect("/dashboard")
-  }
-
-  return <main>
-    <p class="error">Invalid email or password.</p>
-    {{ loginForm(session) }}
-  </main>
 }
 
-return loginForm(session)
-```
-
-```wren
-loginForm(session) { <main>
+return <main>
   <h1>Login</h1>
+  {{ error && <p class="error">{{ error }}</p> }}
   <form method="post">
     {{ session.csrf }}
-    <label>Email: <input name="email" type="email" required /></label>
+    <label>Email: <input name="email" type="email" value="{{ email.safe }}" required /></label>
     <label>Password: <input name="password" type="password" required /></label>
     <button>Login</button>
   </form>
-</main> }
+</main>
 ```
 
 Key points:
@@ -163,8 +155,11 @@ Key points:
 - `Session.csrfOk` verifies the token on submit — check it before processing
 - `Util.verify(password, hash)` checks the password against the stored hash
   (see [Security](security.md) for how to hash passwords with `Util.hash`)
-- `session.login(id)` persists the session
-- Show the same form with an error message on failed login, no redirect
+- `var error` with `{{ error && <p class="error">{{ error }}</p> }}` shows
+  the message inline on a single form, no duplication
+- `value="{{ email.safe }}"` preserves the email on failed login
+- `session.login(id)` persists the session on success
+- `return Response.redirect(...)` on success, no redirect on failure
 
 > ⚠️ Pitfall: never store plaintext passwords. Use `Util.hash(password)` to
 > create the hash, store that in the database, and verify with
