@@ -295,6 +295,7 @@ Who is Bialet for?
    datetime
    cron
    deployment
+   security
    reference
    examples
    ai-prompt
