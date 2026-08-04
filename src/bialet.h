@@ -31,12 +31,46 @@
 #endif
 
 #if IS_WIN
+#include <windows.h>
+
 #include <stdlib.h>
+#include <wchar.h>
+#include <winbase.h>
 #ifndef PATH_MAX
 #define PATH_MAX _MAX_PATH
 #endif
+// _fullpath is purely lexical and does not resolve NTFS junctions/reparse
+// points, so a junction planted inside the served root could bypass the
+// realpath root-containment check. GetFinalPathNameByHandle follows reparse
+// points to the real target.
 static inline char* realpath(const char* path, char* resolved) {
-  return _fullpath(resolved, path, _MAX_PATH);
+  if(!_fullpath(resolved, path, _MAX_PATH))
+    return NULL;
+
+  wchar_t wide[_MAX_PATH];
+  if(MultiByteToWideChar(CP_UTF8, 0, resolved, -1, wide, _MAX_PATH) == 0)
+    return NULL;
+
+  HANDLE h =
+      CreateFileW(wide, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                  NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  if(h == INVALID_HANDLE_VALUE)
+    return NULL;
+
+  DWORD len = GetFinalPathNameByHandleW(h, wide, _MAX_PATH, FILE_NAME_NORMALIZED);
+  CloseHandle(h);
+  if(len == 0 || len >= _MAX_PATH)
+    return NULL;
+
+  wchar_t* p = wide;
+  if(wcsncmp(p, L"\\\\?\\UNC\\", 8) == 0)
+    p += 8;
+  else if(wcsncmp(p, L"\\\\?\\", 4) == 0)
+    p += 4;
+
+  if(WideCharToMultiByte(CP_UTF8, 0, p, -1, resolved, _MAX_PATH, NULL, NULL) == 0)
+    return NULL;
+  return resolved;
 }
 #endif
 
