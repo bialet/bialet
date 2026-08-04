@@ -36,22 +36,24 @@ A simple email subscription form with basic validation:
 ```wren
 // subscribe.wren
 
+var email = Request.post("email") || ""
+var error = null
+
 if (Request.isPost) {
-  var email = Request.post("email") || ""
-
   if (!email.contains("@")) {
-    return <p class="error">Enter a valid email.</p>
+    error = "Enter a valid email."
+  } else {
+    `INSERT INTO subscribers (email) VALUES (?)`.query(email)
+    return Response.redirect("/subscribe?ok=1")
   }
-
-  `INSERT INTO subscribers (email) VALUES (?)`.query(email)
-  return Response.redirect("/subscribe?ok=1")
 }
 
 return <main>
   <h1>Subscribe</h1>
   {{ Request.get("ok") && <p class="success">Subscribed!</p> }}
+  {{ error && <p class="error">{{ error }}</p> }}
   <form method="post">
-    <label>Email: <input name="email" type="email" required /></label>
+    <label>Email: <input name="email" type="email" value="{{ email.safe }}" required /></label>
     <button>Subscribe</button>
   </form>
 </main>
@@ -61,6 +63,9 @@ Key points:
 - `Request.post("email") || ""` reads the field safely
 - `!email.contains("@")` is a quick sanity check — real email validation is
   complex; this catches most typos and empty submissions in one line
+- `var error = null` and `{{ error && ... }}` renders the message inline
+  instead of short-circuiting with `return`
+- `value="{{ email.safe }}"` preserves the input on failed submission
 - `return Response.redirect(...)` prevents resubmission on refresh
 - `Request.get("ok")` shows a success message after redirect
 - `type="email"` and `required` give free browser-side validation
