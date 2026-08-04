@@ -269,7 +269,7 @@ class Session {
       Cookie.set(Session.name, _id)
     }
     __values = {}
-    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ?`.fetch([_id])
+    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ? ORDER BY updatedAt DESC`.fetch([_id])
     if (res && res.count > 0) {
       res.each{|r| __values[r["key"]] = r["val"] }
     }
@@ -282,8 +282,11 @@ class Session {
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
   csrf {
-    var token = Util.randomString(60)
-    set("_bialet_csrf", token)
+    var token = get("_bialet_csrf")
+    if (!token) {
+      token = Util.randomString(60)
+      set("_bialet_csrf", token)
+    }
     return '<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">'
   }
   csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
@@ -1004,7 +1007,16 @@ class File {
 class Db {
   static init {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
-    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME, PRIMARY KEY (id, key))`.query()
+    // Older versions created BIALET_SESSION without a primary key, so REPLACE
+    // inserted duplicate rows and reads were nondeterministic. Rebuild the table
+    // in place when that schema is detected.
+    if (`SELECT COUNT(*) FROM pragma_table_info('BIALET_SESSION') WHERE pk > 0`.toNum == 0) {
+      `ALTER TABLE BIALET_SESSION RENAME TO BIALET_SESSION_OLD`.query()
+      `CREATE TABLE BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME, PRIMARY KEY (id, key))`.query()
+      `INSERT OR IGNORE INTO BIALET_SESSION (id, key, val, updatedAt) SELECT id, key, val, updatedAt FROM BIALET_SESSION_OLD ORDER BY updatedAt DESC`.query()
+      `DROP TABLE BIALET_SESSION_OLD`.query()
+    }
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()

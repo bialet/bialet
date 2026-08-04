@@ -109,6 +109,28 @@ run_test "Session get empty           " "session?get=1"   200 "empty"
 run_test "Session CSRF token render   " "csrf"            200 "_bialet_csrf"
 run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 
+# Multi-form CSRF: every form on a page must carry a token that validates.
+# Uses a cookie jar so the POST hits the same session as the GET.
+total_tests=$((total_tests + 1))
+echo -e -n "Session CSRF multi-form        \t"
+csrf_cookie=/tmp/bialet-csrf-cookies.txt
+csrf_page=$(curl -s -c "$csrf_cookie" "http://$HOST:$PORT/csrf-multi")
+csrf_tokens=$(printf "%s" "$csrf_page" | grep -o 'name="_bialet_csrf" value="[^"]*"' | sed 's/name="_bialet_csrf" value="//; s/"//')
+csrf_first=$(printf "%s" "$csrf_tokens" | head -1)
+csrf_last=$(printf "%s" "$csrf_tokens" | tail -1)
+csrf_first_post=$(curl -s -b "$csrf_cookie" -d "_bialet_csrf=$csrf_first" "http://$HOST:$PORT/csrf-multi")
+csrf_last_post=$(curl -s -b "$csrf_cookie" -d "_bialet_csrf=$csrf_last" "http://$HOST:$PORT/csrf-multi")
+rm -f "$csrf_cookie"
+if [[ -n "$csrf_first" && "$csrf_first" == "$csrf_last" \
+      && "$csrf_first_post" == "OK" && "$csrf_last_post" == "OK" ]]; then
+  echo -e "${GREEN}PASS${NC}"
+  passed_tests=$((passed_tests + 1))
+else
+  echo -e "${RED}FAIL${NC}"
+  failed_tests=$((failed_tests + 1))
+  echo -e "\tExpected a single shared token with POST OK. Tokens: '$csrf_tokens' | first POST: '$csrf_first_post' | last POST: '$csrf_last_post'"
+fi
+
 # Tests - Config
 run_test "Config operations           " "config"          200 "test_value,42,true,false,true"
 run_test "Config json and delete      " "config-json"     200 "a:1|b:2|raw:{\"b\":2}|gone:true"
