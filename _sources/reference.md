@@ -827,7 +827,8 @@ Returns the difference between the current date and `otherDate`.
 ## Markdown
 
 A class for rendering Markdown content to HTML, providing static methods to
-process both inline strings and Markdown files.
+process both inline strings and Markdown files. See the
+[Markdown guide](markdown.md) for the supported syntax and security notes.
 
 ### html(string)
 

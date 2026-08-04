@@ -194,6 +194,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
@@ -426,7 +427,10 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown-rendering">Markdown rendering</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sql-injection">SQL Injection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protection">CSRF Protection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>
@@ -549,6 +553,22 @@ not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted input
 into a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> block or a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> URL — restructure the page so it
 cannot happen.</p>
 </div></blockquote>
+<section id="markdown-rendering">
+<h3>Markdown rendering<a class="headerlink" href="#markdown-rendering" title="Link to this heading">#</a></h3>
+<p>The built-in Markdown parser escapes HTML <strong>only inside code blocks and inline
+code</strong>. Raw HTML in paragraphs, headings, and lists passes through unescaped,
+and link/image URLs are not validated. Rendering untrusted input with
+<code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can therefore produce XSS:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — raw HTML passes through to the output</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span><span class="p">)</span>
+
+<span class="c1">// WRONG — javascript: links are not filtered</span>
+<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;[x](javascript:alert(&#39;xss&#39;))&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Render only Markdown you trust, or sanitize the output before serving it. See
+the <a class="reference internal" href="markdown.html"><span class="std std-doc">Markdown</span></a> guide for the full syntax and security notes.</p>
+</section>
 </section>
 <section id="sql-injection">
 <h2>SQL Injection<a class="headerlink" href="#sql-injection" title="Link to this heading">#</a></h2>
@@ -815,7 +835,10 @@ parameters.</p></li>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown-rendering">Markdown rendering</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sql-injection">SQL Injection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protection">CSRF Protection</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>

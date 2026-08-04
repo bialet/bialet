@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Live Reload" />
+<meta property="og:title" content="Markdown" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://bialet.dev/live-reload.html" />
+<meta property="og:url" content="https://bialet.dev/markdown.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="When enabled, Bialet injects a small polling script into every HTML response. The script checks for file changes once per second and reloads the page automatically — no browser extensions, no WebSo..." />
+<meta property="og:description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Two methods on the Markdown class: Use the result..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="When enabled, Bialet injects a small polling script into every HTML response. The script checks for file changes once per second and reloads the page automatically — no browser extensions, no WebSo..." />
+<meta name="description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Two methods on the Markdown class: Use the result..." />
 
-    <title>Live Reload &#8212; Bialet  documentation</title>
+    <title>Markdown &#8212; Bialet  documentation</title>
   
   
   
@@ -57,13 +57,13 @@
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'live-reload';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'markdown';</script>
     <script src="_static/ai-prompt.js?v=53c6f95f"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Security" href="security.html" />
-    <link rel="prev" title="Configuration" href="configuration.html" />
+    <link rel="next" title="Error Pages" href="errors.html" />
+    <link rel="prev" title="Forms" href="forms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.11.0" />
@@ -191,10 +191,10 @@
 <li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
@@ -203,9 +203,9 @@
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
@@ -293,7 +293,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/edit/main/docs/live-reload.md" target="_blank"
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/markdown.md" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -310,7 +310,7 @@
       
       
       
-      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Flive-reload.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fmarkdown.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -340,7 +340,7 @@
       
       
       
-      <li><a href="_sources/live-reload.md" target="_blank"
+      <li><a href="_sources/markdown.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -416,7 +416,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Live Reload</h1>
+    <h1>Markdown</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -426,14 +426,10 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling">Enabling</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#script-injection">Script injection</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-livereload-endpoint">The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-watching">File watching</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rendering-markdown">Rendering Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-syntax">Supported Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
 </ul>
             </nav>
         </div>
@@ -445,84 +441,107 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="live-reload">
-<h1>Live Reload<a class="headerlink" href="#live-reload" title="Link to this heading">#</a></h1>
-<p>When enabled, Bialet injects a small polling script into every HTML response.
-The script checks for file changes once per second and reloads the page
-automatically — no browser extensions, no WebSocket server, no extra process.</p>
-<section id="enabling">
-<h2>Enabling<a class="headerlink" href="#enabling" title="Link to this heading">#</a></h2>
-<p>Live reload is controlled by the <code class="docutils literal notranslate"><span class="pre">BIALET_LIVE_RELOAD</span></code> configuration key.
-Set it once in your development database:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.enable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
-</pre></div>
-</div>
-<p>Or directly:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;BIALET_LIVE_RELOAD&quot;, &quot;1&quot;)&#39;</span><span class="w"> </span>.
-</pre></div>
-</div>
-<p>Disable it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.disable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
-</pre></div>
-</div>
-<p>Since configuration lives in the SQLite database, enabling it in dev has no
-effect on production — each environment has its own <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and its own
-<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> table.</p>
-<p>To check if it’s currently active:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;BIALET_LIVE_RELOAD&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Live reload is on&quot;</span><span class="p">)</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</section>
-<section id="how-it-works">
-<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
-<section id="script-injection">
-<h3>Script injection<a class="headerlink" href="#script-injection" title="Link to this heading">#</a></h3>
-<p>When live reload is enabled, Bialet appends a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag to every HTML
-response, right before <code class="docutils literal notranslate"><span class="pre">&lt;/body&gt;</span></code> (or at the end if no <code class="docutils literal notranslate"><span class="pre">&lt;/body&gt;</span></code> is present).
-The script polls the <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint every second.</p>
-</section>
-<section id="the-livereload-endpoint">
-<h3>The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint<a class="headerlink" href="#the-livereload-endpoint" title="Link to this heading">#</a></h3>
-<p>This is an internal route handled by the server before any Wren code runs.
-It returns a plain-text version number that updates whenever a file in the
-app directory changes.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">GET</span><span class="w"> </span><span class="o">/</span><span class="vi">_livereload</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="mf">200</span><span class="w"> </span><span class="nc">OK</span>
-<span class="nc">Content</span><span class="o">-</span><span class="nc">Type</span><span class="o">:</span><span class="w"> </span><span class="n">text</span><span class="o">/</span><span class="n">plain</span>
+  <section id="markdown">
+<h1>Markdown<a class="headerlink" href="#markdown" title="Link to this heading">#</a></h1>
+<p>Bialet renders Markdown to HTML with a built-in parser. No external library,
+no bundler — the renderer ships inside the binary.</p>
+<section id="rendering-markdown">
+<h2>Rendering Markdown<a class="headerlink" href="#rendering-markdown" title="Link to this heading">#</a></h2>
+<p>Two methods on the <code class="docutils literal notranslate"><span class="pre">Markdown</span></code> class:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Render a Markdown string</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;## Hello **World**!&quot;</span><span class="p">)</span>
 
-<span class="mf">1746554321</span>
+<span class="c1">// Read a .md file from the app directory and render it</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When the browser sees a different version number from its last poll, it calls
-<code class="docutils literal notranslate"><span class="pre">location.reload()</span></code>.</p>
+<p>Use the result anywhere a string works — interpolate it into a page:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  {{ Markdown.file(&quot;docs/readme.md&quot;) }}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>The full API reference for both methods lives in the
+<a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a> under “Markdown”.</p>
 </section>
-<section id="file-watching">
-<h3>File watching<a class="headerlink" href="#file-watching" title="Link to this heading">#</a></h3>
-<p>Bialet uses inotify (on Linux) to watch the app directory for changes. When
-any file is created, modified, or deleted, the version number updates and the
-next poll picks it up.</p>
-<p>The Wren VM also reloads automatically on <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file changes — this is
-independent of live reload and happens regardless of the config setting.</p>
+<section id="supported-syntax">
+<h2>Supported Syntax<a class="headerlink" href="#supported-syntax" title="Link to this heading">#</a></h2>
+<p>The parser implements a focused subset of Markdown:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Syntax</p></th>
+<th class="head"><p>Renders to</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#</span></code> to <code class="docutils literal notranslate"><span class="pre">######</span></code> headings (must be followed by a space)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;h1&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">&lt;h6&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">**bold**</span></code> and <code class="docutils literal notranslate"><span class="pre">*italic*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;strong&gt;</span></code> / <code class="docutils literal notranslate"><span class="pre">&lt;em&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">`inline</span> <span class="pre">code`</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;code&gt;</span></code> (escaped)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Fenced code blocks with <code class="docutils literal notranslate"><span class="pre">```</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;pre&gt;&lt;code&gt;</span></code> (escaped)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[text](url)</span></code> links</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">href=&quot;url&quot;&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">![alt](url)</span></code> images</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;img</span> <span class="pre">alt=&quot;...&quot;</span> <span class="pre">src=&quot;url&quot;&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">item</span></code> / <code class="docutils literal notranslate"><span class="pre">*</span> <span class="pre">item</span></code> unordered lists</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;&lt;li&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1.</span> <span class="pre">item</span></code> ordered lists</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;ol&gt;&lt;li&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">quote</span></code> blockquotes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;blockquote&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">a</span> <span class="pre">|</span> <span class="pre">b</span> <span class="pre">|</span></code> tables</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;table&gt;&lt;th&gt;&lt;td&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Leading <code class="docutils literal notranslate"><span class="pre">---</span></code> front matter</p></td>
+<td><p>skipped</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>CommonMark and GitHub Flavored Markdown are <strong>not</strong> fully supported. Syntax
+outside this list (footnotes, task lists, strikethrough, nested lists) is not
+rendered — it comes through as plain text. Test your Markdown against the
+renderer before relying on it.</p>
 </section>
-</section>
-<section id="limitations">
-<h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><strong>Polling, not push.</strong> There’s a 1-second delay between saving a file and
-the browser reloading. For CSS-only changes, consider a tool that injects
-stylesheets directly.</p></li>
-<li><p><strong>No WebSocket.</strong> Bialet speaks HTTP/1.0 and runs in a single process.
-Polling is the simplest approach that works everywhere without adding
-dependencies.</p></li>
-<li><p><strong>Full page reload only.</strong> The script calls <code class="docutils literal notranslate"><span class="pre">location.reload()</span></code>. State
-in JavaScript variables or form inputs is lost.</p></li>
-</ul>
+<section id="security">
+<h2>Security<a class="headerlink" href="#security" title="Link to this heading">#</a></h2>
+<p>The parser escapes HTML <strong>only inside code blocks and inline code</strong>. Raw HTML
+in paragraphs, headings, and lists passes through to the output unescaped.
+Link and image URLs are not validated either.</p>
 <blockquote>
-<div><p>⚠️ Pitfall: Enabling live reload on a production database injects the
-script into every page served to real users. The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint
-becomes publicly accessible. Only enable it in development.</p>
+<div><p>⚠️ Pitfall: rendering untrusted input with <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can produce
+XSS. <code class="docutils literal notranslate"><span class="pre">Markdown.html(&quot;&lt;script&gt;alert(1)&lt;/script&gt;&quot;)</span></code> emits a live <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code>
+tag, and <code class="docutils literal notranslate"><span class="pre">[x](javascript:alert(1))</span></code> emits a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> link. Render only
+Markdown you trust, or sanitize the output before serving it.</p>
 </div></blockquote>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
+<p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code> when the file is missing</strong>, it does not
+throw. Guard against it:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">content</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;About page not written yet.&lt;/p&gt;&quot;</span>
+</pre></div>
+</div>
+<p><strong>Output is capped at 2 MB.</strong> Larger documents are truncated silently.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed files are private.</strong> A <code class="docutils literal notranslate"><span class="pre">_about.md</span></code> file renders 403 when fetched
+directly, but <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;_about.md&quot;)</span></code> still reads it from disk — the
+privacy rule applies to HTTP requests, not file reads.</p>
+<p><strong>Front matter is skipped, not parsed.</strong> A leading <code class="docutils literal notranslate"><span class="pre">---</span></code> block is dropped from
+the output. Metadata inside it (title, date, tags) is not exposed — you must
+read it yourself if you need it.</p>
 </section>
 </section>
 
@@ -538,20 +557,20 @@ becomes publicly accessible. Only enable it in development.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="configuration.html"
+       href="forms.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Configuration</p>
+        <p class="prev-next-title">Forms</p>
       </div>
     </a>
     <a class="right-next"
-       href="security.html"
+       href="errors.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Security</p>
+        <p class="prev-next-title">Error Pages</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -572,14 +591,10 @@ becomes publicly accessible. Only enable it in development.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling">Enabling</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#script-injection">Script injection</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-livereload-endpoint">The <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-watching">File watching</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rendering-markdown">Rendering Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-syntax">Supported Syntax</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
 </ul>
   </nav></div>
 
