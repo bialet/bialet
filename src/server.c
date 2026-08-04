@@ -24,6 +24,7 @@
 #define setsockopt_val(v) ((const char*)(v))
 #else
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -402,6 +403,24 @@ void write_response(int client_socket, struct BialetResponse* response) {
   socket_close(client_socket);
 }
 
+// Opens [path] without following a symlink as the final component. On POSIX
+// realpath() is validated for root containment and then the file is reopened;
+// O_NOFOLLOW closes the TOCTOU window where the file is swapped for an
+// out-of-root symlink between the check and the open.
+static FILE* open_file_within_root(const char* path) {
+#if IS_WIN
+  return fopen(path, "rb");
+#else
+  int fd = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+  if(fd < 0)
+    return NULL;
+  FILE* f = fdopen(fd, "rb");
+  if(f == NULL)
+    close(fd);
+  return f;
+#endif
+}
+
 void handle_client(bialet_socket_t client_socket) {
   char    buffer[BUFFER_SIZE];
   ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
@@ -626,7 +645,7 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   // Open file and read content
-  FILE* file = fopen(path, "rb");
+  FILE* file = open_file_within_root(path);
   if(file == NULL) {
     perror("Error opening file");
     clean_http_message(hm);
