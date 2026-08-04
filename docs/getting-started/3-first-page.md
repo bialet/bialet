@@ -16,6 +16,8 @@ World!"
 - `<p>Hello World!</p>` is an **Inline HTML String** — you write HTML
   directly in Wren
 
+## Inline HTML Strings
+
 Inline HTML Strings work like JSX in React, but produce plain strings
 instead of objects. You can embed Wren expressions with `{{ }}`:
 

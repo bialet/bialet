@@ -116,7 +116,7 @@ Two places tempt people out of it:
 > correctness concern, but it also stops "it works when I type a number"
 > bugs from becoming injection-adjacent string handling.
 
-See the [Database](database.md) and [Routing](routing.md) guides for more
+See the [Database](database.md) and [Advanced Routing](advanced-routing.md) guides for more
 Query examples.
 
 ## CSRF Protection

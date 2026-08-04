@@ -1,4 +1,4 @@
-# Routing
+# Advanced Routing
 
 Bialet routing is exactly like serving static HTML files. A file named
 `about.wren` is the route `/about`, just as `about.html` would be. The
