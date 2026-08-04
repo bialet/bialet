@@ -796,6 +796,8 @@ static const char* bialetModuleSource =
 "  static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }\n"
 "  static json(key) { set(key, Json.parse(get(key))) }\n"
 "  static json(key, val) { set(key, Json.stringify(val)) }\n"
+"  static enable(key) { set(key, \"1\") }\n"
+"  static disable(key) { set(key, \"0\") }\n"
 "}\n"
 "class File {\n"
 "  construct new(data) { set_(data) }\n"
