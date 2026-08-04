@@ -8,13 +8,16 @@
 #define MAX_OUTPUT 2 * 1024 * 1024
 
 static bool is_ordered_list_item(const char* line) {
-  if(*line < '0' || *line > '9') return false;
-  while(*line >= '0' && *line <= '9') line++;
+  if(*line < '0' || *line > '9')
+    return false;
+  while(*line >= '0' && *line <= '9')
+    line++;
   return (*line == '.' && *(line + 1) == ' ');
 }
 
 static const char* skip_ordered_list_prefix(const char* line) {
-  while(*line >= '0' && *line <= '9') line++;
+  while(*line >= '0' && *line <= '9')
+    line++;
   return line + 2;
 }
 
@@ -103,7 +106,7 @@ char* markdown_to_html(const char* markdown) {
   char* input = strdup(markdown);
 
   // Split into lines preserving empty lines
-  int   line_capacity = 256;
+  int    line_capacity = 256;
   char** lines = malloc(line_capacity * sizeof(char*));
   if(lines == NULL) {
     free(input);

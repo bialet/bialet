@@ -97,7 +97,8 @@ int start_server(struct BialetConfig* config) {
   }
   // Enable SO_REUSEADDR option
   int opt = 1;
-  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, setsockopt_val(&opt), sizeof(opt)) == -1) {
+  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, setsockopt_val(&opt),
+                sizeof(opt)) == -1) {
     perror("Failed to set SO_REUSEADDR");
     socket_close(server_fd);
     exit(EXIT_FAILURE);
@@ -564,7 +565,8 @@ void handle_client(bialet_socket_t client_socket) {
   if(realpath(path, resolved_path) != NULL) {
     size_t root_len = strlen(bialet_config.full_root_dir);
     if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
-       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' && resolved_path[root_len] != '\0')) {
+       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' &&
+        resolved_path[root_len] != '\0')) {
       message(red("Security Error"), "Path traversal blocked", path);
       clean_http_message(hm);
       custom_error(403, &response);
@@ -731,8 +733,7 @@ void custom_error(int status, struct BialetResponse* response) {
             rewind(file);
             char* file_content = (char*)malloc((size_t)file_size + 1);
             if(file_content != NULL) {
-              size_t read_bytes =
-                  fread(file_content, 1, (size_t)file_size, file);
+              size_t read_bytes = fread(file_content, 1, (size_t)file_size, file);
               fclose(file);
               file_content[read_bytes] = '\0';
               custom_error_recursing = 1;

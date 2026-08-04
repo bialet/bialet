@@ -80,8 +80,8 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
 
 char* bialet_read_file(const char* path) {
   char fullPath[MAX_URL_LEN];
-  int ret = snprintf(fullPath, sizeof(fullPath), "%s/%s", 
-                     bialet_config.full_root_dir, path);
+  int  ret = snprintf(fullPath, sizeof(fullPath), "%s/%s",
+                      bialet_config.full_root_dir, path);
   if(ret < 0 || ret >= (int)sizeof(fullPath)) {
     message(red("Error"), "Path too long in bialetReadFile");
     return NULL;
@@ -94,7 +94,8 @@ char* bialet_read_file(const char* path) {
 
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
-     (resolved[root_len] != '/' && resolved[root_len] != '\\' && resolved[root_len] != '\0')) {
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
+      resolved[root_len] != '\0')) {
     message(red("Error"), "Path traversal attempt in bialetReadFile");
     return NULL;
   }
@@ -154,7 +155,8 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
         message(red("Error"), "Invalid GitHub URL.");
         return result;
       }
-      int ret = snprintf(url, sizeof(url), BIALET_REMOTE_MODULE_GITHUB_URL, user, repo, branch, path);
+      int ret = snprintf(url, sizeof(url), BIALET_REMOTE_MODULE_GITHUB_URL, user,
+                         repo, branch, path);
       if(ret < 0 || ret >= (int)sizeof(url)) {
         message(red("Error"), "GitHub URL too long.");
         return result;
@@ -248,7 +250,8 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
 
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
-     (resolved[root_len] != '/' && resolved[root_len] != '\\' && resolved[root_len] != '\0')) {
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
+      resolved[root_len] != '\0')) {
     return result;
   }
 
@@ -404,7 +407,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
 }
 char* escape_special_chars(const char* input) {
   size_t i, j = 0, len = strlen(input);
-  char* output = malloc(len * 2 + 1);
+  char*  output = malloc(len * 2 + 1);
   if(output == NULL)
     return NULL;
 
@@ -590,11 +593,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt;
-    int           result = sqlite3_prepare_v2(db,
-                                              "INSERT INTO BIALET_FILES (name, "
-                                                        "originalFileName, type, file, size, isTemp) "
-                                                        "VALUES (?, ?, ?, ?, ?, 1)",
-                                              -1, &stmt, 0);
+    int result = sqlite3_prepare_v2(db,
+                                    "INSERT INTO BIALET_FILES (name, "
+                                    "originalFileName, type, file, size, isTemp) "
+                                    "VALUES (?, ?, ?, ?, ?, 1)",
+                                    -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -609,10 +612,10 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
         // Append file ID to filesIds string safely
         char idStr[32];
         snprintf(idStr, sizeof(idStr), "%lld", fileId);
-        
+
         size_t currentLen = strlen(filesIds);
         size_t neededLen = currentLen + (firstFile ? 0 : 1) + strlen(idStr);
-        
+
         if(neededLen < MAX_URL_LEN) {
           if(!firstFile) {
             strncat(filesIds, ",", MAX_URL_LEN - currentLen - 1);
@@ -745,13 +748,12 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, module, "Response", 0);
     WrenHandle* useErrorHandle = wrenGetSlotHandle(vm, 0);
-    WrenHandle* useErrorFallback =
-        wrenMakeCallHandle(vm, "useErrorFallback()");
+    WrenHandle* useErrorFallback = wrenMakeCallHandle(vm, "useErrorFallback()");
     wrenSetSlotHandle(vm, 0, useErrorHandle);
     if(wrenCall(vm, useErrorFallback) == WREN_RESULT_SUCCESS) {
       if(wrenGetSlotBool(vm, 0) &&
-         (r.status == 403 || r.status == 404 || r.status == 413 ||
-          r.status == 429 || r.status == 500)) {
+         (r.status == 403 || r.status == 404 || r.status == 413 || r.status == 429 ||
+          r.status == 500)) {
         custom_error(r.status, &r);
       }
     }
@@ -802,7 +804,7 @@ int bialet_validate_syntax(const char* filePath) {
     return 1;
   }
 
-  WrenVM*             vm = wrenNewVM(&wren_config);
+  WrenVM* vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, abs_path);
   WrenInterpretResult result = wrenInterpret(vm, abs_path, code);
   wrenFreeVM(vm);
@@ -945,8 +947,8 @@ void bialet_init(struct BialetConfig* config) {
     if(config->db_path[lastChar] == '/') {
       config->db_path[lastChar] = '\0';
     }
-    int ret = snprintf(db_path, sizeof(db_path), "%s/%s", 
-                       config->root_dir, config->db_path);
+    int ret = snprintf(db_path, sizeof(db_path), "%s/%s", config->root_dir,
+                       config->db_path);
     if(ret < 0 || ret >= (int)sizeof(db_path)) {
       message(red("Error"), "Database path too long");
       exit(BIALET_SQLITE_ERROR);

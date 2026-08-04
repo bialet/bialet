@@ -57,7 +57,7 @@ void hash_password(char* password, char* output) {
   EVP_MD_CTX_free(ctx);
 
   static char result[HASH_AND_SALT_LENGTH];
-  size_t offset = 0;
+  size_t      offset = 0;
   for(unsigned int i = 0; i < hash_len && offset + 2 < HASH_AND_SALT_LENGTH; i++) {
     snprintf(result + offset, HASH_AND_SALT_LENGTH - offset, "%02x", hash[i]);
     offset += 2;
@@ -67,7 +67,7 @@ void hash_password(char* password, char* output) {
     result[offset++] = '/';
     result[offset] = '\0';
   }
-  
+
   for(size_t i = 0; i < sizeof(salt) && offset + 2 < HASH_AND_SALT_LENGTH; i++) {
     snprintf(result + offset, HASH_AND_SALT_LENGTH - offset, "%02x", salt[i]);
     offset += 2;
@@ -118,10 +118,12 @@ int verify_password(char* password, char* hash_and_salt) {
 
   EVP_MD_CTX_free(ctx);
 
-  char new_hash_str[65];
+  char   new_hash_str[65];
   size_t offset = 0;
-  for(unsigned int i = 0; i < new_hash_len && offset + 2 < sizeof(new_hash_str); i++) {
-    snprintf(new_hash_str + offset, sizeof(new_hash_str) - offset, "%02x", new_hash[i]);
+  for(unsigned int i = 0; i < new_hash_len && offset + 2 < sizeof(new_hash_str);
+      i++) {
+    snprintf(new_hash_str + offset, sizeof(new_hash_str) - offset, "%02x",
+             new_hash[i]);
     offset += 2;
   }
   new_hash_str[64] = 0;

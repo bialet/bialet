@@ -9,14 +9,14 @@
 static int  enabled = 0;
 static long version = 0;
 
-static const char kScript[] =
-    "<script>"
-    "(function(){var v=null;setInterval(function(){"
-    "var x=new XMLHttpRequest();"
-    "x.onload=function(){if(v===null)v=x.responseText;else if(v!==x.responseText)location.reload()};"
-    "x.open('GET','/_livereload');x.send()"
-    "},1000)})()"
-    "</script>";
+static const char kScript[] = "<script>"
+                              "(function(){var v=null;setInterval(function(){"
+                              "var x=new XMLHttpRequest();"
+                              "x.onload=function(){if(v===null)v=x.responseText;"
+                              "else if(v!==x.responseText)location.reload()};"
+                              "x.open('GET','/_livereload');x.send()"
+                              "},1000)})()"
+                              "</script>";
 
 extern sqlite3* db;
 
@@ -25,7 +25,7 @@ void livereload_init(void) {
     return;
 
   sqlite3_stmt* stmt = NULL;
-  const char* sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
+  const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
   if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     return;
 
@@ -56,7 +56,7 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
     return 0;
 
   static char version_str[32];
-  int len = snprintf(version_str, sizeof(version_str), "%ld", version);
+  int         len = snprintf(version_str, sizeof(version_str), "%ld", version);
 
   response->status = 200;
   response->header = (char*)"Content-Type: text/plain\r\n";
@@ -88,7 +88,7 @@ int livereload_inject_response(struct BialetResponse* response) {
   size_t script_len = sizeof(kScript) - 1;
 
   const char* marker = strstr(response->body, "</body>");
-  size_t insert_at = marker ? (size_t)(marker - response->body) : body_len;
+  size_t      insert_at = marker ? (size_t)(marker - response->body) : body_len;
 
   size_t new_len = body_len + script_len;
   char*  new_body = (char*)malloc(new_len + 1);

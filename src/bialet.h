@@ -36,7 +36,7 @@
 #define PATH_MAX _MAX_PATH
 #endif
 static inline char* realpath(const char* path, char* resolved) {
-    return _fullpath(resolved, path, _MAX_PATH);
+  return _fullpath(resolved, path, _MAX_PATH);
 }
 #endif
 

@@ -1,5 +1,4 @@
 #include "bialet.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +26,7 @@ void message_init(struct BialetConfig* config) {
   apply_color = config->output_color;
 #if IS_WIN
   HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-  DWORD mode = 0;
+  DWORD  mode = 0;
   if(GetConsoleMode(hOut, &mode)) {
     SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
   }
@@ -41,7 +40,7 @@ char* colorize(char* str, int color) {
     return str;
   }
   size_t len = strlen(str);
-  char* output = malloc(len + 20);
+  char*  output = malloc(len + 20);
   if(output == NULL)
     return str;
   snprintf(output, len + 20, "\033[%dm%s\033[0m", color, str);

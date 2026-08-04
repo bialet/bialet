@@ -67,7 +67,7 @@
 #define BIALET_LOGO "-"
 #else
 #define BIALET_LOGO "🚲"
-# endif
+#endif
 
 struct BialetConfig    bialet_config;
 time_t                 last_reload = 0;
@@ -94,8 +94,7 @@ static void install_cron() {
   char path[MAX_PATH_LEN];
   char altPath[MAX_PATH_LEN];
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
-  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
-           CRON_FILE_ALT);
+  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir, CRON_FILE_ALT);
   if((cron_code = read_file(path)) || (cron_code = read_file(altPath))) {
     message(yellow("Installing cron"));
     cron_installed = 1;
@@ -177,10 +176,10 @@ void sigint_handler(int signum) {
 }
 
 int main(int argc, char* argv[]) {
-  char*            code = "";
-  char*            validate_file = NULL;
-  char*            test_dir = NULL;
-  int              run_tests = 0;
+  char* code = "";
+  char* validate_file = NULL;
+  char* test_dir = NULL;
+  int   run_tests = 0;
 #if !IS_WIN
   struct sigaction sa;
   sa.sa_handler = sigint_handler;
