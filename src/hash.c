@@ -14,8 +14,19 @@
 
 #ifndef OPENSSL_OK
 
+#if defined(_WIN32)
+#define _CRT_RAND_S
+#endif
+
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 void unsafe_hash(const char* input, char* output) {
   unsigned int hash = 5381;
@@ -26,11 +37,52 @@ void unsafe_hash(const char* input, char* output) {
            hash * 7);
 }
 
+// Seeds rand() from non-deterministic sources. Previously the generator was
+// never seeded, so every process produced identical salts (default seed 1).
+static void seed_random_once(void) {
+  static int seeded = 0;
+  if(seeded)
+    return;
+  unsigned int seed = (unsigned int)time(NULL) ^ (unsigned int)clock() ^
+                      (unsigned int)(uintptr_t)&seeded;
+#if !defined(_WIN32)
+  seed ^= (unsigned int)getpid();
+#endif
+  srand(seed);
+  seeded = 1;
+}
+
 void generate_salt(char* salt, size_t length) {
-  for(size_t i = 0; i < length; i++) {
-    salt[i] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"[rand() %
-                                                                         62];
+  static const char alphabet[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  size_t filled = 0;
+
+  // Prefer /dev/urandom on POSIX for cryptographically random salts.
+#if !defined(_WIN32)
+  int fd = open("/dev/urandom", O_RDONLY);
+  if(fd >= 0) {
+    unsigned char buf[64];
+    while(filled < length) {
+      ssize_t n = read(fd, buf, sizeof(buf));
+      if(n <= 0)
+        break;
+      for(ssize_t i = 0; i < n && filled < length; i++)
+        salt[filled++] = alphabet[buf[i] % 62];
+    }
+    close(fd);
+  }
+#endif
+
+  seed_random_once();
+  while(filled < length) {
+#if defined(_WIN32)
+    unsigned int r = 0;
+    if(rand_s(&r) != 0)
+      r = (unsigned int)rand();
+    salt[filled++] = alphabet[r % 62];
+#else
+    salt[filled++] = alphabet[rand() % 62];
+#endif
   }
   salt[length] = '\0';
 }
