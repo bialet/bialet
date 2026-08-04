@@ -1,5 +1,6 @@
 #include "livereload.h"
 
+#include "messages.h"
 #include <sqlite3.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,7 @@ void livereload_init(void) {
     if(val != NULL && strcmp(val, "0") != 0 && val[0] != '\0') {
       enabled = 1;
       version = (long)time(NULL);
+      message(yellow("Live reloading"));
     }
   }
   sqlite3_finalize(stmt);
@@ -41,6 +43,10 @@ void livereload_init(void) {
 
 int livereload_enabled(void) {
   return enabled;
+}
+
+int livereload_is_poll(const char* uri) {
+  return uri != NULL && strcmp(uri, "/_livereload") == 0;
 }
 
 int livereload_try_handle(const char* uri, struct BialetResponse* response) {

@@ -431,7 +431,8 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   struct HttpMessage* hm = parse_request(full_request, total_read);
-  message(magenta("Request"), hm->method.str, hm->uri.str);
+  if(!livereload_is_poll(hm->uri.str))
+    message(magenta("Request"), hm->method.str, hm->uri.str);
 
   // Variable to track if we need to free full_request
   int should_free_request = (full_request != buffer);
