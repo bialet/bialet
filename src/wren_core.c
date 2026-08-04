@@ -1505,16 +1505,22 @@ DEF_PRIMITIVE(query_fetch) {
 }
 
 DEF_PRIMITIVE(query_execute) {
-  BialetQuery* q = create_bialet_query();
-  if(q == NULL)
+  BialetQuery* query = create_bialet_query();
+  if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
-  BialetQuery query = *q;
-  query.queryString = AS_CSTRING(args[1]);
-  queryPrepare(vm, &query, AS_LIST(args[2]));
-  if(query.lastInsertId) {
-    Value lastInsertId = wrenNewString(vm, query.lastInsertId);
+  char* qs = strdup(AS_CSTRING(args[1]));
+  if(qs == NULL) {
+    free_bialet_query(query);
+    RETURN_ERROR("Out of memory allocating query string");
+  }
+  query->queryString = qs;
+  queryPrepare(vm, query, AS_LIST(args[2]));
+  if(query->lastInsertId) {
+    Value lastInsertId = wrenNewString(vm, query->lastInsertId);
+    free_bialet_query(query);
     RETURN_VAL(lastInsertId);
   } else {
+    free_bialet_query(query);
     RETURN_NULL;
   }
 }
