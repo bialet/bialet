@@ -284,6 +284,7 @@ Who is Bialet for?
    self
    why-bialet
    installation
+   wren
 
 .. toctree::
    :hidden:
@@ -317,13 +318,6 @@ Who is Bialet for?
 
    routing
    rest-api
-
-.. toctree::
-   :hidden:
-   :maxdepth: 2
-   :caption: The Language
-
-   wren
 
 .. toctree::
    :hidden:
