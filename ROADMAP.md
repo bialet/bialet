@@ -24,12 +24,12 @@ improvements.
       systemd, reverse proxy setup, and environment configuration
 - [ ] **Data filtering lib** — Query sanitization and type-safe filtering
       utilities
-- [ ] **Forms guide** — Document POST handling, basic validation, redirect after
+- [x] **Forms guide** — Document POST handling, basic validation, redirect after
       POST (PRG), and simple file uploads.
 - [x] **Security guide** — Central page covering XSS prevention, SQL injection
       reminders, secure configuration, and any built-in protections (e.g.,
       CSRF).
-- [ ] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
+- [x] **Configuration guide** — Reading/writing `BIALET_CONFIG`,
       environment-specific settings, and server options (port, host).
 - [ ] **Reorganise documentation into groups** — Reduce sidebar length by
       grouping related pages:

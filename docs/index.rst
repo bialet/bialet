@@ -287,6 +287,7 @@ Who is Bialet for?
    wren
    routing
    template
+   forms
    errors
    database
    rest-api
@@ -295,6 +296,7 @@ Who is Bialet for?
    datetime
    cron
    deployment
+   configuration
    security
    reference
    examples
