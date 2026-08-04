@@ -22,7 +22,7 @@ The following classes are available by default in all Bialet applications withou
 
 ## External Classes
 
-External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [routing documentation](routing.md) section on External Imports for details on how to import external modules.
+External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [advanced routing documentation](advanced-routing.md) section on External Imports for details on how to import external modules.
 
 ---
 

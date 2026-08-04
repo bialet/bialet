@@ -16,6 +16,20 @@ percentage bars.
 ![Poll Vote](../_static/poll-vote.png)
 ![Poll Results](../_static/poll-results.png)
 
+## Files are routes
+
+Bialet has no router to configure. Every `.wren` file is a URL at the same
+path, just like a static HTML file: `about.wren` → `/about`.
+
+Use the query string for dynamic data:
+
+```wren
+var id = Request.get("id")
+return <p>Article {{ id }}</p>
+```
+
+See [Advanced Routing](../advanced-routing.md) for the full routing model.
+
 ## Chapters
 
 ```{toctree}

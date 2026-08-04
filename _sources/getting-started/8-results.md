@@ -102,7 +102,7 @@ Your poll app is complete. Here are the final files:
   mapping
 - Explore the [API Reference](../reference.md) for all built-in classes
 - Check the [Examples](../examples.rst) page for more patterns
-- Read [Routing](../routing.md) for file-based routing and
+- Read [Advanced Routing](../advanced-routing.md) for file-based routing and
   external imports
 
 ---

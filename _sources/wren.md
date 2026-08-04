@@ -541,7 +541,7 @@ from GitHub:
 import "gh:user/repo/module" for ClassName
 ```
 
-See the [routing guide](routing.md) for details on external imports and file-based
+See the [advanced routing guide](advanced-routing.md) for details on external imports and file-based
 module resolution.
 
 ## Bialet vs. Standard Wren

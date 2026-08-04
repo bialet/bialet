@@ -111,7 +111,7 @@ and `name`. We will fetch the file based on its name and display it in the
 browser.
 
 For more information on routing and dynamic names, see the
-[routing section](routing.md).
+[advanced routing section](advanced-routing.md).
 
 ```wren
 

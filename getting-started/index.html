@@ -198,7 +198,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rest-api.html">Building REST APIs</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
@@ -425,6 +425,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-ll-build">What we’ll build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-are-routes">Files are routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chapters">Chapters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-files">Source files</a></li>
 </ul>
@@ -454,6 +455,17 @@ percentage bars.</p>
 </ul>
 <p><img alt="Poll Vote" src="../_images/poll-vote.png" />
 <img alt="Poll Results" src="../_images/poll-results.png" /></p>
+</section>
+<section id="files-are-routes">
+<h2>Files are routes<a class="headerlink" href="#files-are-routes" title="Link to this heading">#</a></h2>
+<p>Bialet has no router to configure. Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a URL at the same
+path, just like a static HTML file: <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/about</span></code>.</p>
+<p>Use the query string for dynamic data:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Article {{ id }}&lt;/p&gt;</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> for the full routing model.</p>
 </section>
 <section id="chapters">
 <h2>Chapters<a class="headerlink" href="#chapters" title="Link to this heading">#</a></h2>
@@ -533,6 +545,7 @@ Bialet’s conventions in one message.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-ll-build">What we’ll build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#files-are-routes">Files are routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#chapters">Chapters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-files">Source files</a></li>
 </ul>

@@ -207,5 +207,5 @@ guide for the full API.
 - [Security](security.md) — CSRF, password hashing, session defaults, XSS
 - [File Handling](file.md) — uploading, serving, and managing files
 - [Database](database.md) — saving form data with parameterized queries
-- [Routing](routing.md) — where to place form handlers with query params vs
+- [Advanced Routing](advanced-routing.md) — where to place form handlers with query params vs
   `_route.wren`

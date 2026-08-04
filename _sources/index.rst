@@ -316,7 +316,7 @@ Who is Bialet for?
    :maxdepth: 2
    :caption: Connecting Things
 
-   routing
+   advanced-routing
    rest-api
 
 .. toctree::
