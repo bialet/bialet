@@ -92,6 +92,10 @@ struct BialetResponse {
   char* header;
   char* body;
   int   length;
+  /* Whether header/body are heap-allocated and owned by this struct (vs
+   * static strings or buffers owned elsewhere, e.g. file_content). */
+  int body_owned;
+  int header_owned;
 };
 
 typedef enum {
@@ -136,7 +140,7 @@ void add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
 void free_bialet_query(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
-  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "              \
+  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "            \
   "[-t file [root_dir]] [-T] [root_dir]\n"
 
 /* Welcome, not found and error pages */
@@ -145,11 +149,11 @@ void free_bialet_query(BialetQuery* query);
   "<!DOCTYPE html><body style=\"font:2.3rem "                                       \
   "system-ui;text-align:center;margin:2em;color:#024\"><h1>"
 #define BIALET_FOOTER_PAGE                                                          \
-  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "             \
+  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "           \
   "href=\"https://bialet.dev\" style=\"color:#007FAD\" >Bialet"
 #define BIALET_WELCOME_PAGE                                                         \
   BIALET_HEADER_PAGE                                                                \
-  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "      \
+  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "    \
   "href=\"https://bialet.dev/getting-started.html\" "                               \
   "style=\"color:#007FAD\">Getting Started "                                        \
   "guide</a></b>." BIALET_FOOTER_PAGE
@@ -161,14 +165,14 @@ void free_bialet_query(BialetQuery* query);
   "🚨 Internal Server Error</h1><p>Oops! Something broke." BIALET_FOOTER_PAGE
 #define BIALET_FORBIDDEN_PAGE                                                       \
   BIALET_HEADER_PAGE                                                                \
-  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                        \
+  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                      \
   "access this page." BIALET_FOOTER_PAGE
 #define BIALET_PAYLOAD_TOO_LARGE_PAGE                                               \
   BIALET_HEADER_PAGE                                                                \
   "📦 Payload Too Large</h1><p>The request body is too large." BIALET_FOOTER_PAGE
 #define BIALET_TOO_MANY_REQUESTS_PAGE                                               \
   BIALET_HEADER_PAGE                                                                \
-  "⏳ Too Many Requests</h1><p>Please slow down and try again "                     \
+  "⏳ Too Many Requests</h1><p>Please slow down and try again "                    \
   "later." BIALET_FOOTER_PAGE
 
 #endif

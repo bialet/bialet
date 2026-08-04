@@ -103,6 +103,7 @@ int livereload_inject_response(struct BialetResponse* response) {
 
   free(response->body);
   response->body = new_body;
+  response->body_owned = 1;
   response->length = (int)new_len;
   return 1;
 }

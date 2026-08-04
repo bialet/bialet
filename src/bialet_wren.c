@@ -657,6 +657,8 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
   r.header = NULL;
   r.body = NULL;
   r.length = 0;
+  r.body_owned = 0;
+  r.header_owned = 0;
   int     error = 0;
   WrenVM* vm = 0;
 
@@ -694,6 +696,7 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     if(type == WREN_TYPE_STRING) {
       const char* returnBody = wrenGetSlotString(vm, 0);
       r.body = string_safe_copy(returnBody);
+      r.body_owned = 1;
     }
 
     wrenGetVariable(vm, module, "Response", 0);
@@ -708,6 +711,7 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
         const char* body = wrenGetSlotString(vm, 0);
         if(body[0] != BIALET_FILE_CHAR) {
           r.body = string_safe_copy(body);
+          r.body_owned = 1;
         } else {
           /* Handle BIALET_FILE_CHAR response for file serving.
            * This retrieves file content from the database when the response body
@@ -725,6 +729,7 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
               r.body = safe_malloc(len + 1);
               memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
               r.length = len;
+              r.body_owned = 1;
             } else {
               // If the id is not found, we will send an internal server error.
               message(red("Error file not found"), sqlite3_errmsg(db));
@@ -757,6 +762,7 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
       } else {
         const char* headersString = wrenGetSlotString(vm, 0);
         r.header = string_safe_copy(headersString);
+        r.header_owned = 1;
       }
       wrenReleaseHandle(vm, headersMethod);
     }
@@ -784,8 +790,10 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     custom_error(HTTP_ERROR, &r);
   }
 
-  if(!hm)
+  if(!hm) {
     r.header = NULL;
+    r.header_owned = 0;
+  }
 
   return r;
 }

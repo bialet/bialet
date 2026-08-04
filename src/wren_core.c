@@ -1360,10 +1360,11 @@ DEF_PRIMITIVE(test_runRequest) {
   res->elements.data[2] =
       OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
 
-  // Free response data
-  if(response.body)
+  // Free response data (respect ownership flags: error fallback pages are
+  // static strings and must not be freed).
+  if(response.body_owned)
     free(response.body);
-  if(response.header)
+  if(response.header_owned)
     free(response.header);
 
   RETURN_OBJ(res);

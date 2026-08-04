@@ -403,6 +403,22 @@ void write_response(int client_socket, struct BialetResponse* response) {
   socket_close(client_socket);
 }
 
+// Frees the heap-allocated body/header of a response when the ownership flags
+// indicate they belong to the struct (static strings and buffers owned by
+// other code, e.g. file_content, are left untouched).
+static void free_response_owned(struct BialetResponse* response) {
+  if(response->body_owned) {
+    free(response->body);
+    response->body = NULL;
+    response->body_owned = 0;
+  }
+  if(response->header_owned) {
+    free(response->header);
+    response->header = NULL;
+    response->header_owned = 0;
+  }
+}
+
 // Opens [path] without following a symlink as the final component. On POSIX
 // realpath() is validated for root containment and then the file is reopened;
 // O_NOFOLLOW closes the TOCTOU window where the file is swapped for an
@@ -511,7 +527,7 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   {
-    struct BialetResponse lr_response = {0, "", "", 0};
+    struct BialetResponse lr_response = {0, "", "", 0, 0, 0};
     if(livereload_try_handle(hm->uri.str, &lr_response)) {
       write_response(client_socket, &lr_response);
       clean_http_message(hm);
@@ -521,7 +537,7 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  struct BialetResponse response = {0, "", "", 0};
+  struct BialetResponse response = {0, "", "", 0, 0, 0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
@@ -533,6 +549,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     custom_error(403, &response);
     write_response(client_socket, &response);
+    free_response_owned(&response);
     if(should_free_request)
       free(full_request);
     return;
@@ -551,6 +568,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     custom_error(403, &response);
     write_response(client_socket, &response);
+    free_response_owned(&response);
     if(should_free_request)
       free(full_request);
     return;
@@ -635,6 +653,7 @@ void handle_client(bialet_socket_t client_socket) {
       clean_http_message(hm);
       custom_error(403, &response);
       write_response(client_socket, &response);
+      free_response_owned(&response);
       if(should_free_request)
         free(full_request);
       return;
@@ -724,6 +743,7 @@ void handle_client(bialet_socket_t client_socket) {
   if(!body_injected || is_wren_file) {
     free(file_content);
   }
+  free_response_owned(&response);
 
   // Free allocated memory if we had to read a large request
   if(full_request != buffer) {
@@ -783,6 +803,7 @@ static int custom_error_recursing = 0;
 
 void custom_error(int status, struct BialetResponse* response) {
   response->header = BIALET_HEADERS;
+  response->header_owned = 0;
   response->status = status;
   char        path[PATH_SIZE];
   struct stat file_stat;
@@ -810,9 +831,16 @@ void custom_error(int status, struct BialetResponse* response) {
                 wren_response.length = strlen(wren_response.body);
               if(wren_response.status != 0) {
                 *response = wren_response;
-                if(!response->header)
+                if(!response->header) {
                   response->header = BIALET_HEADERS;
+                  response->header_owned = 0;
+                }
                 return;
+              } else {
+                if(wren_response.body_owned)
+                  free(wren_response.body);
+                if(wren_response.header_owned)
+                  free(wren_response.header);
               }
             } else {
               fclose(file);
@@ -840,6 +868,7 @@ void custom_error(int status, struct BialetResponse* response) {
             size_t read_bytes = fread(file_content, 1, (size_t)file_size, file);
             fclose(file);
             response->body = file_content;
+            response->body_owned = 1;
             response->length = read_bytes;
             return;
           }
@@ -850,21 +879,27 @@ void custom_error(int status, struct BialetResponse* response) {
   }
   if(status == 404) {
     response->body = BIALET_NOT_FOUND_PAGE;
+    response->body_owned = 0;
     response->length = strlen(BIALET_NOT_FOUND_PAGE);
   } else if(status == 403) {
     response->body = BIALET_FORBIDDEN_PAGE;
+    response->body_owned = 0;
     response->length = strlen(BIALET_FORBIDDEN_PAGE);
   } else if(status == 413) {
     response->body = BIALET_PAYLOAD_TOO_LARGE_PAGE;
+    response->body_owned = 0;
     response->length = strlen(BIALET_PAYLOAD_TOO_LARGE_PAGE);
   } else if(status == 429) {
     response->body = BIALET_TOO_MANY_REQUESTS_PAGE;
+    response->body_owned = 0;
     response->length = strlen(BIALET_TOO_MANY_REQUESTS_PAGE);
   } else if(status == 500) {
     response->body = BIALET_ERROR_PAGE;
+    response->body_owned = 0;
     response->length = strlen(BIALET_ERROR_PAGE);
   } else {
     response->body = (char*)"";
+    response->body_owned = 0;
     response->length = 0;
   }
 }
