@@ -1,0 +1,745 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Forms" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/forms.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet handles forms with plain HTML and a few Wren methods. A<form> sends data, your.wren file reads it, and you decide what happens next. The Pattern: Every form page follows the same three steps..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet handles forms with plain HTML and a few Wren methods. A<form> sends data, your.wren file reads it, and you decide what happens next. The Pattern: Every form page follows the same three steps..." />
+
+    <title>Forms &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=04181c56" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'forms';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Error Pages" href="errors.html" />
+    <link rel="prev" title="Template" href="template.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/forms.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fforms.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/forms.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Forms</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-pattern">The Pattern</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subscribe-form-post-validation">Subscribe Form (POST + Validation)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#search-form-get">Search Form (GET)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#login-form-post-csrf-password">Login Form (POST + CSRF + Password)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-uploads">File Uploads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="forms">
+<h1>Forms<a class="headerlink" href="#forms" title="Link to this heading">#</a></h1>
+<p>Bialet handles forms with plain HTML and a few Wren methods. A <code class="docutils literal notranslate"><span class="pre">&lt;form&gt;</span></code>
+sends data, your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file reads it, and you decide what happens next.</p>
+<section id="the-pattern">
+<h2>The Pattern<a class="headerlink" href="#the-pattern" title="Link to this heading">#</a></h2>
+<p>Every form page follows the same three steps:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// 1. Read the fields</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+
+<span class="w">  </span><span class="c1">// 2. Process (validate, save)</span>
+<span class="w">  </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">})</span>
+
+<span class="w">  </span><span class="c1">// 3. Redirect to avoid resubmission</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// GET — show the form</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">  &lt;input name=&quot;name&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;button&gt;Save&lt;/button&gt;</span>
+<span class="x">&lt;/form&gt;</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when the key is missing.
+Always guard with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> or a null check before string operations.</p>
+</div></blockquote>
+</section>
+<section id="subscribe-form-post-validation">
+<h2>Subscribe Form (POST + Validation)<a class="headerlink" href="#subscribe-form-post-validation" title="Link to this heading">#</a></h2>
+<p>A simple email subscription form with basic validation:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// subscribe.wren</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Enter a valid email.&quot;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`INSERT INTO subscribers (email) VALUES (?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/subscribe?ok=1&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Subscribe</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  {{ Request.get(&quot;ok&quot;) &amp;&amp; &lt;p class=&quot;success&quot;&gt;</span><span class="nc">Subscribed</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">    &lt;label&gt;</span><span class="nc">Email</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email.safe }}&quot; required /&gt;&lt;/label&gt;</span>
+<span class="w">    </span><span class="x">&lt;button&gt;Subscribe&lt;/button&gt;</span>
+<span class="w">  </span><span class="x">&lt;/form&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>Key points:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;email&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> reads the field safely</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">!email.contains(&quot;&#64;&quot;)</span></code> is a quick sanity check — real email validation is
+complex; this catches most typos and empty submissions in one line</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">error</span> <span class="pre">=</span> <span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">error</span> <span class="pre">&amp;&amp;</span> <span class="pre">...</span> <span class="pre">}}</span></code> renders the message inline
+instead of short-circuiting with <code class="docutils literal notranslate"><span class="pre">return</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email.safe</span> <span class="pre">}}&quot;</span></code> preserves the input on failed submission</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> prevents resubmission on refresh</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;ok&quot;)</span></code> shows a success message after redirect</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type=&quot;email&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">required</span></code> give free browser-side validation</p></li>
+</ul>
+<blockquote>
+<div><p>Never trust client-side validation alone. The <code class="docutils literal notranslate"><span class="pre">required</span></code> attribute is a
+convenience for the user, not a security boundary.</p>
+</div></blockquote>
+</section>
+<section id="search-form-get">
+<h2>Search Form (GET)<a class="headerlink" href="#search-form-get" title="Link to this heading">#</a></h2>
+<p>For search or filtering, use <code class="docutils literal notranslate"><span class="pre">GET</span></code> and read query parameters with
+<code class="docutils literal notranslate"><span class="pre">Request.get()</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// search.wren</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE title LIKE ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;</span><span class="err">%</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;</span><span class="err">%</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Search</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;form method=&quot;get&quot; action=&quot;/search&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name=&quot;q&quot; value=&quot;{{ q.safe }}&quot; placeholder=&quot;Search posts...&quot; /&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Search</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s2">&quot;{{ q.safe }}&quot;</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;ul&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">r</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/post?id={{ r[&quot;id&quot;] }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>Key points:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">method=&quot;get&quot;</span></code> puts the query in the URL (<code class="docutils literal notranslate"><span class="pre">/search?q=term</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;q&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> avoids null — use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> so <code class="docutils literal notranslate"><span class="pre">.safe</span></code> doesn’t crash</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(q</span> <span class="pre">!=</span> <span class="pre">&quot;&quot;)</span></code> checks if there’s a search term (empty string is truthy in
+Wren, so <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(q)</span></code> doesn’t work as a presence check)</p></li>
+<li><p>No redirect needed — GET forms are safe to refresh</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">q.safe</span> <span class="pre">}}&quot;</span></code> preserves the search term</p></li>
+<li><p>Escape all user input with <code class="docutils literal notranslate"><span class="pre">.safe</span></code> when outputting to HTML</p></li>
+</ul>
+</section>
+<section id="login-form-post-csrf-password">
+<h2>Login Form (POST + CSRF + Password)<a class="headerlink" href="#login-form-post-csrf-password" title="Link to this heading">#</a></h2>
+<p>A login form with CSRF protection and password verification:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// login.wren</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">session</span><span class="o">.</span><span class="n">csrfOk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Invalid form submission.&quot;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">session</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/dashboard&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Invalid email or password.&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Login</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  {{ error &amp;&amp; &lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt; }}</span>
+<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">session</span><span class="o">.</span><span class="n">csrf</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="x">&lt;label&gt;Email: &lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email.safe }}&quot; required /&gt;&lt;/label&gt;</span>
+<span class="x">    &lt;label&gt;</span><span class="nc">Password</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;password&quot; type=&quot;password&quot; required /&gt;&lt;/label&gt;</span>
+<span class="w">    </span><span class="x">&lt;button&gt;Login&lt;/button&gt;</span>
+<span class="w">  </span><span class="x">&lt;/form&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>Key points:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.csrf</span></code> renders a hidden token field — put it in every
+state-changing form</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code> verifies the token on submit — check it before processing</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Util.verify(password,</span> <span class="pre">hash)</span></code> checks the password against the stored hash
+(see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for how to hash passwords with <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">error</span></code> with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">error</span> <span class="pre">&amp;&amp;</span> <span class="pre">&lt;p</span> <span class="pre">class=&quot;error&quot;&gt;{{</span> <span class="pre">error</span> <span class="pre">}}&lt;/p&gt;</span> <span class="pre">}}</span></code> shows
+the message inline on a single form, no duplication</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email.safe</span> <span class="pre">}}&quot;</span></code> preserves the email on failed login</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">session.login(id)</span></code> persists the session on success</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> on success, no redirect on failure</p></li>
+</ul>
+<blockquote>
+<div><p>⚠️ Pitfall: never store plaintext passwords. Use <code class="docutils literal notranslate"><span class="pre">Util.hash(password)</span></code> to
+create the hash, store that in the database, and verify with
+<code class="docutils literal notranslate"><span class="pre">Util.verify(password,</span> <span class="pre">storedHash)</span></code>. See the full <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a>
+guide for details on passwords, CSRF, and session defaults.</p>
+</div></blockquote>
+</section>
+<section id="file-uploads">
+<h2>File Uploads<a class="headerlink" href="#file-uploads" title="Link to this heading">#</a></h2>
+<p>Set <code class="docutils literal notranslate"><span class="pre">enctype=&quot;multipart/form-data&quot;</span></code> on the form and read the file with
+<code class="docutils literal notranslate"><span class="pre">Request.file()</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;attachment&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Uploaded: {{ file.name }} ({{ file.size }} bytes)&lt;/p&gt;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
+<span class="x">  &lt;input type=&quot;file&quot; name=&quot;attachment&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;button&gt;Upload&lt;/button&gt;</span>
+<span class="x">&lt;/form&gt;</span>
+</pre></div>
+</div>
+<p>Files are stored in the SQLite database. See the <a class="reference internal" href="file.html"><span class="std std-doc">File Handling</span></a>
+guide for the full API.</p>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></strong> — always <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string ops.</p></li>
+<li><p><strong>Missing <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> — causes double-response
+errors. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
+<li><p><strong>No <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on user input in HTML</strong> — every untrusted string must be
+escaped, including in <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;...&quot;&gt;</span></code> attributes.</p></li>
+<li><p><strong>Forgetting CSRF on state-changing forms</strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">session.csrf</span> <span class="pre">}}</span></code> in the
+form, <code class="docutils literal notranslate"><span class="pre">session.csrfOk</span></code> in the handler.</p></li>
+<li><p><strong>Plaintext passwords</strong> — use <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> / <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code>, never store raw
+passwords in the database.</p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> — CSRF, password hashing, session defaults, XSS</p></li>
+<li><p><a class="reference internal" href="file.html"><span class="std std-doc">File Handling</span></a> — uploading, serving, and managing files</p></li>
+<li><p><a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> — saving form data with parameterized queries</p></li>
+<li><p><a class="reference internal" href="routing.html"><span class="std std-doc">Routing</span></a> — where to place form handlers with query params vs
+<code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="template.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Template</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="errors.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Error Pages</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-pattern">The Pattern</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subscribe-form-post-validation">Subscribe Form (POST + Validation)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#search-form-get">Search Form (GET)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#login-form-post-csrf-password">Login Form (POST + CSRF + Password)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-uploads">File Uploads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

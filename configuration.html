@@ -1,0 +1,799 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Configuration" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/configuration.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet stores configuration in the SQLite database — every setting is a row in a simple key/value table. There are no.env files, no YAML, no environment variables to set. Reading and Writing: Typed..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet stores configuration in the SQLite database — every setting is a row in a simple key/value table. There are no.env files, no YAML, no environment variables to set. Reading and Writing: Typed..." />
+
+    <title>Configuration &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=04181c56" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'configuration';</script>
+    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Security" href="security.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.10.7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="routing.html">Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/configuration.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fconfiguration.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/configuration.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Configuration</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-and-writing">Reading and Writing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#typed-access">Typed Access</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">Delete</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeding-configuration">Seeding Configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-r-at-startup">With <code class="docutils literal notranslate"><span class="pre">-r</span></code> at startup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-migrations-for-defaults">With migrations for defaults</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-environments">Working with Environments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-with-other-frameworks">Comparison with Other Frameworks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-patterns">Common Patterns</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-flags">Feature Flags</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-mode">Maintenance Mode</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination-settings">Pagination Settings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#site-wide-title">Site-Wide Title</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h1>
+<p>Bialet stores configuration in the SQLite database — every setting is a row
+in a simple key/value table. There are no <code class="docutils literal notranslate"><span class="pre">.env</span></code> files, no YAML, no
+environment variables to set.</p>
+<section id="reading-and-writing">
+<h2>Reading and Writing<a class="headerlink" href="#reading-and-writing" title="Link to this heading">#</a></h2>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;app_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;app_name&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// &quot;My App&quot;</span>
+</pre></div>
+</div>
+<section id="typed-access">
+<h3>Typed Access<a class="headerlink" href="#typed-access" title="Link to this heading">#</a></h3>
+<p>All values are stored as strings. Use typed getters for numbers, booleans,
+and JSON:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 20 as a number</span>
+
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// true</span>
+
+<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;darkMode&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notifications&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
+<span class="k">var</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1">// { &quot;darkMode&quot;: true, ... }</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Config.bool</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code> (case-insensitive),
+<code class="docutils literal notranslate"><span class="pre">false</span></code> for everything else including missing keys.</p>
+</section>
+<section id="delete">
+<h3>Delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;old_setting&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Config.get()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for missing keys. Always
+provide a fallback: <code class="docutils literal notranslate"><span class="pre">Config.get(&quot;title&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;Default</span> <span class="pre">Title&quot;</span></code>.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>Under the hood, <code class="docutils literal notranslate"><span class="pre">Config</span></code> reads and writes to the <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> table, a
+two-column table created automatically when the database initializes:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">BIALET_CONFIG</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="k">key</span><span class="w">   </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="nb">TEXT</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Config.set(&quot;key&quot;,</span> <span class="pre">&quot;value&quot;)</span></code> runs an <code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">OR</span> <span class="pre">REPLACE</span></code>. <code class="docutils literal notranslate"><span class="pre">Config.get(&quot;key&quot;)</span></code>
+does a <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">value</span> <span class="pre">FROM</span> <span class="pre">BIALET_CONFIG</span> <span class="pre">WHERE</span> <span class="pre">key</span> <span class="pre">=</span> <span class="pre">?</span></code>. <code class="docutils literal notranslate"><span class="pre">.num</span></code>, <code class="docutils literal notranslate"><span class="pre">.bool</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">.json</span></code> convert the string result into the right type in Wren — the database
+still stores everything as <code class="docutils literal notranslate"><span class="pre">TEXT</span></code>.</p>
+<p>Because configuration is just rows in SQLite, changes persist across server
+restarts with no extra work. There’s no file to parse, no cache to
+invalidate, and no separate config server to run.</p>
+</section>
+<section id="seeding-configuration">
+<h2>Seeding Configuration<a class="headerlink" href="#seeding-configuration" title="Link to this heading">#</a></h2>
+<section id="with-r-at-startup">
+<h3>With <code class="docutils literal notranslate"><span class="pre">-r</span></code> at startup<a class="headerlink" href="#with-r-at-startup" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> flag runs Wren code before the server starts and then exits. Use
+it in deployment scripts to seed secrets and settings:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;stripe_key&quot;, &quot;sk_live_...&quot;)&#39;</span><span class="w"> </span>/www/myapp
+bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;mail_host&quot;, &quot;smtp.example.com&quot;)&#39;</span><span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-r</span></code> can run any Wren code, so you can set multiple values in one call or
+even build a setup script:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// setup.wren — run with: bialet -r &quot;$(cat setup.wren)&quot; /www/myapp</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;darkMode&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notifications&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Use <code class="docutils literal notranslate"><span class="pre">-r</span></code> for one-off provisioning — secrets, API keys, and
+environment-specific overrides that shouldn’t live in migrations.</p>
+</div></blockquote>
+</section>
+<section id="with-migrations-for-defaults">
+<h3>With migrations for defaults<a class="headerlink" href="#with-migrations-for-defaults" title="Link to this heading">#</a></h3>
+<p>For defaults that ship with the application and should exist in every
+environment, write them in a migration:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _migration.wren</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default config&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;title&#39;, &#39;My App&#39;)`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;items_per_page&#39;, &#39;20&#39;)`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;admin_email&#39;, &#39;admin@example.com&#39;)`</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">OR</span> <span class="pre">IGNORE</span></code> sets a fallback value — it only inserts if the key
+doesn’t already exist. This lets <code class="docutils literal notranslate"><span class="pre">-r</span></code> overrides from deployment scripts
+take precedence over migration defaults.</p>
+</section>
+</section>
+<section id="working-with-environments">
+<h2>Working with Environments<a class="headerlink" href="#working-with-environments" title="Link to this heading">#</a></h2>
+<p>Bialet has no <code class="docutils literal notranslate"><span class="pre">development</span></code>, <code class="docutils literal notranslate"><span class="pre">staging</span></code>, or <code class="docutils literal notranslate"><span class="pre">production</span></code> mode. Each
+environment is a different database file with its own <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>
+table. The database <em>is</em> the environment.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dev/
+├── _db.sqlite3          # Dev config
+├── _migration.wren
+└── index.wren
+
+prod/
+├── _db.sqlite3          # Prod config
+├── _migration.wren
+└── index.wren
+</pre></div>
+</div>
+<p>Migrations and application code are identical across environments — only
+the database file differs, and therefore only the configuration and data
+differ. Pointing Bialet at a different <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> switches environments.</p>
+</section>
+<section id="comparison-with-other-frameworks">
+<h2>Comparison with Other Frameworks<a class="headerlink" href="#comparison-with-other-frameworks" title="Link to this heading">#</a></h2>
+<p>Most frameworks layer configuration from multiple sources: <code class="docutils literal notranslate"><span class="pre">.env</span></code> files,
+environment variables, YAML configs, command-line flags, and sometimes a
+configuration database. They merge them with precedence rules (env vars
+beat <code class="docutils literal notranslate"><span class="pre">.env</span></code>, flags beat env vars, etc.), and you need to know which source
+wins in which context.</p>
+<p>Bialet removes that entire stack. There is one source: the database.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>Rails / Django / Laravel</p></th>
+<th class="head"><p>Express / Next.js</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Config storage</p></td>
+<td><p>SQLite rows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.env</span></code> + YAML/rb/py + ENV</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.env</span></code> + ENV</p></td>
+</tr>
+<tr class="row-odd"><td><p>Precedence rules</p></td>
+<td><p>None</p></td>
+<td><p>Multi-layer (env beats file, etc.)</p></td>
+<td><p>Multi-layer</p></td>
+</tr>
+<tr class="row-even"><td><p>Persists across restarts</p></td>
+<td><p>Yes (it’s a DB row)</p></td>
+<td><p>No (env vars are per-process)</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>Programmatic write</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Config.set()</span></code></p></td>
+<td><p>Usually read-only from code</p></td>
+<td><p>Usually read-only</p></td>
+</tr>
+<tr class="row-even"><td><p>Environment switching</p></td>
+<td><p>Point to a different <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RAILS_ENV</span></code>, <code class="docutils literal notranslate"><span class="pre">NODE_ENV</span></code>, etc.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NODE_ENV</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Configuration UI</p></td>
+<td><p>Possible — just writes to SQLite</p></td>
+<td><p>Needs a backing store</p></td>
+<td><p>Needs a backing store</p></td>
+</tr>
+<tr class="row-even"><td><p>Secrets at deploy time</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span> <span class="pre">'Config.set(...)'</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.env</span></code> file or CI env vars</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.env</span></code> file or CI env vars</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The trade-off: you can’t configure Bialet through environment variables or
+<code class="docutils literal notranslate"><span class="pre">.env</span></code> files. If your deployment pipeline relies on those, you’ll need to
+translate them into <code class="docutils literal notranslate"><span class="pre">-r</span></code> calls or migration defaults. The benefit: no
+precedence bugs, no runtime parsing overhead, and a single table to query
+for every setting in the system.</p>
+</section>
+<section id="common-patterns">
+<h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading">#</a></h2>
+<section id="feature-flags">
+<h3>Feature Flags<a class="headerlink" href="#feature-flags" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Show beta UI</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="maintenance-mode">
+<h3>Maintenance Mode<a class="headerlink" href="#maintenance-mode" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">503</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;&lt;h1&gt;</span><span class="nc">We</span><span class="s1">&#39;ll be right back&lt;/h1&gt;&lt;/main&gt;</span>
+<span class="s1">}</span>
+</pre></div>
+</div>
+</section>
+<section id="pagination-settings">
+<h3>Pagination Settings<a class="headerlink" href="#pagination-settings" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
+</pre></div>
+</div>
+</section>
+<section id="site-wide-title">
+<h3>Site-Wide Title<a class="headerlink" href="#site-wide-title" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site_title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;My Site&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Config.get()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for missing keys</strong> — always provide a
+fallback: <code class="docutils literal notranslate"><span class="pre">Config.get(&quot;key&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;default&quot;</span></code>.</p></li>
+<li><p><strong>Config values are strings</strong> — use <code class="docutils literal notranslate"><span class="pre">Config.num()</span></code> and <code class="docutils literal notranslate"><span class="pre">Config.bool()</span></code>
+for typed access. <code class="docutils literal notranslate"><span class="pre">Config.get(&quot;port&quot;)</span></code> returns <code class="docutils literal notranslate"><span class="pre">&quot;7001&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">7001</span></code>.</p></li>
+<li><p><strong>No <code class="docutils literal notranslate"><span class="pre">.env</span></code> files or environment variables</strong> — everything lives in
+<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>. If you need inject values from outside, use <code class="docutils literal notranslate"><span class="pre">-r</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">-r</span></code> runs once and exits</strong> — it’s for provisioning, not for setting
+values that the server reads on every request. Those belong in migrations
+or are set once via <code class="docutils literal notranslate"><span class="pre">-r</span></code> and then read via <code class="docutils literal notranslate"><span class="pre">Config.get()</span></code> at runtime.</p></li>
+<li><p><strong>Keep your production database out of version control</strong> — it contains
+your config, user data, and sessions.</p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Learn about <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> — the Query object, migrations, and
+how <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> sits alongside your application tables</p></li>
+<li><p>Set up a production environment with <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a></p></li>
+<li><p>See the <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> guide for CSRF, headers, and secure
+configuration</p></li>
+<li><p>Check the <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a> for the full <code class="docutils literal notranslate"><span class="pre">Config</span></code> API</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="deployment.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Deployment</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="security.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Security</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-and-writing">Reading and Writing</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#typed-access">Typed Access</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete">Delete</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeding-configuration">Seeding Configuration</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-r-at-startup">With <code class="docutils literal notranslate"><span class="pre">-r</span></code> at startup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-migrations-for-defaults">With migrations for defaults</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-environments">Working with Environments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-with-other-frameworks">Comparison with Other Frameworks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-patterns">Common Patterns</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-flags">Feature Flags</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-mode">Maintenance Mode</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination-settings">Pagination Settings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#site-wide-title">Site-Wide Title</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
