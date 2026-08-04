@@ -1194,10 +1194,11 @@ DEF_PRIMITIVE(util_randomString) {
     RETURN_ERROR("Length cannot be negative.");
   }
 
-  char      random_str[len + 1];
-  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const int  charset_len = (int)(sizeof(charset) - 1);
-  int        written = 0;
+  char       random_str[len + 1];
+  const char charset[] =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const int charset_len = (int)(sizeof(charset) - 1);
+  int       written = 0;
 
   while(written < len) {
     unsigned char random_byte = 0;
@@ -1239,14 +1240,14 @@ DEF_PRIMITIVE(http_call) {
 DEF_PRIMITIVE(test_runRequest) {
   const char* route = AS_CSTRING(args[1]);
   const char* message = AS_CSTRING(args[2]);
-  
+
   // Get root directory from bialet config
   extern const char* bialet_get_full_root_dir();
-  const char* rootDir = bialet_get_full_root_dir();
-  
+  const char*        rootDir = bialet_get_full_root_dir();
+
   // Strip query string from route for file lookup
   const char* qmark = strchr(route, '?');
-  int routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
+  int         routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
 
   // Resolve route to .wren file path
   char path[4096];
@@ -1257,19 +1258,19 @@ DEF_PRIMITIVE(test_runRequest) {
     strncpy(path, tmp, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
   }
-  
+
   // Check if file exists, otherwise try index.wren
   extern char* read_file(const char* path);
-  char* code = read_file(path);
-  if (code == NULL) {
+  char*        code = read_file(path);
+  if(code == NULL) {
     char tmp2[4096];
     snprintf(tmp2, sizeof(tmp2), "%s%.*s/index.wren", rootDir, routePathLen, route);
     strncpy(path, tmp2, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
     code = read_file(path);
   }
-  
-  if (code == NULL) {
+
+  if(code == NULL) {
     // Return 404 response
     ObjList* res = wrenNewList(vm, 3);
     res->elements.data[0] = NUM_VAL(404);
@@ -1277,30 +1278,30 @@ DEF_PRIMITIVE(test_runRequest) {
     res->elements.data[2] = OBJ_VAL(wrenNewString(vm, ""));
     RETURN_OBJ(res);
   }
-  
+
   // Build HttpMessage struct
   extern struct String create_string(const char* str, size_t len);
-  struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
+  struct HttpMessage*  hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   memset(hm, 0, sizeof(struct HttpMessage));
-  
+
   // Store full message
   hm->message = create_string(message, strlen(message));
-  
+
   // Parse method from message
   const char* methodEnd = strchr(message, ' ');
-  if (methodEnd) {
+  if(methodEnd) {
     size_t methodLen = methodEnd - message;
-    char methodBuf[32];
+    char   methodBuf[32];
     strncpy(methodBuf, message, methodLen);
     methodBuf[methodLen] = '\0';
     hm->method = create_string(methodBuf, methodLen);
-    
+
     // Parse URI
     const char* uriStart = methodEnd + 1;
     const char* uriEnd = strchr(uriStart, ' ');
-    if (uriEnd) {
+    if(uriEnd) {
       size_t uriLen = uriEnd - uriStart;
-      char uriBuf[1024];
+      char   uriBuf[1024];
       strncpy(uriBuf, uriStart, uriLen);
       uriBuf[uriLen] = '\0';
       hm->uri = create_string(uriBuf, uriLen);
@@ -1311,16 +1312,16 @@ DEF_PRIMITIVE(test_runRequest) {
     hm->method = create_string("GET", 3);
     hm->uri = create_string("/", 1);
   }
-  
+
   // Extract headers
   const char* headersStart = strchr(message, '\n');
-  if (headersStart) {
+  if(headersStart) {
     headersStart++; // skip \n
     const char* bodyStart = strstr(headersStart, "\r\n\r\n");
-    if (bodyStart) {
+    if(bodyStart) {
       size_t headersLen = bodyStart - headersStart;
-      char headersBuf[4096];
-      if (headersLen < sizeof(headersBuf)) {
+      char   headersBuf[4096];
+      if(headersLen < sizeof(headersBuf)) {
         strncpy(headersBuf, headersStart, headersLen);
         headersBuf[headersLen] = '\0';
         hm->headers = create_string(headersBuf, headersLen);
@@ -1333,14 +1334,15 @@ DEF_PRIMITIVE(test_runRequest) {
   } else {
     hm->headers = create_string("", 0);
   }
-  
+
   hm->routes = create_string("", 0);
-  
+
   // Call bialetRun to execute the route handler
-  extern struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm);
+  extern struct BialetResponse bialet_run(char* module, char* code,
+                                          struct HttpMessage* hm);
   snprintf(filePath, sizeof(filePath), "%s%s", rootDir, route);
   struct BialetResponse response = bialet_run(filePath, code, hm);
-  
+
   // Free HttpMessage fields
   free(hm->method.str);
   free(hm->uri.str);
@@ -1349,17 +1351,21 @@ DEF_PRIMITIVE(test_runRequest) {
   free(hm->message.str);
   free(hm);
   free(code);
-  
+
   // Return [status, body, headers_string]
   ObjList* res = wrenNewList(vm, 3);
   res->elements.data[0] = NUM_VAL(response.status);
-  res->elements.data[1] = OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
-  res->elements.data[2] = OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
-  
+  res->elements.data[1] =
+      OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
+  res->elements.data[2] =
+      OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
+
   // Free response data
-  if (response.body) free(response.body);
-  if (response.header) free(response.header);
-  
+  if(response.body)
+    free(response.body);
+  if(response.header)
+    free(response.header);
+
   RETURN_OBJ(res);
 }
 
@@ -1431,6 +1437,8 @@ DEF_PRIMITIVE(date_unix) {
 
 DEF_PRIMITIVE(markdown_html) {
   char* html = markdown_to_html(AS_CSTRING(args[1]));
+  if(html == NULL)
+    RETURN_ERROR("Markdown output too large");
   RETURN_VAL(wrenNewString(vm, html));
 }
 
@@ -1439,6 +1447,8 @@ DEF_PRIMITIVE(markdown_file) {
   if(content == NULL)
     RETURN_FALSE;
   char* html = markdown_to_html(content);
+  if(html == NULL)
+    RETURN_ERROR("Markdown output too large");
   RETURN_VAL(wrenNewString(vm, html));
 };
 
@@ -1803,7 +1813,8 @@ void wrenInitializeCore(WrenVM* vm) {
 
   // Conditionally load test classes
   if(vm->config.enableTests) {
-    WrenInterpretResult testResult = wrenInterpret(vm, NULL, bialet_testModuleSource);
+    WrenInterpretResult testResult =
+        wrenInterpret(vm, NULL, bialet_testModuleSource);
     if(testResult != WREN_RESULT_SUCCESS) {
       fprintf(stderr, "ERROR: Failed to load test module: %d\n", testResult);
     }
