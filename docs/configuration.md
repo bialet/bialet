@@ -30,6 +30,15 @@ var features = Config.json("features")     // { "darkMode": true, ... }
 `Config.bool` returns `true` for `"1"` and `"true"` (case-insensitive),
 `false` for everything else including missing keys.
 
+For on/off flags, use the `enable` and `disable` convenience methods
+instead of hand-writing the `"1"`/`"0"` strings:
+
+```wren
+Config.enable("beta_features")   // stores "1"
+Config.disable("beta_features")  // stores "0"
+Config.bool("beta_features")     // false
+```
+
 ### Delete
 
 ```wren
@@ -159,6 +168,13 @@ for every setting in the system.
 if (Config.bool("beta_features")) {
   // Show beta UI
 }
+```
+
+Toggle flags with `Config.enable()` / `Config.disable()`:
+
+```wren
+Config.enable("beta_features")   // turn on
+Config.disable("beta_features")  // turn off
 ```
 
 ### Maintenance Mode

@@ -509,6 +509,30 @@ Retrieves a numeric configuration value.
 
 - `key`: The key of the configuration option.
 
+### enable(key)
+
+Sets a configuration option to `"1"`. Convenience method for enabling a
+feature flag — equivalent to `Config.set(key, "1")`.
+
+- `key`: The key of the configuration option to enable.
+
+```wren
+Config.enable("beta_features")  // same as Config.set("beta_features", "1")
+Config.bool("beta_features")    // true
+```
+
+### disable(key)
+
+Sets a configuration option to `"0"`. Convenience method for disabling a
+feature flag — equivalent to `Config.set(key, "0")`.
+
+- `key`: The key of the configuration option to disable.
+
+```wren
+Config.disable("maintenance_mode")  // same as Config.set("maintenance_mode", "0")
+Config.bool("maintenance_mode")     // false
+```
+
 ### delete(key)
 
 Deletes a configuration option.

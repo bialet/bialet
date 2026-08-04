@@ -75,7 +75,7 @@ run_test "Session CSRF token render   " "csrf"            200 "_bialet_csrf"
 run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 
 # Tests - Config
-run_test "Config operations           " "config"          200 "test_value,42,true"
+run_test "Config operations           " "config"          200 "test_value,42,true,false,true"
 
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
