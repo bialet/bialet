@@ -62,6 +62,7 @@ if [ -n "$CLANG_FORMAT" ] && [ -z "${SKIP_CLANG_FORMAT:-}" ]; then
   done
 
   if [ -n "$files" ]; then
+    echo "Running clang-format check..."
     if ! $CLANG_FORMAT --dry-run --Werror --style=file $files >/dev/null 2>&1; then
       echo "pre-commit: clang-format violations found in staged files." >&2
       echo "  Run: clang-format -i --style=file $files" >&2
@@ -69,16 +70,19 @@ if [ -n "$CLANG_FORMAT" ] && [ -z "${SKIP_CLANG_FORMAT:-}" ]; then
       $CLANG_FORMAT --dry-run --style=file $files >&2
       exit 1
     fi
+    echo "clang-format check ok"
   fi
 fi
 
 # ── 2. Build + tests ────────────────────────────────────────────────
 if [ -z "${SKIP_BIALET_TESTS:-}" ]; then
+  echo "Running tests..."
   if ! make check >/tmp/bialet_precommit_makecheck.log 2>&1; then
     echo "pre-commit: make check failed. See /tmp/bialet_precommit_makecheck.log" >&2
     tail -30 /tmp/bialet_precommit_makecheck.log >&2
     exit 1
   fi
+  echo "tests ok"
 fi
 
 exit 0
