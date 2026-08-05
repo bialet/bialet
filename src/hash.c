@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #if !defined(_WIN32)
 #include <fcntl.h>
@@ -37,53 +36,45 @@ void unsafe_hash(const char* input, char* output) {
            hash * 7);
 }
 
-// Seeds rand() from non-deterministic sources. Previously the generator was
-// never seeded, so every process produced identical salts (default seed 1).
-static void seed_random_once(void) {
-  static int seeded = 0;
-  if(seeded)
-    return;
-  unsigned int seed = (unsigned int)time(NULL) ^ (unsigned int)clock() ^
-                      (unsigned int)(uintptr_t)&seeded;
-#if !defined(_WIN32)
-  seed ^= (unsigned int)getpid();
-#endif
-  srand(seed);
-  seeded = 1;
-}
-
 void generate_salt(char* salt, size_t length) {
   static const char alphabet[] =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   size_t filled = 0;
 
-  // Prefer /dev/urandom on POSIX for cryptographically random salts.
+  // Salts must come from a CSPRNG. Never fall back to rand()/time-seeded
+  // values: a predictable salt makes password hashes offline-regenerable, so
+  // a failing OS entropy source is a hard error rather than a weak fallback.
 #if !defined(_WIN32)
   int fd = open("/dev/urandom", O_RDONLY);
-  if(fd >= 0) {
-    unsigned char buf[64];
-    while(filled < length) {
-      ssize_t n = read(fd, buf, sizeof(buf));
-      if(n <= 0)
-        break;
-      for(ssize_t i = 0; i < n && filled < length; i++)
-        salt[filled++] = alphabet[buf[i] % 62];
-    }
-    close(fd);
+  if(fd < 0) {
+    perror("Failed to open /dev/urandom for salt generation");
+    exit(EXIT_FAILURE);
   }
-#endif
-
-  seed_random_once();
+  unsigned char buf[64];
   while(filled < length) {
-#if defined(_WIN32)
-    unsigned int r = 0;
-    if(rand_s(&r) != 0)
-      r = (unsigned int)rand();
-    salt[filled++] = alphabet[r % 62];
-#else
-    salt[filled++] = alphabet[rand() % 62];
-#endif
+    ssize_t n = read(fd, buf, sizeof(buf));
+    if(n < 0) {
+      perror("Failed to read /dev/urandom for salt generation");
+      close(fd);
+      exit(EXIT_FAILURE);
+    }
+    if(n == 0)
+      continue; // block/retry instead of filling the salt with weak bytes
+    for(ssize_t i = 0; i < n && filled < length; i++)
+      salt[filled++] = alphabet[buf[i] % 62];
   }
+  close(fd);
+#else
+  // Windows: rand_s is the CSPRNG. Fail hard rather than silently using rand().
+  while(filled < length) {
+    unsigned int r = 0;
+    if(rand_s(&r) != 0) {
+      perror("rand_s failed for salt generation");
+      exit(EXIT_FAILURE);
+    }
+    salt[filled++] = alphabet[r % 62];
+  }
+#endif
   salt[length] = '\0';
 }
 #endif
@@ -127,10 +118,17 @@ void hash_password(char* password, char* output) {
 #else
   char salt[SALT_LENGTH + 1];
   generate_salt(salt, SALT_LENGTH);
-  char saltedPassword[strlen(password) + SALT_LENGTH + 1];
-  snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", password, salt);
+  size_t salted_len = strlen(password) + SALT_LENGTH + 1;
+  char*  saltedPassword = (char*)malloc(salted_len);
+  if(saltedPassword == NULL) {
+    perror("Failed to allocate salted password buffer");
+    output[0] = '\0';
+    return;
+  }
+  snprintf(saltedPassword, salted_len, "%s%s", password, salt);
   char hash[HASH_LENGTH + 1];
   unsafe_hash(saltedPassword, hash);
+  free(saltedPassword);
   char result[HASH_AND_SALT_LENGTH];
   snprintf(result, sizeof(result), "%s$%s", hash, salt); // Formato: hash$salt
 #endif
@@ -186,10 +184,16 @@ int verify_password(char* password, char* hash_and_salt) {
   if(sscanf(hash_and_salt, "%64[^$]$%16s", storedHash, storedSalt) != 2) {
     return 0;
   }
-  char saltedPassword[strlen(password) + SALT_LENGTH + 1];
-  snprintf(saltedPassword, sizeof(saltedPassword), "%s%s", password, storedSalt);
+  size_t salted_len = strlen(password) + SALT_LENGTH + 1;
+  char*  saltedPassword = (char*)malloc(salted_len);
+  if(saltedPassword == NULL) {
+    perror("Failed to allocate salted password buffer");
+    return 0;
+  }
+  snprintf(saltedPassword, salted_len, "%s%s", password, storedSalt);
   char computedHash[HASH_LENGTH + 1];
   unsafe_hash(saltedPassword, computedHash);
+  free(saltedPassword);
   result = (strncmp(computedHash, storedHash, HASH_LENGTH) == 0);
 #endif
   return result;

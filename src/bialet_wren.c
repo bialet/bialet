@@ -22,6 +22,17 @@
 #include <strings.h>
 #include <time.h>
 
+#if !IS_WIN
+#include <fcntl.h>
+#include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#ifndef NAME_MAX
+#define NAME_MAX 255
+#endif
+#endif
+
 // Portable case-insensitive substring search (avoids _GNU_SOURCE dependency)
 static const char* bialet_strcasestr(const char* haystack, const char* needle) {
   if(!needle[0])
@@ -113,21 +124,89 @@ char* read_file(const char* path) {
   long  length;
   FILE* f = fopen(path, "rb");
   if(f) {
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if(length < 0) {
-      fclose(f);
-      return NULL;
-    }
-    buffer = malloc(length + 1);
-    if(buffer) {
-      fread(buffer, 1, length, f);
-      buffer[length] = '\0';
+    if(fseek(f, 0, SEEK_END) == 0) {
+      length = ftell(f);
+      if(length >= 0 && fseek(f, 0, SEEK_SET) == 0) {
+        buffer = malloc((size_t)length + 1);
+        if(buffer) {
+          size_t read_bytes = fread(buffer, 1, (size_t)length, f);
+          buffer[read_bytes] = '\0';
+        }
+      }
     }
     fclose(f);
   }
   return buffer;
+}
+
+#if !IS_WIN
+// Opens an absolute path with O_NOFOLLOW applied to every component, so a
+// symlink swap between a realpath() containment check and this open cannot
+// pull out-of-root bytes into the module loader. Returns an fd or -1.
+static int open_no_follow(const char* path) {
+  if(path == NULL || path[0] != '/')
+    return -1;
+  int dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if(dirfd < 0)
+    return -1;
+  const char* p = path + 1;
+  while(*p) {
+    while(*p == '/')
+      p++;
+    if(*p == '\0')
+      break;
+    const char* next = strchr(p, '/');
+    size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
+    char        comp[NAME_MAX + 1];
+    if(comp_len >= sizeof(comp))
+      comp_len = sizeof(comp) - 1;
+    memcpy(comp, p, comp_len);
+    comp[comp_len] = '\0';
+    int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    close(dirfd);
+    if(next_fd < 0)
+      return -1;
+    dirfd = next_fd;
+    p += comp_len;
+  }
+  return dirfd;
+}
+
+// Reads the whole file behind [fd] into a NUL-terminated heap buffer.
+static char* read_file_fd(int fd) {
+  if(fd < 0)
+    return NULL;
+  struct stat st;
+  if(fstat(fd, &st) != 0 || st.st_size < 0) {
+    close(fd);
+    return NULL;
+  }
+  size_t len = (size_t)st.st_size;
+  char*  buffer = (char*)malloc(len + 1);
+  if(buffer == NULL) {
+    close(fd);
+    return NULL;
+  }
+  size_t got = 0;
+  while(got < len) {
+    ssize_t n = read(fd, buffer + got, len - got);
+    if(n <= 0)
+      break;
+    got += (size_t)n;
+  }
+  close(fd);
+  buffer[got] = '\0';
+  return buffer;
+}
+#endif
+
+// Wren calls this once it is done compiling a module, so the heap buffer we
+// handed over via result.source can be released (the VM does not own it).
+static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
+                                           WrenLoadModuleResult result) {
+  (void)vm;
+  (void)name;
+  free((char*)result.source);
 }
 
 static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name) {
@@ -180,6 +259,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     if(sqlite3_step(stmt) == SQLITE_ROW) {
       content = (char*)sqlite3_column_text(stmt, 0);
       result.source = string_safe_copy(content);
+      result.onComplete = bialet_wren_free_module_source;
       sqlite3_finalize(stmt);
     } else {
       // File not found in cache, try to get from URL
@@ -187,6 +267,8 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
       struct HttpRequest  req;
       struct HttpResponse resp;
       resp.error = 0;
+      resp.body = NULL;
+      resp.headers = NULL;
       req.method = string_safe_copy("GET");
       req.basicAuth = string_safe_copy("");
       req.raw_headers = string_safe_copy("");
@@ -197,6 +279,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
       if(resp.status >= 200 && resp.status < 300 && !resp.error) {
         // File found, save it in cache
         result.source = resp.body;
+        result.onComplete = bialet_wren_free_module_source;
         sqlite3_stmt* stmt;
         sqlite3_prepare_v2(
             db, "INSERT INTO BIALET_REMOTE_MODULES (module, content) VALUES (?, ?)",
@@ -205,8 +288,11 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
         sqlite3_bind_text(stmt, 2, resp.body, -1, SQLITE_STATIC);
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
+        free(resp.headers);
         message(yellow("Remote module saved"), name);
       } else {
+        free(resp.body);
+        free(resp.headers);
         message(red("Error"), "Module not found in GitHub.");
       }
     }
@@ -260,11 +346,19 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     return result;
   }
 
-  char* buffer = read_file(module);
+  // Reopen the already-contained resolved path with O_NOFOLLOW on every
+  // component, so a symlink swap in the check-to-open window cannot feed
+  // out-of-root bytes into the interpreter.
+#if !IS_WIN
+  char* buffer = read_file_fd(open_no_follow(resolved));
+#else
+  char* buffer = read_file(resolved);
+#endif
   result.source = NULL;
 
   if(buffer) {
     result.source = buffer;
+    result.onComplete = bialet_wren_free_module_source;
   }
   return result;
 }
@@ -352,6 +446,8 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
     if(!colCount) {
       /* Get column names */
       colCount = sqlite3_column_count(stmt);
+      if(colCount > MAX_COLUMNS)
+        colCount = MAX_COLUMNS;
       for(int i = 0; i < colCount; i++) {
         columns[i] = string_safe_copy(sqlite3_column_name(stmt, i));
       }
@@ -961,7 +1057,40 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   printf("\n%d passed, %d failed\n", passed, failed);
   return (failed > 0) ? 1 : 0;
 }
+static char resolved_db_path[MAX_MODULE_LEN];
+
+static void apply_sqlite_pragmas() {
+  char pragma_cmd[256];
+
+  // Foreign keys (configurable: 0=OFF, 1=ON)
+  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA foreign_keys = %s;",
+           bialet_config.sqlite_foreign_keys ? "ON" : "OFF");
+  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+
+  // Synchronous mode (configurable: 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA)
+  const char* sync_modes[] = {"OFF", "NORMAL", "FULL", "EXTRA"};
+  int         sync_mode = bialet_config.sqlite_synchronous;
+  if(sync_mode < 0 || sync_mode > 3)
+    sync_mode = 1; // Default to NORMAL
+  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA synchronous = %s;",
+           sync_modes[sync_mode]);
+  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+
+  // WAL mode (configurable via wal_mode flag)
+  if(bialet_config.wal_mode) {
+    sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
+  }
+  sqlite3_exec(db, "PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";",
+               NULL, NULL, NULL);
+  sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
+               NULL);
+  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
+               NULL);
+  sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
+}
+
 void bialet_init(struct BialetConfig* config) {
+  bialet_config = *config;
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
   if(config->db_path[0] == '/') {
@@ -978,41 +1107,15 @@ void bialet_init(struct BialetConfig* config) {
       exit(BIALET_SQLITE_ERROR);
     }
   }
+  strncpy(resolved_db_path, db_path, sizeof(resolved_db_path) - 1);
+  resolved_db_path[sizeof(resolved_db_path) - 1] = '\0';
   if(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                      NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
     exit(BIALET_SQLITE_ERROR);
   }
-  // Set Pragmas using configuration values
-  char pragma_cmd[256];
+  apply_sqlite_pragmas();
 
-  // Foreign keys (configurable: 0=OFF, 1=ON)
-  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA foreign_keys = %s;",
-           config->sqlite_foreign_keys ? "ON" : "OFF");
-  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
-
-  // Synchronous mode (configurable: 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA)
-  const char* sync_modes[] = {"OFF", "NORMAL", "FULL", "EXTRA"};
-  int         sync_mode = config->sqlite_synchronous;
-  if(sync_mode < 0 || sync_mode > 3)
-    sync_mode = 1; // Default to NORMAL
-  snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA synchronous = %s;",
-           sync_modes[sync_mode]);
-  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
-
-  // WAL mode (configurable via wal_mode flag)
-  if(config->wal_mode) {
-    sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
-  }
-  sqlite3_exec(db, "PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";",
-               NULL, NULL, NULL);
-  sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
-               NULL);
-  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
-               NULL);
-  sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
-
-  bialet_config = *config;
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &bialet_wren_write;
   wren_config.errorFn = &bialet_wren_error;
@@ -1028,6 +1131,24 @@ void bialet_cleanup() {
     sqlite3_close(db);
     db = NULL;
   }
+}
+
+// Re-opens the SQLite connection against the same resolved path, re-applying
+// the configured pragmas. Used after fork() so the HTTP child does not keep
+// sharing the parent's pre-fork connection with the cron/dmon threads, which
+// SQLite forbids.
+void bialet_reopen_db() {
+  if(db) {
+    sqlite3_close_v2(db);
+    db = NULL;
+  }
+  if(sqlite3_open_v2(resolved_db_path, &db,
+                     SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                     NULL) != SQLITE_OK) {
+    message(red("SQL Error"), "Can't reopen database after fork");
+    exit(BIALET_SQLITE_ERROR);
+  }
+  apply_sqlite_pragmas();
 }
 
 BialetQuery* create_bialet_query() {

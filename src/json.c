@@ -318,6 +318,9 @@ static Value parse_value(WrenVM* vm, const char** p, int depth) {
 }
 
 bool prim_json_parse_primitive(WrenVM* vm, Value* args) {
+  if(!IS_STRING(args[1])) {
+    RETURN_ERROR("Invalid JSON: expected a string");
+  }
   const char* json = AS_CSTRING(args[1]);
   if(json == NULL || *json == '\0') {
     RETURN_ERROR("Invalid JSON: empty input");

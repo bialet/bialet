@@ -31,6 +31,7 @@ class Request {
     var startBody = false
     var headerName
     var headerValue
+    var bodyLines = []
     for (line in lines) {
       if (line.trim() == "") {
         startBody = true
@@ -45,9 +46,10 @@ class Request {
         }
         __headers[headerName] = headerValue
       } else {
-        __body = __body + line
+        bodyLines.add(line)
       }
     }
+    __body = bodyLines.join("")
     if (__method == "POST") {
       __post = parseQuery(__body)
     }
@@ -125,7 +127,12 @@ class Response {
   // Getters
   static out { __out.trim() }
   static status { __status }
-  static headers { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+  // Each cookie and header is its own "\r\n"-terminated line. Concatenating
+  // __cookies.join("\r\n") directly with the first header glued the last
+  // cookie's final attribute onto the header (e.g. "Path=/Content-Type: ..."),
+  // corrupting cookie attributes such as Path. Keep this single-line: this
+  // Wren fork mis-parses a getter body whose binary operator ends a line.
+  static headers { __cookies.map{|c| c + "\r\n"}.join() + __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
 
   static out(out) { __out = __out + "\r\n" + out }
   static status(status) { __status = status }

@@ -18,6 +18,7 @@
 #include <float.h>
 #include <math.h>
 #include <sqlite3.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -1189,12 +1190,21 @@ DEF_PRIMITIVE(util_verify) {
 }
 
 DEF_PRIMITIVE(util_randomString) {
-  const int len = AS_NUM(args[1]);
-  if(len < 0) {
+  double len_value = AS_NUM(args[1]);
+  if(len_value < 0) {
     RETURN_ERROR("Length cannot be negative.");
   }
+  // Cap the length so a huge value cannot exhaust the heap; the result is a
+  // heap buffer sized from the double after validation, never a stack VLA.
+  if(len_value > 1000000.0) {
+    RETURN_ERROR("Length too large.");
+  }
+  const int len = (int)len_value;
 
-  char       random_str[len + 1];
+  char* random_str = (char*)malloc((size_t)len + 1);
+  if(random_str == NULL) {
+    RETURN_ERROR("Out of memory generating random string.");
+  }
   const char charset[] =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const int charset_len = (int)(sizeof(charset) - 1);
@@ -1209,7 +1219,9 @@ DEF_PRIMITIVE(util_randomString) {
     random_str[written++] = charset[random_byte % charset_len];
   }
   random_str[len] = '\0';
-  RETURN_VAL(wrenNewString(vm, random_str));
+  Value result = wrenNewString(vm, random_str);
+  free(random_str);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(http_call) {
@@ -1223,16 +1235,23 @@ DEF_PRIMITIVE(http_call) {
   struct HttpResponse response;
   response.error = 0;
   response.status = 200;
-  response.headers = "Content-Type: text/json";
-  response.body = "{}";
+  response.headers = NULL;
+  response.body = NULL;
 
   http_call_perform(&request, &response);
 
   ObjList* res = wrenNewList(vm, 4);
   res->elements.data[0] = NUM_VAL(response.status);
-  res->elements.data[1] = wrenNewString(vm, response.headers);
-  res->elements.data[2] = wrenNewString(vm, response.body);
+  res->elements.data[1] =
+      wrenNewString(vm, response.headers ? response.headers : "");
+  res->elements.data[2] = wrenNewString(vm, response.body ? response.body : "");
   res->elements.data[3] = NUM_VAL(response.error);
+
+  // http_call_perform heap-allocates the body/headers (curl chunk copies,
+  // or the Windows parse_http_response buffers); release them now that the
+  // values live in Wren strings. free(NULL) is safe for early-error paths.
+  free(response.headers);
+  free(response.body);
 
   RETURN_OBJ(res);
 }
@@ -1481,7 +1500,7 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
         if(written < 0 || written >= (int)sizeof(num))
           continue;
         add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
-      } else {
+      } else if(IS_STRING(val)) {
         add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       }
     }

@@ -36,6 +36,7 @@ typedef int bialet_socket_t;
 
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,12 +44,19 @@ typedef int bialet_socket_t;
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#ifndef NAME_MAX
+#define NAME_MAX 255
+#endif
+
 #define BUFFER_SIZE (BUFSIZ * 4)
 #define PATH_SIZE (1024 * 2)
 
 // Idle/read/write timeout for accepted client sockets. The server is
 // single-threaded, so a stalled peer must not be able to park it forever.
-#define BIALET_SOCKET_TIMEOUT_MS (15000)
+// Kept well below the old 15s so a slowloris peer needs to reconnect far more
+// often to hold the accept/handle loop, and any single stalled request is
+// bounded to a few seconds.
+#define BIALET_SOCKET_TIMEOUT_MS (5000)
 
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
@@ -419,15 +427,52 @@ static void free_response_owned(struct BialetResponse* response) {
   }
 }
 
-// Opens [path] without following a symlink as the final component. On POSIX
-// realpath() is validated for root containment and then the file is reopened;
-// O_NOFOLLOW closes the TOCTOU window where the file is swapped for an
-// out-of-root symlink between the check and the open.
+// Opens an absolute, root-contained path with O_NOFOLLOW applied to every
+// component. A single O_NOFOLLOW on the final component (as open() alone
+// provides) leaves a TOCTOU window: a directory component swapped for a
+// symlink between the realpath() containment check and this open would escape
+// the root. Walking the path component-by-component with openat(2) closes that
+// window -- any symlink swap now fails with ELOOP instead of being followed.
+// Returns an open file descriptor or -1.
+static int open_fd_without_follow(const char* path) {
+  if(path == NULL || path[0] != '/')
+    return -1;
+  int dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if(dirfd < 0)
+    return -1;
+  const char* p = path + 1;
+  while(*p) {
+    while(*p == '/')
+      p++;
+    if(*p == '\0')
+      break;
+    const char* next = strchr(p, '/');
+    size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
+    char        comp[NAME_MAX + 1];
+    if(comp_len >= sizeof(comp))
+      comp_len = sizeof(comp) - 1;
+    memcpy(comp, p, comp_len);
+    comp[comp_len] = '\0';
+    int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    close(dirfd);
+    if(next_fd < 0)
+      return -1;
+    dirfd = next_fd;
+    p += comp_len;
+  }
+  return dirfd;
+}
+
+// Opens [path] without following a symlink as any component. On POSIX the
+// caller is expected to have already validated [path] with realpath() for root
+// containment; O_NOFOLLOW per component closes the TOCTOU window where the
+// file or an intermediate directory is swapped for an out-of-root symlink
+// between the check and the open.
 static FILE* open_file_within_root(const char* path) {
 #if IS_WIN
   return fopen(path, "rb");
 #else
-  int fd = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+  int fd = open_fd_without_follow(path);
   if(fd < 0)
     return NULL;
   FILE* f = fdopen(fd, "rb");
@@ -435,6 +480,21 @@ static FILE* open_file_within_root(const char* path) {
     close(fd);
   return f;
 #endif
+}
+
+// Resolves [path] to an absolute path inside the application root, writing the
+// result into [resolved] (PATH_SIZE). Returns 1 on success, 0 when the path
+// cannot be resolved or escapes the root (symlinked outside it).
+static int resolve_within_root(const char* path, char* resolved) {
+  if(realpath(path, resolved) == NULL)
+    return 0;
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
+      resolved[root_len] != '\0')) {
+    return 0;
+  }
+  return 1;
 }
 
 void handle_client(bialet_socket_t client_socket) {
@@ -806,12 +866,14 @@ void custom_error(int status, struct BialetResponse* response) {
   response->header_owned = 0;
   response->status = status;
   char        path[PATH_SIZE];
+  char        resolved_path[PATH_SIZE];
   struct stat file_stat;
 
   if(!custom_error_recursing) {
     snprintf(path, PATH_SIZE, "%s/%d.wren", bialet_config.root_dir, status);
-    if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
-      FILE* file = fopen(path, "rb");
+    if(resolve_within_root(path, resolved_path) &&
+       stat(resolved_path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
+      FILE* file = open_file_within_root(resolved_path);
       if(file != NULL) {
         if(fseek(file, 0, SEEK_END) == 0) {
           long file_size = ftell(file);
@@ -824,7 +886,7 @@ void custom_error(int status, struct BialetResponse* response) {
               file_content[read_bytes] = '\0';
               custom_error_recursing = 1;
               struct BialetResponse wren_response =
-                  bialet_run(path, file_content, NULL);
+                  bialet_run(resolved_path, file_content, NULL);
               custom_error_recursing = 0;
               free(file_content);
               if(wren_response.body && wren_response.length == 0)
@@ -856,8 +918,9 @@ void custom_error(int status, struct BialetResponse* response) {
   }
 
   snprintf(path, PATH_SIZE, "%s/%d.html", bialet_config.root_dir, status);
-  if(stat(path, &file_stat) == 0) {
-    FILE* file = fopen(path, "rb");
+  if(resolve_within_root(path, resolved_path) &&
+     stat(resolved_path, &file_stat) == 0) {
+    FILE* file = open_file_within_root(resolved_path);
     if(file != NULL) {
       if(fseek(file, 0, SEEK_END) == 0) {
         long file_size = ftell(file);

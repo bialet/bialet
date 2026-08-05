@@ -75,6 +75,13 @@ static volatile int8_t keep_running = 1;
 static int             cron_installed = 0;
 static char*           cron_code = 0;
 
+// cron_code/cron_installed are written by the dmon (file-watch) thread and
+// read by the cron thread; the mutex prevents torn reads and use-after-free
+// when a cron file is replaced while the cron tick is running.
+#if !IS_WIN
+static pthread_mutex_t cron_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 static void migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
@@ -91,22 +98,37 @@ static void migrate() {
 }
 
 static void install_cron() {
-  char path[MAX_PATH_LEN];
-  char altPath[MAX_PATH_LEN];
+  char  path[MAX_PATH_LEN];
+  char  altPath[MAX_PATH_LEN];
+  char* new_code = 0;
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir, CRON_FILE_ALT);
-  if((cron_code = read_file(path)) || (cron_code = read_file(altPath))) {
+  if((new_code = read_file(path)) == 0)
+    new_code = read_file(altPath);
+  if(new_code != 0) {
     message(yellow("Installing cron"));
-    cron_installed = 1;
-  } else {
-    cron_installed = 0;
   }
+#if !IS_WIN
+  pthread_mutex_lock(&cron_mutex);
+#endif
+  free(cron_code);
+  cron_code = new_code;
+  cron_installed = (cron_code != 0);
+#if !IS_WIN
+  pthread_mutex_unlock(&cron_mutex);
+#endif
 }
 
 static void cron_run() {
-  if(cron_installed) {
+#if !IS_WIN
+  pthread_mutex_lock(&cron_mutex);
+#endif
+  if(cron_installed && cron_code) {
     bialet_run("cron", cron_code, 0);
   }
+#if !IS_WIN
+  pthread_mutex_unlock(&cron_mutex);
+#endif
 }
 
 void* cron_thread(void* arg) {
@@ -321,8 +343,21 @@ int main(int argc, char* argv[]) {
   char temp_db_path[MAX_PATH_LEN];
   if(run_tests) {
     bialet_config.enable_tests = 1;
+#if !IS_WIN
+    // mkstemp() creates the file atomically with O_EXCL, so a local attacker
+    // cannot pre-place a symlink at a predictable PID-based path and redirect
+    // the test DB writes onto an arbitrary victim file.
+    snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_XXXXXX");
+    int temp_db_fd = mkstemp(temp_db_path);
+    if(temp_db_fd < 0) {
+      perror("mkstemp");
+      exit(EXIT_FAILURE);
+    }
+    close(temp_db_fd);
+#else
     snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3",
              getpid());
+#endif
     bialet_config.db_path = temp_db_path;
 
     // If test_dir was specified, set it as root_dir for resolution
@@ -398,6 +433,11 @@ int main(int argc, char* argv[]) {
   for(;;) {
     pid = fork();
     if(pid == 0) {
+      // The sqlite connection was opened in the parent before fork() and is
+      // still used by the parent's cron/dmon threads. SQLite forbids sharing
+      // a connection across fork(); open our own fresh connection so the HTTP
+      // child never touches the shared pre-fork handle.
+      bialet_reopen_db();
       // Set cpu time and memory limit
       if(setrlimit(RLIMIT_AS, &mem_limit) == -1 ||
          setrlimit(RLIMIT_CPU, &cpu_limit) == -1) {
