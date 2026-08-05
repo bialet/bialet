@@ -160,6 +160,7 @@ class MapSequence is Sequence {
 
   iterate(iterator) { _sequence.iterate(iterator) }
   iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  safe { join("") }
   toString { join("") }
 }
 
@@ -366,8 +367,12 @@ class String is Sequence {
     }
     return output
   }
+  raw { toString }
   toNum { Num.fromString(this) }
   toBool { toNum != 0 }
+}
+
+class HtmlNode is Sequence {
 }
 
 class StringByteSequence is Sequence {
@@ -458,7 +463,6 @@ class List is Sequence {
     }
     return result
   }
-
   first { count > 0 ? this[0] : null }
 }
 

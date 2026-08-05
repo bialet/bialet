@@ -1,6 +1,7 @@
 #include "wren_compiler.h"
 
 #include "wren_common.h"
+#include "wren_value.h"
 #include "wren_vm.h"
 #include <errno.h>
 #include <stdbool.h>
@@ -130,7 +131,9 @@ typedef enum {
   //     TOKEN_NAME          d
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
-  TOKEN_SQL,
+  TOKEN_QUERY,
+  TOKEN_HTML_NODE,
+  TOKEN_HTML_TEXT,
 
   TOKEN_LINE,
 
@@ -955,7 +958,7 @@ static int htmlTagIsVoidElement(char* tagName) {
 static void readHtmlString(Parser* parser, char* previousTagName) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  WrenTokenType type = TOKEN_STRING;
+  WrenTokenType type = TOKEN_HTML_NODE;
   int           closingTag = -1;
   char*         tagName = malloc(MAX_METHOD_NAME);
   int           tagIsOpen = 1;
@@ -1011,7 +1014,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         break;
       }
       if(c == '{' && peekChar(parser) == '{') {
-        type = TOKEN_INTERPOLATION;
+        type = TOKEN_HTML_TEXT;
         // Cap the handlebar stack so pathological nesting cannot write past
         // the fixed-size handlebars array (MAX_INTERPOLATION_NESTING rows).
         if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
@@ -1078,7 +1081,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
 static void readQueryString(Parser* parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  WrenTokenType type = TOKEN_SQL;
+  WrenTokenType type = TOKEN_QUERY;
 
   for(;;) {
     char c = nextChar(parser);
@@ -2635,6 +2638,35 @@ static void stringInterpolation(Compiler* compiler, bool canAssign) {
   callMethod(compiler, 0, "joinInt_()", 10);
 }
 
+static void htmlInterpolation(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
+  // Instantiate a new list.
+  loadCoreVariable(compiler, "List");
+  callMethod(compiler, 0, "new()", 5);
+
+  do {
+    // The opening string part.
+    literal(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+
+    // The interpolated expression.
+    ignoreNewlines(compiler);
+    expression(compiler);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+
+    ignoreNewlines(compiler);
+  } while(match(compiler, TOKEN_HTML_TEXT));
+
+  // The trailing string part.
+  consume(compiler, TOKEN_HTML_NODE, "Expect end of HTML interpolation.");
+  literal(compiler, false);
+  callMethod(compiler, 1, "addCore_(_)", 11);
+
+  // The list of interpolated parts.
+  callMethod(compiler, 0, "joinInt_()", 10);
+}
+
+
 static void super_(Compiler* compiler, bool canAssign) {
   ClassInfo* enclosingClass = getEnclosingClass(compiler);
   if(enclosingClass == NULL) {
@@ -2974,6 +3006,8 @@ GrammarRule rules[] = {
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
     /* TOKEN_QUERY         */ PREFIX(literal),
+    /* TOKEN_HTML_NODE     */ PREFIX(literal),
+    /* TOKEN_HTML_TEXT     */ PREFIX(htmlInterpolation),
     /* TOKEN_LINE          */ UNUSED,
     /* TOKEN_ERROR         */ UNUSED,
     /* TOKEN_EOF           */ UNUSED};
@@ -3477,7 +3511,9 @@ static Value consumeLiteral(Compiler* compiler, const char* message) {
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
-  if(match(compiler, TOKEN_SQL))
+  if(match(compiler, TOKEN_QUERY))
+    return compiler->parser->previous.value;
+  if(match(compiler, TOKEN_HTML_NODE))
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_NAME))
     return compiler->parser->previous.value;
