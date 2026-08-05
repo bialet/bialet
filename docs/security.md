@@ -235,6 +235,39 @@ being downloaded. Name anything private with a leading `_` or `.`.
 > not a sandbox. Keep it out of version control backups you share, and
 > restrict filesystem access to the user that runs the server.
 
+### Database File Permissions
+
+Bialet creates `_db.sqlite3` with SQLite's default mode, `0666 & ~umask`.
+Under the common `umask 022` that yields a world-readable `0644` file, so
+any local user on a shared host can read the whole database — uploaded
+files, password hashes, and cached remote modules included. The server does
+not tighten the mode after opening the file.
+
+Run Bialet with a restrictive umask so the file is created `0600`:
+
+```bash
+umask 0077
+bialet -p 7001 /www/myapp
+```
+
+Under systemd, set `UMask=` on the service instead:
+
+```ini
+[Service]
+UMask=0077
+```
+
+If the database already exists, tighten it with `chmod`. Redo this after
+any migration or restore that recreates the file:
+
+```bash
+chmod 600 /www/myapp/_db.sqlite3
+```
+
+> ⚠️ Pitfall: a world-readable `_db.sqlite3` is as exposed as a leaked
+> backup — no HTTP request is needed to read it. Restrict the app root to
+> the user that runs the server and keep the file out of shared backups.
+
 ### Resource Limits
 
 The server can enforce memory and CPU ceilings per app with CLI flags, which
