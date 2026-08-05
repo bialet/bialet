@@ -73,6 +73,24 @@ If you generate HTML in Wren code rather than inline blocks, escape with
 > into a `<script>` block or a `javascript:` URL — restructure the page so it
 > cannot happen.
 
+### Markdown rendering
+
+The built-in Markdown parser escapes HTML **only inside code blocks and inline
+code**. Raw HTML in paragraphs, headings, and lists passes through unescaped,
+and link/image URLs are not validated. Rendering untrusted input with
+`Markdown.html()` can therefore produce XSS:
+
+```wren
+// WRONG — raw HTML passes through to the output
+var content = Markdown.html("<script>alert('xss')</script>")
+
+// WRONG — javascript: links are not filtered
+var link = Markdown.html("[x](javascript:alert('xss'))")
+```
+
+Render only Markdown you trust, or sanitize the output before serving it. See
+the [Markdown](markdown.md) guide for the full syntax and security notes.
+
 ## SQL Injection
 
 Backtick Query objects use **prepared statements** with `?` placeholders.
