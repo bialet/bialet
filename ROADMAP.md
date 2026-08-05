@@ -12,13 +12,20 @@ improvements.
 
 ## Near Term
 
-- [ ] **Admin dashboard** — Built-in UI for browsing the database and viewing
-      logs
+- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
+- [ ] **Document Tailwind CLI integration** — Step-by-step guide for
+      self-hosting Tailwind with `tailwindcss --watch` against Bialet app
+      directory (dev + production workflows)
+- [ ] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
+      limitations, map callback restrictions, interpolation rules,
+      component-as-method pattern, and raw HTML security footguns
 
 ## Longer Term / Ideas
 
-- [ ] **Data filtering lib** — Query sanitization and type-safe filtering
-      utilities
+- [ ] **Admin dashboard** — External lib UI for browsing the database and
+      viewing logs
+- [ ] **Data filtering lib** — External lib for query sanitization and type-safe
+      filtering utilities
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
       handling
 - [ ] **Static assets** — Serving CSS, JS, and images; MIME types and cache
@@ -30,7 +37,6 @@ improvements.
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
       proxy needed for basic deployments)
-- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
 
 ## How to Contribute
 
