@@ -91,7 +91,7 @@ static void migrate() {
            MIGRATION_FILE_ALT);
   if((code = read_file(path)) || (code = read_file(altPath))) {
     struct BialetResponse r = bialet_run("migration", code, 0);
-    message(yellow("Running migration"), r.body);
+    message(yellow("Migration start"), r.body);
   } else {
     bialet_run("migration", "Db.init", 0);
   }

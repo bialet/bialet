@@ -909,6 +909,7 @@ static const char* bialetModuleSource =
 "        schemaOrCallback.toString.split(\";\").each{|q| Query.fromString(q, []) }\n"
 "      }\n"
 "      `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])\n"
+"      System.print(\"Migration applied - %(version)\")\n"
 "    }\n"
 "    Db.clean\n"
 "  }\n"

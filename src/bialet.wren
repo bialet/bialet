@@ -1047,6 +1047,7 @@ class Db {
         schemaOrCallback.toString.split(";").each{|q| Query.fromString(q, []) }
       }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
+      System.print("Migration applied - %(version)")
     }
     Db.clean
   }
