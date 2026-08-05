@@ -56,7 +56,7 @@ return Template.new().layout(<main>
           <span class="task-content">
             <span class="{{ task.finished ? "task-text completed" : "task-text" }}">
               <span class="priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? "high" : Num.fromString(task.id.toString) % 3 == 2 ? "medium" : "low" }}" aria-hidden="true"></span>
-              {{ task.description.safe }}
+              {{ task.description }}
             </span>
             <span class="task-meta">{{ task.createdAt.hh }}:{{ task.createdAt.mi }}</span>
           </span>

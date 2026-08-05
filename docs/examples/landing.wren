@@ -711,8 +711,8 @@ main section, main article, main aside {
   <main>
     <section class="hero">
       <span class="hero-badge">✨ Now in public beta</span>
-      <h1>{{ heroTitle.safe }}</h1>
-      <p class="hero-subtitle">{{ heroSubtitle.safe }}</p>
+      <h1>{{ heroTitle }}</h1>
+      <p class="hero-subtitle">{{ heroSubtitle }}</p>
       <div class="hero-actions">
         <a href="." class="btn btn-accent btn-lg">Start for free</a>
         <a href="#features" class="btn btn-outline btn-lg">See how it works</a>
@@ -724,8 +724,8 @@ main section, main article, main aside {
       <div class="features-grid">
         {{ features.map{|f| <article class="feature-card {{ f["highlight"] && "featured" }}">
           <span class="feature-icon" aria-hidden="true">{{ f["icon"] }}</span>
-          <h3>{{ f["title"].safe }}</h3>
-          <p>{{ f["desc"].safe }}</p>
+          <h3>{{ f["title"] }}</h3>
+          <p>{{ f["desc"] }}</p>
         </article> } }}
       </div>
     </section>
@@ -733,8 +733,8 @@ main section, main article, main aside {
     <article class="stats-section">
       <div class="stats-grid">
         {{ stats.map{|s| <div class="stat-card">
-          <span class="stat-number">{{ s["value"].safe }}</span>
-          <span class="stat-label">{{ s["label"].safe }}</span>
+          <span class="stat-number">{{ s["value"] }}</span>
+          <span class="stat-label">{{ s["label"] }}</span>
         </div> } }}
       </div>
     </article>
@@ -750,12 +750,12 @@ main section, main article, main aside {
       <div class="pricing-grid">
         {{ pricing.map{|p| <article class="pricing-card {{ p["popular"] && "popular" }}">
           {{ p["popular"] && <span class="popular-badge">Most Popular</span> }}
-          <h3>{{ p["name"].safe }}</h3>
-          <p class="pricing-amount">{{ isAnnual ? p["annual"].safe : p["monthly"].safe }}<span style="font-size:1rem;font-weight:400;color:var(--text-muted)">/mo</span></p>
-          <p class="pricing-desc">{{ p["desc"].safe }}</p>
+          <h3>{{ p["name"] }}</h3>
+          <p class="pricing-amount">{{ isAnnual ? p["annual"] : p["monthly"] }}<span style="font-size:1rem;font-weight:400;color:var(--text-muted)">/mo</span></p>
+          <p class="pricing-desc">{{ p["desc"] }}</p>
           <ul class="pricing-features">
             {{ p["features"].map{|feat| <li class="{{ feat["included"] ? "included" : "excluded" }}">
-              <span aria-hidden="true">{{ feat["included"] ? "✓" : "✕" }}</span> {{ feat["text"].safe }}
+              <span aria-hidden="true">{{ feat["included"] ? "✓" : "✕" }}</span> {{ feat["text"] }}
             </li> } }}
           </ul>
           <a href="." class="btn {{ p["popular"] ? "btn-accent" : "btn-outline" }}">{{ p["popular"] ? "Start for free" : "Get started" }}</a>
@@ -767,11 +767,11 @@ main section, main article, main aside {
       <h2 class="section-title">NOT REAL — Sample testimonials for layout testing</h2>
       <div class="testimonials-grid">
         {{ testimonials.map{|t| <article class="testimonial-card">
-          <blockquote>{{ t["quote"].safe }}</blockquote>
+          <blockquote>{{ t["quote"] }}</blockquote>
           <footer>
             <div>
-              <strong>{{ t["name"].safe }}</strong>
-              <span>{{ t["role"].safe }}</span>
+              <strong>{{ t["name"] }}</strong>
+              <span>{{ t["role"] }}</span>
             </div>
           </footer>
         </article> } }}
@@ -782,8 +782,8 @@ main section, main article, main aside {
       <h2 class="section-title">Frequently asked questions</h2>
       <div class="faq-grid">
         {{ faqs.map{|q| <details class="faq-item">
-          <summary>{{ q["q"].safe }}</summary>
-          <p>{{ q["a"].safe }}</p>
+          <summary>{{ q["q"] }}</summary>
+          <p>{{ q["a"] }}</p>
         </details> } }}
       </div>
     </section>
@@ -802,9 +802,9 @@ main section, main article, main aside {
         <p>A modern framework for people who build things. Single binary, zero config, infinite possibilities.</p>
       </div>
       {{ footerLinks.map{|col| <div class="footer-column">
-        <h4>{{ col["title"].safe }}</h4>
+        <h4>{{ col["title"] }}</h4>
         <ul>
-          {{ col["items"].map{|link| <li><a href="{{ link["href"] }}">{{ link["label"].safe }}</a></li> } }}
+          {{ col["items"].map{|link| <li><a href="{{ link["href"] }}">{{ link["label"] }}</a></li> } }}
         </ul>
       </div> } }}
     </div>
