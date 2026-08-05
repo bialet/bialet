@@ -151,10 +151,10 @@ classes, attributes, or whole HTML blocks:
 {{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
 ```
 
-> **Pitfall:** the Wren expression inside `{{ }}` must start on the same line
-> as the opening `{{`. Only the HTML *inside* the tags may span multiple
-> lines. A leading newline (`{{\n  cond &&\n  <div>`) is a compile error —
-> older builds silently produced empty output.
+> **Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;
+> HTML strings inside it can too. Infix operators (`&&`, `?`, `:`, ...) end
+> their line — an operator at the start of a line is a parse error, exactly
+> as in plain Wren.
 
 ## Code Style
 

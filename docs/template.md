@@ -196,16 +196,14 @@ return <main>
 
 ### Pitfall
 
-**Newlines outside HTML tags produce unexpected output.** The Wren code
-inside `{{ }}` must start on the same line as `{{`. Newlines belong inside
-the HTML string (between `<tag>` and `</tag>`), not in the surrounding Wren
-code. Breaking the Wren expression with newlines is a compile error, not a
-runtime one — the parser reports
-`The expression inside '{{ }}' must start on the same line as '{{'`. Older
-builds failed silently with empty output.
+**Multiline expressions inside `{{ }}` are valid.** The Wren expression can
+span lines, and HTML strings inside it can span lines too. Wren keeps one
+newline rule: an infix operator ends its line, so put `&&`, `?`, `:`, and
+similar at the end of a line. An operator at the start of a line is a parse
+error (`Expected expression.`), exactly as in plain Wren.
 
 ```wren
-// Wrong — Wren code spans lines outside the HTML tags
+// Valid — the expression spans lines, operators end each line
 return <div>{{
   showClear &&
   <form method="post" action="/clear">
@@ -213,14 +211,18 @@ return <div>{{
   </form>
 }}</div>
 
-// Correct — Wren code starts on the same line as {{
-return <div>{{ showClear && <form method="post" action="/clear">
-  <button>Clear</button>
-</form> }}</div>
+// Invalid — the operator starts a line
+return <div>{{
+  showClear
+  && <form method="post" action="/clear">
+    <button>Clear</button>
+  </form>
+}}</div>
 ```
 
-The same rule applies to ternary expressions and `map` — keep the Wren
-expression on the same line as `{{`, let only the HTML string span lines.
+Block callbacks (`map { |v| ... }`) follow Wren's single-expression rule: the
+body must fit on the line after the `{`, otherwise the block returns `null`
+and the output is empty.
 
 ---
 
@@ -878,11 +880,10 @@ embedded in HTML must be escaped. There is no automatic escaping.
 - **Interpolation depth:** Maximum 9 nested `{{ }}` levels.
 - **Forgetting `return`:** Without `return`, the response body is empty.
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
-- **Newlines outside HTML tags in `{{ }}`:** Keep Wren code on the same line
-  as the opening `{{`. The parser rejects a leading newline with a compile
-  error; only HTML strings can span lines.
-- **Map callback is a single expression:** No multiple statements, no variable
-  declarations inside the callback.
+- **Newlines inside `{{ }}`:** The Wren expression can span lines, but an
+  infix operator must end its line — a leading operator is a parse error.
+- **Map callback is a single expression:** The body must fit on the line
+  after the `{`, otherwise the block returns `null` and renders empty.
 - **Empty lists in `map`:** Produce empty output — pair with `&&` for empty
   states.
 - **`return` terminates immediately:** Code after `return` never executes.

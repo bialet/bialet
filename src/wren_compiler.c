@@ -1011,17 +1011,6 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         strcpy(parser->handlebars[parser->numHandlebars], tagName);
         parser->numHandlebars++;
         nextChar(parser);
-
-        // The Wren expression must start on the same line as the "{{".
-        // Newlines before the first token produce parsing ambiguities and
-        // empty output, so reject them with a clear error.
-        const char* scan = parser->currentChar;
-        while(*scan == ' ' || *scan == '\t')
-          scan++;
-        if(*scan == '\n' || *scan == '\r') {
-          lexError(parser, "The expression inside '{{ }}' must start on the "
-                           "same line as '{{'.");
-        }
         break;
       }
       if(tagIsOpen && c == ' ' && peekChar(parser) == '/' &&
