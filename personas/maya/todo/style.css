@@ -1,0 +1,124 @@
+/* Maya's first stylesheet for her first backend app. */
+/* Plain CSS — no framework, she wanted to learn the basics. */
+
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --accent: #6366f1;
+  --done: #94a3b8;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  min-height: 100vh;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 0.25rem;
+}
+
+.remaining {
+  color: var(--done);
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+}
+
+.add-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.add-form input {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.add-form button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+li.done {
+  opacity: 0.55;
+}
+
+li.done .text {
+  text-decoration: line-through;
+}
+
+.mini {
+  margin: 0;
+  display: flex;
+}
+
+.toggle,
+.delete {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem;
+  line-height: 1;
+}
+
+.toggle {
+  color: var(--accent);
+}
+
+.delete {
+  color: #e11d48;
+}
+
+.text {
+  flex: 1;
+}
+
+.empty {
+  text-align: center;
+  color: var(--done);
+  padding: 2rem 0;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--done);
+  font-size: 0.8rem;
+}

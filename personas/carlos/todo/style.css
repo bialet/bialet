@@ -1,0 +1,111 @@
+/* Old-school admin look. System font, neutral colors, table-ish rows.
+   The kind of CSS Carlos has written a hundred times. */
+
+:root {
+  --bg: #f1f5f9;
+  --panel: #ffffff;
+  --border: #cbd5e1;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #0f766e;
+  --danger: #b91c1c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+}
+
+.nav .brand {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.nav a:hover { color: var(--accent); }
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+
+.muted { color: var(--muted); font-size: 0.9rem; margin: 0 0 1.25rem; }
+
+.add-form { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+
+.add-form input[type="text"] {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.add-form button,
+.link {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.task-list { list-style: none; margin: 0; padding: 0; }
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-list li:last-child { border-bottom: none; }
+
+.task.done .text { text-decoration: line-through; color: var(--muted); }
+
+.inline { margin: 0; display: flex; }
+
+.link { padding: 0.25rem 0.5rem; background: transparent; color: var(--accent); }
+.link.danger { color: var(--danger); }
+
+.text { flex: 1; }
+
+.empty { color: var(--muted); text-align: center; padding: 1.5rem 0; }
+
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 2rem 0;
+}
