@@ -223,6 +223,36 @@ When requests arrive through a proxy, Bialet detects HTTPS from the
 attribute is decided. Only set those headers from a proxy you trust — never
 forward user-supplied ones unchanged.
 
+### Reverse Proxy Hardening
+
+Bialet is **single-threaded**: it accepts and serves one connection at a time
+in a blocking loop. The reverse proxy is the layer that protects it from
+hostile clients. Configure the proxy to:
+
+- **Cap the request body.** Bialet accepts bodies up to ~10 MB. Parsing large
+  bodies is expensive (decoding is O(n²) in `Util.urlDecode`), so a big body
+  is a CPU-exhaustion risk as well as a memory one. Set `client_max_body_size`
+  (nginx), `LimitRequestBody` (Apache), or an equivalent to the smallest your
+  app needs — 1 MB is a sane default.
+- **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
+  per `recv()` call, so a peer that dribbles bytes slowly can hold a
+  connection open indefinitely. Set a total read timeout at the proxy
+  (`client_body_timeout` in nginx, `RequestReadTimeout ... MinRate` in
+  Apache) so stalled uploads are cut off.
+- **Buffer the full request before forwarding** (`proxy_request_buffering on`
+  in nginx; the default in most proxies). This keeps a slow client from
+  holding the upstream socket.
+- **Deny private files at the proxy too.** Bialet already returns 403 for
+  `_`/`.`-prefixed paths, but the proxy can return 403 first — a second layer
+  in case an app or a planted symlink ever serves such a file.
+
+See [Deployment](deployment.md) for ready-to-paste nginx, Apache, and Caddy
+configs with these settings.
+
+> ⚠️ Pitfall: a proxy body cap that is *higher* than your app's needs
+> re-opens the CPU-exhaustion and memory-exhaustion risks above. Keep it as
+> low as your uploads actually require.
+
 ### Private Files
 
 Files and directories whose name starts with `_` or `.` are forbidden from
@@ -305,6 +335,8 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 5. Guard `Request.post(...)` with `|| ""` before string operations.
 6. Store passwords with `Util.hash` / `Util.verify`, never plaintext.
 7. Run behind a reverse proxy with TLS; bind Bialet to `127.0.0.1`.
-8. Keep private files (`_`-prefixed) out of shared backups and repositories.
-9. Use `-m` / `-M` / `-c` / `-C` to cap memory and CPU.
-10. Validate and convert input with `Num.fromString()` before numeric math.
+8. Cap the request body and set a total read deadline at the proxy; buffer
+   the full body before forwarding.
+9. Keep private files (`_`-prefixed) out of shared backups and repositories.
+10. Use `-m` / `-M` / `-c` / `-C` to cap memory and CPU.
+11. Validate and convert input with `Num.fromString()` before numeric math.
