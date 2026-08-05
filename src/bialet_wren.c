@@ -320,11 +320,13 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
        MAX_MODULE_LEN) {
       message(red("Error"), "Module name too long.");
+      free(calledFrom);
       return result;
     }
     if(lastSlash)
       *lastSlash = '\0';
     snprintf(module, MAX_MODULE_LEN, "%s/", calledFrom);
+    free(calledFrom);
   }
 
   strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
@@ -392,7 +394,7 @@ static char* sqlite_int_to_string(sqlite3_int64 value) {
 static void query_execute(WrenVM* vm, BialetQuery* query) {
   (void)vm;
   sqlite3_stmt* stmt;
-  char*         columns[MAX_COLUMNS];
+  const char*   columns[MAX_COLUMNS];
   const char*   value;
   int           colType, colCount = 0, type, rowCount = 0, bindCounter = 0, size = 0;
 
@@ -449,7 +451,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
       if(colCount > MAX_COLUMNS)
         colCount = MAX_COLUMNS;
       for(int i = 0; i < colCount; i++) {
-        columns[i] = string_safe_copy(sqlite3_column_name(stmt, i));
+        columns[i] = sqlite3_column_name(stmt, i);
       }
     }
 
@@ -704,11 +706,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt;
-    int           result = sqlite3_prepare_v2(db,
-                                              "INSERT INTO BIALET_FILES (name, "
-                                                        "originalFileName, type, file, size, isTemp) "
-                                                        "VALUES (?, ?, ?, ?, ?, 1)",
-                                              -1, &stmt, 0);
+    int result = sqlite3_prepare_v2(db,
+                                    "INSERT INTO BIALET_FILES (name, "
+                                    "originalFileName, type, file, size, isTemp) "
+                                    "VALUES (?, ?, ?, ?, ?, 1)",
+                                    -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);

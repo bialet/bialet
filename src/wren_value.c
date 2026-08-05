@@ -1,12 +1,12 @@
-#include "wren_value.h"
-
-#include "wren.h"
-#include "wren_vm.h"
-
 #if defined(_WIN32)
 // Must precede <stdlib.h> so rand_s() is declared.
 #define _CRT_RAND_S
 #endif
+
+#include "wren_value.h"
+
+#include "wren.h"
+#include "wren_vm.h"
 
 #include <math.h>
 #include <stdarg.h>
@@ -16,6 +16,7 @@
 #include <string.h>
 
 #if defined(_WIN32)
+#include <time.h>
 #include <windows.h>
 #else
 #include <fcntl.h>

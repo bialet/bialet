@@ -27,7 +27,11 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
+#if IS_MAC
+#include <mach/mach_time.h>
+#endif
 typedef int bialet_socket_t;
 #define BIALET_INVALID_SOCKET (-1)
 #define socket_close(s) close(s)
@@ -57,6 +61,11 @@ typedef int bialet_socket_t;
 // often to hold the accept/handle loop, and any single stalled request is
 // bounded to a few seconds.
 #define BIALET_SOCKET_TIMEOUT_MS (5000)
+
+// Total wall-clock budget for reading a request body. The per-recv SO_RCVTIMEO
+// only bounds a single recv() call, so a peer that dribbles bytes just under
+// that timeout could otherwise hold the single-threaded accept loop forever.
+#define BIALET_BODY_READ_DEADLINE_MS (30000)
 
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
@@ -128,6 +137,43 @@ static void set_socket_timeout(bialet_socket_t fd) {
   tv.tv_usec = (BIALET_SOCKET_TIMEOUT_MS % 1000) * 1000;
   setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
   setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
+}
+
+static long long monotonic_ms(void) {
+#if IS_WIN
+  return (long long)GetTickCount64();
+#elif IS_MAC
+  static mach_timebase_info_data_t timebase;
+  if(timebase.denom == 0)
+    mach_timebase_info(&timebase);
+  return (long long)(mach_absolute_time() * timebase.numer / timebase.denom /
+                     1000000);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+#endif
+}
+
+// Returns 1 when [fd] becomes readable within timeout_ms, 0 on timeout or
+// error. Used to enforce the total body-read deadline below.
+static int wait_readable(bialet_socket_t fd, int timeout_ms) {
+#if IS_WIN
+  fd_set readfds;
+  FD_ZERO(&readfds);
+  FD_SET(fd, &readfds);
+  struct timeval tv;
+  tv.tv_sec = timeout_ms / 1000;
+  tv.tv_usec = (timeout_ms % 1000) * 1000;
+  int ret = select(0, &readfds, NULL, NULL, &tv);
+  return ret > 0 && FD_ISSET(fd, &readfds);
+#else
+  struct pollfd pfd;
+  pfd.fd = fd;
+  pfd.events = POLLIN;
+  int ret = poll(&pfd, 1, timeout_ms);
+  return ret > 0 && (pfd.revents & POLLIN);
 #endif
 }
 
@@ -434,6 +480,7 @@ static void free_response_owned(struct BialetResponse* response) {
 // the root. Walking the path component-by-component with openat(2) closes that
 // window -- any symlink swap now fails with ELOOP instead of being followed.
 // Returns an open file descriptor or -1.
+#if !IS_WIN
 static int open_fd_without_follow(const char* path) {
   if(path == NULL || path[0] != '/')
     return -1;
@@ -462,6 +509,7 @@ static int open_fd_without_follow(const char* path) {
   }
   return dirfd;
 }
+#endif
 
 // Opens [path] without following a symlink as any component. On POSIX the
 // caller is expected to have already validated [path] with realpath() for root
@@ -557,13 +605,28 @@ void handle_client(bialet_socket_t client_socket) {
       memcpy(full_request, buffer, bytes_read);
       total_read = bytes_read;
 
-      // Read remaining data
+      // Read remaining data within a total wall-clock deadline so a slow-drip
+      // peer cannot park the single-threaded server past the budget.
+      long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
       while(total_read < full_size) {
+        long long remaining = deadline - monotonic_ms();
+        if(remaining <= 0)
+          break;
+        if(!wait_readable(client_socket, (int)remaining))
+          break;
         ssize_t n = recv(client_socket, full_request + total_read,
                          full_size - total_read, 0);
         if(n <= 0)
           break;
         total_read += n;
+      }
+
+      // The body did not fully arrive (peer closed early or the deadline
+      // expired): reject the request instead of processing a truncated one.
+      if(total_read < full_size) {
+        free(full_request);
+        socket_close(client_socket);
+        return;
       }
       full_request[total_read] = '\0';
     }
@@ -601,6 +664,7 @@ void handle_client(bialet_socket_t client_socket) {
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
+  int                   private_path_internal = 0;
 
   // Reject any URI whose decoded path component starts with '_' or '.'
   // (private files such as _db.sqlite3, _route.wren, .env). This runs before
@@ -678,6 +742,7 @@ void handle_client(bialet_socket_t client_socket) {
                url_copy);
       if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
         hm->routes = create_string(url_copy, strlen(url_copy));
+        private_path_internal = 1;
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
@@ -710,6 +775,22 @@ void handle_client(bialet_socket_t client_socket) {
        (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' &&
         resolved_path[root_len] != '\0')) {
       message(red("Security Error"), "Path traversal blocked", path);
+      clean_http_message(hm);
+      custom_error(403, &response);
+      write_response(client_socket, &response);
+      free_response_owned(&response);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+    // Re-apply the private-file rule to the resolved target. A symlink named
+    // "x" -> "_db.sqlite3" passes the URI check, so the canonical path must
+    // be validated too. Only the root-relative portion is checked so an app
+    // hosted under a "_"/"."-named directory is not blocked, and _route.wren
+    // (reached only through the framework's own route search) is allowed.
+    if(!private_path_internal &&
+       has_forbidden_uri_component(resolved_path + root_len)) {
+      message(red("Security Error"), "Private file access blocked", path);
       clean_http_message(hm);
       custom_error(403, &response);
       write_response(client_socket, &response);
@@ -797,12 +878,10 @@ void handle_client(bialet_socket_t client_socket) {
     response.header = get_content_type(path);
   }
 
-  int body_injected = livereload_inject_response(&response);
+  (void)livereload_inject_response(&response);
   clean_http_message(hm);
   write_response(client_socket, &response);
-  if(!body_injected || is_wren_file) {
-    free(file_content);
-  }
+  free(file_content);
   free_response_owned(&response);
 
   // Free allocated memory if we had to read a large request

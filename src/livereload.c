@@ -61,7 +61,7 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
   response->status = 200;
   response->header = (char*)"Content-Type: text/plain\r\n";
   response->body = version_str;
-  response->length = (int)len;
+  response->length = (size_t)len;
   return 1;
 }
 
@@ -69,6 +69,20 @@ void livereload_notify(void) {
   if(!enabled)
     return;
   version = (long)time(NULL);
+}
+
+// Portable bounded substring search (POSIX memmem is not available on
+// Windows). Returns a pointer to the first [needle] within [haystack_len]
+// bytes of [haystack], or NULL.
+static const char* find_bytes(const char* haystack, size_t haystack_len,
+                              const char* needle, size_t needle_len) {
+  if(needle_len == 0 || haystack_len < needle_len)
+    return NULL;
+  for(size_t i = 0; i <= haystack_len - needle_len; i++) {
+    if(memcmp(haystack + i, needle, needle_len) == 0)
+      return haystack + i;
+  }
+  return NULL;
 }
 
 int livereload_inject_response(struct BialetResponse* response) {
@@ -79,16 +93,24 @@ int livereload_inject_response(struct BialetResponse* response) {
   if(strstr(response->header, "text/html") == NULL)
     return 0;
 
-  size_t body_len = (size_t)response->length;
-  if(body_len == 0)
+  size_t body_len = response->length;
+  if(body_len == 0) {
+    // The length field is authoritative for opaque caller buffers (e.g. static
+    // files). Only fall back to strlen() for bodies this struct owns, which
+    // are always NUL-terminated.
+    if(!response->body_owned)
+      return 0;
     body_len = strlen(response->body);
+  }
   if(body_len == 0)
     return 0;
 
   size_t script_len = sizeof(kScript) - 1;
 
-  const char* marker = strstr(response->body, "</body>");
+  const char* marker = find_bytes(response->body, body_len, "</body>", 7);
   size_t      insert_at = marker ? (size_t)(marker - response->body) : body_len;
+  if(insert_at > body_len)
+    return 0;
 
   size_t new_len = body_len + script_len;
   char*  new_body = (char*)malloc(new_len + 1);
@@ -101,9 +123,12 @@ int livereload_inject_response(struct BialetResponse* response) {
          body_len - insert_at);
   new_body[new_len] = '\0';
 
-  free(response->body);
+  // Only free a body this struct owns. Static literals (error pages) and
+  // caller-owned buffers (e.g. file_content) are left to their owners.
+  if(response->body_owned)
+    free(response->body);
   response->body = new_body;
   response->body_owned = 1;
-  response->length = (int)new_len;
+  response->length = new_len;
   return 1;
 }

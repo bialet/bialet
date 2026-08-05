@@ -794,44 +794,44 @@ class Util {
   }
 
   static urlDecode(str) {
-    var decoded = ""
+    var parts = []
     var i = 0
     while (i < str.count) {
       if (str[i] == "\%") {
         var hex = str[i + 1..i + 2]
         var charCode = hexToDec(hex)
-        decoded = decoded + String.fromByte(charCode)
+        parts.add(String.fromByte(charCode))
         i = i + 3
       } else if (str[i] == "+") {
-        decoded = decoded + " "
+        parts.add(" ")
         i = i + 1
       } else {
-        decoded = decoded + str[i]
+        parts.add(str[i])
         i = i + 1
       }
     }
-    return decoded
+    return parts.join("")
   }
 
   static urlEncode(str) {
-    var encoded = ""
+    var parts = []
     str = "%(str)"
     for (char in str) {
       if (char == " ") {
-        encoded = encoded + "+"
+        parts.add("+")
       } else if (char == "\%") {
-        encoded = encoded + "\%25"
+        parts.add("\%25")
       } else if (char == "&") {
-        encoded = encoded + "\%26"
+        parts.add("\%26")
       } else if (char == "=") {
-        encoded = encoded + "\%3D"
+        parts.add("\%3D")
       } else if (char == "?") {
-        encoded = encoded + "\%3F"
+        parts.add("\%3F")
       } else {
-        encoded = encoded + char
+        parts.add(char)
       }
     }
-    return encoded
+    return parts.join("")
   }
 
   static params(params) {

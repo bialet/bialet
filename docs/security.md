@@ -230,8 +230,9 @@ in a blocking loop. The reverse proxy is the layer that protects it from
 hostile clients. Configure the proxy to:
 
 - **Cap the request body.** Bialet accepts bodies up to ~10 MB. Parsing large
-  bodies is expensive (decoding is O(n²) in `Util.urlDecode`), so a big body
-  is a CPU-exhaustion risk as well as a memory one. Set `client_max_body_size`
+  bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
+  body still means millions of allocations in `Util.urlDecode`. Set
+  `client_max_body_size`
   (nginx), `LimitRequestBody` (Apache), or an equivalent to the smallest your
   app needs — 1 MB is a sane default.
 - **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is

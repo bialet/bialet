@@ -188,8 +188,9 @@ unless the proxy caps body size, sets read deadlines, and buffers requests.
 Key directives, regardless of which proxy you run:
 
 - **Cap the request body.** Bialet allows bodies up to ~10 MB. A large body
-  is also expensive to parse (see `Util.urlDecode` below). Set the proxy's
-  body limit to the smallest your app needs — 1 MB is a sane default.
+  is also expensive to parse: every byte of a decoded value allocates, so a
+  ~10 MB body still means millions of allocations in `Util.urlDecode`. Set the
+  proxy's body limit to the smallest your app needs — 1 MB is a sane default.
 - **Set a body-read deadline.** Bialet's 5-second socket timeout is per
   `recv()` call, so a peer that dribbles bytes slowly can keep a connection
   open indefinitely. Make the proxy enforce a *total* read timeout and reject
