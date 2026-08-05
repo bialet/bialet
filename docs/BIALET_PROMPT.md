@@ -153,7 +153,8 @@ classes, attributes, or whole HTML blocks:
 
 > **Pitfall:** the Wren expression inside `{{ }}` must start on the same line
 > as the opening `{{`. Only the HTML *inside* the tags may span multiple
-> lines — breaking the Wren expression itself across lines (e.g. `{{\n  cond &&\n  <div>`) causes parsing ambiguities and empty output.
+> lines. A leading newline (`{{\n  cond &&\n  <div>`) is a compile error —
+> older builds silently produced empty output.
 
 ## Code Style
 

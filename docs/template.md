@@ -89,7 +89,8 @@ var card = <article>
 **The opening tag cannot nest itself.** The outermost tag of an inline HTML
 string must not appear as a direct child tag at any nesting level. Once the
 tree starts with a *different* tag, the original tag can be used freely below
-it. The parser checks this on the *whole* string, not just the first level.
+it. The parser checks this on the *whole* string, not just the first level,
+and reports `Cannot nest <div> inside <div>` on the offending line.
 
 ```wren
 // Wrong — <div> is the outermost tag AND a direct child
@@ -198,8 +199,10 @@ return <main>
 **Newlines outside HTML tags produce unexpected output.** The Wren code
 inside `{{ }}` must start on the same line as `{{`. Newlines belong inside
 the HTML string (between `<tag>` and `</tag>`), not in the surrounding Wren
-code. Breaking the Wren expression with newlines can cause parsing
-ambiguities and empty output.
+code. Breaking the Wren expression with newlines is a compile error, not a
+runtime one — the parser reports
+`The expression inside '{{ }}' must start on the same line as '{{'`. Older
+builds failed silently with empty output.
 
 ```wren
 // Wrong — Wren code spans lines outside the HTML tags
@@ -876,7 +879,8 @@ embedded in HTML must be escaped. There is no automatic escaping.
 - **Forgetting `return`:** Without `return`, the response body is empty.
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
 - **Newlines outside HTML tags in `{{ }}`:** Keep Wren code on the same line
-  as the opening `{{`. Only HTML strings can span lines.
+  as the opening `{{`. The parser rejects a leading newline with a compile
+  error; only HTML strings can span lines.
 - **Map callback is a single expression:** No multiple statements, no variable
   declarations inside the callback.
 - **Empty lists in `map`:** Produce empty output — pair with `&&` for empty

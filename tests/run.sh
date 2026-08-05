@@ -27,6 +27,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
   test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
+  test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
+  test_syntax "Nested same tag rejected      " "syntax_err_nested.wren" 1
+  test_syntax "Interp starts on same line    " "syntax_err_interp_sameline.wren" 1
+  test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
 fi
 
 # Tests - Request & Response

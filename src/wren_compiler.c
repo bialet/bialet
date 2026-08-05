@@ -960,6 +960,11 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   char*         tagName = malloc(MAX_METHOD_NAME);
   int           tagIsOpen = 1;
 
+  // Only a string that reads its own opening tag can detect a nested tag with
+  // the same name. Resumes after "{{ }}" and doctype strings already consumed
+  // their tag name elsewhere, so they skip the check.
+  bool readsOpeningTag = previousTagName[0] == '\0';
+
   if(strlen(previousTagName) > 0) {
     strcpy(tagName, previousTagName);
   } else {
@@ -1006,6 +1011,17 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         strcpy(parser->handlebars[parser->numHandlebars], tagName);
         parser->numHandlebars++;
         nextChar(parser);
+
+        // The Wren expression must start on the same line as the "{{".
+        // Newlines before the first token produce parsing ambiguities and
+        // empty output, so reject them with a clear error.
+        const char* scan = parser->currentChar;
+        while(*scan == ' ' || *scan == '\t')
+          scan++;
+        if(*scan == '\n' || *scan == '\r') {
+          lexError(parser, "The expression inside '{{ }}' must start on the "
+                           "same line as '{{'.");
+        }
         break;
       }
       if(tagIsOpen && c == ' ' && peekChar(parser) == '/' &&
@@ -1015,13 +1031,32 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
         break;
       }
+      // The outermost tag cannot nest itself. A nested opening tag with the
+      // same name makes the first matching close tag end the string early and
+      // derails the parser, so fail with a clear message instead.
+      if(readsOpeningTag && c == '<' && peekChar(parser) >= 'a' &&
+         peekChar(parser) <= 'z') {
+        size_t tagLen = strlen(tagName);
+        if(strncmp(parser->currentChar, tagName, tagLen) == 0) {
+          char after = parser->currentChar[tagLen];
+          if(after == '>' || after == ' ' || after == '/' || after == '\r' ||
+             after == '\n' || after == '\0') {
+            lexError(parser,
+                     "Cannot nest <%s> inside <%s>: use a different "
+                     "tag for the inner element.",
+                     tagName, tagName);
+            break;
+          }
+        }
+      }
       wrenByteBufferWrite(parser->vm, &string, c);
       if(c == '<' && peekChar(parser) == '/') {
         closingTag = 0;
       }
-      // Tags should start with a letter, next characters can be letters,
-      // numbers, or hyphens (e.g. custom elements like <my-element>).
-      if((closingTag >= 0 && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) ||
+      // Tags should start with a lowercase letter, next characters can be
+      // lowercase letters, numbers, or hyphens (e.g. custom elements like
+      // <my-element>).
+      if((closingTag >= 0 && c >= 'a' && c <= 'z') ||
          (closingTag >= 1 && c >= '0' && c <= '9') ||
          (closingTag >= 1 && c == '-')) {
         if(tagName[closingTag] != c) {
