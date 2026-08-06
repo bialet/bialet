@@ -400,6 +400,63 @@ DEF_PRIMITIVE(list_swap) {
   RETURN_NULL;
 }
 
+// Concatenates a list of strings into a single string with [sep] between
+// elements. This is the native backend for List.join(sep): it measures the
+// total size once and performs a single allocation, keeping joins linear in
+// the input size. The interpreted join() in the core module pre-converts
+// every element with toString, so every element here is guaranteed to be a
+// string.
+DEF_PRIMITIVE(list_join) {
+  ObjList*   list = AS_LIST(args[0]);
+  ObjString* sep = AS_STRING(args[1]);
+  size_t     sepLength = sep->length;
+  size_t     total = 0;
+
+  uint32_t count = list->elements.count;
+  for(uint32_t i = 0; i < count; i++) {
+    Value element = list->elements.data[i];
+    if(!IS_STRING(element))
+      RETURN_ERROR("List elements must be strings.");
+    size_t length = AS_STRING(element)->length;
+    if(length > SIZE_MAX - total)
+      RETURN_ERROR("Joined string is too large.");
+    total += length;
+  }
+
+  // The separator is copied between each pair of elements. Only when there are
+  // two or more elements does a separator contribute to the total; with an
+  // empty list, count - 1 would underflow to a huge value.
+  if(count > 1) {
+    if(sepLength > (SIZE_MAX - total) / (count - 1)) {
+      RETURN_ERROR("Joined string is too large.");
+    }
+    total += sepLength * (count - 1);
+  }
+
+  // total + 1 keeps the buffer at least one byte so the NULL check below is
+  // meaningful even for an empty result.
+  char* buffer = malloc(total + 1);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory joining strings.");
+
+  char* out = buffer;
+  for(uint32_t i = 0; i < count; i++) {
+    if(i > 0 && sepLength > 0) {
+      memcpy(out, sep->value, sepLength);
+      out += sepLength;
+    }
+    ObjString* part = AS_STRING(list->elements.data[i]);
+    if(part->length > 0) {
+      memcpy(out, part->value, part->length);
+      out += part->length;
+    }
+  }
+
+  Value result = wrenNewStringLength(vm, buffer, total);
+  free(buffer);
+  RETURN_VAL(result);
+}
+
 DEF_PRIMITIVE(list_subscript) {
   ObjList* list = AS_LIST(args[0]);
 
@@ -1224,6 +1281,58 @@ DEF_PRIMITIVE(util_randomString) {
   RETURN_VAL(result);
 }
 
+// Returns the hex value of [c], or -1 if it is not a hex digit.
+static int urlHexDigit(char c) {
+  if(c >= '0' && c <= '9')
+    return c - '0';
+  if(c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  if(c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  return -1;
+}
+
+// Decodes a URL-encoded string in a single allocation. The previous Wren
+// implementation iterated str.count (an O(n) Sequence walk) once per
+// character, making decoding quadratic on attacker-controlled query/body
+// input. A decoded byte is never longer than its encoded form ("%XX" -> one
+// byte, "+" -> one byte, everything else passes through), so the input
+// length is a safe upper bound for the output buffer.
+DEF_PRIMITIVE(util_urlDecode) {
+  ObjString*  string = AS_STRING(args[1]);
+  uint32_t    length = string->length;
+  const char* input = string->value;
+
+  char* buffer = malloc((size_t)length + 1);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory decoding URL string.");
+
+  size_t out = 0;
+  for(uint32_t i = 0; i < length; i++) {
+    char c = input[i];
+    if(c == '%' && i + 2 < length) {
+      int high = urlHexDigit(input[i + 1]);
+      int low = urlHexDigit(input[i + 2]);
+      if(high >= 0 && low >= 0) {
+        buffer[out++] = (char)((high << 4) | low);
+        i += 2;
+        continue;
+      }
+    }
+
+    // A trailing '%' or one without two hex digits is passed through as-is.
+    if(c == '+') {
+      buffer[out++] = ' ';
+    } else {
+      buffer[out++] = c;
+    }
+  }
+
+  Value result = wrenNewStringLength(vm, buffer, out);
+  free(buffer);
+  RETURN_VAL(result);
+}
+
 DEF_PRIMITIVE(http_call) {
   struct HttpRequest request;
   request.url = AS_CSTRING(args[1]);
@@ -1795,6 +1904,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(vm->listClass, "remove(_)", list_removeValue);
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
+  PRIMITIVE(vm->listClass, "joinNative(_)", list_join);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
@@ -1852,6 +1962,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
+  PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);

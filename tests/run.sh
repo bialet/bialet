@@ -50,6 +50,32 @@ run_test "Response headers            " "headers"         200 "headers-set"
 # Tests - Request & Response (extended coverage)
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
+
+# Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002): a
+# ~1MB newline-delimited POST used to stall the single-threaded server for
+# minutes (O(n^2) copies). It must now complete promptly and keep the HTTP
+# layer responsive. The payload goes through a file because it exceeds curl's
+# command-line argument limit.
+total_tests=$((total_tests + 1))
+echo -e -n "Large POST body no hang      \t"
+dos_payload="$(mktemp)"
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c "open('$dos_payload', 'w').write('a\n' * 500000)"
+else
+  head -c 500000 /dev/zero | tr '\0' 'a' | sed 's/./&\n/g' > "$dos_payload"
+fi
+dos_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+  --data-binary "@$dos_payload" "http://$HOST:$PORT/post")
+rm -f "$dos_payload"
+if [[ "$dos_code" != "200" ]]; then
+  echo -e "${RED}FAIL${NC}"
+  failed_tests=$((failed_tests + 1))
+  echo -e -n "\tExpected: 200\tActual: $dos_code (quadratic hang or timeout)\n"
+else
+  echo -e "${GREEN}PASS${NC}"
+  passed_tests=$((passed_tests + 1))
+fi
+
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"

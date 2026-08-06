@@ -113,25 +113,19 @@ class Sequence {
   join() { join("") }
 
   join(sep) {
-    var first = true
-    var result = ""
-
+    var strings = []
     for (element in this) {
-      if (!first) result = result + sep
-      first = false
-      result = result + element.toString
+      strings.add(element.toString)
     }
-
-    return result
+    return strings.joinNative(sep)
   }
 
-
   joinInt_() {
-    var res = ""
+    var strings = []
     for (element in this) {
-      if (element.type != Bool || element) res = res + "" + element.toString
+      if (element.type != Bool || element) strings.add(element.toString)
     }
-    return res
+    return strings.joinNative("")
   }
 
   slice(start) { slice(start, -1) }

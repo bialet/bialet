@@ -33,21 +33,21 @@ class Request {
     var headerValue
     var bodyLines = []
     for (line in lines) {
+      if (startBody) {
+        bodyLines.add(line)
+        continue
+      }
       if (line.trim() == "") {
         startBody = true
         continue
       }
-      if (!startBody) {
-        tmp = line.split(":")
-        headerName = tmp.removeAt(0).trim().lower
-        headerValue = tmp.join(":").trim()
-        if (headerName == "cookie") {
-          Cookie.parseHeader(headerValue)
-        }
-        __headers[headerName] = headerValue
-      } else {
-        bodyLines.add(line)
+      tmp = line.split(":")
+      headerName = tmp.removeAt(0).trim().lower
+      headerValue = tmp.join(":").trim()
+      if (headerName == "cookie") {
+        Cookie.parseHeader(headerValue)
       }
+      __headers[headerName] = headerValue
     }
     __body = bodyLines.join("")
     if (__method == "POST") {
@@ -660,23 +660,23 @@ class Util {
 
   static htmlEscape(value) {
     var input = value == null ? "" : "%(value)"
-    var escaped = ""
+    var escaped = []
     for (char in input) {
       if (char == "&") {
-        escaped = escaped + "&amp;"
+        escaped.add("&amp;")
       } else if (char == "<") {
-        escaped = escaped + "&lt;"
+        escaped.add("&lt;")
       } else if (char == ">") {
-        escaped = escaped + "&gt;"
+        escaped.add("&gt;")
       } else if (char == "\"") {
-        escaped = escaped + "&quot;"
+        escaped.add("&quot;")
       } else if (char == "'") {
-        escaped = escaped + "&#x27;"
+        escaped.add("&#x27;")
       } else {
-        escaped = escaped + char
+        escaped.add(char)
       }
     }
-    return escaped
+    return escaped.join("")
   }
 
   static isDigits(value) {
@@ -713,14 +713,14 @@ class Util {
 
   static stripControlChars(value) {
     value = value == null ? "" : "%(value)"
-    var sanitized = ""
+    var sanitized = []
     for (char in value) {
       var byte = char.bytes[0]
       if (byte >= 32 && byte != 127) {
-        sanitized = sanitized + char
+        sanitized.add(char)
       }
     }
-    return sanitized
+    return sanitized.join("")
   }
 
   static headerName(value) {
@@ -793,25 +793,7 @@ class Util {
     return hex
   }
 
-  static urlDecode(str) {
-    var parts = []
-    var i = 0
-    while (i < str.count) {
-      if (str[i] == "\%") {
-        var hex = str[i + 1..i + 2]
-        var charCode = hexToDec(hex)
-        parts.add(String.fromByte(charCode))
-        i = i + 3
-      } else if (str[i] == "+") {
-        parts.add(" ")
-        i = i + 1
-      } else {
-        parts.add(str[i])
-        i = i + 1
-      }
-    }
-    return parts.join("")
-  }
+  static urlDecode(str) { urlDecode_("%(str)") }
 
   static urlEncode(str) {
     var parts = []
