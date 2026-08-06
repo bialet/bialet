@@ -91,10 +91,19 @@ static: $(OBJS)
 		-lm -lpthread -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
 else ifeq ($(OS),Linux)
 CURL_STATIC_LIBS := $(shell curl-config --static-libs 2>/dev/null || echo '-lcurl')
-CURL_DEPS := $(filter-out -lcurl,$(CURL_STATIC_LIBS))
+CURL_BFLAGS := -Wl,-Bstatic -Wl,-Bdynamic
+# OpenLDAP sonames are versioned per release (liblber-2.5.so.0 on Ubuntu 22.04
+# vs liblber-2.6.so.0 on Ubuntu 24.04), so linking them dynamically makes the
+# binary distro-specific. Link them statically instead. Ubuntu's libldap.a is
+# built against GnuTLS and Cyrus SASL, so resolve those symbols dynamically
+# (libgnutls.so.30 and libsasl2.so.2 have stable sonames). All other curl deps
+# have stable sonames and stay dynamic.
+CURL_DEPS := $(filter-out -lcurl -llber -lldap $(CURL_BFLAGS),$(CURL_STATIC_LIBS))
 static: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 -lm -lpthread -ldl \
-		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 \
+		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS) \
+		-Wl,-Bstatic -llber -lldap -llber -Wl,-Bdynamic -lgnutls -lsasl2 \
+		-lm -lpthread -ldl
 else
 static:
 	@echo "Static build is not supported on $(OS). Use 'make' instead."
