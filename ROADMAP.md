@@ -69,7 +69,7 @@ improvements.
       makes the server serve the database. Only waive the private check when
       the resolved basename is exactly `_route.wren`, and use `lstat`/no-follow
       in the search.
-- [ ] **`setTimezone` uses `putenv()` with a stack buffer** — `setTimezone` in
+- [x] **`setTimezone` uses `putenv()` with a stack buffer** — `setTimezone` in
       `src/wren_core.c` builds `TZ=<tz>` in a 64-byte stack buffer and passes it
       to `putenv()`, which stores the pointer; the second call invalid-frees the
       dead stack address (abort on glibc) or leaves a dangling `TZ` entry. Use

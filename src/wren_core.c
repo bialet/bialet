@@ -1499,14 +1499,26 @@ DEF_PRIMITIVE(test_runRequest) {
 }
 
 void setTimezone(const char* tz) {
-  if(tz == NULL || tz[0] == '\0') {
-    putenv("TZ=");
-    tzset();
+  if(tz == NULL || tz[0] == '\0')
     return;
-  }
-  char tz_env[64];
-  snprintf(tz_env, sizeof(tz_env), "TZ=%s", tz);
-  putenv(tz_env);
+#if defined(_WIN32)
+  // putenv() stores the pointer it is given, so it must outlive the call.
+  // Allocate a fresh string, publish it, then release the previous one (the
+  // Windows CRT never frees the replaced value itself).
+  static char* tz_buf = NULL;
+  int          needed = snprintf(NULL, 0, "TZ=%s", tz);
+  if(needed < 0)
+    return;
+  char* new_buf = malloc((size_t)needed + 1);
+  if(new_buf == NULL)
+    return;
+  snprintf(new_buf, (size_t)needed + 1, "TZ=%s", tz);
+  putenv(new_buf);
+  free(tz_buf);
+  tz_buf = new_buf;
+#else
+  setenv("TZ", tz, 1);
+#endif
   tzset();
 }
 
