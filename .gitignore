@@ -14,3 +14,6 @@ docs/_static/ai-prompt.js
 
 # NPM cache
 node_modules/
+
+# Review artifacts
+/.c-review-results/

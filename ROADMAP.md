@@ -62,6 +62,48 @@ improvements.
 - [ ] **Windows: fix realpath shim buffer size** — the Windows `realpath` shim
       writes up to `_MAX_PATH` (260) bytes into a 100-byte stack buffer; pass
       the caller's real size through to `_fullpath`/`WideCharToMultiByte`.
+- [ ] **`_route.wren` symlink bypasses the private-file rule** — the
+      `_route.wren` directory search uses `stat()` (follows symlinks) and sets
+      `private_path_internal`, which skips the resolved-path `_`/`.` check in
+      `handle_client` (`src/server.c`). A planted `sub/_route.wren -> ../_db.sqlite3`
+      makes the server serve the database. Only waive the private check when
+      the resolved basename is exactly `_route.wren`, and use `lstat`/no-follow
+      in the search.
+- [ ] **`setTimezone` uses `putenv()` with a stack buffer** — `setTimezone` in
+      `src/wren_core.c` builds `TZ=<tz>` in a 64-byte stack buffer and passes it
+      to `putenv()`, which stores the pointer; the second call invalid-frees the
+      dead stack address (abort on glibc) or leaves a dangling `TZ` entry. Use
+      `setenv("TZ", tz, 1)` / `unsetenv("TZ")` or a process-lifetime buffer.
+- [ ] **`fork()` while cron/dmon threads are inside SQLite/Wren** — the Linux
+      parent forks the HTTP child while the cron and dmon threads may hold
+      SQLite/Wren locks (`src/main.c`); the child can deadlock or see torn heap.
+      Register `pthread_atfork` handlers.
+- [ ] **`strtok()` races across cron/dmon/HTTP threads** — process-global
+      tokenizer state in `http_call_perform` (`src/http_call.c`), the remote
+      module loader (`src/bialet_wren.c`), and markdown table rendering
+      (`src/markdown.c`) interleaves across concurrent `bialet_run` contexts.
+      Replace with `strtok_r`/local state.
+- [ ] **Session IDs and CSRF tokens from `sqlite3_randomness`** — the session/
+      CSRF generator uses SQLite's documented non-cryptographic PRNG
+      (`src/wren_core.c`). Use the same CSPRNG already used for password salts.
+- [ ] **Multipart uploads have no steady-state purge** — `save_uploaded_files`
+      grows `BIALET_FILES` ~10 MB per request with no disk recovery; cap
+      aggregate storage or purge old blobs.
+- [ ] **Outbound HTTP client has no response-size cap** — `write_callback` in
+      `src/http_call.c` reallocs without bound; set `CURLOPT_MAXFILESIZE` or an
+      equivalent.
+- [ ] **Unchecked `fread` in `custom_error`** — an empty `{status}.html` yields
+      a body without a trailing NUL and the `strlen` fallback over-reads the
+      heap (`src/server.c`). NUL-terminate or track the length.
+- [ ] **Unchecked `sscanf` leaves `HttpResponse.status` uninitialized** — on
+      Windows, a parse failure leaves `status` uninitialized and it is consumed
+      by the remote-module loader (`src/http_call.c`).
+- [ ] **`test_runRequest` unbounded stack copies** — `strncpy` of the method and
+      URI into 32-byte/1024-byte stack buffers with no size guard
+      (`src/wren_core.c`); reachable in `-T` test mode via hostile `_tests/*.wren`.
+- [ ] **Windows: no-follow open for Wren file/module reads** — extend the
+      no-follow item to `read_file` (`src/bialet_wren.c`), which still uses
+      plain `fopen` on Windows and follows junctions.
 
 ## How to Contribute
 
