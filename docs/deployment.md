@@ -187,10 +187,14 @@ unless the proxy caps body size, sets read deadlines, and buffers requests.
 
 Key directives, regardless of which proxy you run:
 
-- **Cap the request body.** Bialet allows bodies up to ~10 MB. A large body
-  is also expensive to parse: every byte of a decoded value allocates, so a
-  ~10 MB body still means millions of allocations in `Util.urlDecode`. Set the
-  proxy's body limit to the smallest your app needs — 1 MB is a sane default.
+- **Cap the request body.** Bialet rejects request bodies larger than the
+  `-b` limit (default 128 KB) with `413 Payload Too Large` *before* parsing
+  them, so a body can never stall the Wren runtime. The effective cap is the
+  smaller of `-b` and a memory-safe ceiling (`-m` / 512) so a body can never
+  push the fork()ed child past its `RLIMIT_AS` budget — at the default 50 MB
+  soft limit that ceiling is 100 KB, so `-b 128` is fully effective once the
+  soft limit reaches 64 MB. Set the proxy's body limit to the smallest your
+  app needs — 1 MB is a sane default for the proxy.
 - **Set a body-read deadline.** Bialet's 5-second socket timeout is per
   `recv()` call, so a peer that dribbles bytes slowly can keep a connection
   open indefinitely. Make the proxy enforce a *total* read timeout and reject
@@ -523,7 +527,12 @@ Use CLI flags to constrain resources per app:
 | `-M` | Hard memory limit (MB) | 100     | `-M 2048`        |
 | `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
 | `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
+| `-b` | Max request body (KB)  | 128     | `-b 512`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
+
+The request-body cap is the smaller of `-b` and the memory-safe ceiling
+(`-m` / 512, about 100 KB at the default 50 MB soft limit). Bodies over the
+cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
 
 Example for a production app:
 

@@ -240,6 +240,7 @@ int main(int argc, char* argv[]) {
   bialet_config.wal_mode = 0;
   bialet_config.ignored_files = IGNORED_FILES;
   bialet_config.max_upload_size = 2 * 1024 * 1024; // Default 2MB
+  bialet_config.max_post_size = 128 * 1024;        // Default 128KB
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
@@ -247,11 +248,21 @@ int main(int argc, char* argv[]) {
   /* Parse args */
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:m:M:c:C:r:i:t:Tvw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvw")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
         break;
+      case 'b': {
+        char* endptr;
+        long  post_kb = strtol(optarg, &endptr, 10);
+        if(*endptr != '\0' || post_kb <= 0) {
+          fprintf(stderr, "Invalid max post size: %s (use kilobytes, e.g. 128)\n",
+                  optarg);
+          exit(EXIT_FAILURE);
+        }
+        bialet_config.max_post_size = (size_t)post_kb * 1024;
+      } break;
       case 'p': {
         char* endptr;
         long  port_val = strtol(optarg, &endptr, 10);
@@ -363,6 +374,20 @@ int main(int argc, char* argv[]) {
     // If test_dir was specified, set it as root_dir for resolution
     if(test_dir != NULL) {
       bialet_config.root_dir = test_dir;
+    }
+  }
+
+  // Cap the request-body size at the smaller of the configured max post size
+  // and a memory-safe ceiling (soft limit / 512). Wren body parsing allocates
+  // ~160 bytes of address space per body line (one ObjString each), so without
+  // this ceiling a body allowed by -b could push the child past the enforced
+  // RLIMIT_AS budget. At the default 50MB soft limit the ceiling is 100KB, so
+  // -b 128 is effective once the soft limit reaches 64MB.
+  {
+    size_t mem_safe_post =
+        ((size_t)bialet_config.mem_soft_limit * 1024 * 1024) / 512;
+    if(bialet_config.max_post_size > mem_safe_post) {
+      bialet_config.max_post_size = mem_safe_post;
     }
   }
 

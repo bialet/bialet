@@ -51,29 +51,61 @@ run_test "Response headers            " "headers"         200 "headers-set"
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
 
-# Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002): a
-# ~1MB newline-delimited POST used to stall the single-threaded server for
-# minutes (O(n^2) copies). It must now complete promptly and keep the HTTP
-# layer responsive. The payload goes through a file because it exceeds curl's
-# command-line argument limit.
+# Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002) and
+# the memory limit. A large newline-delimited POST used to stall the
+# single-threaded server for minutes (O(n^2) copies) and, on Linux, crash the
+# fork()ed child when Wren body parsing exceeded RLIMIT_AS. The request-body
+# cap (derived from the soft memory limit) now bounds that work: a body at/below
+# the cap must complete promptly with 200, and an oversized body must be
+# rejected promptly with 413 - never hang or crash. Payloads go through files
+# because they exceed curl's command-line argument limit.
 total_tests=$((total_tests + 1))
 echo -e -n "Large POST body no hang      \t"
-dos_payload="$(mktemp)"
+under_payload="$(mktemp)"
+over_payload="$(mktemp)"
 if command -v python3 >/dev/null 2>&1; then
-  python3 -c "open('$dos_payload', 'w').write('a\n' * 500000)"
+  python3 -c "open('$under_payload', 'w').write('a\n' * 30000)"  # 60KB, under the cap
+  python3 -c "open('$over_payload', 'w').write('a\n' * 500000)"  # 1MB, over the cap
 else
-  head -c 500000 /dev/zero | tr '\0' 'a' | sed 's/./&\n/g' > "$dos_payload"
+  head -c 30000 /dev/zero | tr '\0' 'a' | sed 's/./&\n/g' > "$under_payload"
+  head -c 500000 /dev/zero | tr '\0' 'a' | sed 's/./&\n/g' > "$over_payload"
 fi
-dos_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
-  --data-binary "@$dos_payload" "http://$HOST:$PORT/post")
-rm -f "$dos_payload"
-if [[ "$dos_code" != "200" ]]; then
-  echo -e "${RED}FAIL${NC}"
-  failed_tests=$((failed_tests + 1))
-  echo -e -n "\tExpected: 200\tActual: $dos_code (quadratic hang or timeout)\n"
-else
+under_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+  --data-binary "@$under_payload" "http://$HOST:$PORT/post")
+over_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+  --data-binary "@$over_payload" "http://$HOST:$PORT/post")
+alive_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+  "http://$HOST:$PORT/get?foo=bar")
+rm -f "$under_payload" "$over_payload"
+if [[ "$under_code" == "200" && "$over_code" == "413" && "$alive_code" == "200" ]]; then
   echo -e "${GREEN}PASS${NC}"
   passed_tests=$((passed_tests + 1))
+else
+  echo -e "${RED}FAIL${NC}"
+  failed_tests=$((failed_tests + 1))
+  echo -e -n "\tExpected 200 under cap, 413 over cap, server alive. Got under:$under_code over:$over_code alive:$alive_code\n"
+fi
+
+# Custom 413 error page: like 404/500, an oversized body is served the app's
+# own 413.html (or 413.wren) page via custom_error.
+total_tests=$((total_tests + 1))
+echo -e -n "Custom 413 error page       \t"
+over_payload="$(mktemp)"
+if command -v python3 >/dev/null 2>&1; then
+  python3 -c "open('$over_payload', 'w').write('a\n' * 500000)"
+else
+  head -c 500000 /dev/zero | tr '\0' 'a' | sed 's/./&\n/g' > "$over_payload"
+fi
+over_page=$(curl -s --max-time 20 \
+  --data-binary "@$over_payload" "http://$HOST:$PORT/post")
+rm -f "$over_payload"
+if [[ "$over_page" == *"custom-413-page"* ]]; then
+  echo -e "${GREEN}PASS${NC}"
+  passed_tests=$((passed_tests + 1))
+else
+  echo -e "${RED}FAIL${NC}"
+  failed_tests=$((failed_tests + 1))
+  echo -e -n "\tExpected the custom 413 page. Got: '$over_page'\n"
 fi
 
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"

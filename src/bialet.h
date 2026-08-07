@@ -120,6 +120,11 @@ struct BialetConfig {
   /* Max upload size in bytes (default 10MB) */
   size_t max_upload_size;
 
+  /* Max request body size in bytes. Configured with -b (default 128KB) and
+   * clamped at startup to a memory-safe ceiling (soft limit / 512) so worst-
+   * case body parsing (one Wren string per line) stays inside RLIMIT_AS. */
+  size_t max_post_size;
+
   /* SQLite pragma settings */
   int sqlite_foreign_keys; /* Default: 1 (ON) */
   int sqlite_synchronous;  /* 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA; Default: 1 */
@@ -181,8 +186,8 @@ void add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
 void free_bialet_query(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
-  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "              \
-  "[-t file [root_dir]] [-T] [root_dir]\n"
+  "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "            \
+  "[-b post_kb] [-t file [root_dir]] [-T] [root_dir]\n"
 
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
@@ -190,11 +195,11 @@ void free_bialet_query(BialetQuery* query);
   "<!DOCTYPE html><body style=\"font:2.3rem "                                       \
   "system-ui;text-align:center;margin:2em;color:#024\"><h1>"
 #define BIALET_FOOTER_PAGE                                                          \
-  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "             \
+  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "           \
   "href=\"https://bialet.dev\" style=\"color:#007FAD\" >Bialet"
 #define BIALET_WELCOME_PAGE                                                         \
   BIALET_HEADER_PAGE                                                                \
-  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "      \
+  "👋 Welcome to Bialet</h1><p>You're in! What's next?<p>Check out our <b><a "    \
   "href=\"https://bialet.dev/getting-started.html\" "                               \
   "style=\"color:#007FAD\">Getting Started "                                        \
   "guide</a></b>." BIALET_FOOTER_PAGE
@@ -206,14 +211,14 @@ void free_bialet_query(BialetQuery* query);
   "🚨 Internal Server Error</h1><p>Oops! Something broke." BIALET_FOOTER_PAGE
 #define BIALET_FORBIDDEN_PAGE                                                       \
   BIALET_HEADER_PAGE                                                                \
-  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                        \
+  "🚫 Forbidden</h1><p>Sorry, you don't have permission to "                      \
   "access this page." BIALET_FOOTER_PAGE
 #define BIALET_PAYLOAD_TOO_LARGE_PAGE                                               \
   BIALET_HEADER_PAGE                                                                \
   "📦 Payload Too Large</h1><p>The request body is too large." BIALET_FOOTER_PAGE
 #define BIALET_TOO_MANY_REQUESTS_PAGE                                               \
   BIALET_HEADER_PAGE                                                                \
-  "⏳ Too Many Requests</h1><p>Please slow down and try again "                     \
+  "⏳ Too Many Requests</h1><p>Please slow down and try again "                    \
   "later." BIALET_FOOTER_PAGE
 
 #endif

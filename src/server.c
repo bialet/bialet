@@ -560,17 +560,18 @@ void handle_client(bialet_socket_t client_socket) {
   size_t total_read = bytes_read;
   size_t content_length = 0;
 
-// Maximum request size to prevent DoS (10MB by default)
-#define MAX_REQUEST_SIZE (10 * 1024 * 1024)
-
   // Find Content-Length header
   const char* cl_header = stristr(buffer, "Content-Length:");
   if(cl_header && (cl_header < buffer + bytes_read)) {
     char* endptr;
     long  cl_value = strtol(cl_header + 15, &endptr, 10);
-    if(cl_value < 0 || cl_value > MAX_REQUEST_SIZE) {
-      message(red("Request Error"), "Content-Length too large or invalid");
-      socket_close(client_socket);
+    if(cl_value < 0 || (unsigned long)cl_value > bialet_config.max_post_size) {
+      // Reject oversized bodies with a proper HTTP 413 instead of dropping the
+      // connection: reading the body into Wren would blow the memory limit.
+      struct BialetResponse too_large = {0, "", "", 0, 0, 0};
+      custom_error(413, &too_large);
+      write_response(client_socket, &too_large);
+      free_response_owned(&too_large);
       return;
     }
     content_length = (size_t)cl_value;
@@ -588,7 +589,7 @@ void handle_client(bialet_socket_t client_socket) {
       size_t full_size = headers_len + content_length;
 
       // Additional safety check
-      if(full_size > MAX_REQUEST_SIZE) {
+      if(content_length > bialet_config.max_post_size) {
         message(red("Request Error"), "Request size exceeds maximum allowed");
         socket_close(client_socket);
         return;

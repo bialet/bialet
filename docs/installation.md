@@ -178,6 +178,7 @@ CLI:
 | `-M`      | Hard memory limit (MB)                                                    | `100`                                          |
 | `-c`      | CPU limit (%)                                                             | `15`                                           |
 | `-C`      | Hard CPU limit (%)                                                        | `30`                                           |
+| `-b`      | Max request body (KB)                                                     | `128`                                          |
 
 ### Advanced Configuration
 

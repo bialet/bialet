@@ -328,6 +328,13 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
 
 - `-m` / `-M` — soft / hard memory limit in MB
 - `-c` / `-C` — soft / hard CPU limit in percent
+- `-b` — max request body in KB (default 128 KB)
+
+Request bodies are rejected with `413 Payload Too Large` before parsing when
+they exceed the smaller of the `-b` limit and a memory-safe ceiling (`-m` /
+512, about 100 KB at the default 50 MB soft limit). This keeps worst-case body
+parsing (one Wren string per line) inside the enforced `RLIMIT_AS` budget, so
+a crafted body cannot crash the server child or stall it for minutes.
 
 See the resource limits table in [Deployment](deployment.md) for defaults.
 
