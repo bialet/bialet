@@ -88,27 +88,28 @@ static const char* find_bytes(const char* haystack, size_t haystack_len,
 int livereload_inject_response(struct BialetResponse* response) {
   if(!enabled)
     return 0;
-  if(response->body == NULL || response->header == NULL)
+  if(response->header == NULL)
     return 0;
   if(strstr(response->header, "text/html") == NULL)
     return 0;
 
   size_t body_len = response->length;
-  if(body_len == 0) {
+  if(body_len == 0 && response->body != NULL && response->body_owned) {
     // The length field is authoritative for opaque caller buffers (e.g. static
     // files). Only fall back to strlen() for bodies this struct owns, which
     // are always NUL-terminated.
-    if(!response->body_owned)
-      return 0;
     body_len = strlen(response->body);
   }
-  if(body_len == 0)
-    return 0;
 
   size_t script_len = sizeof(kScript) - 1;
 
-  const char* marker = find_bytes(response->body, body_len, "</body>", 7);
-  size_t      insert_at = marker ? (size_t)(marker - response->body) : body_len;
+  size_t      insert_at = body_len;
+  const char* marker = NULL;
+  if(response->body != NULL && body_len > 0) {
+    marker = find_bytes(response->body, body_len, "</body>", 7);
+    if(marker)
+      insert_at = (size_t)(marker - response->body);
+  }
   if(insert_at > body_len)
     return 0;
 
@@ -117,10 +118,12 @@ int livereload_inject_response(struct BialetResponse* response) {
   if(new_body == NULL)
     return 0;
 
-  memcpy(new_body, response->body, insert_at);
+  if(insert_at > 0)
+    memcpy(new_body, response->body, insert_at);
   memcpy(new_body + insert_at, kScript, script_len);
-  memcpy(new_body + insert_at + script_len, response->body + insert_at,
-         body_len - insert_at);
+  if(body_len > insert_at)
+    memcpy(new_body + insert_at + script_len, response->body + insert_at,
+           body_len - insert_at);
   new_body[new_len] = '\0';
 
   // Only free a body this struct owns. Static literals (error pages) and

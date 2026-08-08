@@ -757,8 +757,10 @@ void handle_client(bialet_socket_t client_socket) {
           response.length = strlen(BIALET_WELCOME_PAGE);
           response.header = BIALET_HEADERS;
         }
+        (void)livereload_inject_response(&response);
         clean_http_message(hm);
         write_response(client_socket, &response);
+        free_response_owned(&response);
         if(should_free_request)
           free(full_request);
         return;
