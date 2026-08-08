@@ -806,14 +806,78 @@ Then use utility classes directly:
 </main>
 ```
 
-For production, self-host the compiled CSS. Run Tailwind's CLI or PostCSS build
-against the app directory — the class names in your `.wren` files are standard
-HTML attributes, so any CSS processing tool works.
+The CDN is fine for tinkering, but it renders styles in the browser at runtime
+and adds an external dependency. For production, self-host the compiled CSS
+with the Tailwind CLI.
+
+#### Self-hosting with the Tailwind CLI
+
+This works because Tailwind scans your files as plain text for class names. The
+classes in your `.wren` files are standard HTML attributes, so no special
+configuration is needed to detect them.
+
+**1. Install the CLI.** In your app directory:
+
+```bash
+npm install -D tailwindcss @tailwindcss/cli
+```
+
+**2. Create an input stylesheet.** This is the source file Tailwind reads.
+Put it in a `_`-prefixed directory so Bialet never serves it (see the pitfalls
+below) but Tailwind can still read it from disk. Create `_src/input.css`:
+
+```css
+@import "tailwindcss";
+@source "./**/*.wren";
+```
+
+The `@source` directive tells Tailwind to scan your `.wren` files for classes.
+Adjust the glob to match your app's layout if you keep pages in subdirectories.
+
+**3. Link the compiled output.** Reference the built file in your template's
+`head`. Bialet serves it as a normal static file:
+
+```wren
+head { <head>
+  <title>{{ _title }}</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/style.css" />
+</head> }
+```
+
+#### Development: watch mode
+
+Run Tailwind and Bialet side by side, in two terminals:
+
+```bash
+# Terminal 1 — start Bialet
+bialet .
+
+# Terminal 2 — compile CSS on every change
+npx @tailwindcss/cli -i _src/input.css -o style.css --watch
+```
+
+With [live reload](live-reload.md) enabled, Bialet watches the whole app
+directory. Every time Tailwind writes a new `style.css`, the browser reloads
+automatically — a full Tailwind + Bialet dev loop with no extra tooling.
+
+#### Production: one-shot build
+
+Compile once, minified:
+
+```bash
+npx @tailwindcss/cli -i _src/input.css -o style.css --minify
+```
+
+Commit `style.css` and deploy it alongside your `.wren` files. The server needs
+no Node.js — the compiled file is just a static asset. For caching and gzip on
+the compiled CSS, see [Deployment](deployment.md).
 
 ### Pitfalls
 
 **No CSS preprocessors built in.** Bialet doesn't bundle Sass, Less, or
-PostCSS. Write vanilla CSS, or use a separate build step for preprocessing.
+PostCSS. Write vanilla CSS, or use a separate build step (like Tailwind's CLI)
+for preprocessing.
 
 **`_`-prefixed CSS files are not served.** Files starting with `_` or `.`
 return 403. Name your stylesheets without a leading underscore:
@@ -827,8 +891,33 @@ return 403. Name your stylesheets without a leading underscore:
 <link rel="stylesheet" href="/_style.css" />
 ```
 
-**Framework CDNs add an external dependency.** For production, download the CSS
-file and serve it from your app directory alongside your other static assets.
+This is why the input file lives in `_src/` — Bialet blocks HTTP access to it
+while the CLI still reads it from disk. The output file (`style.css`) must not
+start with `_` or `.`.
+
+**`node_modules` is publicly served.** Everything inside the app root is served
+unless a path component starts with `_` or `.`. After `npm install`, the
+`node_modules/` directory is reachable over HTTP. Block it at your reverse
+proxy in production (see [Deployment](deployment.md)), or run the npm project
+outside the app root and point the CLI at it.
+
+**Dynamic class names are not compiled.** Tailwind scans your source as plain
+text, so it cannot see classes assembled at runtime. This compiles fine:
+
+```wren
+class="text-red-600"   // ✓
+```
+
+This does not — Tailwind never sees the full class name:
+
+```wren
+class="text-{{ error ? "red" : "green" }}-600"   // ✗
+```
+
+Use complete class names in your `.wren` files.
+
+**Framework CDNs add an external dependency.** For production, compile and serve
+the CSS from your app directory instead of loading it from a CDN.
 
 ---
 

@@ -13,7 +13,7 @@ improvements.
 ## Near Term
 
 - [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
-- [ ] **Document Tailwind CLI integration** — Step-by-step guide for
+- [x] **Document Tailwind CLI integration** — Step-by-step guide for
       self-hosting Tailwind with `tailwindcss --watch` against Bialet app
       directory (dev + production workflows)
 - [ ] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
