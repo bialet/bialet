@@ -5,6 +5,9 @@ build-cross/
 # Bialet generated files
 **/_db.sqlite3*
 
+# TLS keys and certificates (never commit private keys)
+**_keys/**
+
 # Docs files
 .venv/
 docs/_static/ai-prompt.js

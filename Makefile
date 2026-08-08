@@ -26,7 +26,7 @@ ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
 endif
 
 ifeq (,$(findstring Darwin,$(OS)))
-HAVE_SSL := $(shell echo "#include <openssl/ssl.h>" | $(CC) -E - 2>/dev/null && echo 1 || echo 0)
+HAVE_SSL := $(shell echo "#include <openssl/ssl.h>" | $(CC) -E - >/dev/null 2>&1 && echo 1 || echo 0)
 ifeq ($(HAVE_SSL),1)
 	CFLAGS += -DHAVE_SSL
 	LDFLAGS += -lssl -lcrypto
@@ -101,7 +101,7 @@ CURL_BFLAGS := -Wl,-Bstatic -Wl,-Bdynamic
 CURL_DEPS := $(filter-out -lcurl -llber -lldap $(CURL_BFLAGS),$(CURL_STATIC_LIBS))
 static: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 \
-		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS) \
+		-Wl,-Bstatic -lsqlite3 -lcurl -lssl -lcrypto -Wl,-Bdynamic $(CURL_DEPS) \
 		-Wl,-Bstatic -llber -lldap -llber -Wl,-Bdynamic -lgnutls -lsasl2 \
 		-lm -lpthread -ldl
 else

@@ -6,10 +6,10 @@ environment with a reverse proxy, systemd, and Docker.
 
 ## Why a Reverse Proxy?
 
-Bialet speaks **HTTP/1.0** and does not support HTTPS natively. Running it
-behind a reverse proxy (nginx, Apache, or Caddy) gives you:
+Bialet speaks **HTTP/1.0**. It supports HTTPS natively with the `-s` flag (see
+[TLS](tls.md)), so you can terminate TLS in Bialet itself. Running it behind
+a reverse proxy (nginx, Apache, or Caddy) still buys you:
 
-- **TLS termination** — HTTPS for your users
 - **HTTP/1.1 or HTTP/2** between the client and the proxy
 - **Static file caching and gzip** — the proxy can compress and cache assets
 - **Security** — Bialet only needs to listen on `127.0.0.1`, not the public
@@ -385,6 +385,42 @@ sudo systemctl enable bialet.service example.com.service
 sudo systemctl start bialet.service example.com.service
 ```
 
+### Native HTTPS Without a Proxy
+
+For basic deployments you can skip the proxy entirely and let Bialet terminate
+TLS (see [TLS](tls.md)). Put the certificate and key in the app's `_keys/`
+folder and add `-s`:
+
+**`/etc/systemd/system/example.com.service`**
+
+```ini
+[Unit]
+Description=example.com in Bialet
+PartOf=bialet.service
+After=bialet.service
+
+[Service]
+User=www-data
+WorkingDirectory=/www/example.com
+ExecStart=bialet -s -p 443 -h 0.0.0.0 -m 1024 -M 2048 \
+  -l /var/log/bialet/example.com.log -d /www/example.com.sqlite /www/example.com
+Restart=on-failure
+
+[Install]
+WantedBy=bialet.service
+```
+
+Make sure the private key is readable by the service user:
+
+```bash
+sudo chown -R www-data:www-data /www/example.com/_keys
+sudo chmod 600 /www/example.com/_keys/key.pem
+```
+
+Renew certificates in a cron job and restart the service so the new files are
+loaded. If you need HTTP/2, gzip, or automatic certificate renewal, keep the
+reverse proxy instead.
+
 ### Multiple Apps on One Server
 
 Run each app on a different port and proxy by hostname:
@@ -544,9 +580,10 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -l /var/log/bialet/app.log /www/my
 
 1. **Copy the binary** — `scp bialet user@host:/usr/local/bin/`
 2. **Copy your app** — `scp -r *.wren static/ user@host:/www/myapp/`
-3. **Set up the reverse proxy** — nginx, Apache, or Caddy (see above),
+3. **Add TLS** — put `_keys/cert.pem` + `_keys/key.pem` in your app folder and
+   run with `-s` (see [TLS](tls.md)), or set up a reverse proxy
+4. **Set up the reverse proxy** — nginx, Apache, or Caddy (see above),
    including the body-size cap, read timeout, and private-file deny from the
-   hardening section
-4. **Create the systemd unit** — so it starts on boot and restarts on crash
-5. **Point your DNS** — A/AAAA record to your server's IP
-6. **Add TLS** — Let's Encrypt via certbot (nginx/Apache) or Caddy's auto-TLS
+   hardening section — unless Bialet is doing TLS directly
+5. **Create the systemd unit** — so it starts on boot and restarts on crash
+6. **Point your DNS** — A/AAAA record to your server's IP

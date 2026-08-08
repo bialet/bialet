@@ -168,13 +168,16 @@ make wren_files && make
 ### Command-line options
 
 ```
-Usage: bialet [-h host] [-p port] [-l log] [-d database] [-t file] [-T] root_dir
+Usage: bialet [-h host] [-p port] [-s [-e cert] [-k key]] [-l log] [-d database] [-t file] [-T] root_dir
 ```
 
 | Option        | Description                                    |
 | ------------- | ---------------------------------------------- |
 | `-h host`     | Host to bind (default `127.0.0.1`)             |
 | `-p port`     | Port to listen on                              |
+| `-s`          | Enable HTTPS with a certificate in `_keys/`    |
+| `-e cert`     | TLS certificate file (default `_keys/cert.pem`)|
+| `-k key`      | TLS private key file (default `_keys/key.pem`) |
 | `-l log`      | Write logs to a file (disables colored output) |
 | `-d database` | SQLite database file (default `_db.sqlite3`)   |
 | `-w`          | Enable SQLite WAL mode                         |

@@ -185,7 +185,8 @@ static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
 
 char* server_url(int port) {
   static char url[MAX_URL];
-  snprintf(url, MAX_URL, "http://%s:%d", bialet_config.host, port);
+  snprintf(url, MAX_URL, "%s://%s:%d", bialet_config.tls_enabled ? "https" : "http",
+           bialet_config.host, port);
   return url;
 }
 
@@ -265,6 +266,9 @@ int main(int argc, char* argv[]) {
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
+  bialet_config.tls_enabled = 0;
+  bialet_config.tls_cert = NULL;
+  bialet_config.tls_key = NULL;
 
   /* Parse args */
 
@@ -280,10 +284,19 @@ int main(int argc, char* argv[]) {
   }
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvwse:k:")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
+        break;
+      case 's':
+        bialet_config.tls_enabled = 1;
+        break;
+      case 'e':
+        bialet_config.tls_cert = optarg;
+        break;
+      case 'k':
+        bialet_config.tls_key = optarg;
         break;
       case 'b': {
         char* endptr;
@@ -448,6 +461,32 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   bialet_config.full_root_dir = resolved_root;
+
+  // When TLS is enabled without explicit -e/-k, look for the certificate and
+  // key in the app's _keys/ folder (both are forbidden from HTTP serving, so
+  // they stay private).
+  if(bialet_config.tls_enabled) {
+    const char* base = bialet_config.full_root_dir ? bialet_config.full_root_dir
+                                                   : bialet_config.root_dir;
+    if(bialet_config.tls_cert == NULL) {
+      size_t needed = strlen(base) + strlen("/_keys/cert.pem") + 1;
+      bialet_config.tls_cert = malloc(needed);
+      if(bialet_config.tls_cert == NULL) {
+        fprintf(stderr, "Error: out of memory resolving TLS certificate path\n");
+        exit(EXIT_FAILURE);
+      }
+      snprintf(bialet_config.tls_cert, needed, "%s/_keys/cert.pem", base);
+    }
+    if(bialet_config.tls_key == NULL) {
+      size_t needed = strlen(base) + strlen("/_keys/key.pem") + 1;
+      bialet_config.tls_key = malloc(needed);
+      if(bialet_config.tls_key == NULL) {
+        fprintf(stderr, "Error: out of memory resolving TLS key path\n");
+        exit(EXIT_FAILURE);
+      }
+      snprintf(bialet_config.tls_key, needed, "%s/_keys/key.pem", base);
+    }
+  }
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);

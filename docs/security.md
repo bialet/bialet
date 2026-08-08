@@ -231,15 +231,16 @@ implemented at the app or proxy layer.
 
 ### TLS
 
-Bialet speaks **HTTP/1.0** and has no native HTTPS. Run it behind a reverse
-proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
-setup, and it also lets you bind Bialet to `127.0.0.1` so only the proxy
-talks to it. See [Deployment](deployment.md) for configs.
+Bialet supports native HTTPS with the `-s` flag — put `cert.pem` and
+`key.pem` in the app's `_keys/` folder and Bialet terminates TLS itself (see
+[TLS](tls.md)). You can also run it behind a reverse proxy (nginx, Apache, or
+Caddy), which additionally lets you bind Bialet to `127.0.0.1` so only the
+proxy talks to it. See [Deployment](deployment.md) for configs.
 
-When requests arrive through a proxy, Bialet detects HTTPS from the
-`X-Forwarded-Proto` / `Forwarded` headers. That is how the `Secure` cookie
-attribute is decided. Only set those headers from a proxy you trust — never
-forward user-supplied ones unchanged.
+When requests arrive over HTTPS — natively or through a proxy — Bialet detects
+it and sets the `Secure` cookie attribute. Behind a proxy it uses the
+`X-Forwarded-Proto` / `Forwarded` headers. Only set those headers from a proxy
+you trust — never forward user-supplied ones unchanged.
 
 ### Reverse Proxy Hardening
 

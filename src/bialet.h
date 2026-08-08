@@ -131,6 +131,13 @@ struct BialetConfig {
 
   /* Set to true when running tests with -T flag */
   int enable_tests;
+
+  /* Native TLS (HTTPS). Disabled by default. When enabled with -s, the cert
+   * and key default to <root_dir>/_keys/cert.pem and <root_dir>/_keys/key.pem
+   * and can be overridden with -e/-k. */
+  int   tls_enabled;
+  char* tls_cert;
+  char* tls_key;
 };
 
 struct BialetResponse {
@@ -187,7 +194,11 @@ void free_bialet_query(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
   "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "            \
-  "[-b post_kb] [-t file [root_dir]] [-T] [dev] [root_dir]\n"                       \
+  "[-b post_kb] [-s [-e cert] [-k key]] [-t file [root_dir]] [-T] "                 \
+  "[dev] [root_dir]\n"                                                              \
+  "  -s       enable HTTPS with a certificate in _keys/ (cert.pem + key.pem)\n"     \
+  "  -e cert  TLS certificate file (default <root>/_keys/cert.pem)\n"               \
+  "  -k key   TLS private key file (default <root>/_keys/key.pem)\n"                \
   "  dev      start from the current directory with live reload and "               \
   "error display enabled, and open the browser\n"
 

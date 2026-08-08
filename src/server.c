@@ -15,6 +15,7 @@
 #include "favicon.h"
 #include "livereload.h"
 #include "messages.h"
+#include "tls.h"
 
 #if IS_WIN
 #include <ws2tcpip.h>
@@ -70,6 +71,13 @@ typedef int bialet_socket_t;
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
 
+// Native TLS state. tls_ctx is the shared server context created in
+// start_server(); tls_current is the SSL object for the connection being
+// handled (set after accept/handshake, cleared when the connection closes).
+// The server is single-threaded, so a single slot is safe.
+static void* tls_ctx = NULL;
+static void* tls_current = NULL;
+
 // Portable case-insensitive string search
 static const char* stristr(const char* haystack, const char* needle) {
   if(!*needle)
@@ -111,7 +119,11 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
   while(sent < count) {
-    ssize_t n = send(fd, p + sent, count - sent, 0);
+    ssize_t n;
+    if(tls_current != NULL)
+      n = tls_write(tls_current, p + sent, count - sent);
+    else
+      n = send(fd, p + sent, count - sent, 0);
     if(n < 0)
       return n; // error (including SO_SNDTIMEO expiry)
     if(n == 0)
@@ -177,6 +189,33 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 #endif
 }
 
+// Reads from the current connection, decrypting first when TLS is active.
+static ssize_t recv_data(bialet_socket_t fd, void* buf, size_t count) {
+  if(tls_current != NULL)
+    return tls_read(tls_current, buf, count);
+  return recv(fd, buf, count, 0);
+}
+
+// Returns 1 when more request bytes are available within timeout_ms. TLS is
+// checked first because a decrypted record can hold plaintext that the kernel
+// socket will not report as readable (poll would block on it).
+static int data_available(bialet_socket_t fd, int timeout_ms) {
+  if(tls_current != NULL && tls_pending(tls_current))
+    return 1;
+  return wait_readable(fd, timeout_ms);
+}
+
+// Sends close_notify, frees the per-connection SSL object, then closes the
+// socket. Safe to call when no TLS is active.
+static void close_client(bialet_socket_t fd) {
+  if(tls_current != NULL) {
+    tls_shutdown(tls_current);
+    tls_free(tls_current);
+    tls_current = NULL;
+  }
+  socket_close(fd);
+}
+
 void handle_client(bialet_socket_t client_socket);
 
 int start_server(struct BialetConfig* config) {
@@ -188,6 +227,14 @@ int start_server(struct BialetConfig* config) {
   }
 #endif
   bialet_config = *config;
+  if(bialet_config.tls_enabled) {
+    tls_ctx = tls_context_create(bialet_config.tls_cert, bialet_config.tls_key);
+    if(tls_ctx == NULL) {
+      fprintf(stderr, "Error: cannot initialize HTTPS. Put a certificate and key in "
+                      "_keys/cert.pem and _keys/key.pem, or pass -e and -k.\n");
+      exit(EXIT_FAILURE);
+    }
+  }
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(server_fd == BIALET_INVALID_SOCKET) {
     perror("Failed to create socket");
@@ -245,6 +292,8 @@ void stop_server() {
   if(server_fd != BIALET_INVALID_SOCKET) {
     socket_close(server_fd);
     server_fd = BIALET_INVALID_SOCKET;
+    tls_context_free(tls_ctx);
+    tls_ctx = NULL;
     message(magenta("Server stopped"));
   }
 }
@@ -413,6 +462,32 @@ struct HttpMessage* parse_request(char* request, ssize_t length) {
   return hm;
 }
 
+// Over TLS, advertise the secure connection to the app the same way a trusted
+// reverse proxy would (X-Forwarded-Proto), so Util.isHttpsRequest() sets the
+// Secure cookie attribute on native HTTPS too. The header is injected after
+// the request line, which Request.init() parses first.
+static struct HttpMessage* parse_request_secure(const char* request,
+                                                ssize_t     length) {
+  const char* line_end = strstr(request, "\r\n");
+  if(line_end == NULL)
+    return parse_request((char*)request, length);
+  size_t      head_len = (size_t)(line_end - request) + 2;
+  const char* prefix = "X-Forwarded-Proto: https\r\n";
+  size_t      prefix_len = strlen(prefix);
+  size_t      total = head_len + prefix_len + (size_t)length + 1;
+  char*       secure = malloc(total);
+  if(secure == NULL)
+    return parse_request((char*)request, length);
+  memcpy(secure, request, head_len);
+  memcpy(secure + head_len, prefix, prefix_len);
+  memcpy(secure + head_len + prefix_len, request + head_len,
+         (size_t)length - head_len);
+  secure[total - 1] = '\0';
+  struct HttpMessage* hm = parse_request(secure, (ssize_t)(total - 1));
+  free(secure);
+  return hm;
+}
+
 void write_response(int client_socket, struct BialetResponse* response) {
   if(!response->status) {
     custom_error(404, response);
@@ -454,7 +529,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
     (void)send_all(client_socket, response->body, body_len);
   }
 
-  socket_close(client_socket);
+  close_client(client_socket);
 }
 
 // Frees the heap-allocated body/header of a response when the ownership flags
@@ -547,10 +622,10 @@ static int resolve_within_root(const char* path, char* resolved) {
 
 void handle_client(bialet_socket_t client_socket) {
   char    buffer[BUFFER_SIZE];
-  ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+  ssize_t bytes_read = recv_data(client_socket, buffer, sizeof(buffer) - 1);
   if(bytes_read <= 0) {
     perror("Error reading request");
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   buffer[bytes_read] = '\0';
@@ -591,14 +666,14 @@ void handle_client(bialet_socket_t client_socket) {
       // Additional safety check
       if(content_length > bialet_config.max_post_size) {
         message(red("Request Error"), "Request size exceeds maximum allowed");
-        socket_close(client_socket);
+        close_client(client_socket);
         return;
       }
 
       full_request = (char*)malloc(full_size + 1);
       if(!full_request) {
         perror("Failed to allocate memory for large request");
-        socket_close(client_socket);
+        close_client(client_socket);
         return;
       }
 
@@ -613,10 +688,10 @@ void handle_client(bialet_socket_t client_socket) {
         long long remaining = deadline - monotonic_ms();
         if(remaining <= 0)
           break;
-        if(!wait_readable(client_socket, (int)remaining))
+        if(!data_available(client_socket, (int)remaining))
           break;
-        ssize_t n = recv(client_socket, full_request + total_read,
-                         full_size - total_read, 0);
+        ssize_t n = recv_data(client_socket, full_request + total_read,
+                              full_size - total_read);
         if(n <= 0)
           break;
         total_read += n;
@@ -626,14 +701,16 @@ void handle_client(bialet_socket_t client_socket) {
       // expired): reject the request instead of processing a truncated one.
       if(total_read < full_size) {
         free(full_request);
-        socket_close(client_socket);
+        close_client(client_socket);
         return;
       }
       full_request[total_read] = '\0';
     }
   }
 
-  struct HttpMessage* hm = parse_request(full_request, total_read);
+  struct HttpMessage* hm =
+      (tls_current != NULL) ? parse_request_secure(full_request, (ssize_t)total_read)
+                            : parse_request(full_request, (ssize_t)total_read);
   if(!livereload_is_poll(hm->uri.str))
     message(magenta("Request"), hm->method.str, hm->uri.str);
 
@@ -646,7 +723,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
 
@@ -735,7 +812,7 @@ void handle_client(bialet_socket_t client_socket) {
       clean_http_message(hm);
       if(should_free_request)
         free(full_request);
-      socket_close(client_socket);
+      close_client(client_socket);
       return;
     }
     while(1) {
@@ -814,7 +891,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   if(fseek(file, 0, SEEK_END) != 0) {
@@ -823,7 +900,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   long file_size_l = ftell(file);
@@ -833,7 +910,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   size_t file_size = (size_t)file_size_l;
@@ -852,7 +929,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   size_t read_bytes = fread(file_content, 1, file_size, file);
@@ -863,7 +940,7 @@ void handle_client(bialet_socket_t client_socket) {
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
+    close_client(client_socket);
     return;
   }
   fclose(file);
@@ -936,7 +1013,22 @@ int server_poll(int delay) {
     return -1;
   }
   set_socket_timeout(client_socket);
+  if(tls_ctx != NULL) {
+    void* ssl = tls_accept(tls_ctx, client_socket);
+    if(ssl == NULL) {
+      fprintf(stderr, "TLS handshake failed\n");
+      socket_close(client_socket);
+      return 0;
+    }
+    tls_current = ssl;
+  }
   handle_client(client_socket);
+  if(tls_current != NULL) {
+    // handle_client is expected to have closed the connection already; free a
+    // leaked SSL object so a stale pointer is not reused for the next client.
+    tls_free(tls_current);
+    tls_current = NULL;
+  }
 
   return 0;
 }

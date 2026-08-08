@@ -13,6 +13,7 @@ PORT="${3:-7001}"
 ECHO_PORT="${4:-7100}"
 SHOW_ERRORS_PORT="${5:-7101}"
 DEV_PORT="${6:-7102}"
+TLS_PORT="${7:-7103}"
 
 source "$(dirname "$0")/util.sh"
 
@@ -45,6 +46,7 @@ run_test "Forbid hidden file          " "_hidden"         403
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
+run_test "HTTPS flag off over HTTP    " "https"           200 "false"
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 run_test "Response headers            " "headers"         200 "headers-set"
@@ -248,6 +250,38 @@ fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
   pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+fi
+
+# Tests - HTTPS / TLS
+# A second instance serves the same app directory over TLS with a throwaway
+# self-signed certificate. Plain HTTP on the TLS port must fail.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v openssl >/dev/null 2>&1; then
+  total_tests=$((total_tests + 1))
+  echo -e -n "HTTPS over native TLS        \t"
+  tls_dir="$(mktemp -d)"
+  openssl req -x509 -newkey rsa:2048 -keyout "$tls_dir/key.pem" \
+    -out "$tls_dir/cert.pem" -days 1 -nodes -subj "/CN=localhost" >/dev/null 2>&1
+  "$TARGET_EXEC" -h "$HOST" -p "$TLS_PORT" -s -e "$tls_dir/cert.pem" \
+    -k "$tls_dir/key.pem" -d "$tls_dir/db.sqlite3" -l /tmp/tests-tls.log \
+    "$(dirname "$0")" > /dev/null 2>&1 &
+  disown
+  sleep 2
+  tls_code=$(curl -sk -o /dev/null -w "%{http_code}" "https://$HOST:$TLS_PORT/get?foo=bar")
+  tls_body=$(curl -sk "https://$HOST:$TLS_PORT/get?foo=bar")
+  tls_https_flag=$(curl -sk "https://$HOST:$TLS_PORT/https")
+  plain_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+    "http://$HOST:$TLS_PORT/get" 2>/dev/null)
+  pgrep -f "$TARGET_EXEC -h $HOST -p $TLS_PORT -s" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$tls_dir"
+  if [[ "$tls_code" == "200" && "$tls_body" == *"bar"* \
+        && "$tls_https_flag" == "true" && "$plain_code" != "200" ]]; then
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+  else
+    echo -e "${RED}FAIL${NC}"
+    failed_tests=$((failed_tests + 1))
+    echo -e -n "\tExpected 200 over https + 'bar', isHttps 'true', no plain HTTP. Got https:$tls_code body:'$tls_body' isHttps:'$tls_https_flag' http:$plain_code\n"
+  fi
 fi
 
 # Tests - bialet dev

@@ -35,8 +35,8 @@ improvements.
       autocomplete, go-to-definition, and diagnostics for VS Code
 - [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
-- [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
-      proxy needed for basic deployments)
+- [x] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
+      proxy needed for basic deployments; see `docs/tls.md`)
 
 ## Security Hardening Backlog
 

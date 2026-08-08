@@ -157,9 +157,10 @@ See [Advanced Routing](advanced-routing.md).
 
 ### Does Bialet support HTTPS?
 
-Bialet itself serves HTTP. For HTTPS in production, put a reverse proxy
-like nginx or Caddy in front of it. For local development, HTTP on
-`localhost` is fine.
+Yes. Run `bialet -s` with a certificate and key in the app's `_keys/` folder
+(`cert.pem` and `key.pem`). HTTPS is optional — the default is plain HTTP.
+For higher traffic you can also put a reverse proxy like nginx or Caddy in
+front of it. See the [TLS](tls.md) guide.
 
 ### How do I deploy a Bialet app?
 
