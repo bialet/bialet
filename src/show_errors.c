@@ -164,8 +164,12 @@ char* show_errors_page(void) {
                      "<h1>Bialet Error</h1><pre style=\"white-space:pre-wrap\">";
   const char* tail =
       "</pre><hr><p style=\"font-size:.85em\">Enable with "
-      "<code>Config.enable(\"BIALET_SHOW_ERRORS\")</code>. Disable it before "
-      "deploying — this page exposes error details to visitors.</p></body></html>";
+      "<code>Config.enable(\"BIALET_SHOW_ERRORS\")</code>. This is only a local "
+      "config — disable it if this is production: "
+      "<a "
+      "href=\"https://bialet.dev/errors.html\">https://bialet.dev/errors.html</a></"
+      "p>"
+      "</body></html>";
 
   size_t head_len = strlen(head);
   size_t esc_len = strlen(escaped);
