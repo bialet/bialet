@@ -45,6 +45,11 @@ if (Config.bool("live_reload")) {
 }
 ```
 
+Bialet reads a few flags itself at startup. `BIALET_LIVE_RELOAD` enables the
+live-reload script (see [Live Reload](live-reload.md)), and
+`BIALET_SHOW_ERRORS` shows compile/runtime errors in the browser instead of the
+generic 500 page (see [Error Pages](errors.md)).
+
 `enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
 equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.
 

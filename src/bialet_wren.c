@@ -14,6 +14,7 @@
 #include "http_call.h"
 #include "messages.h"
 #include "server.h"
+#include "show_errors.h"
 #include "utils.h"
 #include "wren.h"
 #include <ctype.h>
@@ -373,12 +374,15 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
   switch(errorType) {
     case WREN_ERROR_COMPILE: {
       message(red("Compilation Error"), lineMessage, (char*)msg);
+      show_errors_capture("Compilation Error", module, line, msg);
     } break;
     case WREN_ERROR_STACK_TRACE: {
       message(red("Stack Error"), lineMessage, (char*)msg);
+      show_errors_capture("Stack Error", module, line, msg);
     } break;
     case WREN_ERROR_RUNTIME: {
       message(red("Runtime Error"), (char*)msg);
+      show_errors_capture("Runtime Error", module, line, msg);
     } break;
   }
 }
@@ -706,11 +710,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt;
-    int result = sqlite3_prepare_v2(db,
-                                    "INSERT INTO BIALET_FILES (name, "
-                                    "originalFileName, type, file, size, isTemp) "
-                                    "VALUES (?, ?, ?, ?, ?, 1)",
-                                    -1, &stmt, 0);
+    int           result = sqlite3_prepare_v2(db,
+                                              "INSERT INTO BIALET_FILES (name, "
+                                                        "originalFileName, type, file, size, isTemp) "
+                                                        "VALUES (?, ?, ?, ?, ?, 1)",
+                                              -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -759,6 +763,8 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
   r.header_owned = 0;
   int     error = 0;
   WrenVM* vm = 0;
+
+  show_errors_clear();
 
   vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, module);
@@ -885,7 +891,21 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
   wrenFreeVM(vm);
 
   if(error) {
-    custom_error(HTTP_ERROR, &r);
+    if(hm != NULL && show_errors_enabled()) {
+      char* page = show_errors_page();
+      if(page != NULL) {
+        r.status = HTTP_ERROR;
+        r.body = page;
+        r.body_owned = 1;
+        r.length = strlen(page);
+        r.header = BIALET_HEADERS;
+        r.header_owned = 0;
+      } else {
+        custom_error(HTTP_ERROR, &r);
+      }
+    } else {
+      custom_error(HTTP_ERROR, &r);
+    }
   }
 
   if(!hm) {

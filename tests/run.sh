@@ -11,6 +11,7 @@ TARGET_EXEC="${1:-./build/bialet}"
 HOST="${2:-127.0.0.1}"
 PORT="${3:-7001}"
 ECHO_PORT="${4:-7100}"
+SHOW_ERRORS_PORT="${5:-7101}"
 
 source "$(dirname "$0")/util.sh"
 
@@ -215,6 +216,34 @@ run_test "Random sample               " "randomsample"    200 "true,true,true"
 
 # Tests - CORS
 run_test "CORS enabled                " "cors"            200 "cors"
+
+# Tests - BIALET_SHOW_ERRORS
+# With the flag enabled, a compile error must serve the error text instead of
+# the generic 500 page. Uses a dedicated app dir + server instance (own DB, own
+# migration that enables the flag) so it doesn't disturb the main test app.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  total_tests=$((total_tests + 1))
+  echo -e -n "Show errors on compile error\t"
+  show_root="$(dirname "$0")/show-errors"
+  "$TARGET_EXEC" -h "$HOST" -p "$SHOW_ERRORS_PORT" -l /tmp/tests-show-errors.log \
+    "$show_root" > /dev/null 2>&1 &
+  disown
+  sleep 2
+  show_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$SHOW_ERRORS_PORT/broken")
+  show_body=$(curl -s "http://$HOST:$SHOW_ERRORS_PORT/broken")
+  pgrep -f "$TARGET_EXEC -h $HOST -p $SHOW_ERRORS_PORT -l /tmp/tests-show-errors.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  if [[ "$show_code" == "500" && "$show_body" == *"Compilation Error"* \
+        && "$show_body" != *"Oops! Something broke"* ]]; then
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+  else
+    echo -e "${RED}FAIL${NC}"
+    failed_tests=$((failed_tests + 1))
+    echo -e -n "\tExpected 500 with 'Compilation Error', no generic 500 page. Got code:$show_code body:'$show_body'\n"
+  fi
+fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
   pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null

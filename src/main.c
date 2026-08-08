@@ -13,6 +13,7 @@
 #include "livereload.h"
 #include "messages.h"
 #include "server.h"
+#include "show_errors.h"
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -440,6 +441,7 @@ int main(int argc, char* argv[]) {
   welcome(port);
   trigger_reload_files(NULL);
   livereload_init();
+  show_errors_init();
 
 #if IS_LINUX
   int       status;
