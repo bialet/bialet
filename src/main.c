@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -439,6 +440,11 @@ int main(int argc, char* argv[]) {
       fprintf(stderr, "  Starts from the current directory with live reload, "
                       "error display, and your browser.\n");
     }
+    exit(EXIT_FAILURE);
+  }
+  struct stat root_stat;
+  if(stat(resolved_root, &root_stat) != 0 || !S_ISDIR(root_stat.st_mode)) {
+    fprintf(stderr, "Error: not a directory: %s\n", bialet_config.root_dir);
     exit(EXIT_FAILURE);
   }
   bialet_config.full_root_dir = resolved_root;
