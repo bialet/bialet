@@ -254,7 +254,7 @@ fi
 
 # Tests - HTTPS / TLS
 # A second instance serves the same app directory over TLS with a throwaway
-# self-signed certificate. Plain HTTP on the TLS port must fail.
+# self-signed certificate. Plain HTTP on the TLS port must redirect to https.
 if [[ "$TARGET_EXEC" != "-" ]] && command -v openssl >/dev/null 2>&1; then
   total_tests=$((total_tests + 1))
   echo -e -n "HTTPS over native TLS        \t"
@@ -270,17 +270,21 @@ if [[ "$TARGET_EXEC" != "-" ]] && command -v openssl >/dev/null 2>&1; then
   tls_body=$(curl -sk "https://$HOST:$TLS_PORT/get?foo=bar")
   tls_https_flag=$(curl -sk "https://$HOST:$TLS_PORT/https")
   plain_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
-    "http://$HOST:$TLS_PORT/get" 2>/dev/null)
+    "http://$HOST:$TLS_PORT/get?foo=bar" 2>/dev/null)
+  plain_location=$(curl -s -D - -o /dev/null --max-time 3 \
+    "http://$HOST:$TLS_PORT/get?foo=bar" 2>/dev/null | tr -d '\r' \
+    | grep -i "^location:" | head -1)
   pgrep -f "$TARGET_EXEC -h $HOST -p $TLS_PORT -s" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -rf "$tls_dir"
   if [[ "$tls_code" == "200" && "$tls_body" == *"bar"* \
-        && "$tls_https_flag" == "true" && "$plain_code" != "200" ]]; then
+        && "$tls_https_flag" == "true" \
+        && "$plain_code" == "301" && "$plain_location" == *"https://"* ]]; then
     echo -e "${GREEN}PASS${NC}"
     passed_tests=$((passed_tests + 1))
   else
     echo -e "${RED}FAIL${NC}"
     failed_tests=$((failed_tests + 1))
-    echo -e -n "\tExpected 200 over https + 'bar', isHttps 'true', no plain HTTP. Got https:$tls_code body:'$tls_body' isHttps:'$tls_https_flag' http:$plain_code\n"
+    echo -e -n "\tExpected 200 over https + 'bar', isHttps 'true', 301 + https Location over http. Got https:$tls_code body:'$tls_body' isHttps:'$tls_https_flag' http:$plain_code loc:'$plain_location'\n"
   fi
 fi
 

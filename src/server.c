@@ -78,6 +78,11 @@ static struct BialetConfig bialet_config;
 static void* tls_ctx = NULL;
 static void* tls_current = NULL;
 
+// Port actually bound (start_server resolves the final port, since -p 0 / a
+// busy default falls back to a retry range). Used for the plain-HTTP-to-HTTPS
+// redirect when the client did not send a Host header.
+static int bound_port = 0;
+
 // Portable case-insensitive string search
 static const char* stristr(const char* haystack, const char* needle) {
   if(!*needle)
@@ -216,6 +221,88 @@ static void close_client(bialet_socket_t fd) {
   socket_close(fd);
 }
 
+// A TLS ClientHello always begins with a handshake record byte (0x16), never
+// with an ASCII method name. Requests that start with a method are plaintext
+// HTTP sent to the HTTPS port: a leftover browser tab, a health check, or a
+// hand-typed http:// URL.
+static int is_plain_http_request(const char* buf, size_t len) {
+  static const char* methods[] = {"GET ",   "POST ",   "HEAD ",
+                                  "PUT ",   "DELETE ", "OPTIONS ",
+                                  "PATCH ", "TRACE ",  "CONNECT "};
+  for(size_t i = 0; i < sizeof(methods) / sizeof(methods[0]); i++) {
+    size_t mlen = strlen(methods[i]);
+    if(len >= mlen && memcmp(buf, methods[i], mlen) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+// Answers a plaintext HTTP request on the HTTPS port with a 301 to the same
+// URL over https, so mis-directed clients self-heal instead of failing the
+// TLS handshake. Uses the client's Host header when present, else the bound
+// host:port.
+static void redirect_to_https(bialet_socket_t fd) {
+  char    peek[1024];
+  ssize_t n = recv(fd, peek, sizeof(peek) - 1, MSG_PEEK);
+  if(n <= 0) {
+    socket_close(fd);
+    return;
+  }
+  peek[n] = '\0';
+
+  // Request target from the first line: everything between the first and
+  // second space (or the rest of the line).
+  char        path[512] = "/";
+  const char* first_space = strchr(peek, ' ');
+  if(first_space != NULL) {
+    const char* second_space = strchr(first_space + 1, ' ');
+    size_t path_len = second_space != NULL ? (size_t)(second_space - first_space - 1)
+                                           : strlen(first_space + 1);
+    if(path_len > 0 && path_len < sizeof(path)) {
+      memcpy(path, first_space + 1, path_len);
+      path[path_len] = '\0';
+    }
+  }
+
+  char        host[256];
+  const char* host_line = stristr(peek, "Host:");
+  if(host_line != NULL && host_line < peek + n) {
+    size_t      host_len = 0;
+    const char* hv = host_line + 5;
+    while(*hv == ' ' || *hv == '\t')
+      hv++;
+    const char* host_end = strstr(hv, "\r\n");
+    if(host_end != NULL)
+      host_len = (size_t)(host_end - hv);
+    while(host_len > 0 && (hv[host_len - 1] == ' ' || hv[host_len - 1] == '\t' ||
+                           hv[host_len - 1] == '\r'))
+      host_len--;
+    if(host_len > 0 && host_len < sizeof(host)) {
+      memcpy(host, hv, host_len);
+      host[host_len] = '\0';
+    } else {
+      snprintf(host, sizeof(host), "%s:%d", bialet_config.host, bound_port);
+    }
+  } else {
+    snprintf(host, sizeof(host), "%s:%d", bialet_config.host, bound_port);
+  }
+
+  char location[1024];
+  snprintf(location, sizeof(location), "https://%s%s", host, path);
+
+  char response[2048];
+  int  rlen = snprintf(response, sizeof(response),
+                       "HTTP/1.1 301 Moved Permanently\r\n"
+                        "Location: %s\r\n"
+                        "Content-Length: 0\r\n"
+                        "Connection: close\r\n"
+                        "\r\n",
+                       location);
+  if(rlen > 0)
+    (void)send_all(fd, response, (size_t)rlen);
+  socket_close(fd);
+}
+
 void handle_client(bialet_socket_t client_socket);
 
 int start_server(struct BialetConfig* config) {
@@ -267,6 +354,7 @@ int start_server(struct BialetConfig* config) {
     if(listen(server_fd, 10) == -1) {
       continue;
     }
+    bound_port = port;
     return port;
   }
   if(max_retries == 1) {
@@ -1014,6 +1102,19 @@ int server_poll(int delay) {
   }
   set_socket_timeout(client_socket);
   if(tls_ctx != NULL) {
+    // Peek before the handshake: a plaintext HTTP request (old http:// tab,
+    // health check) must be redirected to https instead of tripping a TLS
+    // handshake error on every retry.
+    char    peek[16];
+    ssize_t n = recv(client_socket, peek, sizeof(peek) - 1, MSG_PEEK);
+    if(n <= 0) {
+      socket_close(client_socket);
+      return 0;
+    }
+    if(is_plain_http_request(peek, (size_t)n)) {
+      redirect_to_https(client_socket);
+      return 0;
+    }
     void* ssl = tls_accept(tls_ctx, client_socket);
     if(ssl == NULL) {
       fprintf(stderr, "TLS handshake failed\n");

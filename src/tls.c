@@ -80,7 +80,17 @@ void* tls_accept(void* ctx_v, tls_socket_t fd) {
     return NULL;
   }
   if(SSL_accept(ssl) != 1) {
-    ERR_print_errors_fp(stderr);
+    // Log one concise line instead of the full OpenSSL error stack. A plain
+    // HTTP request to the HTTPS port (old browser tab, health check, port
+    // scan) would otherwise spam every line of ssl/record/*.c on each retry.
+    unsigned long err = ERR_peek_error();
+    if(err != 0) {
+      char err_buf[256];
+      ERR_error_string_n(err, err_buf, sizeof(err_buf));
+      fprintf(stderr, "TLS handshake failed: %s\n", err_buf);
+    } else {
+      fprintf(stderr, "TLS handshake failed\n");
+    }
     SSL_free(ssl);
     return NULL;
   }

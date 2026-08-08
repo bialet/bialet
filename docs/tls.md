@@ -68,9 +68,10 @@ bialet dev -s
 ```
 
 > ⚠️ Pitfall: HTTPS and HTTP share the same port. When `-s` is set, the
-> server only speaks TLS — a plain `http://` request to that port fails the
-> handshake and the connection is dropped. You cannot serve both from one
-> process.
+> server only speaks TLS on that port. A plain `http://` request that reaches
+> it (an old browser tab, a health check, a hand-typed URL) is answered with a
+> `301` redirect to the same `https://` URL, so clients self-heal instead of
+> hitting a confusing handshake error.
 
 ## Getting a Certificate
 
