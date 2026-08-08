@@ -67,8 +67,9 @@ Custom error pages are **static HTML only**. The file is served verbatim:
 
 By default a `.wren` file that fails to parse or throws returns the generic 500
 page, and the actual error goes to the server log. During development it is
-often faster to see the error in the browser. Enable the `BIALET_SHOW_ERRORS`
-config flag:
+often faster to see the error in the browser. `bialet dev` enables this for you
+(along with live reload and browser opening) — see
+[Getting Started](../getting-started/2-setup). Or enable it manually:
 
 ```bash
 bialet -r 'Config.enable("BIALET_SHOW_ERRORS")' .

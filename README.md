@@ -74,13 +74,16 @@ curl -fsSL https://get.bialet.dev | sh
 
 ## Quickstart
 
-1. Create an `index.wren` file in your app directory and start the server:
+1. Create an `index.wren` file in your app directory and start the server in
+   development mode:
 
 ```bash
-bialet
+bialet dev
 ```
 
-2. Visit [127.0.0.1:7001](http://127.0.0.1:7001) in your browser.
+`bialet dev` serves the current directory, turns on live reload and the
+in-browser error display, and opens [127.0.0.1:7001](http://127.0.0.1:7001) in
+your browser automatically.
 
 ## Build from source
 

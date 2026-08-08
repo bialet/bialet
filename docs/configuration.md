@@ -50,6 +50,25 @@ live-reload script (see [Live Reload](live-reload.md)), and
 `BIALET_SHOW_ERRORS` shows compile/runtime errors in the browser instead of the
 generic 500 page (see [Error Pages](errors.md)).
 
+### Development mode: `bialet dev`
+
+The `dev` subcommand is the fastest way to start developing:
+
+```bash
+bialet dev
+```
+
+It starts the server from the current directory and:
+
+- Enables `BIALET_LIVE_RELOAD` and `BIALET_SHOW_ERRORS` in the database. This
+  is idempotent — run it once and the flags stay on for later `bialet` runs; if
+  they were disabled, `bialet dev` turns them back on.
+- Opens `http://127.0.0.1:7001` (or your `-p` port) in the default browser,
+  like `react-scripts start`.
+
+Plain `bialet` starts the server without touching the flags or opening the
+browser.
+
 `enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
 equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.
 

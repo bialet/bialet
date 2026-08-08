@@ -192,6 +192,24 @@ void welcome(int port) {
   message(BIALET_LOGO, green("bialet"), "is riding on", blue(server_url(port)));
 }
 
+static void open_browser(const char* url) {
+#if IS_WIN
+  char cmd[MAX_URL + 20];
+  snprintf(cmd, sizeof(cmd), "start %s", url);
+  system(cmd);
+#else
+  pid_t pid = fork();
+  if(pid == 0) {
+#if IS_MAC
+    execlp("open", "open", url, (char*)NULL);
+#else
+    execlp("xdg-open", "xdg-open", url, (char*)NULL);
+#endif
+    _exit(1);
+  }
+#endif
+}
+
 void sigint_handler(int signum) {
   (void)signum;
   keep_running = 0;
@@ -203,6 +221,7 @@ int main(int argc, char* argv[]) {
   char* validate_file = NULL;
   char* test_dir = NULL;
   int   run_tests = 0;
+  int   dev_mode = 0;
 #if !IS_WIN
   struct sigaction sa;
   sa.sa_handler = sigint_handler;
@@ -247,6 +266,17 @@ int main(int argc, char* argv[]) {
   bialet_config.sqlite_synchronous = 1;  // NORMAL
 
   /* Parse args */
+
+  // `dev` subcommand. The bundled getopt() is BSD-style: it stops at the first
+  // non-option argument, so `dev -p 8080` would leave -p unparsed. Shift a
+  // leading `dev` out of argv so trailing options still work; `-p 8080 dev`
+  // (dev after options) is handled after the getopt loop below.
+  if(argc > 1 && strcmp(argv[1], "dev") == 0) {
+    dev_mode = 1;
+    for(int i = 1; i < argc - 1; i++)
+      argv[i] = argv[i + 1];
+    argc--;
+  }
 
   int opt;
   while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvw")) != -1) {
@@ -348,6 +378,12 @@ int main(int argc, char* argv[]) {
     }
   }
   if(optind < argc) {
+    if(strcmp(argv[optind], "dev") == 0) {
+      dev_mode = 1;
+      optind++;
+    }
+  }
+  if(optind < argc) {
     bialet_config.root_dir = argv[optind];
   }
 
@@ -394,7 +430,15 @@ int main(int argc, char* argv[]) {
 
   char resolved_root[MAX_PATH_LEN];
   if(realpath(bialet_config.root_dir, resolved_root) == NULL) {
-    fprintf(stderr, "Error with root directory.\n");
+    fprintf(stderr, "Error: app directory not found: %s\n", bialet_config.root_dir);
+    fprintf(stderr,
+            "Run bialet from inside your app folder, or pass the folder as an "
+            "argument.\n");
+    if(!dev_mode) {
+      fprintf(stderr, "\nDid you mean: bialet dev\n");
+      fprintf(stderr, "  Starts from the current directory with live reload, "
+                      "error display, and your browser.\n");
+    }
     exit(EXIT_FAILURE);
   }
   bialet_config.full_root_dir = resolved_root;
@@ -440,8 +484,12 @@ int main(int argc, char* argv[]) {
 
   welcome(port);
   trigger_reload_files(NULL);
+  if(dev_mode)
+    bialet_enable_dev_flags();
   livereload_init();
   show_errors_init();
+  if(dev_mode)
+    open_browser(server_url(port));
 
 #if IS_LINUX
   int       status;

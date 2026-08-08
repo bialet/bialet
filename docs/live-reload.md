@@ -7,7 +7,13 @@ automatically — no browser extensions, no WebSocket server, no extra process.
 ## Enabling
 
 Live reload is controlled by the `BIALET_LIVE_RELOAD` configuration key.
-Set it once in your development database:
+
+The easiest way to turn it on is `bialet dev`, which also enables the
+in-browser error display, serves the current directory, and opens your browser
+(see [Getting Started](../getting-started/2-setup)). It is stored in the
+database, so it stays on for later `bialet` runs until you disable it.
+
+Or set it once in your development database:
 
 ```bash
 bialet -r 'Config.enable("BIALET_LIVE_RELOAD")' .

@@ -12,6 +12,7 @@ HOST="${2:-127.0.0.1}"
 PORT="${3:-7001}"
 ECHO_PORT="${4:-7100}"
 SHOW_ERRORS_PORT="${5:-7101}"
+DEV_PORT="${6:-7102}"
 
 source "$(dirname "$0")/util.sh"
 
@@ -247,6 +248,37 @@ fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
   pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+fi
+
+# Tests - bialet dev
+# `bialet dev` must serve the current directory, enable BIALET_LIVE_RELOAD and
+# BIALET_SHOW_ERRORS in the DB, and inject the live-reload script into HTML.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  total_tests=$((total_tests + 1))
+  echo -e -n "bialet dev starts and configures\t"
+  dev_root="$(dirname "$0")/dev-app"
+  dev_exec=$(realpath "$TARGET_EXEC")
+  rm -f "$dev_root/_db.sqlite3"
+  (cd "$dev_root" && "$dev_exec" dev -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
+    > /dev/null 2>&1 &
+  disown
+  sleep 2
+  dev_code=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$DEV_PORT/")
+  dev_body=$(curl -s "http://$HOST:$DEV_PORT/")
+  dev_live=$(printf "%s" "$dev_body" | grep -c "_livereload")
+  dev_flags=$(sqlite3 "$dev_root/_db.sqlite3" \
+    "SELECT COUNT(*) FROM BIALET_CONFIG WHERE key IN ('BIALET_LIVE_RELOAD','BIALET_SHOW_ERRORS') AND val='1'" 2>/dev/null)
+  pgrep -f "$dev_exec dev -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \
+        && "$dev_flags" == "2" ]]; then
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+  else
+    echo -e "${RED}FAIL${NC}"
+    failed_tests=$((failed_tests + 1))
+    echo -e -n "\tExpected 200 + 'Dev App' + livereload script + 2 enabled flags. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags\n"
+  fi
+  rm -f "$dev_root/_db.sqlite3"
 fi
 
 finish

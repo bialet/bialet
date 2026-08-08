@@ -12,6 +12,7 @@
 
 #include "bialet.h"
 #include "http_call.h"
+#include "livereload.h"
 #include "messages.h"
 #include "server.h"
 #include "show_errors.h"
@@ -1109,6 +1110,33 @@ static void apply_sqlite_pragmas() {
   sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
                NULL);
   sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
+}
+
+// Enables the development flags (live reload + showing errors in the browser)
+// in the BIALET_CONFIG table. Idempotent: missing or disabled values are set
+// to "1", already-enabled values are left untouched. Runs in dev mode so the
+// behavior is one-time and self-healing across restarts.
+void bialet_enable_dev_flags() {
+  if(db == NULL)
+    return;
+
+  sqlite3_exec(db,
+               "CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY "
+               "KEY, val TEXT)",
+               NULL, NULL, NULL);
+
+  const char* sql =
+      "INSERT OR REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, '1')";
+  const char* keys[] = {LIVERELOAD_KEY, SHOW_ERRORS_KEY};
+
+  for(size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+    sqlite3_stmt* stmt = NULL;
+    if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+      continue;
+    sqlite3_bind_text(stmt, 1, keys[i], -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
 }
 
 void bialet_init(struct BialetConfig* config) {

@@ -141,13 +141,16 @@ command line.
 
 ### Basic Usage
 
-To start the application, simply run:
+To start developing, run:
 
 ```bash
-bialet
+bialet dev
 ```
 
-By default, the application runs in the current directory.
+This starts the server from the current directory, enables live reload and the
+in-browser error display, and opens the server URL in your browser. Plain
+`bialet` also works and runs from the current directory, without enabling those
+flags or opening the browser.
 
 ### Customizing Startup Options
 

@@ -187,7 +187,9 @@ void free_bialet_query(BialetQuery* query);
 
 #define BIALET_USAGE                                                                \
   "🚲 bialet\n\nUsage: %s [-h host] [-p port] [-l log] [-d database] "            \
-  "[-b post_kb] [-t file [root_dir]] [-T] [root_dir]\n"
+  "[-b post_kb] [-t file [root_dir]] [-T] [dev] [root_dir]\n"                       \
+  "  dev      start from the current directory with live reload and "               \
+  "error display enabled, and open the browser\n"
 
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
