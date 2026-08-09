@@ -15,6 +15,7 @@
 #include "favicon.h"
 #include "livereload.h"
 #include "messages.h"
+#include "utils.h"
 
 #if IS_WIN
 #include <ws2tcpip.h>
@@ -562,10 +563,12 @@ static int open_fd_without_follow(const char* path) {
 // caller is expected to have already validated [path] with realpath() for root
 // containment; O_NOFOLLOW per component closes the TOCTOU window where the
 // file or an intermediate directory is swapped for an out-of-root symlink
-// between the check and the open.
+// between the check and the open. On Windows the shared helper opens with
+// FILE_FLAG_OPEN_REPARSE_POINT and rejects reparse points (junctions/symlinks)
+// instead of following them.
 static FILE* open_file_within_root(const char* path) {
 #if IS_WIN
-  return fopen(path, "rb");
+  return open_file_no_follow(path);
 #else
   int fd = open_fd_without_follow(path);
   if(fd < 0)
