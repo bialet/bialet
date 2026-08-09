@@ -96,6 +96,13 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
   sqlite3_finalize(stmt);
 }
 
+#if !IS_WIN
+// Defined below; forward-declared so bialet_read_file can reuse the no-follow
+// open path used by the module loader.
+static int   open_no_follow(const char* path);
+static char* read_file_fd(int fd);
+#endif
+
 char* bialet_read_file(const char* path) {
   char fullPath[MAX_URL_LEN];
   int  ret = snprintf(fullPath, sizeof(fullPath), "%s/%s",
@@ -118,7 +125,15 @@ char* bialet_read_file(const char* path) {
     return NULL;
   }
 
+  // Reopen the already-contained resolved path without following a symlink, so
+  // a link swapped in after the realpath() check cannot feed out-of-root bytes
+  // to Markdown.file. On POSIX this mirrors the module loader's no-follow open;
+  // on Windows read_file() itself opens without following junctions.
+#if !IS_WIN
+  return read_file_fd(open_no_follow(resolved));
+#else
   return read_file(resolved);
+#endif
 }
 
 char* read_file(const char* path) {
