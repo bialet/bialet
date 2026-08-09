@@ -991,7 +991,11 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
       if(c == '>' || c == ' ') {
         break;
       }
-      tagName[i++] = c;
+      // Bound the tag name so an overlong tag cannot overflow the heap buffer.
+      // The token keeps the full text; tagName only needs to match close tags.
+      if(i < MAX_METHOD_NAME - 1) {
+        tagName[i++] = c;
+      }
     }
     tagName[i] = '\0';
   }
@@ -1008,8 +1012,12 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
       }
       if(c == '{' && peekChar(parser) == '{') {
         type = TOKEN_INTERPOLATION;
-        strcpy(parser->handlebars[parser->numHandlebars], tagName);
-        parser->numHandlebars++;
+        // Cap the handlebar stack so pathological nesting cannot write past
+        // the fixed-size handlebars array (MAX_INTERPOLATION_NESTING rows).
+        if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
+          strcpy(parser->handlebars[parser->numHandlebars], tagName);
+          parser->numHandlebars++;
+        }
         nextChar(parser);
         break;
       }
