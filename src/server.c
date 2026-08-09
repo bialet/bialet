@@ -200,6 +200,30 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 #endif
 }
 
+// Consumes the client's request body after an early rejection (e.g. HTTP 413
+// for an oversized body). Closing the socket while unread bytes sit in the
+// receive buffer makes the kernel emit RST, which discards the response we
+// already sent -- clients would see an empty body. Read and discard the
+// remaining bytes within a bounded deadline so a slow-drip peer cannot stall
+// the single-threaded server.
+static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
+  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
+  char      drain_buf[BUFFER_SIZE];
+  while(bytes_remaining > 0) {
+    long long remaining = deadline - monotonic_ms();
+    if(remaining <= 0)
+      break;
+    if(!wait_readable(fd, (int)remaining))
+      break;
+    size_t want =
+        bytes_remaining < sizeof(drain_buf) ? bytes_remaining : sizeof(drain_buf);
+    ssize_t n = recv(fd, drain_buf, want, 0);
+    if(n <= 0)
+      break;
+    bytes_remaining -= (size_t)n;
+  }
+}
+
 void handle_client(bialet_socket_t client_socket);
 
 int start_server(struct BialetConfig* config) {
@@ -591,6 +615,21 @@ void handle_client(bialet_socket_t client_socket) {
     if(cl_value < 0 || (unsigned long)cl_value > bialet_config.max_post_size) {
       // Reject oversized bodies with a proper HTTP 413 instead of dropping the
       // connection: reading the body into Wren would blow the memory limit.
+      // Drain the already-declared body first so the socket closes with a
+      // clean FIN and the client actually receives the 413 page.
+      if(cl_value > 0) {
+        size_t      body_declared = (size_t)cl_value;
+        const char* body_start = strstr(buffer, "\r\n\r\n");
+        size_t      already_buffered = 0;
+        if(body_start != NULL) {
+          size_t body_offset = (size_t)(body_start + 4 - buffer);
+          if(body_offset < (size_t)bytes_read)
+            already_buffered = bytes_read - body_offset;
+        }
+        if(already_buffered < body_declared) {
+          drain_request_body(client_socket, body_declared - already_buffered);
+        }
+      }
       struct BialetResponse too_large = {0, "", "", 0, 0, 0};
       custom_error(413, &too_large);
       write_response(client_socket, &too_large);
