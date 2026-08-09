@@ -10,29 +10,19 @@
  */
 #include "hash.h"
 
+// Standard C libs (available everywhere, pull them out once)
 #include <string.h>
-
-#if defined(_WIN32)
-#define _CRT_RAND_S
-#include <windows.h>
-
 #include <stdio.h>
 #include <stdlib.h>
-#else
-#include <stdio.h>
-#include <stdlib.h>
-#endif
-
-#ifndef OPENSSL_OK
-
-#if defined(_WIN32)
-#define _CRT_RAND_S
-#endif
-
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
+// Windows-specific
+#if defined(_WIN32)
+#define _CRT_RAND_S          // Define this exactly once, right before including windows.h
+#include <windows.h>
+#endif
+
+// Unix-specific (needed for /dev/urandom CSPRNG on non-Windows)
 #if !defined(_WIN32)
 #include <fcntl.h>
 #include <unistd.h>
@@ -88,7 +78,6 @@ void generate_salt(char* salt, size_t length) {
 #endif
   salt[length] = '\0';
 }
-#endif
 
 // Cryptographically random bytes from the OS CSPRNG. This is the source shared
 // by password salts (generate_salt above) and, since SQLite's sqlite3_randomness
