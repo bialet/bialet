@@ -1079,10 +1079,14 @@ void custom_error(int status, struct BialetResponse* response) {
         long file_size = ftell(file);
         if(file_size >= 0) {
           rewind(file);
-          char* file_content = (char*)malloc((size_t)file_size);
+          // +1 for the trailing NUL: an empty or short-read {status}.html
+          // would otherwise leave the body unterminated and the strlen
+          // fallback in write_response would over-read the heap.
+          char* file_content = (char*)malloc((size_t)file_size + 1);
           if(file_content != NULL) {
             size_t read_bytes = fread(file_content, 1, (size_t)file_size, file);
             fclose(file);
+            file_content[read_bytes] = '\0';
             response->body = file_content;
             response->body_owned = 1;
             response->length = read_bytes;
