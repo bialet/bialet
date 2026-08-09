@@ -38,6 +38,29 @@ improvements.
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
       proxy needed for basic deployments)
 
+## HTTP Client
+
+Outbound HTTP (`Http` class, `src/http_call.c`). The current client covers
+GET/POST/PUT/DELETE, custom headers, Basic auth, redirects, and JSON handling.
+
+- [ ] **Per-call timeout options** — timeouts are hardcoded in
+      `http_call_perform` (20s total / 2s connect); expose `options["timeout"]`
+      / `options["connectTimeout"]`.
+- [ ] **Form-encoded bodies** — `Http.post` always sends JSON; add a
+      `x-www-form-urlencoded` mode or `options["form"]` map.
+- [ ] **Multipart / file uploads** — no way to send files or
+      `multipart/form-data` to an external API.
+- [ ] **Response cookies / cookie jar** — `Set-Cookie` headers are dropped and
+      cookies cannot be persisted across calls.
+- [ ] **Bearer token / auth shortcut** — only `basicAuth` exists; a `token`
+      option or `Authorization` helper would remove the manual header boilerplate.
+- [ ] **Query-string builder** — no helper to append/encode query parameters to
+      a URL.
+- [ ] **Expose the curl error string** — `Http.error` is a numeric code only;
+      surface the underlying message for easier debugging.
+- [ ] **`strtok()` in `http_call_perform`** — uses the process-global tokenizer;
+      switch to `strtok_r` (see Security Hardening Backlog).
+
 ## Security Hardening Backlog
 
 - [ ] **Compiler: bound HTML tag-name buffer** — `readHtmlString` in

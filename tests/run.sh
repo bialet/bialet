@@ -156,6 +156,7 @@ run_test "Db save delete migrate      " "db-more"         200 "inserted:"
 run_test "API call                    " "http"            200 "Adeel Solangi"
 run_test "Third party modules         " "emoji"           200 "❤️"
 run_test "Http POST PUT DELETE        " "http-methods?target=http://$HOST:$ECHO_PORT" 200 "POST|PUT|DELETE|GET|GET"
+run_test "Http client headers/auth/json " "http-client?target=http://$HOST:$ECHO_PORT" 200 "hello|Basic YWRtaW46c2VjcmV0|v|null"
 
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"

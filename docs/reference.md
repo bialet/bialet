@@ -588,15 +588,36 @@ Deletes data from a specified table based on its ID.
 
 ## Http
 
-A class for handling HTTP requests and responses, with methods to perform
-various types of HTTP requests.
+A class for making outbound HTTP requests, with shortcuts for the common
+methods and an instance API for full control over the response.
+
+For worked examples of every pattern (auth, headers, JSON, error handling),
+see the [Making HTTP Calls](http-calls.md) guide.
+
+### Options
+
+Every method accepts an optional `options` map:
+
+- `headers`: Map of header names to values, sent on the request.
+- `basicAuth`: Map with `username` and `password` for HTTP Basic auth.
+
+`Content-Type` defaults to `application/json` when not given in `headers`.
+
+### Shortcut return values
+
+The static shortcuts return:
+
+- The parsed JSON value for 2xx responses with a JSON `Content-Type`.
+- The body string for 2xx responses with any other `Content-Type`.
+- `null` for non-2xx responses (e.g. 404, 500).
+- `false` when the transport failed (DNS, connection, timeout).
 
 ### request(url, method, data, options)
 
 Performs an HTTP request with the specified options.
 
 - `url`: The URL to send the request to.
-- `method`: The HTTP method (e.g., GET, POST).
+- `method`: The HTTP method (e.g., GET, POST, PATCH).
 - `data`: The data to send with the request.
 - `options`: Additional request options.
 
@@ -610,6 +631,7 @@ Performs a GET request to the specified URL with the given options.
 ### post(url, data, options)
 
 Performs a POST request to the specified URL with the given data and options.
+`data` is sent as JSON unless a `Content-Type` header overrides it.
 
 - `url`: The URL to send the request to.
 - `data`: The data to send with the request.
@@ -655,6 +677,66 @@ Performs a simple PUT request to the specified URL with the given data.
 Performs a simple DELETE request to the specified URL.
 
 - `url`: The URL to send the request to.
+
+### new()
+
+Creates an `Http` instance for full control over the request and response.
+
+```wren
+var http = Http.new()
+http.method = "POST"
+http.postData = {"name": "Ada"}
+var ok = http.call("https://api.example.com/users", {})
+if (ok) {
+  var status = http.status
+  var body = http.body
+  var type = http.headers("content-type")
+}
+```
+
+### call(url, options)
+
+Performs the request. Returns `true` when the transport succeeded — note this
+includes non-2xx HTTP responses.
+
+- `url`: The URL to send the request to.
+- `options`: Additional request options.
+
+### method
+
+Set before `call` to choose the HTTP method. Defaults to `GET` when unset;
+assigning `postData` defaults it to `POST`.
+
+### postData
+
+Set before `call` for the request body. Maps and lists are JSON-stringified;
+strings are sent as-is.
+
+### status
+
+Getter that returns the HTTP status code of the response.
+
+### body
+
+Getter that returns the raw response body as a string.
+
+### headers
+
+Getter that returns a map of all response headers, with lowercased keys and
+values.
+
+### headers(name)
+
+Getter that returns a single response header by lowercased name, or `null` if
+absent.
+
+```wren
+var type = http.headers("content-type")
+```
+
+### error
+
+Getter that returns a non-zero value when the transport failed.
 
 (date-reference)=
 

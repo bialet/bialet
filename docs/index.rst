@@ -319,6 +319,7 @@ Who is Bialet for?
 
    advanced-routing
    rest-api
+   http-calls
 
 .. toctree::
    :hidden:

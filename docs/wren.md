@@ -582,7 +582,7 @@ Bialet adds these classes on top of standard Wren:
 | `Cookie`   | Parse, set, and delete cookies — see [Reference](reference.md) |
 | `Session`  | Server-side session storage with CSRF protection — see [Reference](reference.md) |
 | `Db`       | Database migrations and ORM-like save/delete — see [Reference](reference.md) |
-| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [Reference](reference.md) |
+| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md) |
 | `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md) |
 | `File`     | File uploads stored in SQLite — see [Reference](reference.md) |
 | `Markdown` | Render Markdown to HTML — see [Reference](reference.md) |
