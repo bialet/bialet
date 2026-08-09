@@ -106,7 +106,7 @@ char* bialet_read_file(const char* path) {
   }
 
   char resolved[MAX_URL_LEN];
-  if(realpath(fullPath, resolved) == NULL) {
+  if(realpath_n(fullPath, resolved, sizeof(resolved)) == NULL) {
     return NULL;
   }
 
@@ -340,7 +340,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
   }
 
   char resolved[MAX_URL_LEN];
-  if(realpath(module, resolved) == NULL) {
+  if(realpath_n(module, resolved, sizeof(resolved)) == NULL) {
     return result;
   }
 
@@ -929,7 +929,7 @@ int bialet_run_cli(char* code) {
 int bialet_validate_syntax(const char* filePath) {
   char abs_path[MAX_URL_LEN];
 
-  if(realpath(filePath, abs_path) == NULL) {
+  if(realpath_n(filePath, abs_path, sizeof(abs_path)) == NULL) {
     fprintf(stderr, "Error: Cannot resolve file '%s'\n", filePath);
     return 1;
   }

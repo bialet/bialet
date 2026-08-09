@@ -430,7 +430,8 @@ int main(int argc, char* argv[]) {
   }
 
   char resolved_root[MAX_PATH_LEN];
-  if(realpath(bialet_config.root_dir, resolved_root) == NULL) {
+  if(realpath_n(bialet_config.root_dir, resolved_root, sizeof(resolved_root)) ==
+     NULL) {
     fprintf(stderr, "Error: app directory not found: %s\n", bialet_config.root_dir);
     fprintf(stderr,
             "Run bialet from inside your app folder, or pass the folder as an "

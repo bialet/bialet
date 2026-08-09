@@ -581,7 +581,7 @@ static FILE* open_file_within_root(const char* path) {
 // result into [resolved] (PATH_SIZE). Returns 1 on success, 0 when the path
 // cannot be resolved or escapes the root (symlinked outside it).
 static int resolve_within_root(const char* path, char* resolved) {
-  if(realpath(path, resolved) == NULL)
+  if(realpath_n(path, resolved, PATH_SIZE) == NULL)
     return 0;
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
@@ -837,7 +837,7 @@ void handle_client(bialet_socket_t client_socket) {
 
   // Validate final path is within root_dir before opening file
   char resolved_path[PATH_SIZE];
-  if(realpath(path, resolved_path) != NULL) {
+  if(realpath_n(path, resolved_path, sizeof(resolved_path)) != NULL) {
     size_t root_len = strlen(bialet_config.full_root_dir);
     if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
        (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' &&
