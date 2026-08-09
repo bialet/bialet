@@ -301,8 +301,10 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
       struct HttpRequest  req;
       struct HttpResponse resp;
       resp.error = 0;
+      resp.status = 0;
       resp.body = NULL;
       resp.headers = NULL;
+      resp.error_message = NULL;
       req.method = string_safe_copy("GET");
       req.basicAuth = string_safe_copy("");
       req.raw_headers = string_safe_copy("");
