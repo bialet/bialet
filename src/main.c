@@ -431,7 +431,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Set up temporary database for tests
-  char temp_db_path[MAX_PATH_LEN];
+  char temp_db_path[PATH_MAX];
   if(run_tests) {
     bialet_config.enable_tests = 1;
 #if !IS_WIN
@@ -446,8 +446,19 @@ int main(int argc, char* argv[]) {
     }
     close(temp_db_fd);
 #else
-    snprintf(temp_db_path, sizeof(temp_db_path), "/tmp/bialet_test_%d.sqlite3",
-             getpid());
+    // GetTempFileNameA creates the file with exclusive (CREATE_NEW) semantics
+    // in the system temp directory and retries on collisions, the Windows
+    // equivalent of mkstemp/O_EXCL. The old PID-based path was predictable and
+    // let a local attacker pre-place a junction at it.
+    char win_temp[MAX_PATH];
+    if(GetTempPathA(sizeof(win_temp), win_temp) == 0) {
+      perror("GetTempPathA");
+      exit(EXIT_FAILURE);
+    }
+    if(GetTempFileNameA(win_temp, "bialet", 0, temp_db_path) == 0) {
+      perror("GetTempFileNameA");
+      exit(EXIT_FAILURE);
+    }
 #endif
     bialet_config.db_path = temp_db_path;
 
