@@ -18,15 +18,27 @@
 
 #endif
 
+// Hard ceiling on a single outbound HTTP response body/header set. The
+// write/header callbacks below refuse to grow past it, so a malicious or
+// misbehaving server cannot exhaust heap memory (or, in the remote-module
+// loader path, amplify disk usage) through an unbounded response.
+#define MAX_HTTP_RESPONSE_SIZE (50 * 1024 * 1024)
+
 struct memory {
   char*  response;
   size_t size;
+  size_t max_size;
 };
 
 #if IS_UNIX
 static size_t write_callback(void* data, size_t size, size_t nmemb, void* clientp) {
   size_t         realsize = size * nmemb;
   struct memory* mem = (struct memory*)clientp;
+
+  // Abort the transfer (curl treats a 0 return as a write error) once the
+  // configured cap would be exceeded, instead of growing without bound.
+  if(mem->size + realsize > mem->max_size)
+    return 0;
 
   char* ptr = realloc(mem->response, mem->size + realsize + 1);
   if(!ptr)
@@ -46,6 +58,9 @@ static size_t header_callback(char* buffer, size_t size, size_t nitems,
   /* 'userdata' is set with CURLOPT_HEADERDATA */
   size_t         realsize = nitems * size;
   struct memory* mem = (struct memory*)userdata;
+
+  if(mem->size + realsize > mem->max_size)
+    return 0;
 
   char* ptr = realloc(mem->response, mem->size + realsize + 1);
   if(!ptr)
@@ -194,8 +209,8 @@ void http_call_init(struct BialetConfig* config) {
 
 void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
 #if IS_UNIX
-  struct memory      chunk = {0};
-  struct memory      header_chunk = {0};
+  struct memory      chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
+  struct memory      header_chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
   CURL*              handle;
   CURLcode           res;
   struct curl_slist* headers = NULL;
@@ -256,6 +271,9 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   curl_easy_setopt(handle, CURLOPT_WRITEDATA, &chunk);
   curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, header_callback);
   curl_easy_setopt(handle, CURLOPT_HEADERDATA, &header_chunk);
+  /* hard cap on the transfer size; the callbacks enforce it too */
+  curl_easy_setopt(handle, CURLOPT_MAXFILESIZE_LARGE,
+                   (curl_off_t)MAX_HTTP_RESPONSE_SIZE);
 
   res = curl_easy_perform(handle);
 
