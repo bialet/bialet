@@ -157,6 +157,11 @@ run_test "API call                    " "http"            200 "Adeel Solangi"
 run_test "Third party modules         " "emoji"           200 "❤️"
 run_test "Http POST PUT DELETE        " "http-methods?target=http://$HOST:$ECHO_PORT" 200 "POST|PUT|DELETE|GET|GET"
 run_test "Http client headers/auth/json " "http-client?target=http://$HOST:$ECHO_PORT" 200 "hello|Basic YWRtaW46c2VjcmV0|v|null"
+run_test "Http bearer token option    " "http-options?which=token&target=http://$HOST:$ECHO_PORT" 200 "Bearer secret-token"
+run_test "Http form-encoded option    " "http-options?which=form&target=http://$HOST:$ECHO_PORT" 200 "v1=hello world"
+run_test "Http cookie jar round-trip  " "http-options?which=cookie&target=http://$HOST:$ECHO_PORT" 200 "session=abc123"
+run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
+run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"
 
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"

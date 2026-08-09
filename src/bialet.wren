@@ -1045,6 +1045,7 @@ class Http {
     _headers = {}
     _body = ""
     _error = 0
+    _errorMessage = ""
     _fullHeaders = ""
     _postData = ""
   }
@@ -1053,6 +1054,7 @@ class Http {
   headers { _headers }
   headers(name) { _headers.containsKey(name) ? _headers[name] : null }
   error { _error }
+  errorMessage { _errorMessage }
   method { _method }
   method=(m) { _method = m }
   postData=(data) {
@@ -1068,14 +1070,25 @@ class Http {
     if (!options.containsKey("headers")) {
       options["headers"] = {}
     }
-    if (!options["headers"].containsKey("Content-Type")) {
+    if (options.containsKey("form")) {
+      _postData = Util.params(options["form"])
+      options["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
+    } else if (!options["headers"].containsKey("Content-Type")) {
       options["headers"]["Content-Type"] = "application/json"
     }
-    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (options["token"] != null) {
+      options["headers"]["Authorization"] = "Bearer %(options["token"])"
+    }
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
-    var response = call_(url, _method, headers, _postData, _basicAuth)
+    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (!options["headers"].containsKey("Cookie") && Http.jar != "") {
+      headers = headers + "\nCookie: %(Http.jar)"
+    }
+    var timeout = options.containsKey("timeout") ? options["timeout"] : 0
+    var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
+    var response = call_(url, _method, headers, _postData, _basicAuth, timeout, connectTimeout)
 
     if (response[1]) {
       var lines = response[1].split("\n")
@@ -1093,8 +1106,37 @@ class Http {
     _fullHeaders = response[1].trim()
     _body = response[2].trim()
     _error = response[3]
+    _errorMessage = response[4]
+    Http.storeCookies(_fullHeaders)
 
     return _error == 0
+  }
+
+  static jar {
+    if (!__cookieJar || __cookieJar.count == 0) return ""
+    return __cookieJar.map{|c| "%(c.key)=%(c.value)" }.join("; ")
+  }
+  static storeCookies(rawHeaders) {
+    if (rawHeaders == "") return
+    if (!__cookieJar) __cookieJar = {}
+    for (line in rawHeaders.split("\n")) {
+      var sep = line.indexOf(":")
+      if (sep == null || sep <= 0) continue
+      var name = line[0...sep].trim().lower
+      if (name != "set-cookie") continue
+      var value = line[sep + 1...line.count].trim()
+      var parts = value.split(";")
+      var kv = parts[0].split("=")
+      if (kv.count < 2) continue
+      __cookieJar[kv[0].trim()] = kv[1].trim()
+    }
+  }
+  static query(params) { Util.params(params) }
+  static url(base, params) {
+    var qs = Util.params(params)
+    if (qs == "") return base
+    if (base.contains("?")) return base + "&" + qs
+    return base + "?" + qs
   }
 
   static request(url, method, data, options) {

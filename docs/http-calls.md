@@ -7,7 +7,8 @@ covers the `Http` class end to end. For exposing your own API instead, see
 
 The `Http` class is a thin wrapper around libcurl (POSIX) or a raw sockets
 client (Windows). It supports GET, POST, PUT, DELETE, and any other method,
-plus custom headers and HTTP Basic authentication.
+custom headers, Basic and bearer-token auth, form or JSON bodies, per-call
+timeouts, and a persistent cookie jar.
 
 ## Quick Start
 
@@ -41,7 +42,9 @@ var users = Http.get("https://api.example.com/users?active=1", {
 ### POST
 
 `Http.post` sends the body as JSON (`Content-Type: application/json`). Pass a
-map, a list, or a pre-built JSON string.
+map, a list, or a pre-built JSON string. Use the `form` option for
+`application/x-www-form-urlencoded` bodies instead (see
+[Form-Encoded Bodies](#form-encoded-bodies)).
 
 ```wren
 // Map is stringified automatically
@@ -73,30 +76,44 @@ var result = Http.request("https://api.example.com/users/1", "PATCH",
 
 ## Options
 
-Every shortcut accepts an optional options map with two keys:
+Every shortcut accepts an optional options map:
 
-| Key          | Type       | Description                                   |
-| ------------ | ---------- | --------------------------------------------- |
-| `headers`    | Map        | Header names to values, sent on the request   |
-| `basicAuth`  | Map        | `username` / `password` for Basic auth        |
+| Key               | Type       | Description                                              |
+| ----------------- | ---------- | -------------------------------------------------------- |
+| `headers`         | Map        | Header names to values, sent on the request              |
+| `basicAuth`       | Map        | `username` / `password` for Basic auth                   |
+| `token`           | String     | Sends `Authorization: Bearer <token>`                    |
+| `form`            | Map        | Sends the body as `application/x-www-form-urlencoded`    |
+| `timeout`         | Number     | Total transfer timeout in milliseconds (default 20000)   |
+| `connectTimeout`  | Number     | Connect timeout in milliseconds (default 2000)           |
 
 ```wren
 var options = {
   "headers": {"User-Agent": "bialet-app", "Accept": "application/json"},
-  "basicAuth": {"username": "admin", "password": "secret"}
+  "basicAuth": {"username": "admin", "password": "secret"},
+  "timeout": 10000,
+  "connectTimeout": 3000
 }
 var data = Http.get("https://api.example.com/protected", options)
 ```
 
-`Content-Type` defaults to `application/json` if you don't set one in
-`headers`. Every other common header goes through `headers` directly.
+`Content-Type` defaults to `application/json` when you don't set one in
+`headers` and don't use the `form` option. Every other common header goes
+through `headers` directly.
 
 ## Authentication
 
-### Bearer Token and API Keys
+### Bearer Token
 
-There is no dedicated helper. Send the token as a header — this is the
-idiomatic pattern for most modern APIs:
+Use the `token` option to send a `Authorization: Bearer <token>` header:
+
+```wren
+var zones = Http.get("https://api.cloudflare.com/client/v4/zones",
+                     {"token": Config.get("API_TOKEN")})
+```
+
+This is equivalent to setting the header manually. Use the manual form when
+you need a non-Bearer scheme or extra headers:
 
 ```wren
 var options = {
@@ -134,6 +151,57 @@ var options = {
   }
 }
 ```
+
+(form-encoded-bodies)=
+
+## Form-Encoded Bodies
+
+Pass a map to the `form` option to send
+`application/x-www-form-urlencoded` data. Values are URL-encoded
+automatically:
+
+```wren
+var options = {
+  "form": {"username": "ada", "remember": "on"}
+}
+var data = Http.post("https://api.example.com/login", {}, options)
+```
+
+The `form` option overrides both the default JSON body and any `Content-Type`
+header you set. This is the option to reach for when talking to traditional
+web forms.
+
+## Query Strings
+
+Use `Http.url(base, params)` to append URL-encoded query parameters to a URL.
+It inserts `?` or `&` as needed:
+
+```wren
+var url = Http.url("https://api.example.com/search",
+                   {"q": "hello world", "page": 2})
+// https://api.example.com/search?q=hello+world&page=2
+```
+
+`Http.query(params)` returns just the encoded `key=value&...` string if you
+need to build the URL yourself.
+
+## Cookies
+
+Response `Set-Cookie` headers are collected into a process-wide cookie jar.
+On later calls, the stored cookies are sent back as a `Cookie` header — useful
+for maintaining a server-side session across calls:
+
+```wren
+// First call receives a Set-Cookie and stores it in the jar
+Http.get("https://api.example.com/login", {"form": {"user": "ada"}})
+
+// Subsequent calls automatically send Cookie: <stored cookies>
+var profile = Http.get("https://api.example.com/me")
+```
+
+The jar is scoped to the whole process, not per host or per domain. If you
+need per-host isolation or want to opt out, set an explicit `Cookie` header in
+`headers` — it takes precedence over the jar.
 
 (response-handling)=
 
@@ -189,6 +257,7 @@ if (http.call("https://api.example.com/users", {})) {
 | `headers(name)`  | A single response header value, lowercased key         |
 | `headers`        | Map of all response headers, lowercased                |
 | `error`          | Non-zero when the transport failed                     |
+| `errorMessage`   | Human-readable transport error message (curl string)   |
 
 > **Pitfall:** `call` returns `true` for any HTTP response, including 404 and
 > 500. Check `http.status` yourself when you need to distinguish them.
@@ -246,23 +315,29 @@ files themselves.
 ## Error Handling
 
 `Http.error` on a manually-built instance is a numeric code; `false` on the
-shortcuts. The transport timeout is fixed at 20 seconds (2 seconds to connect),
-so a dead service returns an error rather than hanging your app.
+shortcuts. `Http.errorMessage` carries the underlying error text (from curl)
+for logging and debugging. The transport timeout defaults to 20 seconds total
+with 2 seconds to connect — override per call with `timeout` and
+`connectTimeout` (milliseconds), so a dead service returns an error instead of
+hanging your app.
 
 ```wren
 var http = Http.new()
 http.method = "GET"
-if (!http.call("https://api.example.com/health", {})) {
+if (!http.call("https://api.example.com/health",
+               {"timeout": 5000, "connectTimeout": 1000})) {
   // http.error is non-zero: DNS, connect, timeout, ...
-  return Response.json({"status": "down", "error": http.error})
+  // http.errorMessage explains why, e.g. "Could not connect to server"
+  return Response.json({"status": "down", "error": http.error,
+                        "message": http.errorMessage})
 }
 ```
 
 ## Pitfalls
 
-- **`Http.post` always sends JSON.** For `application/x-www-form-urlencoded`
-  or `multipart/form-data`, set `Content-Type` and build the body string
-  yourself.
+- **Cookies are process-wide.** The jar sends every stored cookie on every
+  call, regardless of host. Scope your calls to trusted hosts, or set an
+  explicit `Cookie` header to override the jar.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
 - **Redirects are followed** automatically, up to 10 hops.
@@ -271,7 +346,6 @@ if (!http.call("https://api.example.com/health", {})) {
 
 ## Missing Features
 
-Not every HTTP client feature is implemented yet. Timeout configuration,
-form-encoded bodies, file uploads, response cookies, and a bearer-token
-shortcut are planned — see the
+Not every HTTP client feature is implemented yet. Multipart/file uploads and
+per-host cookie scoping are planned — see the
 [Roadmap](https://github.com/bialet/bialet/blob/main/ROADMAP.md).

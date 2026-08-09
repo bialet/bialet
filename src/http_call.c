@@ -205,10 +205,14 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   const char* raw_headers = request->raw_headers;
   const char* postData = request->postData;
   const char* basicAuth = request->basicAuth;
+  long        timeout = request->timeout > 0 ? request->timeout : 20000L;
+  long        connectTimeout =
+      request->connectTimeout > 0 ? request->connectTimeout : 2000L;
 
   handle = curl_easy_init();
   if(!handle) {
     response->error = 1;
+    response->error_message = string_safe_copy("Failed to init curl");
     return;
   }
   curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
@@ -235,15 +239,14 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   }
   /* For completeness */
   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
-  curl_easy_setopt(handle, CURLOPT_TIMEOUT, 5L);
   curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
   /* only allow redirects to HTTP and HTTPS URLs */
   curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
   curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
-  /* each transfer needs to be done within 20 seconds! */
-  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, 20000L);
+  /* each transfer needs to be done within this many milliseconds */
+  curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, timeout);
   /* connect fast or fail */
-  curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
+  curl_easy_setopt(handle, CURLOPT_CONNECTTIMEOUT_MS, connectTimeout);
   /* Speed up the connection using IPv4 only */
   curl_easy_setopt(handle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
@@ -267,6 +270,7 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   if(res != CURLE_OK) {
     fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
     response->error = 1;
+    response->error_message = string_safe_copy(curl_easy_strerror(res));
   }
 
   /* always cleanup */

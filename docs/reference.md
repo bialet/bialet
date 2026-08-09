@@ -600,8 +600,13 @@ Every method accepts an optional `options` map:
 
 - `headers`: Map of header names to values, sent on the request.
 - `basicAuth`: Map with `username` and `password` for HTTP Basic auth.
+- `token`: String; sends `Authorization: Bearer <token>`.
+- `form`: Map; sends the body as `application/x-www-form-urlencoded`.
+- `timeout`: Number; total transfer timeout in milliseconds (default 20000).
+- `connectTimeout`: Number; connect timeout in milliseconds (default 2000).
 
-`Content-Type` defaults to `application/json` when not given in `headers`.
+`Content-Type` defaults to `application/json` when not given in `headers` and
+`form` is not used.
 
 ### Shortcut return values
 
@@ -737,6 +742,36 @@ var type = http.headers("content-type")
 ### error
 
 Getter that returns a non-zero value when the transport failed.
+
+### errorMessage
+
+Getter that returns a human-readable transport error message (the curl error
+string), or `""` when the call succeeded.
+
+### jar
+
+Static getter that returns the current cookie jar as a `name=value; ...`
+string, or `""` when empty. `Set-Cookie` response headers are stored in the
+jar automatically and sent back on later calls unless a `Cookie` header is set
+explicitly.
+
+### query(params)
+
+Static helper that returns a URL-encoded query string from a map of
+parameters.
+
+```wren
+var qs = Http.query({"q": "hello world", "page": 2}) // "q=hello+world&page=2"
+```
+
+### url(base, params)
+
+Static helper that appends URL-encoded query parameters to a URL, inserting
+`?` or `&` as needed.
+
+```wren
+var url = Http.url("https://api.example.com/search", {"q": "hello"})
+```
 
 (date-reference)=
 

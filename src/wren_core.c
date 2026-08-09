@@ -1340,27 +1340,33 @@ DEF_PRIMITIVE(http_call) {
   request.raw_headers = AS_CSTRING(args[3]);
   request.postData = AS_CSTRING(args[4]);
   request.basicAuth = AS_CSTRING(args[5]);
+  request.timeout = IS_NUM(args[6]) ? (long)AS_NUM(args[6]) : 0;
+  request.connectTimeout = IS_NUM(args[7]) ? (long)AS_NUM(args[7]) : 0;
 
   struct HttpResponse response;
   response.error = 0;
   response.status = 200;
   response.headers = NULL;
   response.body = NULL;
+  response.error_message = NULL;
 
   http_call_perform(&request, &response);
 
-  ObjList* res = wrenNewList(vm, 4);
+  ObjList* res = wrenNewList(vm, 5);
   res->elements.data[0] = NUM_VAL(response.status);
   res->elements.data[1] =
       wrenNewString(vm, response.headers ? response.headers : "");
   res->elements.data[2] = wrenNewString(vm, response.body ? response.body : "");
   res->elements.data[3] = NUM_VAL(response.error);
+  res->elements.data[4] =
+      wrenNewString(vm, response.error_message ? response.error_message : "");
 
   // http_call_perform heap-allocates the body/headers (curl chunk copies,
   // or the Windows parse_http_response buffers); release them now that the
   // values live in Wren strings. free(NULL) is safe for early-error paths.
   free(response.headers);
   free(response.body);
+  free(response.error_message);
 
   RETURN_OBJ(res);
 }
@@ -1977,7 +1983,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
-  PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);
+  PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);
 
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
   PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);

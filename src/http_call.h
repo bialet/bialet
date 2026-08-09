@@ -11,6 +11,8 @@ struct HttpRequest {
   char* method;
   char* postData;
   char* basicAuth;
+  long  timeout;
+  long  connectTimeout;
 };
 
 struct HttpResponse {
@@ -18,6 +20,7 @@ struct HttpResponse {
   int   error;
   char* headers;
   char* body;
+  char* error_message;
 };
 
 void http_call_init(struct BialetConfig* config);

@@ -41,23 +41,28 @@ improvements.
 ## HTTP Client
 
 Outbound HTTP (`Http` class, `src/http_call.c`). The current client covers
-GET/POST/PUT/DELETE, custom headers, Basic auth, redirects, and JSON handling.
+GET/POST/PUT/DELETE, custom headers, Basic auth, bearer tokens, form bodies,
+a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
 
-- [ ] **Per-call timeout options** — timeouts are hardcoded in
-      `http_call_perform` (20s total / 2s connect); expose `options["timeout"]`
-      / `options["connectTimeout"]`.
-- [ ] **Form-encoded bodies** — `Http.post` always sends JSON; add a
-      `x-www-form-urlencoded` mode or `options["form"]` map.
+- [x] **Per-call timeout options** — `options["timeout"]` / `options["connectTimeout"]`
+      (milliseconds) override the 20s / 2s defaults in `http_call_perform`.
+- [x] **Form-encoded bodies** — `options["form"]` map is URL-encoded and sent as
+      `application/x-www-form-urlencoded`.
+- [x] **Response cookies / cookie jar** — `Set-Cookie` headers are stored in a
+      process-wide jar and sent back on subsequent calls unless the caller
+      provides its own `Cookie` header.
+- [x] **Bearer token / auth shortcut** — `options["token"]` sends
+      `Authorization: Bearer <token>`.
+- [x] **Query-string builder** — `Http.url(base, params)` appends URL-encoded
+      query parameters to a URL (`Http.query(params)` returns the encoded
+      string alone).
+- [x] **Expose the curl error string** — `Http.error` remains the numeric code;
+      `Http.errorMessage` now carries the underlying curl message.
 - [ ] **Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
-- [ ] **Response cookies / cookie jar** — `Set-Cookie` headers are dropped and
-      cookies cannot be persisted across calls.
-- [ ] **Bearer token / auth shortcut** — only `basicAuth` exists; a `token`
-      option or `Authorization` helper would remove the manual header boilerplate.
-- [ ] **Query-string builder** — no helper to append/encode query parameters to
-      a URL.
-- [ ] **Expose the curl error string** — `Http.error` is a numeric code only;
-      surface the underlying message for easier debugging.
+- [ ] **Response cookies / cookie jar: per-host scoping** — the jar is
+      process-wide and sends cookies regardless of domain; scope by host and
+      honor `Domain`/`Path`/`Secure` attributes.
 - [ ] **`strtok()` in `http_call_perform`** — uses the process-global tokenizer;
       switch to `strtok_r` (see Security Hardening Backlog).
 
