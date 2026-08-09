@@ -63,7 +63,7 @@ a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
 - [ ] **Response cookies / cookie jar: per-host scoping** — the jar is
       process-wide and sends cookies regardless of domain; scope by host and
       honor `Domain`/`Path`/`Secure` attributes.
-- [ ] **`strtok()` in `http_call_perform`** — uses the process-global tokenizer;
+- [x] **`strtok()` in `http_call_perform`** — uses the process-global tokenizer;
       switch to `strtok_r` (see Security Hardening Backlog).
 
 ## Security Hardening Backlog
@@ -106,7 +106,7 @@ a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
       parent forks the HTTP child while the cron and dmon threads may hold
       SQLite/Wren locks (`src/main.c`); the child can deadlock or see torn heap.
       Register `pthread_atfork` handlers.
-- [ ] **`strtok()` races across cron/dmon/HTTP threads** — process-global
+- [x] **`strtok()` races across cron/dmon/HTTP threads** — process-global
       tokenizer state in `http_call_perform` (`src/http_call.c`), the remote
       module loader (`src/bialet_wren.c`), and markdown table rendering
       (`src/markdown.c`) interleaves across concurrent `bialet_run` contexts.

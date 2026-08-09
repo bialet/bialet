@@ -311,7 +311,8 @@ char* markdown_to_html(const char* markdown) {
       if(!md_append(&buf, "<tr>"))
         goto fail;
       char* row = strdup(line);
-      char* cell = strtok(row, "|");
+      char* saveptr = NULL;
+      char* cell = strtok_r(row, "|", &saveptr);
       while(cell) {
         while(*cell == ' ')
           cell++;
@@ -325,7 +326,7 @@ char* markdown_to_html(const char* markdown) {
           goto fail;
         if(!md_printf(&buf, table_header_parsed ? "</td>" : "</th>"))
           goto fail;
-        cell = strtok(NULL, "|");
+        cell = strtok_r(NULL, "|", &saveptr);
       }
       free(row);
       if(!md_append(&buf, "</tr>\n"))

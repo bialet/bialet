@@ -122,6 +122,7 @@ int parse_url(char* url, char** hostname, char** port, char** path) {
 
 void parse_http_response(struct HttpResponse* res, char* fullResponse) {
   char*  line;
+  char*  saveptr = NULL;
   int    isBody = 0;
   size_t headers_size = 1;
   size_t body_size = 1;
@@ -134,8 +135,8 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
     return;
   }
 
-  // Use strtok to split the response by newlines
-  line = strtok(fullResponse, "\n");
+  // Use strtok_r to split the response by newlines
+  line = strtok_r(fullResponse, "\n", &saveptr);
   while(line != NULL) {
     if(!isBody) {
       // Parse status line
@@ -177,7 +178,7 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
       body[body_len + 1] = '\0';
       body_size = new_size;
     }
-    line = strtok(NULL, "\n");
+    line = strtok_r(NULL, "\n", &saveptr);
   }
   res->headers = headers;
   res->body = body;
@@ -220,11 +221,12 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
   /* Headers */
   char* header_string = strdup(raw_headers);
-  char* header_line = strtok(header_string, "\n");
+  char* saveptr = NULL;
+  char* header_line = strtok_r(header_string, "\n", &saveptr);
   while(header_line != NULL) {
     // Add each header line to the slist
     headers = curl_slist_append(headers, header_line);
-    header_line = strtok(NULL, "\n");
+    header_line = strtok_r(NULL, "\n", &saveptr);
   }
   free(header_string);
   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);

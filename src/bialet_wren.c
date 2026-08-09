@@ -234,9 +234,10 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
         *at = '\0'; // Remove @
         branch = at + 1;
       }
-      char* user = strtok(name_copy, "/");
-      char* repo = strtok(NULL, "/");
-      char* path = strtok(NULL, "");
+      char* saveptr = NULL;
+      char* user = strtok_r(name_copy, "/", &saveptr);
+      char* repo = strtok_r(NULL, "/", &saveptr);
+      char* path = strtok_r(NULL, "", &saveptr);
       if(!user || !repo || !path) {
         message(red("Error"), "Invalid GitHub URL.");
         return result;
