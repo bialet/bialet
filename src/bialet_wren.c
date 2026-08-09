@@ -785,6 +785,26 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
     part = fileData;
   }
 
+  // Steady-state recovery for BIALET_FILES: without a purge the temp blobs
+  // accumulate ~10 MB per upload request indefinitely. The Wren-side Db.clean
+  // only runs during migrations, so enforce the same purge here, throttled to
+  // at most once a minute to keep the per-request cost near zero.
+  {
+    static time_t last_purge = 0;
+    time_t        now = time(NULL);
+    if(now - last_purge >= 60) {
+      last_purge = now;
+      sqlite3_stmt* purge_stmt;
+      if(sqlite3_prepare_v2(db,
+                            "DELETE FROM BIALET_FILES WHERE isTemp = 1 AND "
+                            "createdAt < datetime('now', '-1 day')",
+                            -1, &purge_stmt, 0) == SQLITE_OK) {
+        sqlite3_step(purge_stmt);
+        sqlite3_finalize(purge_stmt);
+      }
+    }
+  }
+
   return 1;
 }
 
