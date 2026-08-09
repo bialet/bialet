@@ -12,6 +12,17 @@
 
 #include <string.h>
 
+#if defined(_WIN32)
+#define _CRT_RAND_S
+#include <windows.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
 #ifndef OPENSSL_OK
 
 #if defined(_WIN32)
@@ -78,6 +89,42 @@ void generate_salt(char* salt, size_t length) {
   salt[length] = '\0';
 }
 #endif
+
+// Cryptographically random bytes from the OS CSPRNG. This is the source shared
+// by password salts (generate_salt above) and, since SQLite's sqlite3_randomness
+// is a documented non-cryptographic PRNG, by session IDs and CSRF tokens.
+void random_bytes_fill(unsigned char* buf, size_t len) {
+#if defined(_WIN32)
+  size_t filled = 0;
+  while(filled < len) {
+    unsigned int r = 0;
+    if(rand_s(&r) != 0) {
+      perror("rand_s failed for random bytes");
+      exit(EXIT_FAILURE);
+    }
+    buf[filled++] = (unsigned char)(r & 0xFF);
+  }
+#else
+  int fd = open("/dev/urandom", O_RDONLY);
+  if(fd < 0) {
+    perror("Failed to open /dev/urandom for random bytes");
+    exit(EXIT_FAILURE);
+  }
+  size_t got = 0;
+  while(got < len) {
+    ssize_t n = read(fd, buf + got, len - got);
+    if(n < 0) {
+      perror("Failed to read /dev/urandom for random bytes");
+      close(fd);
+      exit(EXIT_FAILURE);
+    }
+    if(n == 0)
+      continue; // block/retry instead of returning weak bytes
+    got += (size_t)n;
+  }
+  close(fd);
+#endif
+}
 
 void hash_password(char* password, char* output) {
 #ifdef OPENSSL_OK

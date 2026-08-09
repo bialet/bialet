@@ -1267,9 +1267,18 @@ DEF_PRIMITIVE(util_randomString) {
   const int charset_len = (int)(sizeof(charset) - 1);
   int       written = 0;
 
+  // Draw from the OS CSPRNG (same source as password salts), not SQLite's
+  // documented non-cryptographic PRNG: session IDs and CSRF tokens built on
+  // Util.randomString must not be guessable. Bytes are batched into a small
+  // pool and the same rejection sampling as before removes modulo bias.
+  unsigned char pool[256];
+  size_t        pool_used = sizeof(pool);
   while(written < len) {
-    unsigned char random_byte = 0;
-    sqlite3_randomness(1, &random_byte);
+    if(pool_used >= sizeof(pool)) {
+      random_bytes_fill(pool, sizeof(pool));
+      pool_used = 0;
+    }
+    unsigned char random_byte = pool[pool_used++];
     if(random_byte >= (unsigned char)(charset_len * 4)) {
       continue;
     }
