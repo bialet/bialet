@@ -144,6 +144,10 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
   char*  headers = calloc(1, 1); // Allocate a single byte for null termination
   char*  body = calloc(1, 1);    // Allocate a single byte for null termination
 
+  // Initialize the status code so a failed/malformed status line cannot leave
+  // it uninitialized for the caller (e.g. the remote-module loader).
+  res->status = 0;
+
   if(!headers || !body) {
     free(headers);
     free(body);
@@ -156,7 +160,9 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
     if(!isBody) {
       // Parse status line
       if(strstr(line, "HTTP") == line) { // This is the status line
-        sscanf(line, "HTTP/1.1 %d", &res->status);
+        int parsed = sscanf(line, "HTTP/1.1 %d", &res->status);
+        if(parsed != 1)
+          res->status = 0;
       } else if(strlen(line) <= 1) { // Empty line: headers end, body begins
         isBody = 1;
       } else { // Header line
