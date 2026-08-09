@@ -107,6 +107,29 @@ static int has_forbidden_uri_component(const char* uri) {
   return 0;
 }
 
+// Returns a pointer to the final component of [path], honoring both POSIX and
+// Windows separators. Never returns a pointer to a separator itself.
+static const char* path_basename(const char* path) {
+  const char* last = path;
+  for(const char* p = path; *p; p++) {
+    if(*p == '/' || *p == '\\')
+      last = p + 1;
+  }
+  return last;
+}
+
+// Returns 1 when [path] is a regular file without following a symlink in the
+// final component. On POSIX lstat reports the link itself; on Windows stat()
+// may still follow a junction, so the resolved-path basename check remains the
+// real boundary there.
+static int is_regular_file_no_follow(const char* path, struct stat* st) {
+#if IS_WIN
+  return stat(path, st) == 0 && S_ISREG(st->st_mode);
+#else
+  return lstat(path, st) == 0 && S_ISREG(st->st_mode);
+#endif
+}
+
 static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
@@ -741,7 +764,10 @@ void handle_client(bialet_socket_t client_socket) {
     while(1) {
       snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
                url_copy);
-      if(stat(path, &file_stat) == 0 && S_ISREG(file_stat.st_mode)) {
+      // lstat/no-follow: a planted sub/_route.wren -> ../_db.sqlite3 must not
+      // be accepted as a route file, otherwise realpath resolves it to the
+      // database and private_path_internal waives the private-file check.
+      if(is_regular_file_no_follow(path, &file_stat)) {
         hm->routes = create_string(url_copy, strlen(url_copy));
         private_path_internal = 1;
         break;
@@ -789,10 +815,13 @@ void handle_client(bialet_socket_t client_socket) {
     // Re-apply the private-file rule to the resolved target. A symlink named
     // "x" -> "_db.sqlite3" passes the URI check, so the canonical path must
     // be validated too. Only the root-relative portion is checked so an app
-    // hosted under a "_"/"."-named directory is not blocked, and _route.wren
-    // (reached only through the framework's own route search) is allowed.
-    if(!private_path_internal &&
-       has_forbidden_uri_component(resolved_path + root_len)) {
+    // hosted under a "_"/"."-named directory is not blocked. The framework's
+    // own _route.wren (found only through the lstat-based route search) is
+    // exempt, and only when the resolved basename is exactly "_route.wren" so
+    // a planted sub/_route.wren -> ../_db.sqlite3 cannot waive the boundary.
+    int route_wren_waived = private_path_internal &&
+                            strcmp(path_basename(resolved_path), "_route.wren") == 0;
+    if(!route_wren_waived && has_forbidden_uri_component(resolved_path + root_len)) {
       message(red("Security Error"), "Private file access blocked", path);
       clean_http_message(hm);
       custom_error(403, &response);

@@ -90,7 +90,7 @@ a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
 - [ ] **Windows: fix realpath shim buffer size** — the Windows `realpath` shim
       writes up to `_MAX_PATH` (260) bytes into a 100-byte stack buffer; pass
       the caller's real size through to `_fullpath`/`WideCharToMultiByte`.
-- [ ] **`_route.wren` symlink bypasses the private-file rule** — the
+- [x] **`_route.wren` symlink bypasses the private-file rule** — the
       `_route.wren` directory search uses `stat()` (follows symlinks) and sets
       `private_path_internal`, which skips the resolved-path `_`/`.` check in
       `handle_client` (`src/server.c`). A planted `sub/_route.wren -> ../_db.sqlite3`

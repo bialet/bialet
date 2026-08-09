@@ -42,6 +42,32 @@ run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"
 run_test "Get the route parameter     " "route/baz/qux"   200 "bazqux"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
+# Regression: a planted sub/_route.wren -> ../_db.sqlite3 symlink must not
+# bypass the private-file rule. The _route.wren directory search must not
+# follow symlinks, and the resolved-path check is only waived for a real
+# _route.wren basename. The probe returns 404 (no _route.wren found), never
+# the leaked database bytes.
+total_tests=$((total_tests + 1))
+echo -e -n "_route.wren symlink no bypass\t"
+route_symlink_dir="$(dirname "$0")/sub"
+route_symlink="$route_symlink_dir/_route.wren"
+rm -rf "$route_symlink_dir"
+route_symlink_code=""
+route_symlink_body=""
+if mkdir -p "$route_symlink_dir" && ln -s "../_db.sqlite3" "$route_symlink"; then
+  route_symlink_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$PORT/sub/does-not-exist")
+  route_symlink_body=$(curl -s "http://$HOST:$PORT/sub/does-not-exist")
+fi
+rm -rf "$route_symlink_dir"
+if [[ "$route_symlink_code" == "404" && "$route_symlink_body" != "SQLite format 3"* ]]; then
+  echo -e "${GREEN}PASS${NC}"
+  passed_tests=$((passed_tests + 1))
+else
+  echo -e "${RED}FAIL${NC}"
+  failed_tests=$((failed_tests + 1))
+  echo -e -n "\tExpected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'\n"
+fi
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
