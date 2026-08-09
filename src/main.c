@@ -77,11 +77,17 @@ static volatile int8_t keep_running = 1;
 static int             cron_installed = 0;
 static char*           cron_code = 0;
 
-// cron_code/cron_installed are written by the dmon (file-watch) thread and
-// read by the cron thread; the mutex prevents torn reads and use-after-free
-// when a cron file is replaced while the cron tick is running.
+// run_mutex serializes every background bialet_run against the shared SQLite
+// handle: cron ticks, migrations, and file-watch-triggered runs all go through
+// the single parent-process connection. The cron thread and the dmon
+// (file-watch) thread must not drive the global sqlite3* concurrently, and the
+// pthread_atfork prepare handler takes the same lock so a fork() cannot land
+// while a background thread is inside SQLite/Wren. cron_code/cron_installed are
+// also written by the dmon thread and read by the cron thread; the mutex
+// prevents torn reads and use-after-free when a cron file is replaced while a
+// cron tick is running.
 #if !IS_WIN
-static pthread_mutex_t cron_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t run_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 static void migrate() {
@@ -91,12 +97,18 @@ static void migrate() {
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
            MIGRATION_FILE_ALT);
+#if !IS_WIN
+  pthread_mutex_lock(&run_mutex);
+#endif
   if((code = read_file(path)) || (code = read_file(altPath))) {
     struct BialetResponse r = bialet_run("migration", code, 0);
     message(yellow("Migration start"), r.body);
   } else {
     bialet_run("migration", "Db.init", 0);
   }
+#if !IS_WIN
+  pthread_mutex_unlock(&run_mutex);
+#endif
 }
 
 static void install_cron() {
@@ -111,25 +123,25 @@ static void install_cron() {
     message(yellow("Installing cron"));
   }
 #if !IS_WIN
-  pthread_mutex_lock(&cron_mutex);
+  pthread_mutex_lock(&run_mutex);
 #endif
   free(cron_code);
   cron_code = new_code;
   cron_installed = (cron_code != 0);
 #if !IS_WIN
-  pthread_mutex_unlock(&cron_mutex);
+  pthread_mutex_unlock(&run_mutex);
 #endif
 }
 
 static void cron_run() {
 #if !IS_WIN
-  pthread_mutex_lock(&cron_mutex);
+  pthread_mutex_lock(&run_mutex);
 #endif
   if(cron_installed && cron_code) {
     bialet_run("cron", cron_code, 0);
   }
 #if !IS_WIN
-  pthread_mutex_unlock(&cron_mutex);
+  pthread_mutex_unlock(&run_mutex);
 #endif
 }
 
