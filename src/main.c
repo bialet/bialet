@@ -154,6 +154,27 @@ void* cron_thread(void* arg) {
   return NULL;
 }
 
+#if !IS_WIN
+// The Linux parent forks the HTTP child while the cron and dmon threads may be
+// inside SQLite/Wren. The child inherits copies of whatever mutexes those
+// threads hold (locked forever, since the owner thread does not exist in the
+// child) and torn heap. Taking run_mutex before fork and releasing it in both
+// parent and child guarantees no background bialet_run is in flight at fork
+// time, so the child's bialet_reopen_db() and later request handling never
+// touch a locked SQLite handle.
+static void atfork_prepare(void) {
+  pthread_mutex_lock(&run_mutex);
+}
+
+static void atfork_parent(void) {
+  pthread_mutex_unlock(&run_mutex);
+}
+
+static void atfork_child(void) {
+  pthread_mutex_unlock(&run_mutex);
+}
+#endif
+
 /* Reload files */
 static void trigger_reload_files(const char* filepath) {
   time_t current_time = time(NULL);
@@ -248,6 +269,15 @@ int main(int argc, char* argv[]) {
   signal(SIGINT, sigint_handler);
   signal(SIGTERM, sigint_handler);
   signal(SIGABRT, sigint_handler);
+#endif
+
+#if !IS_WIN
+  // Register before any threads are created so every fork (including
+  // open_browser) is bracketed by the run_mutex prepare/parent/child handlers.
+  if(pthread_atfork(atfork_prepare, atfork_parent, atfork_child) != 0) {
+    fprintf(stderr, "pthread_atfork failed\n");
+    exit(EXIT_FAILURE);
+  }
 #endif
 
 #if IS_LINUX
