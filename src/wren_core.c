@@ -1435,9 +1435,13 @@ DEF_PRIMITIVE(test_runRequest) {
   if(methodEnd) {
     size_t methodLen = methodEnd - message;
     char   methodBuf[32];
-    strncpy(methodBuf, message, methodLen);
-    methodBuf[methodLen] = '\0';
-    hm->method = create_string(methodBuf, methodLen);
+    // Bound the copy so a hostile test request cannot overflow the stack
+    // buffer; the truncated value is enough to drive the route handler.
+    size_t methodCopy =
+        methodLen < sizeof(methodBuf) - 1 ? methodLen : sizeof(methodBuf) - 1;
+    memcpy(methodBuf, message, methodCopy);
+    methodBuf[methodCopy] = '\0';
+    hm->method = create_string(methodBuf, methodCopy);
 
     // Parse URI
     const char* uriStart = methodEnd + 1;
@@ -1445,9 +1449,10 @@ DEF_PRIMITIVE(test_runRequest) {
     if(uriEnd) {
       size_t uriLen = uriEnd - uriStart;
       char   uriBuf[1024];
-      strncpy(uriBuf, uriStart, uriLen);
-      uriBuf[uriLen] = '\0';
-      hm->uri = create_string(uriBuf, uriLen);
+      size_t uriCopy = uriLen < sizeof(uriBuf) - 1 ? uriLen : sizeof(uriBuf) - 1;
+      memcpy(uriBuf, uriStart, uriCopy);
+      uriBuf[uriCopy] = '\0';
+      hm->uri = create_string(uriBuf, uriCopy);
     } else {
       hm->uri = create_string("/", 1);
     }
