@@ -122,9 +122,25 @@ char* bialet_read_file(const char* path) {
 }
 
 char* read_file(const char* path) {
+  if(path == NULL)
+    return NULL;
   char* buffer = 0;
   long  length;
-  FILE* f = fopen(path, "rb");
+  // read_file is used for framework files and module sources; opening without
+  // following symlinks/junctions keeps a planted link from redirecting reads
+  // outside the app root after a containment check.
+  char  resolved[PATH_MAX];
+  FILE* f;
+  if(path[0] == '/') {
+    f = open_file_no_follow(path);
+  } else {
+    // Resolve relative paths (e.g. a "./" app root) to absolute before the
+    // no-follow open; open_file_no_follow walks absolute paths component by
+    // component.
+    if(realpath_n(path, resolved, sizeof(resolved)) == NULL)
+      return NULL;
+    f = open_file_no_follow(resolved);
+  }
   if(f) {
     if(fseek(f, 0, SEEK_END) == 0) {
       length = ftell(f);
