@@ -265,7 +265,7 @@ static const char* bialetModuleSource =
 "      token = Util.randomString(60)\n"
 "      set(\"_bialet_csrf\", token)\n"
 "    }\n"
-"    return '<input type=\"hidden\" name=\"_bialet_csrf\" value=\"%( Util.htmlEscape(token) )\">'\n"
+"    return HtmlNode.new('<input type=\"hidden\" name=\"_bialet_csrf\" value=\"%( Util.htmlEscape(token) )\">')\n"
 "  }\n"
 "  csrfOk { Util.secureEquals(get(\"_bialet_csrf\"), Request.post(\"_bialet_csrf\")) }\n"
 "}\n"

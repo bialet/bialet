@@ -2638,9 +2638,19 @@ static void stringInterpolation(Compiler* compiler, bool canAssign) {
   callMethod(compiler, 0, "joinInt_()", 10);
 }
 
+// A bare HTML string literal (no interpolation). Wrapped in HtmlNode so the
+// escape machinery can tell already-safe markup apart from user data.
+static void htmlNode(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
+  loadCoreVariable(compiler, "HtmlNode");
+  literal(compiler, false);
+  callMethod(compiler, 1, "new(_)", 6);
+}
+
 // An HTML string literal that contains interpolated expressions. Same as
-// [stringInterpolation], but uses the HTML token types so it can later diverge
-// to escape interpolated values.
+// [stringInterpolation], but interpolated values are escaped unless they are
+// already-safe HtmlNodes. The joined result is an HtmlNode so a nested
+// interpolation is not escaped a second time.
 static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   (void)canAssign;
   // Instantiate a new list.
@@ -2648,25 +2658,25 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   callMethod(compiler, 0, "new()", 5);
 
   do {
-    // The opening string part.
-    literal(compiler, false);
+    // The opening literal piece is already-safe HTML.
+    htmlNode(compiler, false);
     callMethod(compiler, 1, "addCore_(_)", 11);
 
-    // The interpolated expression.
+    // The interpolated expression: escape unless it is an HtmlNode.
     ignoreNewlines(compiler);
     expression(compiler);
-    callMethod(compiler, 1, "addCore_(_)", 11);
+    callMethod(compiler, 1, "addHtml_(_)", 11);
 
     ignoreNewlines(compiler);
   } while(match(compiler, TOKEN_HTML_TEXT));
 
-  // The trailing string part.
+  // The trailing literal piece is already-safe HTML.
   consume(compiler, TOKEN_HTML_NODE, "Expect end of HTML interpolation.");
-  literal(compiler, false);
+  htmlNode(compiler, false);
   callMethod(compiler, 1, "addCore_(_)", 11);
 
   // The list of interpolated parts.
-  callMethod(compiler, 0, "joinInt_()", 10);
+  callMethod(compiler, 0, "joinHtml_()", 11);
 }
 
 static void super_(Compiler* compiler, bool canAssign) {
@@ -3008,7 +3018,7 @@ GrammarRule rules[] = {
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
     /* TOKEN_QUERY         */ PREFIX(literal),
-    /* TOKEN_HTML_NODE     */ PREFIX(literal),
+    /* TOKEN_HTML_NODE     */ PREFIX(htmlNode),
     /* TOKEN_HTML_TEXT     */ PREFIX(htmlInterpolation),
     /* TOKEN_LINE          */ UNUSED,
     /* TOKEN_ERROR         */ UNUSED,

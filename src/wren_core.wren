@@ -367,12 +367,26 @@ class String is Sequence {
     }
     return output
   }
-  raw { toString }
+  raw { HtmlNode.new(this) }
   toNum { Num.fromString(this) }
   toBool { toNum != 0 }
 }
 
+// A wrapper for a string of already-rendered HTML. HTML string literals and
+// the output of `{{ }}` interpolation produce HtmlNodes so the escape
+// machinery leaves them alone, while interpolated user data is escaped.
 class HtmlNode is Sequence {
+  construct new(string) {
+    _string = string
+  }
+
+  toString { _string }
+  raw { this }
+  safe { this }
+  +(other) { HtmlNode.new(_string + other.toString) }
+  count { _string.count }
+  iterate(iterator) { _string.iterate(iterator) }
+  iteratorValue(iterator) { _string.iteratorValue(iterator) }
 }
 
 class StringByteSequence is Sequence {
@@ -464,6 +478,29 @@ class List is Sequence {
     return result
   }
   first { count > 0 ? this[0] : null }
+
+  // Adds [node] to an HTML interpolation list. HtmlNodes are already-safe and
+  // stored raw; other values are escaped. Sequences (except String and Map)
+  // are flattened so `{{ list.map{...} }}` renders each item without escaping
+  // the markup produced by nested HTML literals.
+  addHtml_(node) {
+    if (node is HtmlNode) return addCore_(node)
+    if (node.type == Bool && !node) return this
+    if (node is String || node is Map) return addCore_(HtmlNode.new(node.toString.safe))
+    if (node is Sequence) {
+      for (element in node) addHtml_(element)
+      return this
+    }
+    return addCore_(HtmlNode.new(node.toString.safe))
+  }
+
+  // Joins the elements of an HTML interpolation. Every element is an HtmlNode
+  // by the time this runs, so it concatenates their raw strings.
+  joinHtml_() {
+    var res = ""
+    for (element in this) res = res + element.toString
+    return HtmlNode.new(res)
+  }
 }
 
 class Map is Sequence {

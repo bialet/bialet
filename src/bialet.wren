@@ -294,7 +294,7 @@ class Session {
       token = Util.randomString(60)
       set("_bialet_csrf", token)
     }
-    return '<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">'
+    return HtmlNode.new('<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">')
   }
   csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
 }

@@ -18,6 +18,7 @@
 #include "show_errors.h"
 #include "utils.h"
 #include "wren.h"
+#include "wren_vm.h"
 #include <ctype.h>
 #include <sqlite3.h>
 #include <string.h>
@@ -850,12 +851,25 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     error = result != WREN_RESULT_SUCCESS;
   }
   if(!error) {
-    wrenEnsureSlots(vm, 1);
+    wrenEnsureSlots(vm, 2);
     int type = wrenGetSlotType(vm, 0);
     if(type == WREN_TYPE_STRING) {
       const char* returnBody = wrenGetSlotString(vm, 0);
       r.body = string_safe_copy(returnBody);
       r.body_owned = 1;
+    } else if(IS_INSTANCE(vm->apiStack[0])) {
+      /* A handler may return an HtmlNode: an HTML literal already rendered by
+       * the template escape machinery. Stringify it so the page is served. */
+      wrenGetVariable(vm, module, "HtmlNode", 1);
+      if(AS_INSTANCE(vm->apiStack[0])->obj.classObj == AS_CLASS(vm->apiStack[1])) {
+        WrenHandle* toString = wrenMakeCallHandle(vm, "toString");
+        wrenSetSlotHandle(vm, 0, wrenGetSlotHandle(vm, 0));
+        if(wrenCall(vm, toString) == WREN_RESULT_SUCCESS) {
+          const char* body = wrenGetSlotString(vm, 0);
+          r.body = string_safe_copy(body);
+          r.body_owned = 1;
+        }
+      }
     }
 
     wrenGetVariable(vm, module, "Response", 0);
