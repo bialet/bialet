@@ -235,8 +235,8 @@ void free_bialet_query(BialetQuery* query);
  * Response.defaultPage_ builds the same chrome from these macros, so the
  * C-side fallbacks and the Wren API render the exact same template. */
 #define BIALET_CSS_PAGE                                                             \
-  "<style>body{background:#fff;color:#024;font-family:system-ui;font-size:2.3rem;"  \
-  "line-height:2em;text-align:center;padding:2em}"                                  \
+  "<style>body{background:#fff;color:#024;font-family:system-ui;font-size:2rem;"    \
+  "line-height:2em;text-align:center;padding:.5em;max-width:45ch;margin:auto}"      \
   "a{color:#06f;text-decoration:none}"                                              \
   "a:hover{color:#04f;text-decoration:underline}"                                   \
   "a:visited{color:#06f}"                                                           \
@@ -246,7 +246,9 @@ void free_bialet_query(BialetQuery* query);
   "code{color:#fa0}}</style>"
 #define BIALET_HEADER_PAGE "<!DOCTYPE html>" BIALET_CSS_PAGE "<h1>"
 #define BIALET_FOOTER_PAGE                                                          \
-  "</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a "             \
+  "</p><p "                                                                         \
+  "style=\"font-size:.8em;position:fixed;bottom:0;left:0;width:100%;text-align:"    \
+  "center\">Powered by 🚲 <b><a "                                                   \
   "href=\"https://bialet.dev\">Bialet</a></b></p></body></html>"
 #define BIALET_WELCOME_PAGE                                                         \
   BIALET_HEADER_PAGE                                                                \
