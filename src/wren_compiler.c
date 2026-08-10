@@ -2638,6 +2638,9 @@ static void stringInterpolation(Compiler* compiler, bool canAssign) {
   callMethod(compiler, 0, "joinInt_()", 10);
 }
 
+// An HTML string literal that contains interpolated expressions. Same as
+// [stringInterpolation], but uses the HTML token types so it can later diverge
+// to escape interpolated values.
 static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   (void)canAssign;
   // Instantiate a new list.
@@ -2665,7 +2668,6 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   // The list of interpolated parts.
   callMethod(compiler, 0, "joinInt_()", 10);
 }
-
 
 static void super_(Compiler* compiler, bool canAssign) {
   ClassInfo* enclosingClass = getEnclosingClass(compiler);
