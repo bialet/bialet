@@ -171,7 +171,10 @@ class Response {
   static cors { cors("*") }
 
   static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }
-  static pageHtml(title, messageHtml) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( Util.htmlEscape(title) )</h1><p>%( messageHtml )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
+  // defaultPage_ is a C native that renders the same page chrome as the
+  // server's C-side fallbacks (see BIALET_HEADER_PAGE/BIALET_FOOTER_PAGE in
+  // bialet.h), so the default pages live in one place instead of two.
+  static pageHtml(title, messageHtml) { defaultPage_(Util.htmlEscape(title), messageHtml) }
   static end(code, title, message) {
     status(code)
     var content = page(title, message)

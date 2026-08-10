@@ -1342,6 +1342,47 @@ DEF_PRIMITIVE(util_urlDecode) {
   RETURN_VAL(result);
 }
 
+// Builds a default page from the shared C-side template (BIALET_HEADER_PAGE /
+// BIALET_FOOTER_PAGE). This is the single source of truth for the default page
+// chrome; Wren's Response.page/pageHtml call this instead of redefining the
+// template in Wren, so both the C-side fallbacks and the Wren API render the
+// exact same page. [args[1]] and [args[2]] must already be HTML-escaped.
+DEF_PRIMITIVE(response_default_page) {
+  if(!validateString(vm, args[1], "title") ||
+     !validateString(vm, args[2], "message"))
+    return false;
+
+  ObjString* title = AS_STRING(args[1]);
+  ObjString* message = AS_STRING(args[2]);
+
+  static const char kMessageWrap[] = "</h1><p>";
+
+  size_t head_len = strlen(BIALET_HEADER_PAGE);
+  size_t foot_len = strlen(BIALET_FOOTER_PAGE);
+  size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
+                  message->length + foot_len + 1;
+  char*  buffer = (char*)malloc(needed);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory building page.");
+
+  char* p = buffer;
+  memcpy(p, BIALET_HEADER_PAGE, head_len);
+  p += head_len;
+  memcpy(p, title->value, title->length);
+  p += title->length;
+  memcpy(p, kMessageWrap, sizeof(kMessageWrap) - 1);
+  p += sizeof(kMessageWrap) - 1;
+  memcpy(p, message->value, message->length);
+  p += message->length;
+  memcpy(p, BIALET_FOOTER_PAGE, foot_len);
+  p += foot_len;
+  *p = '\0';
+
+  Value result = wrenNewStringLength(vm, buffer, (uint32_t)(p - buffer));
+  free(buffer);
+  RETURN_VAL(result);
+}
+
 DEF_PRIMITIVE(http_call) {
   struct HttpRequest request;
   request.url = AS_CSTRING(args[1]);
@@ -1995,6 +2036,9 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
+
+  ObjClass* responseClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Response"));
+  PRIMITIVE(responseClass->obj.classObj, "defaultPage_(_,_)", response_default_page);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);

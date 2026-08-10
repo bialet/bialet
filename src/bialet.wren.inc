@@ -145,7 +145,7 @@ static const char* bialetModuleSource =
 "  static cors() { cors(\"*\") }\n"
 "  static cors { cors(\"*\") }\n"
 "  static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }\n"
-"  static pageHtml(title, messageHtml) { '<!DOCTYPE html><body style=\"font:2.3rem system-ui;text-align:center;margin:2em;color:#024\"><h1>%( Util.htmlEscape(title) )</h1><p>%( messageHtml )</p><p style=\"font-size:.8em;margin-top:2em\">Powered by 🚲 <b><a href=\"https://bialet.dev\" style=\"color:#007FAD\" >Bialet' }\n"
+"  static pageHtml(title, messageHtml) { defaultPage_(Util.htmlEscape(title), messageHtml) }\n"
 "  static end(code, title, message) {\n"
 "    status(code)\n"
 "    var content = page(title, message)\n"
