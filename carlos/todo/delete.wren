@@ -1,10 +1,10 @@
-// Delete endpoint. POST-only, CSRF-checked, redirect back.
 import "_app/domain" for Task
 
+// POST-only delete handler. Same fail-closed CSRF pattern as toggle.wren.
 var session = Session.new()
 
 if (Request.isPost && session.csrfOk) {
-  var id = Request.post("id") || ""
-  if (id != "") Task.remove(id)
+  Task.delete(Request.post("id") || "0")
 }
+
 return Response.redirect("/")

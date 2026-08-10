@@ -1,19 +1,23 @@
-# Bialet UX Profiles: Three Critical Walkthroughs
+# Bialet UX Profiles: Three Critical Walkthroughs (dev 0.12.0)
 
-This document walks three hypothetical users through Bialet — a student, a
-veteran PHP developer, and a React/TypeScript engineer — and reconstructs their
-experience with the framework step by step, from first install to pushing past
-the tutorial.
+A re-run of the persona study against the **latest `origin/dev`** build
+(bialet 0.12.0). The previous run was against an older dev that had no
+auto-escaping, a session table without a primary key, rotating CSRF tokens,
+and hyphenless tag names. This run re-builds the same three persona apps from
+scratch, using only the docs and the binary, to see which friction is gone and
+what remains.
 
 It is deliberately critical. Each profile ends with a severity-ranked list of
 friction points and the concrete changes that would remove them. Everything
-below is grounded in the current behavior described in `docs/` and the
-codebase, not in speculation about future versions.
+below was reproduced against the binary, not read off the roadmap.
 
 - Profile 1: Maya — The Student (HTML & CSS)
 - Profile 2: Carlos — The Old-School PHP Developer
 - Profile 3: Elena — The React/TypeScript Frontend Engineer
 - Cross-cutting findings
+- Verified: what the previous run found broken and is now fixed
+- Verified: what is still broken
+- Recommended fixes (in order of impact)
 
 ---
 
@@ -26,471 +30,378 @@ database servers" — is exactly what she wants to hear.
 
 ### The journey
 
-**Minutes 0–5: install.** The one-liner works on her Mac (Apple Silicon
-binary). She is told to create `index.wren` and run `bialet`. This is the
-strongest part of the whole experience: no `npm init`, no `npx`, no config
-files, one port, one browser tab. The welcome page appears.
+**Minutes 0–5: install.** The one-liner works, `bialet -v` → `bialet 0.12.0`,
+and `index.wren` + `return <p>Hello World!</p>` + the server = a page. No
+`npm init`, no config files. This is still the strongest part of the whole
+experience. Two small walls in the first five minutes: `bialet --version`
+(the long flag she instinctively tried) *starts a server on port 7001*
+instead of printing a version, and `bialet dev` tries to open a text-mode
+browser and prompts for a "terminal type" on a headless box.
 
 **Minutes 5–30: the first page.** She writes HTML inside Wren, which feels
-like magic. Then she hits the parser.
+like magic. Then she hits the parser:
 
-- A plain `<div>` wrapper containing another `<div>` fails to compile. The
-  outermost tag of an inline HTML string cannot repeat at any nesting level
-  (`docs/template.md`). She needs `<div>` and a list of cards, so she reaches
-  for exactly the pattern the parser rejects.
-- `<br/>` fails; `<br />` is required. That is a silent, arbitrary-looking
-  rule to a beginner.
-- Tag names cannot contain hyphens. She names a component `<custom-tag>` and
-  gets a parse error. CSS custom properties and web components both use
-  hyphens; Wren tells her they're illegal.
-- Interpolation depth is capped at 9 levels. She will hit this while nesting
-  ternaries, because the docs actively teach nested ternaries.
+- A plain `<div>` wrapper containing another `<div>` fails to compile:
+  `Cannot nest <div> inside <div>: use a different tag for the inner element.`
+  followed by a confusing secondary error `Error at 'div': Expect end of
+  file.` The rule is documented, and the error message now suggests the fix —
+  but the rule itself still does not exist in HTML, and a list of cards is the
+  most ordinary thing on the internet. She lost ~10 minutes.
+- Uppercase tags give `Error at '<': Expected expression.` and underscore
+  tags give `Unterminated HTML string.` Neither message mentions tag names.
+  A beginner cannot map either error to "tag names must be lowercase,
+  alphanumeric, and hyphenated."
+- `<br/>` and `<br />` both work. The docs claim `<br/>` is "Incorrect."
+  The doc is wrong. She tested it.
+- Mismatched tags (`<div><span>Hello</div>`) compile and serve 200 with the
+  broken HTML verbatim. The docs claim this "fails." The doc is wrong.
 
-None of these rules exist in HTML. She believes she already knows HTML, and
-the tool is now telling her she doesn't. This is the first moment the "use
-your HTML skills" pitch breaks.
+**Minutes 30–90: the todo list.** The single-file app works, and then the data
+model bites her the same way it did before:
 
-**Minutes 30–90: the guestbook.** She follows the README example and gets
-something working. Then the data model bites her:
+- `Request.post("msg")` returns `null` when a key is missing. Forget the
+  `|| ""` once and the request 500s. This time the server log gives a good
+  message (`Runtime Error Null does not implement 'trim'.` with file and
+  line) — but the **browser** still shows a generic "🚨 Internal Server
+  Error / Oops! Something broke." with no line, no file, no hint. The
+  detailed error page exists (`BIALET_SHOW_ERRORS` / `bialet dev`) but it is
+  not the default, and enabling it requires a server restart the docs don't
+  mention.
+- Database values come back as **strings**. `task["done"]` is `"0"` or `"1"`,
+  and both are truthy in Wren, so her first `if (task["done"])` toggle
+  silently did nothing.
+- `""` is truthy. `if (text)` is not a presence check.
+- A multi-statement `map` callback (`{ |i| var x = i; <li>...</li> }`)
+  silently renders an empty `<ul></ul>` with no error at all.
+- The docs drilled the `Request.post(...) || ""` rule into her so hard that
+  she stopped tripping it — that repetition works.
 
-- `Request.post("msg")` returns `null` when a key is missing. Calling a
-  string method on `null` crashes the request. The docs' fix is `|| ""` on
-  every single field. She forgets it once, gets a 500, and the error page is a
-  generic "Internal server error" with no line number and no hint
-  (`docs/errors.md`).
-- Database values come back as **strings**. Her vote counter does string
-  concatenation instead of addition. She only finds out because she reads the
-  docs; nothing tells her at runtime.
-- `""` is truthy in Wren. The forms guide itself warns: `if (q)` does not
-  work as a presence check; you need `if (q != "")`. To a student, `""` being
-  truthy is just wrong.
-- She must remember `.safe` on every user-supplied string or she ships an XSS
-  hole. There is no auto-escaping. A beginner *will* forget it, and nothing
-  in the framework catches it. The roadmap acknowledges this ("Auto HTML
-  escaping" is a longer-term item, `ROADMAP.md`), which means the project
-  knows the default is dangerous.
+**Minutes 90+.** She discovers there is a full `docs/examples/todo/` example,
+but it is split across 7 files and not linked from the examples page. Her
+editor (VS Code) shows `.wren` as plain text — no highlighting, no extension,
+no LSP anywhere. `bialet -t` exists as a syntax checker, but it does not
+catch mismatched tags and it executes the file it checks.
 
-**Minutes 90+: going further.** She wants an edit page for a blog post, i.e.
-`/article?id=42`. The docs push query strings over path segments
-(`docs/advanced-routing.md`), which is a fine mental model for PHP veterans
-but unfamiliar to her. She has never used `$_GET`. The SEO-friendly URL she
-imagined requires a `_route.wren` escape hatch she has to learn separately.
-
-She tries to debug with `System.print(...)` on the server stdout — in a
-separate terminal, with no structured errors, no stack trace formatting, and
-no source line. If she is on macOS, her live-reload is broken too: reload uses
-inotify (Linux only) and the FAQ tells her to restart the server manually.
-The "see your changes instantly" promise silently dies on the most common
-student laptop.
-
-She opens VS Code, the editor every course told her to use, and there is no
-syntax highlighting, no snippets, no diagnostics — Vim/Neovim have support,
-VS Code does not (`ROADMAP.md`). The "wren" files render as plain text.
+**The live-reload saga.** `live-reload.md` promises a polling script that
+reloads the browser when files change. It is a lie in this build: the script
+is injected and `GET /_livereload` returns a number, but **the number never
+changes** when files are created, modified, or deleted. The Wren hot-reload
+(save → next request serves new code) works, but the advertised browser
+auto-reload is dead. She would blame her setup, restart everything, and it
+still would not work.
 
 ### The "aha!" moment, checked honestly
 
-The advertised aha — "I built a full-stack app in a single file" — is real and
-it survives contact. One `.wren` file with a query, a POST handler, and inline
-HTML is genuinely astonishing to someone who expected React + Node + a
-database. That moment is the product.
+The aha is different this time. The old one — "I built a full-stack app in a
+single file" — is still real, but now it is joined by a second one that
+landed harder: **she pasted `<script>alert(1)</script>` into a task on
+purpose and the page showed it as literal text.** Escaping that is on by
+default, with zero ceremony, is the thing that made her trust the framework.
 
-But it is followed immediately by the anti-aha: the app she built is
-vulnerable (forgot `.safe`), the HTML parser rejects her valid HTML, and the
-errors give her no path forward. She got the demo, then hit a wall.
-
-### Friction, ranked
-
-| # | Friction | Severity | Why it hurts |
-|---|----------|----------|--------------|
-| 1 | No auto-escaping; `.safe` opt-in | Critical | Ships XSS by default; beginners cannot be expected to self-audit |
-| 2 | HTML parser rejects valid HTML (same-tag nesting, hyphen tags, `<br/>`) | High | Contradicts the "use your HTML skills" promise at minute 5 |
-| 3 | Generic 500 page, no line numbers, no hints | High | Dead-end debugging for someone with no runtime experience |
-| 4 | No VS Code extension (only Vim/Neovim) | High | The default student editor has zero support |
-| 5 | Live reload is Linux-only; manual restart on macOS | High | Kills the "instant feedback" loop on the most common student machine |
-| 6 | `Request.post()` → `null` crash-by-default | High | One forgotten `\|\| ""` is a 500 with a blank message |
-| 7 | DB values as strings; `""` truthy; no runtime hints | Medium | Data bugs that are invisible until logic runs |
-| 8 | Query-string-first routing | Medium | An unfamiliar model for someone who never saw `$_GET` |
-| 9 | No scaffold (`bialet new`), no online playground | Medium | First-file friction; FAQ admits no try-online exists |
-| 10 | New dialect of Wren, not standard Wren | Low | Small extra tax on top of "you must learn a language" |
-
-### Recommended changes for Maya
-
-1. **Flip escaping to safe-by-default.** Make `{{ value }}` escape, add
-   `{{ value.raw }}` for trusted markup. This is already on the roadmap — move
-   it up. It is the single highest-impact change for every profile below.
-2. **Ship a VS Code extension** (syntax + language-config + snippets) before
-   any other DX work. She lives in VS Code.
-3. **A dev-only error page** showing file, line, and the offending source line
-   with a one-line hint ("did you forget `.safe`?", "did you guard the POST
-   field with `|| \"\"`?"). The knowledge is already in the docs; surface it
-   at the moment of failure.
-4. **Loosen or remove the same-tag nesting rule.** It exists for the parser,
-   but it makes the tool lie about HTML. At minimum, detect the pattern and
-   suggest the workaround in the error message.
-5. **`bialet new <name>`** scaffold that generates `index.wren`, a layout,
-   and a working guestbook so her first file is not blank.
-6. **macOS live reload** (kqueue) — or, failing that, stop advertising live
-   reload on the homepage.
-7. **A classroom onboarding path**: a 10-minute "no SQL, no Wren beyond a
-   loop" tutorial where the DB is invisible, then reveal it.
+The anti-aha has shifted too. The XSS panic is gone; the walls now are
+silent failures (empty `<ul>` from a map bug, a 302-with-body when she
+forgot `return`, live reload that never reloads) and a generic 500 page that
+sends her to a log file.
 
 ---
 
-## Profile 2: Carlos, the PHP Freelancer
+## Profile 2: Carlos, the Old-School PHP Developer
 
-**Background.** 45, twenty years of vanilla PHP + MySQL on shared hosting.
-Built a hundred small business sites. Skeptical of Laravel, allergic to
-JAMstack and Docker. Bialet's manifesto — "HTML is the Real Frontend,"
-"Standards, not frameworks" — speaks his language.
+**Background.** 47, 20 years of vanilla PHP + MySQL, classic MVC, files-per-URL,
+`htmlspecialchars()` on everything. Distrusts magic; reads the source when
+the docs get vague.
 
 ### The journey
 
-**Setup.** He runs `curl | sh` on his Linux VPS. No `composer install`, no
-`php-fpm`, no `nginx` config, no `.htaccess` gymnastics. He drops a `.wren`
-file in a folder, runs the binary, and gets a page. The file-to-URL mapping is
-PHP's model exactly — `about.wren` is `/about`, the filesystem is the router
-(`docs/advanced-routing.md`). He understands this instantly. This is the best
-possible first ten minutes.
+**What worked first try:** `if (Request.isPost) { ...; return
+Response.redirect("/") }` — every POST returned 302 + Location, PRG just
+works. Parameterized backtick queries (`?` placeholders) — the compiler
+refuses string interpolation into a backtick, so the injection path is closed
+by construction. He verified: `'; DROP TABLE tasks; --` stored literally and
+rendered escaped. `.to(Task)` mapping is neat, and `Null.to` is a no-op so
+`find()` returns null safely. `_`/`.`-prefixed files return 403. The DB and
+the migration auto-created on first run.
 
-**The language swap.** He knows PHP cold and now has to write Wren. The syntax
-is C/JS/Python-familiar, and he can read it fine. What he *can't* do is reuse
-any of the 20 years of PHP snippets, Composer packages, or muscle memory. His
-freelance business runs on `include` + a utility folder. Bialet's answer is
-`import` plus remote `gh:` imports — but there is no package registry, no
-version resolution, and cached remote modules never update until you
-manually clear the `BIALET_REMOTE_MODULES` table (`docs/advanced-routing.md`).
-For a paid client project, silently pinning `main` forever is a liability.
+**Escaping / XSS — the best feature.** `{{ }}` auto-escapes `& < > " '` in
+text and attributes. He did not need `htmlspecialchars` once, and would have
+to go out of his way (`.raw` / `HtmlNode`) to opt into raw output. His own
+error string ("Task text can't be empty.") came back as `can&apos;t`. He
+called it the reason he would use this over raw PHP today.
 
-**The CRM.** He builds a small client CRM. Raw SQL with `?` placeholders maps
-onto his PDO reflexes; prepared statements that reject interpolation are
-actually stricter than PHP and he approves. `save()` that inspects the `id`
-field to decide INSERT vs UPDATE is a neat, predictable mini-ORM. This part is
-a genuine win.
+**Sessions + CSRF — fixed, and he verified it.** His page has 9 forms (add +
+4 tasks × toggle + delete), each with `{{ session.csrf }}`. He extracted
+every token: all 9 were identical. He cross-fired them — first form's token
+on `/toggle`, last form's token on `/toggle`, no token, wrong token,
+cross-session token — and every legitimate combination worked, every invalid
+one failed closed. He read `src/bialet.wren` to confirm why: `csrf`
+generates **one token per session**, cached in the instance; `set()` is a
+`REPLACE INTO` on the `PRIMARY KEY (id, key)` session table; `Session.new()`
+reads with `ORDER BY updatedAt DESC`. He verified the old-DB rebuild code in
+`Db.init` is real. The multi-form CSRF breakage from the previous run is
+**fixed end to end**. He confirmed one `_bialet_csrf` row per session in
+`BIALET_SESSION`.
 
-Then the edges:
+**The walls.**
 
-- **No real auth story.** Sessions + `Util.hash`/`Util.verify` exist, but
-  `Util.hash` is salted SHA-256 — a fast hash the security docs themselves say
-  is only "fine for internal tools" and recommends a slow KDF for real users
-  (`docs/security.md`). His clients ask for "login for our staff and let them
-  add users." There is no OAuth, no MFA, no roles, no admin scaffold. A PHP
-  dev expects a CMS or framework to hand him an admin panel; he has to build
-  auth, admin, and validation from scratch.
-- **No native TLS.** Bialet speaks HTTP/1.0 and needs a reverse proxy for
-  HTTPS (`docs/security.md`). On his shared-hosting setup — cPanel, existing
-  Apache, auto-SSL — that means he must run the binary on a random port and
-  proxy to it, which cPanel hosts make annoying. He could install it on a VPS
-  with systemd + nginx, but his *existing* clients live on shared hosts where
-  he has no shell. The single-binary pitch quietly assumes he owns a box.
-- **Windows.** He develops on Windows. The cross-compiled binary requires
-  three DLLs shipped alongside it (`libsqlite3-0.dll`,
-  `libcrypto-3-x64.dll`, `libssl-3-x64.dll`, per `README.md`). His `make
-  install` muscle memory from Linux does not apply.
-- **Migrations are name-based.** `Db.migrate("Name", query)` tracks by name
-  and has no rollback, no `down()`, no version numbers. Fine for one-man
-  projects; he has clients who ask "can you revert last week's change?" The
-  answer today is a manual restore.
-- **Concurrency and lock contention.** One process, SQLite. For a 50-employee
-  CRM it's fine. He'll hit the wall only when a client's "small tool" grows
-  into the business — and the FAQ's answer is basically "go use a different
-  framework," which is honest but is a real ceiling on his revenue per client.
-- **Long-term maintainability.** He is 45 and thinks about the next developer
-  who inherits this code. There is no Wren talent pool, no Stack Overflow
-  mass, no one to hand the project to. That is the single hardest objection
-  for him, and it is rational.
+1. **No implicit constructor.** `class Template { layout(content) {...} }`
+   then `Template.new().layout(...)` — exactly the docs' shape — blew up at
+   runtime with `Runtime Error Template metaclass does not implement 'new()'.`
+   Wren has no implicit constructor; the docs' example happens to declare
+   `construct new()`, but nowhere says it is mandatory.
+2. **The silent-null method body.** His `list()` method returned 0 rows while
+   the identical expression at top level returned 4. No error, no log. He
+   read `wren_compiler.c` to find why: a method body is an implicit-return
+   "expression body" **only when the expression starts on the same line as
+   the `{`**. Put a newline after `{` and it becomes a statement body that
+   returns `null`. The docs ("A Wren block that contains a single expression
+   implicitly returns that expression") never warn that the newline kills it.
+   This cost him an hour.
+3. **Statement-style method bodies barely work.** `static t() { var x = ...
+   }` on a new line → `Error at 'var': Expected expression.` Combined with #2,
+   a method body that starts on a new line can do almost nothing useful
+   without an explicit `return`.
+4. **`--version` starts a server.** Only `-v` prints the version; the long
+   flag silently boots the server on port 7002.
+5. **`-t` executes the file.** A file with `Session.new()` at top level
+   threw `Runtime Error Null does not implement 'add(_)'.` under `-t`, which
+   then still printed `✓ Syntax OK`.
+6. **`database.md` names the session table `BIALET_SESSIONS`.** The real
+   table is `BIALET_SESSION` (what `security.md` and the source use).
+7. **Generic 500 page.** Runtime errors go to the server log; the browser
+   gets "Oops! Something broke." `bialet dev` / `BIALET_SHOW_ERRORS` exists
+   but is buried in `errors.md` and needs a restart.
 
-### The "aha!" moment, checked honestly
-
-The manifesto lands. "Ride Light. Simplicity is a superpower" is written by
-someone who shares his disgust with the modern stack. He will evangelize the
-binary deploy to other freelancers.
-
-But the honest verdict: Bialet is PHP for people who are **already on a Linux
-VPS**. Carlos's actual business is built on shared hosting and Windows dev
-machines, and the tool's deployment story assumes the opposite in both cases.
-
-### Friction, ranked
-
-| # | Friction | Severity | Why it hurts |
-|---|----------|----------|--------------|
-| 1 | No shared-hosting path (needs reverse proxy + shell) | Critical | His entire existing client base is unserved |
-| 2 | No native TLS (HTTP/1.0, proxy required) | High | Kills direct-domain deployment for small clients |
-| 3 | No admin panel, no roles, weak default password hashing | High | He has to rebuild what CMS users take for granted |
-| 4 | Niche language, no ecosystem, no talent pool | High | Rational long-term objection he will raise to himself |
-| 5 | Windows builds need DLL juggling | Medium | His dev machine is Windows; setup friction |
-| 6 | Remote imports pin `main` and never update | Medium | Supply-chain uncertainty on paid work |
-| 7 | Name-based migrations, no rollback | Medium | No path to undo a bad schema change |
-| 8 | Single-process ceiling | Low | Fine now, a real revenue ceiling later |
-
-### Recommended changes for Carlos
-
-1. **A shared-host deploy story.** Either a no-shell, port-based "drop
-   binary + app folder into a cPanel-style docroot behind existing Apache
-   (mod_proxy_fcgi or .htaccess rewrite)" recipe, or explicit docs that Bialet
-   requires a VPS and stop suggesting otherwise. Be open about it like the
-   rest of the docs are.
-2. **Native TLS** so a domain can point at the binary without nginx. It's on
-   the roadmap; it should be near-term. Also serve HTTP/1.1.
-3. **An admin scaffold or an honest replacement.** A minimal generated CRUD
-   admin over a table would cover most of his CRM work and is very much in
-   Bialet's scope. Note the roadmap's admin dashboard is read-only (browse
-   DB/logs) — generate, not just view.
-4. **Document the auth upgrade path** (slow KDF via a proxy/auth layer, OAuth
-   via `Http` outbound calls) so the security page is not a dead end.
-5. **Single self-contained Windows binary** (statically link SQLite/OpenSSL
-   for Windows like `make static` does for Linux).
-6. **Make remote imports update-on-reload in dev**, or at least surface a
-   warning when a pinned `main` import was cached more than N days ago.
-7. **`Db.rollback`/versioned migrations** — even a "name → down-script"
-   convention is better than nothing.
+**Scorecard verdict:** Setup good; templates/HTML-in-Wren mixed (nice inline
+HTML + auto-escaping, but undocumented implicit-return and constructor
+traps); DB layer good (parameterized by construction, `.to(Class)` mapping,
+simple migrations); escaping/XSS excellent; sessions+CSRF excellent and
+verified; error messages weak; routing good (files-per-URL, PRG trivial).
 
 ---
 
-## Profile 3: Elena, the React Engineer
+## Profile 3: Elena, the React/TypeScript Frontend Engineer
 
-**Background.** 30, frontend engineer at a SaaS company, React + TypeScript +
-Next.js daily. Burned out on bundler churn and `node_modules`. Side project: a
-personal dashboard. Bialet's "anti-bloat" pitch is exactly her fantasy.
+**Background.** 29, 7 years React + TS + Next.js. Lives in component land:
+props, state, useEffect, JSX, Tailwind. Expects the framework to escape by
+default because React does.
 
 ### The journey
 
-**Setup.** She does the one-liner and, honestly, it's refreshing. No
-`package.json`, no `next.config.js`, no build. The first page renders. She
-feels the weight lifting.
+**What worked.** Zero-config startup; file-based routing (index.wren → `/`,
+toggle.wren → `/toggle`); PRG; auto-escaping **on by default, in text and
+attributes** — her #1 fear ("do I have to wrap every string?") was wrong, it
+is just on, and `.raw` / `HtmlNode` are the `dangerouslySetInnerHTML`
+equivalent, nicer to write. CSRF is simple and the multi-form token behavior
+is good (she stress-tested 7 forms — all identical tokens, first and last
+both validated, no token → 400, wrong token → 400). `&&` conditional blocks,
+ternaries in attributes, ternaries with HTML operands, multi-line
+components, `map` lists, and **hyphenated custom elements `<my-element>`**
+all parse — most of her JSX muscle memory survived. In-browser error pages
+with `BIALET_SHOW_ERRORS` exist (type + module + line). Live reload: she
+confirmed the script is injected and the endpoint returns a version — she
+did *not* notice the version never changes.
 
-**The template system.** Bialet's inline HTML is JSX-shaped, so she feels
-immediately at home. Then the differences surface, one by one:
+**The parser fights.** The same-tag nesting rule is the big one: `Cannot nest
+<div> inside <div>` (also fires for `<form>` and `<my-custom-tag>`); the
+outermost tag cannot reappear at any depth until a different tag starts the
+tree. She had to design every component's outer tag around it. Uppercase and
+underscore tags produce misleading errors (`Expected expression.` /
+`Unterminated HTML string.`).
 
-- **The same-tag nesting rule.** She writes a `<div>` wrapper containing
-  `<div>` cards — the most common layout pattern in existence — and it fails.
-  In JSX this is legal; here it's a parse error with a workaround that reads
-  like a bug report (`docs/template.md`).
-- **Map callbacks are single expressions.** She cannot declare a variable
-  inside `tasks.map { |t| ... }`. The docs tell her to pre-compute before the
-  template instead. That is a design constraint, not a language law, and it
-  breaks a pattern she uses daily.
-- **`{{ }}` newline rules.** The Wren expression must start on the same line
-  as `{{`; only the inner HTML string can span lines. She writes
-  multi-line JSX by instinct and gets silent empty output.
-- **Interpolation depth cap of 9.** Deeply nested ternaries — which the docs
-  encourage — hit it.
+**Where Bialet is worse than React.**
 
-Every one of these is a JSX feature she relies on, removed or restricted.
-JSX is a real template language; this is a string-literal parser with a
-JSX coat of paint. The moment she composes components, she discovers the
-differences, because **Bialet has no components** — only Wren methods that
-return HTML strings, and the parser's own rules cap how they nest.
+1. **Mismatched closing tags silently pass.** React throws `Closing tag
+   </div> does not match opening tag <span>`. Bialet compiles it, serves 200,
+   and hands back malformed HTML verbatim. The docs even promise it fails.
+   Her single worst surprise.
+2. **Multi-statement `map` callbacks silently render nothing.** `<ul></ul>`,
+   zero error. React would at least be loud about an unexpected return.
+3. **"null is safe" is oversold.** `wren.md` says "accessing a key or calling
+   a method on null returns null instead of throwing." Reality: `null["key"]`
+   and `null.count` are safe, but an *undefined* method on null throws
+   `Null does not implement 'something'.` → 500. The safety story is only
+   true for what `Null` happens to implement.
+4. **No dev-time warnings.** Escaping gives no feedback; double-escaping with
+   `.safe` silently emits `&amp;lt;`.
+5. **`bialet -t` executes the file.** `Session.new()` blew up under `-t`,
+   outside a request. No way to just *check* a file.
+6. **Tooling.** No language server, no VS Code support, no autocomplete. She
+   also hit the doc contradictions (`template.md` mismatched-tags and `<br/>`
+   claims; `security.md`'s intro "no magic that escapes your output for you"
+   directly contradicting its own auto-escaping rules; `BIALET_SHOW_ERRORS` /
+   `BIALET_LIVE_RELOAD` being read once at startup; the `BIALET_PROMPT.md`
+   example shipping a todo app with no CSRF at all).
 
-**The data and state model.**
-
-- **No reactivity, no client components.** The docs are honest: classic
-  multi-page app, forms and links, sprinkle Alpine.js. For a dashboard with
-  live-ish data, she needs polling or Alpine — and Bialet has no WebSockets
-  or SSE at all (`docs/why-bialet.md`, `docs/faq.md`). Her side project's
-  central feature (live charts) is off the table without bolting on a
-  separate service.
-- **Fresh VM per request.** There is no process-global state to cache in.
-  Every request recompiles and re-runs her script. She is told to put
-  everything in SQLite. Coming from a world where she can memoize or cache
-  in-process, this is a step backwards in tooling sophistication.
-- **DB values are strings; `""` is truthy; `Request.post` is null-prone.**
-  The same correctness traps as Maya, plus the docs' heavy reliance on
-  `Num.fromString` everywhere makes her code louder than the equivalent
-  TypeScript.
-- **`.safe` everywhere.** React escapes by default. Here, forgetting one
-  `.safe` is an XSS hole. Her React instincts — "interpolation is safe" —
-  actively produce vulnerabilities. This is a regression against her training,
-  and it is the worst-designed footgun in the framework.
-
-**The DX.**
-
-- **No TypeScript, no LSP, no diagnostics.** The roadmap has an LSP as a
-  longer-term idea and VS Code support is unchecked. She opens a `.wren` file
-  in VS Code and gets plain text. For an engineer whose entire workflow is
-  editor-driven, this is disqualifying on its own.
-- **Live reload exists on Linux only** and refreshes via polling, not a
-  pushed WebSocket; the roadmap item is explicitly to add WebSocket
-  live-reload. Her browser does not refresh, errors are not overlaid, and
-  there's no dev-server error overlay at all.
-- **No test story worth the name.** Integration tests exist (`tests/run.sh`,
-  HTTP assertions). There is no unit-test runner, no fixture loading, no
-  mocking. She cannot `npm test` her logic; she has to curl.
-- **Tailwind CDN for dev, but "self-host for production."** The moment she
-  wants a real Tailwind build she reintroduces the build step she fled. The
-  framework is honest about it, but the "no build step" promise has a corner.
-
-### The "aha!" moment, checked honestly
-
-The "ultimate anti-bloat tool" feeling is real for about an hour. Then she
-collides with the parser restrictions, the missing editor support, the
-no-typing, and the manual escaping — and realizes she traded React's churn for
-a smaller, harder wall. Bialet sells itself as "everything you need for a
-data-driven site" and that's true; what it doesn't say is that it also
-requires leaving behind everything that made JS tooling tolerable for her.
-
-### Friction, ranked
-
-| # | Friction | Severity | Why it hurts |
-|---|----------|----------|--------------|
-| 1 | No LSP / VS Code support / diagnostics | Critical | Her entire workflow is editor-driven |
-| 2 | No auto-escaping; `.safe` opt-in | Critical | React training makes her write XSS by default |
-| 3 | Template parser restricts JSX patterns she uses daily | High | Same-tag nesting, single-expression callbacks, newline rules, 9-level cap |
-| 4 | No WebSockets/SSE, no reactivity | High | Live dashboards — her stated use case — are out of scope |
-| 5 | No unit tests, fixtures, or test runner | High | She cannot verify logic without curling |
-| 6 | No process-level caching; fresh VM per request | Medium | Reintroduces a problem modern frameworks solved |
-| 7 | Live reload is Linux-only, polling, no browser refresh | Medium | The DX promise breaks on her Mac |
-| 8 | `""` truthy, DB strings, null-prone POST fields | Medium | Correctness traps she stopped hitting in TS |
-| 9 | No real component model | Medium | Composition is capped by parser rules |
-
-### Recommended changes for Elena
-
-1. **LSP + VS Code extension with live diagnostics.** This is the largest
-   lever for her, and it would lift every other profile too. It should be a
-   release goal, not a longer-term idea.
-2. **Auto-escape by default** (`{{ }}` escapes; `{{ ... .raw }}` opts out).
-   Same as Maya's #1. This is the one change that makes the framework safe to
-   recommend to people whose instincts came from React.
-3. **Relax the template parser to be JSX-like where it can be.** Allow
-   multi-statement map callbacks, drop the same-tag nesting rule, raise or
-   remove the 9-level cap. These are parser improvements, not scope creep.
-4. **Document the real-time gap prominently.** A "When you need live data"
-   page with concrete polling/Alpine/SSE-through-a-service recipes, so the
-   disappointment happens in the docs, not at 2am.
-5. **A unit-test story** — even a `bialet test` that runs a directory of
-   `.wren` test files with assertions and a table-driven runner.
-6. **A typed/checked mode** — at minimum a linter (unused variables, missing
-   `.safe` on user input, missing `return` before redirect), since full TS is
-   out of scope.
-7. **Move WebSocket live-reload (roadmap 0.13) and opcode caching up.**
+**Scorecard verdict:** Setup 5/5; components/JSX-like DX 3/5 (compose fine,
+no props/children/keys, single-expression map is a silent data-loss trap);
+HTML parser 3/5 (clear same-tag error, silently accepts mismatched tags,
+misleading invalid-name errors); escaping 4/5 (default-on like React, no
+warnings); DB layer 4/5 (values-as-strings is a permanent footgun); error
+messages 3/5; tooling 2/5. Bottom line: once she made peace with
+"there's no component tree, the page re-renders server-side," it felt like a
+very small, very honest PHP she could ship a tiny internal tool with — but
+not a stateful SPA.
 
 ---
 
-## Cross-cutting findings
+## Cross-cutting findings (all three, reproduced)
 
-Three problems dominate all three profiles, in different costumes:
-
-**1. Escaping is backwards.** Every profile tripped on `.safe`. The roadmap
-already lists "auto HTML escaping" as a longer-term idea — the maintainers
-know. This should be the top engineering priority. Safe-by-default, with
-explicit `raw` for trusted content. It is the difference between a toy and a
-framework you can hand to people with dangerous instincts.
-
-**2. The HTML parser is a tax on valid HTML.** The same-tag nesting rule,
-hyphen-less tag names, `<br/>` vs `<br />`, 9-level interpolation caps, and
-`{{ }}` newline rules are all parser constraints leaking into user
-experience. They actively contradict the "HTML is the Real Frontend" pitch.
-Every restriction should be either removed or turned into a friendly, specific
-error the moment it happens.
-
-**3. Editor support is the quiet blocker.** Vim/Neovim have syntax. The three
-most likely new users (VS Code student, VS Code React dev) get nothing, and
-there is no LSP. The roadmap treats this as an idea, not a release blocker.
-For two of three profiles it is disqualifying.
-
-Secondary themes, all present in the docs today and all worth their own
-release items: live reload that works everywhere and actually refreshes the
-browser; a dev-mode error page with file/line/hints instead of a generic 500;
-explicit "not for your use case" guidance for auth, real-time, and shared
-hosting; and a decision on the Windows story (self-contained binary or
-honest DLL docs).
+1. **The docs no longer match the binary in several places**, and every one
+   of them cost a persona time: mismatched tags are claimed to fail but
+   silently serve broken HTML (`template.md`); `<br/>` is claimed incorrect
+   but works (`template.md`); forgotten `return` before redirect is claimed
+   to produce a "double-response error" but actually sends a 302-with-body
+   (`template.md`); the session table is named `BIALET_SESSIONS` in
+   `database.md` but is `BIALET_SESSION`; `wren.md` claims null is "safe" in
+   a way that is only partially true; `security.md` opens with "there is no
+   magic that escapes your output for you" and then describes default-on
+   escaping. Misleading pitfalls are worse than no pitfalls.
+2. **The Wren language's sharp edges are now the biggest trap**, not the
+   framework's security story. Silent nulls — the implicit-return newline
+   rule, the single-expression `map` callback, single-line `if` blocks that
+   reject `return` — produce empty output or no-op code with zero feedback.
+   Three of the four walls Carlos hit, two of Maya's, and two of Elena's
+   were silent Wren behavior. A PHP/JS/React dev cannot predict any of them.
+3. **Auto-escaping on by default is unanimously the best feature.** All three
+   personas mentioned it unprompted as the reason they would trust the
+   framework. Do not regress it.
+4. **Session/CSRF is now trustworthy.** Both developers stress-tested
+   multi-form pages and both confirmed stable tokens, deterministic reads,
+   and a keyed table. The documented workaround from the previous run (call
+   `session.csrf` once per page) is no longer necessary — but the docs still
+   do not state that the token is stable across forms on a page.
+5. **The browser 500 page is still a wall.** Everyone hit a real bug and the
+   browser showed "🚨 Internal Server Error / Oops! Something broke." The
+   useful error is in the server log or behind `BIALET_SHOW_ERRORS`, which is
+   not the default, is buried in `errors.md`, and needs a restart to enable.
+6. **No editor support, still.** No VS Code extension, no LSP, no syntax
+   highlighting. `.wren` files are plain text. The only tool is `-t`, which
+   executes the file and misses mismatched tags.
+7. **The parser still rejects legal HTML** (same-tag nesting) and its
+   invalid-tag-name errors are misleading. Hyphens are now allowed and
+   `<br/>` works, so two of the old parser complaints are gone.
+8. **CSRF is not surfaced to beginners.** Maya built the whole app with no
+   CSRF because she does not know what CSRF is and nothing in the
+   getting-started path makes her care. The docs assume the threat model is
+   already understood.
 
 ---
 
-## Field findings: reproduced bugs (from building the persona apps)
+## Verified: what the previous run found broken, now fixed
 
-Writing the three `todo/` apps against the real binary surfaced one severe,
-reproducible defect in the session/CSRF layer that no profile predicted and
-the docs never warn about. The persona session notes in `personas/` tell the
-story in their own words; here is the technical summary.
+The previous run's top findings were reproduced against `./build/bialet`
+before this run and re-tested against dev 0.12.0:
 
-### The session store is not a key-value store
+1. **Multi-form CSRF — FIXED.** Previously only the LAST form's token on a
+   page validated (`{{ session.csrf }}` rotated the stored token on every
+   call). Now `csrf` generates one token per session, cached in the instance;
+   all forms on a page carry the identical token, and the first, middle, and
+   last form tokens all validate. Reproduced: 3 forms → identical tokens,
+   form A valid, form C valid.
+2. **`BIALET_SESSION` primary key — FIXED.** Schema is now
+   `PRIMARY KEY (id, key)`; `REPLACE INTO` replaces instead of appending;
+   older un-keyed databases are rebuilt in place on startup. No more unbounded
+   session growth.
+3. **`Session.get()` determinism — FIXED.** The constructor reads with
+   `ORDER BY updatedAt DESC`; no more "last row iterated wins" flakiness.
+4. **Auto-escaping — SHIPPED.** `{{ }}` escapes `& < > " '` by default in
+   text and attributes. `.safe` is now a footgun (double-escapes) rather than
+   the required opt-in, and the docs warn about it.
+5. **Hyphens in tag names — SHIPPED.** `<my-element>` parses.
+6. **CSRF token entropy — IMPROVED.** Tokens now come from the OS CSPRNG.
 
-`BIALET_SESSION` is created with no primary key and no unique index:
+## Verified: what is still broken on dev 0.12.0
 
-```sql
-CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)
-```
+1. **Browser live-reload is dead.** The injected polling script polls
+   `/_livereload` forever because the version never changes on file create /
+   modify / delete. Verified with real content edits. The Wren hot-reload
+   still works; the advertised browser auto-reload does not.
+2. **Mismatched closing tags are accepted.** Compiles and serves 200 with raw
+   malformed HTML. The docs promise a compile error. Both a docs bug and a
+   framework bug.
+3. **Wren's implicit-return newline rule.** A method body whose expression
+   starts on a new line after `{` silently returns null. Silent data loss,
+   undocumented.
+4. **No implicit constructor.** `Template.new()` on a class without
+   `construct new() {}` fails at runtime with a confusing metaclass error.
+5. **`bialet -t` executes the file** and prints `✓ Syntax OK` even after a
+   runtime error; it also does not catch mismatched tags.
+6. **`bialet --version` starts a server** on port 7001 instead of printing a
+   version. Only `-v` works.
+7. **`BIALET_SHOW_ERRORS` and `BIALET_LIVE_RELOAD` are read once at startup.**
+   Enabling them while the server runs does nothing until restart;
+   undocumented.
+8. **The default 500 page is a dead end.** Generic "Oops, something broke";
+   the real error (which has file and line) is server-log-only unless dev
+   error display is enabled.
+9. **The same-tag nesting rule persists.** `<div>` in `<div>` still fails to
+   compile, though the error now suggests a fix. `docs/template.md`
+   documents the workaround.
+10. **Misleading invalid-tag-name errors.** Uppercase → `Expected expression.`;
+    underscore → `Unterminated HTML string.`
+11. **Doc-vs-reality drift.** `<br/>` "incorrect" (works), mismatched tags
+    "fail" (don't), "double-response error" (never happens), `BIALET_SESSIONS`
+    (real: `BIALET_SESSION`), "null is safe" (only partially), security.md
+    intro contradiction.
+12. **Silent single-expression rules.** Multi-statement `map` callbacks and
+    one-line `if { return ... }` blocks fail silently or with cryptic errors.
 
-`Session.set()` writes with `REPLACE INTO`, which is a no-op for replacement
-when nothing is unique — it just appends. Consequences:
+---
 
-- **Session rows accumulate forever.** Every `Session.set()` (including every
-  `session.csrf` call, i.e. every page render that emits a form) inserts a new
-  row. A session that renders a form 50 times has 50 rows for `_bialet_csrf`.
-  `Db.clean` deletes expired sessions, not duplicate keys within a session.
-- **`Session.get()` is non-deterministic.** The constructor loads *every* row
-  for the session (`SELECT key, val ... WHERE id = ?`, no `ORDER BY`, no
-  `LIMIT`) and writes each into a map — the last row iterated wins. Which row
-  is "last" is whatever SQLite happens to return for an unordered query.
-  Verified empirically: with two token rows present, the same request
-  sequence both passed and failed `csrfOk` across runs.
+## Recommended fixes (in order of impact)
 
-### Multi-form CSRF is broken out of the box
-
-The documented pattern — `{{ session.csrf }}` in every state-changing form —
-rotates the stored token on every call. On a page with N forms there are N
-different rendered tokens and only the last one stored. Verified:
-
-```wren
-var s = Session.new()
-if (Request.isPost) return s.csrfOk ? "OK" : "FAIL"
-return <main>
-  <form method="post">{{ s.csrf }}<button>A</button></form>
-  <form method="post">{{ s.csrf }}<button>B</button></form>
-  <form method="post">{{ s.csrf }}<button>C</button></form>
-</main>
-```
-
-Submit A's token → `FAIL`. Submit B's → `FAIL`. Submit C's → `OK`.
-
-This is the single most damaging finding. A todo/CRM/dashboard — every app
-with an add form plus per-row edit/delete forms — has multiple forms on one
-page by definition, so the documented usage fails for all but the last form.
-
-**Working workaround** (used in the Carlos and Elena apps, discovered by
-reading the source): generate the token once and reuse the same hidden field
-in every form.
-
-```wren
-var csrf = ""
-if (!Request.isPost) {
-  csrf = session.csrf          // called exactly once per page
-}
-// ... {{ csrf }} in every form ...
-```
-
-`csrfOk` still compares against the stored token; because only one token row
-was written since the last page load, `get()` has a single candidate. (If a
-session has accumulated rows from many earlier page loads, even this
-workaround stays flaky — see the non-determinism above.)
-
-### Recommended fixes (in order of impact)
-
-1. `PRIMARY KEY (id, key)` on `BIALET_SESSION` (or `UNIQUE(id, key)`) so
-   `REPLACE INTO` actually replaces. This is a one-line schema change with
-   wide blast radius: it fixes unbounded session growth AND the stale-token
-   reads.
-2. Make `get()` deterministic: `SELECT key, val ... WHERE id = ? ORDER BY
-   updatedAt DESC LIMIT 1` (or rely on the PK and use `INSERT OR REPLACE`).
-3. Stop `Session.csrf` from rotating the stored token on render, or document
-   the single-token-per-page rule loudly. Multi-form pages are the norm.
-4. Document the bug and the workaround in `docs/security.md` today, so users
-   stop hitting it blind. The security page claims "a token is generated per
-   session, stored server-side, and rendered as a hidden form field" — it
-   does not say "only the last form on the page validates."
+1. **Fix `/_livereload` so the version bumps on file change** — or remove
+   the injected script. A polling script that never reloads is a broken
+   promise and a silent dead feature. (One-line: recompute the version in the
+   handler from the watch state.)
+2. **Make mismatched closing tags a compile error.** The docs already promise
+   it, React does it, and all three personas tripped on the silent acceptance.
+3. **Document — and ideally warn about — the implicit-return newline rule.**
+   One sentence in `template.md`'s Model section ("a method body is an
+   expression body only when the expression starts on the same line as the
+   `{`"), plus a compiler warning when a method body block ends without an
+   explicit return. Silent null is worse than a crash.
+4. **Reconcile the docs with 0.12.0 reality:** fix the mismatched-tags and
+   `<br/>` claims in `template.md`, the "double-response error" claim, the
+   `BIALET_SESSIONS` table name in `database.md`, the overstated "null is
+   safe" in `wren.md`, and the `security.md` intro that contradicts
+   auto-escaping.
+5. **Make `-t` a real checker:** do not execute the file (so `Session.new()`
+   cannot blow up), catch mismatched tags, and document that it must be run
+   from inside the app directory.
+6. **Show real errors in the browser during development by default**, and
+   document that `BIALET_SHOW_ERRORS` / `BIALET_LIVE_RELOAD` are read at
+   startup and need a restart.
+7. **`bialet --version` and other long flags should not silently start a
+   server.** Reject or map them; a flag that boots a server on a default port
+   is how orphan processes happen.
+8. **State explicitly that the CSRF token is stable across all forms on a
+   page** (per session, not per form) in `docs/security.md`.
+9. **Add even minimal editor support** — a VS Code extension with syntax
+   highlighting, or an LSP, or at least mention one in the docs.
+10. **Better invalid-tag-name errors** ("tag names must be lowercase
+    alphanumeric + hyphens") instead of `Expected expression.` / `Unterminated
+    HTML string.`
+11. **Give beginners a CSRF nudge** — a one-line note on the forms page:
+    "any form that changes data should include `{{ session.csrf }}` and check
+    `session.csrfOk`; this is called CSRF."
+12. **Link `docs/examples/todo/` from the examples page** (or delete it);
+    all three personas either never found it or found it by accident.
 
 ---
 
 ## One-paragraph verdict
 
-Bialet's core trade — one binary, filesystem routing, SQLite, inline HTML —
-is sound and genuinely delightful for a narrow slice of work. But the three
-users above all hit the same walls: unsafe-by-default escaping, an HTML
-parser that rejects ordinary HTML, no editor support worth the name, a
-generic 500 page with no path forward — and, worst of all, a session/CSRF
-layer that silently breaks multi-form pages out of the box. The framework's
-honesty about its limits is its best feature; the gaps are exactly the ones
-its own roadmap has already identified. Fix the session table first (it's a
-one-line schema fix that makes CSRF trustworthy), then escaping, then the
-parser, then the editor story — and Bialet stops being "great for the happy
-path" and becomes "safe to hand to real people."
+The re-run confirms the core trade — one binary, filesystem routing, SQLite,
+inline HTML — and shows the framework's security story is now the real deal:
+auto-escaping on by default, parameterized SQL by construction, and a
+session/CSRF layer that survives a 9-form page, all verified empirically. The
+friction moved. What drives the personas away now is not security but *silent
+behavior*: a method body that quietly returns null, a `map` callback that
+quietly renders nothing, mismatched tags that quietly serve broken HTML, a
+live-reload script that quietly polls forever, a `-t` checker that quietly
+executes your file, and docs that quietly disagree with the binary. Fix the
+silence — a compile error for mismatched tags, a warning for implicit-return
+nulls, a working version bump for `/_livereload`, and docs that match 0.12.0 —
+and Bialet stops being "great for the happy path" and becomes "safe to hand
+to real people, including the ones who don't know what a statement body is."

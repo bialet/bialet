@@ -1,111 +1,306 @@
-# Carlos's Session Notes — "It's PHP for people who own a VPS"
+# Carlos's Session Notes
 
-First-person log of building `todo/` with Bialet, as Carlos would write it.
-20 years of vanilla PHP + MySQL, built a hundred small business sites.
-The app itself is in `todo/`.
+47. 20 years of vanilla PHP + MySQL. I build the same way in every language:
+`if ($_POST)` controllers, files-per-URL, explicit SQL, `htmlspecialchars()`
+on everything, and a migration file I can read. I don't trust magic, and when
+the docs get vague I read the source. That's what this session was: does this
+little C+Wren thing do my sessions, CSRF, escaping, and SQL for me, or am I
+back in 2008?
 
-## What happened, in order
+Short answer: escaping and SQL injection are done FOR me, properly. Sessions
+and CSRF are done for me too, and the multi-form token case — the thing that
+used to be broken — actually works now. But there is one silent Wren footgun
+that ate an hour of my life, and the docs don't warn you about it anywhere.
 
-1. **The first ten minutes are the best ten minutes.** Drop a `.wren` file in
-   a folder, run the binary, the file IS the URL. That's the PHP mental model
-   exactly — I understood it instantly. No Composer, no php-fpm, no nginx
-   config, no `.htaccess`. For an old hand this feels like coming home.
+---
 
-2. **Raw SQL with prepared statements — good.** `` `SELECT ... WHERE id = ?` ``
-   with `?` placeholders is PDO, and the compiler REJECTING interpolation
-   into a query is stricter than PHP. I trust it more than most PHP I've
-   written. `save()` that inspects the `id` field to decide INSERT vs UPDATE
-   is a tidy, predictable mini-ORM. This part is genuinely well designed.
+## What I set up
 
-3. **The CSRF mess is the worst thing I hit.** I followed the docs: put
-   `{{ session.csrf }}` in every form. My add form worked when the list was
-   empty, then started failing once I had rows on the page. I spent real
-   time on this and traced it to three compounding problems:
+A classic MVC todo app, exactly the shape I'd build in PHP:
 
-   - **Multiple `{{ session.csrf }}` on one page = only the last one works.**
-     Each call generates a new token and stores it. Every form before the
-     last carries a stale token.
-   - **`BIALET_SESSION` has no primary key.** The `CREATE TABLE` is
-     `(id TEXT, key TEXT, val TEXT, updatedAt DATETIME)` — nothing unique.
-     So `REPLACE INTO` never replaces; every token write APPENDS a row. My
-     session table grows one row per page load, forever.
-   - **`Session.get()` reads back "some" row.** The constructor does
-     `SELECT key, val FROM BIALET_SESSION WHERE id = ?` with no `ORDER BY`
-     and shoves every row into a map; the LAST one iterated wins. With two
-     token rows, the returned token is whatever SQLite happens to hand back
-     last — and I watched the same request sequence both pass and fail.
-   - Workaround I settled on: generate the token ONCE per page and reuse the
-     same hidden field in every form. That's not in the docs anywhere. I
-     reverse-engineered it from the source.
+```
+todo/
+├── _app/
+│   ├── migration.wren      # Db.migrate("Create tasks table", `CREATE TABLE ...`)
+│   ├── domain.wren         # Task model: list/find/create/toggle/delete, explicit SQL
+│   └── template.wren       # Template.layout() shared HTML
+├── index.wren              # list + add form, controller on top, view below
+├── toggle.wren             # POST-only, redirect back
+├── delete.wren             # POST-only, redirect back
+├── style.css
+└── _db.sqlite3             # created automatically on first run
+```
 
-4. **`Session.new()` at the top of every file** — in PHP I'd guard sessions
-   with `session_status()`; here I call it and get a cookie back. Fine. But
-   sessions are in the database (`BIALET_SESSION`), which means every request
-   reads SQLite. For a small CRM that's fine; for anything bigger it's a
-   bottleneck you can't opt out of.
+Ran it with `nohup .../build/bialet -p 7012 ./todo &`. First run created the
+SQLite DB and applied the migration without me asking:
 
-5. **Auth is thin and the docs admit it.** `Util.hash` is salted SHA-256 — a
-   FAST hash. The security docs themselves say it's only "fine for internal
-   tools" and recommend a slow KDF for real users. My clients ask for "staff
-   login, add users" and there's no roles, no OAuth, no admin scaffold. I'd
-   have to build all of it. In PHP I'd at least have a package or an existing
-   pattern.
+```
+2026-08-10 17:00:48 Log Migration applied - Create tasks table
+```
 
-6. **Deployment is the wall.** The single binary is great ON a VPS. But
-   most of my existing clients are on cPanel shared hosting where I don't
-   have a shell. Bialet speaks HTTP/1.0 and has no native TLS — you need a
-   reverse proxy and root. That rules out exactly the hosting my business
-   runs on. And my dev machine is Windows: the cross-compiled binary needs
-   three DLLs shipped beside it. Every other framework I use just installs.
+No config, no build step, no npm. That part is genuinely nice. One binary and
+it just runs.
 
-7. **Migrations are name-based with no rollback.** `Db.migrate("name", sql)`
-   tracks by name. There's no `down()`, no version numbers, no way to undo
-   last week's schema change when a client asks. For a one-man project,
-   fine. I've had clients ask to "revert the change" — I can't with this.
+## What worked first try
 
-8. **The long-term question.** Wren is a niche dialect of a niche language.
-   When I'm 50 and a client needs this maintained, who takes over? There's no
-   talent pool, no Stack Overflow mass, no ecosystem. That's not a knock on
-   the code — it's a rational business objection and it's the hardest thing
-   to overcome.
+- **PRG.** `if (Request.isPost) { ...; return Response.redirect("/") }`.
+  Every POST returned `HTTP/1.1 302` + `Location: /`. Refresh won't resubmit.
+- **Parameterized SQL.** Backtick queries with `?` placeholders. The compiler
+  refuses string interpolation into a backtick, so the injection path is
+  closed by construction. I verified with `'; DROP TABLE tasks; --` as a task
+  title: it was stored **literally** as text and rendered escaped. No drop.
+- **`Request.post` returns `null`** when the field is missing. The docs scream
+  this on every page and they're right to. `(Request.post("title") || "").trim()`
+  everywhere. Without the guard it crashes the request.
+- **DB values come back as strings.** `done` is an INTEGER in SQLite but I
+  compare `row["done"] == "1"`. Annoying, documented, handled.
+- **`.to(Task)` mapping.** `first(id).to(Task)` returns `null` for a missing
+  row because `Null.to` is a no-op in the core lib. So `find()` is safe
+  without a null dance. That surprised me — in a good way.
+- **Live reload.** Editing `template.wren` hot-reloaded without a restart.
+- **Private files.** `/_app`, `/_db.sqlite3`, `/_app/domain.wren` all return
+  **403**. Unknown paths return 404.
 
-## What I loved
+## What broke, and the exact errors
 
-- The manifesto is written by someone who feels my pain. "Ride Light" isn't
-  marketing, it's the actual design.
-- File-based routing + query strings is exactly `$_GET`, and I prefer it to
-  Laravel's router for these projects.
-- Raw SQL. No ORM lying to me.
-- One binary to deploy to a VPS with systemd. I'll evangelize that to other
-  freelancers who own a box.
+### 1. `Template.new()` — no constructor, no dice
 
-## Scorecard (PHP veteran eyes)
+First boot gave me:
 
-| Aspect | Grade | Note |
+```
+Runtime Error Template metaclass does not implement 'new()'.
+Stack Error .../todo/index.wren line 30 (script)
+```
+
+Wren has **no implicit constructor**. `Template.new()` only exists if you
+declare `construct new() {}`. In PHP every object has a default constructor,
+so I wrote `class Template { layout(content) { ... } }` and called
+`Template.new().layout(...)` exactly like the docs show — and it blew up. The
+docs' example *happens* to include `construct new()`, but nowhere does it say
+"this is mandatory". Silent until runtime.
+
+Fix: `construct new() {}` in the class.
+
+### 2. The big one: my model silently returned 0 rows
+
+After the add forms all returned 302 and sqlite confirmed **4 rows in the
+table**, the page rendered the empty state:
+
+```sql
+sqlite> SELECT id, title, done FROM tasks;
+1|buy milk|0
+2|write report|0
+3|<script>alert(1)</script>|0
+4|'; DROP TABLE tasks; --|0
+```
+
+Page: "Nothing here yet. Add a task above." No error anywhere. Server log:
+nothing. My `list()` was:
+
+```wren
+static list() {
+  `SELECT * FROM tasks ORDER BY id`.fetch.to(Task)
+}
+```
+
+That's the documented pattern. `fetch.to(Task)` returns 4 rows when I do it
+inline, but the *same expression* inside a method body returned nothing. I
+proved it side by side:
+
+```
+DEBUG Task.list count=0      // the method
+DEBUG inline chain count=4   // identical expression at top level
+```
+
+I read the compiler source to find out why. `wren_compiler.c`, `finishBlock`:
+
+```c
+// If there's no line after the "{", it's a single-expression body.
+if(!matchLine(compiler)) {
+  expression(compiler);
+  ...
+  return true;          // <- implicit return ONLY here
+}
+...
+return false;           // statement body -> implicit return null
+```
+
+**A method body is an implicit-return "expression body" only when the
+expression starts on the same line as the `{`.** Put a newline after `{` and
+it becomes a *statement body* that returns `null`. No warning. My `{\n  expr\n}`
+form was a statement body. The docs' model example works only because it puts
+the opening backtick on the `{` line by accident.
+
+This is stock Wren behavior, not a Bialet regression — but the docs
+("A Wren block that contains a single expression implicitly returns that
+expression") never warn that the newline kills it. For a PHP dev this is a
+trap: silent empty results, no error message, "it worked when I typed a
+number" energy.
+
+Fix: **explicit `return` in every method body.** Carlos doesn't trust implicit
+returns anymore. There's a comment in `domain.wren` so the next guy doesn't
+repeat my hour.
+
+### 3. Statements in a method body
+
+While bisecting I tried `static t3() { var x = ...` on a new line:
+
+```
+Compilation Error _app/domain line 28 Error at 'var': Expected expression.
+Compilation Error _app/domain line 28 Error at 'x': Expect '}' at end of block.
+```
+
+So statement-style bodies are barely a thing — a method body after a newline
+is treated as a definition list and `var` is not an expression. Constructors
+with assignments are the exception (they're parsed as initializers). This
+means: **a method body that starts on a new line basically can't do anything
+useful.** Everything must be `{ expression }` on one line, or use explicit
+`return` + one expression per line. Bizarre for someone used to blocks, but
+you learn to live with it.
+
+### 4. `--version` starts a server
+
+`bialet --version` ignored the flag and started serving on port 7002. The
+documented flag is `-v` (`bialet -v` → `bialet 0.12.0`). The long form just
+silently runs the server. Minor, but a CLI that half-accepts flags is a CLI
+that hangs your shell.
+
+## The multi-form CSRF test (the important one)
+
+My page has **9 forms** on it: 1 add form + 4 tasks × (toggle + delete). All
+nine carry `{{ session.csrf }}`. I extracted every hidden token from the
+rendered HTML:
+
+```
+$ grep -oP '(?<=name="_bialet_csrf" value=")[^"]+' page.html | sort | uniq -c
+      9 dctlBMJPsG8Bpkc9h9DoT4xzxvvOj5Hu1Ja5nMMKbQ8BAwra1wja4CaUfMYr
+```
+
+**All 9 forms, one token.** Then I cross-fired them:
+
+- **First form's token** (the add form) submitted to `/toggle` for task 1 →
+  `302`, task flipped 0→1. **Works.**
+- **Last form's token** (task 4's delete form) submitted to `/toggle` for
+  task 2 → `302`, task flipped 0→1. **Works.**
+- **No token** → `302`, task untouched.
+- **Wrong token** (`WRONGTOKEN123`) → `302`, task untouched.
+- **Cross-session attack** — a fresh cookie jar's token POSTed with the
+  victim's session cookie → `302`, task untouched.
+- **Token from before a server restart** still validated after restart
+  (token lives in the DB, not memory).
+
+Why it works, from the source (`src/bialet.wren`, `Session` class, lines
+264-300):
+
+```wren
+csrf {
+  var token = get("_bialet_csrf")          // cached in this instance
+  if (!token) {
+    token = Util.randomString(60)
+    set("_bialet_csrf", token)             // REPLACE INTO ... (id,key)
+  }
+  return HtmlNode.new('<input ...>')
+}
+csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
+```
+
+The token is generated **once per session** and cached in the instance's
+`__values`, so the 2nd through 9th `{{ session.csrf }}` on the page are no-ops
+that return the same token. `set()` upserts via `REPLACE INTO` on the
+`(id, key)` primary key, so there's exactly one `_bialet_csrf` row per session
+— I confirmed one row in `BIALET_SESSION`. `csrfOk` compares against the
+server-side copy with a constant-time XOR loop (`Util.secureEquals`). This is
+exactly the behavior I was told used to be broken (non-deterministic reads,
+duplicate rows, last-rendered-token-wins). **As of 0.12.0 it is fixed and I
+verified it end to end.** The `(id, key)` primary key + `REPLACE` + the
+`ORDER BY updatedAt DESC` read in the `Session.new()` constructor all line up
+now. The docs even document the "older DBs without the PK are rebuilt on
+startup" migration (`bialet.wren` lines 999-1007) — I saw the rebuild code
+and it's real.
+
+Cookie defaults confirmed on the wire:
+
+```
+Set-Cookie: BIALETSESSID=mN0T8TNxwo7uZRIsrhxx1GWFwRe4KmqBL7KbZmjM; SameSite=Lax; Path=/; HttpOnly
+```
+
+Exactly as documented. Secure is added only behind TLS.
+
+## Escaping / XSS test
+
+Added a task whose text is `<script>alert(1)</script>`. Rendered:
+
+```html
+<span class="title">&lt;script&gt;alert(1)&lt;/script&gt;</span>
+```
+
+**Escaped by default** — `{{ }}` auto-escapes `& < > " '`. I don't need
+`htmlspecialchars` on every output; the template does it and I'd have to go
+out of my way to opt into raw HTML (`.raw` / `HtmlNode`). The docs warn
+against `.safe` inside `{{ }}` because it double-escapes. Even *my own error
+string* got escaped (`Task text can&apos;t be empty.`). This is the single
+best thing about the stack for a paranoid old man.
+
+## The SQL injection story
+
+Covered above, but to be explicit: backtick queries are prepared statements,
+the compiler blocks string interpolation into them, and my injection-looking
+payloads were stored as literal text and rendered escaped. The two escape
+hatches the docs warn about (`ORDER BY` via `.order()` allow-list, `LIMIT`
+via placeholders) are sensible. I trusted raw `UPDATE ... WHERE id = ?` and
+it behaved exactly like PDO with prepared statements.
+
+## Scorecard
+
+| Area | Verdict | Notes |
 |---|---|---|
-| File-based routing | A | the PHP model, done right |
-| Prepared statements / SQL | A | stricter than PDO, good |
-| CSRF / sessions | F | multi-form breakage, no-PK table, undefined read order |
-| Auth story | D | fast-hash default, no roles/OAuth/admin |
-| Deployment | D | VPS-only; no shared-hosting path; no TLS |
-| Windows story | D | DLL juggling |
-| Migrations | C | no rollback, no versions |
-| Long-term maintainability | D | niche language, no talent pool |
-| The manifesto | A | speaks my language |
+| Setup | Good | One binary, zero config, DB + migrations auto on first run. `--version` silently starting a server is a wart. |
+| Templates / HTML-in-Wren | Mixed | Inline HTML + auto-escaping is nice, but implicit-return-on-`{`-line and mandatory `construct new()` are undocumented traps. `map` callbacks are single-expression only. |
+| DB layer | Good | Parameterized by construction, `.to(Class)` mapping is neat, migrations are simple. String-typed columns are annoying but documented. |
+| Escaping / XSS | Excellent | Automatic, correct, verified. The framework's best feature. |
+| Sessions + CSRF | Excellent | Stable token, deterministic reads, PK-keyed table, constant-time compare, multi-form verified. Fixes I was told about are real. |
+| Error messages | Weak | Runtime errors go to the server log and the browser gets a cute generic 500. Silent nulls (implicit return) are the real killer. `bialet dev` / `BIALET_SHOW_ERRORS` exists but is buried. |
+| Routing | Good | Files-per-URL like static files, `Request.get()` for query params, PRG trivial. No router to configure. |
 
 ## Concrete asks
 
-1. **Fix `BIALET_SESSION`**: add a primary key on `(id, key)` so `REPLACE`
-   replaces, and make `get()` order deterministically (`ORDER BY updatedAt
-   DESC LIMIT 1`). This one fix removes the CSRF flakiness AND the unbounded
-   session growth.
-2. **Document the multi-form CSRF trap** and the single-token workaround, or
-   make `csrf` not rotate the stored token on every render.
-3. **A shared-hosting story**, or be explicit that a VPS is required. Right
-   now the marketing implies any old host works.
-4. **Native TLS + HTTP/1.1** so a domain can point straight at the binary.
-5. **Versioned migrations with rollback** (even a down-script convention).
-6. **A self-contained Windows build** (`make static` does it for Linux;
-   do the same for Windows so there are no DLLs).
-7. **An admin scaffold** — a generated CRUD admin over a table would cover
-   most of my client work.
+1. **Document the implicit-return newline rule in `template.md`**, loudly, in
+   the Model section where the silent null first bites. One sentence: "a
+   method body is an expression body (implicit return) only when the
+   expression starts on the same line as `{`; otherwise it returns null."
+   Even better: have the compiler warn when a method body block ends without
+   an explicit return — silent null is worse than a crash.
+2. **Document that component classes need a declared `construct new()`**, or
+   give `Foo.new()` on a constructor-less class a friendlier error than
+   "metaclass does not implement 'new()'".
+3. **Fix the table-name inconsistency in `database.md`**: it lists
+   `BIALET_SESSIONS`, but the real table is `BIALET_SESSION` (what
+   `security.md` and the source use). An hour of SQLite queries against the
+   wrong name is easy to waste.
+4. **Make the 500 page show the error during development.** The generic
+   "Oops! Something broke." page plus a log line is exactly the PHP-2008
+   workflow I wanted to escape. Surface `bialet dev` / `BIALET_SHOW_ERRORS`
+   in `getting-started` instead of burying it in `errors.md`.
+5. **`--version` and other long flags should not silently start a server.**
+   Either reject them or map them to `-v` / help. A flag that boots a server
+   on a default port is how you end up with orphan processes.
+6. **Compile-time check for bare `Request.post(name)`.** The docs hammer the
+   null guard on every page because a missing field crashes the request. A
+   linter warning when `Request.post(...)` is used without `|| ""` or a null
+   check would make the #1 crash cause impossible to ship.
+7. Keep the auto-escaping default. Do not add opt-in escaping. It is the
+   right call and the reason I'd use this over raw PHP today.
+
+## Bottom line
+
+Sessions, CSRF, escaping, and SQL injection are handled for me — and handled
+correctly, verified with curl, not just read in docs. That's further than most
+PHP 2008-era code I maintain. The cost is a language (Wren) with sharp edges
+that are either undocumented (implicit return, constructor requirement) or
+fragile (single-expression `map` bodies, statement bodies basically unusable).
+Once I wrote explicit `return` and a blank constructor, the app was boring —
+which is exactly what I want from a framework.
+
+Final state after a from-scratch run (fresh DB): migration applied once,
+GET 200, add/toggle/delete all 302, rows in the table match the actions.
+App is working.

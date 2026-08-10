@@ -1,11 +1,12 @@
-// Toggle endpoint. A tiny "controller" file, one job, like a PHP
-// endpoint script. POST-only, CSRF-checked, redirect back.
 import "_app/domain" for Task
 
+// POST-only toggle handler. Fails closed on a bad CSRF token:
+// no state change, still redirect back so the user isn't staring at a 500.
 var session = Session.new()
 
 if (Request.isPost && session.csrfOk) {
-  var id = Request.post("id") || ""
-  if (id != "") Task.toggle(id)
+  var task = Task.find(Request.post("id") || "0")
+  if (task) task.toggle()
 }
+
 return Response.redirect("/")

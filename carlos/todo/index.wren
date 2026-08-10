@@ -1,70 +1,58 @@
-// Task list + add form.
-// The file IS the URL, like index.php. Controller logic on top,
-// HTML view below. Familiar shape for someone who wrote PHP for 20 years.
-import "_app/template" for Template
 import "_app/domain" for Task
+import "_app/template" for Template
 
+// === Controller ===
+// One session per request. csrf getter is idempotent within the instance,
+// so every {{ session.csrf }} on this page renders the same token.
 var session = Session.new()
+var error = null
 
-// POST/GET CSRF gotcha: putting {{ session.csrf }} in EVERY form on a page
-// silently breaks all but the last one — each call rotates the stored token.
-// First add task silently "worked" in my tests... then toggle/delete forms
-// started failing when I had rows on the page. Generate the token ONCE and
-// reuse the same hidden field in every form:
-var csrf = ""
-if (!Request.isPost) {
-  csrf = session.csrf
-}
-
-// ----- POST: add a task -----
-// CSRF token check, like a token_check() helper in PHP.
 if (Request.isPost) {
-  if (session.csrfOk) {
-    // In PHP I'd write $_POST['text'] ?? ''. Here: Request.post("text") || "".
-    var text = Request.post("text") || ""
-    if (text != "") Task.add(text)
+  if (!session.csrfOk) {
+    // No token / wrong token. Do NOT touch state.
+    error = "CSRF token missing or invalid."
+  } else {
+    // Request.post returns null when the field is absent. Guard it.
+    var title = (Request.post("title") || "").trim()
+    if (title == "") {
+      error = "Task text can't be empty."
+    } else {
+      Task.create(title)
+      // Post/Redirect/Get -- no resubmission on refresh.
+      return Response.redirect("/")
+    }
   }
-  return Response.redirect("/")
 }
 
-// ----- GET: pick rows by the query string, like $_GET['filter'] -----
-var filter = Request.get("filter") || "all"
-var tasks
-if (filter == "done") {
-  tasks = Task.done()
-} else if (filter == "open") {
-  tasks = Task.open()
-} else {
-  tasks = Task.all()
-}
+var tasks = Task.list()
 
-var open = Task.countOpen()
+// === View ===
+return Template.new().layout(<main>
+  <h1>Todo list</h1>
 
-return Template.layout(<section class="panel">
-  <h1>Tasks</h1>
-  <p class="muted">{{ open }} open · {{ tasks.count }} shown</p>
-
-  <form method="post" class="add-form">
-    {{ csrf }}
-    <input type="text" name="text" placeholder="New task..." />
+  <form method="post" action="/">
+    {{ session.csrf }}
+    <input type="text" name="title" placeholder="What needs doing?" autofocus />
     <button type="submit">Add</button>
   </form>
 
-  {{ tasks.count == 0 && <p class="empty">No tasks in this view.</p> }}
+  {{ error && <p class="error">{{ error }}</p> }}
 
-  <ul class="task-list">
-    {{ tasks.map { |t| <li class="{{ t["done"] == "1" ? "task done" : "task" }}">
+  <ul class="tasks">
+    {{ tasks.map {|t| <li class="{{ t.done && "done" }}">
       <form method="post" action="/toggle" class="inline">
-        {{ csrf }}
-        <input type="hidden" name="id" value="{{ t["id"] }}" />
-        <button type="submit" class="link">{{ t["done"] == "1" ? "↩ reopen" : "✓ complete" }}</button>
+        {{ session.csrf }}
+        <input type="hidden" name="id" value="{{ t.id }}" />
+        <button type="submit" class="toggle">{{ t.done ? "undo" : "done" }}</button>
       </form>
-      <span class="text">{{ t["text"].safe }}</span>
+      <span class="title">{{ t.title }}</span>
       <form method="post" action="/delete" class="inline">
-        {{ csrf }}
-        <input type="hidden" name="id" value="{{ t["id"] }}" />
-        <button type="submit" class="link danger">delete</button>
+        {{ session.csrf }}
+        <input type="hidden" name="id" value="{{ t.id }}" />
+        <button type="submit" class="delete">delete</button>
       </form>
     </li> } }}
   </ul>
-</section>)
+
+  {{ tasks.count == 0 && <p class="empty">Nothing here yet. Add a task above.</p> }}
+</main>)
