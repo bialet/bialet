@@ -19,11 +19,49 @@ improvements.
 - [ ] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
       limitations, map callback restrictions, interpolation rules,
       component-as-method pattern, and raw HTML security footguns
+- [ ] **Live reload: fix the `/_livereload` version bump** — the injected
+      polling script never reloads the browser because the version number
+      does not change when files in the app directory are created, modified,
+      or deleted (reproduced in the persona study). Recompute the version
+      from the watcher state in the handler, or drop the injected script.
+- [ ] **Docs: state that mismatched closing tags are accepted** —
+      `template.md` currently claims `<div><span>Hello</div>` fails to
+      compile; the parser accepts it and serves the HTML verbatim. Document
+      that mismatched tags are not validated.
+- [ ] **Docs: more Wren method-body examples** — add explicit examples of
+      single-line vs multi-line method bodies: a body is an expression body
+      (implicit return) only when the expression starts on the same line as
+      the `{`; a statement body on a following line returns `null` silently.
+- [ ] **Docs: start beginners with `bialet dev`** — the getting-started flow
+      should run `bialet dev` from the first page so the in-browser error
+      display and live reload are on by default instead of a bare `bialet`
+      with a generic error page.
+- [ ] **Docs: note config is read at startup** — `BIALET_SHOW_ERRORS` and
+      `BIALET_LIVE_RELOAD` are read when the server starts; enabling them
+      while a server is running requires a restart. Document this.
+- [ ] **CLI: reject unsupported long-form flags** — `bialet --version`
+      silently starts a server on port 7001 instead of printing the version.
+      Reject unknown long-form options rather than falling through to
+      "serve the current directory".
+- [ ] **Docs: fix stale claims vs the current binary** — accept `<br/>`
+      (no space) as valid (`template.md` calls it "Incorrect"), drop the
+      "double-response error" claim for a forgotten `return` before
+      `Response.redirect`, correct the session table name in `database.md`
+      (`BIALET_SESSIONS` → `BIALET_SESSION`), qualify `wren.md`'s "null is
+      safe", and fix the `security.md` intro that contradicts auto-escaping.
+- [ ] **Compiler: friendlier invalid-tag-name errors** — `<MyElement>` gives
+      `Error at '<': Expected expression.` and `<my_component>` gives
+      `Unterminated HTML string.`; emit `Invalid tag name: must be lowercase
+      alphanumeric + hyphens` instead.
 
 ## Longer Term / Ideas
 
 - [ ] **Admin dashboard** — External lib UI for browsing the database and
       viewing logs
+- [ ] **Warn when a block callback returns null** — a multi-statement `map`
+      callback (or any block whose body is not a single expression) renders
+      empty output with no error. Log a warning so a silent empty `<ul>`
+      is distinguishable from an empty query result.
 - [ ] **Data filtering lib** — External lib for query sanitization and type-safe
       filtering utilities
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
