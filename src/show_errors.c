@@ -158,18 +158,17 @@ char* show_errors_page(void) {
   if(escaped == NULL)
     return NULL;
 
-  const char* head = "<!DOCTYPE html><html lang=\"en\"><head><meta "
-                     "charset=\"utf-8\"/><title>Bialet Error</title></head><body "
-                     "style=\"font:1rem system-ui,monospace;margin:2em;color:#024\">"
-                     "<h1>Bialet Error</h1><pre style=\"white-space:pre-wrap\">";
+  // Same chrome as the default pages (see BIALET_HEADER_PAGE/BIALET_FOOTER_PAGE
+  // in bialet.h). The trace renders as code in the accent color, with an alert
+  // at the bottom about disabling the flag before production.
+  const char* head =
+      BIALET_HEADER_PAGE "Bialet Error</h1><pre style=\"white-space:pre-wrap;"
+                         "text-align:left;font-size:.6em\"><code>";
   const char* tail =
-      "</pre><hr><p style=\"font-size:.85em\">Enable with "
-      "<code>Config.enable(\"BIALET_SHOW_ERRORS\")</code>. This is only a local "
-      "config — disable it if this is production: "
-      "<a "
-      "href=\"https://bialet.dev/errors.html\">https://bialet.dev/errors.html</a></"
-      "p>"
-      "</body></html>";
+      "</code></pre><p style=\"border:1px solid currentColor;border-radius:.5em;"
+      "padding:1em;margin-top:2em\">Disable if it is production — <a "
+      "href=\"https://bialet.dev/errors.html\">How to disable "
+      "it?</a>" BIALET_FOOTER_PAGE;
 
   size_t head_len = strlen(head);
   size_t esc_len = strlen(escaped);
