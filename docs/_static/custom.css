@@ -3,6 +3,60 @@ html[data-theme="dark"] .highlight .sb { color: #ff5555 } /* Literal.String.Back
 html[data-theme="light"] .highlight .x { color: #04B1D5 } /* Other */
 html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Backtick */
 
+/* ── Brand palette ────────────────────────────────────────── */
+/* BRAND.md: minimal, high-contrast, dual-mode palette, built from
+   3-character hex values. Each token has one job. */
+
+html[data-theme="light"],
+html:not([data-theme]) {
+  --brand-bg: #FFF;
+  --brand-text: #024;
+  --brand-link: #06F;
+  --brand-link-hover: #04F;
+  --brand-code: #B00;
+}
+
+html[data-theme="dark"] {
+  --brand-bg: #024;
+  --brand-text: #FFF;
+  --brand-link: #0BF;
+  --brand-link-hover: #0FF;
+  --brand-code: #FA0;
+}
+
+/* Map the brand palette onto the Sphinx theme tokens. */
+html[data-theme="light"],
+html:not([data-theme]),
+html[data-theme="dark"] {
+  --pst-color-background: var(--brand-bg);
+  --pst-color-on-background: var(--brand-bg);
+  --pst-color-surface: var(--brand-bg);
+  --pst-color-text-base: var(--brand-text);
+  --pst-color-text: var(--brand-text);
+  --pst-color-heading: var(--brand-text);
+  --pst-color-on-surface: var(--brand-text);
+  --pst-color-link: var(--brand-link);
+  --pst-color-link-hover: var(--brand-link-hover);
+  --pst-color-primary: var(--brand-link);
+  --pst-color-primary-highlight: var(--brand-link-hover);
+  --pst-color-secondary: var(--brand-link-hover);
+  --pst-color-inline-code: var(--brand-code);
+  --pst-color-inline-code-links: var(--brand-link);
+  --pst-color-text-muted: color-mix(in srgb, var(--brand-text) 65%, var(--brand-bg));
+  --pst-color-border: color-mix(in srgb, var(--brand-text) 25%, var(--brand-bg));
+}
+
+/* Sphinx Design buttons and cards follow the same tokens. */
+html[data-theme="light"],
+html:not([data-theme]),
+html[data-theme="dark"] {
+  --sd-color-primary: var(--brand-link);
+  --sd-color-primary-highlight: var(--brand-link-hover);
+  --sd-color-primary-text: var(--brand-bg);
+  --sd-color-secondary: var(--pst-color-text-muted);
+  --sd-color-secondary-text: var(--brand-bg);
+}
+
 /* ── Landing page ─────────────────────────────────────────── */
 
 #bialet > h1 {
@@ -13,10 +67,7 @@ html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Bac
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%,
-      var(--pst-color-primary-highlight, rgba(124,58,237,0.06)) 0%,
-      transparent 60%);
+  background: var(--pst-color-background);
 }
 
 .landing-nav {
@@ -70,18 +121,23 @@ html[data-theme="light"] .highlight .sb { color: #FF2222 } /* Literal.String.Bac
 .landing-content .highlight {
   border-radius: 0.75rem;
   border: 1px solid var(--pst-color-border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .landing-content .sd-card {
   border-radius: 0.75rem;
   border: 1px solid var(--pst-color-border);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s;
 }
 
 .landing-content .sd-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: var(--pst-color-link);
+}
+
+/* Plain over slick — no drop shadows on landing elements. */
+.landing-content .sd-shadow-sm,
+.landing-content .sd-shadow-md,
+.landing-content .sd-shadow-lg {
+  box-shadow: none;
 }
 
 .landing-content .sd-btn {

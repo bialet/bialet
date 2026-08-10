@@ -2,7 +2,7 @@ Bialet
 ======
 
 .. meta::
-    :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light..
+    :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
     :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 .. raw:: html
@@ -96,7 +96,7 @@ Bialet
 .. raw:: html
 
    <div class="community-banner">
-     <p style="font-size: 1.3em; margin: 0 0 0.5em 0">🤖 <strong>Building with AI?</strong></p>
+     <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Building with AI?</strong></p>
      <p style="padding: 0.5em">
        Paste this into Claude, ChatGPT, or Cursor so it writes idiomatic
        <code>.wren</code> code from the first response.
@@ -121,7 +121,7 @@ Features
       :text-align: center
       :shadow: sm
 
-      :octicon:`package;2em;sd-text-info`
+      :octicon:`package;2em`
       ^^^
       **A Tiny Single Binary**
 
@@ -133,7 +133,7 @@ Features
       :text-align: center
       :shadow: sm
 
-      :octicon:`database;2em;sd-text-info`
+      :octicon:`database;2em`
       ^^^
       **SQLite is Built-in**
 
@@ -144,7 +144,7 @@ Features
       :text-align: center
       :shadow: sm
 
-      :octicon:`rocket;2em;sd-text-info`
+      :octicon:`zap;2em`
       ^^^
       **Zero Build Step**
 
@@ -155,7 +155,7 @@ Features
       :text-align: center
       :shadow: sm
 
-      :octicon:`code;2em;sd-text-info`
+      :octicon:`code;2em`
       ^^^
       **HTML is the Real Frontend**
 
@@ -238,7 +238,7 @@ Who is Bialet for?
       :text-align: center
       :shadow: sm
 
-      :octicon:`beaker;2em;sd-text-warning`
+      :octicon:`beaker;2em`
       ^^^
       **Internal Tools & Dashboards**
 
@@ -249,7 +249,7 @@ Who is Bialet for?
       :text-align: center
       :shadow: sm
 
-      :octicon:`mortar-board;2em;sd-text-warning`
+      :octicon:`mortar-board;2em`
       ^^^
       **Learning & Teaching**
 
@@ -260,7 +260,7 @@ Who is Bialet for?
       :text-align: center
       :shadow: sm
 
-      :octicon:`heart;2em;sd-text-warning`
+      :octicon:`heart;2em`
       ^^^
       **Lovers of Simplicity**
 
@@ -348,7 +348,7 @@ Who is Bialet for?
 .. raw:: html
 
    <div class="community-banner">
-     <p style="font-size: 1.3em; margin: 0 0 0.5em 0">🚲 <strong>Let's build together</strong></p>
+     <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Let's build together</strong></p>
      <p style="padding: 0.5em">
        Bialet is maintained by a solo developer, but the community is open to everyone.
        Whether you're stuck on a query, have a feature idea, or want to show off your
