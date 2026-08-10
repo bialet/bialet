@@ -502,7 +502,8 @@ Bialet adds a few convenience methods:
 
 ```wren
 [1, 2, 3].first                  // 1 (null for empty lists)
-"<script>".safe                   // "&lt;script&gt;" (HTML escape)
+"<script>".safe                   // "&lt;script&gt;" (HTML escape, pre-escape)
+"<b>x</b>".raw                    // HtmlNode (mark as safe HTML)
 "hello".upper                     // "HELLO"
 "HELLO".lower                     // "hello"
 "42".toNum                        // 42 (as Number)

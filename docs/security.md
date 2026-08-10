@@ -7,7 +7,8 @@ central reference for keeping a Bialet app safe.
 
 Three rules cover most real-world damage:
 
-1. **Escape untrusted output** — `{{ }}` does not escape. Use `.safe`.
+1. **Trust `{{ }}` to escape untrusted output** — interpolation escapes by
+   default. Mark intentionally-raw HTML with `HtmlNode` or `.raw`.
 2. **Parameterize SQL** — never build a query from string concatenation.
 3. **Validate state-changing requests** — check `Session.csrfOk` on POSTs.
 
@@ -16,7 +17,7 @@ Three rules cover most real-world damage:
 | Protection | Where | Notes |
 |------------|-------|-------|
 | Parameterized SQL | Backtick Query objects | String interpolation is rejected by the compiler |
-| HTML escaping | `.safe`, `Util.htmlEscape()` | You must call it — never automatic |
+| HTML escaping | `{{ }}` interpolation | Automatic; HTML literals and `HtmlNode` stay raw |
 | CSRF tokens | `Session.csrf` / `Session.csrfOk` | Constant-time comparison |
 | HttpOnly + SameSite cookies | `Cookie.set` defaults | `Secure` added automatically behind TLS |
 | Private file blocking | Server | `_` and `.` prefixed files return 403 |
@@ -25,53 +26,68 @@ Three rules cover most real-world damage:
 
 ## Cross-Site Scripting (XSS)
 
-The `{{ }}` interpolation **does not escape HTML by default**. When you
-display user-generated content, database values, or URL parameters, you must
-escape them yourself. This is deliberate: it keeps inline HTML readable and
-fast, and it makes the escaping explicit where it matters.
+The `{{ }}` interpolation **escapes HTML by default**. Any plain value you
+interpolate — a string from user input, the database, or a URL parameter — is
+escaped before it reaches the page, in attribute values as well as element
+bodies:
 
 ```wren
 var userInput = "<script>alert('xss')</script>"
 
-// WRONG — XSS vulnerability
-var dangerous = <p>{{ userInput }}</p>
-// Renders: <p><script>alert('xss')</script></p>
-
-// CORRECT — HTML characters are escaped
-var safe = <p>{{ userInput.safe }}</p>
+var safe = <p>{{ userInput }}</p>
 // Renders: <p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>
 ```
 
-`.safe` replaces `&`, `<`, `>`, `"`, and `'` with their HTML entities. The
-equivalent helper `Util.htmlEscape(str)` returns the same result as a plain
-string:
+Escaping replaces `&`, `<`, `>`, `"`, and `'` with their HTML entities. The
+standalone helper `Util.htmlEscape(str)` returns the same result:
 
 ```wren
 var escaped = Util.htmlEscape(userInput)
 ```
 
-> ⚠️ Pitfall: **Forgetting `.safe` is an XSS vulnerability.** Every string
-> that comes from user input, the database, or the URL must be escaped before
-> it reaches HTML. There is no automatic escaping — not even for values pulled
-> from `Request.post()`.
+> ⚠️ Pitfall: **Do not add `.safe` inside `{{ }}`.** Since interpolation
+> already escapes, `{{ userInput.safe }}` escapes the text twice
+> (`&amp;lt;` instead of `&lt;`). Drop `.safe` from templates.
 
-Escaping applies in attributes too, not just element bodies:
+### Intentionally raw HTML
+
+Values that are already rendered HTML are marked with an `HtmlNode` and are
+left untouched by interpolation:
+
+- **HTML string literals** — `<div>...</div>` evaluates to an `HtmlNode`.
+- **Nested `{{ }}` blocks** — their result is an `HtmlNode`, so nesting
+  `{{ outer }}` around inner markup does not double-escape it.
+- **`.raw`** — `"<b>bold</b>".raw` marks a string as safe HTML.
+- **`HtmlNode.new(...)`** — wrap a runtime string explicitly.
 
 ```wren
-// WRONG — break out of the attribute, inject an event handler
-<a href="{{ url }}">link</a>
+var userText = "<script>alert('xss')</script>"
+var card = <div class="card"><p>kept <b>raw</b></p></div>
+var safeMarkup = "<em>raw</em>".raw
 
-// CORRECT
-<a href="{{ url.safe }}">link</a>
+<p>{{ userText }}</p>    // escaped
+<p>{{ card }}</p>        // rendered as written
+<p>{{ safeMarkup }}</p>  // rendered as written
+
+// A string that really does contain markup must be marked safe:
+var html = "<b>bold</b>".raw
+<p>{{ html }}</p>
 ```
 
-If you generate HTML in Wren code rather than inline blocks, escape with
-`Util.htmlEscape()` before concatenating it into a template string.
+Sequences are flattened by interpolation, so building a list of fragments
+with `map` escapes each item's user data while keeping the surrounding
+markup:
 
-> ⚠️ Pitfall: `.safe` escapes for HTML text and attribute contexts. It does
-> not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted input
-> into a `<script>` block or a `javascript:` URL — restructure the page so it
-> cannot happen.
+```wren
+var items = ["<b>a</b>", "b"]
+<ul>{{ items.map{|x| <li>{{ x }}</li> } }}</ul>
+// <li>&lt;b&gt;a&lt;/b&gt;</li><li>b</li>
+```
+
+> ⚠️ Pitfall: `HtmlNode` and `.raw` assert that the string is already safe.
+> They do not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted
+> input into a `<script>` block or a `javascript:` URL — restructure the page
+> so it cannot happen.
 
 ### Markdown rendering
 
@@ -351,8 +367,8 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 
 ## Security Checklist
 
-1. Escape every string from user input, the database, or the URL with `.safe`
-   before interpolating into HTML.
+1. Interpolate untrusted values with `{{ }}` and rely on the automatic
+   escaping; mark intentional markup with `HtmlNode` or `.raw`.
 2. Never build SQL from strings — use `?` placeholders and pass values as
    parameters.
 3. Use `.order()` with an allow-list for sortable columns.

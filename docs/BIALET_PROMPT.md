@@ -141,14 +141,14 @@ classes, attributes, or whole HTML blocks:
 <a class="filter-tab {{ filter == "all" && "active" }}">All</a>
 <span>{{ activeCount }} task{{ activeCount != 1 && "s" }} remaining</span>
 {{ showClear && <button class="clear-btn">Clear completed</button> }}
-<span class="{{ task.finished ? "done" : "pending" }}">{{ task.description.safe }}</span>
+<span class="{{ task.finished ? "done" : "pending" }}">{{ task.description }}</span>
 ```
 
 **Iteration** uses `map`, and the callback must be a **single expression**
 (no multi-statement blocks, no `var` declarations inside it):
 
 ```wren
-{{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+{{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
 ```
 
 > **Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;
@@ -541,7 +541,7 @@ return Layout.render(
     <table>
       <thead><tr><th>Name</th><th>Email</th></tr></thead>
       <tbody>
-        {{ users.map{|u| <tr><td>{{ u.name.safe }}</td><td>{{ u.email.safe }}</td></tr>} }}
+        {{ users.map{|u| <tr><td>{{ u.name }}</td><td>{{ u.email }}</td></tr>} }}
       </tbody>
     </table>
     <form method="post">
@@ -748,9 +748,9 @@ Markdown.file("about.md")              // reads and renders a file from the app 
 
 1. **Never concatenate or interpolate values into SQL** — always use `?`
    placeholders and pass parameters to the query method.
-2. **Always escape untrusted output with `.safe`** — `{{ }}` does **not**
-   escape HTML automatically. Escape any string from user input, the
-   database, or the URL before interpolating it into HTML.
+2. **Rely on `{{ }}` auto-escaping** — interpolation escapes plain strings
+   (user input, database, URL) automatically. Mark intentionally-raw markup
+   with `HtmlNode` or `.raw`.
 3. **Always `return` before `Response.redirect(...)`** to avoid
    double-response errors.
 4. **Validate input** in domain classes (`isValid`, `errors`) or inline
@@ -763,11 +763,11 @@ Markdown.file("about.md")              // reads and renders a file from the app 
 `SELECT * FROM users WHERE name = '%(name)'`.fetch
 
 // WRONG — XSS
-<p>{{ userInput }}</p>
+<p>{{ userInput.safe }}</p>  // double-escaped: interpolation already escapes
 
 // CORRECT
 `SELECT * FROM users WHERE name = ?`.fetch(name)
-<p>{{ userInput.safe }}</p>
+<p>{{ userInput }}</p>
 ```
 
 ## JSON APIs
@@ -942,7 +942,7 @@ return Layout.render(<main>
         <input type="hidden" name="id" value="{{ task.id }}" />
         <button>{{ task.finished ? "✓" : "○" }}</button>
       </form>
-      <span class="{{ task.finished ? "done" : "" }}">{{ task.description.safe }}</span>
+      <span class="{{ task.finished ? "done" : "" }}">{{ task.description }}</span>
       <form method="post" action="/delete" style="display:inline">
         <input type="hidden" name="id" value="{{ task.id }}" />
         <button>✕</button>
@@ -989,7 +989,7 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
    the bottom, always `return Response.redirect(...)`
 6. **Models**: domain classes with validation and `.to(Class)` mapping
 7. **Database**: backtick SQL, `?` placeholders, `_app/migration.wren` for schema
-8. **Security**: parameterized queries always; `.safe` on every untrusted string
+8. **Security**: parameterized queries always; `{{ }}` auto-escapes untrusted strings
 9. **APIs**: `Response.json()`, one file per resource, method + query param
    for the id, rather than per-verb files
 10. **Git**: always add `_db.sqlite3*` to `.gitignore`

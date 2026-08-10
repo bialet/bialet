@@ -53,7 +53,7 @@ return <main>
   {{ Request.get("ok") && <p class="success">Subscribed!</p> }}
   {{ error && <p class="error">{{ error }}</p> }}
   <form method="post">
-    <label>Email: <input name="email" type="email" value="{{ email.safe }}" required /></label>
+    <label>Email: <input name="email" type="email" value="{{ email }}" required /></label>
     <button>Subscribe</button>
   </form>
 </main>
@@ -65,7 +65,7 @@ Key points:
   complex; this catches most typos and empty submissions in one line
 - `var error = null` and `{{ error && ... }}` renders the message inline
   instead of short-circuiting with `return`
-- `value="{{ email.safe }}"` preserves the input on failed submission
+- `value="{{ email }}"` preserves the input on failed submission
 - `return Response.redirect(...)` prevents resubmission on refresh
 - `Request.get("ok")` shows a success message after redirect
 - `type="email"` and `required` give free browser-side validation
@@ -91,14 +91,14 @@ if (q != "") {
 return <main>
   <h1>Search</h1>
   <form method="get" action="/search">
-    <input name="q" value="{{ q.safe }}" placeholder="Search posts..." />
+    <input name="q" value="{{ q }}" placeholder="Search posts..." />
     <button>Search</button>
   </form>
 
   {{ q != "" && <section>
-    <p>{{ results.count }} results for "{{ q.safe }}"</p>
+    <p>{{ results.count }} results for "{{ q }}"</p>
     <ul>
-      {{ results.map {|r| <li><a href="/post?id={{ r["id"] }}">{{ r["title"].safe }}</a></li> } }}
+      {{ results.map {|r| <li><a href="/post?id={{ r["id"] }}">{{ r["title"] }}</a></li> } }}
     </ul>
   </section> }}
 </main>
@@ -106,12 +106,12 @@ return <main>
 
 Key points:
 - `method="get"` puts the query in the URL (`/search?q=term`)
-- `Request.get("q") || ""` avoids null — use `|| ""` so `.safe` doesn't crash
+- `Request.get("q") || ""` avoids null — use `|| ""` before string ops
 - `if (q != "")` checks if there's a search term (empty string is truthy in
   Wren, so `if (q)` doesn't work as a presence check)
 - No redirect needed — GET forms are safe to refresh
-- `value="{{ q.safe }}"` preserves the search term
-- Escape all user input with `.safe` when outputting to HTML
+- `value="{{ q }}"` preserves the search term
+- Interpolation auto-escapes, so user input is safe to output directly
 
 ## Login Form (POST + CSRF + Password)
 
@@ -144,7 +144,7 @@ return <main>
   {{ error && <p class="error">{{ error }}</p> }}
   <form method="post">
     {{ session.csrf }}
-    <label>Email: <input name="email" type="email" value="{{ email.safe }}" required /></label>
+    <label>Email: <input name="email" type="email" value="{{ email }}" required /></label>
     <label>Password: <input name="password" type="password" required /></label>
     <button>Login</button>
   </form>
@@ -159,7 +159,7 @@ Key points:
   (see [Security](security.md) for how to hash passwords with `Util.hash`)
 - `var error` with `{{ error && <p class="error">{{ error }}</p> }}` shows
   the message inline on a single form, no duplication
-- `value="{{ email.safe }}"` preserves the email on failed login
+- `value="{{ email }}"` preserves the email on failed login
 - `session.login(id)` persists the session on success
 - `return Response.redirect(...)` on success, no redirect on failure
 
@@ -195,8 +195,9 @@ guide for the full API.
 - **`Request.post()` returns `null`** — always `|| ""` before string ops.
 - **Missing `return` before `Response.redirect()`** — causes double-response
   errors. Always `return Response.redirect(...)`.
-- **No `.safe` on user input in HTML** — every untrusted string must be
-  escaped, including in `<input value="...">` attributes.
+- **Double-escaping with `.safe`** — `{{ }}` already escapes. Writing
+  `{{ userInput.safe }}` escapes the text twice (`&amp;lt;`). Interpolate the
+  raw value; use `HtmlNode` or `.raw` only for markup you intentionally trust.
 - **Forgetting CSRF on state-changing forms** — `{{ session.csrf }}` in the
   form, `session.csrfOk` in the handler.
 - **Plaintext passwords** — use `Util.hash` / `Util.verify`, never store raw

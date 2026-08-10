@@ -32,6 +32,12 @@ var sum = <p>{{ 5 + 3 }}</p>
 // Output: <p>8</p>
 ```
 
+Interpolation **escapes plain values automatically** — strings, numbers, and
+other non-HTML values have `&`, `<`, `>`, `"`, and `'` replaced with their
+HTML entities. HTML string literals, nested `{{ }}` results, `.raw` strings,
+and `HtmlNode` values are already marked safe and are inserted verbatim. See
+[Security](security.md) for the full rules and the escape pitfalls.
+
 ### `return` sends the response
 
 Inside a `.wren` file, `return` sends the value as the HTTP response body
@@ -80,7 +86,7 @@ the tags become part of the HTML output.
 ```wren
 var card = <article>
   <h2>Title</h2>
-  <p>{{ description.safe }}</p>
+  <p>{{ description }}</p>
 </article>
 ```
 
@@ -254,9 +260,9 @@ lines. The `{{ }}` must be inside an HTML tag context:
 
 ```wren
 return <main>{{ task.finished ? <span class="task-text completed">
-  {{ task.description.safe }}
+  {{ task.description }}
 </span> : <span class="task-text">
-  {{ task.description.safe }}
+  {{ task.description }}
 </span> }}</main>
 ```
 
@@ -273,7 +279,7 @@ if (task.finished) {
 }
 
 // Clean template
-<span class="{{ taskClass }}">{{ task.description.safe }}</span>
+<span class="{{ taskClass }}">{{ task.description }}</span>
 ```
 
 **Newlines outside HTML tags** — same rule as `&&`:
@@ -330,7 +336,7 @@ the HTML inside the tags has newlines.
       <span class="task-content">
         <span class="{{ task.finished ? "task-text completed" : "task-text" }}">
           <span class="priority-dot low" aria-hidden="true"></span>
-          {{ task.description.safe }}
+          {{ task.description }}
         </span>
         <span class="task-meta">{{ task.createdAt.hh }}:{{ task.createdAt.mi }}</span>
       </span>
@@ -365,7 +371,7 @@ state:
 ```wren
 return <main>
   <ul>
-    {{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+    {{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
   </ul>
   {{ tasks.count == 0 && <section class="empty-state">
     <p>No tasks yet. Add your first one above.</p>
@@ -423,7 +429,7 @@ var posts = Post.list()
 return Template.new().layout(<main>
   <h1>Posts</h1>
   <ul>
-    {{ posts.map{ |p| <li><a href="/posts/{{ p.id }}">{{ p.title.safe }}</a></li> } }}
+    {{ posts.map{ |p| <li><a href="/posts/{{ p.id }}">{{ p.title }}</a></li> } }}
   </ul>
 </main>)
 ```
@@ -923,35 +929,32 @@ the CSS from your app directory instead of loading it from a CDN.
 
 ## Escaping & Security
 
-The `{{ }}` interpolation does **not** escape HTML by default. When displaying
-user-generated content, database values, or URL parameters, you must use the
-`.safe` property to escape special HTML characters and prevent XSS attacks.
+The `{{ }}` interpolation **escapes HTML by default**. Plain values — strings
+from user input, database queries, or URL parameters — have `&`, `<`, `>`, `"`,
+and `'` replaced with their HTML entities before they reach the page.
 
 ```wren
 var userInput = "<script>alert('xss')</script>"
 
-// Dangerous — XSS vulnerability
-var dangerous = <p>{{ userInput }}</p>
-// Renders: <p><script>alert('xss')</script></p>
-
-// Safe — HTML characters are escaped
-var safe = <p>{{ userInput.safe }}</p>
+// Safe — HTML characters are escaped automatically
+var safe = <p>{{ userInput }}</p>
 // Renders: <p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>
 ```
 
-You can also use `Util.htmlEscape()` for manual escaping:
+You can also use `Util.htmlEscape()` for manual escaping outside of
+interpolation:
 
 ```wren
 var escaped = Util.htmlEscape(userInput)
 ```
 
-**Rule:** Always use `.safe` on any string that comes from user input, database
-queries, or URL parameters before inserting it into HTML.
+Markup that is already safe is left untouched: HTML string literals, the
+result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
+[Security](security.md) for the full rules.
 
-### Pitfall
-
-**Forgetting `.safe` is an XSS vulnerability.** Every user-supplied string
-embedded in HTML must be escaped. There is no automatic escaping.
+> ⚠️ Pitfall: **Do not add `.safe` inside `{{ }}`.** Interpolation already
+> escapes, so `{{ userInput.safe }}` escapes the text twice (`&amp;lt;`).
+> Use `HtmlNode` or `.raw` only for markup you intentionally trust.
 
 ---
 
@@ -984,4 +987,6 @@ embedded in HTML must be escaped. There is no automatic escaping.
 - **`_`-prefixed CSS is not served:** Name stylesheets without leading `_`.
 - **CSS preprocessors not built in:** Write vanilla CSS or use a build step.
 - **Framework CDNs in production:** Self-host CSS files for reliability.
-- **`{{ }}` does not escape HTML:** Always use `.safe` on untrusted strings.
+- **`{{ }}` escapes by default:** Plain values are auto-escaped; do not add
+  `.safe` inside `{{ }}` (it double-escapes). Use `HtmlNode` or `.raw` for
+  intentionally-raw markup.

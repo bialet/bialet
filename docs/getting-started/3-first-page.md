@@ -30,10 +30,10 @@ Everything inside `{{ }}` is evaluated as Wren code and the result is
 inserted into the HTML. You can use variables, conditionals, loops — any
 valid Wren expression.
 
-> **Security note:** `{{ }}` does **not** escape HTML by default. When
-> displaying user-generated content, use `.safe` to escape it:
-> `{{ userContent.safe }}`. See [HTML Template](../template.md)
-> for details.
+> **Security note:** `{{ }}` escapes plain values automatically, so
+> user-generated content is safe by default: `{{ userContent }}`. HTML
+> literals and `HtmlNode` values are rendered as-is. See
+> [HTML Template](../template.md) and [Security](../security.md) for details.
 
 ```wren
 var items = ["apples", "oranges", "bananas"]

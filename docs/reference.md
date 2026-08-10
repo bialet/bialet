@@ -19,6 +19,31 @@ The following classes are available by default in all Bialet applications withou
 - **File** - File operations
 - **Markdown** - Render Markdown content to HTML
 - **System** - Logging and output utilities
+- **HtmlNode** - A string of already-safe HTML that `{{ }}` leaves unescaped
+
+## HtmlNode
+
+`HtmlNode` wraps a string of already-rendered HTML. HTML string literals
+(`<div>...</div>`), the result of a `{{ }}` block, and `String.raw` all produce
+`HtmlNode` values. Interpolating an `HtmlNode` renders it verbatim, while
+plain strings are auto-escaped.
+
+### new(string)
+
+Wraps a string as safe HTML. Only use this for markup you control or have
+already escaped.
+
+### toString
+
+Returns the raw HTML string.
+
+### +(other)
+
+Concatenates the raw HTML with `other.toString`, returning a new `HtmlNode`.
+
+### raw
+
+Returns `this` — the node is already safe.
 
 ## External Classes
 
@@ -1166,7 +1191,22 @@ Converts a string to a boolean value by first converting to a number (using `toN
 Escapes special HTML characters in a string to prevent XSS attacks. Replaces `&`, `<`, `>`, `"`, and `'` with their HTML entity equivalents.
 
 ```wren
-"<script>alert('xss')</script>".safe  // "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+"<script>alert('xss')</script>".safe  // "&lt;script&gt;alert(&apos;xss&apos;)&lt;/script&gt;"
+```
+
+`{{ }}` interpolation already calls this for plain values, so you do not need
+`.safe` inside templates — adding it escapes the text twice. Use `.safe` when
+building HTML from strings outside of interpolation, or to pre-escape a value
+before storing it.
+
+#### raw
+
+Marks a string as already-safe HTML by wrapping it in an `HtmlNode`, so `{{ }}`
+interpolation leaves it untouched.
+
+```wren
+var markup = "<b>bold</b>".raw
+<p>{{ markup }}</p>  // <b>bold</b>, not escaped
 ```
 
 #### lower
