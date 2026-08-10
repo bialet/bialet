@@ -235,7 +235,8 @@ void free_bialet_query(BialetQuery* query);
  * Response.defaultPage_ builds the same chrome from these macros, so the
  * C-side fallbacks and the Wren API render the exact same template. */
 #define BIALET_CSS_PAGE                                                             \
-  "<style>body{background:#fff;color:#024;font-family:system-ui;font-size:2rem;"    \
+  "<style>body{background:#fff;color:#024;font-family:system-ui;font-size:clamp(1." \
+  "8rem, 2.5vw, 2rem);"                                                             \
   "line-height:2em;text-align:center;padding:.5em;max-width:45ch;margin:auto}"      \
   "a{color:#06f;text-decoration:none}"                                              \
   "a:hover{color:#04f;text-decoration:underline}"                                   \
