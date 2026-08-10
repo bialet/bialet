@@ -1197,7 +1197,16 @@ void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
   char db_path[MAX_MODULE_LEN];
   int  lastChar = (int)strlen(config->db_path) - 1;
-  if(config->db_path[0] == '/') {
+  // A drive-qualified path (C:\...) is absolute on Windows; without this check
+  // a temp DB returned by GetTempFileNameA would be joined onto root_dir.
+  int is_abs = config->db_path[0] == '/';
+#if IS_WIN
+  if(!is_abs && config->db_path[0] != '\0' && config->db_path[1] == ':' &&
+     (config->db_path[2] == '/' || config->db_path[2] == '\\')) {
+    is_abs = 1;
+  }
+#endif
+  if(is_abs) {
     strncpy(db_path, config->db_path, sizeof(db_path) - 1);
     db_path[sizeof(db_path) - 1] = '\0';
   } else {

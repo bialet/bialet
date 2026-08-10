@@ -16,6 +16,7 @@
 #define NAME_MAX 255
 #endif
 #else
+#include <fcntl.h>
 #include <io.h>
 #endif
 
