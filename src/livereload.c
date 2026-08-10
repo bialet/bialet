@@ -6,8 +6,25 @@
 #include <string.h>
 #include <time.h>
 
-static int  enabled = 0;
+#if IS_LINUX
+#include <sys/mman.h>
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+#endif
+
+static int enabled = 0;
+
+#if IS_LINUX
+// The Linux parent forks a child process to serve HTTP while the dmon
+// file-watch thread keeps running in the parent. A plain static would leave
+// each process with its own copy, so the HTTP child keeps serving the version
+// it inherited at fork time and /_livereload never changes. Share the counter
+// across the fork with an anonymous mapping instead.
+static volatile long* shared_version = NULL;
+#else
 static long version = 0;
+#endif
 
 static const char kScript[] = "<script>"
                               "(function(){var v=null;setInterval(function(){"
@@ -21,6 +38,13 @@ static const char kScript[] = "<script>"
 extern sqlite3* db;
 
 void livereload_init(void) {
+#if IS_LINUX
+  shared_version = mmap(NULL, sizeof(long), PROT_READ | PROT_WRITE,
+                        MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  if(shared_version == MAP_FAILED)
+    shared_version = NULL;
+#endif
+
   if(db == NULL)
     return;
 
@@ -34,7 +58,12 @@ void livereload_init(void) {
     const char* val = (const char*)sqlite3_column_text(stmt, 0);
     if(val != NULL && strcmp(val, "0") != 0 && val[0] != '\0') {
       enabled = 1;
+#if IS_LINUX
+      if(shared_version != NULL)
+        *shared_version = (long)time(NULL);
+#else
       version = (long)time(NULL);
+#endif
       message(yellow("Live reloading"));
     }
   }
@@ -56,7 +85,14 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
     return 0;
 
   static char version_str[32];
-  int         len = snprintf(version_str, sizeof(version_str), "%ld", version);
+  int         len;
+#if IS_LINUX
+  if(shared_version == NULL)
+    return 0;
+  len = snprintf(version_str, sizeof(version_str), "%ld", *shared_version);
+#else
+  len = snprintf(version_str, sizeof(version_str), "%ld", version);
+#endif
 
   response->status = 200;
   response->header = (char*)"Content-Type: text/plain\r\n";
@@ -68,7 +104,12 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
 void livereload_notify(void) {
   if(!enabled)
     return;
+#if IS_LINUX
+  if(shared_version != NULL)
+    *shared_version = (long)time(NULL);
+#else
   version = (long)time(NULL);
+#endif
 }
 
 // Portable bounded substring search (POSIX memmem is not available on

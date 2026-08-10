@@ -19,11 +19,15 @@ improvements.
 - [ ] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
       limitations, map callback restrictions, interpolation rules,
       component-as-method pattern, and raw HTML security footguns
-- [ ] **Live reload: fix the `/_livereload` version bump** — the injected
-      polling script never reloads the browser because the version number
-      does not change when files in the app directory are created, modified,
-      or deleted (reproduced in the persona study). Recompute the version
-      from the watcher state in the handler, or drop the injected script.
+- [x] **Live reload: fix the `/_livereload` version bump** — the injected
+      polling script never reloaded the browser because the version number
+      did not change when files in the app directory were created, modified,
+      or deleted. On Linux the HTTP child process served a copy of the
+      version frozen at fork time while the parent's file-watch thread
+      updated its own, and in `bialet dev` the server loop reaped the
+      browser child instead of the HTTP child, tearing down the watcher.
+      The version counter now lives in a shared mapping and the server waits
+      for its HTTP child specifically.
 - [ ] **Docs: state that mismatched closing tags are accepted** —
       `template.md` currently claims `<div><span>Hello</div>` fails to
       compile; the parser accepts it and serves the HTML verbatim. Document

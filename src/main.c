@@ -584,8 +584,11 @@ int main(int argc, char* argv[]) {
       }
       exit(0);
     } else if(pid > 0) {
-      // Parent: Wait for child to exit
-      wait(&status);
+      // Parent: wait for the HTTP child specifically. `wait()` would also
+      // reap the browser child forked by open_browser() in dev mode and, if
+      // that one exited cleanly first, tear down dmon and exit while the
+      // HTTP child still serves.
+      waitpid(pid, &status, 0);
       if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
         break;
       } else {
