@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-#if IS_LINUX
+#ifndef _WIN32
   pid_t         pid;
   struct rlimit mem_limit;
   struct rlimit cpu_limit;
@@ -548,7 +548,7 @@ int main(int argc, char* argv[]) {
   if(dev_mode)
     open_browser(server_url(port));
 
-#if IS_LINUX
+#ifndef _WIN32
   int       status;
   pthread_t cron_tid;
   pthread_create(&cron_tid, NULL, cron_thread, NULL);
@@ -570,9 +570,20 @@ int main(int argc, char* argv[]) {
       // a connection across fork(); open our own fresh connection so the HTTP
       // child never touches the shared pre-fork handle.
       bialet_reopen_db();
-      // Set cpu time and memory limit
-      if(setrlimit(RLIMIT_AS, &mem_limit) == -1 ||
-         setrlimit(RLIMIT_CPU, &cpu_limit) == -1) {
+      // Set cpu time and memory limit. RLIMIT_AS is Linux-only here: on
+      // Darwin, setrlimit(RLIMIT_AS, ...) rejects any value below the
+      // process's already-huge virtual address-space reservation (bialet's
+      // own libmalloc VM zones alone exceed the configured soft/hard limits
+      // by orders of magnitude at process start), so it always fails with
+      // EINVAL and would crash-loop every child. RLIMIT_CPU is enforced
+      // correctly on both platforms.
+#if IS_LINUX
+      if(setrlimit(RLIMIT_AS, &mem_limit) == -1) {
+        perror("setrlimit");
+        exit(1);
+      }
+#endif
+      if(setrlimit(RLIMIT_CPU, &cpu_limit) == -1) {
         perror("setrlimit");
         exit(1);
       }
@@ -600,7 +611,12 @@ int main(int argc, char* argv[]) {
   dmon_deinit();
 #endif
 
-#if !IS_LINUX
+// Windows has no fork(), so it cannot reuse the process-per-cycle
+// RLIMIT_AS/RLIMIT_CPU model above: a killed process here would have no
+// supervisor to restart it. This branch remains unbounded; see DOS-001 in
+// the c-review report for tracking a Windows-appropriate resource cap
+// (e.g. a Job Object) that doesn't turn a killed job into a permanent outage.
+#ifdef _WIN32
   dmon_init();
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);

@@ -1,6 +1,8 @@
 
+#include <limits.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Size-aware realpath for both platforms. On Windows, _fullpath is purely
 // lexical and does not resolve NTFS junctions/reparse points, so a junction
@@ -59,7 +61,17 @@ char* realpath_n(const char* path, char* resolved, size_t resolved_size) {
   free(wide);
   return resolved;
 #else
-  (void)resolved_size;
-  return realpath(path, resolved);
+  // realpath()'s 2-argument form requires resolved to be PATH_MAX bytes;
+  // every caller in this codebase passes a smaller buffer, so resolve into
+  // a PATH_MAX-sized local buffer first and only copy into the caller's
+  // [resolved, resolved_size] if it actually fits.
+  char tmp[PATH_MAX];
+  if(realpath(path, tmp) == NULL)
+    return NULL;
+  size_t len = strlen(tmp);
+  if(len >= resolved_size)
+    return NULL;
+  memcpy(resolved, tmp, len + 1);
+  return resolved;
 #endif
 }

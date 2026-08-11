@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-#if IS_LINUX
+#ifndef _WIN32
 #include <sys/mman.h>
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
@@ -15,8 +15,8 @@
 
 static int enabled = 0;
 
-#if IS_LINUX
-// The Linux parent forks a child process to serve HTTP while the dmon
+#ifndef _WIN32
+// The Linux/macOS parent forks a child process to serve HTTP while the dmon
 // file-watch thread keeps running in the parent. A plain static would leave
 // each process with its own copy, so the HTTP child keeps serving the version
 // it inherited at fork time and /_livereload never changes. Share the counter
@@ -38,7 +38,7 @@ static const char kScript[] = "<script>"
 extern sqlite3* db;
 
 void livereload_init(void) {
-#if IS_LINUX
+#if IS_LINUX || IS_MAC
   shared_version = mmap(NULL, sizeof(long), PROT_READ | PROT_WRITE,
                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
   if(shared_version == MAP_FAILED)
@@ -58,7 +58,7 @@ void livereload_init(void) {
     const char* val = (const char*)sqlite3_column_text(stmt, 0);
     if(val != NULL && strcmp(val, "0") != 0 && val[0] != '\0') {
       enabled = 1;
-#if IS_LINUX
+#if IS_LINUX || IS_MAC
       if(shared_version != NULL)
         *shared_version = (long)time(NULL);
 #else
@@ -86,7 +86,7 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
 
   static char version_str[32];
   int         len;
-#if IS_LINUX
+#if IS_LINUX || IS_MAC
   if(shared_version == NULL)
     return 0;
   len = snprintf(version_str, sizeof(version_str), "%ld", *shared_version);
@@ -104,7 +104,7 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
 void livereload_notify(void) {
   if(!enabled)
     return;
-#if IS_LINUX
+#if IS_LINUX || IS_MAC
   if(shared_version != NULL)
     *shared_version = (long)time(NULL);
 #else
