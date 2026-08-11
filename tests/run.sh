@@ -289,11 +289,11 @@ fi
 # bump the /_livereload version when a file in the app directory changes.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   total_tests=$((total_tests + 1))
-  echo -e -n "bialet dev starts and configures\t"
+  echo -e -n "bialet dev starts           \t"
   dev_root="$(dirname "$0")/dev-app"
   dev_exec=$(realpath "$TARGET_EXEC")
   rm -f "$dev_root/_db.sqlite3"
-  (cd "$dev_root" && "$dev_exec" dev -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
+  (cd "$dev_root" && "$dev_exec" dev -q -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
     > /dev/null 2>&1 &
   disown
   sleep 2
@@ -308,7 +308,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   sleep 2
   dev_v2=$(curl -s "http://$HOST:$DEV_PORT/_livereload")
   rm -f "$dev_root/reload_scratch"
-  pgrep -f "$dev_exec dev -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  pgrep -f "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \
         && "$dev_flags" == "2" && "$dev_v1" != "$dev_v2" ]]; then
     echo -e "${GREEN}PASS${NC}"

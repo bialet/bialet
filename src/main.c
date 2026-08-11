@@ -295,6 +295,7 @@ int main(int argc, char* argv[]) {
   bialet_config.cpu_hard_limit = 30;
   /* Env config values */
   bialet_config.debug = 0;
+  bialet_config.quiet = 0;
   bialet_config.output_color = 1;
   bialet_config.db_path = DB_FILE;
   bialet_config.wal_mode = 0;
@@ -319,7 +320,7 @@ int main(int argc, char* argv[]) {
   }
 
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvw")) != -1) {
+  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvwq")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
@@ -407,6 +408,10 @@ int main(int argc, char* argv[]) {
           test_dir = argv[optind];
           optind++;
         }
+        break;
+      case 'q':
+        bialet_config.quiet = 1;
+        bialet_config.output_color = 0;
         break;
       case 'v':
         printf("bialet %s\n", BIALET_VERSION);
@@ -545,7 +550,7 @@ int main(int argc, char* argv[]) {
     bialet_enable_dev_flags();
   livereload_init();
   show_errors_init();
-  if(dev_mode)
+  if(dev_mode && !bialet_config.quiet)
     open_browser(server_url(port));
 
 #ifndef _WIN32
