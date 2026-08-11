@@ -110,7 +110,8 @@ class Poll {
   votes_(opt) { Num.fromString(opt["votes"]) }
 }
 
-// null is safe: accessing a key or method on null returns null, not an error
+// null is forgiving: null["key"], null.count, null.map, null.toString don't
+// throw; other method calls on null are runtime errors
 ```
 
 **Inline HTML strings** are Wren's template mechanism — no separate template
@@ -475,7 +476,7 @@ Db.migrate("Seed sample posts", Fn.new{
 
 ### `BIALET_*` System Tables
 
-`BIALET_CONFIG`, `BIALET_MIGRATIONS`, `BIALET_SESSIONS`, `BIALET_FILES`,
+`BIALET_CONFIG`, `BIALET_MIGRATIONS`, `BIALET_SESSION`, `BIALET_FILES`,
 `BIALET_LOGS`, `BIALET_REMOTE_MODULES`. You may read/write rows in these with
 caution, but never drop or restructure them.
 
@@ -554,9 +555,9 @@ return Layout.render(
 ```
 
 > **Pitfall:** always `return Response.redirect(...)`. A bare
-> `Response.redirect(...)` without `return` sets the redirect headers but lets
-> execution continue — the code below then tries to send a second response
-> body, causing a double-response error.
+> `Response.redirect(...)` without `return` still runs the rest of the script,
+> so the 302 carries an unexpected body. There is no error — the redirect just
+> isn't clean.
 
 ## Shared Logic (Instead of Middleware)
 
@@ -751,8 +752,8 @@ Markdown.file("about.md")              // reads and renders a file from the app 
 2. **Rely on `{{ }}` auto-escaping** — interpolation escapes plain strings
    (user input, database, URL) automatically. Mark intentionally-raw markup
    with `HtmlNode` or `.raw`.
-3. **Always `return` before `Response.redirect(...)`** to avoid
-   double-response errors.
+3. **Always `return` before `Response.redirect(...)`** so the rest of the
+   script doesn't attach a body to the redirect.
 4. **Validate input** in domain classes (`isValid`, `errors`) or inline
    before saving.
 5. **Pin external imports** to a tag, not `main`, for anything beyond local

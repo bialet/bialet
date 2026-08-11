@@ -46,7 +46,7 @@ improvements.
       starts a server on port 7001 instead of printing the version. Reject
       unknown long-form options rather than falling through to "serve the
       current directory".
-- [ ] **Docs: fix stale claims vs the current binary** — accept `<br/>` (no
+- [x] **Docs: fix stale claims vs the current binary** — accept `<br/>` (no
       space) as valid (`template.md` calls it "Incorrect"), drop the
       "double-response error" claim for a forgotten `return` before
       `Response.redirect`, correct the session table name in `database.md`
@@ -56,7 +56,7 @@ improvements.
       `Error at '<': Expected expression.` and `<my_component>` gives
       `Unterminated HTML string.`; emit
       `Invalid tag name: must be lowercase     alphanumeric + hyphens` instead.
-- [ ] **CLI: document missing flags and split usage docs out of installation**
+- [x] **CLI: document missing flags and split usage docs out of installation**
 
 ## Longer Term / Ideas
 

@@ -356,7 +356,7 @@ Bialet tables are prefixed with `BIALET_`.
 
 - `BIALET_CONFIG`: The configuration table.
 - `BIALET_MIGRATIONS`: The migration history table.
-- `BIALET_SESSIONS`: The session table.
+- `BIALET_SESSION`: The session table.
 - `BIALET_FILES`: The file storage table.
 - `BIALET_LOGS`: The logging table.
 - `BIALET_REMOTE_MODULES`: The remote module cache table.

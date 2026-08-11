@@ -134,9 +134,19 @@ byte offset `i`. `.count` is the byte length.
 var val = null
 ```
 
-In Bialet, `null` is safe: accessing a key or calling a method on null returns
-null instead of throwing an error. This makes template interpolation forgiving
-when data is missing.
+Bialet makes `null` forgiving in templates: a small set of methods never
+throws, so missing data renders as empty output instead of crashing the
+request. On `null`:
+
+- `null["key"]` returns `null`
+- `null.count` returns `0`
+- `null.map { ... }` returns an empty list
+- `null.to(Class)` returns `null`
+- `null.toString` returns `""`
+
+Any other method call on `null` still throws — `Null does not implement
+'x'.` For example `null.get("key")` is a runtime error. Use the safe methods
+above, or a `|| default` fallback, in templates.
 
 ### Lists
 

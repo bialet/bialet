@@ -1,9 +1,9 @@
 # Security
 
-Bialet keeps the framework small, and that extends to security: there is no
-magic that escapes your output for you, and no ORM that hides your SQL. The
-good news is that the sharp edges are explicit and few. This page is the
-central reference for keeping a Bialet app safe.
+Bialet keeps the framework small, and that extends to security: `{{ }}`
+interpolation escapes output by default, and there is no ORM hiding your SQL —
+you write the queries yourself. The sharp edges are explicit and few. This page
+is the central reference for keeping a Bialet app safe.
 
 Three rules cover most real-world damage:
 

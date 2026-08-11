@@ -67,16 +67,27 @@ var link = <a href="{{ url }}" class="nav-link">{{ label }}</a>
 
 ### Self-Closing Tags
 
-Certain HTML tags are self-closing. In Bialet, these must include a space
-before the closing slash. The final output omits the slash.
+HTML's void elements (`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, ...) are
+accepted with or without a trailing slash, and the markup is served verbatim:
 
-- Correct: `<hr />`, `<br />`, `<input value="{{ val }}" />`, `<meta charset="utf-8" />`
-- Incorrect: `<hr/>`, `<br/>`
+```wren
+var a = <div>one<br/>two</div>   // <br/> kept as written
+var b = <div>one<br />two</div>  // <br /> kept as written
+var c = <div>one<br>two</div>    // <br> kept as written
+```
+
+When a void element is the *outermost* tag of the string it must end with a
+space and slash — `<input value="{{ val }}" />` — so the parser knows the
+string has ended. The output omits the space and slash:
 
 ```wren
 var inputField = <input value="{{ userInput }}" />
 // Renders: <input value='Hello'>
 ```
+
+Without the space (`<input/>`) the parser reads the slash as part of the tag
+name, never finds a matching close tag, and reports "Unterminated HTML
+string."
 
 ### Multi-line Inline HTML
 
@@ -537,17 +548,25 @@ the Post/Redirect/Get pattern and prevents duplicate form submissions.
 
 ### Pitfall
 
-**Forgetting `return` before `Response.redirect()`** causes a double-response
-error. The redirect sends headers, then the code below still executes and
-tries to send a body. Always `return Response.redirect(...)`.
+**Forgetting `return` before `Response.redirect()`.** Code after a bare
+`Response.redirect(...)` still runs. There is no error — the server sends the
+302 with its `Location` header and attaches whatever body the rest of the
+script returns. Always `return Response.redirect(...)` so the script stops at
+the redirect and no body is sent:
 
 ```wren
-// Wrong — missing return
+// Wrong — the code below still runs and attaches a body to the 302
 if (Request.isPost) {
   task.save()
-  Response.redirect("/")  // redirect sends headers...
+  Response.redirect("/")
 }
-// ...then this still runs, trying to send a second response
+return Template.new().layout(...)
+
+// Correct — return stops the script at the redirect
+if (Request.isPost) {
+  task.save()
+  return Response.redirect("/")
+}
 return Template.new().layout(...)
 ```
 
@@ -994,8 +1013,9 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
   states.
 - **`return` terminates immediately:** Code after `return` never executes.
 - **DB values are strings:** Convert with `Num.fromString()` before math.
-- **Forgetting `return` before `Response.redirect()`:** Causes double-response
-  errors.
+- **Forgetting `return` before `Response.redirect()`:** The code after it
+  still runs and attaches a body to the 302 — no error, just a redirect with
+  an unexpected body. Always `return Response.redirect(...)`.
 - **Instance vs static methods:** Instance methods need `new()`; static methods
   don't.
 - **`_`-prefixed CSS is not served:** Name stylesheets without leading `_`.

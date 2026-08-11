@@ -193,8 +193,8 @@ guide for the full API.
 ## Pitfalls
 
 - **`Request.post()` returns `null`** — always `|| ""` before string ops.
-- **Missing `return` before `Response.redirect()`** — causes double-response
-  errors. Always `return Response.redirect(...)`.
+- **Missing `return` before `Response.redirect()`** — the code after it still
+  runs and attaches a body to the 302. Always `return Response.redirect(...)`.
 - **Double-escaping with `.safe`** — `{{ }}` already escapes. Writing
   `{{ userInput.safe }}` escapes the text twice (`&amp;lt;`). Interpolate the
   raw value; use `HtmlNode` or `.raw` only for markup you intentionally trust.
