@@ -955,6 +955,19 @@ static int htmlTagIsVoidElement(char* tagName) {
          strcmp(tagName, "wbr") == 0;
 }
 
+// Returns true if [tagName] is a valid HTML tag name: it must start with a
+// lowercase letter and contain only lowercase letters, numbers, and hyphens
+// (e.g. <my-element>).
+static int htmlTagNameIsValid(char* tagName) {
+  if(tagName[0] < 'a' || tagName[0] > 'z')
+    return 0;
+  for(char* p = tagName + 1; *p != '\0'; p++) {
+    if((*p < 'a' || *p > 'z') && (*p < '0' || *p > '9') && *p != '-')
+      return 0;
+  }
+  return 1;
+}
+
 static void readHtmlString(Parser* parser, char* previousTagName) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
@@ -962,6 +975,8 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   int           closingTag = -1;
   char*         tagName = malloc(MAX_METHOD_NAME);
   int           tagIsOpen = 1;
+  int           tagDone = 0;
+  int           invalidTag = 0;
 
   // Only a string that reads its own opening tag can detect a nested tag with
   // the same name. Resumes after "{{ }}" and doctype strings already consumed
@@ -988,10 +1003,12 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         // Omit space and slash in self closing tag
         nextChar(parser);
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
+        tagDone = 1;
         break;
       }
       wrenByteBufferWrite(parser->vm, &string, c);
       if(c == '>' || c == ' ') {
+        tagDone = 1;
         break;
       }
       // Bound the tag name so an overlong tag cannot overflow the heap buffer.
@@ -1001,9 +1018,18 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
       }
     }
     tagName[i] = '\0';
+
+    // Reject invalid tag names up front instead of letting them derail the
+    // lexer into a confusing error later. Tag names must start with a
+    // lowercase letter and contain only lowercase letters, numbers, and
+    // hyphens.
+    if(tagDone && !htmlTagNameIsValid(tagName)) {
+      lexError(parser, "Invalid tag name: must be lowercase alphanumeric + hyphens");
+      invalidTag = 1;
+    }
   }
 
-  if(closingTag < 0) {
+  if(closingTag < 0 && !invalidTag) {
     for(;;) {
       char c = nextChar(parser);
       if(c == '>')
@@ -1390,7 +1416,12 @@ static void nextToken(Parser* parser) {
         int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
         int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
                                     lastTokenType(parser) == TOKEN_RETURN;
-        if((isDocType || (peekChar(parser) >= 'a' && peekChar(parser) <= 'z')) &&
+        // A lowercase letter starts a tag; an uppercase letter is accepted too
+        // so `<MyElement>` reaches tag-name validation and gets a clear error
+        // instead of being lexed as a less-than comparison.
+        int htmlTagStart = (peekChar(parser) >= 'a' && peekChar(parser) <= 'z') ||
+                           (peekChar(parser) >= 'A' && peekChar(parser) <= 'Z');
+        if((isDocType || htmlTagStart) &&
            (notIgnoreSpacesTokens || lastTokenType(parser) == TOKEN_LEFT_PAREN ||
             lastTokenType(parser) == TOKEN_LEFT_BRACKET ||
             lastTokenType(parser) == TOKEN_LEFT_BRACE ||

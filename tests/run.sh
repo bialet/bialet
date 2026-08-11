@@ -34,6 +34,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Nested same tag rejected      " "syntax_err_nested.wren" 1
   test_syntax "Leading op rejected           " "syntax_err_interp_leading_op.wren" 1
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
+  test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
+  test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
 fi
 
 # Tests - Request & Response

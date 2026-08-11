@@ -190,6 +190,42 @@ test_syntax() {
     passed_tests=$((passed_tests + 1))
 }
 
+test_syntax_msg() {
+    description=$1
+    file=$2
+    expected_exit=$3
+    expected_msg=$4
+    root_path=${5:-}
+
+    total_tests=$((total_tests + 1))
+    echo -e -n "$description\t"
+    filepath="$(dirname "$0")/$file"
+
+    if [[ -n "$root_path" ]]; then
+        output=$("$TARGET_EXEC" -t "$filepath" "$root_path" 2>&1)
+    else
+        output=$("$TARGET_EXEC" -t "$filepath" 2>&1)
+    fi
+    actual_exit=$?
+
+    if [[ "$actual_exit" -ne "$expected_exit" ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected exit: ${expected_exit}\tActual: $actual_exit\n"
+        return 1
+    fi
+
+    if [[ -n "$expected_msg" && "$output" != *"$expected_msg"* ]]; then
+        echo -e "${RED}FAIL${NC}"
+        failed_tests=$((failed_tests + 1))
+        echo -e -n "\tExpected message: $expected_msg\tActual: $output\n"
+        return 1
+    fi
+
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+}
+
 # Function to print the final result
 print_summary() {
     echo -e "\nSummary:\n"
