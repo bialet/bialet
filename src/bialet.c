@@ -1,8 +1,19 @@
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+#endif
 
 #include <limits.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+#include <wchar.h>
+#endif
 
 // Size-aware realpath for both platforms. On Windows, _fullpath is purely
 // lexical and does not resolve NTFS junctions/reparse points, so a junction

@@ -12,18 +12,17 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-
-#ifdef _WIN32
-#define _CRT_RAND_S // Define this exactly once, right before including windows.h
-#include <windows.h>
-#endif
 
 #ifndef _WIN32
 #include <fcntl.h>
 #include <unistd.h>
+#else
+#define _CRT_RAND_S // Must be defined before stdlib.h is first included.
+#include <windows.h>
 #endif
+
+#include <stdlib.h>
 
 void unsafe_hash(const char* input, char* output) {
   unsigned int hash = 5381;

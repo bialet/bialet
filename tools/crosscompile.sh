@@ -45,7 +45,7 @@ build_linux() {
         apt-get update -qq && apt-get install -y -qq \
             build-essential make libsqlite3-dev libcurl4-openssl-dev libssl-dev \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
-            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev > /dev/null 2>&1
+            libkrb5-dev libldap2-dev libsasl2-dev libbrotli-dev libzstd-dev > /dev/null 2>&1
         make clean static
     '
     cp "$PROJECT_DIR/build/bialet" "$DIST_DIR/bialet-linux-x86_64"
