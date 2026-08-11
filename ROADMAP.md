@@ -12,7 +12,7 @@ improvements.
 
 ## Near Term
 
-- [ ] **Auto HTML escaping** — `{{ value }}` should be escaped by default
+- [x] **Auto HTML escaping** — `{{ value }}` should be escaped by default
 - [x] **Document Tailwind CLI integration** — Step-by-step guide for
       self-hosting Tailwind with `tailwindcss --watch` against Bialet app
       directory (dev + production workflows)
@@ -79,57 +79,34 @@ improvements.
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
       proxy needed for basic deployments)
-
-## HTTP Client
-
-Outbound HTTP (`Http` class, `src/http_call.c`). The current client covers
-GET/POST/PUT/DELETE, custom headers, Basic auth, bearer tokens, form bodies,
-a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
-
-- [x] **Per-call timeout options** — `options["timeout"]` / `options["connectTimeout"]`
-      (milliseconds) override the 20s / 2s defaults in `http_call_perform`.
-- [x] **Form-encoded bodies** — `options["form"]` map is URL-encoded and sent as
-      `application/x-www-form-urlencoded`.
-- [x] **Response cookies / cookie jar** — `Set-Cookie` headers are stored in a
-      process-wide jar and sent back on subsequent calls unless the caller
-      provides its own `Cookie` header.
-- [x] **Bearer token / auth shortcut** — `options["token"]` sends
-      `Authorization: Bearer <token>`.
-- [x] **Query-string builder** — `Http.url(base, params)` appends URL-encoded
-      query parameters to a URL (`Http.query(params)` returns the encoded
-      string alone).
-- [x] **Expose the curl error string** — `Http.error` remains the numeric code;
-      `Http.errorMessage` now carries the underlying curl message.
-- [ ] **Multipart / file uploads** — no way to send files or
+- [ ] **HTTP Client - Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
-- [ ] **Response cookies / cookie jar: per-host scoping** — the jar is
+- [ ] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the jar is
       process-wide and sends cookies regardless of domain; scope by host and
       honor `Domain`/`Path`/`Secure` attributes.
-- [x] **`strtok()` in `http_call_perform`** — uses the process-global tokenizer;
-      switch to `strtok_r` (see Security Hardening Backlog).
 
 ## Security Hardening Backlog
 
-- [ ] **Compiler: bound HTML tag-name buffer** — `readHtmlString` in
+- [x] **Compiler: bound HTML tag-name buffer** — `readHtmlString` in
       `src/wren_compiler.c` writes tag names into a fixed 64-byte buffer with no
       bounds check; an overlong tag name overflows the heap during compile.
       Bound `i` against `MAX_METHOD_NAME` (or grow with a `ByteBuffer`) and cap
       `numHandlebars` against `MAX_INTERPOLATION_NESTING`.
-- [ ] **`Markdown.file`: close check-to-open TOCTOU** — `bialet_read_file` in
+- [x] **`Markdown.file`: close check-to-open TOCTOU** — `bialet_read_file` in
       `src/bialet_wren.c` validates with `realpath()` then re-opens with plain
       `fopen`, which follows symlinks. Reuse the `open_no_follow` path used
       elsewhere.
-- [ ] **Serialize `bialet_run` on the shared SQLite handle** — the cron thread
+- [x] **Serialize `bialet_run` on the shared SQLite handle** — the cron thread
       and the dmon file-watch thread both run Wren against the global `sqlite3*`
       connection without a shared lock. Widen the cron mutex to cover migrations
       and file-watch-triggered runs.
-- [ ] **Windows: no-follow file open** — `open_file_within_root` degrades to
+- [x] **Windows: no-follow file open** — `open_file_within_root` degrades to
       bare `fopen` on Windows, following junctions; the POSIX `O_NOFOLLOW` walk
       has no Windows equivalent.
-- [ ] **Windows: secure test-mode temp DB** — the `-T` path uses a predictable
+- [x] **Windows: secure test-mode temp DB** — the `-T` path uses a predictable
       PID-based `/tmp/bialet_test_<pid>.sqlite3`; use `mkstemp`/O_EXCL semantics
       on Windows too.
-- [ ] **Windows: fix realpath shim buffer size** — the Windows `realpath` shim
+- [x] **Windows: fix realpath shim buffer size** — the Windows `realpath` shim
       writes up to `_MAX_PATH` (260) bytes into a 100-byte stack buffer; pass
       the caller's real size through to `_fullpath`/`WideCharToMultiByte`.
 - [x] **`_route.wren` symlink bypasses the private-file rule** — the
@@ -144,7 +121,7 @@ a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
       to `putenv()`, which stores the pointer; the second call invalid-frees the
       dead stack address (abort on glibc) or leaves a dangling `TZ` entry. Use
       `setenv("TZ", tz, 1)` / `unsetenv("TZ")` or a process-lifetime buffer.
-- [ ] **`fork()` while cron/dmon threads are inside SQLite/Wren** — the Linux
+- [x] **`fork()` while cron/dmon threads are inside SQLite/Wren** — the Linux
       parent forks the HTTP child while the cron and dmon threads may hold
       SQLite/Wren locks (`src/main.c`); the child can deadlock or see torn heap.
       Register `pthread_atfork` handlers.
@@ -153,27 +130,66 @@ a persistent cookie jar, per-call timeouts, redirects, and JSON handling.
       module loader (`src/bialet_wren.c`), and markdown table rendering
       (`src/markdown.c`) interleaves across concurrent `bialet_run` contexts.
       Replace with `strtok_r`/local state.
-- [ ] **Session IDs and CSRF tokens from `sqlite3_randomness`** — the session/
+- [x] **Session IDs and CSRF tokens from `sqlite3_randomness`** — the session/
       CSRF generator uses SQLite's documented non-cryptographic PRNG
       (`src/wren_core.c`). Use the same CSPRNG already used for password salts.
-- [ ] **Multipart uploads have no steady-state purge** — `save_uploaded_files`
+- [x] **Multipart uploads have no steady-state purge** — `save_uploaded_files`
       grows `BIALET_FILES` ~10 MB per request with no disk recovery; cap
       aggregate storage or purge old blobs.
-- [ ] **Outbound HTTP client has no response-size cap** — `write_callback` in
+- [x] **Outbound HTTP client has no response-size cap** — `write_callback` in
       `src/http_call.c` reallocs without bound; set `CURLOPT_MAXFILESIZE` or an
       equivalent.
-- [ ] **Unchecked `fread` in `custom_error`** — an empty `{status}.html` yields
+- [x] **Unchecked `fread` in `custom_error`** — an empty `{status}.html` yields
       a body without a trailing NUL and the `strlen` fallback over-reads the
       heap (`src/server.c`). NUL-terminate or track the length.
-- [ ] **Unchecked `sscanf` leaves `HttpResponse.status` uninitialized** — on
+- [x] **Unchecked `sscanf` leaves `HttpResponse.status` uninitialized** — on
       Windows, a parse failure leaves `status` uninitialized and it is consumed
       by the remote-module loader (`src/http_call.c`).
-- [ ] **`test_runRequest` unbounded stack copies** — `strncpy` of the method and
+- [x] **`test_runRequest` unbounded stack copies** — `strncpy` of the method and
       URI into 32-byte/1024-byte stack buffers with no size guard
       (`src/wren_core.c`); reachable in `-T` test mode via hostile `_tests/*.wren`.
-- [ ] **Windows: no-follow open for Wren file/module reads** — extend the
+- [x] **Windows: no-follow open for Wren file/module reads** — extend the
       no-follow item to `read_file` (`src/bialet_wren.c`), which still uses
       plain `fopen` on Windows and follows junctions.
+- [ ] **Unchecked `sqlite3_prepare_v2()` results in `bialet_wren.c`** —
+      `bialet_wren_write` (the log/`System.print()` sink) and
+      `bialet_wren_load_module` (remote-module cache lookup) both discard the
+      prepare's return code and bind/step the possibly-`NULL` statement
+      unconditionally. A `SQLITE_BUSY` failure (mitigated but not eliminated by
+      `sqlite3_busy_timeout`) crashes the request with a NULL deref. Check the
+      return value before using `stmt` in both.
+- [ ] **Unchecked `realloc()` derefs in `add_result`/`add_result_row`/
+      `add_parameter`** — all three (`src/bialet_wren.c`) grow a query's
+      results/rows/parameters array with `realloc()` and dereference the result
+      immediately with no `NULL` check. An allocation failure under the 50MB
+      `RLIMIT_AS` cap on a large `Db` query crashes instead of returning an
+      error.
+- [ ] **`custom_error()` leaks the previously-owned response header/body** —
+      `src/server.c` overwrites `response->header`/`body` without checking
+      `header_owned`/`body_owned` first, leaking the prior allocation on the
+      `Response.useErrorFallback` path; a remotely-repeatable per-request leak
+      that contributes to `RLIMIT_AS`-triggered worker restarts under sustained
+      traffic.
+- [ ] **Remote-module fetch leaks `HttpRequest` strings and
+      `HttpResponse.error_message`** — `bialet_wren_load_module`
+      (`src/bialet_wren.c`) builds `req.method`/`basicAuth`/`raw_headers`/
+      `postData`/`url` and `resp.error_message` on the heap but never frees them
+      on either the success or failure return path after a `gh:`/`http(s)://`
+      module import.
+- [ ] **`HttpRequest.timeout`/`connectTimeout` read uninitialized in
+      remote-module fetch** — the local `struct HttpRequest req` in
+      `bialet_wren_load_module` (`src/bialet_wren.c`) never assigns
+      `timeout`/`connectTimeout` before `http_call_perform()` reads them via
+      `> 0` comparisons, so the outbound fetch timeout is whatever garbage was
+      on the stack.
+- [ ] **Windows outbound HTTP path has no timeouts and mishandles write
+      failures** — the Windows raw-socket branch of `http_call_perform`
+      (`src/http_call.c`) never applies `request->timeout`/`connectTimeout`
+      (unlike the POSIX/libcurl path's `CURLOPT_TIMEOUT_MS`/
+      `CURLOPT_CONNECTTIMEOUT_MS`), and on a failed `send()`/`SSL_write()` it
+      sets `response->error` but falls through to `recv()`/`SSL_read()` on the
+      same broken connection instead of returning — either lets a slow or
+      unresponsive remote server hang the single request-handling thread.
 
 ## How to Contribute
 
