@@ -42,7 +42,7 @@ improvements.
 - [x] **Docs: note config is read at startup** — `BIALET_SHOW_ERRORS` and
       `BIALET_LIVE_RELOAD` are read when the server starts; enabling them while
       a server is running requires a restart. Document this.
-- [ ] **CLI: reject unsupported long-form flags** — `bialet --version` silently
+- [x] **CLI: reject unsupported long-form flags** — `bialet --version` silently
       starts a server on port 7001 instead of printing the version. Reject
       unknown long-form options rather than falling through to "serve the
       current directory".

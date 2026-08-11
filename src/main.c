@@ -247,6 +247,15 @@ void sigint_handler(int signum) {
   stop_server();
 }
 
+static void print_usage(const char* prog, FILE* out) {
+  fprintf(out, BIALET_USAGE, prog);
+}
+
+static int path_exists(const char* path) {
+  struct stat st;
+  return stat(path, &st) == 0;
+}
+
 int main(int argc, char* argv[]) {
   char* code = "";
   char* validate_file = NULL;
@@ -319,11 +328,47 @@ int main(int argc, char* argv[]) {
     argc--;
   }
 
+  // Long-form options. The bundled getopt() is BSD-style and treats any `--foo`
+  // as a `--` end-of-options marker, so `bialet --version` silently started a
+  // server on the current directory. Handle them up front: `--help` and
+  // `--version` are recognized, a `--`-prefixed argument that names an existing
+  // path is served like a positional path, and any other long-form option is
+  // rejected as an invalid parameter. Matched arguments are shifted out of argv
+  // so getopt keeps parsing trailing short options.
+  for(int i = 1; i < argc;) {
+    if(strcmp(argv[i], "--") == 0 || strncmp(argv[i], "--", 2) != 0) {
+      i++;
+      continue;
+    }
+    if(strcmp(argv[i], "--help") == 0) {
+      print_usage(argv[0], stdout);
+      exit(EXIT_SUCCESS);
+    }
+    if(strcmp(argv[i], "--version") == 0) {
+      printf("bialet %s\n", BIALET_VERSION);
+      exit(EXIT_SUCCESS);
+    }
+    if(path_exists(argv[i])) {
+      bialet_config.root_dir = argv[i];
+      for(int j = i; j < argc - 1; j++)
+        argv[j] = argv[j + 1];
+      argc--;
+    } else {
+      fprintf(stderr, "Invalid parameter: %s\n", argv[i]);
+      print_usage(argv[0], stderr);
+      exit(EXIT_FAILURE);
+    }
+  }
+
   int opt;
-  while((opt = getopt(argc, argv, "h:p:l:d:b:m:M:c:C:r:i:t:Tvwq")) != -1) {
+  while((opt = getopt(argc, argv, "Hh:p:l:d:b:m:M:c:C:r:i:t:Tvwq")) != -1) {
     switch(opt) {
       case 'h':
         bialet_config.host = optarg;
+        break;
+      case 'H':
+        print_usage(argv[0], stdout);
+        exit(EXIT_SUCCESS);
         break;
       case 'b': {
         char* endptr;
