@@ -131,7 +131,7 @@ typedef enum {
   //     TOKEN_NAME          d
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
-  TOKEN_QUERY,
+  TOKEN_QUERY_STRING,
   TOKEN_HTML_NODE,
   TOKEN_HTML_TEXT,
 
@@ -1081,7 +1081,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
 static void readQueryString(Parser* parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  WrenTokenType type = TOKEN_QUERY;
+  WrenTokenType type = TOKEN_QUERY_STRING;
 
   for(;;) {
     char c = nextChar(parser);
@@ -3017,7 +3017,7 @@ GrammarRule rules[] = {
     /* TOKEN_NUMBER        */ PREFIX(literal),
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
-    /* TOKEN_QUERY         */ PREFIX(literal),
+    /* TOKEN_QUERY_STRING  */ PREFIX(literal),
     /* TOKEN_HTML_NODE     */ PREFIX(htmlNode),
     /* TOKEN_HTML_TEXT     */ PREFIX(htmlInterpolation),
     /* TOKEN_LINE          */ UNUSED,
@@ -3523,7 +3523,7 @@ static Value consumeLiteral(Compiler* compiler, const char* message) {
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
-  if(match(compiler, TOKEN_QUERY))
+  if(match(compiler, TOKEN_QUERY_STRING))
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_HTML_NODE))
     return compiler->parser->previous.value;
