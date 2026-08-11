@@ -35,6 +35,9 @@ Since configuration lives in the SQLite database, enabling it in dev has no
 effect on production — each environment has its own `_db.sqlite3` and its own
 `BIALET_CONFIG` table.
 
+> ⚠️ Pitfall: `BIALET_LIVE_RELOAD` is read when the server starts. Enabling or
+> disabling it while a server is running requires a restart.
+
 To check if it's currently active:
 
 ```wren

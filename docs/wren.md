@@ -382,6 +382,39 @@ class Poll {
 This is a complete domain class. No ORM, no annotations, no configuration — just
 Wren methods that express the logic directly.
 
+### Same line vs. next line
+
+The implicit return only applies when the expression starts on the same line as
+the opening `{`. If the body starts on a following line, Wren treats it as a
+statement body — each statement runs, the last value is discarded, and the
+method returns `null`:
+
+```wren
+class Shape {
+  // Expression body — starts on the `{` line, the value is returned
+  area(w, h) { w * h }
+
+  // Same for HTML — the string starts on the `{` line
+  badge(label) { <span class="badge">{{ label }}</span> }
+
+  // Expression moved to the next line — computes then discards, returns null
+  brokenArea(w, h) {
+    w * h
+  }
+
+  // Statement body — runs the query, returns null unless you `return`
+  increment(id) {
+    `UPDATE votes SET n = n + 1 WHERE id = ?`.query(id)
+  }
+}
+```
+
+`brokenArea(2, 3)` evaluates `2 * 3` and throws the result away, returning
+`null`. In a template this renders as empty output — no error tells you the
+value was dropped. Keep the expression on the same line as `{` when you want
+the implicit return, and use an explicit `return` for any multi-line method
+that must return a value.
+
 ### When You Need `return`
 
 For multiline methods that branch early, use explicit `return`:

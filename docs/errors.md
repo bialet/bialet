@@ -81,6 +81,9 @@ Disable it the same way:
 bialet -r 'Config.disable("BIALET_SHOW_ERRORS")' .
 ```
 
+> ⚠️ Pitfall: `BIALET_SHOW_ERRORS` is read when the server starts. Enabling or
+> disabling it while a server is running has no effect until you restart.
+
 When enabled, a compile or runtime error renders a page showing the error
 type, the module, the line, and the message — instead of the generic 500 page.
 This applies even if you have a custom `500.html` or `500.wren`; the error page

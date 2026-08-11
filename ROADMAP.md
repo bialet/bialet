@@ -27,19 +27,19 @@ improvements.
       and in `bialet dev` the server loop reaped the browser child instead of
       the HTTP child, tearing down the watcher. The version counter now lives in
       a shared mapping and the server waits for its HTTP child specifically.
-- [ ] **Docs: state that mismatched closing tags are accepted** — `template.md`
+- [x] **Docs: state that mismatched closing tags are accepted** — `template.md`
       currently claims `<div><span>Hello</div>` fails to compile; the parser
       accepts it and serves the HTML verbatim. Document that mismatched tags are
       not validated.
-- [ ] **Docs: more Wren method-body examples** — add explicit examples of
+- [x] **Docs: more Wren method-body examples** — add explicit examples of
       single-line vs multi-line method bodies: a body is an expression body
       (implicit return) only when the expression starts on the same line as the
       `{`; a statement body on a following line returns `null` silently.
-- [ ] **Docs: start beginners with `bialet dev`** — the getting-started flow
+- [x] **Docs: start beginners with `bialet dev`** — the getting-started flow
       should run `bialet dev` from the first page so the in-browser error
       display and live reload are on by default instead of a bare `bialet` with
       a generic error page.
-- [ ] **Docs: note config is read at startup** — `BIALET_SHOW_ERRORS` and
+- [x] **Docs: note config is read at startup** — `BIALET_SHOW_ERRORS` and
       `BIALET_LIVE_RELOAD` are read when the server starts; enabling them while
       a server is running requires a restart. Document this.
 - [ ] **CLI: reject unsupported long-form flags** — `bialet --version` silently

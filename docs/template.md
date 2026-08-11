@@ -116,14 +116,27 @@ var fine = <section>
 </section>
 ```
 
-**Mismatched tags fail.** Opening and closing tags must match:
+**Mismatched closing tags are not validated.** The parser only matches the
+closing tag against the *outermost* opening tag. Inner tags are never checked
+for balance — the string ends at the first closing tag that matches the outer
+tag, and everything before it is served verbatim, unclosed inner tags included:
 
 ```wren
-// Wrong
+// Compiles fine — <span> is never closed, the markup is served as-is
 var bad = <div><span>Hello</div>
 
-// Correct
+// Correct — close every tag yourself
 var good = <div><span>Hello</span></div>
+```
+
+The browser receives `<div><span>Hello</div>` and auto-closes the `<span>`
+when it renders, so the page usually looks fine. But the markup is not
+validated, so write matching tags yourself. Anything after the first matching
+close tag is outside the string and fails to compile:
+
+```wren
+// Compilation error — the string already ended at </div>
+var alsoBad = <div><span>Hello</div></span>
 ```
 
 **Invalid tag names.** Tag names must be lowercase, start with a letter, and
@@ -963,8 +976,9 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
 - **Opening-tag nesting:** The outermost tag of an inline HTML string cannot
   appear again as a child at any level. This means `<div><div>...</div></div>` fails because `<div>` is both the outermost and a nested tag. Wrap with a different tag (e.g. `<section>`) and nest freely below it:
   `<section><div><div>...</div></div></section>`.
-- **Mismatched tags:** `<div><span>Hello</div>` fails — opening and closing
-  tags must match.
+- **Mismatched tags are not validated:** Only the outer closing tag is
+  matched; `<div><span>Hello</div>` compiles and is served verbatim (the
+  browser auto-closes the `<span>`). Write well-formed HTML yourself.
 - **Invalid tag names:** Tag names must be lowercase, start with a letter, and
   contain only letters, numbers, and hyphens — no underscores or uppercase.
   Hyphens enable custom elements like `<my-element>`. Use classes and semantic

@@ -50,6 +50,11 @@ live-reload script (see [Live Reload](live-reload.md)), and
 `BIALET_SHOW_ERRORS` shows compile/runtime errors in the browser instead of the
 generic 500 page (see [Error Pages](errors.md)).
 
+> ⚠️ Pitfall: these flags are read once, at startup. Changing them in the
+> database while a server is running (e.g. with `Config.enable()` from a
+> request handler) has no effect until you restart the server. `bialet dev`
+> sets both before the server starts, which is why it "just works".
+
 ### Development mode: `bialet dev`
 
 The `dev` subcommand is the fastest way to start developing:
