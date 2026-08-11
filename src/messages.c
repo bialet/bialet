@@ -7,7 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#if IS_WIN
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -24,7 +24,7 @@ int   apply_color = 0;
 void message_init(struct BialetConfig* config) {
   log_file = config->log_file;
   apply_color = config->output_color;
-#if IS_WIN
+#ifdef _WIN32
   HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
   DWORD  mode = 0;
   if(GetConsoleMode(hOut, &mode)) {

@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if IS_UNIX
+#ifndef _WIN32
 #include <curl/curl.h>
 #endif
 
-#if IS_WIN
+#ifdef _WIN32
 #include <winsock2.h>
 
 #include <openssl/err.h>
@@ -30,7 +30,7 @@ struct memory {
   size_t max_size;
 };
 
-#if IS_UNIX
+#ifndef _WIN32
 static size_t write_callback(void* data, size_t size, size_t nmemb, void* clientp) {
   size_t         realsize = size * nmemb;
   struct memory* mem = (struct memory*)clientp;
@@ -75,7 +75,7 @@ static size_t header_callback(char* buffer, size_t size, size_t nitems,
 }
 #endif
 
-#if IS_WIN
+#ifdef _WIN32
 
 void init_openssl() {
   SSL_load_error_strings();
@@ -208,13 +208,13 @@ void parse_http_response(struct HttpResponse* res, char* fullResponse) {
 
 void http_call_init(struct BialetConfig* config) {
   (void)config;
-#if IS_UNIX
+#ifndef _WIN32
   curl_global_init(CURL_GLOBAL_ALL);
 #endif
 }
 
 void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
-#if IS_UNIX
+#ifndef _WIN32
   struct memory      chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
   struct memory      header_chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
   CURL*              handle;
@@ -307,7 +307,7 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
 
 #endif
 
-#if IS_WIN
+#ifdef _WIN32
   char *hostname, *port, *path;
   if(parse_url(request->url, &hostname, &port, &path) != 0) {
     response->error = 1; // Error parsing URL

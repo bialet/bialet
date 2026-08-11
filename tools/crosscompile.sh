@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-DIST_DIR="$PROJECT_DIR/build-cross"
+DIST_DIR="$PROJECT_DIR/build"
 
 SQLITE_YEAR="2024"
 SQLITE_VERSION="3460100"

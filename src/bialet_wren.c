@@ -25,7 +25,7 @@
 #include <strings.h>
 #include <time.h>
 
-#if !IS_WIN
+#ifndef _WIN32
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/stat.h>
@@ -97,7 +97,7 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
   sqlite3_finalize(stmt);
 }
 
-#if !IS_WIN
+#ifndef _WIN32
 // Defined below; forward-declared so bialet_read_file can reuse the no-follow
 // open path used by the module loader.
 static int   open_no_follow(const char* path);
@@ -130,7 +130,7 @@ char* bialet_read_file(const char* path) {
   // a link swapped in after the realpath() check cannot feed out-of-root bytes
   // to Markdown.file. On POSIX this mirrors the module loader's no-follow open;
   // on Windows read_file() itself opens without following junctions.
-#if !IS_WIN
+#ifndef _WIN32
   return read_file_fd(open_no_follow(resolved));
 #else
   return read_file(resolved);
@@ -173,7 +173,7 @@ char* read_file(const char* path) {
   return buffer;
 }
 
-#if !IS_WIN
+#ifndef _WIN32
 // Opens an absolute path with O_NOFOLLOW applied to every component, so a
 // symlink swap between a realpath() containment check and this open cannot
 // pull out-of-root bytes into the module loader. Returns an fd or -1.
@@ -388,7 +388,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
   // Reopen the already-contained resolved path with O_NOFOLLOW on every
   // component, so a symlink swap in the check-to-open window cannot feed
   // out-of-root bytes into the interpreter.
-#if !IS_WIN
+#ifndef _WIN32
   char* buffer = read_file_fd(open_no_follow(resolved));
 #else
   char* buffer = read_file(resolved);
@@ -746,11 +746,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt;
-    int           result = sqlite3_prepare_v2(db,
-                                              "INSERT INTO BIALET_FILES (name, "
-                                                        "originalFileName, type, file, size, isTemp) "
-                                                        "VALUES (?, ?, ?, ?, ?, 1)",
-                                              -1, &stmt, 0);
+    int result = sqlite3_prepare_v2(db,
+                                    "INSERT INTO BIALET_FILES (name, "
+                                    "originalFileName, type, file, size, isTemp) "
+                                    "VALUES (?, ?, ?, ?, ?, 1)",
+                                    -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -1214,7 +1214,7 @@ void bialet_init(struct BialetConfig* config) {
   // A drive-qualified path (C:\...) is absolute on Windows; without this check
   // a temp DB returned by GetTempFileNameA would be joined onto root_dir.
   int is_abs = config->db_path[0] == '/';
-#if IS_WIN
+#ifdef _WIN32
   if(!is_abs && config->db_path[0] != '\0' && config->db_path[1] == ':' &&
      (config->db_path[2] == '/' || config->db_path[2] == '\\')) {
     is_abs = 1;

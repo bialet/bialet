@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#if IS_WIN
+#ifdef _WIN32
 
 #include <winsock2.h>
 
@@ -30,7 +30,6 @@
 
 #include "getopt.h"
 #include <signal.h>
-#include <stdio.h>
 #include <tchar.h>
 #include <time.h>
 
@@ -38,6 +37,9 @@
 #define WIDTH 7
 #define BUF_LEN 1024
 #define FTW_F 1
+// Bialet logo is a bycicle however there is no emoji support on Windows terminal.
+// We will use a dash instead, empty logo looks bad as well.
+#define BIALET_LOGO "-"
 
 #else
 
@@ -58,16 +60,11 @@
 #define CRON_FILE_ALT "/_app/cron" BIALET_EXTENSION
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" BIALET_EXTENSION
-#define MAX_ROUTES 100
 #define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
-// Bialet logo is a bycicle however there is no emoji support on Windows terminal.
-// We will use a dash instead, empty logo looks bad as well.
-#if IS_WIN
-#define BIALET_LOGO "-"
-#else
+#ifndef BIALET_LOGO
 #define BIALET_LOGO "🚲"
 #endif
 
@@ -86,7 +83,7 @@ static char*           cron_code = 0;
 // also written by the dmon thread and read by the cron thread; the mutex
 // prevents torn reads and use-after-free when a cron file is replaced while a
 // cron tick is running.
-#if !IS_WIN
+#ifndef _WIN32
 static pthread_mutex_t run_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
@@ -97,7 +94,7 @@ static void migrate() {
   snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE);
   snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
            MIGRATION_FILE_ALT);
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_lock(&run_mutex);
 #endif
   if((code = read_file(path)) || (code = read_file(altPath))) {
@@ -106,7 +103,7 @@ static void migrate() {
   } else {
     bialet_run("migration", "Db.init", 0);
   }
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
 #endif
 }
@@ -122,25 +119,25 @@ static void install_cron() {
   if(new_code != 0) {
     message(yellow("Installing cron"));
   }
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_lock(&run_mutex);
 #endif
   free(cron_code);
   cron_code = new_code;
   cron_installed = (cron_code != 0);
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
 #endif
 }
 
 static void cron_run() {
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_lock(&run_mutex);
 #endif
   if(cron_installed && cron_code) {
     bialet_run("cron", cron_code, 0);
   }
-#if !IS_WIN
+#ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
 #endif
 }
@@ -154,7 +151,7 @@ void* cron_thread(void* arg) {
   return NULL;
 }
 
-#if !IS_WIN
+#ifndef _WIN32
 // The Linux parent forks the HTTP child while the cron and dmon threads may be
 // inside SQLite/Wren. The child inherits copies of whatever mutexes those
 // threads hold (locked forever, since the owner thread does not exist in the
@@ -227,7 +224,7 @@ void welcome(int port) {
 }
 
 static void open_browser(const char* url) {
-#if IS_WIN
+#ifdef _WIN32
   char cmd[MAX_URL + 20];
   snprintf(cmd, sizeof(cmd), "start %s", url);
   system(cmd);
@@ -256,7 +253,7 @@ int main(int argc, char* argv[]) {
   char* test_dir = NULL;
   int   run_tests = 0;
   int   dev_mode = 0;
-#if !IS_WIN
+#ifndef _WIN32
   struct sigaction sa;
   sa.sa_handler = sigint_handler;
   sa.sa_flags = 0;
@@ -271,7 +268,7 @@ int main(int argc, char* argv[]) {
   signal(SIGABRT, sigint_handler);
 #endif
 
-#if !IS_WIN
+#ifndef _WIN32
   // Register before any threads are created so every fork (including
   // open_browser) is bracketed by the run_mutex prepare/parent/child handlers.
   if(pthread_atfork(atfork_prepare, atfork_parent, atfork_child) != 0) {
@@ -434,7 +431,7 @@ int main(int argc, char* argv[]) {
   char temp_db_path[PATH_MAX];
   if(run_tests) {
     bialet_config.enable_tests = 1;
-#if !IS_WIN
+#ifndef _WIN32
     // mkstemp() creates the file atomically with O_EXCL, so a local attacker
     // cannot pre-place a symlink at a predictable PID-based path and redirect
     // the test DB writes onto an arbitrary victim file.

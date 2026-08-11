@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !IS_WIN
+#ifndef _WIN32
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/stat.h>
@@ -84,7 +84,7 @@ void trim(char* str) {
     memmove(str, start, strlen(start) + 1);
 }
 
-#if !IS_WIN
+#ifndef _WIN32
 // Walks [path] component by component with openat(O_NOFOLLOW) so a symlink
 // swap on any component between a realpath() containment check and this open
 // fails with ELOOP instead of being followed out of the root.
@@ -121,7 +121,7 @@ static int open_fd_no_follow(const char* path) {
 FILE* open_file_no_follow(const char* path) {
   if(path == NULL)
     return NULL;
-#if IS_WIN
+#ifdef _WIN32
   wchar_t wide[PATH_MAX];
   if(MultiByteToWideChar(CP_UTF8, 0, path, -1, wide, PATH_MAX) == 0)
     return NULL;

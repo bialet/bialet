@@ -10,20 +10,17 @@
  */
 #include "hash.h"
 
-// Standard C libs (available everywhere, pull them out once)
-#include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <string.h>
 
-// Windows-specific
-#if defined(_WIN32)
-#define _CRT_RAND_S          // Define this exactly once, right before including windows.h
+#ifdef _WIN32
+#define _CRT_RAND_S // Define this exactly once, right before including windows.h
 #include <windows.h>
 #endif
 
-// Unix-specific (needed for /dev/urandom CSPRNG on non-Windows)
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <fcntl.h>
 #include <unistd.h>
 #endif
@@ -45,7 +42,7 @@ void generate_salt(char* salt, size_t length) {
   // Salts must come from a CSPRNG. Never fall back to rand()/time-seeded
   // values: a predictable salt makes password hashes offline-regenerable, so
   // a failing OS entropy source is a hard error rather than a weak fallback.
-#if !defined(_WIN32)
+#ifndef _WIN32
   int fd = open("/dev/urandom", O_RDONLY);
   if(fd < 0) {
     perror("Failed to open /dev/urandom for salt generation");
@@ -83,17 +80,7 @@ void generate_salt(char* salt, size_t length) {
 // by password salts (generate_salt above) and, since SQLite's sqlite3_randomness
 // is a documented non-cryptographic PRNG, by session IDs and CSRF tokens.
 void random_bytes_fill(unsigned char* buf, size_t len) {
-#if defined(_WIN32)
-  size_t filled = 0;
-  while(filled < len) {
-    unsigned int r = 0;
-    if(rand_s(&r) != 0) {
-      perror("rand_s failed for random bytes");
-      exit(EXIT_FAILURE);
-    }
-    buf[filled++] = (unsigned char)(r & 0xFF);
-  }
-#else
+#ifndef _WIN32
   int fd = open("/dev/urandom", O_RDONLY);
   if(fd < 0) {
     perror("Failed to open /dev/urandom for random bytes");
@@ -112,6 +99,16 @@ void random_bytes_fill(unsigned char* buf, size_t len) {
     got += (size_t)n;
   }
   close(fd);
+#else
+  size_t filled = 0;
+  while(filled < len) {
+    unsigned int r = 0;
+    if(rand_s(&r) != 0) {
+      perror("rand_s failed for random bytes");
+      exit(EXIT_FAILURE);
+    }
+    buf[filled++] = (unsigned char)(r & 0xFF);
+  }
 #endif
 }
 

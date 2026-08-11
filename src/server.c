@@ -17,7 +17,7 @@
 #include "messages.h"
 #include "utils.h"
 
-#if IS_WIN
+#ifdef _WIN32
 #include <ws2tcpip.h>
 #define bialet_socket_t SOCKET
 #define BIALET_INVALID_SOCKET INVALID_SOCKET
@@ -124,7 +124,7 @@ static const char* path_basename(const char* path) {
 // may still follow a junction, so the resolved-path basename check remains the
 // real boundary there.
 static int is_regular_file_no_follow(const char* path, struct stat* st) {
-#if IS_WIN
+#ifdef _WIN32
   return stat(path, st) == 0 && S_ISREG(st->st_mode);
 #else
   return lstat(path, st) == 0 && S_ISREG(st->st_mode);
@@ -149,7 +149,7 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
 // dropped after BIALET_SOCKET_TIMEOUT_MS instead of blocking the
 // single-threaded accept/handle loop forever.
 static void set_socket_timeout(bialet_socket_t fd) {
-#if IS_WIN
+#ifdef _WIN32
   DWORD timeout_ms = BIALET_SOCKET_TIMEOUT_MS;
   setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, setsockopt_val(&timeout_ms),
              sizeof(timeout_ms));
@@ -165,7 +165,7 @@ static void set_socket_timeout(bialet_socket_t fd) {
 }
 
 static long long monotonic_ms(void) {
-#if IS_WIN
+#ifdef _WIN32
   return (long long)GetTickCount64();
 #elif IS_MAC
   static mach_timebase_info_data_t timebase;
@@ -183,7 +183,7 @@ static long long monotonic_ms(void) {
 // Returns 1 when [fd] becomes readable within timeout_ms, 0 on timeout or
 // error. Used to enforce the total body-read deadline below.
 static int wait_readable(bialet_socket_t fd, int timeout_ms) {
-#if IS_WIN
+#ifdef _WIN32
   fd_set readfds;
   FD_ZERO(&readfds);
   FD_SET(fd, &readfds);
@@ -228,7 +228,7 @@ static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
 void handle_client(bialet_socket_t client_socket);
 
 int start_server(struct BialetConfig* config) {
-#if IS_WIN
+#ifdef _WIN32
   WSADATA wsaData;
   if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
     fprintf(stderr, "WSAStartup failed\n");
@@ -528,7 +528,7 @@ static void free_response_owned(struct BialetResponse* response) {
 // the root. Walking the path component-by-component with openat(2) closes that
 // window -- any symlink swap now fails with ELOOP instead of being followed.
 // Returns an open file descriptor or -1.
-#if !IS_WIN
+#ifndef _WIN32
 static int open_fd_without_follow(const char* path) {
   if(path == NULL || path[0] != '/')
     return -1;
@@ -567,7 +567,7 @@ static int open_fd_without_follow(const char* path) {
 // FILE_FLAG_OPEN_REPARSE_POINT and rejects reparse points (junctions/symlinks)
 // instead of following them.
 static FILE* open_file_within_root(const char* path) {
-#if IS_WIN
+#ifdef _WIN32
   return open_file_no_follow(path);
 #else
   int fd = open_fd_without_follow(path);
@@ -965,7 +965,7 @@ void handle_client(bialet_socket_t client_socket) {
 }
 
 int server_poll(int delay) {
-#if IS_WIN
+#ifdef _WIN32
   fd_set readfds;
   FD_ZERO(&readfds);
   FD_SET(server_fd, &readfds);

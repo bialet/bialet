@@ -11,22 +11,16 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#include <stddef.h>
-
-#ifndef _WIN32
-#include <stdlib.h>
-#endif
-
 #define BIALET_VERSION "0.12.0"
 
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef _WIN32
-#define IS_WIN 1
-#define IS_UNIX 0
 #define IS_MAC 0
 #define IS_LINUX 0
 #else
-#define IS_UNIX 1
-#define IS_WIN 0
 #if __APPLE__
 #define IS_MAC 1
 #define IS_LINUX 0
@@ -36,17 +30,17 @@
 #endif
 #endif
 
-#if IS_WIN
+#ifdef _WIN32
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0601
 #ifndef WINVER
 #define WINVER 0x0601
 #endif
+
 #include <winsock2.h>
 
 #include <windows.h>
 
-#include <stdlib.h>
 #include <wchar.h>
 #include <winbase.h>
 #ifndef PATH_MAX
@@ -54,84 +48,7 @@
 #endif
 #endif
 
-// Size-aware realpath for both platforms. On Windows, _fullpath is purely
-// lexical and does not resolve NTFS junctions/reparse points, so a junction
-// planted inside the served root could bypass the realpath root-containment
-// check. GetFinalPathNameByHandle follows reparse points to the real target.
-// Unlike the old 2-argument shim, every intermediate buffer is bounded by the
-// caller's real [resolved_size], so a small caller buffer (e.g. the 100-byte
-// root buffer in main.c) can no longer be overrun by a 260-byte _MAX_PATH
-// write.
-static inline char* realpath_n(const char* path, char* resolved,
-                               size_t resolved_size) {
-#if IS_WIN
-  if(resolved_size == 0)
-    return NULL;
-  if(!_fullpath(resolved, path, resolved_size))
-    return NULL;
-
-  // Room for the UTF-8 -> wide conversion of a path up to resolved_size plus
-  // slack for the "\\?\" prefixes GetFinalPathNameByHandleW can add.
-  size_t   wchars = resolved_size + 8;
-  wchar_t* wide = (wchar_t*)malloc(wchars * sizeof(wchar_t));
-  if(wide == NULL)
-    return NULL;
-  if(MultiByteToWideChar(CP_UTF8, 0, resolved, -1, wide, (int)wchars) == 0) {
-    free(wide);
-    return NULL;
-  }
-
-  HANDLE h =
-      CreateFileW(wide, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                  NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-  if(h == INVALID_HANDLE_VALUE) {
-    free(wide);
-    return NULL;
-  }
-
-  DWORD len =
-      GetFinalPathNameByHandleW(h, wide, (DWORD)wchars, FILE_NAME_NORMALIZED);
-  CloseHandle(h);
-  if(len == 0 || len >= wchars) {
-    free(wide);
-    return NULL;
-  }
-
-  wchar_t* p = wide;
-  if(wcsncmp(p, L"\\\\?\\UNC\\", 8) == 0)
-    p += 8;
-  else if(wcsncmp(p, L"\\\\?\\", 4) == 0)
-    p += 4;
-
-  if(WideCharToMultiByte(CP_UTF8, 0, p, -1, resolved, (int)resolved_size, NULL,
-                         NULL) == 0) {
-    free(wide);
-    return NULL;
-  }
-  free(wide);
-  return resolved;
-#else
-  (void)resolved_size;
-  return realpath(path, resolved);
-#endif
-}
-
-#ifdef _WIN64
-
-#include <winsock2.h>
-
-#include <windows.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#else
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#endif
-
+char* realpath_n(const char* path, char* resolved, size_t resolved_size);
 #define MAX_NUMBER_LENGTH 100
 #define BIALET_EXTENSION ".wren"
 #define BIALET_EXTENSION_LEN 5
