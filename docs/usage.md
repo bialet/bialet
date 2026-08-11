@@ -36,24 +36,37 @@ Pass the app directory and flags to control startup:
 bialet -p 8080 -h 0.0.0.0 /path/to/app
 ```
 
-| Parameter | Description                                                                 | Default                                      |
-| --------- | --------------------------------------------------------------------------- | -------------------------------------------- |
-| `-p`      | Port number                                                                 | `7001`                                       |
-| `-h`      | Host name                                                                   | `127.0.0.1`                                  |
-| `-r`      | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`      | Validate the syntax of a Wren file, then exit                               | None                                         |
-| `-T`      | Run tests in the `_tests/` folder                                           | None                                         |
-| `-v`      | Print the version and exit                                                  | None                                         |
-| `-l`      | Log file location                                                           | `stdout`                                     |
-| `-d`      | SQLite database file location                                               | `_db.sqlite3`                                |
-| `-w`      | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
-| `-i`      | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
-| `-m`      | Memory soft limit (MB)                                                      | `50`                                         |
-| `-M`      | Memory hard limit (MB)                                                      | `100`                                        |
-| `-c`      | CPU soft limit (%)                                                          | `15`                                         |
-| `-C`      | CPU hard limit (%)                                                          | `30`                                         |
-| `-b`      | Max request body (KB)                                                       | `128`                                        |
-| `-q`      | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+Every option has a short and a long form. Values can be passed as
+`--option value` or `--option=value`:
+
+```bash
+bialet --port 8080 --host 0.0.0.0 /path/to/app
+bialet --port=8080 /path/to/app
+```
+
+| Parameter               | Description                                                                 | Default                                      |
+| ----------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
+| `-p`, `--port`          | Port number                                                                 | `7001`                                       |
+| `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
+| `-H`, `--help`          | Show this help and exit                                                     | None                                         |
+| `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
+| `-t`, `--validate`      | Validate the syntax of a Wren file, then exit                               | None                                         |
+| `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
+| `-v`, `--version`       | Print the version and exit                                                  | None                                         |
+| `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
+| `-d`, `--db`            | SQLite database file location                                               | `_db.sqlite3`                                |
+| `-w`, `--wal`           | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
+| `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
+| `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `50`                                         |
+| `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `100`                                        |
+| `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
+| `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
+| `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
+| `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+
+Long options that require a value reject an empty one (`--port` alone is an
+error). Unknown options, short or long, are rejected with an error and the
+usage text instead of being silently ignored.
 
 ### Version
 
@@ -66,8 +79,8 @@ bialet -v
 
 ### Quiet mode
 
-`-q` suppresses the browser auto-open and colored log output. Useful in
-scripts, containers, and CI:
+`-q` (or `--quiet`) suppresses the browser auto-open and colored log output.
+Useful in scripts, containers, and CI:
 
 ```bash
 bialet -q /path/to/app

@@ -10,6 +10,7 @@
  */
 #include "bialet.h"
 #include "bialet_wren.h"
+#include "cli.h"
 #include "livereload.h"
 #include "messages.h"
 #include "server.h"
@@ -28,7 +29,6 @@
 
 #include <windows.h>
 
-#include "getopt.h"
 #include <signal.h>
 #include <tchar.h>
 #include <time.h>
@@ -247,21 +247,13 @@ void sigint_handler(int signum) {
   stop_server();
 }
 
-static void print_usage(const char* prog, FILE* out) {
-  fprintf(out, BIALET_USAGE, prog);
-}
-
-static int path_exists(const char* path) {
-  struct stat st;
-  return stat(path, &st) == 0;
-}
-
 int main(int argc, char* argv[]) {
-  char* code = "";
-  char* validate_file = NULL;
-  char* test_dir = NULL;
-  int   run_tests = 0;
-  int   dev_mode = 0;
+  char*            code = NULL;
+  const char*      validate_file = NULL;
+  const char*      test_dir = NULL;
+  int              run_tests = 0;
+  int              dev_mode = 0;
+  BialetCliOptions cli_opts;
 #ifndef _WIN32
   struct sigaction sa;
   sa.sa_handler = sigint_handler;
@@ -316,166 +308,26 @@ int main(int argc, char* argv[]) {
   bialet_config.sqlite_synchronous = 1;  // NORMAL
 
   /* Parse args */
-
-  // `dev` subcommand. The bundled getopt() is BSD-style: it stops at the first
-  // non-option argument, so `dev -p 8080` would leave -p unparsed. Shift a
-  // leading `dev` out of argv so trailing options still work; `-p 8080 dev`
-  // (dev after options) is handled after the getopt loop below.
-  if(argc > 1 && strcmp(argv[1], "dev") == 0) {
-    dev_mode = 1;
-    for(int i = 1; i < argc - 1; i++)
-      argv[i] = argv[i + 1];
-    argc--;
-  }
-
-  // Long-form options. The bundled getopt() is BSD-style and treats any `--foo`
-  // as a `--` end-of-options marker, so `bialet --version` silently started a
-  // server on the current directory. Handle them up front: `--help` and
-  // `--version` are recognized, a `--`-prefixed argument that names an existing
-  // path is served like a positional path, and any other long-form option is
-  // rejected as an invalid parameter. Matched arguments are shifted out of argv
-  // so getopt keeps parsing trailing short options.
-  for(int i = 1; i < argc;) {
-    if(strcmp(argv[i], "--") == 0 || strncmp(argv[i], "--", 2) != 0) {
-      i++;
-      continue;
-    }
-    if(strcmp(argv[i], "--help") == 0) {
-      print_usage(argv[0], stdout);
+  cli_parse(argc, argv, &bialet_config, &cli_opts);
+  switch(cli_opts.action) {
+    case BIALET_CLI_HELP:
+      cli_print_help(argv[0], stdout);
       exit(EXIT_SUCCESS);
-    }
-    if(strcmp(argv[i], "--version") == 0) {
-      printf("bialet %s\n", BIALET_VERSION);
+    case BIALET_CLI_VERSION:
+      cli_print_version();
       exit(EXIT_SUCCESS);
-    }
-    if(path_exists(argv[i])) {
-      bialet_config.root_dir = argv[i];
-      for(int j = i; j < argc - 1; j++)
-        argv[j] = argv[j + 1];
-      argc--;
-    } else {
-      fprintf(stderr, "Invalid parameter: %s\n", argv[i]);
-      print_usage(argv[0], stderr);
+    case BIALET_CLI_INVALID:
+      fprintf(stderr, "%s\n", cli_opts.error);
+      cli_print_help(argv[0], stderr);
       exit(EXIT_FAILURE);
-    }
+    default:
+      break;
   }
-
-  int opt;
-  while((opt = getopt(argc, argv, "Hh:p:l:d:b:m:M:c:C:r:i:t:Tvwq")) != -1) {
-    switch(opt) {
-      case 'h':
-        bialet_config.host = optarg;
-        break;
-      case 'H':
-        print_usage(argv[0], stdout);
-        exit(EXIT_SUCCESS);
-        break;
-      case 'b': {
-        char* endptr;
-        long  post_kb = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || post_kb <= 0) {
-          fprintf(stderr, "Invalid max post size: %s (use kilobytes, e.g. 128)\n",
-                  optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.max_post_size = (size_t)post_kb * 1024;
-      } break;
-      case 'p': {
-        char* endptr;
-        long  port_val = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || port_val < 0 || port_val > 65535) {
-          fprintf(stderr, "Invalid port number: %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.port = (int)port_val;
-      } break;
-      case 'l':
-        if((bialet_config.log_file = fopen(optarg, "a")) == NULL) {
-          perror("Error opening log file");
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.output_color = 0;
-        break;
-      case 'd':
-        bialet_config.db_path = optarg;
-        break;
-      case 'w':
-        bialet_config.wal_mode = 1;
-        break;
-      case 'i':
-        bialet_config.ignored_files = optarg;
-        break;
-      case 'm': {
-        char* endptr;
-        long  mem = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || mem < 0) {
-          fprintf(stderr, "Invalid memory limit: %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.mem_soft_limit = (int)mem;
-      } break;
-      case 'M': {
-        char* endptr;
-        long  mem = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || mem < 0) {
-          fprintf(stderr, "Invalid memory limit: %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.mem_hard_limit = (int)mem;
-      } break;
-      case 'c': {
-        char* endptr;
-        long  cpu = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || cpu < 0) {
-          fprintf(stderr, "Invalid CPU limit: %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.cpu_soft_limit = (int)cpu;
-      } break;
-      case 'C': {
-        char* endptr;
-        long  cpu = strtol(optarg, &endptr, 10);
-        if(*endptr != '\0' || cpu < 0) {
-          fprintf(stderr, "Invalid CPU limit: %s\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        bialet_config.cpu_hard_limit = (int)cpu;
-      } break;
-      case 'r':
-        code = optarg;
-        break;
-      case 't':
-        validate_file = optarg;
-        break;
-      case 'T':
-        run_tests = 1;
-        if(optind < argc && argv[optind][0] != '-') {
-          test_dir = argv[optind];
-          optind++;
-        }
-        break;
-      case 'q':
-        bialet_config.quiet = 1;
-        bialet_config.output_color = 0;
-        break;
-      case 'v':
-        printf("bialet %s\n", BIALET_VERSION);
-        exit(0);
-        break;
-      default:
-        fprintf(stderr, BIALET_USAGE, argv[0]);
-        exit(EXIT_FAILURE);
-    }
-  }
-  if(optind < argc) {
-    if(strcmp(argv[optind], "dev") == 0) {
-      dev_mode = 1;
-      optind++;
-    }
-  }
-  if(optind < argc) {
-    bialet_config.root_dir = argv[optind];
-  }
+  code = (char*)cli_opts.run_code;
+  validate_file = cli_opts.validate_file;
+  test_dir = cli_opts.test_dir;
+  run_tests = cli_opts.run_tests;
+  dev_mode = cli_opts.dev_mode;
 
   // Set up temporary database for tests
   char temp_db_path[PATH_MAX];
@@ -511,7 +363,7 @@ int main(int argc, char* argv[]) {
 
     // If test_dir was specified, set it as root_dir for resolution
     if(test_dir != NULL) {
-      bialet_config.root_dir = test_dir;
+      bialet_config.root_dir = (char*)test_dir;
     }
   }
 
@@ -552,7 +404,7 @@ int main(int argc, char* argv[]) {
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);
-  if(strcmp(code, "") != 0) {
+  if(code != NULL) {
     exit(bialet_run_cli(code));
   }
 

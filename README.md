@@ -168,24 +168,29 @@ make wren_files && make
 ### Command-line options
 
 ```
-Usage: bialet [-h host] [-p port] [-l log] [-d database] [-t file] [-T] root_dir
+Usage: bialet [options] [dev] [root_dir]
 ```
 
-| Option        | Description                                    |
-| ------------- | ---------------------------------------------- |
-| `-h host`     | Host to bind (default `127.0.0.1`)             |
-| `-p port`     | Port to listen on                              |
-| `-l log`      | Write logs to a file (disables colored output) |
-| `-d database` | SQLite database file (default `_db.sqlite3`)   |
-| `-w`          | Enable SQLite WAL mode                         |
-| `-i files`    | Glob of files to ignore                        |
-| `-m` / `-M`   | Memory soft / hard limit in MB                 |
-| `-c` / `-C`   | CPU soft / hard limit in seconds               |
-| `-r code`     | Run an inline Wren snippet and exit            |
-| `-t file`     | Validate the syntax of a `.wren` file          |
-| `-T [dir]`    | Run the test suite                             |
-| `-v`          | Print the version and exit                     |
-| `root_dir`    | App directory to serve (default `.`)           |
+Every option has a short and a long form; values accept `--option value` or
+`--option=value`.
+
+| Option                        | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `-h`, `--host`                | Host to bind (default `127.0.0.1`)             |
+| `-p`, `--port`                | Port to listen on                              |
+| `-l`, `--log`                 | Write logs to a file (disables colored output) |
+| `-d`, `--db`                  | SQLite database file (default `_db.sqlite3`)   |
+| `-w`, `--wal`                 | Enable SQLite WAL mode                         |
+| `-i`, `--ignore`              | Glob of files to ignore                        |
+| `-m`, `--mem-soft` / `-M`, `--mem-hard` | Memory soft / hard limit in MB         |
+| `-c`, `--cpu-soft` / `-C`, `--cpu-hard` | CPU soft / hard limit in %             |
+| `-r`, `--run`                 | Run an inline Wren snippet and exit            |
+| `-t`, `--validate`            | Validate the syntax of a `.wren` file          |
+| `-T`, `--tests`               | Run the test suite                             |
+| `-v`, `--version`             | Print the version and exit                     |
+| `-H`, `--help`                | Print the help and exit                        |
+| `dev`                         | Live reload, error display, browser auto-open  |
+| `root_dir`                    | App directory to serve (default `.`)           |
 
 ## Documentation
 

@@ -140,43 +140,6 @@ void         add_result(BialetQuery* query);
 void add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
 void free_bialet_query(BialetQuery* query);
 
-#define BIALET_USAGE                                                                \
-  "🚲 bialet\n\n"                                                                 \
-  "Usage: %s [options] [dev] [root_dir]\n\n"                                        \
-  "Starts a server serving the given root_dir (default: the current "               \
-  "directory). Add `dev` to enable live reload, in-browser error display, "         \
-  "and auto-open the browser.\n\n"                                                  \
-  "Examples:\n"                                                                     \
-  "  bialet                   Serve the current directory on 127.0.0.1:7001\n"      \
-  "  bialet dev               Dev server with live reload and error display\n"      \
-  "  bialet [dev] /path/to/app\n"                                                   \
-  "                           Serve a specific directory, optionally in dev "       \
-  "mode\n\n"                                                                        \
-  "Options:\n"                                                                      \
-  "  -p PORT    Port number                              (default: 7001)\n"         \
-  "  -h HOST    Host name                                (default: 127.0.0.1)\n"    \
-  "  -H         Show this help and exit\n"                                          \
-  "  -r CODE    Run the code passed as argument, then exit\n"                       \
-  "  -t FILE    Validate the syntax of a Wren file, then exit\n"                    \
-  "  -T [DIR]   Run tests in the _tests/ folder\n"                                  \
-  "  -v         Print the version and exit\n"                                       \
-  "  -l FILE    Log file location                        (default: stdout)\n"       \
-  "  -d FILE    SQLite database file location            (default: _db.sqlite3)\n"  \
-  "  -w         Enable SQLite Write-Ahead logging mode\n"                           \
-  "  -i LIST    Ignored files: comma-separated list of glob expressions\n"          \
-  "             (default: README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml)\n"          \
-  "  -m MB      Memory soft limit                        (default: 50)\n"           \
-  "  -M MB      Memory hard limit                        (default: 100)\n"          \
-  "  -c PERC    CPU soft limit                           (default: 15)\n"           \
-  "  -C PERC    CPU hard limit                           (default: 30)\n"           \
-  "  -b KB      Max request body                         (default: 128)\n"          \
-  "  -q         Quiet: suppress the browser auto-open and colored output\n\n"       \
-  "Long-form options:\n"                                                            \
-  "  --help     Show this help and exit\n"                                          \
-  "  --version  Print the version and exit\n\n"                                     \
-  "Any other long-form option is rejected as an invalid parameter.\n\n"             \
-  "Full documentation: https://bialet.dev/usage.html\n"
-
 /* Welcome, not found and error pages */
 #define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
 /* Shared page chrome. Bialet's brand palette (BRAND.md), hardcoded so the
