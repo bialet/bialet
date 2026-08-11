@@ -20,43 +20,43 @@ improvements.
       limitations, map callback restrictions, interpolation rules,
       component-as-method pattern, and raw HTML security footguns
 - [x] **Live reload: fix the `/_livereload` version bump** — the injected
-      polling script never reloaded the browser because the version number
-      did not change when files in the app directory were created, modified,
-      or deleted. On Linux the HTTP child process served a copy of the
-      version frozen at fork time while the parent's file-watch thread
-      updated its own, and in `bialet dev` the server loop reaped the
-      browser child instead of the HTTP child, tearing down the watcher.
-      The version counter now lives in a shared mapping and the server waits
-      for its HTTP child specifically.
-- [ ] **Docs: state that mismatched closing tags are accepted** —
-      `template.md` currently claims `<div><span>Hello</div>` fails to
-      compile; the parser accepts it and serves the HTML verbatim. Document
-      that mismatched tags are not validated.
+      polling script never reloaded the browser because the version number did
+      not change when files in the app directory were created, modified, or
+      deleted. On Linux the HTTP child process served a copy of the version
+      frozen at fork time while the parent's file-watch thread updated its own,
+      and in `bialet dev` the server loop reaped the browser child instead of
+      the HTTP child, tearing down the watcher. The version counter now lives in
+      a shared mapping and the server waits for its HTTP child specifically.
+- [ ] **Docs: state that mismatched closing tags are accepted** — `template.md`
+      currently claims `<div><span>Hello</div>` fails to compile; the parser
+      accepts it and serves the HTML verbatim. Document that mismatched tags are
+      not validated.
 - [ ] **Docs: more Wren method-body examples** — add explicit examples of
       single-line vs multi-line method bodies: a body is an expression body
-      (implicit return) only when the expression starts on the same line as
-      the `{`; a statement body on a following line returns `null` silently.
+      (implicit return) only when the expression starts on the same line as the
+      `{`; a statement body on a following line returns `null` silently.
 - [ ] **Docs: start beginners with `bialet dev`** — the getting-started flow
       should run `bialet dev` from the first page so the in-browser error
-      display and live reload are on by default instead of a bare `bialet`
-      with a generic error page.
+      display and live reload are on by default instead of a bare `bialet` with
+      a generic error page.
 - [ ] **Docs: note config is read at startup** — `BIALET_SHOW_ERRORS` and
-      `BIALET_LIVE_RELOAD` are read when the server starts; enabling them
-      while a server is running requires a restart. Document this.
-- [ ] **CLI: reject unsupported long-form flags** — `bialet --version`
-      silently starts a server on port 7001 instead of printing the version.
-      Reject unknown long-form options rather than falling through to
-      "serve the current directory".
-- [ ] **Docs: fix stale claims vs the current binary** — accept `<br/>`
-      (no space) as valid (`template.md` calls it "Incorrect"), drop the
+      `BIALET_LIVE_RELOAD` are read when the server starts; enabling them while
+      a server is running requires a restart. Document this.
+- [ ] **CLI: reject unsupported long-form flags** — `bialet --version` silently
+      starts a server on port 7001 instead of printing the version. Reject
+      unknown long-form options rather than falling through to "serve the
+      current directory".
+- [ ] **Docs: fix stale claims vs the current binary** — accept `<br/>` (no
+      space) as valid (`template.md` calls it "Incorrect"), drop the
       "double-response error" claim for a forgotten `return` before
       `Response.redirect`, correct the session table name in `database.md`
       (`BIALET_SESSIONS` → `BIALET_SESSION`), qualify `wren.md`'s "null is
       safe", and fix the `security.md` intro that contradicts auto-escaping.
 - [ ] **Compiler: friendlier invalid-tag-name errors** — `<MyElement>` gives
       `Error at '<': Expected expression.` and `<my_component>` gives
-      `Unterminated HTML string.`; emit `Invalid tag name: must be lowercase
-      alphanumeric + hyphens` instead.
+      `Unterminated HTML string.`; emit
+      `Invalid tag name: must be lowercase     alphanumeric + hyphens` instead.
+- [ ] **CLI: document missing flags and split usage docs out of installation**
 
 ## Longer Term / Ideas
 
@@ -64,8 +64,8 @@ improvements.
       viewing logs
 - [ ] **Warn when a block callback returns null** — a multi-statement `map`
       callback (or any block whose body is not a single expression) renders
-      empty output with no error. Log a warning so a silent empty `<ul>`
-      is distinguishable from an empty query result.
+      empty output with no error. Log a warning so a silent empty `<ul>` is
+      distinguishable from an empty query result.
 - [ ] **Data filtering lib** — External lib for query sanitization and type-safe
       filtering utilities
 - [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
@@ -81,9 +81,9 @@ improvements.
       proxy needed for basic deployments)
 - [ ] **HTTP Client - Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
-- [ ] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the jar is
-      process-wide and sends cookies regardless of domain; scope by host and
-      honor `Domain`/`Path`/`Secure` attributes.
+- [ ] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the
+      jar is process-wide and sends cookies regardless of domain; scope by host
+      and honor `Domain`/`Path`/`Secure` attributes.
 
 ## Security Hardening Backlog
 
@@ -112,10 +112,10 @@ improvements.
 - [x] **`_route.wren` symlink bypasses the private-file rule** — the
       `_route.wren` directory search uses `stat()` (follows symlinks) and sets
       `private_path_internal`, which skips the resolved-path `_`/`.` check in
-      `handle_client` (`src/server.c`). A planted `sub/_route.wren -> ../_db.sqlite3`
-      makes the server serve the database. Only waive the private check when
-      the resolved basename is exactly `_route.wren`, and use `lstat`/no-follow
-      in the search.
+      `handle_client` (`src/server.c`). A planted
+      `sub/_route.wren -> ../_db.sqlite3` makes the server serve the database.
+      Only waive the private check when the resolved basename is exactly
+      `_route.wren`, and use `lstat`/no-follow in the search.
 - [x] **`setTimezone` uses `putenv()` with a stack buffer** — `setTimezone` in
       `src/wren_core.c` builds `TZ=<tz>` in a 64-byte stack buffer and passes it
       to `putenv()`, which stores the pointer; the second call invalid-frees the
@@ -147,7 +147,8 @@ improvements.
       by the remote-module loader (`src/http_call.c`).
 - [x] **`test_runRequest` unbounded stack copies** — `strncpy` of the method and
       URI into 32-byte/1024-byte stack buffers with no size guard
-      (`src/wren_core.c`); reachable in `-T` test mode via hostile `_tests/*.wren`.
+      (`src/wren_core.c`); reachable in `-T` test mode via hostile
+      `_tests/*.wren`.
 - [x] **Windows: no-follow open for Wren file/module reads** — extend the
       no-follow item to `read_file` (`src/bialet_wren.c`), which still uses
       plain `fopen` on Windows and follows junctions.
