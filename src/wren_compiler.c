@@ -3951,6 +3951,13 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.next.line = 0;
   parser.next.value = UNDEFINED_VAL;
 
+  // `current` needs the same treatment: nextToken() starts with
+  // `previous = current`, so the first call reads this before anything has
+  // written it. The copied value is never used, but reading an uninitialized
+  // object is still undefined -- and GCC diagnoses it once -O2 inlines
+  // nextToken() into this function.
+  parser.current = parser.next;
+
   parser.printErrors = printErrors;
   parser.hasError = false;
 
