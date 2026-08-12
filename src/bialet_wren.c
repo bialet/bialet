@@ -1133,13 +1133,37 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   int   testCount = 0;
 
   struct dirent* entry;
-  while((entry = readdir(dir)) != NULL && testCount < MAX_TEST_FILES) {
-    if(is_test_file(entry->d_name)) {
-      testFiles[testCount] = strdup(entry->d_name);
-      testCount++;
+  int            skipped = 0;
+  while((entry = readdir(dir)) != NULL) {
+    if(!is_test_file(entry->d_name))
+      continue;
+    // A directory named "foo.wren" is not a test file.
+#ifdef DT_DIR
+    if(entry->d_type == DT_DIR)
+      continue;
+#endif
+    if(testCount >= MAX_TEST_FILES) {
+      // Reaching the cap used to end the loop silently, so tests beyond the
+      // hundredth simply never ran and the summary still said "0 failed".
+      skipped++;
+      continue;
     }
+    char* name = strdup(entry->d_name);
+    if(name == NULL) {
+      // Was unchecked: a NULL entry later reached snprintf("%s", NULL).
+      fprintf(stderr, "Error: out of memory collecting test files\n");
+      skipped++;
+      continue;
+    }
+    testFiles[testCount] = name;
+    testCount++;
   }
   closedir(dir);
+
+  if(skipped > 0) {
+    fprintf(stderr, "Warning: %d test file(s) not run (limit %d)\n", skipped,
+            MAX_TEST_FILES);
+  }
 
   if(testCount == 0) {
     printf("No tests found.\n");
