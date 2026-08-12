@@ -308,6 +308,7 @@ Who is Bialet for?
    :caption: User Interfaces
 
    template
+   jsx-migration
    forms
    markdown
    errors

@@ -16,7 +16,7 @@ improvements.
 - [x] **Document Tailwind CLI integration** — Step-by-step guide for
       self-hosting Tailwind with `tailwindcss --watch` against Bialet app
       directory (dev + production workflows)
-- [ ] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
+- [x] **JSX-to-Bialet migration guide** — Cheatsheet covering: tag nesting
       limitations, map callback restrictions, interpolation rules,
       component-as-method pattern, and raw HTML security footguns
 - [x] **Live reload: fix the `/_livereload` version bump** — the injected
