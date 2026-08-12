@@ -1669,10 +1669,11 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   if(vm->config.writeFn != NULL) {
     for(int i = 0; i < params->elements.count; i++) {
       val = params->elements.data[i];
+      int ok = 0;
       if(IS_NULL(val)) {
-        add_parameter(query, 0, BIALETQUERYTYPE_NULL);
+        ok = add_parameter(query, 0, BIALETQUERYTYPE_NULL);
       } else if(IS_BOOL(val)) {
-        add_parameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
+        ok = add_parameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
       } else if(IS_NUM(val)) {
         char num[MAX_NUMBER_LENGTH];
         // %.17g keeps full double precision and renders compactly (DBL_MAX
@@ -1681,10 +1682,14 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
         int written = snprintf(num, sizeof(num), "%.17g", AS_NUM(val));
         if(written < 0 || written >= (int)sizeof(num))
           continue;
-        add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
+        ok = add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else if(IS_STRING(val)) {
-        add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
+        ok = add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       }
+      // On allocation failure, drop the parameter instead of dereferencing
+      // the un-grown array in the query runner.
+      if(ok != 0)
+        continue;
     }
     vm->config.queryFn(vm, query);
   }

@@ -134,10 +134,13 @@ typedef struct {
 } BialetQuery;
 
 BialetQuery* create_bialet_query();
-void         add_result_row(BialetQuery* query, int resultIndex, const char* name,
-                            const char* value, int size, BialetQueryType type);
-void         add_result(BialetQuery* query);
-void add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
+/* Returns 0 on success, -1 when the result/row/parameter could not be grown
+ * (allocation failure). Callers must not use the failed slot and should abort
+ * the query rather than dereference the un-grown array. */
+int add_result_row(BialetQuery* query, int resultIndex, const char* name,
+                   const char* value, int size, BialetQueryType type);
+int add_result(BialetQuery* query);
+int add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
 void free_bialet_query(BialetQuery* query);
 
 /* Welcome, not found and error pages */

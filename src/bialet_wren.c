@@ -497,6 +497,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
   }
 
   /* Execute statement and fetch results */
+  int alloc_error = 0;
   while((result = sqlite3_step(stmt)) == SQLITE_ROW) {
     if(!colCount) {
       /* Get column names */
@@ -508,7 +509,10 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
       }
     }
 
-    add_result(query);
+    if(add_result(query) != 0) {
+      alloc_error = 1;
+      break;
+    }
     for(int i = 0; i < colCount; i++) {
       colType = sqlite3_column_type(stmt, i);
       switch(colType) {
@@ -541,9 +545,16 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
           message(red("Query Error"), "Uknown type on binding result");
           break;
       }
-      add_result_row(query, rowCount, columns[i], value, size, type);
+      if(add_result_row(query, rowCount, columns[i], value, size, type) != 0) {
+        alloc_error = 1;
+        break;
+      }
     }
     rowCount++;
+  }
+
+  if(alloc_error) {
+    message(red("Query Error"), "Out of memory while collecting query results");
   }
 
   /* Check for errors during query execution.
@@ -1304,44 +1315,63 @@ BialetQuery* create_bialet_query() {
   return query;
 }
 
-void add_result(BialetQuery* query) {
-  query->resultsCount++;
-  query->results = (BialetQueryResult*)realloc(
-      query->results, query->resultsCount * sizeof(BialetQueryResult));
-  BialetQueryResult* newResult = &query->results[query->resultsCount - 1];
+int add_result(BialetQuery* query) {
+  int                count = query->resultsCount + 1;
+  BialetQueryResult* new_results = (BialetQueryResult*)realloc(
+      query->results, (size_t)count * sizeof(BialetQueryResult));
+  if(new_results == NULL)
+    return -1;
+  query->results = new_results;
+  query->resultsCount = count;
+  BialetQueryResult* newResult = &query->results[count - 1];
   newResult->rows = NULL;
   newResult->rowCount = 0;
+  return 0;
 }
 
-void add_result_row(BialetQuery* query, int resultIndex, const char* name,
-                    const char* value, int size, BialetQueryType type) {
+int add_result_row(BialetQuery* query, int resultIndex, const char* name,
+                   const char* value, int size, BialetQueryType type) {
   if(resultIndex < 0 || resultIndex >= query->resultsCount)
-    return;
+    return -1;
 
   BialetQueryResult* result = &query->results[resultIndex];
-  result->rowCount++;
-  result->rows = (BialetQueryRow*)realloc(result->rows,
-                                          result->rowCount * sizeof(BialetQueryRow));
-  BialetQueryRow* newRow = &result->rows[result->rowCount - 1];
+  int                count = result->rowCount + 1;
+  BialetQueryRow*    new_rows =
+      (BialetQueryRow*)realloc(result->rows, (size_t)count * sizeof(BialetQueryRow));
+  if(new_rows == NULL)
+    return -1;
+  result->rows = new_rows;
+  result->rowCount = count;
+  BialetQueryRow* newRow = &result->rows[count - 1];
   newRow->name = string_safe_copy(name != NULL ? name : "");
   if(value != NULL && size > 0) {
-    newRow->value = safe_malloc(size);
+    newRow->value = safe_malloc((size_t)size);
     memcpy(newRow->value, value, size);
   } else {
     newRow->value = string_safe_copy("");
   }
   newRow->size = size;
   newRow->type = type;
+  return 0;
 }
 
-void add_parameter(BialetQuery* query, const char* value, BialetQueryType type) {
-  query->parametersCount++;
-  query->parameters = (BialetQueryParameter*)realloc(
-      query->parameters, query->parametersCount * sizeof(BialetQueryParameter));
-  BialetQueryParameter* newParameter =
-      &query->parameters[query->parametersCount - 1];
-  newParameter->value = value != NULL ? strdup(value) : NULL;
+int add_parameter(BialetQuery* query, const char* value, BialetQueryType type) {
+  char* copy = value != NULL ? strdup(value) : NULL;
+  if(value != NULL && copy == NULL)
+    return -1;
+  int                   count = query->parametersCount + 1;
+  BialetQueryParameter* new_parameters = (BialetQueryParameter*)realloc(
+      query->parameters, (size_t)count * sizeof(BialetQueryParameter));
+  if(new_parameters == NULL) {
+    free(copy);
+    return -1;
+  }
+  query->parameters = new_parameters;
+  query->parametersCount = count;
+  BialetQueryParameter* newParameter = &query->parameters[count - 1];
+  newParameter->value = copy;
   newParameter->type = type;
+  return 0;
 }
 
 void free_bialet_query(BialetQuery* query) {
