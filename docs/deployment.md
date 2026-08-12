@@ -333,6 +333,57 @@ Caddy reads request bodies before proxying by default. For a total body
 deadline, front Caddy with a timeout-capable proxy or enforce it at the app
 level.
 
+## Cloudflare Tunnel (Alternative)
+
+If you do not control a server or a domain, [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+exposes a local Bialet server over a public HTTPS URL **without opening a
+port, configuring a proxy, or buying DNS**. `cloudflared` keeps an outbound
+connection to Cloudflare's edge; requests arrive at your machine through that
+tunnel. Cloudflare terminates TLS and buffers slow clients, which covers most
+of what a reverse proxy does.
+
+Install `cloudflared` ([official packages](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)):
+
+```bash
+sudo apt-get install -y cloudflared
+```
+
+Start Bialet bound to localhost, then point a quick tunnel at it:
+
+```bash
+bialet -p 7001 /www/myapp
+cloudflared tunnel --url http://127.0.0.1:7001
+```
+
+`cloudflared` prints a `https://<random>.trycloudflare.com` URL. Open it and
+your app is live. No account, no configuration.
+
+> **Pitfall: the URL is temporary.** A quick tunnel dies when `cloudflared`
+> stops, and the next run gets a **new** random hostname. Fine for demos and
+> previews; useless as a stable endpoint.
+
+For a stable hostname you need a [named tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/),
+which requires a Cloudflare account and a domain on their DNS:
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create myapp
+cloudflared tunnel route dns myapp app.example.com
+cloudflared tunnel run --url http://127.0.0.1:7001 myapp
+```
+
+A named tunnel persists across restarts and can run as a systemd unit with
+`cloudflared service install`.
+
+Security notes that still apply:
+
+- **Bind Bialet to `127.0.0.1`.** The tunnel forwards to localhost; do not
+  add `-h 0.0.0.0`. Only Cloudflare's edge ever talks to your server.
+- **Cap the request body.** Cloudflare does not enforce a body-size limit for
+  you. Keep Bialet's `-b` default (128 KB) or lower it.
+- **Private files are still private.** Bialet returns 403 for `_`/`.`
+  prefixed files; a tunnel does not change that.
+
 ## Running Bialet as a Service
 
 ### systemd (Ubuntu / Debian)
