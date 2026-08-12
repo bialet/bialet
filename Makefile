@@ -54,14 +54,22 @@ ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
 endif
 
 ifeq (,$(findstring Darwin,$(OS)))
-HAVE_SSL := $(shell echo "#include <openssl/ssl.h>" | $(CC) -E - 2>/dev/null && echo 1 || echo 0)
+# The probe used to leave the preprocessor's *output* in HAVE_SSL -- `$(CC) -E -`
+# writes the expanded header to stdout, so HAVE_SSL became thousands of lines of
+# openssl/ssl.h and never compared equal to "1". Non-Darwin builds therefore
+# always compiled without -DHAVE_SSL, silently falling back to the DJB2 password
+# hash even with libssl-dev installed. Send the output to /dev/null so only the
+# exit status decides.
+HAVE_SSL := $(shell echo "#include <openssl/ssl.h>" | $(CC) -E - >/dev/null 2>&1 && echo 1 || echo 0)
 ifeq ($(HAVE_SSL),1)
 	CFLAGS += -DHAVE_SSL
-	LDFLAGS += -lssl -lcrypto
+	SSL_LIBS := -lssl -lcrypto
+	LDFLAGS += $(SSL_LIBS)
 endif
 else
 		CFLAGS += $(shell pkg-config --cflags openssl) -DHAVE_SSL
-		LDFLAGS += $(shell pkg-config --libs openssl) -framework CoreServices
+		SSL_LIBS := $(shell pkg-config --libs openssl)
+		LDFLAGS += $(SSL_LIBS) -framework CoreServices
 endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
@@ -123,7 +131,7 @@ html:
 # MinGW cross-compilation (Windows) — uses -static, no libcurl on Windows
 ifneq (,$(findstring mingw32,$(CC)))
 static: $(OBJS)
-	$(CC) -static $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 \
+	$(CC) -static $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) \
 		-lm -lpthread -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
 else ifeq ($(OS),Linux)
 CURL_STATIC_LIBS := $(shell curl-config --static-libs 2>/dev/null || echo '-lcurl')
@@ -136,10 +144,10 @@ CURL_BFLAGS := -Wl,-Bstatic -Wl,-Bdynamic
 # have stable sonames and stay dynamic.
 CURL_DEPS := $(filter-out -lcurl -llber -lldap $(CURL_BFLAGS),$(CURL_STATIC_LIBS))
 static: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) -std=c17 \
+	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) \
 		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS) \
 		-Wl,-Bstatic -llber -lldap -llber -Wl,-Bdynamic -lgnutls -lsasl2 \
-		-lm -lpthread -ldl
+		$(SSL_LIBS) -lm -lpthread -ldl
 else
 static:
 	@echo "Static build is not supported on $(OS). Use 'make' instead."
