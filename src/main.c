@@ -40,9 +40,6 @@
 #define WIDTH 7
 #define BUF_LEN 1024
 #define FTW_F 1
-// Bialet logo is a bycicle however there is no emoji support on Windows terminal.
-// We will use a dash instead, empty logo looks bad as well.
-#define BIALET_LOGO "-"
 
 #else
 
@@ -71,10 +68,6 @@
 #define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
-
-#ifndef BIALET_LOGO
-#define BIALET_LOGO "🚲"
-#endif
 
 struct BialetConfig bialet_config;
 /* Written only by trigger_reload_files: once from main() before any thread

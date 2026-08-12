@@ -20,7 +20,11 @@
 #ifdef _WIN32
 #define IS_MAC 0
 #define IS_LINUX 0
+// Bialet logo is a bycicle however there is no emoji support on Windows terminal.
+// We will use a dash instead, empty logo looks bad as well.
+#define BIALET_LOGO "-"
 #else
+#define BIALET_LOGO "🚲"
 #if __APPLE__
 #define IS_MAC 1
 #define IS_LINUX 0

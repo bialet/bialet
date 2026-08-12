@@ -42,7 +42,8 @@ void cli_print_help(const char* prog, FILE* out);
 void cli_print_version(void);
 
 #define BIALET_USAGE                                                                \
-  "🚲 bialet\n\n"                                                                 \
+  BIALET_LOGO                                                                       \
+  " bialet\n\n"                                                                     \
   "Usage: %s [options] [dev] [root_dir]\n\n"                                        \
   "Starts a server serving the given root_dir (default: the current "               \
   "directory). Add `dev` to enable live reload, in-browser error display, "         \
@@ -72,11 +73,16 @@ void cli_print_version(void);
   "expressions\n"                                                                   \
   "                        (default: README*,AGENTS*,LICENSE*,*.json,*.yml,"        \
   "*.yaml,*.exe)\n"                                                                 \
-  "  -m, --mem-soft MB     Memory soft limit                      (default: 50)\n"  \
-  "  -M, --mem-hard MB     Memory hard limit                      (default: 100)\n" \
-  "  -c, --cpu-soft PERC   CPU soft limit                         (default: 15)\n"  \
-  "  -C, --cpu-hard PERC   CPU hard limit                         (default: 30)\n"  \
-  "  -b, --max-post KB     Max request body                       (default: 128)\n" \
+  "  -m, --mem-soft MB     Memory soft limit                      (default: "       \
+  "50)\n"                                                                           \
+  "  -M, --mem-hard MB     Memory hard limit                      (default: "       \
+  "100)\n"                                                                          \
+  "  -c, --cpu-soft PERC   CPU soft limit                         (default: "       \
+  "15)\n"                                                                           \
+  "  -C, --cpu-hard PERC   CPU hard limit                         (default: "       \
+  "30)\n"                                                                           \
+  "  -b, --max-post KB     Max request body                       (default: "       \
+  "128)\n"                                                                          \
   "  -q, --quiet           Quiet: suppress the browser auto-open and colored "      \
   "output\n\n"                                                                      \
   "Long options take a value as `--port 8080` or `--port=8080`.\n\n"                \
