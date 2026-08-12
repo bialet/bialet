@@ -25,6 +25,10 @@ are stored in the database and persist across restarts, so you only need to
 run `dev` once. Plain `bialet` starts the server without touching those flags
 or opening the browser.
 
+> On Windows, double-clicking `bialet.exe` in File Explorer counts as a dev
+> launch: the server starts in dev mode with the browser opening automatically.
+> Run it from a terminal to start without dev mode.
+
 See [Live Reload](live-reload.md) and [Error Pages](errors.md) for what dev
 mode turns on.
 

@@ -90,6 +90,10 @@ bialet dev
 
 Copy the `bialet.exe` file on your project folder and double click it.
 
+Double-clicking `bialet.exe` in File Explorer starts it in dev mode: live
+reload, in-browser error display, and the browser opens automatically. Run it
+from a terminal to start without dev mode.
+
 ## The Bialet Manifesto — Ride Light 🚲
 
 1. **Simplicity is a superpower.** Every line of tooling you don't write is a

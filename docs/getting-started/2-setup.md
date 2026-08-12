@@ -36,6 +36,9 @@ run once — the flags are stored in the database and persist across restarts.
 If you don't need those development conveniences, plain `bialet` starts the
 server the same way without touching the flags or opening the browser.
 
+On Windows, double-clicking `bialet.exe` in the project folder starts it in dev
+mode, just like `bialet dev`.
+
 For now you'll see a directory listing — we haven't created any `.wren` files
 yet.
 

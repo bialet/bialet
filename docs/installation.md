@@ -24,6 +24,10 @@ Extract and run — no installation required:
 bialet.exe
 ```
 
+Double-clicking `bialet.exe` in File Explorer starts it in dev mode (live
+reload, in-browser error display, and the browser opens automatically). Run it
+from a terminal to start without dev mode.
+
 ## Releases
 
 Pre-built binaries for all supported platforms are available on the [releases

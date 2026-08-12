@@ -1,6 +1,9 @@
 # Build generated files
 build/
 
+# Windows binaries
+*.exe
+
 # Bialet generated files
 **/_db.sqlite3*
 

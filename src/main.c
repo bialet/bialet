@@ -34,6 +34,7 @@
 #include <signal.h>
 #include <tchar.h>
 #include <time.h>
+#include <tlhelp32.h>
 
 #define DIV 1048576
 #define WIDTH 7
@@ -67,7 +68,7 @@
 #define CRON_FILE_ALT "/_app/cron" BIALET_EXTENSION
 #define DB_FILE "_db.sqlite3"
 #define ROUTE_FILE "_route" BIALET_EXTENSION
-#define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml"
+#define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200
 
@@ -299,6 +300,42 @@ void sigint_handler(int signum) {
 #endif
 }
 
+#ifdef _WIN32
+/* A double-click on the exe in Explorer spawns it with explorer.exe as the
+ * parent; a terminal launch is parented by the console host (cmd.exe,
+ * powershell.exe, Windows Terminal, ...). Compare the parent process name to
+ * distinguish a GUI launch. */
+static int launched_from_gui(void) {
+  HANDLE         snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  PROCESSENTRY32 entry;
+  DWORD          pid = GetCurrentProcessId();
+  DWORD          parent = 0;
+  int            is_gui = 0;
+  if(snapshot == INVALID_HANDLE_VALUE)
+    return 0;
+  entry.dwSize = sizeof(entry);
+  if(Process32First(snapshot, &entry)) {
+    do {
+      if(entry.th32ProcessID == pid) {
+        parent = entry.th32ParentProcessID;
+        break;
+      }
+    } while(Process32Next(snapshot, &entry));
+  }
+  if(parent != 0 && Process32First(snapshot, &entry)) {
+    do {
+      if(entry.th32ProcessID == parent) {
+        if(_stricmp(entry.szExeFile, "explorer.exe") == 0)
+          is_gui = 1;
+        break;
+      }
+    } while(Process32Next(snapshot, &entry));
+  }
+  CloseHandle(snapshot);
+  return is_gui;
+}
+#endif
+
 int main(int argc, char* argv[]) {
   char*            code = NULL;
   const char*      validate_file = NULL;
@@ -380,6 +417,11 @@ int main(int argc, char* argv[]) {
   test_dir = cli_opts.test_dir;
   run_tests = cli_opts.run_tests;
   dev_mode = cli_opts.dev_mode;
+#ifdef _WIN32
+  /* Double-clicking the exe in Explorer is treated as a dev launch. */
+  if(!dev_mode && launched_from_gui())
+    dev_mode = 1;
+#endif
 
   // Set up temporary database for tests
   char temp_db_path[PATH_MAX];
