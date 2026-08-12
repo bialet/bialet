@@ -1220,13 +1220,25 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
 }
 static char resolved_db_path[PATH_MAX];
 
+// Runs a statement and reports failure. Every sqlite3_exec below previously
+// discarded its return code, so a pragma that did not apply -- WAL mode on a
+// filesystem that cannot support it, for instance -- left the database running
+// with different durability than configured, silently.
+static void sqlite_exec_checked(const char* sql) {
+  char* errmsg = NULL;
+  if(sqlite3_exec(db, sql, NULL, NULL, &errmsg) != SQLITE_OK) {
+    message(red("SQL Error"), sql, errmsg ? errmsg : sqlite3_errmsg(db));
+  }
+  sqlite3_free(errmsg);
+}
+
 static void apply_sqlite_pragmas() {
   char pragma_cmd[256];
 
   // Foreign keys (configurable: 0=OFF, 1=ON)
   snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA foreign_keys = %s;",
            bialet_config.sqlite_foreign_keys ? "ON" : "OFF");
-  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+  sqlite_exec_checked(pragma_cmd);
 
   // Synchronous mode (configurable: 0=OFF, 1=NORMAL, 2=FULL, 3=EXTRA)
   const char* sync_modes[] = {"OFF", "NORMAL", "FULL", "EXTRA"};
@@ -1235,19 +1247,18 @@ static void apply_sqlite_pragmas() {
     sync_mode = 1; // Default to NORMAL
   snprintf(pragma_cmd, sizeof(pragma_cmd), "PRAGMA synchronous = %s;",
            sync_modes[sync_mode]);
-  sqlite3_exec(db, pragma_cmd, NULL, NULL, NULL);
+  sqlite_exec_checked(pragma_cmd);
 
   // WAL mode (configurable via wal_mode flag)
   if(bialet_config.wal_mode) {
-    sqlite3_exec(db, "PRAGMA journal_mode = WAL;", NULL, NULL, NULL);
+    sqlite_exec_checked("PRAGMA journal_mode = WAL;");
   }
-  sqlite3_exec(db, "PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";",
-               NULL, NULL, NULL);
-  sqlite3_exec(db, "PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";", NULL, NULL,
-               NULL);
-  sqlite3_exec(db, "PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";", NULL, NULL,
-               NULL);
-  sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT);
+  sqlite_exec_checked("PRAGMA journal_size_limit = " BIALET_SQLITE_JOURNAL_SIZE ";");
+  sqlite_exec_checked("PRAGMA mmap_size = " BIALET_SQLITE_MMAP_SIZE ";");
+  sqlite_exec_checked("PRAGMA cache_size = " BIALET_SQLITE_CACHE_SIZE ";");
+  if(sqlite3_busy_timeout(db, BIALET_SQLITE_BUSY_TIMEOUT) != SQLITE_OK) {
+    message(red("SQL Error"), "Could not set busy timeout");
+  }
 }
 
 // Enables the development flags (live reload + showing errors in the browser)
@@ -1258,10 +1269,8 @@ void bialet_enable_dev_flags() {
   if(db == NULL)
     return;
 
-  sqlite3_exec(db,
-               "CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY "
-               "KEY, val TEXT)",
-               NULL, NULL, NULL);
+  sqlite_exec_checked("CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY "
+                      "KEY, val TEXT)");
 
   const char* sql =
       "INSERT OR REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, '1')";
@@ -1343,7 +1352,14 @@ void bialet_init(struct BialetConfig* config) {
 
 void bialet_cleanup() {
   if(db) {
-    sqlite3_close(db);
+    // sqlite3_close() fails with SQLITE_BUSY when any statement is still
+    // unfinalized and then leaves the handle open; its return was discarded, so
+    // the connection just leaked. sqlite3_close_v2() marks the handle as a
+    // zombie and releases it once the last statement goes away.
+    int rc = sqlite3_close_v2(db);
+    if(rc != SQLITE_OK) {
+      message(red("SQL Error"), "Error closing database", sqlite3_errstr(rc));
+    }
     db = NULL;
   }
 }

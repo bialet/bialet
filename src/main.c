@@ -11,6 +11,7 @@
 #include "bialet.h"
 #include "bialet_wren.h"
 #include "cli.h"
+#include "http_call.h"
 #include "livereload.h"
 #include "messages.h"
 #include "server.h"
@@ -452,6 +453,11 @@ int main(int argc, char* argv[]) {
 
   message_init(&bialet_config);
   bialet_init(&bialet_config);
+  // Registered rather than called at each exit point: main() leaves through a
+  // dozen exit() calls plus the forked child's exit(0), and neither the SQLite
+  // handle nor curl's global state was ever released on any of them.
+  atexit(bialet_cleanup);
+  atexit(http_call_cleanup);
   if(code != NULL) {
     exit(bialet_run_cli(code));
   }
