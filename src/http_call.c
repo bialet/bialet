@@ -312,9 +312,11 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   long               http_code = 0;
 
   const char* url = request->url;
-  const char* method = request->method;
-  const char* raw_headers = request->raw_headers;
-  const char* postData = request->postData;
+  const char* method = request->method ? request->method : "GET";
+  /* NULL-safe: strdup(NULL) and strlen(NULL) are both undefined behavior, and
+   * these fields come straight from Wren, where a caller can leave them unset. */
+  const char* raw_headers = request->raw_headers ? request->raw_headers : "";
+  const char* postData = request->postData ? request->postData : "";
   const char* basicAuth = request->basicAuth;
   long        timeout = request->timeout > 0 ? request->timeout : 20000L;
   long        connectTimeout =
@@ -329,8 +331,31 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   curl_easy_setopt(handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
   curl_easy_setopt(handle, CURLOPT_URL, url);
   curl_easy_setopt(handle, CURLOPT_CUSTOMREQUEST, method);
+  /* Restrict both the request and any redirect to http/https. Without this a
+   * Wren app could read local files through file://, and curl's redirect
+   * defaults also permit ftp/ftps -- so a redirect could move a request onto a
+   * scheme the app never asked for. Certificate and hostname verification are
+   * stated explicitly rather than relied on as library defaults. */
+  /* The *_STR forms arrived in libcurl 7.85; Ubuntu 22.04 still ships 7.81, so
+   * fall back to the deprecated bitmask options there. */
+#if LIBCURL_VERSION_NUM >= 0x075500
+  curl_easy_setopt(handle, CURLOPT_PROTOCOLS_STR, "http,https");
+  curl_easy_setopt(handle, CURLOPT_REDIR_PROTOCOLS_STR, "http,https");
+#else
+  curl_easy_setopt(handle, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
+  curl_easy_setopt(handle, CURLOPT_REDIR_PROTOCOLS,
+                   CURLPROTO_HTTP | CURLPROTO_HTTPS);
+#endif
+  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 2L);
   /* Headers */
   char* header_string = strdup(raw_headers);
+  if(header_string == NULL) {
+    response->error = 1;
+    response->error_message = string_safe_copy("Out of memory building headers");
+    curl_easy_cleanup(handle);
+    return;
+  }
   char* saveptr = NULL;
   char* header_line = strtok_r(header_string, "\n", &saveptr);
   while(header_line != NULL) {
@@ -352,7 +377,7 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   /* For completeness */
   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
   curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
-  /* only allow redirects to HTTP and HTTPS URLs */
+  /* Redirects are restricted to http/https above, not here. */
   curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
   curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
   /* each transfer needs to be done within this many milliseconds */
