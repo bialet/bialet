@@ -601,44 +601,6 @@ static void free_response_owned(struct BialetResponse* response) {
   }
 }
 
-// Opens an absolute, root-contained path with O_NOFOLLOW applied to every
-// component. A single O_NOFOLLOW on the final component (as open() alone
-// provides) leaves a TOCTOU window: a directory component swapped for a
-// symlink between the realpath() containment check and this open would escape
-// the root. Walking the path component-by-component with openat(2) closes that
-// window -- any symlink swap now fails with ELOOP instead of being followed.
-// Returns an open file descriptor or -1.
-#ifndef _WIN32
-static int open_fd_without_follow(const char* path) {
-  if(path == NULL || path[0] != '/')
-    return -1;
-  int dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-  if(dirfd < 0)
-    return -1;
-  const char* p = path + 1;
-  while(*p) {
-    while(*p == '/')
-      p++;
-    if(*p == '\0')
-      break;
-    const char* next = strchr(p, '/');
-    size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
-    char        comp[NAME_MAX + 1];
-    if(comp_len >= sizeof(comp))
-      comp_len = sizeof(comp) - 1;
-    memcpy(comp, p, comp_len);
-    comp[comp_len] = '\0';
-    int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
-    close(dirfd);
-    if(next_fd < 0)
-      return -1;
-    dirfd = next_fd;
-    p += comp_len;
-  }
-  return dirfd;
-}
-#endif
-
 // Opens [path] without following a symlink as any component. On POSIX the
 // caller is expected to have already validated [path] with realpath() for root
 // containment; O_NOFOLLOW per component closes the TOCTOU window where the
@@ -647,17 +609,7 @@ static int open_fd_without_follow(const char* path) {
 // FILE_FLAG_OPEN_REPARSE_POINT and rejects reparse points (junctions/symlinks)
 // instead of following them.
 static FILE* open_file_within_root(const char* path) {
-#ifdef _WIN32
   return open_file_no_follow(path);
-#else
-  int fd = open_fd_without_follow(path);
-  if(fd < 0)
-    return NULL;
-  FILE* f = fdopen(fd, "rb");
-  if(f == NULL)
-    close(fd);
-  return f;
-#endif
 }
 
 // Resolves [path] to an absolute path inside the application root, writing the

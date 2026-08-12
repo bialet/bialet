@@ -88,7 +88,10 @@ void trim(char* str) {
 // Walks [path] component by component with openat(O_NOFOLLOW) so a symlink
 // swap on any component between a realpath() containment check and this open
 // fails with ELOOP instead of being followed out of the root.
-static int open_fd_no_follow(const char* path) {
+//
+// This used to be copy-pasted in three places (here, server.c and
+// bialet_wren.c); it lives here now and the others call it.
+int open_fd_no_follow(const char* path) {
   if(path == NULL || path[0] != '/')
     return -1;
   int dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -103,8 +106,13 @@ static int open_fd_no_follow(const char* path) {
     const char* next = strchr(p, '/');
     size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
     char        comp[NAME_MAX + 1];
-    if(comp_len >= sizeof(comp))
-      comp_len = sizeof(comp) - 1;
+    // Fail rather than truncate. Silently shortening an over-long component
+    // would open a *different* entry than the caller asked for -- a name that
+    // the containment check above never validated.
+    if(comp_len >= sizeof(comp)) {
+      close(dirfd);
+      return -1;
+    }
     memcpy(comp, p, comp_len);
     comp[comp_len] = '\0';
     int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
@@ -115,6 +123,35 @@ static int open_fd_no_follow(const char* path) {
     p += comp_len;
   }
   return dirfd;
+}
+
+// Reads the whole file behind [fd] into a NUL-terminated heap buffer, closing
+// [fd] either way. Accepts fd < 0 so callers can chain it onto
+// open_fd_no_follow() directly.
+char* read_file_fd(int fd) {
+  if(fd < 0)
+    return NULL;
+  struct stat st;
+  if(fstat(fd, &st) != 0 || st.st_size < 0) {
+    close(fd);
+    return NULL;
+  }
+  size_t len = (size_t)st.st_size;
+  char*  buffer = (char*)malloc(len + 1);
+  if(buffer == NULL) {
+    close(fd);
+    return NULL;
+  }
+  size_t got = 0;
+  while(got < len) {
+    ssize_t n = read(fd, buffer + got, len - got);
+    if(n <= 0)
+      break;
+    got += (size_t)n;
+  }
+  close(fd);
+  buffer[got] = '\0';
+  return buffer;
 }
 #endif
 

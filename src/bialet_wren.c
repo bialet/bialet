@@ -80,13 +80,6 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
   }
 }
 
-#ifndef _WIN32
-// Defined below; forward-declared so bialet_read_file can reuse the no-follow
-// open path used by the module loader.
-static int   open_no_follow(const char* path);
-static char* read_file_fd(int fd);
-#endif
-
 char* bialet_read_file(const char* path) {
   char fullPath[MAX_URL_LEN];
   int  ret = snprintf(fullPath, sizeof(fullPath), "%s/%s",
@@ -114,7 +107,7 @@ char* bialet_read_file(const char* path) {
   // to Markdown.file. On POSIX this mirrors the module loader's no-follow open;
   // on Windows read_file() itself opens without following junctions.
 #ifndef _WIN32
-  return read_file_fd(open_no_follow(resolved));
+  return read_file_fd(open_fd_no_follow(resolved));
 #else
   return read_file(resolved);
 #endif
@@ -155,67 +148,6 @@ char* read_file(const char* path) {
   }
   return buffer;
 }
-
-#ifndef _WIN32
-// Opens an absolute path with O_NOFOLLOW applied to every component, so a
-// symlink swap between a realpath() containment check and this open cannot
-// pull out-of-root bytes into the module loader. Returns an fd or -1.
-static int open_no_follow(const char* path) {
-  if(path == NULL || path[0] != '/')
-    return -1;
-  int dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-  if(dirfd < 0)
-    return -1;
-  const char* p = path + 1;
-  while(*p) {
-    while(*p == '/')
-      p++;
-    if(*p == '\0')
-      break;
-    const char* next = strchr(p, '/');
-    size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
-    char        comp[NAME_MAX + 1];
-    if(comp_len >= sizeof(comp))
-      comp_len = sizeof(comp) - 1;
-    memcpy(comp, p, comp_len);
-    comp[comp_len] = '\0';
-    int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
-    close(dirfd);
-    if(next_fd < 0)
-      return -1;
-    dirfd = next_fd;
-    p += comp_len;
-  }
-  return dirfd;
-}
-
-// Reads the whole file behind [fd] into a NUL-terminated heap buffer.
-static char* read_file_fd(int fd) {
-  if(fd < 0)
-    return NULL;
-  struct stat st;
-  if(fstat(fd, &st) != 0 || st.st_size < 0) {
-    close(fd);
-    return NULL;
-  }
-  size_t len = (size_t)st.st_size;
-  char*  buffer = (char*)malloc(len + 1);
-  if(buffer == NULL) {
-    close(fd);
-    return NULL;
-  }
-  size_t got = 0;
-  while(got < len) {
-    ssize_t n = read(fd, buffer + got, len - got);
-    if(n <= 0)
-      break;
-    got += (size_t)n;
-  }
-  close(fd);
-  buffer[got] = '\0';
-  return buffer;
-}
-#endif
 
 // Wren calls this once it is done compiling a module, so the heap buffer we
 // handed over via result.source can be released (the VM does not own it).
@@ -398,7 +330,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
   // component, so a symlink swap in the check-to-open window cannot feed
   // out-of-root bytes into the interpreter.
 #ifndef _WIN32
-  char* buffer = read_file_fd(open_no_follow(resolved));
+  char* buffer = read_file_fd(open_fd_no_follow(resolved));
 #else
   char* buffer = read_file(resolved);
 #endif

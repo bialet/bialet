@@ -15,4 +15,11 @@ void  trim(char* str);
 // rejected outright. Returns NULL on failure or when the target is a link.
 FILE* open_file_no_follow(const char* path);
 
+#ifndef _WIN32
+// POSIX building blocks behind open_file_no_follow, shared with the module
+// loader and the static-file path. [path] must be absolute.
+int   open_fd_no_follow(const char* path);
+char* read_file_fd(int fd);
+#endif
+
 #endif
