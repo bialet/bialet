@@ -76,7 +76,10 @@
 #endif
 
 struct BialetConfig bialet_config;
-time_t              last_reload = 0;
+/* Written only by trigger_reload_files: once from main() before any thread
+ * exists, then from the dmon watch thread. Static because nothing outside this
+ * file uses it. */
+static time_t last_reload = 0;
 // sig_atomic_t is the only integer type the standard guarantees can be written
 // by a signal handler and read by the main flow without tearing.
 static volatile sig_atomic_t keep_running = 1;

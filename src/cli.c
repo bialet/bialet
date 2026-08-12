@@ -56,6 +56,11 @@ static const CliOptSpec cli_opts[] = {
     {"max-post", 'b', 1}, {"quiet", 'q', 0},
 };
 
+/* cli_opts[] is indexed by CliOptId, so the two must stay the same length and
+ * in the same order. Nothing enforced that before. */
+_Static_assert(sizeof(cli_opts) / sizeof(cli_opts[0]) == CLI_OPT_COUNT,
+               "cli_opts[] must have exactly one entry per CliOptId");
+
 static CliOptId short_to_id(char c) {
   for(int i = 0; i < CLI_OPT_COUNT; i++) {
     if(cli_opts[i].short_name == c)

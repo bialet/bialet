@@ -189,7 +189,9 @@ static Value parse_string(WrenVM* vm, const char** p) {
   return result;
 }
 
-static Value parse_number(__attribute__((unused)) WrenVM* vm, const char** p) {
+static Value parse_number(WrenVM* vm, const char** p) {
+  /* (void) rather than __attribute__((unused)), which is a GNU extension. */
+  (void)vm;
   const char* s = *p;
   errno = 0;
   char*  end;

@@ -757,7 +757,7 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   {
-    struct BialetResponse lr_response = {0, "", "", 0, 0, 0};
+    struct BialetResponse lr_response = {0};
     if(livereload_try_handle(hm->uri.str, &lr_response)) {
       write_response(client_socket, &lr_response);
       clean_http_message(hm);
@@ -767,7 +767,7 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  struct BialetResponse response = {0, "", "", 0, 0, 0};
+  struct BialetResponse response = {0};
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
@@ -825,7 +825,7 @@ void handle_client(bialet_socket_t client_socket) {
     // Serve index.html or index.wren
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
     if(stat(path, &file_stat) != 0) {
-      // Reemplazar sufijo ".wren" por ".html"
+      // Replace the ".wren" suffix with ".html"
       size_t L = strlen(path);
       if(L >= 5) {
         strncpy(path + L - 5, ".html", 6);
