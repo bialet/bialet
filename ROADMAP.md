@@ -52,7 +52,7 @@ improvements.
       `Response.redirect`, correct the session table name in `database.md`
       (`BIALET_SESSIONS` → `BIALET_SESSION`), qualify `wren.md`'s "null is
       safe", and fix the `security.md` intro that contradicts auto-escaping.
-- [ ] **Compiler: friendlier invalid-tag-name errors** — `<MyElement>` gives
+- [x] **Compiler: friendlier invalid-tag-name errors** — `<MyElement>` gives
       `Error at '<': Expected expression.` and `<my_component>` gives
       `Unterminated HTML string.`; emit
       `Invalid tag name: must be lowercase     alphanumeric + hyphens` instead.
