@@ -369,13 +369,12 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   if(iResult == SOCKET_ERROR) {
     // Connection still in progress: wait until writable or the connect
     // timeout elapses. select() flags failures through exceptfds/SO_ERROR.
-    fd_set      writefds, exceptfds;
+    fd_set writefds, exceptfds;
     FD_ZERO(&writefds);
     FD_ZERO(&exceptfds);
     FD_SET(sockfd, &writefds);
     FD_SET(sockfd, &exceptfds);
-    long   connect_ms =
-        request->connectTimeout > 0 ? request->connectTimeout : 2000L;
+    long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
     struct timeval tv;
     tv.tv_sec = connect_ms / 1000;
     tv.tv_usec = (connect_ms % 1000) * 1000;

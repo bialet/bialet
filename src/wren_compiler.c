@@ -2971,18 +2971,12 @@ void constructorSignature(Compiler* compiler, Signature* signature) {
 //
 // See:
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
-#define UNUSED                                                                      \
-  { NULL, NULL, NULL, PREC_NONE, NULL }
-#define PREFIX(fn)                                                                  \
-  { fn, NULL, NULL, PREC_NONE, NULL }
-#define INFIX(prec, fn)                                                             \
-  { NULL, fn, NULL, prec, NULL }
-#define INFIX_OPERATOR(prec, name)                                                  \
-  { NULL, infixOp, infixSignature, prec, name }
-#define PREFIX_OPERATOR(name)                                                       \
-  { unaryOp, NULL, unarySignature, PREC_NONE, name }
-#define OPERATOR(name)                                                              \
-  { unaryOp, infixOp, mixedSignature, PREC_TERM, name }
+#define UNUSED {NULL, NULL, NULL, PREC_NONE, NULL}
+#define PREFIX(fn) {fn, NULL, NULL, PREC_NONE, NULL}
+#define INFIX(prec, fn) {NULL, fn, NULL, prec, NULL}
+#define INFIX_OPERATOR(prec, name) {NULL, infixOp, infixSignature, prec, name}
+#define PREFIX_OPERATOR(name) {unaryOp, NULL, unarySignature, PREC_NONE, name}
+#define OPERATOR(name) {unaryOp, infixOp, mixedSignature, PREC_TERM, name}
 
 GrammarRule rules[] = {
     /* TOKEN_LEFT_PAREN    */ PREFIX(grouping),
