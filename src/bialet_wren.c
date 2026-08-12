@@ -1172,7 +1172,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   printf("\n%d passed, %d failed\n", passed, failed);
   return (failed > 0) ? 1 : 0;
 }
-static char resolved_db_path[MAX_MODULE_LEN];
+static char resolved_db_path[PATH_MAX];
 
 static void apply_sqlite_pragmas() {
   char pragma_cmd[256];
@@ -1233,26 +1233,44 @@ void bialet_enable_dev_flags() {
 
 void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
-  char db_path[MAX_MODULE_LEN];
-  int  lastChar = (int)strlen(config->db_path) - 1;
+  char db_path[PATH_MAX];
+
+  // strlen() - 1 was stored in an int and then indexed unconditionally, so an
+  // empty -d value gave config->db_path[-1] -- an out-of-bounds read *and*
+  // write, into argv memory.
+  size_t db_len = strlen(config->db_path);
+  if(db_len == 0) {
+    message(red("Error"), "Database path is empty");
+    exit(BIALET_SQLITE_ERROR);
+  }
+
   // A drive-qualified path (C:\...) is absolute on Windows; without this check
   // a temp DB returned by GetTempFileNameA would be joined onto root_dir.
   int is_abs = config->db_path[0] == '/';
 #ifdef _WIN32
-  if(!is_abs && config->db_path[0] != '\0' && config->db_path[1] == ':' &&
+  if(!is_abs && db_len >= 3 && config->db_path[1] == ':' &&
      (config->db_path[2] == '/' || config->db_path[2] == '\\')) {
     is_abs = 1;
   }
 #endif
   if(is_abs) {
-    strncpy(db_path, config->db_path, sizeof(db_path) - 1);
-    db_path[sizeof(db_path) - 1] = '\0';
-  } else {
-    if(config->db_path[lastChar] == '/') {
-      config->db_path[lastChar] = '\0';
+    if(db_len >= sizeof(db_path)) {
+      message(red("Error"), "Database path too long");
+      exit(BIALET_SQLITE_ERROR);
     }
-    int ret = snprintf(db_path, sizeof(db_path), "%s/%s", config->root_dir,
-                       config->db_path);
+    memcpy(db_path, config->db_path, db_len + 1);
+  } else {
+    // Trim trailing slashes on our copy instead of mutating the caller's
+    // argv-backed string in place.
+    while(db_len > 0 && config->db_path[db_len - 1] == '/') {
+      db_len--;
+    }
+    if(db_len == 0) {
+      message(red("Error"), "Database path is empty");
+      exit(BIALET_SQLITE_ERROR);
+    }
+    int ret = snprintf(db_path, sizeof(db_path), "%s/%.*s", config->root_dir,
+                       (int)db_len, config->db_path);
     if(ret < 0 || ret >= (int)sizeof(db_path)) {
       message(red("Error"), "Database path too long");
       exit(BIALET_SQLITE_ERROR);
