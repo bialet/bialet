@@ -130,6 +130,7 @@ static int ct_equal(const void* a, const void* b, size_t n) {
 #endif
 }
 
+#ifdef OPENSSL_OK
 static void hex_encode(const unsigned char* in, size_t in_len, char* out) {
   static const char digits[] = "0123456789abcdef";
   for(size_t i = 0; i < in_len; i++) {
@@ -154,6 +155,8 @@ static int hex_decode(const char* hex, unsigned char* out, size_t out_len) {
   }
   return 1;
 }
+#endif /* OPENSSL_OK: the hex helpers are only used by the PBKDF2 and legacy        \
+        * SHA-256 formats; the DJB2 fallback format stores its salt as ASCII. */
 
 #ifdef OPENSSL_OK
 // Current format. PBKDF2-HMAC-SHA256 with a per-password random salt.
