@@ -8,6 +8,16 @@
  *
  * For full license text, see LICENSE.md.
  */
+#ifdef _WIN32
+// Must precede *every* include: it is what makes rand_s visible, and mingw's
+// stdlib.h only declares rand_s if this is already defined when stdlib.h is
+// first pulled in. It used to sit further down, after hash.h had already
+// included stdlib.h indirectly (through the OpenSSL headers), so rand_s was
+// undeclared and the MinGW build failed with -Werror=implicit-function-
+// declaration.
+#define _CRT_RAND_S
+#endif
+
 #include "hash.h"
 
 #include <stdint.h>
@@ -18,7 +28,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #else
-#define _CRT_RAND_S // Must be defined before stdlib.h is first included.
 #include <windows.h>
 #endif
 
