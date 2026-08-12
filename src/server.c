@@ -716,7 +716,9 @@ void handle_client(bialet_socket_t client_socket) {
   // Content-Length is read from the header block only, anchored to a line
   // start (see find_header).
   if(hdr_len != 0) {
-    static const char kContentLength[] = "Content-Length:";
+    // The name is passed without its colon: find_header requires the colon to
+    // be the byte immediately after the name.
+    static const char kContentLength[] = "Content-Length";
     const char*       cl =
         find_header(buffer, hdr_len, kContentLength, sizeof(kContentLength) - 1);
     if(cl != NULL) {
