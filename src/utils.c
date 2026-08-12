@@ -20,12 +20,18 @@
 #include <io.h>
 #endif
 
+// Fail-fast allocation. Note this exits the process, so an allocation failure
+// while handling a request takes down the whole server rather than failing that
+// one request. On POSIX the supervisor forks a replacement; on Windows there is
+// none, so a transient OOM is an outage. Kept as-is because the handful of
+// callers cannot meaningfully recover mid-Wren-call, but at least say what
+// happened first: this used to exit(1) with no output at all, which is
+// indistinguishable from a crash.
 char* safe_malloc(size_t size) {
-  char* p;
-
-  p = (char*)malloc(size);
-  if(p == 0) {
-    exit(1);
+  char* p = (char*)malloc(size);
+  if(p == NULL) {
+    fprintf(stderr, "bialet: out of memory allocating %zu bytes\n", size);
+    exit(EXIT_FAILURE);
   }
   return p;
 }
