@@ -350,15 +350,64 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     return;
   }
 
-  // Connect to server.
+  // Connect to server, bounded by connectTimeout. A blocking connect() can
+  // hang the single request-handling thread against an unreachable remote, so
+  // drive the socket non-blocking and wait for completion with select().
+  {
+    u_long nonblocking = 1;
+    ioctlsocket(sockfd, FIONBIO, &nonblocking);
+  }
   iResult = connect(sockfd, ptr->ai_addr, (int)ptr->ai_addrlen);
-  if(iResult == SOCKET_ERROR) {
+  if(iResult == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK) {
     closesocket(sockfd);
     sockfd = INVALID_SOCKET;
     response->error = 4; // Connection failed
     freeaddrinfo(result);
     WSACleanup();
     return;
+  }
+  if(iResult == SOCKET_ERROR) {
+    // Connection still in progress: wait until writable or the connect
+    // timeout elapses. select() flags failures through exceptfds/SO_ERROR.
+    fd_set      writefds, exceptfds;
+    FD_ZERO(&writefds);
+    FD_ZERO(&exceptfds);
+    FD_SET(sockfd, &writefds);
+    FD_SET(sockfd, &exceptfds);
+    long   connect_ms =
+        request->connectTimeout > 0 ? request->connectTimeout : 2000L;
+    struct timeval tv;
+    tv.tv_sec = connect_ms / 1000;
+    tv.tv_usec = (connect_ms % 1000) * 1000;
+    int sel = select(0, NULL, &writefds, &exceptfds, &tv);
+    int so_error = 0;
+    int err_len = sizeof(so_error);
+    if(sel > 0)
+      getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char*)&so_error, &err_len);
+    else
+      so_error = -1; // select() timed out or errored
+    if(so_error != 0) {
+      closesocket(sockfd);
+      sockfd = INVALID_SOCKET;
+      response->error = 4; // Connection failed or timed out
+      freeaddrinfo(result);
+      WSACleanup();
+      return;
+    }
+  }
+  {
+    // Restore blocking I/O and bound send/recv by the overall timeout, the
+    // Windows equivalent of CURLOPT_TIMEOUT_MS on the POSIX path. These also
+    // keep SSL_connect()/SSL_read() from hanging on a stalled peer.
+    u_long nonblocking = 0;
+    ioctlsocket(sockfd, FIONBIO, &nonblocking);
+    long  timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
+    DWORD send_timeout = (DWORD)timeout_ms;
+    DWORD recv_timeout = (DWORD)timeout_ms;
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&send_timeout,
+               sizeof(send_timeout));
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&recv_timeout,
+               sizeof(recv_timeout));
   }
 
   freeaddrinfo(result);
@@ -423,33 +472,42 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     return;
   }
 
+  int write_ok = 0;
   if(use_ssl) {
-    if(SSL_write(ssl, req, strlen(req)) <= 0) {
+    if(SSL_write(ssl, req, (int)strlen(req)) <= 0) {
       ERR_print_errors_fp(stderr);
       response->error = 6; // SSL write failed
+    } else {
+      write_ok = 1;
     }
   } else {
     if(send(sockfd, req, (int)strlen(req), 0) == SOCKET_ERROR) {
       response->error = 7; // Send failed
+    } else {
+      write_ok = 1;
     }
   }
 
-  char res[4096 * 2];
-  int  bytes_received;
+  // A failed send()/SSL_write() left the connection broken; reading from it
+  // would only block or surface a meaningless error, so return instead.
+  if(write_ok) {
+    char res[4096 * 2];
+    int  bytes_received;
 
-  if(use_ssl) {
-    bytes_received = SSL_read(ssl, res, sizeof(res) - 1);
-  } else {
-    bytes_received = recv(sockfd, res, sizeof(res) - 1, 0);
-  }
+    if(use_ssl) {
+      bytes_received = SSL_read(ssl, res, sizeof(res) - 1);
+    } else {
+      bytes_received = recv(sockfd, res, sizeof(res) - 1, 0);
+    }
 
-  if(bytes_received < 0) {
-    perror("recv failed");
-    response->error = 8; // Receive failed
-  } else {
-    // Null-terminate the response
-    res[bytes_received] = '\0';
-    parse_http_response(response, res);
+    if(bytes_received < 0) {
+      perror("recv failed");
+      response->error = 8; // Receive failed
+    } else {
+      // Null-terminate the response
+      res[bytes_received] = '\0';
+      parse_http_response(response, res);
+    }
   }
 
   // Shutdown the connection since no more data will be sent
