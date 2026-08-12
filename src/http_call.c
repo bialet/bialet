@@ -13,6 +13,7 @@
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 #include <stdio.h>
 #include <ws2tcpip.h>
 
@@ -77,139 +78,227 @@ static size_t header_callback(char* buffer, size_t size, size_t nitems,
 
 #ifdef _WIN32
 
-void init_openssl() {
-  SSL_load_error_strings();
-  OpenSSL_add_ssl_algorithms();
-}
+/* Values reported through HttpResponse.error. The Wren side only tests
+ * error == 0, but distinct codes stay useful in logs. */
+#define HTTP_ERR_URL 1
+#define HTTP_ERR_RESOLVE 2
+#define HTTP_ERR_SOCKET 3
+#define HTTP_ERR_CONNECT 4
+#define HTTP_ERR_TLS 5
+#define HTTP_ERR_TLS_WRITE 6
+#define HTTP_ERR_SEND 7
+#define HTTP_ERR_RECV 8
+#define HTTP_ERR_REQUEST 9
 
-void cleanup_openssl() {
-  EVP_cleanup();
-}
+struct ParsedUrl {
+  char host[256];
+  char port[8];
+  char path[1024];
+  int  is_https;
+};
 
-SSL_CTX* create_context() {
-  const SSL_METHOD* method;
-  SSL_CTX*          ctx;
+/* Splits [url] into its parts without modifying it.
+ *
+ * Two bugs are fixed here. The old parse_url wrote NUL bytes into the caller's
+ * buffer to terminate the host and the path -- and the caller is wren_core.c
+ * passing AS_CSTRING(), i.e. the live bytes of an interned Wren string. And it
+ * reported TLS by comparing the port to "443", so "https://host:8443/" was
+ * sent as plaintext to a TLS listener, leaking any Authorization header or
+ * post body. The scheme now decides. */
+static int parse_url(const char* url, struct ParsedUrl* out) {
+  const char* p;
+  memset(out, 0, sizeof(*out));
 
-  method = TLS_client_method();
-
-  ctx = SSL_CTX_new(method);
-  if(!ctx) {
-    perror("Unable to create SSL context");
-    ERR_print_errors_fp(stderr);
-    exit(EXIT_FAILURE);
-  }
-
-  return ctx;
-}
-
-int parse_url(char* url, char** hostname, char** port, char** path) {
-  char* p;
-  *hostname = url;
-
-  // Check for https:// or http:// prefix
   if(strncmp(url, "https://", 8) == 0) {
-    *port = "443";
-    *hostname += 8;
+    out->is_https = 1;
+    snprintf(out->port, sizeof(out->port), "%s", "443");
+    p = url + 8;
   } else if(strncmp(url, "http://", 7) == 0) {
-    *port = "80";
-    *hostname += 7;
+    out->is_https = 0;
+    snprintf(out->port, sizeof(out->port), "%s", "80");
+    p = url + 7;
   } else {
-    return -1; // Unsupported protocol
+    return -1; /* only http/https, matching the libcurl allowlist */
   }
 
-  p = strchr(*hostname, '/');
-  if(p) {
-    *p = '\0'; // Null-terminate hostname and set path
-    *path = p + 1;
-  } else {
-    *path = "";
+  const char* slash = strchr(p, '/');
+  const char* colon = strchr(p, ':');
+  const char* host_end = slash;
+  if(colon != NULL && (slash == NULL || colon < slash)) {
+    host_end = colon;
+    size_t plen = slash ? (size_t)(slash - colon - 1) : strlen(colon + 1);
+    if(plen == 0 || plen >= sizeof(out->port))
+      return -1;
+    memcpy(out->port, colon + 1, plen);
+    out->port[plen] = '\0';
   }
+  size_t hlen = host_end ? (size_t)(host_end - p) : strlen(p);
+  if(hlen == 0 || hlen >= sizeof(out->host))
+    return -1;
+  memcpy(out->host, p, hlen);
+  out->host[hlen] = '\0';
 
-  // Check for port in hostname
-  p = strchr(*hostname, ':');
-  if(p) {
-    *p = '\0'; // Null-terminate hostname
-    *port = p + 1;
-  }
-
+  int written = snprintf(out->path, sizeof(out->path), "%s", slash ? slash : "/");
+  if(written < 0 || written >= (int)sizeof(out->path))
+    return -1;
   return 0;
 }
 
-void parse_http_response(struct HttpResponse* res, char* fullResponse) {
-  char*  line;
-  char*  saveptr = NULL;
-  int    isBody = 0;
-  size_t headers_size = 1;
-  size_t body_size = 1;
-  char*  headers = calloc(1, 1); // Allocate a single byte for null termination
-  char*  body = calloc(1, 1);    // Allocate a single byte for null termination
+/* OpenSSL >= 1.1 initializes itself on first use, so SSL_load_error_strings()
+ * and OpenSSL_add_ssl_algorithms() are no-ops and EVP_cleanup() is a deprecated
+ * *process-wide* teardown. Calling that once per HTTP request tore down global
+ * library state underneath any other user of OpenSSL in the process. Nothing is
+ * initialized or cleaned up per request now.
+ *
+ * Verification is configured on the CTX here, i.e. BEFORE SSL_new(): an SSL
+ * object snapshots the CTX verify mode at creation time, so the old code --
+ * which called SSL_CTX_set_verify() and SSL_CTX_set_default_verify_paths()
+ * *after* SSL_new() -- verified nothing at all. Every Windows HTTPS call,
+ * including the remote-module loader that then executes what it downloads, was
+ * trivially MITM-able. */
+static SSL_CTX* create_context(void) {
+  SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
+  if(!ctx) {
+    ERR_print_errors_fp(stderr);
+    return NULL; /* was exit(EXIT_FAILURE) from inside a request */
+  }
+  SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+  if(!SSL_CTX_set_default_verify_paths(ctx)) {
+    ERR_print_errors_fp(stderr);
+    SSL_CTX_free(ctx);
+    return NULL;
+  }
+  SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
+  return ctx;
+}
 
-  // Initialize the status code so a failed/malformed status line cannot leave
-  // it uninitialized for the caller (e.g. the remote-module loader).
+/* 1 when [host] is a bare IPv4/IPv6 literal, which must not be sent as SNI. */
+static int host_is_ip_literal(const char* host) {
+  for(const char* c = host; *c; c++) {
+    if(!((*c >= '0' && *c <= '9') || *c == '.' || *c == ':'))
+      return 0;
+  }
+  return 1;
+}
+
+/* Splits the raw response at the CRLFCRLF header terminator and copies each
+ * half verbatim.
+ *
+ * The old version ran strtok_r(fullResponse, "\n") over the whole buffer, which
+ * collapsed consecutive newlines (so blank lines inside a body disappeared),
+ * stopped at the first NUL, re-joined every line with a bare \n, and only
+ * recognised a literal "HTTP/1.1 " status line. */
+static void parse_http_response(struct HttpResponse* res, const char* raw,
+                                size_t len) {
+  /* Initialized so a malformed status line cannot leave it stale for the
+   * caller (e.g. the remote-module loader, which gates on 2xx). */
   res->status = 0;
 
-  if(!headers || !body) {
+  /* Status line: accept any HTTP version, then the first 3-digit code. */
+  if(len >= 12 && memcmp(raw, "HTTP/", 5) == 0) {
+    const char* sp = memchr(raw, ' ', len);
+    if(sp != NULL && (size_t)(sp - raw) + 4 <= len) {
+      int code = 0;
+      int digits = 0;
+      for(const char* d = sp + 1; d < raw + len && *d >= '0' && *d <= '9'; d++) {
+        code = code * 10 + (*d - '0');
+        if(++digits == 3)
+          break;
+      }
+      if(digits == 3)
+        res->status = code;
+    }
+  }
+
+  size_t hdr_len = len;
+  size_t body_off = len;
+  for(size_t i = 0; i + 4 <= len; i++) {
+    if(memcmp(raw + i, "\r\n\r\n", 4) == 0) {
+      hdr_len = i + 2; /* keep the CRLF that ends the last header line */
+      body_off = i + 4;
+      break;
+    }
+  }
+
+  char*  headers = (char*)malloc(hdr_len + 1);
+  size_t body_len = len - body_off;
+  char*  body = (char*)malloc(body_len + 1);
+  if(headers == NULL || body == NULL) {
     free(headers);
     free(body);
     return;
   }
+  memcpy(headers, raw, hdr_len);
+  headers[hdr_len] = '\0';
+  memcpy(body, raw + body_off, body_len);
+  body[body_len] = '\0';
 
-  // Use strtok_r to split the response by newlines
-  line = strtok_r(fullResponse, "\n", &saveptr);
-  while(line != NULL) {
-    if(!isBody) {
-      // Parse status line
-      if(strstr(line, "HTTP") == line) { // This is the status line
-        int parsed = sscanf(line, "HTTP/1.1 %d", &res->status);
-        if(parsed != 1)
-          res->status = 0;
-      } else if(strlen(line) <= 1) { // Empty line: headers end, body begins
-        isBody = 1;
-      } else { // Header line
-        trim(line);
-        size_t line_len = strlen(line);
-        size_t new_size = headers_size + line_len + 1; // +1 for newline
-        char*  new_headers = realloc(headers, new_size);
-        if(!new_headers) {
-          free(headers);
-          free(body);
-          return;
-        }
-        headers = new_headers;
-        strncat(headers, line, line_len);
-        size_t headers_len = strlen(headers);
-        headers[headers_len] = '\n';
-        headers[headers_len + 1] = '\0';
-        headers_size = new_size;
-      }
-    } else {
-      // Parse body
-      size_t line_len = strlen(line);
-      size_t new_size = body_size + line_len + 1; // +1 for newline
-      char*  new_body = realloc(body, new_size);
-      if(!new_body) {
-        free(headers);
-        free(body);
-        return;
-      }
-      body = new_body;
-      strncat(body, line, line_len);
-      size_t body_len = strlen(body);
-      body[body_len] = '\n';
-      body[body_len + 1] = '\0';
-      body_size = new_size;
-    }
-    line = strtok_r(NULL, "\n", &saveptr);
-  }
+  free(res->headers);
+  free(res->body);
   res->headers = headers;
   res->body = body;
+}
+
+/* Builds the request into a heap buffer. The old code formatted into a fixed
+ * char[1024] and failed the call outright for anything larger, and with an
+ * empty raw_headers it emitted "...Host: h\r\n" + "" + "\r\n", terminating the
+ * headers early so that "Content-Length: 0" landed in the body. */
+static char* build_request(const struct ParsedUrl*   url,
+                           const struct HttpRequest* request, size_t* out_len) {
+  const char* method = request->method ? request->method : "GET";
+  const char* raw_headers = request->raw_headers ? request->raw_headers : "";
+  const char* postData = request->postData ? request->postData : "";
+  size_t      post_len = strlen(postData);
+
+  /* Ensure the caller's header block is CRLF-terminated before ours. */
+  size_t hdr_len = strlen(raw_headers);
+  int    needs_crlf =
+      hdr_len > 0 && !(hdr_len >= 2 && raw_headers[hdr_len - 2] == '\r' &&
+                       raw_headers[hdr_len - 1] == '\n');
+
+  int head_len = snprintf(
+      NULL, 0, "%s %s HTTP/1.1\r\nHost: %s\r\n%s%sContent-Length: %zu\r\n\r\n",
+      method, url->path, url->host, raw_headers, needs_crlf ? "\r\n" : "", post_len);
+  if(head_len < 0)
+    return NULL;
+
+  char* req = (char*)malloc((size_t)head_len + post_len + 1);
+  if(req == NULL)
+    return NULL;
+  snprintf(req, (size_t)head_len + 1,
+           "%s %s HTTP/1.1\r\nHost: %s\r\n%s%sContent-Length: %zu\r\n\r\n", method,
+           url->path, url->host, raw_headers, needs_crlf ? "\r\n" : "", post_len);
+  /* memcpy rather than a %s in the format: the body may contain NUL bytes. */
+  memcpy(req + head_len, postData, post_len);
+  *out_len = (size_t)head_len + post_len;
+  req[*out_len] = '\0';
+  return req;
 }
 #endif
 
 void http_call_init(struct BialetConfig* config) {
   (void)config;
 #ifndef _WIN32
-  curl_global_init(CURL_GLOBAL_ALL);
+  if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+    fprintf(stderr, "curl_global_init failed\n");
+  }
+#else
+  /* Once at startup instead of once per request: the old code paired
+   * WSAStartup/WSACleanup inside http_call_perform, tearing down Winsock
+   * refcounts from a request path while the server socket was live. */
+  WSADATA wsaData;
+  if(WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    fprintf(stderr, "WSAStartup failed in http_call_init\n");
+  }
+#endif
+}
+
+void http_call_cleanup(void) {
+#ifndef _WIN32
+  /* Matching teardown for curl_global_init; previously never called. */
+  curl_global_cleanup();
+#else
+  WSACleanup();
 #endif
 }
 
@@ -308,216 +397,205 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
 #endif
 
 #ifdef _WIN32
-  char *hostname, *port, *path;
-  if(parse_url(request->url, &hostname, &port, &path) != 0) {
-    response->error = 1; // Error parsing URL
+  struct ParsedUrl url;
+  SOCKET           sockfd = INVALID_SOCKET;
+  struct addrinfo  hints, *result = NULL, *ptr = NULL;
+  SSL_CTX*         ctx = NULL;
+  SSL*             ssl = NULL;
+  char*            req = NULL;
+  char*            raw = NULL;
+
+  /* Every exit below funnels through `done:` so no socket, SSL object, CTX or
+   * heap buffer is leaked on an error path. */
+  if(parse_url(request->url, &url) != 0) {
+    response->error = HTTP_ERR_URL;
+    response->error_message = string_safe_copy("Unsupported or malformed URL");
     return;
   }
-
-  int use_ssl = strcmp(port, "443") == 0;
-
-  // Initialize Winsock
-  WSADATA wsaData;
-  WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-  // Create a SOCKET for connecting to server
-  SOCKET          sockfd = INVALID_SOCKET;
-  struct addrinfo hints, *result = NULL, *ptr = NULL;
 
   ZeroMemory(&hints, sizeof(hints));
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
 
-  // Resolve the server address and port
-  int iResult = getaddrinfo(hostname, port, &hints, &result);
-  if(iResult != 0) {
-    response->error = 2; // Error resolving hostname
-    WSACleanup();
+  if(getaddrinfo(url.host, url.port, &hints, &result) != 0) {
+    response->error = HTTP_ERR_RESOLVE;
+    response->error_message = string_safe_copy("Could not resolve host");
     return;
   }
 
-  // Attempt to connect to the first address returned by
-  // the call to getaddrinfo
-  ptr = result;
+  long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
+  long timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
 
-  // Create a SOCKET for connecting to server
-  sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-  if(sockfd == INVALID_SOCKET) {
-    response->error = 3; // Socket creation failed
-    freeaddrinfo(result);
-    WSACleanup();
-    return;
-  }
+  /* Try every address getaddrinfo returned, not just the first. With
+   * AF_UNSPEC the first record is often IPv6, so a v4-only host failed
+   * outright before. */
+  for(ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+    sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+    if(sockfd == INVALID_SOCKET)
+      continue;
 
-  // Connect to server, bounded by connectTimeout. A blocking connect() can
-  // hang the single request-handling thread against an unreachable remote, so
-  // drive the socket non-blocking and wait for completion with select().
-  {
+    /* Bound connect() by connectTimeout: a blocking connect can hang the
+     * request-handling thread against an unreachable remote. */
     u_long nonblocking = 1;
     ioctlsocket(sockfd, FIONBIO, &nonblocking);
-  }
-  iResult = connect(sockfd, ptr->ai_addr, (int)ptr->ai_addrlen);
-  if(iResult == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK) {
-    closesocket(sockfd);
-    sockfd = INVALID_SOCKET;
-    response->error = 4; // Connection failed
-    freeaddrinfo(result);
-    WSACleanup();
-    return;
-  }
-  if(iResult == SOCKET_ERROR) {
-    // Connection still in progress: wait until writable or the connect
-    // timeout elapses. select() flags failures through exceptfds/SO_ERROR.
-    fd_set writefds, exceptfds;
-    FD_ZERO(&writefds);
-    FD_ZERO(&exceptfds);
-    FD_SET(sockfd, &writefds);
-    FD_SET(sockfd, &exceptfds);
-    long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
-    struct timeval tv;
-    tv.tv_sec = connect_ms / 1000;
-    tv.tv_usec = (connect_ms % 1000) * 1000;
-    int sel = select(0, NULL, &writefds, &exceptfds, &tv);
-    int so_error = 0;
-    int err_len = sizeof(so_error);
-    if(sel > 0)
-      getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char*)&so_error, &err_len);
-    else
-      so_error = -1; // select() timed out or errored
-    if(so_error != 0) {
-      closesocket(sockfd);
-      sockfd = INVALID_SOCKET;
-      response->error = 4; // Connection failed or timed out
-      freeaddrinfo(result);
-      WSACleanup();
-      return;
+    int iResult = connect(sockfd, ptr->ai_addr, (int)ptr->ai_addrlen);
+    if(iResult == SOCKET_ERROR) {
+      if(WSAGetLastError() != WSAEWOULDBLOCK) {
+        closesocket(sockfd);
+        sockfd = INVALID_SOCKET;
+        continue;
+      }
+      fd_set writefds, exceptfds;
+      FD_ZERO(&writefds);
+      FD_ZERO(&exceptfds);
+      FD_SET(sockfd, &writefds);
+      FD_SET(sockfd, &exceptfds);
+      struct timeval tv;
+      tv.tv_sec = connect_ms / 1000;
+      tv.tv_usec = (connect_ms % 1000) * 1000;
+      int sel = select(0, NULL, &writefds, &exceptfds, &tv);
+      int so_error = 0;
+      int err_len = (int)sizeof(so_error);
+      if(sel > 0)
+        getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char*)&so_error, &err_len);
+      else
+        so_error = -1; /* select() timed out or errored */
+      if(so_error != 0) {
+        closesocket(sockfd);
+        sockfd = INVALID_SOCKET;
+        continue;
+      }
     }
-  }
-  {
-    // Restore blocking I/O and bound send/recv by the overall timeout, the
-    // Windows equivalent of CURLOPT_TIMEOUT_MS on the POSIX path. These also
-    // keep SSL_connect()/SSL_read() from hanging on a stalled peer.
-    u_long nonblocking = 0;
+    /* Restore blocking I/O and bound send/recv by the overall timeout, the
+     * Windows equivalent of CURLOPT_TIMEOUT_MS. These also keep
+     * SSL_connect()/SSL_read() from hanging on a stalled peer. */
+    nonblocking = 0;
     ioctlsocket(sockfd, FIONBIO, &nonblocking);
-    long  timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
-    DWORD send_timeout = (DWORD)timeout_ms;
-    DWORD recv_timeout = (DWORD)timeout_ms;
-    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&send_timeout,
-               sizeof(send_timeout));
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&recv_timeout,
-               sizeof(recv_timeout));
+    DWORD tmo = (DWORD)timeout_ms;
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tmo, sizeof(tmo));
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tmo, sizeof(tmo));
+    break;
+  }
+  freeaddrinfo(result);
+  result = NULL;
+
+  if(sockfd == INVALID_SOCKET) {
+    response->error = HTTP_ERR_CONNECT;
+    response->error_message = string_safe_copy("Connection failed or timed out");
+    goto done;
   }
 
-  freeaddrinfo(result);
-
-  SSL_CTX* ctx = NULL;
-  SSL*     ssl = NULL;
-
-  if(use_ssl) {
-    // Initialize OpenSSL
-    init_openssl();
-    ctx = create_context();
-
-    // Create an SSL connection and attach it to the socket
+  if(url.is_https) {
+    ctx = create_context(); /* verify mode set on the CTX before SSL_new */
+    if(ctx == NULL) {
+      response->error = HTTP_ERR_TLS;
+      response->error_message = string_safe_copy("Could not create TLS context");
+      goto done;
+    }
     ssl = SSL_new(ctx);
     if(ssl == NULL) {
-      response->error = 5; // SSL creation failed
-      SSL_CTX_free(ctx);
-      cleanup_openssl();
-      WSACleanup();
-      return;
+      response->error = HTTP_ERR_TLS;
+      response->error_message = string_safe_copy("Could not create TLS session");
+      goto done;
     }
-    SSL_set_fd(ssl, sockfd);
+    SSL_set_fd(ssl, (int)sockfd);
 
-    // Enable certificate verification for security
-    // NOTE: This requires proper certificate store setup on Windows
-    // For production, consider loading system certificates or a CA bundle
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
-    SSL_CTX_set_default_verify_paths(ctx);
+    /* SNI: without it a virtual-hosted server cannot pick a certificate. */
+    if(!host_is_ip_literal(url.host))
+      SSL_set_tlsext_host_name(ssl, url.host);
 
-    int result = SSL_connect(ssl);
-    if(result != 1) {
-      response->error = 5; // SSL connection failed
-      SSL_free(ssl);
-      closesocket(sockfd);
-      SSL_CTX_free(ctx);
-      cleanup_openssl();
-      WSACleanup();
-      return;
+    /* Hostname verification. Chain validity alone does not bind a certificate
+     * to the host we asked for, so without this any CA-valid certificate for
+     * any domain would be accepted. */
+    SSL_set_hostflags(ssl, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+    if(!SSL_set1_host(ssl, url.host)) {
+      response->error = HTTP_ERR_TLS;
+      response->error_message = string_safe_copy("Could not set TLS hostname");
+      goto done;
     }
-  }
 
-  // Send an initial buffer
-  char req[1024];
-  int  ret =
-      snprintf(req, sizeof(req),
-               "%s /%s HTTP/1.1\r\nHost: %s\r\n%s\r\nContent-Length: %d\r\n\r\n%s",
-               request->method, path, hostname,
-               request->raw_headers ? request->raw_headers : "",
-               request->postData ? (int)strlen(request->postData) : 0,
-               request->postData ? request->postData : "");
-
-  if(ret < 0 || ret >= (int)sizeof(req)) {
-    response->error = 9; // Request too large
-    if(use_ssl) {
-      SSL_shutdown(ssl);
-      SSL_free(ssl);
-      SSL_CTX_free(ctx);
-      cleanup_openssl();
-    }
-    closesocket(sockfd);
-    WSACleanup();
-    return;
-  }
-
-  int write_ok = 0;
-  if(use_ssl) {
-    if(SSL_write(ssl, req, (int)strlen(req)) <= 0) {
-      ERR_print_errors_fp(stderr);
-      response->error = 6; // SSL write failed
-    } else {
-      write_ok = 1;
-    }
-  } else {
-    if(send(sockfd, req, (int)strlen(req), 0) == SOCKET_ERROR) {
-      response->error = 7; // Send failed
-    } else {
-      write_ok = 1;
+    if(SSL_connect(ssl) != 1) {
+      ERR_print_errors_fp(stderr); /* surface *why* the handshake failed */
+      response->error = HTTP_ERR_TLS;
+      response->error_message =
+          string_safe_copy("TLS handshake or certificate verification failed");
+      goto done;
     }
   }
 
-  // A failed send()/SSL_write() left the connection broken; reading from it
-  // would only block or surface a meaningless error, so return instead.
-  if(write_ok) {
-    char res[4096 * 2];
-    int  bytes_received;
-
-    if(use_ssl) {
-      bytes_received = SSL_read(ssl, res, sizeof(res) - 1);
-    } else {
-      bytes_received = recv(sockfd, res, sizeof(res) - 1, 0);
-    }
-
-    if(bytes_received < 0) {
-      perror("recv failed");
-      response->error = 8; // Receive failed
-    } else {
-      // Null-terminate the response
-      res[bytes_received] = '\0';
-      parse_http_response(response, res);
-    }
+  size_t req_len = 0;
+  req = build_request(&url, request, &req_len);
+  if(req == NULL) {
+    response->error = HTTP_ERR_REQUEST;
+    response->error_message = string_safe_copy("Could not build request");
+    goto done;
   }
 
-  // Shutdown the connection since no more data will be sent
-  if(use_ssl) {
+  /* Write the whole request: a single send()/SSL_write() may accept only part
+   * of it, which silently truncated large post bodies. */
+  size_t sent = 0;
+  while(sent < req_len) {
+    int n = url.is_https ? SSL_write(ssl, req + sent, (int)(req_len - sent))
+                         : send(sockfd, req + sent, (int)(req_len - sent), 0);
+    if(n <= 0) {
+      if(url.is_https)
+        ERR_print_errors_fp(stderr);
+      response->error = url.is_https ? HTTP_ERR_TLS_WRITE : HTTP_ERR_SEND;
+      response->error_message = string_safe_copy("Failed to send request");
+      goto done;
+    }
+    sent += (size_t)n;
+  }
+
+  /* Read the whole response. A single SSL_read()/recv() returns at most one
+   * record or segment, so every response larger than that was silently
+   * truncated. Capped at MAX_HTTP_RESPONSE_SIZE, matching the libcurl path. */
+  size_t cap = 16 * 1024;
+  size_t len = 0;
+  raw = (char*)malloc(cap);
+  if(raw == NULL) {
+    response->error = HTTP_ERR_RECV;
+    response->error_message = string_safe_copy("Out of memory reading response");
+    goto done;
+  }
+  for(;;) {
+    if(len + 4096 + 1 > cap) {
+      if(cap >= MAX_HTTP_RESPONSE_SIZE)
+        break; /* hard ceiling reached; keep what we have */
+      size_t ncap = cap * 2;
+      if(ncap > MAX_HTTP_RESPONSE_SIZE)
+        ncap = MAX_HTTP_RESPONSE_SIZE;
+      char* tmp = (char*)realloc(raw, ncap);
+      if(tmp == NULL)
+        break;
+      raw = tmp;
+      cap = ncap;
+    }
+    int n = url.is_https ? SSL_read(ssl, raw + len, (int)(cap - len - 1))
+                         : recv(sockfd, raw + len, (int)(cap - len - 1), 0);
+    if(n <= 0)
+      break; /* clean EOF, timeout or error */
+    len += (size_t)n;
+  }
+  raw[len] = '\0';
+  parse_http_response(response, raw, len);
+
+done:
+  free(raw);
+  free(req);
+  if(ssl != NULL) {
     SSL_shutdown(ssl);
     SSL_free(ssl);
-    SSL_CTX_free(ctx);
-    cleanup_openssl();
   }
-
-  closesocket(sockfd);
-  WSACleanup();
+  if(ctx != NULL)
+    SSL_CTX_free(ctx);
+  if(sockfd != INVALID_SOCKET)
+    closesocket(sockfd);
+  /* No WSACleanup() here: Winsock is started once in http_call_init(). */
+  if(response->body == NULL)
+    response->body = string_safe_copy("");
+  if(response->headers == NULL)
+    response->headers = string_safe_copy("");
 #endif
 }

@@ -24,6 +24,8 @@ struct HttpResponse {
 };
 
 void http_call_init(struct BialetConfig* config);
+/* Matching teardown for http_call_init (curl_global_cleanup / WSACleanup). */
+void http_call_cleanup(void);
 void http_call_perform(struct HttpRequest* req, struct HttpResponse* resp);
 
 #endif
