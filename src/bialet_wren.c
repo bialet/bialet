@@ -882,6 +882,12 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
       wrenSetSlotHandle(vm, 0, responseClass);
       if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
         message(red("Runtime Error"), "Failed to get body");
+      } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
+        /* wrenGetSlotString only asserts the slot type, and asserts compile out
+         * with NDEBUG -- so a handler returning a non-string from Response.out
+         * reinterpreted whatever was in the slot as a char*. */
+        message(red("Runtime Error"), "Response body is not a string");
+        error = 1;
       } else {
         const char* body = wrenGetSlotString(vm, 0);
         if(body[0] != BIALET_FILE_CHAR) {
@@ -922,6 +928,9 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenSetSlotHandle(vm, 0, responseClass);
     if((error = wrenCall(vm, statusMethod) != WREN_RESULT_SUCCESS)) {
       message(red("Runtime Error"), "Failed to get status");
+    } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_NUM) {
+      message(red("Runtime Error"), "Response status is not a number");
+      error = 1;
     } else {
       const double status = wrenGetSlotDouble(vm, 0);
       r.status = (int)status;
@@ -934,6 +943,9 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
       wrenSetSlotHandle(vm, 0, responseClass);
       if((error = wrenCall(vm, headersMethod) != WREN_RESULT_SUCCESS)) {
         message(red("Runtime Error"), "Failed to get headers");
+      } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
+        message(red("Runtime Error"), "Response headers are not a string");
+        error = 1;
       } else {
         const char* headersString = wrenGetSlotString(vm, 0);
         r.header = string_safe_copy(headersString);
@@ -947,7 +959,8 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     WrenHandle* useErrorHandle = wrenGetSlotHandle(vm, 0);
     WrenHandle* useErrorFallback = wrenMakeCallHandle(vm, "useErrorFallback()");
     wrenSetSlotHandle(vm, 0, useErrorHandle);
-    if(wrenCall(vm, useErrorFallback) == WREN_RESULT_SUCCESS) {
+    if(wrenCall(vm, useErrorFallback) == WREN_RESULT_SUCCESS &&
+       wrenGetSlotType(vm, 0) == WREN_TYPE_BOOL) {
       if(wrenGetSlotBool(vm, 0) &&
          (r.status == 403 || r.status == 404 || r.status == 413 || r.status == 429 ||
           r.status == 500)) {
