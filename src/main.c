@@ -501,9 +501,28 @@ int main(int argc, char* argv[]) {
       // reap the browser child forked by open_browser() in dev mode and, if
       // that one exited cleanly first, tear down dmon and exit while the
       // HTTP child still serves.
-      waitpid(pid, &status, 0);
+      //
+      // waitpid's result was previously ignored while `status` was
+      // uninitialized. There is no SA_RESTART on our handlers, so a SIGINT or
+      // SIGTERM makes waitpid fail with EINTR without ever writing `status` --
+      // and WIFEXITED then inspected an indeterminate value, sometimes
+      // breaking the loop and sometimes respawning a child at random.
+      status = 0;
+      pid_t waited;
+      do {
+        waited = waitpid(pid, &status, 0);
+      } while(waited < 0 && errno == EINTR && keep_running);
+
+      if(waited < 0) {
+        if(!keep_running)
+          break; // shutting down: stop supervising
+        perror("waitpid");
+        break;
+      }
       if(WIFEXITED(status) && WEXITSTATUS(status) == 0) {
         break;
+      } else if(!keep_running) {
+        break; // child stopped because we are shutting down
       } else {
         message(red("Error"), "Restarting");
       }
