@@ -50,8 +50,16 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 # file must be rebuilt when one of them changes.
 WREN_INCS := $(WREN_FILES:%.wren=%.wren.inc)
 
+# Header dependencies. Without these, editing a header left every object file
+# that includes it stale: a change to a constant such as HASH_AND_SALT_LENGTH
+# would relink mismatched objects, where one translation unit sizes a buffer
+# with the old value and another writes it with the new one.
+DEPS := $(OBJS:.o=.d)
+
 $(BUILD_DIR)/%.c.o: %.c $(WREN_INCS) | $(OBJ_DIRS)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -MMD -MP -MF $(@:.o=.d) -c $< -o $@
+
+-include $(DEPS)
 
 $(OBJ_DIRS):
 	@mkdir -p $@
