@@ -3,6 +3,7 @@
 #include "wren_primitive.h"
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -75,7 +76,20 @@ static Value parse_string(WrenVM* vm, const char** p) {
     return JSON_ERROR;
   s++;
 
-  size_t len = strlen(s);
+  // Measure this token before allocating. strlen(s) is the length of the whole
+  // *remaining document*, so a document made of many short strings allocated
+  // (and touched) quadratic memory. The decoded form is never longer than the
+  // encoded form, so the span is a safe upper bound.
+  const char* scan = s;
+  while(*scan != '\0' && *scan != '"') {
+    if(*scan == '\\' && scan[1] != '\0')
+      scan += 2;
+    else
+      scan++;
+  }
+  if(*scan != '"')
+    return JSON_ERROR; // unterminated string
+  size_t len = (size_t)(scan - s);
   char*  buf = malloc(len + 1);
   if(buf == NULL)
     return JSON_ERROR;
@@ -326,7 +340,27 @@ bool prim_json_parse_primitive(WrenVM* vm, Value* args) {
     RETURN_ERROR("Invalid JSON: empty input");
   }
   const char* p = json;
-  Value       result = parse_value(vm, &p, 0);
+
+  // Pause the collector for the duration of the parse.
+  //
+  // The lists, maps and strings built below are held only in C locals while
+  // their children are parsed: a new ObjList is not reachable from any GC root
+  // until it is written into its parent, and a map key is unreachable between
+  // being created and being inserted. Every wrenNew*/wrenMapSet/
+  // wrenValueBufferWrite call can allocate, and wrenReallocate collects once
+  // bytesAllocated passes nextGC -- so a GC landing mid-parse could free a
+  // container that is still being filled. Rooting each level with
+  // wrenPushRoot is not an option here: WREN_MAX_TEMP_ROOTS is 8 while nesting
+  // is allowed to MAX_JSON_DEPTH (128).
+  //
+  // Suppressing collection for the parse is bounded work: peak growth is
+  // proportional to the input, which callers already cap (max_post_size for
+  // request bodies). Restoring nextGC lets the very next allocation collect.
+  size_t saved_next_gc = vm->nextGC;
+  vm->nextGC = SIZE_MAX;
+  Value result = parse_value(vm, &p, 0);
+  vm->nextGC = saved_next_gc;
+
   if(IS_UNDEFINED(result)) {
     RETURN_ERROR("Invalid JSON");
   }
@@ -334,6 +368,8 @@ bool prim_json_parse_primitive(WrenVM* vm, Value* args) {
   if(*p != '\0') {
     RETURN_ERROR("Invalid JSON: unexpected trailing data");
   }
+  // Assigned before any further allocation, so `result` becomes reachable from
+  // the API stack before a collection can run again.
   args[0] = result;
   return true;
 }
