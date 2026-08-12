@@ -17,6 +17,8 @@
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #define OPENSSL_OK 1
+#include <openssl/crypto.h>
+#include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #endif
@@ -24,7 +26,9 @@
 
 #define SALT_LENGTH 16
 #define HASH_LENGTH 64
-#define HASH_AND_SALT_LENGTH 98
+/* Large enough for the current format, "pbkdf2$<iters>$<32 hex salt>$<64 hex
+ * hash>" (111 bytes), as well as both legacy formats. */
+#define HASH_AND_SALT_LENGTH 128
 
 // Fills [buf] with [len] cryptographically random bytes from the OS CSPRNG
 // (same source used for password salts). Hard-fails on entropy errors rather
