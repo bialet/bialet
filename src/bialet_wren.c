@@ -89,12 +89,15 @@ sqlite3*                   db;
 static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
   message(yellow("Log"), message);
-  sqlite3_stmt* stmt;
-  sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1, &stmt,
-                     0);
-  sqlite3_bind_text(stmt, 1, message, -1, SQLITE_STATIC);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+  // A failed prepare (e.g. SQLITE_BUSY on the shared connection) leaves stmt
+  // NULL; binding/stepping it would NULL-deref the request thread.
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1,
+                        &stmt, 0) == SQLITE_OK) {
+    sqlite3_bind_text(stmt, 1, message, -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
 }
 
 #ifndef _WIN32
@@ -285,54 +288,64 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
       message(red("Error"), "Import type not supported.");
       return result;
     }
-    sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(
-        db, "SELECT content FROM BIALET_REMOTE_MODULES WHERE module = ? LIMIT 1", -1,
-        &stmt, 0);
-    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
-    const char* content = 0;
-    if(sqlite3_step(stmt) == SQLITE_ROW) {
-      content = (char*)sqlite3_column_text(stmt, 0);
-      result.source = string_safe_copy(content);
-      result.onComplete = bialet_wren_free_module_source;
-      sqlite3_finalize(stmt);
-    } else {
-      // File not found in cache, try to get from URL
-      sqlite3_finalize(stmt);
-      struct HttpRequest  req;
-      struct HttpResponse resp;
-      resp.error = 0;
-      resp.status = 0;
-      resp.body = NULL;
-      resp.headers = NULL;
-      resp.error_message = NULL;
-      req.method = string_safe_copy("GET");
-      req.basicAuth = string_safe_copy("");
-      req.raw_headers = string_safe_copy("");
-      req.postData = string_safe_copy("");
-      req.url = string_safe_copy(url);
-      http_call_perform(&req, &resp);
-      // Check if HTTP request was successful (2xx status codes)
-      if(resp.status >= 200 && resp.status < 300 && !resp.error) {
-        // File found, save it in cache
-        result.source = resp.body;
+    sqlite3_stmt* stmt = NULL;
+    if(sqlite3_prepare_v2(
+           db, "SELECT content FROM BIALET_REMOTE_MODULES WHERE module = ? LIMIT 1",
+           -1, &stmt, 0) == SQLITE_OK) {
+      sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+      const char* content = 0;
+      if(sqlite3_step(stmt) == SQLITE_ROW) {
+        content = (char*)sqlite3_column_text(stmt, 0);
+        result.source = string_safe_copy(content);
         result.onComplete = bialet_wren_free_module_source;
-        sqlite3_stmt* stmt;
-        sqlite3_prepare_v2(
-            db, "INSERT INTO BIALET_REMOTE_MODULES (module, content) VALUES (?, ?)",
-            -1, &stmt, 0);
-        sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, resp.body, -1, SQLITE_STATIC);
-        sqlite3_step(stmt);
-        sqlite3_finalize(stmt);
-        free(resp.headers);
-        message(yellow("Remote module saved"), name);
-      } else {
-        free(resp.body);
-        free(resp.headers);
-        message(red("Error"), "Module not found in GitHub.");
       }
+      sqlite3_finalize(stmt);
     }
+    if(result.source != NULL)
+      return result;
+
+    // File not found in cache (or the cache lookup itself failed), try to get
+    // it from the URL. Zero the request so timeout/connectTimeout are never
+    // read uninitialized; the values below match the http_call_perform defaults.
+    struct HttpRequest  req;
+    struct HttpResponse resp;
+    memset(&req, 0, sizeof(req));
+    memset(&resp, 0, sizeof(resp));
+    req.method = string_safe_copy("GET");
+    req.basicAuth = string_safe_copy("");
+    req.raw_headers = string_safe_copy("");
+    req.postData = string_safe_copy("");
+    req.url = string_safe_copy(url);
+    req.timeout = 20000L;
+    req.connectTimeout = 2000L;
+    http_call_perform(&req, &resp);
+    // Check if HTTP request was successful (2xx status codes)
+    if(resp.status >= 200 && resp.status < 300 && !resp.error) {
+      // File found, save it in cache. resp.body ownership moves into
+      // result.source and is released by the onComplete callback.
+      result.source = resp.body;
+      result.onComplete = bialet_wren_free_module_source;
+      sqlite3_stmt* cache_stmt = NULL;
+      if(sqlite3_prepare_v2(
+             db, "INSERT INTO BIALET_REMOTE_MODULES (module, content) VALUES (?, ?)",
+             -1, &cache_stmt, 0) == SQLITE_OK) {
+        sqlite3_bind_text(cache_stmt, 1, name, -1, SQLITE_STATIC);
+        sqlite3_bind_text(cache_stmt, 2, resp.body, -1, SQLITE_STATIC);
+        sqlite3_step(cache_stmt);
+        sqlite3_finalize(cache_stmt);
+      }
+      message(yellow("Remote module saved"), name);
+    } else {
+      free(resp.body);
+      message(red("Error"), "Module not found in GitHub.");
+    }
+    free(resp.headers);
+    free(resp.error_message);
+    free(req.method);
+    free(req.basicAuth);
+    free(req.raw_headers);
+    free(req.postData);
+    free(req.url);
     return result;
   }
 
