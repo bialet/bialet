@@ -540,36 +540,42 @@ void write_response(int client_socket, struct BialetResponse* response) {
     custom_error(404, response);
   }
 
+  // `length` is authoritative. Falling back to strlen() is only safe for a
+  // body this struct owns, which is always NUL-terminated by construction; an
+  // opaque caller-owned buffer may be a zero-length or unterminated allocation.
   size_t body_len = response->length;
-  if(body_len == 0 && response->body) {
+  if(body_len == 0 && response->body != NULL && response->body_owned) {
     body_len = strlen(response->body);
   }
 
   const char* desc = get_http_status_description(response->status);
   const char* hdr = response->header ? response->header : "";
 
+  // %zu rather than %lu: unsigned long is 32-bit under Windows LLP64.
   int needed = snprintf(NULL, 0,
                         "HTTP/1.1 %d %s\r\n"
                         "%s"
-                        "Content-Length: %lu\r\n\r\n",
-                        response->status, desc, hdr, (unsigned long)body_len);
+                        "Content-Length: %zu\r\n\r\n",
+                        response->status, desc, hdr, body_len);
   if(needed < 0) {
     perror("Failed to format HTTP response");
+    socket_close(client_socket); // was leaked on this path
     return;
   }
 
   char* message = (char*)malloc((size_t)needed + 1);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
+    socket_close(client_socket);
     return;
   }
   snprintf(message, (size_t)needed + 1,
            "HTTP/1.1 %d %s\r\n"
            "%s"
-           "Content-Length: %lu\r\n\r\n",
-           response->status, desc, hdr, (unsigned long)body_len);
+           "Content-Length: %zu\r\n\r\n",
+           response->status, desc, hdr, body_len);
 
-  (void)send_all(client_socket, message, strlen(message));
+  (void)send_all(client_socket, message, (size_t)needed);
   free(message);
 
   if(response->body && body_len > 0) {
@@ -996,7 +1002,11 @@ void handle_client(bialet_socket_t client_socket) {
     is_wren_file = 1;
   }
 
-  size_t alloc_size = file_size + is_wren_file;
+  // Always reserve room for a terminator, for wren and non-wren files alike.
+  // A zero-byte static file previously produced malloc(0), and the
+  // `length == 0 -> strlen(body)` fallback in write_response then read out of
+  // bounds to compute Content-Length and sent whatever heap bytes followed.
+  size_t alloc_size = file_size + 1;
   char*  file_content = malloc(alloc_size);
   if(file_content == NULL) {
     perror("Error allocating memory for file content");
@@ -1019,9 +1029,9 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
   fclose(file);
+  file_content[read_bytes] = '\0';
 
   if(is_wren_file) {
-    file_content[read_bytes] = '\0';
     response = bialet_run(path, file_content, hm);
     if(response.length == 0 && response.body) {
       response.length = strlen(response.body);
