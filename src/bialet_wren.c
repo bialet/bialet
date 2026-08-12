@@ -989,10 +989,23 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
 
 int bialet_run_cli(char* code) {
   struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
-  if(response.status == HTTP_ERROR)
-    return 1;
-  printf("%s", response.body);
-  return 0;
+  int                   status = response.status == HTTP_ERROR ? 1 : 0;
+  if(status == 0 && response.body != NULL) {
+    // fwrite with the known length rather than printf("%s"): the body may be
+    // binary (a file served through Response.file) and would be cut at the
+    // first NUL, and printf("%s", NULL) on an empty response was undefined
+    // behavior.
+    size_t len = response.length;
+    if(len == 0)
+      len = strlen(response.body);
+    fwrite(response.body, 1, len, stdout);
+  }
+  // The response owned its body/header and was discarded here.
+  if(response.body_owned)
+    free(response.body);
+  if(response.header_owned)
+    free(response.header);
+  return status;
 }
 
 int bialet_validate_syntax(const char* filePath) {
