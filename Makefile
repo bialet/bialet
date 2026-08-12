@@ -31,10 +31,15 @@ CFLAGS := -std=gnu17 -Wall -Wextra -Werror -g -O2 -Wvla -Wpointer-arith \
           -fstack-protector-strong
 LDFLAGS := -lm -lpthread -lsqlite3 -lcurl
 
-# Hardening for the network daemon. glibc-only / GNU-ld-only, so Linux only;
-# the Linux `static` target below does not use LDFLAGS and is unaffected.
-ifeq ($(OS),Linux)
-CFLAGS += -D_FORTIFY_SOURCE=2
+# Hardening for the network daemon. Gated on the *target*, not on uname: the
+# Windows cross-compile runs inside a Linux container, so `uname -s` says Linux
+# while the target is mingw (whose CRT does not implement _FORTIFY_SOURCE and
+# whose linker does not take -z relro). -U first so a toolchain that already
+# predefines _FORTIFY_SOURCE (Ubuntu 24.04's GCC defines it as 3) does not
+# error out on the redefinition under -Werror.
+IS_MINGW := $(findstring mingw32,$(CC))
+ifeq ($(OS)$(IS_MINGW),Linux)
+CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 LDFLAGS += -Wl,-z,relro,-z,now
 endif
 
