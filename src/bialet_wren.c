@@ -349,14 +349,20 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     return result;
   }
 
+  // Every write to `module` is bounded by sizeof(module). The old code mixed
+  // two constants for this one buffer: it was declared MAX_URL_LEN (1024) but
+  // appended to with `MAX_MODULE_LEN - strlen(module) - 1` (256-based), so once
+  // the prefix passed 255 characters that bound wrapped around to a value near
+  // SIZE_MAX and strncat's limit stopped limiting anything. Only an unrelated
+  // length guard kept it from overflowing.
   if(name[0] == '/') {
     if(strlen(name) + strlen(bialet_config.full_root_dir) + BIALET_EXTENSION_LEN +
            1 >
-       MAX_URL_LEN) {
+       sizeof(module)) {
       message(red("Error"), "Module name too long.");
       return result;
     }
-    snprintf(module, MAX_URL_LEN, "%s", bialet_config.full_root_dir);
+    snprintf(module, sizeof(module), "%s", bialet_config.full_root_dir);
   } else {
     char* calledFrom = string_safe_copy(wrenGetUserData(vm));
     if(calledFrom == NULL) {
@@ -368,22 +374,32 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     }
     lastSlash = strrchr(calledFrom, '/');
     if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
-       MAX_MODULE_LEN) {
+       sizeof(module)) {
       message(red("Error"), "Module name too long.");
       free(calledFrom);
       return result;
     }
     if(lastSlash)
       *lastSlash = '\0';
-    snprintf(module, MAX_MODULE_LEN, "%s/", calledFrom);
+    snprintf(module, sizeof(module), "%s/", calledFrom);
     free(calledFrom);
   }
 
-  strncat(module, name, MAX_MODULE_LEN - strlen(module) - 1);
+  size_t used = strlen(module);
+  if(used + 1 >= sizeof(module)) {
+    message(red("Error"), "Module name too long.");
+    return result;
+  }
+  strncat(module, name, sizeof(module) - used - 1);
+
   size_t name_len = strlen(module);
   if(name_len < BIALET_EXTENSION_LEN ||
      strcmp(module + name_len - BIALET_EXTENSION_LEN, BIALET_EXTENSION) != 0) {
-    strncat(module, BIALET_EXTENSION, MAX_MODULE_LEN - strlen(module) - 1);
+    if(name_len + BIALET_EXTENSION_LEN >= sizeof(module)) {
+      message(red("Error"), "Module name too long.");
+      return result;
+    }
+    strncat(module, BIALET_EXTENSION, sizeof(module) - name_len - 1);
   }
 
   char resolved[MAX_URL_LEN];
