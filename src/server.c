@@ -897,6 +897,9 @@ void handle_client(bialet_socket_t client_socket) {
       // be accepted as a route file, otherwise realpath resolves it to the
       // database and private_path_internal waives the private-file check.
       if(is_regular_file_no_follow(path, &file_stat)) {
+        // parse_request() already allocated an empty placeholder here, which
+        // this assignment used to drop on the floor.
+        free(hm->routes.str);
         hm->routes = create_string(url_copy, strlen(url_copy));
         private_path_internal = 1;
         break;

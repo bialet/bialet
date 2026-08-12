@@ -94,6 +94,21 @@ static char*                 cron_code = 0;
 static pthread_mutex_t run_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
+// Runs [code] and releases the response. bialet_run() returns a body (and
+// sometimes a header) allocated with body_owned/header_owned set; the
+// background callers discarded the struct, leaking a page-sized allocation on
+// every migration and on every cron tick -- once a minute, forever, in the
+// long-lived supervisor process.
+static void bialet_run_discard(const char* module, char* code, char* log_label) {
+  struct BialetResponse r = bialet_run((char*)module, code, 0);
+  if(log_label != NULL)
+    message(yellow(log_label), r.body ? r.body : "");
+  if(r.body_owned)
+    free(r.body);
+  if(r.header_owned)
+    free(r.header);
+}
+
 static void migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
@@ -105,10 +120,10 @@ static void migrate() {
   pthread_mutex_lock(&run_mutex);
 #endif
   if((code = read_file(path)) || (code = read_file(altPath))) {
-    struct BialetResponse r = bialet_run("migration", code, 0);
-    message(yellow("Migration start"), r.body);
+    bialet_run_discard("migration", code, "Migration start");
+    free(code); // the file contents were leaked too
   } else {
-    bialet_run("migration", "Db.init", 0);
+    bialet_run_discard("migration", "Db.init", NULL);
   }
 #ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
@@ -142,7 +157,7 @@ static void cron_run() {
   pthread_mutex_lock(&run_mutex);
 #endif
   if(cron_installed && cron_code) {
-    bialet_run("cron", cron_code, 0);
+    bialet_run_discard("cron", cron_code, NULL);
   }
 #ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
