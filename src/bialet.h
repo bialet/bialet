@@ -49,6 +49,16 @@
 #endif
 
 char* realpath_n(const char* path, char* resolved, size_t resolved_size);
+
+/* Marks a printf-style function so the compiler checks its callers' format
+ * strings and silences -Wformat-nonliteral inside the wrapper itself. GCC,
+ * Clang and MinGW all support it; anything else gets no checking. */
+#if defined(__GNUC__) || defined(__clang__)
+#define BIALET_PRINTF_FORMAT(fmt_idx, args_idx)                                     \
+  __attribute__((format(printf, fmt_idx, args_idx)))
+#else
+#define BIALET_PRINTF_FORMAT(fmt_idx, args_idx)
+#endif
 #define MAX_NUMBER_LENGTH 100
 #define BIALET_EXTENSION ".wren"
 #define BIALET_EXTENSION_LEN 5

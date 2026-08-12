@@ -1,12 +1,13 @@
 #include "markdown.h"
 
+#include "bialet.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_OUTPUT 2 * 1024 * 1024
+#define MAX_OUTPUT (2 * 1024 * 1024)
 
 typedef struct {
   char*  data;
@@ -49,6 +50,7 @@ static bool md_append(MdBuf* b, const char* s) {
   return md_appendn(b, s, strlen(s));
 }
 
+BIALET_PRINTF_FORMAT(2, 3)
 static bool md_printf(MdBuf* b, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -405,11 +407,11 @@ char* markdown_to_html(const char* markdown) {
         while(end > cell && *end == ' ')
           *end-- = '\0';
 
-        if(!md_printf(&buf, table_header_parsed ? "<td>" : "<th>"))
+        if(!md_append(&buf, table_header_parsed ? "<td>" : "<th>"))
           goto fail;
         if(!render_inline(cell, &buf))
           goto fail;
-        if(!md_printf(&buf, table_header_parsed ? "</td>" : "</th>"))
+        if(!md_append(&buf, table_header_parsed ? "</td>" : "</th>"))
           goto fail;
         cell = strtok_r(NULL, "|", &saveptr);
       }

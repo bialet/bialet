@@ -11,6 +11,7 @@
 #include "cli.h"
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -63,8 +64,14 @@ static CliOptId short_to_id(char c) {
   return CLI_OPT_COUNT;
 }
 
-static void cli_error(BialetCliOptions* opts, const char* fmt, const char* arg) {
-  snprintf(opts->error, sizeof(opts->error), fmt, arg);
+/* Variadic so the format attribute applies: GCC only accepts it on a variadic
+ * function, and with it every caller's format string is checked. */
+BIALET_PRINTF_FORMAT(2, 3)
+static void cli_error(BialetCliOptions* opts, const char* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(opts->error, sizeof(opts->error), fmt, ap);
+  va_end(ap);
   opts->action = BIALET_CLI_INVALID;
 }
 
