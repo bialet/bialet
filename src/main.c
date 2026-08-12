@@ -68,11 +68,18 @@
 #define BIALET_LOGO "🚲"
 #endif
 
-struct BialetConfig    bialet_config;
-time_t                 last_reload = 0;
-static volatile int8_t keep_running = 1;
-static int             cron_installed = 0;
-static char*           cron_code = 0;
+struct BialetConfig bialet_config;
+time_t              last_reload = 0;
+// sig_atomic_t is the only integer type the standard guarantees can be written
+// by a signal handler and read by the main flow without tearing.
+static volatile sig_atomic_t keep_running = 1;
+// PID of the HTTP child, so the shutdown signal can be forwarded to it. Killing
+// only the supervisor left the child holding the listening socket and serving
+// forever, which `kill -TERM <pid>` reproduces (an interactive Ctrl-C hid it,
+// because the terminal signals the whole process group).
+static volatile sig_atomic_t http_child_pid = 0;
+static int                   cron_installed = 0;
+static char*                 cron_code = 0;
 
 // run_mutex serializes every background bialet_run against the shared SQLite
 // handle: cron ticks, migrations, and file-watch-triggered runs all go through
@@ -241,10 +248,21 @@ static void open_browser(const char* url) {
 #endif
 }
 
+// Async-signal-safe. The old handler called stop_server(), which calls
+// message() -> malloc/localtime/fprintf/fflush; none of those are on the POSIX
+// async-signal-safe list, so a signal arriving inside an allocation or an
+// flush could deadlock or corrupt state. Only the flag is set here (and kill(),
+// which is async-signal-safe, to forward shutdown to the HTTP child); the
+// socket is closed on the normal path once the poll loop observes the flag.
 void sigint_handler(int signum) {
-  (void)signum;
   keep_running = 0;
-  stop_server();
+#ifndef _WIN32
+  pid_t child = (pid_t)http_child_pid;
+  if(child > 0)
+    kill(child, signum);
+#else
+  (void)signum;
+#endif
 }
 
 int main(int argc, char* argv[]) {
@@ -495,8 +513,12 @@ int main(int argc, char* argv[]) {
       while(keep_running) {
         server_poll(SERVER_POLL_DELAY);
       }
+      // Closing the listening socket (and logging it) happens here on the
+      // normal path rather than inside the signal handler.
+      stop_server();
       exit(0);
     } else if(pid > 0) {
+      http_child_pid = (sig_atomic_t)pid;
       // Parent: wait for the HTTP child specifically. `wait()` would also
       // reap the browser child forked by open_browser() in dev mode and, if
       // that one exited cleanly first, tear down dmon and exit while the
@@ -513,6 +535,7 @@ int main(int argc, char* argv[]) {
         waited = waitpid(pid, &status, 0);
       } while(waited < 0 && errno == EINTR && keep_running);
 
+      http_child_pid = 0;
       if(waited < 0) {
         if(!keep_running)
           break; // shutting down: stop supervising
@@ -555,6 +578,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  stop_server();
   dmon_deinit();
 #endif
 

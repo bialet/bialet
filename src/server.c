@@ -1064,6 +1064,10 @@ int server_poll(int delay) {
   tv.tv_usec = (delay % 1000) * 1000;
   int ret = select(0, &readfds, NULL, NULL, delay >= 0 ? &tv : NULL);
   if(ret < 0) {
+    // An interrupted wait is not an error: a shutdown signal lands here on its
+    // way to the poll loop, which previously logged "Select error".
+    if(WSAGetLastError() == WSAEINTR)
+      return 0;
     if(server_fd != BIALET_INVALID_SOCKET) {
       perror("Select error");
     }
@@ -1078,6 +1082,11 @@ int server_poll(int delay) {
 
   int poll_result = poll(fds, 1, delay);
   if(poll_result < 0) {
+    // An interrupted wait is not an error: a shutdown signal lands here on its
+    // way to the poll loop, which previously logged "Poll error: Interrupted
+    // system call" on every clean Ctrl-C.
+    if(errno == EINTR)
+      return 0;
     if(server_fd != BIALET_INVALID_SOCKET) {
       perror("Poll error");
     }
