@@ -459,10 +459,13 @@ int main(int argc, char* argv[]) {
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);
 
-  mem_limit.rlim_cur = bialet_config.mem_soft_limit * MEGABYTE;
-  mem_limit.rlim_max = bialet_config.mem_hard_limit * MEGABYTE;
-  cpu_limit.rlim_cur = bialet_config.cpu_soft_limit;
-  cpu_limit.rlim_max = bialet_config.cpu_hard_limit;
+  // Computed in rlim_t. `mem_soft_limit * MEGABYTE` was int * int, so -m 2048
+  // overflowed a 32-bit int -- undefined behavior, and whatever limit survived
+  // bore no relation to what was asked for.
+  mem_limit.rlim_cur = (rlim_t)bialet_config.mem_soft_limit * MEGABYTE;
+  mem_limit.rlim_max = (rlim_t)bialet_config.mem_hard_limit * MEGABYTE;
+  cpu_limit.rlim_cur = (rlim_t)bialet_config.cpu_soft_limit;
+  cpu_limit.rlim_max = (rlim_t)bialet_config.cpu_hard_limit;
 
   for(;;) {
     pid = fork();
