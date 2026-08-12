@@ -125,6 +125,39 @@ static bool escape_html(const char* src, MdBuf* b) {
   return escape_html_n(src, strlen(src), b);
 }
 
+// Allows only schemes that cannot execute script when clicked, plus
+// scheme-relative and relative references. "[x](javascript:alert(1))" was
+// previously emitted into href verbatim.
+static bool is_safe_url(const char* url, size_t n) {
+  size_t colon = 0;
+  while(colon < n && url[colon] != ':') {
+    // A '/', '?' or '#' before any colon means there is no scheme at all.
+    if(url[colon] == '/' || url[colon] == '?' || url[colon] == '#')
+      return true;
+    colon++;
+  }
+  if(colon >= n)
+    return true; // no scheme
+  static const char* allowed[] = {"http", "https", "mailto", "tel", "ftp"};
+  for(size_t i = 0; i < sizeof(allowed) / sizeof(allowed[0]); i++) {
+    size_t len = strlen(allowed[i]);
+    if(len != colon)
+      continue;
+    size_t k = 0;
+    while(k < len) {
+      char c = url[k];
+      if(c >= 'A' && c <= 'Z')
+        c = (char)(c - 'A' + 'a');
+      if(c != allowed[i][k])
+        break;
+      k++;
+    }
+    if(k == len)
+      return true;
+  }
+  return false;
+}
+
 static bool render_inline(const char* src, MdBuf* b) {
   while(*src) {
     if(strncmp(src, "**", 2) == 0) {
@@ -169,9 +202,19 @@ static bool render_inline(const char* src, MdBuf* b) {
       const char* url_start = alt_end ? strchr(alt_end, '(') : NULL;
       const char* url_end = url_start ? strchr(url_start, ')') : NULL;
       if(alt_end && url_start && url_end) {
-        if(!md_printf(b, "<img alt=\"%.*s\" src=\"%.*s\">",
-                      (int)(alt_end - (src + 2)), src + 2,
-                      (int)(url_end - url_start - 1), url_start + 1))
+        // Both the URL and the alt text are escaped before going into an
+        // attribute. They were interpolated raw, so a " in either one closed the
+        // attribute and let the rest inject markup:
+        //   ![" onerror=alert(1) x="](y)
+        size_t url_len = (size_t)(url_end - url_start - 1);
+        if(!md_append(b, "<img alt=\"") ||
+           !escape_html_n(src + 2, (size_t)(alt_end - (src + 2)), b) ||
+           !md_append(b, "\" src=\""))
+          return false;
+        if(is_safe_url(url_start + 1, url_len) &&
+           !escape_html_n(url_start + 1, url_len, b))
+          return false;
+        if(!md_append(b, "\">"))
           return false;
         src = url_end + 1;
         continue;
@@ -181,9 +224,18 @@ static bool render_inline(const char* src, MdBuf* b) {
       const char* url_start = text_end ? strchr(text_end, '(') : NULL;
       const char* url_end = url_start ? strchr(url_start, ')') : NULL;
       if(text_end && url_start && url_end) {
-        if(!md_printf(b, "<a href=\"%.*s\">%.*s</a>", (int)(url_end - url_start - 1),
-                      url_start + 1, (int)(text_end - (src + 1)), src + 1))
-          return false;
+        size_t url_len = (size_t)(url_end - url_start - 1);
+        size_t text_len = (size_t)(text_end - (src + 1));
+        if(is_safe_url(url_start + 1, url_len)) {
+          if(!md_append(b, "<a href=\"") ||
+             !escape_html_n(url_start + 1, url_len, b) || !md_append(b, "\">") ||
+             !escape_html_n(src + 1, text_len, b) || !md_append(b, "</a>"))
+            return false;
+        } else {
+          // Rejected scheme: keep the label as plain text rather than linking it.
+          if(!escape_html_n(src + 1, text_len, b))
+            return false;
+        }
         src = url_end + 1;
         continue;
       }
