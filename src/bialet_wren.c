@@ -22,7 +22,6 @@
 #include <ctype.h>
 #include <sqlite3.h>
 #include <string.h>
-#include <strings.h>
 #include <time.h>
 
 #ifndef _WIN32
@@ -35,25 +34,6 @@
 #define NAME_MAX 255
 #endif
 #endif
-
-// Portable case-insensitive substring search (avoids _GNU_SOURCE dependency)
-static const char* bialet_strcasestr(const char* haystack, const char* needle) {
-  if(!needle[0])
-    return haystack;
-  for(; *haystack; haystack++) {
-    if(tolower((unsigned char)*haystack) == tolower((unsigned char)*needle)) {
-      const char* h = haystack;
-      const char* n = needle;
-      while(*h && *n && tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
-        h++;
-        n++;
-      }
-      if(!*n)
-        return haystack;
-    }
-  }
-  return NULL;
-}
 
 #define BIALET_SQLITE_ERROR 11
 #define BIALET_SQLITE_BUSY_TIMEOUT 5000
@@ -616,174 +596,207 @@ char* escape_special_chars(const char* input) {
   return output;
 }
 
+// Bounded byte search: the request body is arbitrary binary data, so nothing
+// here may use str*() functions. The old parser ran strstr/strchr/strcasestr
+// over hm->message.str, all of which stop at the first NUL -- so uploading any
+// file containing a zero byte (every PNG, PDF, zip or executable) silently
+// truncated or dropped the part.
+static const char* mem_find(const char* hay, size_t hay_len, const char* needle,
+                            size_t needle_len) {
+  if(needle_len == 0 || hay_len < needle_len)
+    return NULL;
+  for(size_t i = 0; i + needle_len <= hay_len; i++) {
+    if(memcmp(hay + i, needle, needle_len) == 0)
+      return hay + i;
+  }
+  return NULL;
+}
+
+// Case-insensitive variant, for header names.
+static const char* mem_find_ci(const char* hay, size_t hay_len, const char* needle,
+                               size_t needle_len) {
+  if(needle_len == 0 || hay_len < needle_len)
+    return NULL;
+  for(size_t i = 0; i + needle_len <= hay_len; i++) {
+    size_t k = 0;
+    while(k < needle_len &&
+          tolower((unsigned char)hay[i + k]) == tolower((unsigned char)needle[k]))
+      k++;
+    if(k == needle_len)
+      return hay + i;
+  }
+  return NULL;
+}
+
+// Copies the value that runs from [src] up to the first delimiter into [out],
+// bounded by both [avail] and [out_size]. Returns the length written.
+static size_t copy_until(const char* src, size_t avail, const char* delims,
+                         char* out, size_t out_size) {
+  size_t n = 0;
+  while(n < avail && n + 1 < out_size && strchr(delims, src[n]) == NULL &&
+        src[n] != '\0')
+    n++;
+  memcpy(out, src, n);
+  out[n] = '\0';
+  return n;
+}
+
 int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
   filesIds[0] = '\0'; // Initialize empty string
 
-  // Find Content-Type header to check if it's multipart/form-data
-  const char* headers = hm->message.str;
-  const char* headerEnd = strstr(headers, "\r\n\r\n");
+  const char* msg = hm->message.str;
+  size_t      msg_len = hm->message.len;
+  if(msg == NULL || msg_len == 0)
+    return 0;
 
+  // End of the request header block.
+  const char* headerEnd = mem_find(msg, msg_len, "\r\n\r\n", 4);
   if(!headerEnd)
     return 0;
+  size_t head_len = (size_t)(headerEnd - msg);
 
-  // Search for Content-Type header
-  const char* ctStart = bialet_strcasestr(headers, "Content-Type:");
-  if(!ctStart || ctStart > headerEnd)
+  static const char kContentType[] = "Content-Type:";
+  const char*       ctStart =
+      mem_find_ci(msg, head_len, kContentType, sizeof(kContentType) - 1);
+  if(!ctStart)
+    return 0;
+  ctStart += sizeof(kContentType) - 1;
+  while(ctStart < headerEnd && (*ctStart == ' ' || *ctStart == '\t'))
+    ctStart++;
+
+  static const char kMultipart[] = "multipart/form-data";
+  size_t            ct_avail = (size_t)(headerEnd - ctStart);
+  if(ct_avail < sizeof(kMultipart) - 1 ||
+     mem_find_ci(ctStart, sizeof(kMultipart) - 1, kMultipart,
+                 sizeof(kMultipart) - 1) != ctStart)
     return 0;
 
-  ctStart += 13; // Skip "Content-Type:"
-  while(*ctStart == ' ')
-    ctStart++; // Skip spaces
+  static const char kBoundary[] = "boundary=";
+  const char*       boundaryStart =
+      mem_find_ci(ctStart, ct_avail, kBoundary, sizeof(kBoundary) - 1);
+  if(!boundaryStart)
+    return 0;
+  boundaryStart += sizeof(kBoundary) - 1;
 
-  // Check if it's multipart/form-data
-  if(strncasecmp(ctStart, "multipart/form-data", 19) != 0)
+  char   boundary[256];
+  size_t boundary_len =
+      copy_until(boundaryStart, (size_t)(headerEnd - boundaryStart), "\r\n;",
+                 boundary, sizeof(boundary));
+  if(boundary_len == 0)
     return 0;
 
-  // Extract boundary
-  const char* boundaryStart = bialet_strcasestr(ctStart, "boundary=");
-  if(!boundaryStart || boundaryStart > headerEnd)
-    return 0;
-
-  boundaryStart += 9; // Skip "boundary="
-  char boundary[256];
-  int  i = 0;
-  while(boundaryStart[i] && boundaryStart[i] != '\r' && boundaryStart[i] != '\n' &&
-        boundaryStart[i] != ';' && i < 255) {
-    boundary[i] = boundaryStart[i];
-    i++;
-  }
-  boundary[i] = '\0';
-
-  // Find the body (after \r\n\r\n)
   const char* body = headerEnd + 4;
-  size_t      bodyLen = hm->message.len - (body - hm->message.str);
+  const char* end = msg + msg_len;
+  if(body >= end)
+    return 0;
 
-  // Create full boundary markers
+  // The opening delimiter is "--boundary"; every later one is preceded by CRLF.
+  // Matching the CRLF as part of the delimiter is what makes this safe for
+  // binary content that happens to contain the boundary string, and it also
+  // means the trailing CRLF is not counted as file data.
   char startBoundary[260];
-  char endBoundary[264];
-  snprintf(startBoundary, sizeof(startBoundary), "--%s", boundary);
-  snprintf(endBoundary, sizeof(endBoundary), "--%s--", boundary);
+  char delimiter[264];
+  int  sb = snprintf(startBoundary, sizeof(startBoundary), "--%.*s",
+                     (int)boundary_len, boundary);
+  int  dl = snprintf(delimiter, sizeof(delimiter), "\r\n--%.*s", (int)boundary_len,
+                     boundary);
+  if(sb < 0 || sb >= (int)sizeof(startBoundary) || dl < 0 ||
+     dl >= (int)sizeof(delimiter))
+    return 0;
+  size_t sb_len = (size_t)sb;
+  size_t dl_len = (size_t)dl;
 
-  // Parse multipart parts
-  const char* part = body;
+  const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
   int         uploadedFiles = 0;
 
-  while(part && part < body + bodyLen) {
-    // Find next boundary
-    part = strstr(part, startBoundary);
-    if(!part)
-      break;
-
-    part += strlen(startBoundary);
-
-    // Skip CRLF after boundary
-    if(*part == '\r')
+  while(cursor != NULL) {
+    const char* part = cursor + sb_len;
+    if(part + 2 <= end && part[0] == '-' && part[1] == '-')
+      break; // closing delimiter "--boundary--"
+    if(part < end && *part == '\r')
       part++;
-    if(*part == '\n')
+    if(part < end && *part == '\n')
       part++;
-
-    // Check if this is the end boundary
-    if(strncmp(part - strlen(startBoundary), endBoundary, strlen(endBoundary)) ==
-       0) {
-      break;
-    }
-
-    // Parse headers for this part
-    const char* partHeaderEnd = strstr(part, "\r\n\r\n");
-    if(!partHeaderEnd || partHeaderEnd >= body + bodyLen)
+    if(part >= end)
       break;
 
-    // Extract Content-Disposition
-    const char* cdStart = bialet_strcasestr(part, "Content-Disposition:");
-    if(!cdStart || cdStart > partHeaderEnd)
-      continue;
-
-    // Extract filename
-    const char* filenameStart = bialet_strcasestr(cdStart, "filename=\"");
-    if(!filenameStart || filenameStart > partHeaderEnd) {
-      part = partHeaderEnd + 4;
-      continue;
-    }
-
-    filenameStart += 10; // Skip 'filename="'
-    const char* filenameEnd = strchr(filenameStart, '"');
-    if(!filenameEnd || filenameEnd > partHeaderEnd)
-      continue;
-
-    char filename[256];
-    int  fnLen = filenameEnd - filenameStart;
-    if(fnLen > 255)
-      fnLen = 255;
-    strncpy(filename, filenameStart, fnLen);
-    filename[fnLen] = '\0';
-
-    // Skip empty filenames
-    if(filename[0] == '\0') {
-      part = partHeaderEnd + 4;
-      continue;
-    }
-
-    // Extract field name
-    const char* nameStart = bialet_strcasestr(cdStart, "name=\"");
-    if(!nameStart || nameStart > partHeaderEnd)
-      continue;
-
-    nameStart += 6; // Skip 'name="'
-    const char* nameEnd = strchr(nameStart, '"');
-    if(!nameEnd || nameEnd > partHeaderEnd)
-      continue;
-
-    char fieldName[256];
-    int  nameLen = nameEnd - nameStart;
-    if(nameLen > 255)
-      nameLen = 255;
-    strncpy(fieldName, nameStart, nameLen);
-    fieldName[nameLen] = '\0';
-
-    // Extract Content-Type for this part
-    const char* partCtStart = bialet_strcasestr(part, "Content-Type:");
-    char        contentTypeStr[256] = "application/octet-stream";
-    if(partCtStart && partCtStart < partHeaderEnd) {
-      partCtStart += 13; // Skip "Content-Type:"
-      while(*partCtStart == ' ')
-        partCtStart++;
-
-      int ctLen = 0;
-      while(partCtStart[ctLen] && partCtStart[ctLen] != '\r' &&
-            partCtStart[ctLen] != '\n' && ctLen < 255) {
-        contentTypeStr[ctLen] = partCtStart[ctLen];
-        ctLen++;
-      }
-      contentTypeStr[ctLen] = '\0';
-    }
-
-    // Find file data (after part headers)
+    const char* partHeaderEnd = mem_find(part, (size_t)(end - part), "\r\n\r\n", 4);
+    if(!partHeaderEnd)
+      break;
+    size_t      part_head_len = (size_t)(partHeaderEnd - part);
     const char* fileData = partHeaderEnd + 4;
 
-    // Find end of file data (next boundary)
-    const char* nextBoundary = strstr(fileData, startBoundary);
-    if(!nextBoundary)
-      nextBoundary = body + bodyLen;
+    // Where this part's data ends, and where to resume scanning.
+    const char* nextDelim =
+        mem_find(fileData, (size_t)(end - fileData), delimiter, dl_len);
+    const char* fileEnd = nextDelim ? nextDelim : end;
+    const char* resume = nextDelim ? nextDelim + 2 : NULL; // skip the CRLF
 
-    // Calculate file size (remove trailing \r\n before boundary)
-    size_t fileSize = nextBoundary - fileData;
-    if(fileSize >= 2 && fileData[fileSize - 2] == '\r' &&
-       fileData[fileSize - 1] == '\n') {
-      fileSize -= 2;
+    static const char kDisposition[] = "Content-Disposition:";
+    const char*       cdStart =
+        mem_find_ci(part, part_head_len, kDisposition, sizeof(kDisposition) - 1);
+    if(!cdStart) {
+      cursor = resume
+                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
+                   : NULL;
+      continue;
+    }
+    size_t cd_avail = part_head_len - (size_t)(cdStart - part);
+
+    static const char kFilename[] = "filename=\"";
+    const char*       filenameStart =
+        mem_find_ci(cdStart, cd_avail, kFilename, sizeof(kFilename) - 1);
+    char filename[256];
+    filename[0] = '\0';
+    if(filenameStart != NULL) {
+      filenameStart += sizeof(kFilename) - 1;
+      copy_until(filenameStart, (size_t)(partHeaderEnd - filenameStart), "\"",
+                 filename, sizeof(filename));
+    }
+    // A part with no filename is a plain form field, not an upload.
+    if(filename[0] == '\0') {
+      cursor = resume
+                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
+                   : NULL;
+      continue;
     }
 
+    static const char kName[] = "name=\"";
+    const char* nameStart = mem_find_ci(cdStart, cd_avail, kName, sizeof(kName) - 1);
+    char        fieldName[256];
+    fieldName[0] = '\0';
+    if(nameStart != NULL) {
+      nameStart += sizeof(kName) - 1;
+      copy_until(nameStart, (size_t)(partHeaderEnd - nameStart), "\"", fieldName,
+                 sizeof(fieldName));
+    }
+
+    char        contentTypeStr[256] = "application/octet-stream";
+    const char* partCtStart =
+        mem_find_ci(part, part_head_len, kContentType, sizeof(kContentType) - 1);
+    if(partCtStart != NULL) {
+      partCtStart += sizeof(kContentType) - 1;
+      while(partCtStart < partHeaderEnd &&
+            (*partCtStart == ' ' || *partCtStart == '\t'))
+        partCtStart++;
+      copy_until(partCtStart, (size_t)(partHeaderEnd - partCtStart), "\r\n;",
+                 contentTypeStr, sizeof(contentTypeStr));
+    }
+
+    size_t fileSize = (size_t)(fileEnd - fileData);
+
     // Validate file size to prevent disk abuse
-    extern struct BialetConfig bialet_config;
     if(fileSize > bialet_config.max_upload_size) {
-      // Skip this file - it exceeds the maximum allowed size
       char sizeMsg[512];
       snprintf(
           sizeMsg, sizeof(sizeMsg),
           "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
           filename, fileSize, bialet_config.max_upload_size);
       message(red("Upload Error"), sizeMsg);
-      part = fileData;
+      cursor = resume
+                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
+                   : NULL;
       continue;
     }
 
@@ -792,12 +805,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
     // BIALET_FILES (CPU/disk amplification).
     if(uploadedFiles >= MAX_UPLOAD_FILES) {
       message(red("Upload Error"), "Too many files in request, skipping rest");
-      part = fileData;
-      continue;
+      break;
     }
 
     // Save file to database
-    sqlite3_stmt* stmt;
+    sqlite3_stmt* stmt = NULL;
     int result = sqlite3_prepare_v2(db,
                                     "INSERT INTO BIALET_FILES (name, "
                                     "originalFileName, type, file, size, isTemp) "
@@ -808,8 +820,9 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
       sqlite3_bind_text(stmt, 2, filename, -1, SQLITE_STATIC);
       sqlite3_bind_text(stmt, 3, contentTypeStr, -1, SQLITE_STATIC);
-      sqlite3_bind_blob(stmt, 4, fileData, fileSize, SQLITE_STATIC);
-      sqlite3_bind_int(stmt, 5, fileSize);
+      sqlite3_bind_blob64(stmt, 4, fileData, (sqlite3_uint64)fileSize,
+                          SQLITE_STATIC);
+      sqlite3_bind_int64(stmt, 5, (sqlite3_int64)fileSize);
 
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
@@ -830,12 +843,17 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
         } else {
           message(red("Upload Error"), "Too many files uploaded");
         }
+      } else {
+        message(red("Upload Error"), sqlite3_errmsg(db));
       }
       sqlite3_finalize(stmt);
       uploadedFiles++;
+    } else {
+      message(red("Upload Error"), sqlite3_errmsg(db));
     }
 
-    part = fileData;
+    cursor = resume ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
+                    : NULL;
   }
 
   // Steady-state recovery for BIALET_FILES: without a purge the temp blobs
