@@ -1015,6 +1015,10 @@ int server_poll(int delay) {
 static int custom_error_recursing = 0;
 
 void custom_error(int status, struct BialetResponse* response) {
+  // The caller may already own a heap body/header (e.g. the
+  // Response.useErrorFallback path in bialet_run swaps a real response for a
+  // fallback page); release them before overwriting so they are not leaked.
+  free_response_owned(response);
   response->header = BIALET_HEADERS;
   response->header_owned = 0;
   response->status = status;
