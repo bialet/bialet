@@ -339,16 +339,19 @@ int start_server(struct BialetConfig* config) {
     }
     return port;
   }
+  /* 12 bytes, not 10: an int needs 11 characters plus the terminator
+   * ("-2147483648"). The values here are validated ports, but the buffer has to
+   * fit the type -- GCC's -Wformat-truncation flags the old size. */
   if(max_retries == 1) {
-    char port_str[10];
+    char port_str[12];
     snprintf(port_str, sizeof(port_str), "%d", port);
     message(red("Could not bind port"), magenta(port_str),
             "- Check if the port is already in use.");
   } else {
     message(red("Could not open server"));
-    char initial_port_str[10];
+    char initial_port_str[12];
     snprintf(initial_port_str, sizeof(initial_port_str), "%d", config->port);
-    char last_port_str[10];
+    char last_port_str[12];
     snprintf(last_port_str, sizeof(last_port_str), "%d", port);
     message("Ports from", magenta(initial_port_str), "to", magenta(last_port_str),
             "tried");
