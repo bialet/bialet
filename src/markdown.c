@@ -80,24 +80,49 @@ static const char* skip_ordered_list_prefix(const char* line) {
   return line + 2;
 }
 
-static bool escape_html(const char* src, MdBuf* b) {
-  while(*src) {
-    const char* special = src;
-    while(*special && *special != '&' && *special != '<' && *special != '>')
-      special++;
-    if(special > src) {
-      if(!md_appendn(b, src, (size_t)(special - src)))
+// Escapes exactly [n] bytes of [src]. The length-bounded form matters for
+// inline spans, where the region to escape ends before the closing delimiter.
+static bool escape_html_n(const char* src, size_t n, MdBuf* b) {
+  size_t i = 0;
+  while(i < n) {
+    size_t plain = i;
+    while(plain < n && src[plain] != '&' && src[plain] != '<' && src[plain] != '>' &&
+          src[plain] != '"' && src[plain] != '\'')
+      plain++;
+    if(plain > i) {
+      if(!md_appendn(b, src + i, plain - i))
         return false;
-      src = special;
+      i = plain;
     }
-    if(*src == '\0')
+    if(i >= n)
       break;
-    const char* repl = *src == '&' ? "&amp;" : (*src == '<' ? "&lt;" : "&gt;");
+    const char* repl;
+    switch(src[i]) {
+      case '&':
+        repl = "&amp;";
+        break;
+      case '<':
+        repl = "&lt;";
+        break;
+      case '>':
+        repl = "&gt;";
+        break;
+      case '"':
+        repl = "&quot;";
+        break;
+      default:
+        repl = "&#39;";
+        break;
+    }
     if(!md_append(b, repl))
       return false;
-    src++;
+    i++;
   }
   return true;
+}
+
+static bool escape_html(const char* src, MdBuf* b) {
+  return escape_html_n(src, strlen(src), b);
 }
 
 static bool render_inline(const char* src, MdBuf* b) {
@@ -125,12 +150,14 @@ static bool render_inline(const char* src, MdBuf* b) {
         continue;
       }
     } else if(*src == '`') {
-      src++;
-      const char* end = strchr(src, '`');
+      const char* end = strchr(src + 1, '`');
       if(end) {
+        // Escape only the span between the backticks. escape_html() ran to the
+        // end of the line, so everything after the closing backtick was emitted
+        // once inside <code> and then a second time by the loop below.
         if(!md_append(b, "<code>"))
           return false;
-        if(!escape_html(src, b))
+        if(!escape_html_n(src + 1, (size_t)(end - src - 1), b))
           return false;
         if(!md_append(b, "</code>"))
           return false;
