@@ -43,6 +43,7 @@ typedef int bialet_socket_t;
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,21 +72,89 @@ typedef int bialet_socket_t;
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
 
-// Portable case-insensitive string search
-static const char* stristr(const char* haystack, const char* needle) {
-  if(!*needle)
-    return haystack;
-  for(; *haystack; haystack++) {
-    const char* h = haystack;
-    const char* n = needle;
-    while(*h && *n && tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
-      h++;
-      n++;
-    }
-    if(!*n)
-      return haystack;
+// Portable case-insensitive compare of exactly [n] bytes.
+static int ci_ncmp(const char* a, const char* b, size_t n) {
+  for(size_t i = 0; i < n; i++) {
+    int ca = tolower((unsigned char)a[i]);
+    int cb = tolower((unsigned char)b[i]);
+    if(ca != cb)
+      return ca - cb;
+  }
+  return 0;
+}
+
+// Bounded search for the CRLFCRLF terminating the header block. Returns the
+// offset of the first body byte, or 0 when the terminator has not arrived yet.
+// The request buffer holds attacker-controlled bytes that may contain NULs
+// (file uploads), so every scan here is length-bounded rather than str*().
+static size_t header_block_len(const char* buf, size_t len) {
+  if(len < 4)
+    return 0;
+  for(size_t i = 0; i + 4 <= len; i++) {
+    if(memcmp(buf + i, "\r\n\r\n", 4) == 0)
+      return i + 4;
+  }
+  return 0;
+}
+
+// Returns a pointer to the value of header [name] within the header block, or
+// NULL. Matching is anchored to the start of a header line and the request
+// line is skipped: an unanchored search (the old stristr over the whole
+// buffer) accepted "Content-Length:" appearing in the request line or body,
+// so "GET /?x=Content-Length:50000" made the single-threaded server wait out
+// the full body deadline for bytes that were never coming. Leading whitespace
+// before the field name is not accepted either, which is what stops request
+// smuggling via " Content-Length:".
+static const char* find_header(const char* buf, size_t hdr_len, const char* name,
+                               size_t name_len) {
+  const char* p = buf;
+  const char* end = buf + hdr_len;
+
+  while(p + 1 < end && !(p[0] == '\r' && p[1] == '\n'))
+    p++;
+  if(p + 1 >= end)
+    return NULL;
+  p += 2;
+
+  while(p < end) {
+    const char* eol = p;
+    while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
+      eol++;
+    size_t line_len = (size_t)(eol - p);
+    if(line_len > name_len && p[name_len] == ':' && ci_ncmp(p, name, name_len) == 0)
+      return p + name_len + 1;
+    if(eol + 1 >= end)
+      break;
+    p = eol + 2;
   }
   return NULL;
+}
+
+// Strict unsigned decimal parse of a Content-Length value. Returns 0 on
+// success, 1 when well-formed but above [max], -1 when malformed. strtol()
+// previously accepted leading signs and stopped at the first non-digit, so
+// "Content-Length:50000junk" parsed as 50000.
+static int parse_content_length(const char* v, size_t max, size_t* out) {
+  while(*v == ' ' || *v == '\t')
+    v++;
+  if(*v < '0' || *v > '9')
+    return -1;
+  size_t n = 0;
+  while(*v >= '0' && *v <= '9') {
+    size_t digit = (size_t)(*v - '0');
+    if(n > (SIZE_MAX - digit) / 10)
+      return -1;
+    n = n * 10 + digit;
+    v++;
+  }
+  while(*v == ' ' || *v == '\t')
+    v++;
+  if(*v != '\r' && *v != '\n' && *v != '\0')
+    return -1;
+  if(n > max)
+    return 1;
+  *out = n;
+  return 0;
 }
 
 // Returns 1 when any path component of [uri] starts with '_' or '.', closing
@@ -427,11 +496,16 @@ char* get_content_type(const char* path) {
   return (char*)"Content-Type: application/octet-stream\r\n";
 }
 
-struct HttpMessage* parse_request(char* request, ssize_t length) {
-  struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
+// Zeroed so that `headers` -- declared in struct HttpMessage but not populated
+// on this path -- is never left indeterminate. Returns NULL on allocation
+// failure so the caller can fail the single request instead of exiting the
+// whole server.
+struct HttpMessage* parse_request(char* request, size_t length) {
+  struct HttpMessage* hm =
+      (struct HttpMessage*)calloc(1, sizeof(struct HttpMessage));
   if(hm == NULL) {
     perror("Failed to allocate memory for HttpMessage");
-    exit(EXIT_FAILURE);
+    return NULL;
   }
 
   char   first_line[BUFFER_SIZE];
@@ -444,7 +518,7 @@ struct HttpMessage* parse_request(char* request, ssize_t length) {
 
   hm->message = create_string(request, length);
 
-  // Tokenizar la primera línea segura
+  // Tokenize the request line from the bounded copy above.
   char* saveptr = NULL;
   char* method = strtok_r(first_line, " ", &saveptr);
   if(!method)
@@ -596,84 +670,88 @@ static int resolve_within_root(const char* path, char* resolved) {
 }
 
 void handle_client(bialet_socket_t client_socket) {
-  char    buffer[BUFFER_SIZE];
-  ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-  if(bytes_read <= 0) {
-    perror("Error reading request");
+  char   buffer[BUFFER_SIZE];
+  size_t total_read = 0;
+  size_t hdr_len = 0;
+
+  // Read until the header block is complete. Taking whatever the first recv()
+  // returned meant headers split across two TCP segments -- routine for any
+  // real client -- were parsed as a truncated request. Bounded by the same
+  // wall-clock deadline used for bodies so a slow-drip peer cannot park the
+  // accept loop.
+  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
+  for(;;) {
+    long long remaining = deadline - monotonic_ms();
+    if(remaining <= 0 || total_read >= sizeof(buffer) - 1)
+      break;
+    if(!wait_readable(client_socket, (int)remaining))
+      break;
+    ssize_t n =
+        recv(client_socket, buffer + total_read, sizeof(buffer) - 1 - total_read, 0);
+    if(n <= 0)
+      break;
+    total_read += (size_t)n;
+    hdr_len = header_block_len(buffer, total_read);
+    if(hdr_len != 0)
+      break;
+  }
+  if(total_read == 0) {
+    // A peer that simply closed sets no errno, so perror() here only printed a
+    // stale, misleading message.
     socket_close(client_socket);
     return;
   }
-  buffer[bytes_read] = '\0';
+  buffer[total_read] = '\0';
 
-  // Check if we need to read more data (for large POST bodies)
   char*  full_request = buffer;
-  size_t total_read = bytes_read;
   size_t content_length = 0;
+  int    should_free_request = 0;
 
-  // Find Content-Length header
-  const char* cl_header = stristr(buffer, "Content-Length:");
-  if(cl_header && (cl_header < buffer + bytes_read)) {
-    char* endptr;
-    long  cl_value = strtol(cl_header + 15, &endptr, 10);
-    if(cl_value < 0 || (unsigned long)cl_value > bialet_config.max_post_size) {
-      // Reject oversized bodies with a proper HTTP 413 instead of dropping the
-      // connection: reading the body into Wren would blow the memory limit.
-      // Drain the already-declared body first so the socket closes with a
-      // clean FIN and the client actually receives the 413 page.
-      if(cl_value > 0) {
-        size_t      body_declared = (size_t)cl_value;
-        const char* body_start = strstr(buffer, "\r\n\r\n");
-        size_t      already_buffered = 0;
-        if(body_start != NULL) {
-          size_t body_offset = (size_t)(body_start + 4 - buffer);
-          if(body_offset < (size_t)bytes_read)
-            already_buffered = bytes_read - body_offset;
+  // Content-Length is read from the header block only, anchored to a line
+  // start (see find_header).
+  if(hdr_len != 0) {
+    static const char kContentLength[] = "Content-Length:";
+    const char*       cl =
+        find_header(buffer, hdr_len, kContentLength, sizeof(kContentLength) - 1);
+    if(cl != NULL) {
+      int rc =
+          parse_content_length(cl, bialet_config.max_post_size, &content_length);
+      if(rc != 0) {
+        // Reject oversized or malformed bodies with a proper HTTP 413 instead
+        // of dropping the connection: reading the body into Wren would blow
+        // the memory limit. Drain the already-declared body first so the
+        // socket closes with a clean FIN and the client actually receives the
+        // 413 page.
+        if(rc > 0) {
+          size_t already = total_read - hdr_len;
+          size_t declared = 0;
+          if(parse_content_length(cl, SIZE_MAX, &declared) == 0 &&
+             already < declared) {
+            drain_request_body(client_socket, declared - already);
+          }
         }
-        if(already_buffered < body_declared) {
-          drain_request_body(client_socket, body_declared - already_buffered);
-        }
-      }
-      struct BialetResponse too_large = {0, "", "", 0, 0, 0};
-      custom_error(413, &too_large);
-      write_response(client_socket, &too_large);
-      free_response_owned(&too_large);
-      return;
-    }
-    content_length = (size_t)cl_value;
-  }
-
-  // Find end of headers
-  const char* body_start = strstr(buffer, "\r\n\r\n");
-  if(body_start && content_length > 0) {
-    body_start += 4;
-    size_t headers_len = body_start - buffer;
-    size_t body_read = bytes_read - headers_len;
-
-    // If we haven't read the full body yet, allocate and read more
-    if(body_read < content_length) {
-      size_t full_size = headers_len + content_length;
-
-      // Additional safety check
-      if(content_length > bialet_config.max_post_size) {
-        message(red("Request Error"), "Request size exceeds maximum allowed");
-        socket_close(client_socket);
+        struct BialetResponse too_large = {0};
+        custom_error(413, &too_large);
+        write_response(client_socket, &too_large);
+        free_response_owned(&too_large);
         return;
       }
+    }
+  }
 
+  // Read the remainder of the body, if any.
+  if(content_length > 0 && hdr_len != 0) {
+    size_t full_size = hdr_len + content_length;
+    if(total_read < full_size) {
       full_request = (char*)malloc(full_size + 1);
       if(!full_request) {
         perror("Failed to allocate memory for large request");
         socket_close(client_socket);
         return;
       }
+      should_free_request = 1;
+      memcpy(full_request, buffer, total_read);
 
-      // Copy what we already have
-      memcpy(full_request, buffer, bytes_read);
-      total_read = bytes_read;
-
-      // Read remaining data within a total wall-clock deadline so a slow-drip
-      // peer cannot park the single-threaded server past the budget.
-      long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
       while(total_read < full_size) {
         long long remaining = deadline - monotonic_ms();
         if(remaining <= 0)
@@ -684,7 +762,7 @@ void handle_client(bialet_socket_t client_socket) {
                          full_size - total_read, 0);
         if(n <= 0)
           break;
-        total_read += n;
+        total_read += (size_t)n;
       }
 
       // The body did not fully arrive (peer closed early or the deadline
@@ -699,11 +777,14 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   struct HttpMessage* hm = parse_request(full_request, total_read);
+  if(hm == NULL) {
+    if(should_free_request)
+      free(full_request);
+    socket_close(client_socket);
+    return;
+  }
   if(!livereload_is_poll(hm->uri.str))
     message(magenta("Request"), hm->method.str, hm->uri.str);
-
-  // Variable to track if we need to free full_request
-  int should_free_request = (full_request != buffer);
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
@@ -959,9 +1040,8 @@ void handle_client(bialet_socket_t client_socket) {
   free_response_owned(&response);
 
   // Free allocated memory if we had to read a large request
-  if(full_request != buffer) {
+  if(should_free_request)
     free(full_request);
-  }
 }
 
 int server_poll(int delay) {
