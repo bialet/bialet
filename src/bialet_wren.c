@@ -448,8 +448,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
   (void)vm;
   sqlite3_stmt* stmt;
   const char*   columns[MAX_COLUMNS];
-  const char*   value;
-  int           colType, colCount = 0, type, rowCount = 0, bindCounter = 0, size = 0;
+  int           colType, colCount = 0, rowCount = 0, bindCounter = 0;
 
   // Check if the query string contains only whitespace
   const char* str = query->queryString;
@@ -514,18 +513,29 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
       break;
     }
     for(int i = 0; i < colCount; i++) {
+      /* Initialized per column. These were declared once outside the loop and
+       * the `default:` branch below only logged before falling through to
+       * add_result_row(), which then used whatever the *previous* column left
+       * behind -- or, on the first column, indeterminate values. */
+      const char* value = NULL;
+      int         size = 0;
+      int         type = BIALETQUERYTYPE_NULL;
+
       colType = sqlite3_column_type(stmt, i);
       switch(colType) {
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
-          type = BIALETQUERYTYPE_NUMBER;
-          value = (const char*)sqlite3_column_text(stmt, i);
-          size = strlen(value);
-          break;
         case SQLITE_TEXT:
-          type = BIALETQUERYTYPE_STRING;
+          type = colType == SQLITE_TEXT ? BIALETQUERYTYPE_STRING
+                                        : BIALETQUERYTYPE_NUMBER;
           value = (const char*)sqlite3_column_text(stmt, i);
-          size = strlen(value);
+          /* sqlite3_column_text returns NULL if the conversion cannot be
+           * allocated; strlen() on it was an unconditional NULL dereference. */
+          if(value == NULL) {
+            alloc_error = 1;
+          } else {
+            size = (int)strlen(value);
+          }
           break;
         case SQLITE_BLOB:
           type = BIALETQUERYTYPE_BLOB;
@@ -542,9 +552,11 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
           size = 1;
           break;
         default:
-          message(red("Query Error"), "Uknown type on binding result");
-          break;
+          message(red("Query Error"), "Unknown type on binding result");
+          continue; /* skip this column instead of falling through */
       }
+      if(alloc_error)
+        break;
       if(add_result_row(query, rowCount, columns[i], value, size, type) != 0) {
         alloc_error = 1;
         break;
