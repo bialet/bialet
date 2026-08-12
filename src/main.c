@@ -16,6 +16,7 @@
 #include "server.h"
 #include "show_errors.h"
 #include <errno.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,7 +54,12 @@
 
 #define MEGABYTE (1024 * 1024)
 #define MAX_URL 256
-#define MAX_PATH_LEN 100
+/* Paths get PATH_MAX. This was 100, which is shorter than many real project
+ * paths: realpath_n() refuses to truncate, so `bialet /some/deep/app/dir`
+ * reported "app directory not found" for a directory that existed, and the
+ * migration and cron paths below were silently truncated so those files were
+ * never found. */
+#define MAX_PATH_LEN PATH_MAX
 #define MIGRATION_FILE "/_migration" BIALET_EXTENSION
 #define MIGRATION_FILE_ALT "/_app/migration" BIALET_EXTENSION
 #define CRON_FILE "/_cron" BIALET_EXTENSION
@@ -113,9 +119,13 @@ static void migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
-  snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE);
-  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
-           MIGRATION_FILE_ALT);
+  if(snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE) >=
+         (int)sizeof(path) ||
+     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+              MIGRATION_FILE_ALT) >= (int)sizeof(altPath)) {
+    message(red("Error"), "Migration path too long");
+    return;
+  }
 #ifndef _WIN32
   pthread_mutex_lock(&run_mutex);
 #endif
@@ -134,8 +144,13 @@ static void install_cron() {
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
   char* new_code = 0;
-  snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE);
-  snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir, CRON_FILE_ALT);
+  if(snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE) >=
+         (int)sizeof(path) ||
+     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+              CRON_FILE_ALT) >= (int)sizeof(altPath)) {
+    message(red("Error"), "Cron path too long");
+    return;
+  }
   if((new_code = read_file(path)) == 0)
     new_code = read_file(altPath);
   if(new_code != 0) {
