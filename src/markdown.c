@@ -275,7 +275,13 @@ char* markdown_to_html(const char* markdown) {
           goto fail;
         in_blockquote = true;
       }
-      if(!render_inline(line + 2, &buf))
+      // Skip the marker and at most one following space without ever moving
+      // past the terminator. `line + 2` read one byte beyond the NUL for a line
+      // consisting of exactly ">", which any document can contain.
+      const char* quoted = line + 1;
+      if(*quoted == ' ')
+        quoted++;
+      if(!render_inline(quoted, &buf))
         goto fail;
       if(!md_append(&buf, "<br>\n"))
         goto fail;
