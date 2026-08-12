@@ -16,8 +16,31 @@ OBJ_DIRS := $(sort $(dir $(OBJS)))
 
 WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 
-CFLAGS := -Wall -Wextra -Werror -g
-LDFLAGS := -std=c17 -lm -lpthread -lsqlite3 -lcurl
+# -std= belongs in CFLAGS. It used to sit in LDFLAGS, where the compiler driver
+# ignores it for compilation, so the project was never actually built as C17 --
+# it used whatever the compiler defaulted to.
+#
+# gnu17 rather than c17: strict c17 defines __STRICT_ANSI__, which on glibc hides
+# strtok_r, strncasecmp, realpath, openat, mkstemp, ftw.h and localtime_r, all of
+# which this codebase uses. Switching to plain c17 would need
+# -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE alongside it.
+#
+# -O2: there was no optimization flag at all, so releases shipped unoptimized.
+# -Wvla catches VLAs (optional in C11/C17, absent on MSVC).
+CFLAGS := -std=gnu17 -Wall -Wextra -Werror -g -O2 -Wvla -Wpointer-arith \
+          -fstack-protector-strong
+LDFLAGS := -lm -lpthread -lsqlite3 -lcurl
+
+# Hardening for the network daemon. glibc-only / GNU-ld-only, so Linux only;
+# the Linux `static` target below does not use LDFLAGS and is unaffected.
+ifeq ($(OS),Linux)
+CFLAGS += -D_FORTIFY_SOURCE=2
+LDFLAGS += -Wl,-z,relro,-z,now
+endif
+
+# Not enabled, because they cannot pass with -Werror while the vendored Wren
+# sources are compiled in the same pass, but useful to run by hand:
+#   -Wshadow -Wstrict-prototypes -Wwrite-strings -Wcast-qual -Wconversion
 
 # Not checking against OS because I compile with Wine on Linux
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
