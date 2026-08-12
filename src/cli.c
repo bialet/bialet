@@ -106,15 +106,22 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
     case CLI_OPT_VERSION:
       opts->action = BIALET_CLI_VERSION;
       break;
-    case CLI_OPT_LOG:
-      if((config->log_file = fopen(value, "a")) == NULL) {
+    case CLI_OPT_LOG: {
+      FILE* opened = fopen(value, "a");
+      if(opened == NULL) {
         snprintf(opts->error, sizeof(opts->error), "Error opening log file %s: %s",
                  value, strerror(errno));
         opts->action = BIALET_CLI_INVALID;
         return;
       }
+      /* Repeating -l leaked the previously opened stream. */
+      if(config->log_file != NULL && config->log_file != stdout &&
+         config->log_file != stderr) {
+        fclose(config->log_file);
+      }
+      config->log_file = opened;
       config->output_color = 0;
-      break;
+    } break;
     case CLI_OPT_DB:
       config->db_path = (char*)value;
       break;
