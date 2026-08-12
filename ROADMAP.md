@@ -152,38 +152,38 @@ improvements.
 - [x] **Windows: no-follow open for Wren file/module reads** — extend the
       no-follow item to `read_file` (`src/bialet_wren.c`), which still uses
       plain `fopen` on Windows and follows junctions.
-- [ ] **Unchecked `sqlite3_prepare_v2()` results in `bialet_wren.c`** —
+- [x] **Unchecked `sqlite3_prepare_v2()` results in `bialet_wren.c`** —
       `bialet_wren_write` (the log/`System.print()` sink) and
       `bialet_wren_load_module` (remote-module cache lookup) both discard the
       prepare's return code and bind/step the possibly-`NULL` statement
       unconditionally. A `SQLITE_BUSY` failure (mitigated but not eliminated by
       `sqlite3_busy_timeout`) crashes the request with a NULL deref. Check the
       return value before using `stmt` in both.
-- [ ] **Unchecked `realloc()` derefs in `add_result`/`add_result_row`/
+- [x] **Unchecked `realloc()` derefs in `add_result`/`add_result_row`/
       `add_parameter`** — all three (`src/bialet_wren.c`) grow a query's
       results/rows/parameters array with `realloc()` and dereference the result
       immediately with no `NULL` check. An allocation failure under the 50MB
       `RLIMIT_AS` cap on a large `Db` query crashes instead of returning an
       error.
-- [ ] **`custom_error()` leaks the previously-owned response header/body** —
+- [x] **`custom_error()` leaks the previously-owned response header/body** —
       `src/server.c` overwrites `response->header`/`body` without checking
       `header_owned`/`body_owned` first, leaking the prior allocation on the
       `Response.useErrorFallback` path; a remotely-repeatable per-request leak
       that contributes to `RLIMIT_AS`-triggered worker restarts under sustained
       traffic.
-- [ ] **Remote-module fetch leaks `HttpRequest` strings and
+- [x] **Remote-module fetch leaks `HttpRequest` strings and
       `HttpResponse.error_message`** — `bialet_wren_load_module`
       (`src/bialet_wren.c`) builds `req.method`/`basicAuth`/`raw_headers`/
       `postData`/`url` and `resp.error_message` on the heap but never frees them
       on either the success or failure return path after a `gh:`/`http(s)://`
       module import.
-- [ ] **`HttpRequest.timeout`/`connectTimeout` read uninitialized in
+- [x] **`HttpRequest.timeout`/`connectTimeout` read uninitialized in
       remote-module fetch** — the local `struct HttpRequest req` in
       `bialet_wren_load_module` (`src/bialet_wren.c`) never assigns
       `timeout`/`connectTimeout` before `http_call_perform()` reads them via
       `> 0` comparisons, so the outbound fetch timeout is whatever garbage was
       on the stack.
-- [ ] **Windows outbound HTTP path has no timeouts and mishandles write
+- [x] **Windows outbound HTTP path has no timeouts and mishandles write
       failures** — the Windows raw-socket branch of `http_call_perform`
       (`src/http_call.c`) never applies `request->timeout`/`connectTimeout`
       (unlike the POSIX/libcurl path's `CURLOPT_TIMEOUT_MS`/
