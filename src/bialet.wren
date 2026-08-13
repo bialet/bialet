@@ -980,17 +980,17 @@ class File {
   size { _size }
   isTemp { _isTemp }
   createdAt { _createdAt }
-  destroy { `DELETE FROM BIALET_FILES WHERE id = ? LIMIT 1`.query(_id) }
+  destroy { `DELETE FROM BIALET_FILES WHERE id = ?`.query(_id) }
   destroy() { destroy }
   save {
     _isTemp = false
-    `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ? LIMIT 1`.query(_id)
+    `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ?`.query(_id)
     return this
   }
   save() { save }
   temp {
     _isTemp = true
-    `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ? LIMIT 1`.query(_id)
+    `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ?`.query(_id)
     return this
   }
   temp() { temp }

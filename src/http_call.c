@@ -276,6 +276,41 @@ static void parse_http_response(struct HttpResponse* res, const char* raw,
   res->body = body;
 }
 
+/* Base64-encodes [len] bytes of [data] into a heap buffer (caller frees).
+ * Only used to build the Authorization header for basic auth, so the alphabet
+ * and padding are the standard RFC 4648 ones. */
+static char* base64_encode(const unsigned char* data, size_t len) {
+  static const char table[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  char* out = (char*)malloc(((len + 2) / 3) * 4 + 1);
+  if(out == NULL)
+    return NULL;
+  size_t i = 0, o = 0;
+  for(; i + 3 <= len; i += 3) {
+    unsigned v = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
+    out[o++] = table[(v >> 18) & 63];
+    out[o++] = table[(v >> 12) & 63];
+    out[o++] = table[(v >> 6) & 63];
+    out[o++] = table[v & 63];
+  }
+  size_t rem = len - i;
+  if(rem == 1) {
+    unsigned v = (unsigned)data[i] << 16;
+    out[o++] = table[(v >> 18) & 63];
+    out[o++] = table[(v >> 12) & 63];
+    out[o++] = '=';
+    out[o++] = '=';
+  } else if(rem == 2) {
+    unsigned v = ((unsigned)data[i] << 16) | ((unsigned)data[i + 1] << 8);
+    out[o++] = table[(v >> 18) & 63];
+    out[o++] = table[(v >> 12) & 63];
+    out[o++] = table[(v >> 6) & 63];
+    out[o++] = '=';
+  }
+  out[o] = '\0';
+  return out;
+}
+
 /* Builds the request into a heap buffer. The old code formatted into a fixed
  * char[1024] and failed the call outright for anything larger, and with an
  * empty raw_headers it emitted "...Host: h\r\n" + "" + "\r\n", terminating the
@@ -293,18 +328,47 @@ static char* build_request(const struct ParsedUrl*   url,
       hdr_len > 0 && !(hdr_len >= 2 && raw_headers[hdr_len - 2] == '\r' &&
                        raw_headers[hdr_len - 1] == '\n');
 
-  int head_len = snprintf(
-      NULL, 0, "%s %s HTTP/1.1\r\nHost: %s\r\n%s%sContent-Length: %zu\r\n\r\n",
-      method, url->path, url->host, raw_headers, needs_crlf ? "\r\n" : "", post_len);
-  if(head_len < 0)
+  /* Basic auth is sent as "Authorization: Basic <base64(user:pass)>"; the
+   * libcurl path handles this via CURLOPT_USERPWD, so it must be spelled out
+   * here. The header always ends with CRLF. */
+  char* auth_header = NULL;
+  if(request->basicAuth != NULL && request->basicAuth[0] != '\0') {
+    char* enc = base64_encode((const unsigned char*)request->basicAuth,
+                              strlen(request->basicAuth));
+    if(enc != NULL) {
+      int needed = snprintf(NULL, 0, "Authorization: Basic %s\r\n", enc);
+      if(needed > 0) {
+        auth_header = (char*)malloc((size_t)needed + 1);
+        if(auth_header != NULL)
+          snprintf(auth_header, (size_t)needed + 1, "Authorization: Basic %s\r\n",
+                   enc);
+      }
+      free(enc);
+    }
+  }
+
+  int head_len =
+      snprintf(NULL, 0,
+               "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
+               "Length: %zu\r\n\r\n",
+               method, url->path, url->host, auth_header ? auth_header : "",
+               raw_headers, needs_crlf ? "\r\n" : "", post_len);
+  if(head_len < 0) {
+    free(auth_header);
     return NULL;
+  }
 
   char* req = (char*)malloc((size_t)head_len + post_len + 1);
-  if(req == NULL)
+  if(req == NULL) {
+    free(auth_header);
     return NULL;
+  }
   snprintf(req, (size_t)head_len + 1,
-           "%s %s HTTP/1.1\r\nHost: %s\r\n%s%sContent-Length: %zu\r\n\r\n", method,
-           url->path, url->host, raw_headers, needs_crlf ? "\r\n" : "", post_len);
+           "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
+           "Length: %zu\r\n\r\n",
+           method, url->path, url->host, auth_header ? auth_header : "", raw_headers,
+           needs_crlf ? "\r\n" : "", post_len);
+  free(auth_header);
   /* memcpy rather than a %s in the format: the body may contain NUL bytes. */
   memcpy(req + head_len, postData, post_len);
   *out_len = (size_t)head_len + post_len;

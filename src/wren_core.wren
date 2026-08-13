@@ -695,7 +695,13 @@ class Query {
   fetch(p1, p2, p3) { fetch_(this, [p1, p2, p3]) }
   // First methods, return first result as Object
   first_(params) {
-    var res = fetch_("%(this) LIMIT 1", params)
+    // Only SELECT statements can take a trailing "LIMIT 1". Appending it to an
+    // UPDATE/DELETE/INSERT is a syntax error in SQLite >= 3.46 (UPDATE/DELETE
+    // LIMIT support was removed there), and to an "UPDATE ... RETURNING" it
+    // lands after the RETURNING clause, which most versions reject.
+    var sql = "%(this)"
+    if (sql.trim().upper.startsWith("SELECT")) sql = sql + " LIMIT 1"
+    var res = fetch_(sql, params)
     return res is List && res.count > 0 ? res[0] : null
   }
   first { first_([]) }

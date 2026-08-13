@@ -1592,6 +1592,65 @@ DEF_PRIMITIVE(date_current) {
   RETURN_VAL(wrenNewString(vm, fullDate));
 }
 
+/* Whether year [y] has 53 ISO 8601 weeks: it does exactly when its January 1
+ * falls on a Thursday, or on a Wednesday in a leap year. */
+static int year_has_53_iso_weeks(int y) {
+  struct tm jan1 = {0};
+  jan1.tm_year = y - 1900;
+  jan1.tm_mday = 1;
+  mktime(&jan1);
+  int iso_wday = jan1.tm_wday == 0 ? 7 : jan1.tm_wday; /* Mon=1 .. Sun=7 */
+  int leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+  return iso_wday == 4 || (leap && iso_wday == 3);
+}
+
+/* ISO 8601 week number (1-53) of [y]-[m]-[d]. strftime()'s %V produces this
+ * on glibc but is unsupported (empty output) on the msvcrt the Windows build
+ * links, so it is computed here for every platform. */
+static int iso_week_number(int y, int m, int d) {
+  struct tm t = {0};
+  t.tm_year = y - 1900;
+  t.tm_mon = m - 1;
+  t.tm_mday = d;
+  mktime(&t);
+  int iso_wday = t.tm_wday == 0 ? 7 : t.tm_wday; /* Mon=1 .. Sun=7 */
+  int week = (t.tm_yday + 1 - iso_wday + 10) / 7;
+  if(week < 1)
+    return iso_week_number(y - 1, 12, 28); /* last week of the previous year */
+  if(week == 53 && !year_has_53_iso_weeks(y))
+    return 1; /* the week of Dec 29-31 belongs to next year */
+  return week;
+}
+
+/* ISO 8601 week-numbering year for [y]-[m]-[d]: differs from [y] only for the
+ * first or last few days of the year. */
+static int iso_week_year(int y, int m, int d) {
+  struct tm t = {0};
+  t.tm_year = y - 1900;
+  t.tm_mon = m - 1;
+  t.tm_mday = d;
+  mktime(&t);
+  int iso_wday = t.tm_wday == 0 ? 7 : t.tm_wday;
+  int week = (t.tm_yday + 1 - iso_wday + 10) / 7;
+  if(week < 1)
+    return y - 1;
+  if(week == 53 && !year_has_53_iso_weeks(y))
+    return y + 1;
+  return y;
+}
+
+/* Appends the strftime expansion of [fmt] to out[*pos], growing nothing beyond
+ * [cap]. */
+static void date_format_append(char* out, size_t cap, size_t* pos,
+                               const struct tm* t, const char* fmt) {
+  char tmp[64];
+  if(strftime(tmp, sizeof(tmp), fmt, t) == 0)
+    return;
+  for(const char* p = tmp; *p && *pos + 1 < cap; p++)
+    out[(*pos)++] = *p;
+  out[*pos] = '\0';
+}
+
 DEF_PRIMITIVE(date_format) {
   const char* format = AS_CSTRING(args[1]);
   int         year = AS_NUM(args[2]);
@@ -1615,9 +1674,82 @@ DEF_PRIMITIVE(date_format) {
   // struct fields.
   mktime(&t);
 
-  char buf[64];
-  strftime(buf, sizeof(buf), format, &t);
-  RETURN_VAL(wrenNewString(vm, buf));
+  // The C library's strftime() is used for the C89 directives, but the POSIX
+  // extras are expanded here so the output matches on Windows too: the msvcrt
+  // that the MinGW build links against does not implement %F %T %V %G %g %e
+  // %u %R %r %h %n %t %s and returns empty text for them.
+  char   out[128];
+  size_t pos = 0;
+  out[0] = '\0';
+  for(const char* p = format; *p && pos + 16 < sizeof(out); p++) {
+    if(*p != '%') {
+      out[pos++] = *p;
+      continue;
+    }
+    char d = *++p;
+    if(d == '\0')
+      break;
+    switch(d) {
+      case '%':
+        out[pos++] = '%';
+        break;
+      case 'F':
+        date_format_append(out, sizeof(out), &pos, &t, "%Y-%m-%d");
+        break;
+      case 'T':
+        date_format_append(out, sizeof(out), &pos, &t, "%H:%M:%S");
+        break;
+      case 'R':
+        date_format_append(out, sizeof(out), &pos, &t, "%H:%M");
+        break;
+      case 'r':
+        date_format_append(out, sizeof(out), &pos, &t, "%I:%M:%S %p");
+        break;
+      case 'h':
+        date_format_append(out, sizeof(out), &pos, &t, "%b");
+        break;
+      case 'n':
+        out[pos++] = '\n';
+        break;
+      case 't':
+        out[pos++] = '\t';
+        break;
+      case 'V':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%02d",
+                                iso_week_number(year, month, day));
+        break;
+      case 'G':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%04d",
+                                iso_week_year(year, month, day));
+        break;
+      case 'g':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%02d",
+                                iso_week_year(year, month, day) % 100);
+        break;
+      case 'u':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%d",
+                                t.tm_wday == 0 ? 7 : t.tm_wday);
+        break;
+      case 'e':
+        /* %e is space-padded, %d is zero-padded. */
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%2d", t.tm_mday);
+        break;
+      case 's': {
+        char tmp[24];
+        snprintf(tmp, sizeof(tmp), "%ld", (long)mktime(&t));
+        for(char* c = tmp; *c && pos + 1 < sizeof(out); c++)
+          out[pos++] = *c;
+        break;
+      }
+      default: {
+        char fmt[3] = {'%', d, '\0'};
+        date_format_append(out, sizeof(out), &pos, &t, fmt);
+        break;
+      }
+    }
+  }
+  out[pos] = '\0';
+  RETURN_VAL(wrenNewString(vm, out));
 }
 
 DEF_PRIMITIVE(date_unix) {
