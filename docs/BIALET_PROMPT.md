@@ -891,8 +891,9 @@ class Task {
   save() { _id = `tasks`.save(this) }
 
   toggle() {
-    _finished = `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ? RETURNING finished`
-      .toBool(_id, Session.id)
+    `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ?`.query(_id, Session.id)
+    _finished = !finished
+    return _finished
   }
 
   static list() { `SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC`.fetch(Session.id).to(Task) }

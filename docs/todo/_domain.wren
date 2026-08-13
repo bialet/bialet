@@ -17,11 +17,9 @@ class Task {
   save() { `Task`.save(this) }
 
   toggle() {
-    _finished = `
-      UPDATE Task SET finished = ((finished | 1) - (finished & 1))
-      WHERE id = ? AND session = ?
-      RETURNING finished
-    `.toBool(_id, Session.id)
+    `UPDATE Task SET finished = ((finished | 1) - (finished & 1)) WHERE id = ? AND session = ?`.query(_id, Session.id)
+    _finished = !finished
+    return _finished
   }
 
   toString { description }
