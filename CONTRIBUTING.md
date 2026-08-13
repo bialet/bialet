@@ -12,29 +12,85 @@ Be respectful. Keep discussions constructive. Assume good intent.
 
 ### Prerequisites
 
+- A C17-compatible compiler (`gcc` or `clang`) and `make`
+- `git`
+- Development headers for SQLite, libcurl, and OpenSSL (see below)
+- `python3` — only needed to regenerate the embedded Wren sources
+  (`make wren_files`)
+
 **Linux (Debian/Ubuntu):**
 
 ```bash
-sudo apt install -y build-essential libsqlite3-dev libssl-dev
-# Optional, recommended for production:
-sudo apt install -y libcurl4-openssl-dev
+sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
 ```
 
 **macOS:**
 
 ```bash
-brew install sqlite3 curl
-# Optional, recommended for production:
-brew install openssl
+brew install sqlite3 curl openssl pkg-config
 ```
+
+**Windows** — Bialet is cross-compiled from Linux with MinGW (see
+[Cross-compiling](#cross-compiling) below). The resulting binary needs these
+DLLs alongside it at runtime:
+
+- `libsqlite3-0.dll`
+- `libcrypto-3-x64.dll`
+- `libssl-3-x64.dll`
+
+OpenSSL is optional but recommended for production (enables TLS). The build
+auto-detects it and defines `HAVE_SSL` when present; on macOS it is located
+via `pkg-config`.
 
 ### Build
 
 ```bash
-make clean && make
+git clone https://github.com/bialet/bialet.git
+cd bialet
+make               # compiles to ./build/bialet
+make install       # copies the binary to ~/.local/bin
 ```
 
-The binary is at `build/bialet`.
+The default build uses `-Wall -Wextra -Werror` and links against
+`libsqlite3`, `libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto`
+when OpenSSL is detected).
+
+#### Make targets
+
+| Target              | Description                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `make` / `make all` | Build the binary to `./build/bialet`                                                    |
+| `make install`      | Copy the binary to `~/.local/bin`                                                       |
+| `make uninstall`    | Remove the installed binary                                                             |
+| `make check`        | Build and run the test suite                                                            |
+| `make installcheck` | Install, then run the tests against the installed binary                                |
+| `make static`       | Linux only — produce a statically linked, self-contained binary                         |
+| `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
+| `make html`         | Build the documentation with Sphinx                                                     |
+| `make clean`        | Remove `build/` and test databases                                                      |
+
+### Cross-compiling
+
+Docker-based, one-shot (no local MinGW setup needed):
+
+```bash
+./tools/crosscompile.sh windows   # or: linux | all
+```
+
+This cross-builds static SQLite and OpenSSL for the `x86_64-w64-mingw32`
+target inside a container, then runs `CC=x86_64-w64-mingw32-gcc make
+static`. The resulting binary is copied to `build/bialet-windows-x86_64.exe`.
+
+If you already have a MinGW cross-toolchain and SQLite/OpenSSL built for
+`x86_64-w64-mingw32` on your machine, you can skip Docker:
+
+```bash
+CC=x86_64-w64-mingw32-gcc make static
+```
+
+See `tools/crosscompile.sh`'s `build_windows()` function for the exact
+dependency-build steps if you need to set these up manually.
+`.github/workflows/release.yml` runs the same process for releases.
 
 ### Run Tests
 
@@ -49,10 +105,47 @@ make check
 ./build/bialet -T tests/
 ```
 
+### Testing Against a Remote Server
+
+`tests/run.sh` can run the integration suite against a bialet instance
+running elsewhere — useful for validating a cross-compiled binary (e.g. the
+Windows `.exe`) without running it locally. Pass `-` as the executable to
+skip spawning a local process:
+
+```bash
+./tests/run.sh - <remote-host> <port> <echo-port>
+```
+
+To set this up:
+
+1. Copy the binary and the `tests/` directory to the target machine.
+2. On that machine, start two instances the way `run.sh` would locally: one
+   serving `tests/` on the main port, one serving `tests/echo` on the echo
+   port.
+3. From your dev machine, run the command above pointing at that host.
+
+Two things are auto-skipped in this mode: syntax validation (`-t`) and
+dev-mode tests (both need local binary access), and the symlink/FS-sharing
+regression test (skipped unless the remote server can see the same
+filesystem as the test runner).
+
 ### Run in Development Mode
 
 ```bash
 make dev PATH_RUN=/path/to/dev-app
+```
+
+Or run the freshly built binary directly against an app directory:
+
+```bash
+./build/bialet /path/to/dev-app
+```
+
+If you changed any embedded `.wren` source under `src/`, regenerate the C
+string includes before rebuilding:
+
+```bash
+make wren_files && make
 ```
 
 ## Project Structure

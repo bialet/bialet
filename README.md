@@ -113,66 +113,17 @@ from a terminal to start without dev mode.
 
 ## Build from source
 
-### Prerequisites
-
-- A C17-compatible compiler (`gcc` or `clang`) and `make`
-- `git`
-- Development headers for SQLite, libcurl, and OpenSSL (see below)
-- `python3` — only needed to regenerate the embedded Wren sources
-  (`make wren_files`)
-
-### Dependencies
-
-**Debian/Ubuntu**
-
-```bash
-sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
-```
-
-**macOS**
-
-```bash
-brew install sqlite3 curl openssl pkg-config
-```
-
-**Windows** — Bialet is cross-compiled from Linux with MinGW
-(`CC=x86_64-w64-mingw32-gcc make`). The resulting binary needs these DLLs
-alongside it at runtime:
-
-- `libsqlite3-0.dll`
-- `libcrypto-3-x64.dll`
-- `libssl-3-x64.dll`
-
-OpenSSL is optional but recommended for production (enables TLS). The build
-auto-detects it and defines `HAVE_SSL` when present; on macOS it is located via
-`pkg-config`.
-
-### Compile and install
-
 ```bash
 git clone https://github.com/bialet/bialet.git
 cd bialet
 make               # compiles to ./build/bialet
-make install       # copies the binary to ~/.local/bin
+make install       # optional: copies the binary to ~/.local/bin
 ```
 
-The default build uses `-Wall -Wextra -Werror` and links against `libsqlite3`,
-`libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto` when OpenSSL is
-detected).
-
-### Make targets
-
-| Target              | Description                                                                             |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `make` / `make all` | Build the binary to `./build/bialet`                                                    |
-| `make install`      | Copy the binary to `~/.local/bin`                                                       |
-| `make uninstall`    | Remove the installed binary                                                             |
-| `make check`        | Build and run the test suite                                                            |
-| `make installcheck` | Install, then run the tests against the installed binary                                |
-| `make static`       | Linux only — produce a statically linked, self-contained binary                         |
-| `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
-| `make html`         | Build the documentation with Sphinx                                                     |
-| `make clean`        | Remove `build/` and test databases                                                      |
+Requires a C17 compiler, `make`, `git`, and development headers for SQLite,
+libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites)
+for per-OS dependency commands, cross-compiling (including Windows), the
+full list of `make` targets, and the development workflow.
 
 ## Development
 
@@ -180,15 +131,7 @@ Run the freshly built binary against an app directory (the last positional
 argument is the app root, defaulting to the current directory):
 
 ```bash
-make                        # rebuild after editing C sources
 ./build/bialet /path/to/dev-app
-```
-
-If you change any embedded `.wren` source under `src/`, regenerate the C string
-includes before rebuilding:
-
-```bash
-make wren_files && make
 ```
 
 ### Command-line options

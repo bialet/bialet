@@ -89,46 +89,17 @@ BIALET_PORT=8080 docker compose up
 
 ## Building from Source
 
-To build Bialet from source, you'll need to install certain dependencies and run
-the build process.
-
-### Dependencies
-
-#### Debian/Ubuntu
-
 ```bash
-sudo apt install -y libsqlite3-dev libssl-dev
-# Optional, but recommended for production
-sudo apt install -y libcurl4-openssl-dev
-```
-
-#### MacOS
-
-```bash
-brew install sqlite3 curl
-# Optional, but recommended for production
-brew install openssl
-```
-
-### Windows
-
-- libcrypto-3-x64.dll
-- libsqlite3-0.dll
-- libssl-3-x64.dll (Optional, but recommended for production)
-
-### Building the Project
-
-After installing the dependencies, compile the project:
-
-```bash
-make clean && make
-```
-
-To install the built application, run:
-
-```bash
+git clone https://github.com/bialet/bialet.git
+cd bialet
+make
 make install
 ```
+
+For per-OS dependencies, cross-compiling (including Windows), the full list
+of `make` targets, and the development workflow, see
+[CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md)
+on GitHub.
 
 ## Syntax Highlighting
 
