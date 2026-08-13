@@ -23,6 +23,32 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   sleep 1
 fi
 
+# Capability detection for TARGET_EXEC "-" (no local binary, testing against
+# an already-running server). Rather than hard-failing or silently skipping
+# whole test groups, probe what's actually available and run as much as
+# possible. This is scoped to "-" only: with a real TARGET_EXEC, behavior is
+# unchanged (both flags stay true, no probing, no extra latency).
+ECHO_REACHABLE=1
+FS_SHARED=1
+
+if [[ "$TARGET_EXEC" == "-" ]]; then
+  # Some other bialet instance rooted at tests/echo may already be listening
+  # on $ECHO_PORT (e.g. started by hand). Probe instead of assuming.
+  check_port "$HOST" "$ECHO_PORT" 2 || ECHO_REACHABLE=0
+
+  # The symlink-bypass regression below needs to plant a file in this tests/
+  # directory and have the *target server* see it - only true if the server
+  # is reading this exact filesystem. Round-trip a random marker file
+  # through it to find out.
+  fs_probe_name="fs-share-probe-$$.html"
+  fs_probe_path="$(dirname "$0")/$fs_probe_name"
+  fs_probe_token="probe-$RANDOM$RANDOM"
+  printf '%s' "$fs_probe_token" > "$fs_probe_path" 2>/dev/null
+  fs_probe_body=$(curl -s --max-time 5 "http://$HOST:$PORT/$fs_probe_name")
+  rm -f "$fs_probe_path"
+  [[ "$fs_probe_body" == "$fs_probe_token" ]] || FS_SHARED=0
+fi
+
 # Tests - Syntax validation (-t flag)
 if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
@@ -36,6 +62,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
+else
+  skip_test "Syntax validation (11 checks)  " "requires local binary access (-t flag)"
 fi
 
 # Tests - Request & Response
@@ -49,26 +77,30 @@ run_test "Forbid hidden file          " "_hidden"         403
 # follow symlinks, and the resolved-path check is only waived for a real
 # _route.wren basename. The probe returns 404 (no _route.wren found), never
 # the leaked database bytes.
-total_tests=$((total_tests + 1))
-echo -e -n "_route.wren symlink no bypass\t"
-route_symlink_dir="$(dirname "$0")/sub"
-route_symlink="$route_symlink_dir/_route.wren"
-rm -rf "$route_symlink_dir"
-route_symlink_code=""
-route_symlink_body=""
-if mkdir -p "$route_symlink_dir" && ln -s "../_db.sqlite3" "$route_symlink"; then
-  route_symlink_code=$(curl -s -o /dev/null -w "%{http_code}" \
-    "http://$HOST:$PORT/sub/does-not-exist")
-  route_symlink_body=$(curl -s "http://$HOST:$PORT/sub/does-not-exist")
-fi
-rm -rf "$route_symlink_dir"
-if [[ "$route_symlink_code" == "404" && "$route_symlink_body" != "SQLite format 3"* ]]; then
-  echo -e "${GREEN}PASS${NC}"
-  passed_tests=$((passed_tests + 1))
+if [[ "$FS_SHARED" == 1 ]]; then
+  total_tests=$((total_tests + 1))
+  echo -e -n "_route.wren symlink no bypass\t"
+  route_symlink_dir="$(dirname "$0")/sub"
+  route_symlink="$route_symlink_dir/_route.wren"
+  rm -rf "$route_symlink_dir"
+  route_symlink_code=""
+  route_symlink_body=""
+  if mkdir -p "$route_symlink_dir" && ln -s "../_db.sqlite3" "$route_symlink"; then
+    route_symlink_code=$(curl -s -o /dev/null -w "%{http_code}" \
+      "http://$HOST:$PORT/sub/does-not-exist")
+    route_symlink_body=$(curl -s "http://$HOST:$PORT/sub/does-not-exist")
+  fi
+  rm -rf "$route_symlink_dir"
+  if [[ "$route_symlink_code" == "404" && "$route_symlink_body" != "SQLite format 3"* ]]; then
+    echo -e "${GREEN}PASS${NC}"
+    passed_tests=$((passed_tests + 1))
+  else
+    echo -e "${RED}FAIL${NC}"
+    failed_tests=$((failed_tests + 1))
+    echo -e -n "\tExpected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'\n"
+  fi
 else
-  echo -e "${RED}FAIL${NC}"
-  failed_tests=$((failed_tests + 1))
-  echo -e -n "\tExpected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'\n"
+  skip_test "_route.wren symlink no bypass" "server filesystem is not shared with this script"
 fi
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
@@ -184,13 +216,24 @@ run_test "Db save delete migrate      " "db-more"         200 "inserted:"
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"
 run_test "Third party modules         " "emoji"           200 "❤️"
-run_test "Http POST PUT DELETE        " "http-methods?target=http://$HOST:$ECHO_PORT" 200 "POST|PUT|DELETE|GET|GET"
-run_test "Http client headers/auth/json " "http-client?target=http://$HOST:$ECHO_PORT" 200 "hello|Basic YWRtaW46c2VjcmV0|v|null"
-run_test "Http bearer token option    " "http-options?which=token&target=http://$HOST:$ECHO_PORT" 200 "Bearer secret-token"
-run_test "Http form-encoded option    " "http-options?which=form&target=http://$HOST:$ECHO_PORT" 200 "v1=hello world"
-run_test "Http cookie jar round-trip  " "http-options?which=cookie&target=http://$HOST:$ECHO_PORT" 200 "session=abc123"
-run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
-run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"
+if [[ "$ECHO_REACHABLE" == 1 ]]; then
+  run_test "Http POST PUT DELETE        " "http-methods?target=http://$HOST:$ECHO_PORT" 200 "POST|PUT|DELETE|GET|GET"
+  run_test "Http client headers/auth/json " "http-client?target=http://$HOST:$ECHO_PORT" 200 "hello|Basic YWRtaW46c2VjcmV0|v|null"
+  run_test "Http bearer token option    " "http-options?which=token&target=http://$HOST:$ECHO_PORT" 200 "Bearer secret-token"
+  run_test "Http form-encoded option    " "http-options?which=form&target=http://$HOST:$ECHO_PORT" 200 "v1=hello world"
+  run_test "Http cookie jar round-trip  " "http-options?which=cookie&target=http://$HOST:$ECHO_PORT" 200 "session=abc123"
+  run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
+  run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"
+else
+  echo_skip_reason="echo server not reachable at $HOST:$ECHO_PORT"
+  skip_test "Http POST PUT DELETE        " "$echo_skip_reason"
+  skip_test "Http client headers/auth/json " "$echo_skip_reason"
+  skip_test "Http bearer token option    " "$echo_skip_reason"
+  skip_test "Http form-encoded option    " "$echo_skip_reason"
+  skip_test "Http cookie jar round-trip  " "$echo_skip_reason"
+  skip_test "Http query-string builder   " "$echo_skip_reason"
+  skip_test "Http timeout + error message" "$echo_skip_reason"
+fi
 
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"
@@ -279,6 +322,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     failed_tests=$((failed_tests + 1))
     echo -e -n "\tExpected 500 with 'Compilation Error', no generic 500 page. Got code:$show_code body:'$show_body'\n"
   fi
+else
+  skip_test "Show errors on compile error" "requires local binary access"
 fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
@@ -321,6 +366,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     echo -e -n "\tExpected 200 + 'Dev App' + livereload script + 2 enabled flags + bumping version. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags v1:$dev_v1 v2:$dev_v2\n"
   fi
   rm -f "$dev_root/_db.sqlite3"
+else
+  skip_test "bialet dev starts" "requires local binary access"
 fi
 
 finish

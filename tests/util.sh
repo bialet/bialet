@@ -4,12 +4,45 @@
 total_tests=0
 passed_tests=0
 failed_tests=0
+skipped_tests=0
 
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Record a test as skipped (not run) rather than failed. Used when TARGET_EXEC
+# is "-" and a capability the test needs (a local binary, an echo server, a
+# filesystem shared with the target server) isn't available. Skips don't
+# affect total_tests or the exit code.
+skip_test() {
+    description=$1
+    reason=$2
+
+    echo -e -n "$description\t"
+    echo -e "${YELLOW}SKIP${NC}"
+    echo -e -n "\t$reason\n"
+    skipped_tests=$((skipped_tests + 1))
+}
+
+# Non-fatal TCP reachability probe with a timeout, used to detect optional
+# capabilities (e.g. an echo server on a given port) without hanging or
+# aborting the run. Distinct from the blocking startup port-wait below, which
+# is used to confirm the server this script itself started has come up.
+check_port() {
+    local host=$1 port=$2 timeout=${3:-2}
+    (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null &
+    local pid=$!
+    (sleep "$timeout" && kill "$pid" 2>/dev/null) &
+    local killer=$!
+    wait "$pid" 2>/dev/null
+    local status=$?
+    kill "$killer" 2>/dev/null
+    wait "$killer" 2>/dev/null
+    return $status
+}
 
 # Function to run and assert GET requests
 test_get() {
@@ -232,6 +265,7 @@ print_summary() {
     echo -e "Total Tests: $total_tests"
     echo -e "${GREEN}Passed Tests: $passed_tests${NC}"
     echo -e "${RED}Failed Tests: $failed_tests${NC}"
+    echo -e "${YELLOW}Skipped Tests: $skipped_tests${NC}"
 
     if [ "$failed_tests" -ne 0 ]; then
         return 1
