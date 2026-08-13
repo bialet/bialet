@@ -845,7 +845,11 @@ _DMON_PRIVATE void _dmon_watch_recursive(const char* dirname, int fd, uint32_t m
 {
     struct dirent* entry;
     DIR* dir = opendir(dirname);
-    DMON_ASSERT(dir);
+    // The directory may be deleted while the initial recursive scan runs (a
+    // create/delete race); stop descending in that case.
+    if (dir == NULL) {
+        return;
+    }
 
     char watchdir[DMON_MAX_PATH];
 
@@ -876,8 +880,13 @@ _DMON_PRIVATE void _dmon_watch_recursive(const char* dirname, int fd, uint32_t m
                 watchdir[watchdir_len + 1] = '\0';
             }
             int wd = inotify_add_watch(fd, watchdir, mask);
-            _DMON_UNUSED(wd);
-            DMON_ASSERT(wd != -1);
+            // The directory may have been removed between readdir() and the
+            // inotify_add_watch() call (a create/delete race, e.g. an app or
+            // test suite churning temp directories). That is not a bug: there
+            // is nothing left to watch, so skip instead of asserting.
+            if (wd == -1) {
+                continue;
+            }
 
             dmon__watch_subdir subdir;
             _dmon_strcpy(subdir.rootdir, sizeof(subdir.rootdir), watchdir);
@@ -912,7 +921,11 @@ _DMON_PRIVATE void _dmon_gather_recursive(dmon__watch_state* watch, const char* 
 {
     struct dirent* entry;
     DIR* dir = opendir(dirname);
-    DMON_ASSERT(dir);
+    // The directory may have been deleted between the IN_CREATE event and this
+    // scan (a create/delete race); nothing to gather in that case.
+    if (dir == NULL) {
+        return;
+    }
 
     char newdir[DMON_MAX_PATH];
     while ((entry = readdir(dir)) != NULL) {
@@ -1065,8 +1078,13 @@ _DMON_PRIVATE void _dmon_inotify_process_events(void)
                     _dmon_strcat(watchdir, sizeof(watchdir), "/");
                     uint32_t mask = IN_MOVED_TO | IN_CREATE | IN_MOVED_FROM | IN_DELETE | IN_MODIFY;
                     int wd = inotify_add_watch(watch->fd, watchdir, mask);
-                    _DMON_UNUSED(wd);
-                    DMON_ASSERT(wd != -1);
+                    // The directory can be deleted between the IN_CREATE event
+                    // and this add_watch (a create/delete race), in which case
+                    // inotify_add_watch() returns -1 and there is nothing to
+                    // watch. Skip instead of aborting the process.
+                    if (wd == -1) {
+                        continue;
+                    }
 
                     dmon__watch_subdir subdir;
                     _dmon_strcpy(subdir.rootdir, sizeof(subdir.rootdir), watchdir);
