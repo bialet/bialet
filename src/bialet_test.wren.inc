@@ -198,4 +198,9 @@ static const char* bialet_testModuleSource =
 "      Fiber.abort(message)\n"
 "    }\n"
 "  }\n"
+"}\n"
+"class Tests {\n"
+"  static skip() {\n"
+"    skip_()\n"
+"  }\n"
 "}\n";

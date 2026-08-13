@@ -1361,7 +1361,7 @@ DEF_PRIMITIVE(response_default_page) {
   size_t foot_len = strlen(BIALET_FOOTER_PAGE);
   size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
                   message->length + foot_len + 1;
-  char* buffer = (char*)malloc(needed);
+  char*  buffer = (char*)malloc(needed);
   if(buffer == NULL)
     RETURN_ERROR("Out of memory building page.");
 
@@ -1557,6 +1557,12 @@ DEF_PRIMITIVE(test_runRequest) {
     free(response.header);
 
   RETURN_OBJ(res);
+}
+
+DEF_PRIMITIVE(tests_skip) {
+  extern void bialet_test_mark_skip(void);
+  bialet_test_mark_skip();
+  RETURN_NULL;
 }
 
 void setTimezone(const char* tz) {
@@ -2197,5 +2203,8 @@ void wrenInitializeCore(WrenVM* vm) {
 
     ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
     PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
+
+    ObjClass* testsClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Tests"));
+    PRIMITIVE(testsClass->obj.classObj, "skip_()", tests_skip);
   }
 }

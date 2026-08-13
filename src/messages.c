@@ -35,6 +35,23 @@ void message_init(struct BialetConfig* config) {
     apply_color = 0;
 }
 
+// Lets callers outside message()/colorize() (e.g. the -T test runner, which
+// prints with plain printf instead of message()) decide whether to emit ANSI
+// codes, using the same isatty + -q + output_color determination as the rest
+// of the app instead of re-deriving it.
+int message_color_enabled(void) {
+  return apply_color;
+}
+
+// Lets a caller temporarily redirect message() output (e.g. the -T test
+// runner silencing System.log/migration noise during -q) without a second
+// global. Returns the previous destination so it can be restored.
+FILE* message_set_log_file(FILE* f) {
+  FILE* old = log_file;
+  log_file = f;
+  return old;
+}
+
 /* colorize() hands back either a fresh heap string or its argument unchanged,
  * and message_internal() has to know which one it got. The old code guessed by
  * testing str[0] == '\033', so any *caller-supplied* string beginning with ESC

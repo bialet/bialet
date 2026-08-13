@@ -9,6 +9,7 @@ Use the `-T` flag to run all tests:
 ```bash
 bialet -T                    # Run all tests in _tests/ folder
 bialet -T docs/examples      # Run tests in specific directory
+bialet -T -q                 # Quiet mode: no colors, minimal output (for CI)
 ```
 
 ## Test Directory Structure
@@ -42,6 +43,20 @@ System.log("Setting up test environment")
 // Insert test data
 `INSERT INTO users (name, email) VALUES (?, ?)`.query("Test User", "test@example.com")
 ```
+
+## Skipping Tests
+
+Call `Tests.skip()` as a test file's first statement to mark it skipped
+instead of run. Skipped tests count separately from passed/failed and never
+affect the exit code:
+
+```wren
+// _tests/maintenance.wren
+Tests.skip()
+```
+
+`Tests.skip()` doesn't abort the fiber, so any code after it in the same file
+still executes -- put it first if the rest of the file should not run.
 
 ## Writing Tests
 
@@ -377,11 +392,33 @@ Test.get("/hi")
 **Run tests:**
 ```bash
 $ bialet -T
-Running tests in _tests/...
+Running tests in _tests...
 
-✓ _tests/hi.wren: Test.get("/hi").status(200).contains("Hello World")
+  ✓ hi.wren
 
-1 passed, 0 failed
+Summary:
+
+Total Tests: 1
+Passed Tests: 1
+Failed Tests: 0
+Skipped Tests: 0
+```
+
+A failing assertion reports the file and the `Fiber.abort` message under it:
+
+```bash
+$ bialet -T
+Running tests in _tests...
+
+  ✗ hi.wren
+      Expected code to be 200 but was 500
+
+Summary:
+
+Total Tests: 1
+Passed Tests: 0
+Failed Tests: 1
+Skipped Tests: 0
 ```
 
 ## Exit Codes
@@ -389,12 +426,22 @@ Running tests in _tests/...
 - `0`: All tests passed
 - `1`: One or more tests failed
 
-This makes it easy to integrate with CI/CD pipelines:
+This makes it easy to integrate with CI/CD pipelines. `-q` drops the colors
+and per-test lines down to a single summary line plus a `### FAIL` block per
+failure -- friendlier for CI logs:
+
+```bash
+$ bialet -T -q
+1 of 1 tests failed in 0.02s
+
+### FAIL _tests/hi.wren:2 - hi
+Expected code to be 200 but was 500
+```
 
 ```yaml
 # GitHub Actions example
 - name: Run tests
-  run: bialet -T
+  run: bialet -T -q
 ```
 
 ## How It Works

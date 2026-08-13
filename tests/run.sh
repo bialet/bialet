@@ -2,17 +2,31 @@
 #
 # Test runner
 #
-# Usage: ./run.sh [executable] [host] [port]
+# Usage: ./run.sh [-q] [executable] [host] [port]
 # Use "-" to not start the server process
+# -q: quiet mode -- no colors, minimal output (crux-style FAIL summary only)
 #
 
+# Pull -q out of the argument list wherever it appears; everything else stays
+# positional (executable, host, port, ...) exactly as before.
+QUIET=0
+args=()
+for arg in "$@"; do
+  if [[ "$arg" == "-q" ]]; then
+    QUIET=1
+  else
+    args+=("$arg")
+  fi
+done
+export QUIET
+
 # Parameters
-TARGET_EXEC="${1:-./build/bialet}"
-HOST="${2:-127.0.0.1}"
-PORT="${3:-7001}"
-ECHO_PORT="${4:-7100}"
-SHOW_ERRORS_PORT="${5:-7101}"
-DEV_PORT="${6:-7102}"
+TARGET_EXEC="${args[0]:-./build/bialet}"
+HOST="${args[1]:-127.0.0.1}"
+PORT="${args[2]:-7001}"
+ECHO_PORT="${args[3]:-7100}"
+SHOW_ERRORS_PORT="${args[4]:-7101}"
+DEV_PORT="${args[5]:-7102}"
 
 source "$(dirname "$0")/util.sh"
 
@@ -78,8 +92,7 @@ run_test "Forbid hidden file          " "_hidden"         403
 # _route.wren basename. The probe returns 404 (no _route.wren found), never
 # the leaked database bytes.
 if [[ "$FS_SHARED" == 1 ]]; then
-  total_tests=$((total_tests + 1))
-  echo -e -n "_route.wren symlink no bypass\t"
+  route_symlink_line=$LINENO
   route_symlink_dir="$(dirname "$0")/sub"
   route_symlink="$route_symlink_dir/_route.wren"
   rm -rf "$route_symlink_dir"
@@ -92,12 +105,10 @@ if [[ "$FS_SHARED" == 1 ]]; then
   fi
   rm -rf "$route_symlink_dir"
   if [[ "$route_symlink_code" == "404" && "$route_symlink_body" != "SQLite format 3"* ]]; then
-    echo -e "${GREEN}PASS${NC}"
-    passed_tests=$((passed_tests + 1))
+    report_result "_route.wren symlink no bypass" "$route_symlink_line" 0
   else
-    echo -e "${RED}FAIL${NC}"
-    failed_tests=$((failed_tests + 1))
-    echo -e -n "\tExpected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'\n"
+    report_result "_route.wren symlink no bypass" "$route_symlink_line" 1 \
+      "Expected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'"
   fi
 else
   skip_test "_route.wren symlink no bypass" "server filesystem is not shared with this script"
@@ -121,8 +132,7 @@ run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/requ
 # the cap must complete promptly with 200, and an oversized body must be
 # rejected promptly with 413 - never hang or crash. Payloads go through files
 # because they exceed curl's command-line argument limit.
-total_tests=$((total_tests + 1))
-echo -e -n "Large POST body no hang      \t"
+large_post_line=$LINENO
 under_payload="$(mktemp)"
 over_payload="$(mktemp)"
 if command -v python3 >/dev/null 2>&1; then
@@ -140,18 +150,15 @@ alive_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
   "http://$HOST:$PORT/get?foo=bar")
 rm -f "$under_payload" "$over_payload"
 if [[ "$under_code" == "200" && "$over_code" == "413" && "$alive_code" == "200" ]]; then
-  echo -e "${GREEN}PASS${NC}"
-  passed_tests=$((passed_tests + 1))
+  report_result "Large POST body no hang" "$large_post_line" 0
 else
-  echo -e "${RED}FAIL${NC}"
-  failed_tests=$((failed_tests + 1))
-  echo -e -n "\tExpected 200 under cap, 413 over cap, server alive. Got under:$under_code over:$over_code alive:$alive_code\n"
+  report_result "Large POST body no hang" "$large_post_line" 1 \
+    "Expected 200 under cap, 413 over cap, server alive. Got under:$under_code over:$over_code alive:$alive_code"
 fi
 
 # Custom 413 error page: like 404/500, an oversized body is served the app's
 # own 413.html (or 413.wren) page via custom_error.
-total_tests=$((total_tests + 1))
-echo -e -n "Custom 413 error page       \t"
+custom_413_line=$LINENO
 over_payload="$(mktemp)"
 if command -v python3 >/dev/null 2>&1; then
   python3 -c "open('$over_payload', 'w').write('a\n' * 500000)"
@@ -162,12 +169,10 @@ over_page=$(curl -s --max-time 20 \
   --data-binary "@$over_payload" "http://$HOST:$PORT/post")
 rm -f "$over_payload"
 if [[ "$over_page" == *"custom-413-page"* ]]; then
-  echo -e "${GREEN}PASS${NC}"
-  passed_tests=$((passed_tests + 1))
+  report_result "Custom 413 error page" "$custom_413_line" 0
 else
-  echo -e "${RED}FAIL${NC}"
-  failed_tests=$((failed_tests + 1))
-  echo -e -n "\tExpected the custom 413 page. Got: '$over_page'\n"
+  report_result "Custom 413 error page" "$custom_413_line" 1 \
+    "Expected the custom 413 page. Got: '$over_page'"
 fi
 
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
@@ -254,8 +259,7 @@ run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 
 # Multi-form CSRF: every form on a page must carry a token that validates.
 # Uses a cookie jar so the POST hits the same session as the GET.
-total_tests=$((total_tests + 1))
-echo -e -n "Session CSRF multi-form        \t"
+csrf_multi_line=$LINENO
 csrf_cookie=/tmp/bialet-csrf-cookies.txt
 csrf_page=$(curl -s -c "$csrf_cookie" "http://$HOST:$PORT/csrf-multi")
 csrf_tokens=$(printf "%s" "$csrf_page" | grep -o 'name="_bialet_csrf" value="[^"]*"' | sed 's/name="_bialet_csrf" value="//; s/"//')
@@ -266,12 +270,10 @@ csrf_last_post=$(curl -s -b "$csrf_cookie" -d "_bialet_csrf=$csrf_last" "http://
 rm -f "$csrf_cookie"
 if [[ -n "$csrf_first" && "$csrf_first" == "$csrf_last" \
       && "$csrf_first_post" == "OK" && "$csrf_last_post" == "OK" ]]; then
-  echo -e "${GREEN}PASS${NC}"
-  passed_tests=$((passed_tests + 1))
+  report_result "Session CSRF multi-form" "$csrf_multi_line" 0
 else
-  echo -e "${RED}FAIL${NC}"
-  failed_tests=$((failed_tests + 1))
-  echo -e "\tExpected a single shared token with POST OK. Tokens: '$csrf_tokens' | first POST: '$csrf_first_post' | last POST: '$csrf_last_post'"
+  report_result "Session CSRF multi-form" "$csrf_multi_line" 1 \
+    "Expected a single shared token with POST OK. Tokens: '$csrf_tokens' | first POST: '$csrf_first_post' | last POST: '$csrf_last_post'"
 fi
 
 # Tests - Config
@@ -301,8 +303,7 @@ run_test "CORS enabled                " "cors"            200 "cors"
 # the generic 500 page. Uses a dedicated app dir + server instance (own DB, own
 # migration that enables the flag) so it doesn't disturb the main test app.
 if [[ "$TARGET_EXEC" != "-" ]]; then
-  total_tests=$((total_tests + 1))
-  echo -e -n "Show errors on compile error\t"
+  show_errors_line=$LINENO
   show_root="$(dirname "$0")/show-errors"
   "$TARGET_EXEC" -h "$HOST" -p "$SHOW_ERRORS_PORT" -l /tmp/tests-show-errors.log \
     "$show_root" > /dev/null 2>&1 &
@@ -315,12 +316,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   if [[ "$show_code" == "500" && "$show_body" == *"Compilation Error"* \
         && "$show_body" != *"Oops! Something broke"* ]]; then
-    echo -e "${GREEN}PASS${NC}"
-    passed_tests=$((passed_tests + 1))
+    report_result "Show errors on compile error" "$show_errors_line" 0
   else
-    echo -e "${RED}FAIL${NC}"
-    failed_tests=$((failed_tests + 1))
-    echo -e -n "\tExpected 500 with 'Compilation Error', no generic 500 page. Got code:$show_code body:'$show_body'\n"
+    report_result "Show errors on compile error" "$show_errors_line" 1 \
+      "Expected 500 with 'Compilation Error', no generic 500 page. Got code:$show_code body:'$show_body'"
   fi
 else
   skip_test "Show errors on compile error" "requires local binary access"
@@ -335,8 +334,7 @@ fi
 # BIALET_SHOW_ERRORS in the DB, inject the live-reload script into HTML, and
 # bump the /_livereload version when a file in the app directory changes.
 if [[ "$TARGET_EXEC" != "-" ]]; then
-  total_tests=$((total_tests + 1))
-  echo -e -n "bialet dev starts           \t"
+  dev_starts_line=$LINENO
   dev_root="$(dirname "$0")/dev-app"
   dev_exec=$(realpath "$TARGET_EXEC")
   rm -f "$dev_root/_db.sqlite3"
@@ -358,12 +356,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   pgrep -f "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \
         && "$dev_flags" == "2" && "$dev_v1" != "$dev_v2" ]]; then
-    echo -e "${GREEN}PASS${NC}"
-    passed_tests=$((passed_tests + 1))
+    report_result "bialet dev starts" "$dev_starts_line" 0
   else
-    echo -e "${RED}FAIL${NC}"
-    failed_tests=$((failed_tests + 1))
-    echo -e -n "\tExpected 200 + 'Dev App' + livereload script + 2 enabled flags + bumping version. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags v1:$dev_v1 v2:$dev_v2\n"
+    report_result "bialet dev starts" "$dev_starts_line" 1 \
+      "Expected 200 + 'Dev App' + livereload script + 2 enabled flags + bumping version. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags v1:$dev_v1 v2:$dev_v2"
   fi
   rm -f "$dev_root/_db.sqlite3"
 else

@@ -3,7 +3,9 @@
 
 #include "bialet.h"
 
-void message_init(struct BialetConfig* config);
+void  message_init(struct BialetConfig* config);
+int   message_color_enabled(void);
+FILE* message_set_log_file(FILE* f);
 
 char* colorize(char* str, int color);
 char* green(char* str);

@@ -24,6 +24,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifndef _WIN32
 #include <fcntl.h>
 #include <limits.h>
@@ -65,6 +69,36 @@
 WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
+
+// Test-runner failure capture. bialet_wren_error() is the global Wren error
+// callback for every VM in the process (requests, migrations, cron, and
+// -T test files alike); while test_capturing is set, it records the abort
+// message and originating line here instead of printing, so run_test_file()
+// can report the real reason a test failed instead of just a pass/fail bit.
+// Tests run one WrenVM at a time on a single thread, so plain (non-thread-
+// local) statics are enough.
+#define TEST_FAIL_MSG_LEN 256
+static int  test_capturing = 0;
+static int  test_skip_requested = 0;
+static int  test_fail_line = 0;
+static char test_fail_msg[TEST_FAIL_MSG_LEN] = "";
+
+static void test_capture_begin(void) {
+  test_capturing = 1;
+  test_skip_requested = 0;
+  test_fail_line = 0;
+  test_fail_msg[0] = '\0';
+}
+
+static void test_capture_end(void) {
+  test_capturing = 0;
+}
+
+// Called by the Tests.skip() primitive (wren_core.c) so a test file can mark
+// itself skipped instead of running assertions.
+void bialet_test_mark_skip(void) {
+  test_skip_requested = 1;
+}
 
 static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
@@ -346,6 +380,25 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
 void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
                        const int line, const char* msg) {
   (void)vm;
+  if(test_capturing) {
+    switch(errorType) {
+      case WREN_ERROR_COMPILE:
+      case WREN_ERROR_RUNTIME:
+        if(msg != NULL)
+          snprintf(test_fail_msg, sizeof(test_fail_msg), "%s", msg);
+        break;
+      case WREN_ERROR_STACK_TRACE:
+        // wrenDebugPrintStackTrace() never reports frames from the anonymous
+        // core module (where the Test DSL itself lives), only named modules.
+        // The test file runs as module "main", so the last (outermost)
+        // frame reported here is always its own top-level line -- the exact
+        // call site of the failing assertion, not internals of Test.status()
+        // and friends.
+        test_fail_line = line;
+        break;
+    }
+    return;
+  }
   char lineMessage[MAX_LINE_ERROR_LEN];
   snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
   switch(errorType) {
@@ -1062,6 +1115,15 @@ int bialet_validate_syntax(const char* filePath) {
 #define TEST_INIT_FILE "_init.wren"
 #define MAX_TEST_FILES 100
 
+// ANSI SGR codes for the -T runner's own printf-based output. Kept local
+// (rather than reusing messages.h's green()/red()/yellow()) because those
+// route their allocation through a pending-free list that only message()
+// drains; calling them here without message() would leak, and after
+// MSG_MAX_PENDING calls would silently stop coloring altogether.
+#define TEST_COLOR_GREEN 32
+#define TEST_COLOR_RED 31
+#define TEST_COLOR_YELLOW 33
+
 const char* bialet_get_full_root_dir() {
   return bialet_config.full_root_dir;
 }
@@ -1077,13 +1139,41 @@ static int is_test_file(const char* name) {
   return 1;
 }
 
-static int run_test_file(const char* testPath, const char* testName,
-                         const char* initPath) {
-  (void)testName;
+typedef enum { TEST_RESULT_PASS, TEST_RESULT_FAIL, TEST_RESULT_SKIP } TestResult;
+
+typedef struct {
+  char name[MAX_MODULE_LEN];
+  int  line;
+  char msg[TEST_FAIL_MSG_LEN];
+} TestFailure;
+
+static long long test_monotonic_ms(void) {
+#ifdef _WIN32
+  return (long long)GetTickCount64();
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+#endif
+}
+
+// Prints [text] wrapped in the given SGR color when color output is enabled
+// (isatty + -q + output_color, the same determination the rest of the app
+// uses), otherwise prints it plain.
+static void print_colored(const char* text, int color) {
+  if(message_color_enabled())
+    printf("\033[%dm%s\033[0m", color, text);
+  else
+    fputs(text, stdout);
+}
+
+static TestResult run_test_file(const char* testPath, const char* initPath,
+                                int* outLine, char* outMsg, size_t outMsgSize) {
   char* code = read_file(testPath);
   if(code == NULL) {
-    fprintf(stderr, "  ✗ Cannot read test file: %s\n", testPath);
-    return 1;
+    *outLine = 0;
+    snprintf(outMsg, outMsgSize, "Cannot read test file: %s", testPath);
+    return TEST_RESULT_FAIL;
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
@@ -1101,16 +1191,32 @@ static int run_test_file(const char* testPath, const char* testName,
   }
 
   // Run test code in main module
+  test_capture_begin();
   WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, code);
+  int                 skipped = test_skip_requested;
+  int                 failLine = test_fail_line;
+  char                failMsg[TEST_FAIL_MSG_LEN];
+  snprintf(failMsg, sizeof(failMsg), "%s", test_fail_msg);
+  test_capture_end();
 
   wrenFreeVM(vm);
   free(code);
 
-  return (result == WREN_RESULT_SUCCESS) ? 0 : 1;
+  if(skipped)
+    return TEST_RESULT_SKIP;
+  if(result != WREN_RESULT_SUCCESS) {
+    *outLine = failLine;
+    snprintf(outMsg, outMsgSize, "%s", failMsg[0] ? failMsg : "Test failed");
+    return TEST_RESULT_FAIL;
+  }
+  return TEST_RESULT_PASS;
 }
 
 int bialet_run_tests(const char* testDir, const char* rootDir) {
   (void)rootDir;
+  long long startMs = test_monotonic_ms();
+  int       quiet = bialet_config.quiet;
+
   char testsPath[MAX_MODULE_LEN];
   snprintf(testsPath, sizeof(testsPath), "%s/%s", testDir, TESTS_DIR);
 
@@ -1120,7 +1226,8 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     return 1;
   }
 
-  printf("Running tests in %s...\n\n", testsPath);
+  if(!quiet)
+    printf("Running tests in %s...\n\n", testsPath);
 
   DIR* dir = opendir(testsPath);
   if(dir == NULL) {
@@ -1133,7 +1240,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   int   testCount = 0;
 
   struct dirent* entry;
-  int            skipped = 0;
+  int            capped = 0;
   while((entry = readdir(dir)) != NULL) {
     if(!is_test_file(entry->d_name))
       continue;
@@ -1145,14 +1252,14 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     if(testCount >= MAX_TEST_FILES) {
       // Reaching the cap used to end the loop silently, so tests beyond the
       // hundredth simply never ran and the summary still said "0 failed".
-      skipped++;
+      capped++;
       continue;
     }
     char* name = strdup(entry->d_name);
     if(name == NULL) {
       // Was unchecked: a NULL entry later reached snprintf("%s", NULL).
       fprintf(stderr, "Error: out of memory collecting test files\n");
-      skipped++;
+      capped++;
       continue;
     }
     testFiles[testCount] = name;
@@ -1160,13 +1267,14 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   }
   closedir(dir);
 
-  if(skipped > 0) {
-    fprintf(stderr, "Warning: %d test file(s) not run (limit %d)\n", skipped,
+  if(capped > 0) {
+    fprintf(stderr, "Warning: %d test file(s) not run (limit %d)\n", capped,
             MAX_TEST_FILES);
   }
 
   if(testCount == 0) {
-    printf("No tests found.\n");
+    if(!quiet)
+      printf("No tests found.\n");
     return 0;
   }
 
@@ -1175,29 +1283,108 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   snprintf(initPath, sizeof(initPath), "%s/%s", testsPath, TEST_INIT_FILE);
   char* initPathPtr = (stat(initPath, &st) == 0) ? initPath : NULL;
 
-  int passed = 0;
-  int failed = 0;
+  int         passed = 0;
+  int         failed = 0;
+  int         skipped = 0;
+  TestFailure failures[MAX_TEST_FILES];
+
+  // In -q, test-triggered System.log/migration output (via message()) would
+  // otherwise interleave with the crux-style summary below. Redirect it to
+  // the null device for the duration of the run and restore it afterward.
+  FILE* quietSink = NULL;
+  FILE* prevLogFile = NULL;
+  if(quiet) {
+    quietSink = fopen(
+#ifdef _WIN32
+        "NUL",
+#else
+        "/dev/null",
+#endif
+        "w");
+    if(quietSink != NULL)
+      prevLogFile = message_set_log_file(quietSink);
+  }
 
   // Run each test file
   for(int i = 0; i < testCount; i++) {
     char testPath[MAX_MODULE_LEN * 2];
     snprintf(testPath, sizeof(testPath), "%s/%s", testsPath, testFiles[i]);
 
-    printf("  Running %s...\n", testFiles[i]);
+    int        line = 0;
+    char       msg[TEST_FAIL_MSG_LEN];
+    TestResult result =
+        run_test_file(testPath, initPathPtr, &line, msg, sizeof(msg));
 
-    int result = run_test_file(testPath, testFiles[i], initPathPtr);
-    if(result == 0) {
-      passed++;
-      printf("    ✓ Passed\n");
-    } else {
-      failed++;
-      printf("    ✗ Failed\n");
+    switch(result) {
+      case TEST_RESULT_PASS:
+        passed++;
+        if(!quiet) {
+          printf("  ");
+          print_colored("✓", TEST_COLOR_GREEN);
+          printf(" %s\n", testFiles[i]);
+        }
+        break;
+      case TEST_RESULT_SKIP:
+        skipped++;
+        if(!quiet) {
+          printf("  ");
+          print_colored("○", TEST_COLOR_YELLOW);
+          printf(" %s\n", testFiles[i]);
+        }
+        break;
+      case TEST_RESULT_FAIL:
+        snprintf(failures[failed].name, sizeof(failures[failed].name), "%s",
+                 testFiles[i]);
+        failures[failed].line = line;
+        snprintf(failures[failed].msg, sizeof(failures[failed].msg), "%s", msg);
+        failed++;
+        if(!quiet) {
+          printf("  ");
+          print_colored("✗", TEST_COLOR_RED);
+          printf(" %s\n      %s\n", testFiles[i], msg);
+        }
+        break;
     }
 
     free(testFiles[i]);
   }
 
-  printf("\n%d passed, %d failed\n", passed, failed);
+  if(quietSink != NULL) {
+    message_set_log_file(prevLogFile);
+    fclose(quietSink);
+  }
+
+  double elapsed = (double)(test_monotonic_ms() - startMs) / 1000.0;
+  int    ran = passed + failed;
+
+  if(quiet) {
+    printf("%d of %d tests failed in %.2fs\n", failed, ran, elapsed);
+    for(int i = 0; i < failed; i++) {
+      // Strip the ".wren" extension for the display name; is_test_file()
+      // guarantees every entry here ends with it.
+      char stem[MAX_MODULE_LEN];
+      snprintf(stem, sizeof(stem), "%s", failures[i].name);
+      size_t stemLen = strlen(stem);
+      if(stemLen > 5)
+        stem[stemLen - 5] = '\0';
+      printf("\n### FAIL %s/%s:%d - %s\n%s\n", TESTS_DIR, failures[i].name,
+             failures[i].line, stem, failures[i].msg);
+    }
+  } else {
+    char line[64];
+    printf("\nSummary:\n\n");
+    printf("Total Tests: %d\n", ran);
+    snprintf(line, sizeof(line), "Passed Tests: %d", passed);
+    print_colored(line, TEST_COLOR_GREEN);
+    printf("\n");
+    snprintf(line, sizeof(line), "Failed Tests: %d", failed);
+    print_colored(line, TEST_COLOR_RED);
+    printf("\n");
+    snprintf(line, sizeof(line), "Skipped Tests: %d", skipped);
+    print_colored(line, TEST_COLOR_YELLOW);
+    printf("\n");
+  }
+
   return (failed > 0) ? 1 : 0;
 }
 static char resolved_db_path[PATH_MAX];

@@ -160,6 +160,24 @@ make check
 ./build/bialet -T tests/
 ```
 
+By default, both suites print a colored line per test (✓ passed, ✗ failed,
+○ skipped) plus a summary. Pass `-q` for quiet/CI-friendly output instead: no
+colors, no per-test lines — just one summary line and a `### FAIL` block per
+failure:
+
+```bash
+./tests/run.sh -q ./build/bialet 127.0.0.1 7111
+./build/bialet -T tests/ -q
+```
+
+```
+$ ./build/bialet -T tests/ -q
+1 of 14 tests failed in 0.11s
+
+### FAIL _tests/login.wren:37 - login
+Expected code to be 401 but was 500
+```
+
 ### Testing Against a Remote Server
 
 `tests/run.sh` can run the integration suite against a bialet instance
