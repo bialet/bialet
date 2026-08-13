@@ -273,7 +273,7 @@ blocks of HTML based on a condition.
 ### Nested ternaries for multi-value decisions
 
 ```wren
-<span class="priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? "high" : Num.fromString(task.id.toString) % 3 == 2 ? "medium" : "low" }}"
+<span class="priority-dot {{ task.id.toNum % 3 == 1 ? "high" : task.id.toNum % 3 == 2 ? "medium" : "low" }}"
       aria-hidden="true"></span>
 ```
 

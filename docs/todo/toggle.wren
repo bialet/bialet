@@ -1,5 +1,5 @@
 import "_domain" for Task
 
-var id = Request.post("id") || ""
-Task.new({"id": id}).toggle()
+var id = Request.post("id")
+if (id) Task.toggle(id)
 Response.redirect("/")

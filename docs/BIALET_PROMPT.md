@@ -416,6 +416,27 @@ Invalid columns fall back to the first entry in `allowedColumns` — this
 prevents SQL injection through user-controlled sort parameters. Pass a limit
 as a 4th argument for quick "top N" queries.
 
+### Optional Filters Without Concatenation
+
+The Query object forbids concatenation/interpolation, so a `WHERE` clause
+that depends on which filters are present can't be built by appending SQL
+fragments. Write one static query and bypass each filter with `OR` instead:
+
+```wren
+// Empty string bypasses the filter
+var search = Request.get("search") || ""
+var users = `SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')`.fetch(search, search)
+
+// Boolean flag bypasses the filter — tri-state "all/active/completed"
+static list(filter) { `SELECT * FROM tasks
+  WHERE session = ? AND (? = 1 OR finished = ?)
+  ORDER BY createdAt ASC`.fetch(Session.id, filter == "all", filter == "active").to(Task) }
+```
+
+Booleans bind as `1`/`0`, so `? = 1` short-circuits the `OR` and matches every
+row when the flag is true. Chain multiple filters with `AND`, each with its
+own bypass, to let callers omit any combination of them.
+
 ### Pagination
 
 Always pass `LIMIT`/`OFFSET` as `?` placeholders:
@@ -890,11 +911,7 @@ class Task {
 
   save() { _id = `tasks`.save(this) }
 
-  toggle() {
-    `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ?`.query(_id, Session.id)
-    _finished = !finished
-    return _finished
-  }
+  static toggle(id) { `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ?`.query(id, Session.id) }
 
   static list() { `SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC`.fetch(Session.id).to(Task) }
   static delete(id) { `DELETE FROM tasks WHERE id = ? AND session = ?`.query(id, Session.id) }
@@ -959,7 +976,8 @@ return Layout.render(<main>
 // toggle.wren
 import "_app/domain" for Task
 
-Task.new({"id": Request.post("id") || ""}).toggle()
+var id = Request.post("id")
+if (id) Task.toggle(id)
 return Response.redirect("/")
 ```
 
