@@ -1361,7 +1361,7 @@ DEF_PRIMITIVE(response_default_page) {
   size_t foot_len = strlen(BIALET_FOOTER_PAGE);
   size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
                   message->length + foot_len + 1;
-  char*  buffer = (char*)malloc(needed);
+  char* buffer = (char*)malloc(needed);
   if(buffer == NULL)
     RETURN_ERROR("Out of memory building page.");
 
@@ -2049,8 +2049,8 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);
 
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
-  PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
-  PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
+  PRIMITIVE(markdownClass->obj.classObj, "html_(_)", markdown_html);
+  PRIMITIVE(markdownClass->obj.classObj, "file_(_)", markdown_file);
 
   ObjClass* jsonClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Json"));
   PRIMITIVE(jsonClass->obj.classObj, "parse_(_)", json_parse_primitive);

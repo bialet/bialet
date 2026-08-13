@@ -1044,4 +1044,9 @@ static const char* bialetModuleSource =
 "  }\n"
 "}\n"
 "class Markdown {\n"
+"  static html(markdown) { html_(markdown).raw }\n"
+"  static file(name) {\n"
+"    var content = file_(name)\n"
+"    return content is String ? content.raw : content\n"
+"  }\n"
 "}\n";

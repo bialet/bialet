@@ -1193,4 +1193,9 @@ class Cron {
 }
 
 class Markdown {
+  static html(markdown) { html_(markdown).raw }
+  static file(name) {
+    var content = file_(name)
+    return content is String ? content.raw : content
+  }
 }
