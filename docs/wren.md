@@ -7,9 +7,9 @@ Bialet embeds a heavily modified dialect of Wren. The syntax itself has been
 extended — not through libraries, but directly in the parser — to support native
 SQL queries and rich string interpolation:
 
-- Native queries: `SELECT * FROM users`.fetch compiles into a query execution
-  call. See the [Database](database.md) guide.
-- Template strings: var output = <p>Hello {{ name }}</p> is syntax that
+- Native queries: ``var users = `SELECT * FROM users`.fetch`` compiles into a
+  query execution call. See the [Database](database.md) guide.
+- Template strings: `var output = <p>Hello {{ name }}</p>` is syntax that
   evaluates to a string with interpolation. See [Templates](template.md) for
   details.
 
@@ -98,7 +98,7 @@ true
 false
 ```
 
-`null` is false; everything else (including `0` and `""`) is true.
+> ⚠️ Pitfall: `null` is false; everything else (including `0` and `""`) is true.
 
 ### Numbers
 
@@ -134,9 +134,9 @@ byte offset `i`. `.count` is the byte length.
 var val = null
 ```
 
-Bialet makes `null` forgiving in templates: a small set of methods never
-throws, so missing data renders as empty output instead of crashing the
-request. On `null`:
+Bialet makes `null` forgiving in templates: a small set of methods never throws,
+so missing data renders as empty output instead of crashing the request. On
+`null`:
 
 - `null["key"]` returns `null`
 - `null.count` returns `0`
@@ -144,9 +144,9 @@ request. On `null`:
 - `null.to(Class)` returns `null`
 - `null.toString` returns `""`
 
-Any other method call on `null` still throws — `Null does not implement
-'x'.` For example `null.get("key")` is a runtime error. Use the safe methods
-above, or a `|| default` fallback, in templates.
+Any other method call on `null` still throws — `Null does not implement 'x'.`
+For example `null.get("key")` is a runtime error. Use the safe methods above, or
+a `|| default` fallback, in templates.
 
 ### Lists
 
@@ -421,9 +421,9 @@ class Shape {
 
 `brokenArea(2, 3)` evaluates `2 * 3` and throws the result away, returning
 `null`. In a template this renders as empty output — no error tells you the
-value was dropped. Keep the expression on the same line as `{` when you want
-the implicit return, and use an explicit `return` for any multi-line method
-that must return a value.
+value was dropped. Keep the expression on the same line as `{` when you want the
+implicit return, and use an explicit `return` for any multi-line method that
+must return a value.
 
 ### When You Need `return`
 
@@ -585,8 +585,8 @@ from GitHub:
 import "gh:user/repo/module" for ClassName
 ```
 
-See the [advanced routing guide](advanced-routing.md) for details on external imports and file-based
-module resolution.
+See the [advanced routing guide](advanced-routing.md) for details on external
+imports and file-based module resolution.
 
 ## Bialet vs. Standard Wren
 
@@ -618,23 +618,23 @@ when you need to persist state across request cycles.
 
 Bialet adds these classes on top of standard Wren:
 
-| Class      | Purpose                                                   |
-| ---------- | --------------------------------------------------------- |
-| `Query`    | Backtick SQL: `` `SELECT * FROM users`.fetch `` — see [Database](database.md) |
+| Class      | Purpose                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| `Query`    | Backtick SQL: `` `SELECT * FROM users`.fetch `` — see [Database](database.md)             |
 | `Request`  | Incoming HTTP request (method, URI, headers, body, files) — see [Reference](reference.md) |
-| `Response` | Outgoing HTTP response (status, headers, body, redirect) — see [Reference](reference.md) |
-| `Cookie`   | Parse, set, and delete cookies — see [Reference](reference.md) |
-| `Session`  | Server-side session storage with CSRF protection — see [Reference](reference.md) |
-| `Db`       | Database migrations and ORM-like save/delete — see [Reference](reference.md) |
-| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md) |
-| `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md) |
-| `File`     | File uploads stored in SQLite — see [Reference](reference.md) |
-| `Markdown` | Render Markdown to HTML — see [Reference](reference.md) |
-| `Json`     | JSON parse and stringify — see [Reference](reference.md) |
-| `Config`   | Key-value configuration store — see [Reference](reference.md) |
-| `Cron`     | Scheduled tasks — see [Reference](reference.md) |
-| `System`   | Logging and stdout output — see [Reference](reference.md) |
-| `Util`     | Helpers: hashing, encoding, random strings, URL encoding — see [Reference](reference.md) |
+| `Response` | Outgoing HTTP response (status, headers, body, redirect) — see [Reference](reference.md)  |
+| `Cookie`   | Parse, set, and delete cookies — see [Reference](reference.md)                            |
+| `Session`  | Server-side session storage with CSRF protection — see [Reference](reference.md)          |
+| `Db`       | Database migrations and ORM-like save/delete — see [Reference](reference.md)              |
+| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md)            |
+| `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md)  |
+| `File`     | File uploads stored in SQLite — see [Reference](reference.md)                             |
+| `Markdown` | Render Markdown to HTML — see [Reference](reference.md)                                   |
+| `Json`     | JSON parse and stringify — see [Reference](reference.md)                                  |
+| `Config`   | Key-value configuration store — see [Reference](reference.md)                             |
+| `Cron`     | Scheduled tasks — see [Reference](reference.md)                                           |
+| `System`   | Logging and stdout output — see [Reference](reference.md)                                 |
+| `Util`     | Helpers: hashing, encoding, random strings, URL encoding — see [Reference](reference.md)  |
 
 The full API reference with method signatures and examples is on the
 [Reference](reference.md) page.
