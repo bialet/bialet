@@ -113,17 +113,44 @@ from a terminal to start without dev mode.
 
 ## Build from source
 
+Install the build dependencies for your OS, then run `make`:
+
+**Debian / Ubuntu:**
+
 ```bash
-git clone https://github.com/bialet/bialet.git
-cd bialet
+sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
+```
+
+**Fedora / RHEL / CentOS:**
+
+```bash
+sudo dnf install -y gcc make sqlite-devel libcurl-devel openssl-devel
+```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S --needed base-devel sqlite curl openssl
+```
+
+**macOS:**
+
+```bash
+brew install sqlite3 curl openssl pkg-config
+```
+
+Build and install:
+
+```bash
 make               # compiles to ./build/bialet
-make install       # optional: copies the binary to ~/.local/bin
+make check         # runs the test suite
+make install       # copies the binary to ~/.local/bin
 ```
 
 Requires a C17 compiler, `make`, `git`, and development headers for SQLite,
 libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites)
-for per-OS dependency commands, cross-compiling (including Windows), the
-full list of `make` targets, and the development workflow.
+for other distributions, cross-compiling (including Windows), the full list of
+`make` targets, and the development workflow.
 
 ## Development
 

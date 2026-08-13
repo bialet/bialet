@@ -18,10 +18,65 @@ Be respectful. Keep discussions constructive. Assume good intent.
 - `python3` — only needed to regenerate the embedded Wren sources
   (`make wren_files`)
 
-**Linux (Debian/Ubuntu):**
+**Linux:**
+
+Package names vary by distribution, but the set is always the same: a C17
+compiler (`gcc`/`clang`), `make`, and development headers for SQLite, libcurl,
+and OpenSSL. OpenSSL is optional but recommended (enables TLS); the build
+auto-detects it and links it in when present.
+
+**Debian / Ubuntu / Linux Mint / Pop!\_OS / Kali (apt):**
 
 ```bash
 sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
+```
+
+**Fedora / RHEL / CentOS Stream / Rocky Linux / AlmaLinux (dnf):**
+
+```bash
+sudo dnf install -y gcc make sqlite-devel libcurl-devel openssl-devel
+```
+
+**Arch Linux / Manjaro / EndeavourOS (pacman):**
+
+```bash
+sudo pacman -S --needed base-devel sqlite curl openssl
+```
+
+`base-devel` provides the compiler and `make`; the SQLite and libcurl dev
+headers ship inside the regular `sqlite` and `curl` packages.
+
+**openSUSE (zypper):**
+
+```bash
+sudo zypper install -y gcc make sqlite3-devel libcurl-devel libopenssl-devel
+```
+
+**Alpine Linux (apk):**
+
+```bash
+sudo apk add build-base sqlite-dev curl-dev openssl-dev
+```
+
+**Void Linux (xbps):**
+
+```bash
+sudo xbps-install -y base-devel sqlite-devel libcurl-devel openssl-devel
+```
+
+**NixOS (nix):**
+
+```bash
+nix-shell -p gcc sqlite curl openssl
+```
+
+**Gentoo (emerge):**
+
+`gcc` and `make` are part of the base toolchain on Gentoo and usually already
+installed. Add the libraries:
+
+```bash
+sudo emerge --ask dev-db/sqlite net-misc/curl dev-libs/openssl
 ```
 
 **macOS:**
