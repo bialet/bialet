@@ -13,8 +13,10 @@
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <stdio.h>
+#include <wincrypt.h>
 #include <ws2tcpip.h>
 
 #endif
@@ -156,6 +158,41 @@ static int parse_url(const char* url, struct ParsedUrl* out) {
  * *after* SSL_new() -- verified nothing at all. Every Windows HTTPS call,
  * including the remote-module loader that then executes what it downloads, was
  * trivially MITM-able. */
+/* Loads the Windows "ROOT" system certificate store into [ctx]'s trust store.
+ * SSL_CTX_set_default_verify_paths() cannot be relied on in a cross-compiled
+ * binary: the CA paths it embeds are the MinGW build machine's
+ * (/usr/x86_64-w64-mingw32/ssl/certs), which do not exist on a real Windows
+ * box, so HTTPS verification failed for every server ("certificate verify
+ * failed" plus STORE/file_open errors about that path). The ROOT store is the
+ * machine's actual CA set, kept current by Windows Update. Certificates that
+ * OpenSSL cannot parse (or rejects as duplicates) are skipped, not fatal. */
+static int load_windows_system_certs(SSL_CTX* ctx) {
+  HCERTSTORE store = CertOpenSystemStore(0, "ROOT");
+  if(store == NULL)
+    return 0;
+
+  X509_STORE*    trust = SSL_CTX_get_cert_store(ctx);
+  int            ok = 0;
+  PCCERT_CONTEXT cur = NULL;
+  while((cur = CertEnumCertificatesInStore(store, cur)) != NULL) {
+    const unsigned char* encoded = cur->pbCertEncoded;
+    X509*                x509 = d2i_X509(NULL, &encoded, (long)cur->cbCertEncoded);
+    if(x509 == NULL) {
+      ERR_clear_error(); /* unparseable cert: skip it, not the whole store */
+      continue;
+    }
+    /* X509_STORE_add_cert takes its own reference; drop ours. */
+    if(X509_STORE_add_cert(trust, x509) == 1)
+      ok = 1;
+    ERR_clear_error();
+    X509_free(x509);
+  }
+  if(cur != NULL)
+    CertFreeCertificateContext(cur);
+  CertCloseStore(store, 0);
+  return ok;
+}
+
 static SSL_CTX* create_context(void) {
   SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
   if(!ctx) {
@@ -163,7 +200,7 @@ static SSL_CTX* create_context(void) {
     return NULL; /* was exit(EXIT_FAILURE) from inside a request */
   }
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
-  if(!SSL_CTX_set_default_verify_paths(ctx)) {
+  if(!load_windows_system_certs(ctx)) {
     ERR_print_errors_fp(stderr);
     SSL_CTX_free(ctx);
     return NULL;

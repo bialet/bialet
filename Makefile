@@ -49,8 +49,8 @@ endif
 
 # Not checking against OS because I compile with Wine on Linux
 ifneq (,$(findstring x86_64-w64-mingw32-gcc,$(CC)))
-    # If it does, append -lws2_32 to LDFLAGS
-    LDFLAGS += -lws2_32
+    # If it does, append -lws2_32 (winsock) and -lcrypt32 (Windows cert store)
+    LDFLAGS += -lws2_32 -lcrypt32
 endif
 
 ifeq (,$(findstring Darwin,$(OS)))
