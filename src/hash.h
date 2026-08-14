@@ -11,10 +11,14 @@
 #ifndef HASH_H
 #define HASH_H
 
+#include <stddef.h>
+
 #ifdef HAVE_SSL
 #include <openssl/opensslv.h>
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #define OPENSSL_OK 1
+#include <openssl/crypto.h>
+#include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 #endif
@@ -22,9 +26,16 @@
 
 #define SALT_LENGTH 16
 #define HASH_LENGTH 64
-#define HASH_AND_SALT_LENGTH 98
+/* Large enough for the current format, "pbkdf2$<iters>$<32 hex salt>$<64 hex
+ * hash>" (111 bytes), as well as both legacy formats. */
+#define HASH_AND_SALT_LENGTH 128
 
-int  verifyPassword(char* password, char* hash_and_salt);
-void hashPassword(char* password, char* output);
+// Fills [buf] with [len] cryptographically random bytes from the OS CSPRNG
+// (same source used for password salts). Hard-fails on entropy errors rather
+// than degrading to a predictable fallback.
+void random_bytes_fill(unsigned char* buf, size_t len);
+
+int  verify_password(char* password, char* hash_and_salt);
+void hash_password(char* password, char* output);
 
 #endif

@@ -1,10 +1,10 @@
-// --- CSS Grid Landing Page Showcase ---
+// --- CSS Landing Page Showcase ---
 // Demonstrates: inline HTML, CSS Grid, custom properties, backdrop-filter,
 // conditional rendering (&&, ternary), iteration (map), semantic HTML.
 // Change `var isAnnual = true` below to see annual pricing toggle.
 
-var showBanner = true
-var isAnnual = false
+var showBanner = Request.get("showBanner") != "no"
+var isAnnual = Request.get("isAnnual")
 
 var heroTitle = "Build faster with the tools you already know"
 var heroSubtitle = "Bialet combines modern CSS architecture, semantic HTML, and server-side rendering into a single cohesive platform — all powered by a single binary."
@@ -13,39 +13,44 @@ var features = [
   {"icon": "⚡", "title": "Instant Hot Reload", "desc": "See changes the moment you save. No rebuilds, no waiting, no context switching.", "highlight": true},
   {"icon": "🧩", "title": "Component Architecture", "desc": "Compose pages from reusable Wren classes. Clean separation of logic and presentation, no framework lock-in.", "highlight": false},
   {"icon": "🗄️", "title": "Zero-Config Database", "desc": "SQLite baked into the binary. Write SQL with backtick templates and parameterized queries — no ORM.", "highlight": false},
-  {"icon": "🎨", "title": "CSS Grid First", "desc": "Every layout uses CSS Grid. Responsive by default with auto-fit and minmax — no media-query spaghetti.", "highlight": true},
+  {"icon": "🎨", "title": "CSS Agnostic", "desc": "No CSS dependencies. Works with any library, framework, or vanilla JS. Zero styling overhead.", "highlight": true},
   {"icon": "🔒", "title": "Security Built-In", "desc": "SQL injection prevention, CSRF tokens, XSS escaping, and session management — all out of the box.", "highlight": false},
-  {"icon": "📦", "title": "Single Binary Deploy", "desc": "No node_modules. No Docker. No package.json. One binary, one folder — copy it anywhere and run.", "highlight": true},
+  {"icon": "📦", "title": "Single Binary Deploy", "desc": "No node_modules. No package.json. No YAML. One binary, one folder — copy it anywhere and run.", "highlight": true},
 ]
 
 var stats = [
-  {"value": "12K+", "label": "Active Developers"},
-  {"value": "99.9\x25", "label": "Uptime SLA"},
-  {"value": "<2ms", "label": "Avg Response"},
-  {"value": "150+", "label": "Plugins"},
+  {"value": "20K+", "label": "Lines of Code"},
+  {"value": "100\x25", "label": "Tests Passed"},
+  {"value": "<1mb", "label": "Linux & Mac Binary size"},
+  {"value": "600+", "label": "Commits"},
 ]
 
 var pricing = [
   {"name": "Starter", "monthly": "$0", "annual": "$0", "desc": "Perfect for side projects and learning the ropes.", "popular": false, "features": [
-    {"text": "Up to 3 projects", "included": true},
-    {"text": "500MB storage", "included": true},
-    {"text": "Community support", "included": true},
-    {"text": "Custom domain", "included": false},
-    {"text": "Team access", "included": false},
+    {"text": "Single-file deployment", "included": true},
+    {"text": "Built-in SQLite database", "included": true},
+    {"text": "Live reload on save", "included": true},
+    {"text": "HTML + server-rendered pages", "included": true},
+    {"text": "Sessions & cookies", "included": true},
+    {"text": "node_modules folder", "included": false},
+    {"text": "Build step / bundler", "included": false},
   ]},
-  {"name": "Pro", "monthly": "$29", "annual": "$24", "desc": "For professionals shipping real products.", "popular": true, "features": [
-    {"text": "Unlimited projects", "included": true},
-    {"text": "50GB storage", "included": true},
-    {"text": "Priority support", "included": true},
-    {"text": "Custom domain", "included": true},
-    {"text": "Team access (5 seats)", "included": true},
+  {"name": "Pro", "monthly": "$0", "annual": "$0", "desc": "For professionals shipping real products.", "popular": true, "features": [
+    {"text": "JSON & REST API endpoints", "included": true},
+    {"text": "CORS support", "included": true},
+    {"text": "Markdown rendering", "included": true},
+    {"text": "External module imports", "included": true},
+    {"text": "Password hashing & Basic auth", "included": true},
+    {"text": "PostgreSQL / MySQL integration", "included": false},
+    {"text": "WebSockets", "included": false},
   ]},
-  {"name": "Enterprise", "monthly": "$99", "annual": "$83", "desc": "For large teams with advanced needs.", "popular": false, "features": [
-    {"text": "Everything in Pro", "included": true},
-    {"text": "500GB storage", "included": true},
-    {"text": "24/7 phone support", "included": true},
-    {"text": "SSO integration", "included": true},
-    {"text": "Unlimited seats", "included": true},
+  {"name": "Enterprise", "monthly": "$0", "annual": "$0", "desc": "For large teams with advanced needs.", "popular": false, "features": [
+    {"text": "Cron jobs & scheduled tasks", "included": true},
+    {"text": "Multi-instance reverse proxy deployment", "included": true},
+    {"text": "Custom domains & TLS termination", "included": true},
+    {"text": "Integrated prepared statements — No SQL injection", "included": true},
+    {"text": "Connection pooling & read replicas", "included": false},
+    {"text": "Multi-region data replication", "included": false},
   ]},
 ]
 
@@ -53,7 +58,7 @@ var testimonials = [
   {"quote": "Bialet transformed how our team ships. We went from 3-day deploy cycles to pushing 5 times a day. The single-binary approach eliminated our entire infrastructure headache.", "name": "Sarah Chen", "role": "CTO at StreamScale"},
   {"quote": "I evaluated 8 frameworks before choosing Bialet. The combination of Wren's clean syntax with SQLite's simplicity is unbeatable for internal tools and dashboards.", "name": "Marcus Rivera", "role": "Lead Engineer at DataForge"},
   {"quote": "No more fighting with Webpack configs or chasing ESM compatibility. Bialet just works. Our team's velocity doubled within the first sprint after migrating.", "name": "Aiko Tanaka", "role": "Engineering Manager at BuildKit"},
-  {"quote": "The CSS Grid-first approach in the documentation was a revelation. Finally, a framework that treats layout as a first-class concern instead of an afterthought.", "name": "James Okonkwo", "role": "Frontend Lead at PixelCraft"},
+  {"quote": "The bring-your-own-styles approach in the documentation was a game-changer. Finally, a component that respects your tech stack instead of locking you into one way of doing things.", "name": "James Okonkwo", "role": "Frontend Lead at PixelCraft"},
 ]
 
 var faqs = [
@@ -69,20 +74,20 @@ var footerLinks = [
   {"title": "Product", "items": [
     {"label": "Features", "href": "#features"},
     {"label": "Pricing", "href": "#pricing"},
-    {"label": "Changelog", "href": "#"},
-    {"label": "Roadmap", "href": "#"},
+    {"label": "Releases", "href": "https://github.com/bialet/bialet/releases"},
+    {"label": "Roadmap", "href": "https://github.com/bialet/bialet/blob/main/ROADMAP.md"},
   ]},
   {"title": "Resources", "items": [
-    {"label": "Documentation", "href": "#"},
-    {"label": "Examples", "href": "#"},
-    {"label": "API Reference", "href": "#"},
-    {"label": "Community", "href": "#"},
+    {"label": "Documentation", "href": "https://bialet.dev/getting-started.html"},
+    {"label": "Examples", "href": "https://bialet.dev/examples.html"},
+    {"label": "API Reference", "href": "https://bialet.dev/reference.html"},
+    {"label": "Community", "href": "https://github.com/bialet/bialet/discussions"},
   ]},
-  {"title": "Company", "items": [
-    {"label": "About", "href": "#"},
-    {"label": "Blog", "href": "#"},
-    {"label": "Twitter", "href": "#"},
-    {"label": "GitHub", "href": "#"},
+  {"title": "More", "items": [
+    {"label": "Why Bialet?", "href": "https://bialet.dev/why-bialet.html"},
+    {"label": "FAQ", "href": "https://bialet.dev/faq.html"},
+    {"label": "Wren Language", "href": "https://wren.io"},
+    {"label": "GitHub", "href": "https://github.com/bialet/bialet"},
   ]},
 ]
 
@@ -94,7 +99,7 @@ return <!doctype html>
   <title>Bialet — Modern Framework for People Who Ship</title>
   <style>
 /* ═══════════════════════════════════════════════════
-   CSS Grid Landing Page — Modern Design System
+   CSS Landing Page — Modern Design System
    Showcases: grid, custom properties, :has(), clamp(),
    backdrop-filter, auto-fit, conditional classes.
    All layout via CSS Grid — no floats, no flex hacks.
@@ -675,29 +680,41 @@ main section, main article, main aside {
 <body>
   {{ showBanner && <aside class="promo-banner">
     <span>Limited-time offer — 50% off annual plans for new customers!</span>
-    <button class="promo-close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>
+    <!--
+
+      Use the Popover API, no need to Wren nor JavaScript code
+
+      https://developer.mozilla.org/en-US/docs/Web/API/Popover_API
+
+      <div id="promo-banner" popover="auto" class="promo-banner">
+        <span>Limited-time offer — 50% off annual plans for new customers!</span>
+        <button popovertarget="promo-banner" popovertargetaction="hide" class="promo-close" aria-label="Dismiss">&times;</button>
+      </div>
+
+    -->
+    <a href="landing?showBanner=no" class="promo-close" aria-label="Dismiss">&times;</a>
   </aside> }}
 
   <header class="site-header">
     <nav>
-      <a href="/" class="nav-brand">Bialet</a>
+      <a href="https://bialet.dev" class="nav-brand">Bialet</a>
       <ul class="nav-links">
         <li><a href="#features">Features</a></li>
         <li><a href="#pricing">Pricing</a></li>
         <li><a href="#testimonials">Testimonials</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
-      <a href="#" class="btn btn-sm btn-accent">Get Started</a>
+      <a href="." class="btn btn-sm btn-accent">Get Started</a>
     </nav>
   </header>
 
   <main>
     <section class="hero">
       <span class="hero-badge">✨ Now in public beta</span>
-      <h1>{{ heroTitle.safe }}</h1>
-      <p class="hero-subtitle">{{ heroSubtitle.safe }}</p>
+      <h1>{{ heroTitle }}</h1>
+      <p class="hero-subtitle">{{ heroSubtitle }}</p>
       <div class="hero-actions">
-        <a href="#" class="btn btn-accent btn-lg">Start free trial</a>
+        <a href="." class="btn btn-accent btn-lg">Start for free</a>
         <a href="#features" class="btn btn-outline btn-lg">See how it works</a>
       </div>
     </section>
@@ -707,8 +724,8 @@ main section, main article, main aside {
       <div class="features-grid">
         {{ features.map{|f| <article class="feature-card {{ f["highlight"] && "featured" }}">
           <span class="feature-icon" aria-hidden="true">{{ f["icon"] }}</span>
-          <h3>{{ f["title"].safe }}</h3>
-          <p>{{ f["desc"].safe }}</p>
+          <h3>{{ f["title"] }}</h3>
+          <p>{{ f["desc"] }}</p>
         </article> } }}
       </div>
     </section>
@@ -716,8 +733,8 @@ main section, main article, main aside {
     <article class="stats-section">
       <div class="stats-grid">
         {{ stats.map{|s| <div class="stat-card">
-          <span class="stat-number">{{ s["value"].safe }}</span>
-          <span class="stat-label">{{ s["label"].safe }}</span>
+          <span class="stat-number">{{ s["value"] }}</span>
+          <span class="stat-label">{{ s["label"] }}</span>
         </div> } }}
       </div>
     </article>
@@ -725,35 +742,36 @@ main section, main article, main aside {
     <section class="pricing-section" id="pricing">
       <h2 class="section-title">Simple, transparent pricing</h2>
       <div class="pricing-toggle">
-        <span class="pricing-period {{ isAnnual ? "" : "active" }}">Monthly</span>
+        <!-- This should definitely be solved with JavaScript, again this is a showcase -->
+        <a href="?isMonthly#pricing" class="pricing-period {{ isAnnual ? "" : "active" }}">Monthly</a>
         <span aria-hidden="true">&middot;</span>
-        <span class="pricing-period {{ isAnnual ? "active" : "" }}">Annual {{ isAnnual && "— save 17\x25" }}</span>
+        <a href="?isAnnual#pricing" class="pricing-period {{ isAnnual ? "active" : "" }}">Annual {{ isAnnual && "— save 17\x25" }}</a>
       </div>
       <div class="pricing-grid">
         {{ pricing.map{|p| <article class="pricing-card {{ p["popular"] && "popular" }}">
           {{ p["popular"] && <span class="popular-badge">Most Popular</span> }}
-          <h3>{{ p["name"].safe }}</h3>
-          <p class="pricing-amount">{{ isAnnual ? p["annual"].safe : p["monthly"].safe }}<span style="font-size:1rem;font-weight:400;color:var(--text-muted)">/mo</span></p>
-          <p class="pricing-desc">{{ p["desc"].safe }}</p>
+          <h3>{{ p["name"] }}</h3>
+          <p class="pricing-amount">{{ isAnnual ? p["annual"] : p["monthly"] }}<span style="font-size:1rem;font-weight:400;color:var(--text-muted)">/mo</span></p>
+          <p class="pricing-desc">{{ p["desc"] }}</p>
           <ul class="pricing-features">
             {{ p["features"].map{|feat| <li class="{{ feat["included"] ? "included" : "excluded" }}">
-              <span aria-hidden="true">{{ feat["included"] ? "✓" : "✕" }}</span> {{ feat["text"].safe }}
+              <span aria-hidden="true">{{ feat["included"] ? "✓" : "✕" }}</span> {{ feat["text"] }}
             </li> } }}
           </ul>
-          <a href="#" class="btn {{ p["popular"] ? "btn-accent" : "btn-outline" }}">{{ p["popular"] ? "Start Pro trial" : "Get started" }}</a>
+          <a href="." class="btn {{ p["popular"] ? "btn-accent" : "btn-outline" }}">{{ p["popular"] ? "Start for free" : "Get started" }}</a>
         </article> } }}
       </div>
     </section>
 
     <aside class="testimonials-section" id="testimonials">
-      <h2 class="section-title">Loved by teams worldwide</h2>
+      <h2 class="section-title">NOT REAL — Sample testimonials for layout testing</h2>
       <div class="testimonials-grid">
         {{ testimonials.map{|t| <article class="testimonial-card">
-          <blockquote>{{ t["quote"].safe }}</blockquote>
+          <blockquote>{{ t["quote"] }}</blockquote>
           <footer>
             <div>
-              <strong>{{ t["name"].safe }}</strong>
-              <span>{{ t["role"].safe }}</span>
+              <strong>{{ t["name"] }}</strong>
+              <span>{{ t["role"] }}</span>
             </div>
           </footer>
         </article> } }}
@@ -764,8 +782,8 @@ main section, main article, main aside {
       <h2 class="section-title">Frequently asked questions</h2>
       <div class="faq-grid">
         {{ faqs.map{|q| <details class="faq-item">
-          <summary>{{ q["q"].safe }}</summary>
-          <p>{{ q["a"].safe }}</p>
+          <summary>{{ q["q"] }}</summary>
+          <p>{{ q["a"] }}</p>
         </details> } }}
       </div>
     </section>
@@ -773,26 +791,26 @@ main section, main article, main aside {
     <footer class="cta-section">
       <h2>Ready to ship faster?</h2>
       <p>Start building with a single binary. No config files, no boilerplate, no nonsense.</p>
-      <a href="#" class="btn btn-accent btn-lg">Start free trial &rarr;</a>
+      <a href="." class="btn btn-accent btn-lg">Start for free&rarr;</a>
     </footer>
   </main>
 
   <footer class="site-footer">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="/" class="nav-brand">Bialet</a>
+        <a href="https://bialet.dev" class="nav-brand">Bialet</a>
         <p>A modern framework for people who build things. Single binary, zero config, infinite possibilities.</p>
       </div>
       {{ footerLinks.map{|col| <div class="footer-column">
-        <h4>{{ col["title"].safe }}</h4>
+        <h4>{{ col["title"] }}</h4>
         <ul>
-          {{ col["items"].map{|link| <li><a href="{{ link["href"] }}">{{ link["label"].safe }}</a></li> } }}
+          {{ col["items"].map{|link| <li><a href="{{ link["href"] }}">{{ link["label"] }}</a></li> } }}
         </ul>
       </div> } }}
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 Bialet. All rights reserved.</span>
-      <span>Built with <a href="https://bialet.dev">Bialet</a> &mdash; CSS Grid showcase</span>
+      <span>&copy; {{ Date.now.year }} Bialet. All rights reserved.</span>
+      <span>Built with <a href="https://bialet.dev">Bialet</a> &mdash; CSS showcase</span>
     </div>
   </footer>
 </body>

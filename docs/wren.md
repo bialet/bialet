@@ -7,9 +7,9 @@ Bialet embeds a heavily modified dialect of Wren. The syntax itself has been
 extended — not through libraries, but directly in the parser — to support native
 SQL queries and rich string interpolation:
 
-- Native queries: `SELECT * FROM users`.fetch compiles into a query execution
-  call. See the [Database](database.md) guide.
-- Template strings: var output = <p>Hello {{ name }}</p> is syntax that
+- Native queries: ``var users = `SELECT * FROM users`.fetch`` compiles into a
+  query execution call. See the [Database](database.md) guide.
+- Template strings: `var output = <p>Hello {{ name }}</p>` is syntax that
   evaluates to a string with interpolation. See [Templates](template.md) for
   details.
 
@@ -98,7 +98,7 @@ true
 false
 ```
 
-`null` is false; everything else (including `0` and `""`) is true.
+> ⚠️ Pitfall: `null` is false; everything else (including `0` and `""`) is true.
 
 ### Numbers
 
@@ -134,9 +134,19 @@ byte offset `i`. `.count` is the byte length.
 var val = null
 ```
 
-In Bialet, `null` is safe: accessing a key or calling a method on null returns
-null instead of throwing an error. This makes template interpolation forgiving
-when data is missing.
+Bialet makes `null` forgiving in templates: a small set of methods never throws,
+so missing data renders as empty output instead of crashing the request. On
+`null`:
+
+- `null["key"]` returns `null`
+- `null.count` returns `0`
+- `null.map { ... }` returns an empty list
+- `null.to(Class)` returns `null`
+- `null.toString` returns `""`
+
+Any other method call on `null` still throws — `Null does not implement 'x'.`
+For example `null.get("key")` is a runtime error. Use the safe methods above, or
+a `|| default` fallback, in templates.
 
 ### Lists
 
@@ -382,6 +392,39 @@ class Poll {
 This is a complete domain class. No ORM, no annotations, no configuration — just
 Wren methods that express the logic directly.
 
+### Same line vs. next line
+
+The implicit return only applies when the expression starts on the same line as
+the opening `{`. If the body starts on a following line, Wren treats it as a
+statement body — each statement runs, the last value is discarded, and the
+method returns `null`:
+
+```wren
+class Shape {
+  // Expression body — starts on the `{` line, the value is returned
+  area(w, h) { w * h }
+
+  // Same for HTML — the string starts on the `{` line
+  badge(label) { <span class="badge">{{ label }}</span> }
+
+  // Expression moved to the next line — computes then discards, returns null
+  brokenArea(w, h) {
+    w * h
+  }
+
+  // Statement body — runs the query, returns null unless you `return`
+  increment(id) {
+    `UPDATE votes SET n = n + 1 WHERE id = ?`.query(id)
+  }
+}
+```
+
+`brokenArea(2, 3)` evaluates `2 * 3` and throws the result away, returning
+`null`. In a template this renders as empty output — no error tells you the
+value was dropped. Keep the expression on the same line as `{` when you want the
+implicit return, and use an explicit `return` for any multi-line method that
+must return a value.
+
 ### When You Need `return`
 
 For multiline methods that branch early, use explicit `return`:
@@ -502,7 +545,8 @@ Bialet adds a few convenience methods:
 
 ```wren
 [1, 2, 3].first                  // 1 (null for empty lists)
-"<script>".safe                   // "&lt;script&gt;" (HTML escape)
+"<script>".safe                   // "&lt;script&gt;" (HTML escape, pre-escape)
+"<b>x</b>".raw                    // HtmlNode (mark as safe HTML)
 "hello".upper                     // "HELLO"
 "HELLO".lower                     // "hello"
 "42".toNum                        // 42 (as Number)
@@ -541,8 +585,8 @@ from GitHub:
 import "gh:user/repo/module" for ClassName
 ```
 
-See the [advanced routing guide](advanced-routing.md) for details on external imports and file-based
-module resolution.
+See the [advanced routing guide](advanced-routing.md) for details on external
+imports and file-based module resolution.
 
 ## Bialet vs. Standard Wren
 
@@ -574,23 +618,23 @@ when you need to persist state across request cycles.
 
 Bialet adds these classes on top of standard Wren:
 
-| Class      | Purpose                                                   |
-| ---------- | --------------------------------------------------------- |
-| `Query`    | Backtick SQL: `` `SELECT * FROM users`.fetch `` — see [Database](database.md) |
+| Class      | Purpose                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| `Query`    | Backtick SQL: `` `SELECT * FROM users`.fetch `` — see [Database](database.md)             |
 | `Request`  | Incoming HTTP request (method, URI, headers, body, files) — see [Reference](reference.md) |
-| `Response` | Outgoing HTTP response (status, headers, body, redirect) — see [Reference](reference.md) |
-| `Cookie`   | Parse, set, and delete cookies — see [Reference](reference.md) |
-| `Session`  | Server-side session storage with CSRF protection — see [Reference](reference.md) |
-| `Db`       | Database migrations and ORM-like save/delete — see [Reference](reference.md) |
-| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [Reference](reference.md) |
-| `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md) |
-| `File`     | File uploads stored in SQLite — see [Reference](reference.md) |
-| `Markdown` | Render Markdown to HTML — see [Reference](reference.md) |
-| `Json`     | JSON parse and stringify — see [Reference](reference.md) |
-| `Config`   | Key-value configuration store — see [Reference](reference.md) |
-| `Cron`     | Scheduled tasks — see [Reference](reference.md) |
-| `System`   | Logging and stdout output — see [Reference](reference.md) |
-| `Util`     | Helpers: hashing, encoding, random strings, URL encoding — see [Reference](reference.md) |
+| `Response` | Outgoing HTTP response (status, headers, body, redirect) — see [Reference](reference.md)  |
+| `Cookie`   | Parse, set, and delete cookies — see [Reference](reference.md)                            |
+| `Session`  | Server-side session storage with CSRF protection — see [Reference](reference.md)          |
+| `Db`       | Database migrations and ORM-like save/delete — see [Reference](reference.md)              |
+| `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md)            |
+| `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md)  |
+| `File`     | File uploads stored in SQLite — see [Reference](reference.md)                             |
+| `Markdown` | Render Markdown to HTML — see [Reference](reference.md)                                   |
+| `Json`     | JSON parse and stringify — see [Reference](reference.md)                                  |
+| `Config`   | Key-value configuration store — see [Reference](reference.md)                             |
+| `Cron`     | Scheduled tasks — see [Reference](reference.md)                                           |
+| `System`   | Logging and stdout output — see [Reference](reference.md)                                 |
+| `Util`     | Helpers: hashing, encoding, random strings, URL encoding — see [Reference](reference.md)  |
 
 The full API reference with method signatures and examples is on the
 [Reference](reference.md) page.

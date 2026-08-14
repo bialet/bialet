@@ -198,3 +198,12 @@ class Test {
     }
   }
 }
+
+// Marks the current test file as skipped instead of run. Call it as the
+// file's only (or first) statement -- it does not abort the fiber, so any
+// code after it still executes.
+class Tests {
+  static skip() {
+    skip_()
+  }
+}

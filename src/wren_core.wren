@@ -113,25 +113,19 @@ class Sequence {
   join() { join("") }
 
   join(sep) {
-    var first = true
-    var result = ""
-
+    var strings = []
     for (element in this) {
-      if (!first) result = result + sep
-      first = false
-      result = result + element.toString
+      strings.add(element.toString)
     }
-
-    return result
+    return strings.joinNative(sep)
   }
 
-
   joinInt_() {
-    var res = ""
+    var strings = []
     for (element in this) {
-      if (element.type != Bool || element) res = res + "" + element.toString
+      if (element.type != Bool || element) strings.add(element.toString)
     }
-    return res
+    return strings.joinNative("")
   }
 
   slice(start) { slice(start, -1) }
@@ -166,6 +160,7 @@ class MapSequence is Sequence {
 
   iterate(iterator) { _sequence.iterate(iterator) }
   iteratorValue(iterator) { _fn.call(_sequence.iteratorValue(iterator)) }
+  safe { join("") }
   toString { join("") }
 }
 
@@ -372,8 +367,26 @@ class String is Sequence {
     }
     return output
   }
+  raw { HtmlNode.new(this) }
   toNum { Num.fromString(this) }
   toBool { toNum != 0 }
+}
+
+// A wrapper for a string of already-rendered HTML. HTML string literals and
+// the output of `{{ }}` interpolation produce HtmlNodes so the escape
+// machinery leaves them alone, while interpolated user data is escaped.
+class HtmlNode is Sequence {
+  construct new(string) {
+    _string = string
+  }
+
+  toString { _string }
+  raw { this }
+  safe { this }
+  +(other) { HtmlNode.new(_string + other.toString) }
+  count { _string.count }
+  iterate(iterator) { _string.iterate(iterator) }
+  iteratorValue(iterator) { _string.iteratorValue(iterator) }
 }
 
 class StringByteSequence is Sequence {
@@ -464,8 +477,30 @@ class List is Sequence {
     }
     return result
   }
-
   first { count > 0 ? this[0] : null }
+
+  // Adds [node] to an HTML interpolation list. HtmlNodes are already-safe and
+  // stored raw; other values are escaped. Sequences (except String and Map)
+  // are flattened so `{{ list.map{...} }}` renders each item without escaping
+  // the markup produced by nested HTML literals.
+  addHtml_(node) {
+    if (node is HtmlNode) return addCore_(node)
+    if (node.type == Bool && !node) return this
+    if (node is String || node is Map) return addCore_(HtmlNode.new(node.toString.safe))
+    if (node is Sequence) {
+      for (element in node) addHtml_(element)
+      return this
+    }
+    return addCore_(HtmlNode.new(node.toString.safe))
+  }
+
+  // Joins the elements of an HTML interpolation. Every element is an HtmlNode
+  // by the time this runs, so it concatenates their raw strings.
+  joinHtml_() {
+    var res = ""
+    for (element in this) res = res + element.toString
+    return HtmlNode.new(res)
+  }
 }
 
 class Map is Sequence {
@@ -660,7 +695,13 @@ class Query {
   fetch(p1, p2, p3) { fetch_(this, [p1, p2, p3]) }
   // First methods, return first result as Object
   first_(params) {
-    var res = fetch_("%(this) LIMIT 1", params)
+    // Only SELECT statements can take a trailing "LIMIT 1". Appending it to an
+    // UPDATE/DELETE/INSERT is a syntax error in SQLite >= 3.46 (UPDATE/DELETE
+    // LIMIT support was removed there), and to an "UPDATE ... RETURNING" it
+    // lands after the RETURNING clause, which most versions reject.
+    var sql = "%(this)"
+    if (sql.trim().upper.startsWith("SELECT")) sql = sql + " LIMIT 1"
+    var res = fetch_(sql, params)
     return res is List && res.count > 0 ? res[0] : null
   }
   first { first_([]) }

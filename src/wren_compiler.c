@@ -1,6 +1,7 @@
 #include "wren_compiler.h"
 
 #include "wren_common.h"
+#include "wren_value.h"
 #include "wren_vm.h"
 #include <errno.h>
 #include <stdbool.h>
@@ -130,7 +131,9 @@ typedef enum {
   //     TOKEN_NAME          d
   //     TOKEN_STRING        " e"
   TOKEN_INTERPOLATION,
-  TOKEN_SQL,
+  TOKEN_QUERY_STRING,
+  TOKEN_HTML_NODE,
+  TOKEN_HTML_TEXT,
 
   TOKEN_LINE,
 
@@ -952,13 +955,33 @@ static int htmlTagIsVoidElement(char* tagName) {
          strcmp(tagName, "wbr") == 0;
 }
 
+// Returns true if [tagName] is a valid HTML tag name: it must start with a
+// lowercase letter and contain only lowercase letters, numbers, and hyphens
+// (e.g. <my-element>).
+static int htmlTagNameIsValid(char* tagName) {
+  if(tagName[0] < 'a' || tagName[0] > 'z')
+    return 0;
+  for(char* p = tagName + 1; *p != '\0'; p++) {
+    if((*p < 'a' || *p > 'z') && (*p < '0' || *p > '9') && *p != '-')
+      return 0;
+  }
+  return 1;
+}
+
 static void readHtmlString(Parser* parser, char* previousTagName) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  WrenTokenType type = TOKEN_STRING;
+  WrenTokenType type = TOKEN_HTML_NODE;
   int           closingTag = -1;
   char*         tagName = malloc(MAX_METHOD_NAME);
   int           tagIsOpen = 1;
+  int           tagDone = 0;
+  int           invalidTag = 0;
+
+  // Only a string that reads its own opening tag can detect a nested tag with
+  // the same name. Resumes after "{{ }}" and doctype strings already consumed
+  // their tag name elsewhere, so they skip the check.
+  bool readsOpeningTag = previousTagName[0] == '\0';
 
   if(strlen(previousTagName) > 0) {
     strcpy(tagName, previousTagName);
@@ -980,18 +1003,33 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         // Omit space and slash in self closing tag
         nextChar(parser);
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
+        tagDone = 1;
         break;
       }
       wrenByteBufferWrite(parser->vm, &string, c);
       if(c == '>' || c == ' ') {
+        tagDone = 1;
         break;
       }
-      tagName[i++] = c;
+      // Bound the tag name so an overlong tag cannot overflow the heap buffer.
+      // The token keeps the full text; tagName only needs to match close tags.
+      if(i < MAX_METHOD_NAME - 1) {
+        tagName[i++] = c;
+      }
     }
     tagName[i] = '\0';
+
+    // Reject invalid tag names up front instead of letting them derail the
+    // lexer into a confusing error later. Tag names must start with a
+    // lowercase letter and contain only lowercase letters, numbers, and
+    // hyphens.
+    if(tagDone && !htmlTagNameIsValid(tagName)) {
+      lexError(parser, "Invalid tag name: must be lowercase alphanumeric + hyphens");
+      invalidTag = 1;
+    }
   }
 
-  if(closingTag < 0) {
+  if(closingTag < 0 && !invalidTag) {
     for(;;) {
       char c = nextChar(parser);
       if(c == '>')
@@ -1002,9 +1040,13 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         break;
       }
       if(c == '{' && peekChar(parser) == '{') {
-        type = TOKEN_INTERPOLATION;
-        strcpy(parser->handlebars[parser->numHandlebars], tagName);
-        parser->numHandlebars++;
+        type = TOKEN_HTML_TEXT;
+        // Cap the handlebar stack so pathological nesting cannot write past
+        // the fixed-size handlebars array (MAX_INTERPOLATION_NESTING rows).
+        if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
+          strcpy(parser->handlebars[parser->numHandlebars], tagName);
+          parser->numHandlebars++;
+        }
         nextChar(parser);
         break;
       }
@@ -1015,13 +1057,34 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
         break;
       }
+      // The outermost tag cannot nest itself. A nested opening tag with the
+      // same name makes the first matching close tag end the string early and
+      // derails the parser, so fail with a clear message instead.
+      if(readsOpeningTag && c == '<' && peekChar(parser) >= 'a' &&
+         peekChar(parser) <= 'z') {
+        size_t tagLen = strlen(tagName);
+        if(strncmp(parser->currentChar, tagName, tagLen) == 0) {
+          char after = parser->currentChar[tagLen];
+          if(after == '>' || after == ' ' || after == '/' || after == '\r' ||
+             after == '\n' || after == '\0') {
+            lexError(parser,
+                     "Cannot nest <%s> inside <%s>: use a different "
+                     "tag for the inner element.",
+                     tagName, tagName);
+            break;
+          }
+        }
+      }
       wrenByteBufferWrite(parser->vm, &string, c);
       if(c == '<' && peekChar(parser) == '/') {
         closingTag = 0;
       }
-      // Tags should start with a letter, next characters can be letters or numbers
+      // Tags should start with a lowercase letter, next characters can be
+      // lowercase letters, numbers, or hyphens (e.g. custom elements like
+      // <my-element>).
       if((closingTag >= 0 && c >= 'a' && c <= 'z') ||
-         (closingTag >= 1 && c >= '0' && c <= '9')) {
+         (closingTag >= 1 && c >= '0' && c <= '9') ||
+         (closingTag >= 1 && c == '-')) {
         if(tagName[closingTag] != c) {
           closingTag = -1; // Different tag
         } else {
@@ -1044,7 +1107,7 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
 static void readQueryString(Parser* parser) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
-  WrenTokenType type = TOKEN_SQL;
+  WrenTokenType type = TOKEN_QUERY_STRING;
 
   for(;;) {
     char c = nextChar(parser);
@@ -1353,7 +1416,12 @@ static void nextToken(Parser* parser) {
         int isDocType = peekChar(parser) == '!' && peekNextChar(parser) == 'd';
         int notIgnoreSpacesTokens = lastTokenType(parser) == TOKEN_EQ ||
                                     lastTokenType(parser) == TOKEN_RETURN;
-        if((isDocType || (peekChar(parser) >= 'a' && peekChar(parser) <= 'z')) &&
+        // A lowercase letter starts a tag; an uppercase letter is accepted too
+        // so `<MyElement>` reaches tag-name validation and gets a clear error
+        // instead of being lexed as a less-than comparison.
+        int htmlTagStart = (peekChar(parser) >= 'a' && peekChar(parser) <= 'z') ||
+                           (peekChar(parser) >= 'A' && peekChar(parser) <= 'Z');
+        if((isDocType || htmlTagStart) &&
            (notIgnoreSpacesTokens || lastTokenType(parser) == TOKEN_LEFT_PAREN ||
             lastTokenType(parser) == TOKEN_LEFT_BRACKET ||
             lastTokenType(parser) == TOKEN_LEFT_BRACE ||
@@ -2601,6 +2669,47 @@ static void stringInterpolation(Compiler* compiler, bool canAssign) {
   callMethod(compiler, 0, "joinInt_()", 10);
 }
 
+// A bare HTML string literal (no interpolation). Wrapped in HtmlNode so the
+// escape machinery can tell already-safe markup apart from user data.
+static void htmlNode(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
+  loadCoreVariable(compiler, "HtmlNode");
+  literal(compiler, false);
+  callMethod(compiler, 1, "new(_)", 6);
+}
+
+// An HTML string literal that contains interpolated expressions. Same as
+// [stringInterpolation], but interpolated values are escaped unless they are
+// already-safe HtmlNodes. The joined result is an HtmlNode so a nested
+// interpolation is not escaped a second time.
+static void htmlInterpolation(Compiler* compiler, bool canAssign) {
+  (void)canAssign;
+  // Instantiate a new list.
+  loadCoreVariable(compiler, "List");
+  callMethod(compiler, 0, "new()", 5);
+
+  do {
+    // The opening literal piece is already-safe HTML.
+    htmlNode(compiler, false);
+    callMethod(compiler, 1, "addCore_(_)", 11);
+
+    // The interpolated expression: escape unless it is an HtmlNode.
+    ignoreNewlines(compiler);
+    expression(compiler);
+    callMethod(compiler, 1, "addHtml_(_)", 11);
+
+    ignoreNewlines(compiler);
+  } while(match(compiler, TOKEN_HTML_TEXT));
+
+  // The trailing literal piece is already-safe HTML.
+  consume(compiler, TOKEN_HTML_NODE, "Expect end of HTML interpolation.");
+  htmlNode(compiler, false);
+  callMethod(compiler, 1, "addCore_(_)", 11);
+
+  // The list of interpolated parts.
+  callMethod(compiler, 0, "joinHtml_()", 11);
+}
+
 static void super_(Compiler* compiler, bool canAssign) {
   ClassInfo* enclosingClass = getEnclosingClass(compiler);
   if(enclosingClass == NULL) {
@@ -2933,7 +3042,9 @@ GrammarRule rules[] = {
     /* TOKEN_NUMBER        */ PREFIX(literal),
     /* TOKEN_STRING        */ PREFIX(literal),
     /* TOKEN_INTERPOLATION */ PREFIX(stringInterpolation),
-    /* TOKEN_QUERY         */ PREFIX(literal),
+    /* TOKEN_QUERY_STRING  */ PREFIX(literal),
+    /* TOKEN_HTML_NODE     */ PREFIX(htmlNode),
+    /* TOKEN_HTML_TEXT     */ PREFIX(htmlInterpolation),
     /* TOKEN_LINE          */ UNUSED,
     /* TOKEN_ERROR         */ UNUSED,
     /* TOKEN_EOF           */ UNUSED};
@@ -3437,7 +3548,9 @@ static Value consumeLiteral(Compiler* compiler, const char* message) {
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_STRING))
     return compiler->parser->previous.value;
-  if(match(compiler, TOKEN_SQL))
+  if(match(compiler, TOKEN_QUERY_STRING))
+    return compiler->parser->previous.value;
+  if(match(compiler, TOKEN_HTML_NODE))
     return compiler->parser->previous.value;
   if(match(compiler, TOKEN_NAME))
     return compiler->parser->previous.value;
@@ -3837,6 +3950,13 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.next.length = 0;
   parser.next.line = 0;
   parser.next.value = UNDEFINED_VAL;
+
+  // `current` needs the same treatment: nextToken() starts with
+  // `previous = current`, so the first call reads this before anything has
+  // written it. The copied value is never used, but reading an uninitialized
+  // object is still undefined -- and GCC diagnoses it once -O2 inlines
+  // nextToken() into this function.
+  parser.current = parser.next;
 
   parser.printErrors = printErrors;
   parser.hasError = false;

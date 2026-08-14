@@ -1,0 +1,6 @@
+Cookie.set("del_me", "present")
+Cookie.delete("del_me")
+var present = Cookie.get("del_me")
+var fallback = Cookie.get("missing_key", "fallback-value")
+var missing = Cookie.get("missing_key")
+return "present:" + (present == "" ? "empty" : (present ? present : "null")) + "|fallback:" + fallback + "|missing:" + (missing == null ? "null" : missing)

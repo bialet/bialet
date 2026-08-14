@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# Pre-commit hook for Bialet.
+#
+# Runs two checks on every commit:
+#   1. clang-format validation on the staged C/H source files.
+#   2. Build + integration test suite (make check).
+#
+# Vendored / third-party files are excluded from clang-format validation:
+#   - src/wren_*.c, src/wren_*.h  (embedded Wren interpreter)
+#   - src/dmon.h                  (vendored directory monitor library)
+#   - src/getopt.c, src/getopt.h  (BSD-derived getopt)
+#   - src/favicon.h               (generated icon data)
+#
+# Skips both checks when any of SKIP_CLANG_FORMAT / SKIP_BIALET_TESTS are
+# set, or when committing into the middle of an interactive rebase
+# (MERGE_MSG or REBASE_HEAD present).
+set -u
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT" || exit 1
+
+# Resolve the clang-format binary, preferring one that matches the repo
+# config. Falls back to any clang-format on PATH.
+CLANG_FORMAT="${CLANG_FORMAT:-}"
+if [ -z "$CLANG_FORMAT" ]; then
+  if command -v clang-format >/dev/null 2>&1; then
+    CLANG_FORMAT="$(command -v clang-format)"
+  else
+    echo "pre-commit: clang-format not found; skipping format check" >&2
+    CLANG_FORMAT=""
+  fi
+fi
+
+# Bail out during rebase/cherry-pick interims.
+if [ -f .git/MERGE_MSG ] || [ -f .git/REBASE_HEAD ]; then
+  exit 0
+fi
+
+STAGED="$(git diff --cached --name-only --diff-filter=ACM)"
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+fail() {
+  echo "pre-commit: $1" >&2
+  exit 1
+}
+
+# ── 1. clang-format validation ─────────────────────────────────────
+if [ -n "$CLANG_FORMAT" ] && [ -z "${SKIP_CLANG_FORMAT:-}" ]; then
+  files=""
+  for f in $STAGED; do
+    case "$f" in
+      src/*.c|src/*.h) ;;
+      *) continue ;;
+    esac
+    case "$f" in
+      src/wren_*|src/dmon.h|src/getopt.c|src/getopt.h|src/favicon.h) continue ;;
+    esac
+    files="$files $f"
+  done
+
+  if [ -n "$files" ]; then
+    echo "Running clang-format check..."
+    if ! $CLANG_FORMAT --dry-run --Werror --style=file $files >/dev/null 2>&1; then
+      echo "pre-commit: clang-format violations found in staged files." >&2
+      echo "  Run: clang-format -i --style=file $files" >&2
+      echo "  Then: git add the formatted files and commit again." >&2
+      $CLANG_FORMAT --dry-run --style=file $files >&2
+      exit 1
+    fi
+    echo "clang-format check ok"
+  fi
+fi
+
+# ── 2. Build + tests ────────────────────────────────────────────────
+if [ -z "${SKIP_BIALET_TESTS:-}" ]; then
+  echo "Running tests..."
+  if ! make check >/tmp/bialet_precommit_makecheck.log 2>&1; then
+    echo "pre-commit: make check failed. See /tmp/bialet_precommit_makecheck.log" >&2
+    tail -30 /tmp/bialet_precommit_makecheck.log >&2
+    exit 1
+  fi
+  echo "tests ok"
+fi
+
+exit 0

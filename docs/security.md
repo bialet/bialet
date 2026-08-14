@@ -1,13 +1,14 @@
 # Security
 
-Bialet keeps the framework small, and that extends to security: there is no
-magic that escapes your output for you, and no ORM that hides your SQL. The
-good news is that the sharp edges are explicit and few. This page is the
-central reference for keeping a Bialet app safe.
+Bialet keeps the framework small, and that extends to security: `{{ }}`
+interpolation escapes output by default, and there is no ORM hiding your SQL —
+you write the queries yourself. The sharp edges are explicit and few. This page
+is the central reference for keeping a Bialet app safe.
 
 Three rules cover most real-world damage:
 
-1. **Escape untrusted output** — `{{ }}` does not escape. Use `.safe`.
+1. **Trust `{{ }}` to escape untrusted output** — interpolation escapes by
+   default. Mark intentionally-raw HTML with `HtmlNode` or `.raw`.
 2. **Parameterize SQL** — never build a query from string concatenation.
 3. **Validate state-changing requests** — check `Session.csrfOk` on POSTs.
 
@@ -16,7 +17,7 @@ Three rules cover most real-world damage:
 | Protection | Where | Notes |
 |------------|-------|-------|
 | Parameterized SQL | Backtick Query objects | String interpolation is rejected by the compiler |
-| HTML escaping | `.safe`, `Util.htmlEscape()` | You must call it — never automatic |
+| HTML escaping | `{{ }}` interpolation | Automatic; HTML literals and `HtmlNode` stay raw |
 | CSRF tokens | `Session.csrf` / `Session.csrfOk` | Constant-time comparison |
 | HttpOnly + SameSite cookies | `Cookie.set` defaults | `Secure` added automatically behind TLS |
 | Private file blocking | Server | `_` and `.` prefixed files return 403 |
@@ -25,53 +26,68 @@ Three rules cover most real-world damage:
 
 ## Cross-Site Scripting (XSS)
 
-The `{{ }}` interpolation **does not escape HTML by default**. When you
-display user-generated content, database values, or URL parameters, you must
-escape them yourself. This is deliberate: it keeps inline HTML readable and
-fast, and it makes the escaping explicit where it matters.
+The `{{ }}` interpolation **escapes HTML by default**. Any plain value you
+interpolate — a string from user input, the database, or a URL parameter — is
+escaped before it reaches the page, in attribute values as well as element
+bodies:
 
 ```wren
 var userInput = "<script>alert('xss')</script>"
 
-// WRONG — XSS vulnerability
-var dangerous = <p>{{ userInput }}</p>
-// Renders: <p><script>alert('xss')</script></p>
-
-// CORRECT — HTML characters are escaped
-var safe = <p>{{ userInput.safe }}</p>
+var safe = <p>{{ userInput }}</p>
 // Renders: <p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>
 ```
 
-`.safe` replaces `&`, `<`, `>`, `"`, and `'` with their HTML entities. The
-equivalent helper `Util.htmlEscape(str)` returns the same result as a plain
-string:
+Escaping replaces `&`, `<`, `>`, `"`, and `'` with their HTML entities. The
+standalone helper `Util.htmlEscape(str)` returns the same result:
 
 ```wren
 var escaped = Util.htmlEscape(userInput)
 ```
 
-> ⚠️ Pitfall: **Forgetting `.safe` is an XSS vulnerability.** Every string
-> that comes from user input, the database, or the URL must be escaped before
-> it reaches HTML. There is no automatic escaping — not even for values pulled
-> from `Request.post()`.
+> ⚠️ Pitfall: **Do not add `.safe` inside `{{ }}`.** Since interpolation
+> already escapes, `{{ userInput.safe }}` escapes the text twice
+> (`&amp;lt;` instead of `&lt;`). Drop `.safe` from templates.
 
-Escaping applies in attributes too, not just element bodies:
+### Intentionally raw HTML
+
+Values that are already rendered HTML are marked with an `HtmlNode` and are
+left untouched by interpolation:
+
+- **HTML string literals** — `<div>...</div>` evaluates to an `HtmlNode`.
+- **Nested `{{ }}` blocks** — their result is an `HtmlNode`, so nesting
+  `{{ outer }}` around inner markup does not double-escape it.
+- **`.raw`** — `"<b>bold</b>".raw` marks a string as safe HTML.
+- **`HtmlNode.new(...)`** — wrap a runtime string explicitly.
 
 ```wren
-// WRONG — break out of the attribute, inject an event handler
-<a href="{{ url }}">link</a>
+var userText = "<script>alert('xss')</script>"
+var card = <div class="card"><p>kept <b>raw</b></p></div>
+var safeMarkup = "<em>raw</em>".raw
 
-// CORRECT
-<a href="{{ url.safe }}">link</a>
+<p>{{ userText }}</p>    // escaped
+<p>{{ card }}</p>        // rendered as written
+<p>{{ safeMarkup }}</p>  // rendered as written
+
+// A string that really does contain markup must be marked safe:
+var html = "<b>bold</b>".raw
+<p>{{ html }}</p>
 ```
 
-If you generate HTML in Wren code rather than inline blocks, escape with
-`Util.htmlEscape()` before concatenating it into a template string.
+Sequences are flattened by interpolation, so building a list of fragments
+with `map` escapes each item's user data while keeping the surrounding
+markup:
 
-> ⚠️ Pitfall: `.safe` escapes for HTML text and attribute contexts. It does
-> not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted input
-> into a `<script>` block or a `javascript:` URL — restructure the page so it
-> cannot happen.
+```wren
+var items = ["<b>a</b>", "b"]
+<ul>{{ items.map{|x| <li>{{ x }}</li> } }}</ul>
+// <li>&lt;b&gt;a&lt;/b&gt;</li><li>b</li>
+```
+
+> ⚠️ Pitfall: `HtmlNode` and `.raw` assert that the string is already safe.
+> They do not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted
+> input into a `<script>` block or a `javascript:` URL — restructure the page
+> so it cannot happen.
 
 ### Markdown rendering
 
@@ -192,6 +208,11 @@ Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
 
+The table is keyed on `(id, key)`: `Session.set` replaces the row for a key
+instead of appending, and `Session.get` always returns the latest value
+written. Older databases that lack the primary key are rebuilt in place on
+startup.
+
 > ⚠️ Pitfall: `Request.post(name)` returns `null` when the key is missing.
 > Calling string methods on it crashes the request. Always guard with `|| ""`
 > or a null check:
@@ -236,6 +257,37 @@ When requests arrive through a proxy, Bialet detects HTTPS from the
 attribute is decided. Only set those headers from a proxy you trust — never
 forward user-supplied ones unchanged.
 
+### Reverse Proxy Hardening
+
+Bialet is **single-threaded**: it accepts and serves one connection at a time
+in a blocking loop. The reverse proxy is the layer that protects it from
+hostile clients. Configure the proxy to:
+
+- **Cap the request body.** Bialet accepts bodies up to ~10 MB. Parsing large
+  bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
+  body still means millions of allocations in `Util.urlDecode`. Set
+  `client_max_body_size`
+  (nginx), `LimitRequestBody` (Apache), or an equivalent to the smallest your
+  app needs — 1 MB is a sane default.
+- **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
+  per `recv()` call, so a peer that dribbles bytes slowly can hold a
+  connection open indefinitely. Set a total read timeout at the proxy
+  (`client_body_timeout` in nginx, `RequestReadTimeout ... MinRate` in
+  Apache) so stalled uploads are cut off.
+- **Buffer the full request before forwarding** (`proxy_request_buffering on`
+  in nginx; the default in most proxies). This keeps a slow client from
+  holding the upstream socket.
+- **Deny private files at the proxy too.** Bialet already returns 403 for
+  `_`/`.`-prefixed paths, but the proxy can return 403 first — a second layer
+  in case an app or a planted symlink ever serves such a file.
+
+See [Deployment](deployment.md) for ready-to-paste nginx, Apache, and Caddy
+configs with these settings.
+
+> ⚠️ Pitfall: a proxy body cap that is *higher* than your app's needs
+> re-opens the CPU-exhaustion and memory-exhaustion risks above. Keep it as
+> low as your uploads actually require.
+
 ### Private Files
 
 Files and directories whose name starts with `_` or `.` are forbidden from
@@ -248,6 +300,39 @@ being downloaded. Name anything private with a leading `_` or `.`.
 > not a sandbox. Keep it out of version control backups you share, and
 > restrict filesystem access to the user that runs the server.
 
+### Database File Permissions
+
+Bialet creates `_db.sqlite3` with SQLite's default mode, `0666 & ~umask`.
+Under the common `umask 022` that yields a world-readable `0644` file, so
+any local user on a shared host can read the whole database — uploaded
+files, password hashes, and cached remote modules included. The server does
+not tighten the mode after opening the file.
+
+Run Bialet with a restrictive umask so the file is created `0600`:
+
+```bash
+umask 0077
+bialet -p 7001 /www/myapp
+```
+
+Under systemd, set `UMask=` on the service instead:
+
+```ini
+[Service]
+UMask=0077
+```
+
+If the database already exists, tighten it with `chmod`. Redo this after
+any migration or restore that recreates the file:
+
+```bash
+chmod 600 /www/myapp/_db.sqlite3
+```
+
+> ⚠️ Pitfall: a world-readable `_db.sqlite3` is as exposed as a leaked
+> backup — no HTTP request is needed to read it. Restrict the app root to
+> the user that runs the server and keep the file out of shared backups.
+
 ### Resource Limits
 
 The server can enforce memory and CPU ceilings per app with CLI flags, which
@@ -259,6 +344,13 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
 
 - `-m` / `-M` — soft / hard memory limit in MB
 - `-c` / `-C` — soft / hard CPU limit in percent
+- `-b` — max request body in KB (default 128 KB)
+
+Request bodies are rejected with `413 Payload Too Large` before parsing when
+they exceed the smaller of the `-b` limit and a memory-safe ceiling (`-m` /
+512, about 256 KB at the default 128 MB soft limit). This keeps worst-case body
+parsing (one Wren string per line) inside the enforced `RLIMIT_AS` budget, so
+a crafted body cannot crash the server child or stall it for minutes.
 
 See the resource limits table in [Deployment](deployment.md) for defaults.
 
@@ -275,8 +367,8 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 
 ## Security Checklist
 
-1. Escape every string from user input, the database, or the URL with `.safe`
-   before interpolating into HTML.
+1. Interpolate untrusted values with `{{ }}` and rely on the automatic
+   escaping; mark intentional markup with `HtmlNode` or `.raw`.
 2. Never build SQL from strings — use `?` placeholders and pass values as
    parameters.
 3. Use `.order()` with an allow-list for sortable columns.
@@ -285,6 +377,8 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 5. Guard `Request.post(...)` with `|| ""` before string operations.
 6. Store passwords with `Util.hash` / `Util.verify`, never plaintext.
 7. Run behind a reverse proxy with TLS; bind Bialet to `127.0.0.1`.
-8. Keep private files (`_`-prefixed) out of shared backups and repositories.
-9. Use `-m` / `-M` / `-c` / `-C` to cap memory and CPU.
-10. Validate and convert input with `Num.fromString()` before numeric math.
+8. Cap the request body and set a total read deadline at the proxy; buffer
+   the full body before forwarding.
+9. Keep private files (`_`-prefixed) out of shared backups and repositories.
+10. Use `-m` / `-M` / `-c` / `-C` to cap memory and CPU.
+11. Validate and convert input with `Num.fromString()` before numeric math.

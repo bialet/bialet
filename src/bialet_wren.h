@@ -14,19 +14,21 @@
 #include "bialet.h"
 #include "server.h"
 
-void bialetInit(struct BialetConfig* config);
-void bialetCleanup();
+void bialet_init(struct BialetConfig* config);
+void bialet_cleanup();
+void bialet_reopen_db();
+void bialet_enable_dev_flags();
 
-const char* bialetGetFullRootDir();
+const char* bialet_get_full_root_dir();
 
-struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
+struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm);
 
-char* readFile(const char* path);
-char* bialetReadFile(const char* path);
+char* read_file(const char* path);
+char* bialet_read_file(const char* path);
 
-int bialetRunCli(char* code);
-int bialetValidateSyntax(const char* filePath);
-int bialetRunTests(const char* testDir, const char* rootDir);
+int bialet_run_cli(char* code);
+int bialet_validate_syntax(const char* filePath);
+int bialet_run_tests(const char* testDir, const char* rootDir);
 
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 

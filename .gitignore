@@ -1,6 +1,8 @@
 # Build generated files
 build/
-build-cross/
+
+# Windows binaries
+*.exe
 
 # Bialet generated files
 **/_db.sqlite3*
@@ -12,5 +14,5 @@ docs/_static/ai-prompt.js
 # Editor files
 .vscode/
 
-# NPM cache
-node_modules/
+# Review artifacts
+/.c-review-results/

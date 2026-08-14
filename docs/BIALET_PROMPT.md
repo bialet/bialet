@@ -110,7 +110,8 @@ class Poll {
   votes_(opt) { Num.fromString(opt["votes"]) }
 }
 
-// null is safe: accessing a key or method on null returns null, not an error
+// null is forgiving: null["key"], null.count, null.map, null.toString don't
+// throw; other method calls on null are runtime errors
 ```
 
 **Inline HTML strings** are Wren's template mechanism — no separate template
@@ -122,8 +123,8 @@ var greeting = <h1>Hello, {{ name }}!</h1>
 
 - Delimited by `<tag>...</tag>`; the string must open and close with the
   **same** tag name.
-- Tag names: lowercase letters/numbers only — no hyphens, underscores, or
-  uppercase.
+- Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
+  Hyphens enable custom elements like `<my-element>`.
 - A tag cannot directly nest another tag of the **same** name
   (`<div><div>...` is a parse error) — use a different tag for the inner one.
 - Self-closing tags need a space before the slash: `<br />`, `<input ... />`.
@@ -141,19 +142,20 @@ classes, attributes, or whole HTML blocks:
 <a class="filter-tab {{ filter == "all" && "active" }}">All</a>
 <span>{{ activeCount }} task{{ activeCount != 1 && "s" }} remaining</span>
 {{ showClear && <button class="clear-btn">Clear completed</button> }}
-<span class="{{ task.finished ? "done" : "pending" }}">{{ task.description.safe }}</span>
+<span class="{{ task.finished ? "done" : "pending" }}">{{ task.description }}</span>
 ```
 
 **Iteration** uses `map`, and the callback must be a **single expression**
 (no multi-statement blocks, no `var` declarations inside it):
 
 ```wren
-{{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+{{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
 ```
 
-> **Pitfall:** the Wren expression inside `{{ }}` must start on the same line
-> as the opening `{{`. Only the HTML *inside* the tags may span multiple
-> lines — breaking the Wren expression itself across lines (e.g. `{{\n  cond &&\n  <div>`) causes parsing ambiguities and empty output.
+> **Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;
+> HTML strings inside it can too. Infix operators (`&&`, `?`, `:`, ...) end
+> their line — an operator at the start of a line is a parse error, exactly
+> as in plain Wren.
 
 ## Code Style
 
@@ -414,6 +416,27 @@ Invalid columns fall back to the first entry in `allowedColumns` — this
 prevents SQL injection through user-controlled sort parameters. Pass a limit
 as a 4th argument for quick "top N" queries.
 
+### Optional Filters Without Concatenation
+
+The Query object forbids concatenation/interpolation, so a `WHERE` clause
+that depends on which filters are present can't be built by appending SQL
+fragments. Write one static query and bypass each filter with `OR` instead:
+
+```wren
+// Empty string bypasses the filter
+var search = Request.get("search") || ""
+var users = `SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')`.fetch(search, search)
+
+// Boolean flag bypasses the filter — tri-state "all/active/completed"
+static list(filter) { `SELECT * FROM tasks
+  WHERE session = ? AND (? = 1 OR finished = ?)
+  ORDER BY createdAt ASC`.fetch(Session.id, filter == "all", filter == "active").to(Task) }
+```
+
+Booleans bind as `1`/`0`, so `? = 1` short-circuits the `OR` and matches every
+row when the flag is true. Chain multiple filters with `AND`, each with its
+own bypass, to let callers omit any combination of them.
+
 ### Pagination
 
 Always pass `LIMIT`/`OFFSET` as `?` placeholders:
@@ -474,7 +497,7 @@ Db.migrate("Seed sample posts", Fn.new{
 
 ### `BIALET_*` System Tables
 
-`BIALET_CONFIG`, `BIALET_MIGRATIONS`, `BIALET_SESSIONS`, `BIALET_FILES`,
+`BIALET_CONFIG`, `BIALET_MIGRATIONS`, `BIALET_SESSION`, `BIALET_FILES`,
 `BIALET_LOGS`, `BIALET_REMOTE_MODULES`. You may read/write rows in these with
 caution, but never drop or restructure them.
 
@@ -540,7 +563,7 @@ return Layout.render(
     <table>
       <thead><tr><th>Name</th><th>Email</th></tr></thead>
       <tbody>
-        {{ users.map{|u| <tr><td>{{ u.name.safe }}</td><td>{{ u.email.safe }}</td></tr>} }}
+        {{ users.map{|u| <tr><td>{{ u.name }}</td><td>{{ u.email }}</td></tr>} }}
       </tbody>
     </table>
     <form method="post">
@@ -553,9 +576,9 @@ return Layout.render(
 ```
 
 > **Pitfall:** always `return Response.redirect(...)`. A bare
-> `Response.redirect(...)` without `return` sets the redirect headers but lets
-> execution continue — the code below then tries to send a second response
-> body, causing a double-response error.
+> `Response.redirect(...)` without `return` still runs the rest of the script,
+> so the 302 carries an unexpected body. There is no error — the redirect just
+> isn't clean.
 
 ## Shared Logic (Instead of Middleware)
 
@@ -747,11 +770,11 @@ Markdown.file("about.md")              // reads and renders a file from the app 
 
 1. **Never concatenate or interpolate values into SQL** — always use `?`
    placeholders and pass parameters to the query method.
-2. **Always escape untrusted output with `.safe`** — `{{ }}` does **not**
-   escape HTML automatically. Escape any string from user input, the
-   database, or the URL before interpolating it into HTML.
-3. **Always `return` before `Response.redirect(...)`** to avoid
-   double-response errors.
+2. **Rely on `{{ }}` auto-escaping** — interpolation escapes plain strings
+   (user input, database, URL) automatically. Mark intentionally-raw markup
+   with `HtmlNode` or `.raw`.
+3. **Always `return` before `Response.redirect(...)`** so the rest of the
+   script doesn't attach a body to the redirect.
 4. **Validate input** in domain classes (`isValid`, `errors`) or inline
    before saving.
 5. **Pin external imports** to a tag, not `main`, for anything beyond local
@@ -762,11 +785,11 @@ Markdown.file("about.md")              // reads and renders a file from the app 
 `SELECT * FROM users WHERE name = '%(name)'`.fetch
 
 // WRONG — XSS
-<p>{{ userInput }}</p>
+<p>{{ userInput.safe }}</p>  // double-escaped: interpolation already escapes
 
 // CORRECT
 `SELECT * FROM users WHERE name = ?`.fetch(name)
-<p>{{ userInput.safe }}</p>
+<p>{{ userInput }}</p>
 ```
 
 ## JSON APIs
@@ -888,10 +911,7 @@ class Task {
 
   save() { _id = `tasks`.save(this) }
 
-  toggle() {
-    _finished = `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ? RETURNING finished`
-      .toBool(_id, Session.id)
-  }
+  static toggle(id) { `UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ?`.query(id, Session.id) }
 
   static list() { `SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC`.fetch(Session.id).to(Task) }
   static delete(id) { `DELETE FROM tasks WHERE id = ? AND session = ?`.query(id, Session.id) }
@@ -941,7 +961,7 @@ return Layout.render(<main>
         <input type="hidden" name="id" value="{{ task.id }}" />
         <button>{{ task.finished ? "✓" : "○" }}</button>
       </form>
-      <span class="{{ task.finished ? "done" : "" }}">{{ task.description.safe }}</span>
+      <span class="{{ task.finished ? "done" : "" }}">{{ task.description }}</span>
       <form method="post" action="/delete" style="display:inline">
         <input type="hidden" name="id" value="{{ task.id }}" />
         <button>✕</button>
@@ -956,7 +976,8 @@ return Layout.render(<main>
 // toggle.wren
 import "_app/domain" for Task
 
-Task.new({"id": Request.post("id") || ""}).toggle()
+var id = Request.post("id")
+if (id) Task.toggle(id)
 return Response.redirect("/")
 ```
 
@@ -988,7 +1009,7 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
    the bottom, always `return Response.redirect(...)`
 6. **Models**: domain classes with validation and `.to(Class)` mapping
 7. **Database**: backtick SQL, `?` placeholders, `_app/migration.wren` for schema
-8. **Security**: parameterized queries always; `.safe` on every untrusted string
+8. **Security**: parameterized queries always; `{{ }}` auto-escapes untrusted strings
 9. **APIs**: `Response.json()`, one file per resource, method + query param
    for the id, rather than per-verb files
 10. **Git**: always add `_db.sqlite3*` to `.gitignore`

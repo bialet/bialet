@@ -20,10 +20,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
-            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev
+            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
+            libgnutls28-dev libsasl2-dev sqlite3
 
       - name: Build (static)
         run: make clean && make static
+
+      - name: Run test suite
+        run: ./tests/run.sh ./build/bialet
 
       - name: Package
         run: |
@@ -34,6 +38,37 @@ jobs:
         with:
           name: bialet-linux-x86_64
           path: dist/
+
+  # ── Post-build smoke test on a different distro ─────────────────
+  # The release binary links against the build host's system libraries, so
+  # verify it loads and runs on a distro the build didn't run on. This catches
+  # versioned-soname mismatches, e.g. the liblber-2.5.so.0 dependency built on
+  # Ubuntu 22.04 that failed to load on Ubuntu 24.04.
+  smoke-test-linux:
+    name: Smoke test Linux (24.04)
+    needs: build-linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: bialet-linux-x86_64
+          path: dist/
+
+      - name: Verify binary loads and prints version
+        run: |
+          tar xzf dist/*.tar.gz
+          ./bialet -v
+
+      - name: Smoke test the HTTP server
+        run: |
+          mkdir -p /tmp/app
+          printf '<h1>bialet-smoke</h1>' > /tmp/app/index.html
+          ./bialet -h 127.0.0.1 -p 7111 -l /tmp/bialet-smoke.log /tmp/app > /dev/null 2>&1 &
+          SERVER_PID=$!
+          sleep 1
+          BODY=$(curl -fsS http://127.0.0.1:7111/)
+          kill $SERVER_PID
+          echo "$BODY" | grep -q 'bialet-smoke' && echo "HTTP smoke test passed"
 
   # ── Linux arm64 ──────────────────────────────────────────────────
   build-linux-arm64:
@@ -47,7 +82,8 @@ jobs:
           apt-get update
           apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
-            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev
+            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
+            libgnutls28-dev libsasl2-dev
       - uses: actions/checkout@v4
       - name: Build (static)
         run: make clean && make static
@@ -72,6 +108,9 @@ jobs:
 
       - name: Build
         run: make clean && make
+
+      - name: Run test suite
+        run: ./tests/run.sh ./build/bialet
 
       - name: Package
         run: |
@@ -138,6 +177,7 @@ jobs:
     name: Create GitHub Release
     needs:
       - build-linux
+      - smoke-test-linux
       - build-linux-arm64
       - build-macos-arm64
       - build-windows

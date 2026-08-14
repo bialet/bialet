@@ -14,47 +14,28 @@ class Task {
   createdAt { Date.new(_createdAt) }
   description=(val) { _description = val.toString.trim() }
 
-  save() { `Task`.save(this) }
+  save() { _id = `Task`.save(this) }
 
-  toggle() {
-    _finished = `
-      UPDATE Task SET finished = ((finished | 1) - (finished & 1))
-      WHERE id = ? AND session = ?
-      RETURNING finished
-    `.toBool(_id, Session.id)
-  }
+  toString { "id:%( id ) | %( description )" }
 
-  toString { description }
+  static toggle(id) { `UPDATE Task SET finished = ((finished | 1) - (finished & 1))
+    WHERE id = ? AND session = ?`.query(id, Session.id) }
 
-  static list() { `
-    SELECT * FROM Task WHERE session = ? ORDER BY createdAt ASC
-  `.fetch(Session.id).to(Task) }
+  static list(finished) { `SELECT * FROM Task
+    WHERE session = ? AND (? = 1 OR finished = ?)
+    ORDER BY createdAt ASC`.fetch(Session.id, finished == "all", finished == "active").to(Task) }
 
-  static listActive() { `
-    SELECT * FROM Task WHERE session = ? AND finished = 0 ORDER BY createdAt ASC
-  `.fetch(Session.id).to(Task) }
+  static countActive() { `SELECT COUNT(*) as cnt FROM Task
+    WHERE session = ? AND finished = 0`.toNum(Session.id) }
 
-  static listCompleted() { `
-    SELECT * FROM Task WHERE session = ? AND finished = 1 ORDER BY createdAt ASC
-  `.fetch(Session.id).to(Task) }
+  static countCompleted() { `SELECT COUNT(*) as cnt FROM Task
+    WHERE session = ? AND finished = 1`.toNum(Session.id) }
 
-  static countActive() {
-    var r = `SELECT COUNT(*) as cnt FROM Task WHERE session = ? AND finished = 0`.fetch(Session.id)
-    return Num.fromString(r[0]["cnt"])
-  }
+  static clear() { `DELETE FROM Task
+    WHERE finished = 1 AND session = ?`.query(Session.id) }
 
-  static countCompleted() {
-    var r = `SELECT COUNT(*) as cnt FROM Task WHERE session = ? AND finished = 1`.fetch(Session.id)
-    return Num.fromString(r[0]["cnt"])
-  }
-
-  static clear() { `
-    DELETE FROM Task WHERE finished = 1 AND session = ?
-    `.query(Session.id) }
-
-  static delete(id) { `
-    DELETE FROM Task WHERE id = ? AND session = ?
-    `.query(id, Session.id) }
+  static delete(id) { `DELETE FROM Task
+    WHERE id = ? AND session = ?`.query(id, Session.id) }
 
   static clearAll() { `DELETE FROM Task WHERE finished = 1`.query }
 }

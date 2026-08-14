@@ -21,11 +21,14 @@ var interpolatedAttributes = <p id="{{ i }}_{{ j }}">C</p>
 var interpolatedInsideInterpolated = <ul>{{ list.map{|x| <li>{{ x }}</li> } }}</ul>
 var conditionalRendering = <p>{{ a != b && <b>C</b> }}</p>
 var ternary = <p>{{ a == b ? <b>==</b> : <b>!=</b> }}</p>
+var customElement = <my-element id="x">custom</my-element>
+var hyphenAttrs = <div data-count="{{ n }}">da</div>
+var nestedCustom = <x-foo><y-bar>nested</y-bar></x-foo>
 var content = ""
 
 // Yes, < and > signs still work!
 if (n<m || m>n) {
-  content = emptyTag + selfClosingTag + interpolated + selfClosingInterpolated + attributes + selfClosingAttributes + multiline + interpolatedAttributes + interpolatedInsideInterpolated + ternary + conditionalRendering
+  content = emptyTag + selfClosingTag + interpolated + selfClosingInterpolated + attributes + selfClosingAttributes + multiline + interpolatedAttributes + interpolatedInsideInterpolated + ternary + conditionalRendering + customElement + hyphenAttrs + nestedCustom
 }
 
 class Template {

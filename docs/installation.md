@@ -1,4 +1,7 @@
-# Installation and Usage
+# Installation
+
+For how to run and configure the `bialet` binary, see
+[Command Line Usage](usage.md).
 
 ## With the Install Script
 
@@ -20,6 +23,10 @@ Extract and run — no installation required:
 ```bash
 bialet.exe
 ```
+
+Double-clicking `bialet.exe` in File Explorer starts it in dev mode (live
+reload, in-browser error display, and the browser opens automatically). Run it
+from a terminal to start without dev mode.
 
 ## Releases
 
@@ -82,46 +89,17 @@ BIALET_PORT=8080 docker compose up
 
 ## Building from Source
 
-To build Bialet from source, you'll need to install certain dependencies and run
-the build process.
-
-### Dependencies
-
-#### Debian/Ubuntu
-
 ```bash
-sudo apt install -y libsqlite3-dev libssl-dev
-# Optional, but recommended for production
-sudo apt install -y libcurl4-openssl-dev
-```
-
-#### MacOS
-
-```bash
-brew install sqlite3 curl
-# Optional, but recommended for production
-brew install openssl
-```
-
-### Windows
-
-- libcrypto-3-x64.dll
-- libsqlite3-0.dll
-- libssl-3-x64.dll (Optional, but recommended for production)
-
-### Building the Project
-
-After installing the dependencies, compile the project:
-
-```bash
-make clean && make
-```
-
-To install the built application, run:
-
-```bash
+git clone https://github.com/bialet/bialet.git
+cd bialet
+make
 make install
 ```
+
+For per-OS dependencies, cross-compiling (including Windows), the full list
+of `make` targets, and the development workflow, see
+[CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md)
+on GitHub.
 
 ## Syntax Highlighting
 
@@ -134,133 +112,5 @@ Plug 'bialet/bialet.vim'
 
 We are still working on supporting VSCode and other IDEs.
 
-## Using the Bialet CLI
-
-The Bialet CLI allows you to interact with the application directly from the
-command line.
-
-### Basic Usage
-
-To start the application, simply run:
-
-```bash
-bialet
-```
-
-By default, the application runs in the current directory.
-
-### Customizing Startup Options
-
-To change the directory where the application runs or adjust other settings, you
-can use various command-line arguments:
-
-```bash
-bialet -p 7001 /path/to/app
-```
-
-### CLI Parameters
-
-The table below summarizes the available command-line parameters for the Bialet
-CLI:
-
-| Parameter | Description                                                               | Default Value                                  |
-| --------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
-| `-p`      | Port number                                                               | `7001`                                         |
-| `-h`      | Host name                                                                 | `127.0.0.1`                                    |
-| `-r`      | Run the code passed as argument                                           | None                                           |
-| `-t`      | Validate syntax of a Wren file                                            | None                                           |
-| `-T`      | Run tests in `_tests/` folder                                             | None                                           |
-| `-l`      | Log file location                                                         | `stdout`                                       |
-| `-d`      | SQLite database file location                                             | `_db.sqlite3`                                  |
-| `-w`      | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html) | Disabled                                       |
-| `-i`      | Ignored files, comma separated list of glob expressions                   | README\*, LICENSE\* , \*.json, \*.yml, \*.yaml |
-| `-m`      | Memory limit (MB)                                                         | `50`                                           |
-| `-M`      | Hard memory limit (MB)                                                    | `100`                                          |
-| `-c`      | CPU limit (%)                                                             | `15`                                           |
-| `-C`      | Hard CPU limit (%)                                                        | `30`                                           |
-
-### Advanced Configuration
-
-Bialet provides several advanced configuration options that can be set
-programmatically in the C code (future versions may expose these as CLI
-parameters):
-
-#### File Upload Limits
-
-- **Max Upload Size**: Controls the maximum file size for uploads (default: 10
-  MB)
-- Files exceeding this limit will be rejected with an error message
-
-#### SQLite Pragma Settings
-
-- **Foreign Keys**: Enable/disable foreign key constraints (default: ON)
-- **Synchronous Mode**: Controls how SQLite writes to disk (default: NORMAL)
-  - OFF: Fastest, least safe
-  - NORMAL: Balanced performance and safety (default)
-  - FULL: Very safe, slower
-  - EXTRA: Maximum safety, slowest
-
-These settings are optimized for most use cases but can be adjusted in the
-source code if needed.
-
-## Run code from the Command Line
-
-To run code from the command line, use the `-r` command:
-
-```bash
-bialet -r 'System.log("Hello, World!")'
-```
-
-The response will be printed directly.
-
-```bash
-bialet -r 'return "No log, plain response"'
-```
-
-You have to respect new lines in the code.
-
-## Running Tests
-
-Bialet includes a built-in testing framework. See [Testing Guide](tests.md) for full documentation.
-
-```bash
-bialet -T                    # Run all tests in _tests/
-bialet -T docs/examples      # Run tests in specific directory
-```
-
-## Validate Syntax of a Wren File
-
-To check the syntax of a Wren file without executing it, use the `-t` command.
-Run it the same way you run the server:
-
-If you start your server from the app directory:
-
-```bash
-cd /path/to/app
-bialet               # starts server
-bialet -t index.wren # validates syntax
-```
-
-If you start your server with an explicit root path:
-
-```bash
-bialet /path/to/app                         # starts server
-bialet -t /path/to/app/index.wren /path/to/app # validates syntax
-```
-
-The root path is required when your file imports from `_app/` or uses relative
-imports. If you omit it for such files, the validator will exit with an error.
-
-This will validate the syntax and exit with code `0` if the syntax is valid, or
-code `1` if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.
-
-```bash
-# Example: Check syntax before deploying (explicit root path)
-if bialet -t /path/to/app/main.wren /path/to/app; then
-    echo "Syntax OK, deploying..."
-else
-    echo "Syntax errors found, aborting deployment"
-    exit 1
-fi
-```
+For the full command-line reference — starting the server, `bialet dev`, every
+flag, `-r`, `-t`, and `-T` — see [Command Line Usage](usage.md).

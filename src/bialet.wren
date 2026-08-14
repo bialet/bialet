@@ -25,27 +25,31 @@ class Request {
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
       __get = parseQuery(__fullUri[uriSeparator+1...__fullUri.count])
+    } else {
+      __uri = __fullUri
     }
     var startBody = false
     var headerName
     var headerValue
+    var bodyLines = []
     for (line in lines) {
+      if (startBody) {
+        bodyLines.add(line)
+        continue
+      }
       if (line.trim() == "") {
         startBody = true
         continue
       }
-      if (!startBody) {
-        tmp = line.split(":")
-        headerName = tmp.removeAt(0).trim().lower
-        headerValue = tmp.join(":").trim()
-        if (headerName == "cookie") {
-          Cookie.parseHeader(headerValue)
-        }
-        __headers[headerName] = headerValue
-      } else {
-        __body = __body + line
+      tmp = line.split(":")
+      headerName = tmp.removeAt(0).trim().lower
+      headerValue = tmp.join(":").trim()
+      if (headerName == "cookie") {
+        Cookie.parseHeader(headerValue)
       }
+      __headers[headerName] = headerValue
     }
+    __body = bodyLines.join("")
     if (__method == "POST") {
       __post = parseQuery(__body)
     }
@@ -123,7 +127,12 @@ class Response {
   // Getters
   static out { __out.trim() }
   static status { __status }
-  static headers { __cookies.join("\r\n") +  __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
+  // Each cookie and header is its own "\r\n"-terminated line. Concatenating
+  // __cookies.join("\r\n") directly with the first header glued the last
+  // cookie's final attribute onto the header (e.g. "Path=/Content-Type: ..."),
+  // corrupting cookie attributes such as Path. Keep this single-line: this
+  // Wren fork mis-parses a getter body whose binary operator ends a line.
+  static headers { __cookies.map{|c| c + "\r\n"}.join() + __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
 
   static out(out) { __out = __out + "\r\n" + out }
   static status(status) { __status = status }
@@ -162,7 +171,10 @@ class Response {
   static cors { cors("*") }
 
   static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }
-  static pageHtml(title, messageHtml) { '<!DOCTYPE html><body style="font:2.3rem system-ui;text-align:center;margin:2em;color:#024"><h1>%( Util.htmlEscape(title) )</h1><p>%( messageHtml )</p><p style="font-size:.8em;margin-top:2em">Powered by 🚲 <b><a href="https://bialet.dev" style="color:#007FAD" >Bialet' }
+  // defaultPage_ is a C native that renders the same page chrome as the
+  // server's C-side fallbacks (see BIALET_HEADER_PAGE/BIALET_FOOTER_PAGE in
+  // bialet.h), so the default pages live in one place instead of two.
+  static pageHtml(title, messageHtml) { defaultPage_(Util.htmlEscape(title), messageHtml) }
   static end(code, title, message) {
     status(code)
     var content = page(title, message)
@@ -267,7 +279,7 @@ class Session {
       Cookie.set(Session.name, _id)
     }
     __values = {}
-    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ?`.fetch([_id])
+    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ? ORDER BY updatedAt DESC`.fetch([_id])
     if (res && res.count > 0) {
       res.each{|r| __values[r["key"]] = r["val"] }
     }
@@ -280,9 +292,12 @@ class Session {
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
   csrf {
-    var token = Util.randomString(60)
-    set("_bialet_csrf", token)
-    return '<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">'
+    var token = get("_bialet_csrf")
+    if (!token) {
+      token = Util.randomString(60)
+      set("_bialet_csrf", token)
+    }
+    return HtmlNode.new('<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">')
   }
   csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
 }
@@ -648,23 +663,23 @@ class Util {
 
   static htmlEscape(value) {
     var input = value == null ? "" : "%(value)"
-    var escaped = ""
+    var escaped = []
     for (char in input) {
       if (char == "&") {
-        escaped = escaped + "&amp;"
+        escaped.add("&amp;")
       } else if (char == "<") {
-        escaped = escaped + "&lt;"
+        escaped.add("&lt;")
       } else if (char == ">") {
-        escaped = escaped + "&gt;"
+        escaped.add("&gt;")
       } else if (char == "\"") {
-        escaped = escaped + "&quot;"
+        escaped.add("&quot;")
       } else if (char == "'") {
-        escaped = escaped + "&#x27;"
+        escaped.add("&#x27;")
       } else {
-        escaped = escaped + char
+        escaped.add(char)
       }
     }
-    return escaped
+    return escaped.join("")
   }
 
   static isDigits(value) {
@@ -701,14 +716,14 @@ class Util {
 
   static stripControlChars(value) {
     value = value == null ? "" : "%(value)"
-    var sanitized = ""
+    var sanitized = []
     for (char in value) {
       var byte = char.bytes[0]
       if (byte >= 32 && byte != 127) {
-        sanitized = sanitized + char
+        sanitized.add(char)
       }
     }
-    return sanitized
+    return sanitized.join("")
   }
 
   static headerName(value) {
@@ -781,45 +796,27 @@ class Util {
     return hex
   }
 
-  static urlDecode(str) {
-    var decoded = ""
-    var i = 0
-    while (i < str.count) {
-      if (str[i] == "\%") {
-        var hex = str[i + 1..i + 2]
-        var charCode = hexToDec(hex)
-        decoded = decoded + String.fromByte(charCode)
-        i = i + 3
-      } else if (str[i] == "+") {
-        decoded = decoded + " "
-        i = i + 1
-      } else {
-        decoded = decoded + str[i]
-        i = i + 1
-      }
-    }
-    return decoded
-  }
+  static urlDecode(str) { urlDecode_("%(str)") }
 
   static urlEncode(str) {
-    var encoded = ""
+    var parts = []
     str = "%(str)"
     for (char in str) {
       if (char == " ") {
-        encoded = encoded + "+"
+        parts.add("+")
       } else if (char == "\%") {
-        encoded = encoded + "\%25"
+        parts.add("\%25")
       } else if (char == "&") {
-        encoded = encoded + "\%26"
+        parts.add("\%26")
       } else if (char == "=") {
-        encoded = encoded + "\%3D"
+        parts.add("\%3D")
       } else if (char == "?") {
-        encoded = encoded + "\%3F"
+        parts.add("\%3F")
       } else {
-        encoded = encoded + char
+        parts.add(char)
       }
     }
-    return encoded
+    return parts.join("")
   }
 
   static params(params) {
@@ -933,12 +930,12 @@ class Util {
 }
 
 class Config {
-  static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"].toString }
+  static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"] }
   static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
   static bool(key) { get(key) != "0" }
   static num(key) { Num.fromString(get(key)) }
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
-  static json(key) { set(key, Json.parse(get(key))) }
+  static json(key) { Json.parse(get(key)) }
   static json(key, val) { set(key, Json.stringify(val)) }
   static enable(key) { set(key, "1") }
   static disable(key) { set(key, "0") }
@@ -983,17 +980,17 @@ class File {
   size { _size }
   isTemp { _isTemp }
   createdAt { _createdAt }
-  destroy { `DELETE FROM BIALET_FILES WHERE id = ? LIMIT 1`.query(_id) }
+  destroy { `DELETE FROM BIALET_FILES WHERE id = ?`.query(_id) }
   destroy() { destroy }
   save {
     _isTemp = false
-    `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ? LIMIT 1`.query(_id)
+    `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ?`.query(_id)
     return this
   }
   save() { save }
   temp {
     _isTemp = true
-    `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ? LIMIT 1`.query(_id)
+    `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ?`.query(_id)
     return this
   }
   temp() { temp }
@@ -1002,7 +999,16 @@ class File {
 class Db {
   static init {
     `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
-    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME, PRIMARY KEY (id, key))`.query()
+    // Older versions created BIALET_SESSION without a primary key, so REPLACE
+    // inserted duplicate rows and reads were nondeterministic. Rebuild the table
+    // in place when that schema is detected.
+    if (`SELECT COUNT(*) FROM pragma_table_info('BIALET_SESSION') WHERE pk > 0`.toNum == 0) {
+      `ALTER TABLE BIALET_SESSION RENAME TO BIALET_SESSION_OLD`.query()
+      `CREATE TABLE BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME, PRIMARY KEY (id, key))`.query()
+      `INSERT OR IGNORE INTO BIALET_SESSION (id, key, val, updatedAt) SELECT id, key, val, updatedAt FROM BIALET_SESSION_OLD ORDER BY updatedAt DESC`.query()
+      `DROP TABLE BIALET_SESSION_OLD`.query()
+    }
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
@@ -1026,10 +1032,11 @@ class Db {
         schemaOrCallback.toString.split(";").each{|q| Query.fromString(q, []) }
       }
       `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
+      System.print("Migration applied - %(version)")
     }
     Db.clean
   }
-  static save(table, values) { Query.fromString(table).save(values) }
+  static save(table, values) { Query.new(table).save(values) }
   static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
 }
 
@@ -1041,6 +1048,7 @@ class Http {
     _headers = {}
     _body = ""
     _error = 0
+    _errorMessage = ""
     _fullHeaders = ""
     _postData = ""
   }
@@ -1049,6 +1057,7 @@ class Http {
   headers { _headers }
   headers(name) { _headers.containsKey(name) ? _headers[name] : null }
   error { _error }
+  errorMessage { _errorMessage }
   method { _method }
   method=(m) { _method = m }
   postData=(data) {
@@ -1064,14 +1073,25 @@ class Http {
     if (!options.containsKey("headers")) {
       options["headers"] = {}
     }
-    if (!options["headers"].containsKey("Content-Type")) {
+    if (options.containsKey("form")) {
+      _postData = Util.params(options["form"])
+      options["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
+    } else if (!options["headers"].containsKey("Content-Type")) {
       options["headers"]["Content-Type"] = "application/json"
     }
-    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (options["token"] != null) {
+      options["headers"]["Authorization"] = "Bearer %(options["token"])"
+    }
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
-    var response = call_(url, _method, headers, _postData, _basicAuth)
+    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    if (!options["headers"].containsKey("Cookie") && Http.jar != "") {
+      headers = headers + "\nCookie: %(Http.jar)"
+    }
+    var timeout = options.containsKey("timeout") ? options["timeout"] : 0
+    var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
+    var response = call_(url, _method, headers, _postData, _basicAuth, timeout, connectTimeout)
 
     if (response[1]) {
       var lines = response[1].split("\n")
@@ -1089,8 +1109,37 @@ class Http {
     _fullHeaders = response[1].trim()
     _body = response[2].trim()
     _error = response[3]
+    _errorMessage = response[4]
+    Http.storeCookies(_fullHeaders)
 
     return _error == 0
+  }
+
+  static jar {
+    if (!__cookieJar || __cookieJar.count == 0) return ""
+    return __cookieJar.map{|c| "%(c.key)=%(c.value)" }.join("; ")
+  }
+  static storeCookies(rawHeaders) {
+    if (rawHeaders == "") return
+    if (!__cookieJar) __cookieJar = {}
+    for (line in rawHeaders.split("\n")) {
+      var sep = line.indexOf(":")
+      if (sep == null || sep <= 0) continue
+      var name = line[0...sep].trim().lower
+      if (name != "set-cookie") continue
+      var value = line[sep + 1...line.count].trim()
+      var parts = value.split(";")
+      var kv = parts[0].split("=")
+      if (kv.count < 2) continue
+      __cookieJar[kv[0].trim()] = kv[1].trim()
+    }
+  }
+  static query(params) { Util.params(params) }
+  static url(base, params) {
+    var qs = Util.params(params)
+    if (qs == "") return base
+    if (base.contains("?")) return base + "&" + qs
+    return base + "?" + qs
   }
 
   static request(url, method, data, options) {
@@ -1144,4 +1193,9 @@ class Cron {
 }
 
 class Markdown {
+  static html(markdown) { html_(markdown).raw }
+  static file(name) {
+    var content = file_(name)
+    return content is String ? content.raw : content
+  }
 }

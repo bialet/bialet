@@ -5,12 +5,12 @@ if (Request.isPost) {
   var task = Task.new()
   task.description = Request.post("task") || ""
   task.save()
-  System.log("New task created: %(task)")
+  System.log("Task created: %(task)")
   return Response.redirect("/")
 }
 
 var filter = Request.get("filter") || "all"
-var tasks = (filter == "active") ? Task.listActive() : (filter == "completed") ? Task.listCompleted() : Task.list()
+var tasks = Task.list(filter)
 var activeCount = Task.countActive()
 var completedCount = Task.countCompleted()
 
@@ -55,8 +55,8 @@ return Template.new().layout(<main>
           </form>
           <span class="task-content">
             <span class="{{ task.finished ? "task-text completed" : "task-text" }}">
-              <span class="priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? "high" : Num.fromString(task.id.toString) % 3 == 2 ? "medium" : "low" }}" aria-hidden="true"></span>
-              {{ task.description.safe }}
+              <span class="priority-dot {{ task.id.toNum % 3 == 1 ? "high" : task.id.toNum % 3 == 2 ? "medium" : "low" }}" aria-hidden="true"></span>
+              {{ task.description }}
             </span>
             <span class="task-meta">{{ task.createdAt.hh }}:{{ task.createdAt.mi }}</span>
           </span>

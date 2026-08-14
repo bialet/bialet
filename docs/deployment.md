@@ -18,6 +18,12 @@ behind a reverse proxy (nginx, Apache, or Caddy) gives you:
 You *can* expose Bialet directly with `-h 0.0.0.0`, but this is not
 recommended for production.
 
+Bialet is **single-threaded**: it accepts and serves one connection at a time,
+in a blocking loop. The reverse proxy is therefore not just for TLS — it is
+the layer that absorbs slow clients, connection churn, and request buffering.
+Treat the proxy as part of your security posture, not a convenience (see
+[Security](security.md) and the hardening section below).
+
 ## No Restart Needed on Deploy
 
 When you push new code to your server, the Bialet server **does not need to
@@ -172,6 +178,211 @@ example.com {
 ```
 
 That's it. Caddy obtains and renews certificates automatically.
+
+## Hardening the Proxy
+
+The proxy is your first line of defense. Because Bialet is single-threaded
+and blocking, a single slow or hostile client can stall every other request
+unless the proxy caps body size, sets read deadlines, and buffers requests.
+
+Key directives, regardless of which proxy you run:
+
+- **Cap the request body.** Bialet rejects request bodies larger than the
+  `-b` limit (default 128 KB) with `413 Payload Too Large` *before* parsing
+  them, so a body can never stall the Wren runtime. The effective cap is the
+  smaller of `-b` and a memory-safe ceiling (`-m` / 512) so a body can never
+  push the fork()ed child past its `RLIMIT_AS` budget — at the default 128 MB
+  soft limit that ceiling is 256 KB, so the default `-b 128` is fully
+  effective. Set the proxy's body limit to the smallest your
+  app needs — 1 MB is a sane default for the proxy.
+- **Set a body-read deadline.** Bialet's 5-second socket timeout is per
+  `recv()` call, so a peer that dribbles bytes slowly can keep a connection
+  open indefinitely. Make the proxy enforce a *total* read timeout and reject
+  clients that stall mid-body.
+- **Buffer the body at the proxy.** Read the full request before forwarding
+  it, so the upstream socket is never held open by a slow client.
+- **Bind Bialet to `127.0.0.1`** and only expose the proxy to the internet.
+- **Deny private files at the proxy too.** Bialet already returns 403 for
+  `_`/`.`-prefixed files, but blocking them at the proxy adds a second layer
+  in case an application or symlink ever serves one (see [Security](security.md)).
+
+### nginx
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    # Cap body size and enforce a total read deadline.
+    client_max_body_size 1m;
+    client_body_timeout 10s;
+
+    # Deny private files at the proxy (defense in depth).
+    location ~ (^|/)[_.] {
+        return 403;
+    }
+
+    # Serve static files directly from disk (optional, faster)
+    root /www/example.com;
+    location / {
+        # Try static file first, fall back to Bialet
+        try_files $uri @bialet;
+    }
+
+    # Gzip static assets
+    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location @bialet {
+        proxy_request_buffering on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://127.0.0.1:7001;
+    }
+}
+```
+
+Note: the `location ~ (^|/)[_.]` block matches any path segment that starts
+with `_` or `.`, which covers `_db.sqlite3`, `_route.wren`, and dotfiles such
+as `.env`. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.
+
+### Apache
+
+```apache
+<VirtualHost *:80>
+    ServerName example.com
+
+    # Cap body size (bytes) and set a total read timeout (needs mod_reqtimeout).
+    LimitRequestBody 1048576
+    RequestReadTimeout header=20-40,MinRate=500 body=30,MinRate=500
+
+    # Gzip
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/css text/javascript
+        AddOutputFilterByType DEFLATE application/javascript application/json
+        AddOutputFilterByType DEFLATE image/svg+xml
+    </IfModule>
+
+    # Cache static assets
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresByType text/css "access plus 7 days"
+        ExpiresByType text/javascript "access plus 7 days"
+        ExpiresByType image/png "access plus 7 days"
+        ExpiresByType image/jpeg "access plus 7 days"
+        ExpiresByType image/svg+xml "access plus 7 days"
+        ExpiresByType font/woff2 "access plus 30 days"
+    </IfModule>
+
+    # Deny private files at the proxy (defense in depth).
+    RewriteRule ^(.*)(^|/)[_.][^/]*$ - [F,L]
+
+    # Serve static files directly
+    DocumentRoot /www/example.com
+
+    RewriteEngine On
+    # If the file exists, serve it
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^ - [L]
+    # Otherwise proxy to Bialet
+    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
+
+    ProxyPreserveHost On
+    ProxyPassReverse / http://127.0.0.1:7001/
+</VirtualHost>
+```
+
+`RequestReadTimeout` is provided by `mod_reqtimeout`, enabled with
+`a2enmod reqtimeout`. The `MinRate` clause stops a slow-drip client that would
+otherwise never trip the absolute timeout.
+
+### Caddy
+
+Caddy does not have a per-location body-size directive, but you can cap
+request bodies with a request matcher:
+
+```
+example.com {
+    encode gzip zstd
+
+    @static {
+        file
+        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
+    }
+    header @static Cache-Control "public, max-age=604800, immutable"
+
+    @private {
+        path_regexp private (^|/)[_.]
+    }
+    respond @private 403
+
+    reverse_proxy 127.0.0.1:7001 {
+        flush_interval -1
+    }
+}
+```
+
+Caddy reads request bodies before proxying by default. For a total body
+deadline, front Caddy with a timeout-capable proxy or enforce it at the app
+level.
+
+## Cloudflare Tunnel (Alternative)
+
+If you do not control a server or a domain, [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+exposes a local Bialet server over a public HTTPS URL **without opening a
+port, configuring a proxy, or buying DNS**. `cloudflared` keeps an outbound
+connection to Cloudflare's edge; requests arrive at your machine through that
+tunnel. Cloudflare terminates TLS and buffers slow clients, which covers most
+of what a reverse proxy does.
+
+Install `cloudflared` ([official packages](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)):
+
+```bash
+sudo apt-get install -y cloudflared
+```
+
+Start Bialet bound to localhost, then point a quick tunnel at it:
+
+```bash
+bialet -p 7001 /www/myapp
+cloudflared tunnel --url http://127.0.0.1:7001
+```
+
+`cloudflared` prints a `https://<random>.trycloudflare.com` URL. Open it and
+your app is live. No account, no configuration.
+
+> **Pitfall: the URL is temporary.** A quick tunnel dies when `cloudflared`
+> stops, and the next run gets a **new** random hostname. Fine for demos and
+> previews; useless as a stable endpoint.
+
+For a stable hostname you need a [named tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/),
+which requires a Cloudflare account and a domain on their DNS:
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create myapp
+cloudflared tunnel route dns myapp app.example.com
+cloudflared tunnel run --url http://127.0.0.1:7001 myapp
+```
+
+A named tunnel persists across restarts and can run as a systemd unit with
+`cloudflared service install`.
+
+Security notes that still apply:
+
+- **Bind Bialet to `127.0.0.1`.** The tunnel forwards to localhost; do not
+  add `-h 0.0.0.0`. Only Cloudflare's edge ever talks to your server.
+- **Cap the request body.** Cloudflare does not enforce a body-size limit for
+  you. Keep Bialet's `-b` default (128 KB) or lower it.
+- **Private files are still private.** Bialet returns 403 for `_`/`.`
+  prefixed files; a tunnel does not change that.
 
 ## Running Bialet as a Service
 
@@ -363,11 +574,16 @@ Use CLI flags to constrain resources per app:
 
 | Flag | Description            | Default | Example          |
 |------|------------------------|---------|------------------|
-| `-m` | Soft memory limit (MB) | 50      | `-m 1024`        |
-| `-M` | Hard memory limit (MB) | 100     | `-M 2048`        |
+| `-m` | Soft memory limit (MB) | 128     | `-m 1024`        |
+| `-M` | Hard memory limit (MB) | 256     | `-M 2048`        |
 | `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
 | `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
+| `-b` | Max request body (KB)  | 128     | `-b 512`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
+
+The request-body cap is the smaller of `-b` and the memory-safe ceiling
+(`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
+cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
 
 Example for a production app:
 
@@ -379,7 +595,9 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -l /var/log/bialet/app.log /www/my
 
 1. **Copy the binary** — `scp bialet user@host:/usr/local/bin/`
 2. **Copy your app** — `scp -r *.wren static/ user@host:/www/myapp/`
-3. **Set up the reverse proxy** — nginx, Apache, or Caddy (see above)
+3. **Set up the reverse proxy** — nginx, Apache, or Caddy (see above),
+   including the body-size cap, read timeout, and private-file deny from the
+   hardening section
 4. **Create the systemd unit** — so it starts on boot and restarts on crash
 5. **Point your DNS** — A/AAAA record to your server's IP
 6. **Add TLS** — Let's Encrypt via certbot (nginx/Apache) or Caddy's auto-TLS

@@ -11,6 +11,8 @@ struct HttpRequest {
   char* method;
   char* postData;
   char* basicAuth;
+  long  timeout;
+  long  connectTimeout;
 };
 
 struct HttpResponse {
@@ -18,9 +20,12 @@ struct HttpResponse {
   int   error;
   char* headers;
   char* body;
+  char* error_message;
 };
 
-void httpCallInit(struct BialetConfig* config);
-void httpCallPerform(struct HttpRequest* req, struct HttpResponse* resp);
+void http_call_init(struct BialetConfig* config);
+/* Matching teardown for http_call_init (curl_global_cleanup / WSACleanup). */
+void http_call_cleanup(void);
+void http_call_perform(struct HttpRequest* req, struct HttpResponse* resp);
 
 #endif

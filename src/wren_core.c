@@ -18,6 +18,7 @@
 #include <float.h>
 #include <math.h>
 #include <sqlite3.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -397,6 +398,63 @@ DEF_PRIMITIVE(list_swap) {
   list->elements.data[indexB] = a;
 
   RETURN_NULL;
+}
+
+// Concatenates a list of strings into a single string with [sep] between
+// elements. This is the native backend for List.join(sep): it measures the
+// total size once and performs a single allocation, keeping joins linear in
+// the input size. The interpreted join() in the core module pre-converts
+// every element with toString, so every element here is guaranteed to be a
+// string.
+DEF_PRIMITIVE(list_join) {
+  ObjList*   list = AS_LIST(args[0]);
+  ObjString* sep = AS_STRING(args[1]);
+  size_t     sepLength = sep->length;
+  size_t     total = 0;
+
+  uint32_t count = list->elements.count;
+  for(uint32_t i = 0; i < count; i++) {
+    Value element = list->elements.data[i];
+    if(!IS_STRING(element))
+      RETURN_ERROR("List elements must be strings.");
+    size_t length = AS_STRING(element)->length;
+    if(length > SIZE_MAX - total)
+      RETURN_ERROR("Joined string is too large.");
+    total += length;
+  }
+
+  // The separator is copied between each pair of elements. Only when there are
+  // two or more elements does a separator contribute to the total; with an
+  // empty list, count - 1 would underflow to a huge value.
+  if(count > 1) {
+    if(sepLength > (SIZE_MAX - total) / (count - 1)) {
+      RETURN_ERROR("Joined string is too large.");
+    }
+    total += sepLength * (count - 1);
+  }
+
+  // total + 1 keeps the buffer at least one byte so the NULL check below is
+  // meaningful even for an empty result.
+  char* buffer = malloc(total + 1);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory joining strings.");
+
+  char* out = buffer;
+  for(uint32_t i = 0; i < count; i++) {
+    if(i > 0 && sepLength > 0) {
+      memcpy(out, sep->value, sepLength);
+      out += sepLength;
+    }
+    ObjString* part = AS_STRING(list->elements.data[i]);
+    if(part->length > 0) {
+      memcpy(out, part->value, part->length);
+      out += part->length;
+    }
+  }
+
+  Value result = wrenNewStringLength(vm, buffer, total);
+  free(buffer);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(list_subscript) {
@@ -1177,38 +1235,152 @@ DEF_PRIMITIVE(system_writeString) {
 DEF_PRIMITIVE(util_hash) {
   char* password = AS_CSTRING(args[1]);
   char  hash[HASH_AND_SALT_LENGTH] = {0};
-  hashPassword(password, hash);
+  hash_password(password, hash);
   RETURN_VAL(wrenNewString(vm, hash));
 }
 
 DEF_PRIMITIVE(util_verify) {
   char* password = AS_CSTRING(args[1]);
   char* hash_and_salt = AS_CSTRING(args[2]);
-  int   result = verifyPassword(password, hash_and_salt);
+  int   result = verify_password(password, hash_and_salt);
   RETURN_BOOL(result);
 }
 
 DEF_PRIMITIVE(util_randomString) {
-  const int len = AS_NUM(args[1]);
-  if(len < 0) {
+  double len_value = AS_NUM(args[1]);
+  if(len_value < 0) {
     RETURN_ERROR("Length cannot be negative.");
   }
+  // Cap the length so a huge value cannot exhaust the heap; the result is a
+  // heap buffer sized from the double after validation, never a stack VLA.
+  if(len_value > 1000000.0) {
+    RETURN_ERROR("Length too large.");
+  }
+  const int len = (int)len_value;
 
-  char      random_str[len + 1];
-  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const int  charset_len = (int)(sizeof(charset) - 1);
-  int        written = 0;
+  char* random_str = (char*)malloc((size_t)len + 1);
+  if(random_str == NULL) {
+    RETURN_ERROR("Out of memory generating random string.");
+  }
+  const char charset[] =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const int charset_len = (int)(sizeof(charset) - 1);
+  int       written = 0;
 
+  // Draw from the OS CSPRNG (same source as password salts), not SQLite's
+  // documented non-cryptographic PRNG: session IDs and CSRF tokens built on
+  // Util.randomString must not be guessable. Bytes are batched into a small
+  // pool and the same rejection sampling as before removes modulo bias.
+  unsigned char pool[256];
+  size_t        pool_used = sizeof(pool);
   while(written < len) {
-    unsigned char random_byte = 0;
-    sqlite3_randomness(1, &random_byte);
+    if(pool_used >= sizeof(pool)) {
+      random_bytes_fill(pool, sizeof(pool));
+      pool_used = 0;
+    }
+    unsigned char random_byte = pool[pool_used++];
     if(random_byte >= (unsigned char)(charset_len * 4)) {
       continue;
     }
     random_str[written++] = charset[random_byte % charset_len];
   }
   random_str[len] = '\0';
-  RETURN_VAL(wrenNewString(vm, random_str));
+  Value result = wrenNewString(vm, random_str);
+  free(random_str);
+  RETURN_VAL(result);
+}
+
+// Returns the hex value of [c], or -1 if it is not a hex digit.
+static int urlHexDigit(char c) {
+  if(c >= '0' && c <= '9')
+    return c - '0';
+  if(c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  if(c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  return -1;
+}
+
+// Decodes a URL-encoded string in a single allocation. The previous Wren
+// implementation iterated str.count (an O(n) Sequence walk) once per
+// character, making decoding quadratic on attacker-controlled query/body
+// input. A decoded byte is never longer than its encoded form ("%XX" -> one
+// byte, "+" -> one byte, everything else passes through), so the input
+// length is a safe upper bound for the output buffer.
+DEF_PRIMITIVE(util_urlDecode) {
+  ObjString*  string = AS_STRING(args[1]);
+  uint32_t    length = string->length;
+  const char* input = string->value;
+
+  char* buffer = malloc((size_t)length + 1);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory decoding URL string.");
+
+  size_t out = 0;
+  for(uint32_t i = 0; i < length; i++) {
+    char c = input[i];
+    if(c == '%' && i + 2 < length) {
+      int high = urlHexDigit(input[i + 1]);
+      int low = urlHexDigit(input[i + 2]);
+      if(high >= 0 && low >= 0) {
+        buffer[out++] = (char)((high << 4) | low);
+        i += 2;
+        continue;
+      }
+    }
+
+    // A trailing '%' or one without two hex digits is passed through as-is.
+    if(c == '+') {
+      buffer[out++] = ' ';
+    } else {
+      buffer[out++] = c;
+    }
+  }
+
+  Value result = wrenNewStringLength(vm, buffer, out);
+  free(buffer);
+  RETURN_VAL(result);
+}
+
+// Builds a default page from the shared C-side template (BIALET_HEADER_PAGE /
+// BIALET_FOOTER_PAGE). This is the single source of truth for the default page
+// chrome; Wren's Response.page/pageHtml call this instead of redefining the
+// template in Wren, so both the C-side fallbacks and the Wren API render the
+// exact same page. [args[1]] and [args[2]] must already be HTML-escaped.
+DEF_PRIMITIVE(response_default_page) {
+  if(!validateString(vm, args[1], "title") ||
+     !validateString(vm, args[2], "message"))
+    return false;
+
+  ObjString* title = AS_STRING(args[1]);
+  ObjString* message = AS_STRING(args[2]);
+
+  static const char kMessageWrap[] = "</h1><p>";
+
+  size_t head_len = strlen(BIALET_HEADER_PAGE);
+  size_t foot_len = strlen(BIALET_FOOTER_PAGE);
+  size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
+                  message->length + foot_len + 1;
+  char*  buffer = (char*)malloc(needed);
+  if(buffer == NULL)
+    RETURN_ERROR("Out of memory building page.");
+
+  char* p = buffer;
+  memcpy(p, BIALET_HEADER_PAGE, head_len);
+  p += head_len;
+  memcpy(p, title->value, title->length);
+  p += title->length;
+  memcpy(p, kMessageWrap, sizeof(kMessageWrap) - 1);
+  p += sizeof(kMessageWrap) - 1;
+  memcpy(p, message->value, message->length);
+  p += message->length;
+  memcpy(p, BIALET_FOOTER_PAGE, foot_len);
+  p += foot_len;
+  *p = '\0';
+
+  Value result = wrenNewStringLength(vm, buffer, (uint32_t)(p - buffer));
+  free(buffer);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(http_call) {
@@ -1218,20 +1390,33 @@ DEF_PRIMITIVE(http_call) {
   request.raw_headers = AS_CSTRING(args[3]);
   request.postData = AS_CSTRING(args[4]);
   request.basicAuth = AS_CSTRING(args[5]);
+  request.timeout = IS_NUM(args[6]) ? (long)AS_NUM(args[6]) : 0;
+  request.connectTimeout = IS_NUM(args[7]) ? (long)AS_NUM(args[7]) : 0;
 
   struct HttpResponse response;
   response.error = 0;
   response.status = 200;
-  response.headers = "Content-Type: text/json";
-  response.body = "{}";
+  response.headers = NULL;
+  response.body = NULL;
+  response.error_message = NULL;
 
-  httpCallPerform(&request, &response);
+  http_call_perform(&request, &response);
 
-  ObjList* res = wrenNewList(vm, 4);
+  ObjList* res = wrenNewList(vm, 5);
   res->elements.data[0] = NUM_VAL(response.status);
-  res->elements.data[1] = wrenNewString(vm, response.headers);
-  res->elements.data[2] = wrenNewString(vm, response.body);
+  res->elements.data[1] =
+      wrenNewString(vm, response.headers ? response.headers : "");
+  res->elements.data[2] = wrenNewString(vm, response.body ? response.body : "");
   res->elements.data[3] = NUM_VAL(response.error);
+  res->elements.data[4] =
+      wrenNewString(vm, response.error_message ? response.error_message : "");
+
+  // http_call_perform heap-allocates the body/headers (curl chunk copies,
+  // or the Windows parse_http_response buffers); release them now that the
+  // values live in Wren strings. free(NULL) is safe for early-error paths.
+  free(response.headers);
+  free(response.body);
+  free(response.error_message);
 
   RETURN_OBJ(res);
 }
@@ -1239,14 +1424,14 @@ DEF_PRIMITIVE(http_call) {
 DEF_PRIMITIVE(test_runRequest) {
   const char* route = AS_CSTRING(args[1]);
   const char* message = AS_CSTRING(args[2]);
-  
+
   // Get root directory from bialet config
-  extern const char* bialetGetFullRootDir();
-  const char* rootDir = bialetGetFullRootDir();
-  
+  extern const char* bialet_get_full_root_dir();
+  const char*        rootDir = bialet_get_full_root_dir();
+
   // Strip query string from route for file lookup
   const char* qmark = strchr(route, '?');
-  int routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
+  int         routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
 
   // Resolve route to .wren file path
   char path[4096];
@@ -1257,19 +1442,19 @@ DEF_PRIMITIVE(test_runRequest) {
     strncpy(path, tmp, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
   }
-  
+
   // Check if file exists, otherwise try index.wren
-  extern char* readFile(const char* path);
-  char* code = readFile(path);
-  if (code == NULL) {
+  extern char* read_file(const char* path);
+  char*        code = read_file(path);
+  if(code == NULL) {
     char tmp2[4096];
     snprintf(tmp2, sizeof(tmp2), "%s%.*s/index.wren", rootDir, routePathLen, route);
     strncpy(path, tmp2, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
-    code = readFile(path);
+    code = read_file(path);
   }
-  
-  if (code == NULL) {
+
+  if(code == NULL) {
     // Return 404 response
     ObjList* res = wrenNewList(vm, 3);
     res->elements.data[0] = NUM_VAL(404);
@@ -1277,33 +1462,38 @@ DEF_PRIMITIVE(test_runRequest) {
     res->elements.data[2] = OBJ_VAL(wrenNewString(vm, ""));
     RETURN_OBJ(res);
   }
-  
+
   // Build HttpMessage struct
   extern struct String create_string(const char* str, size_t len);
-  struct HttpMessage* hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
+  struct HttpMessage*  hm = (struct HttpMessage*)malloc(sizeof(struct HttpMessage));
   memset(hm, 0, sizeof(struct HttpMessage));
-  
+
   // Store full message
   hm->message = create_string(message, strlen(message));
-  
+
   // Parse method from message
   const char* methodEnd = strchr(message, ' ');
-  if (methodEnd) {
+  if(methodEnd) {
     size_t methodLen = methodEnd - message;
-    char methodBuf[32];
-    strncpy(methodBuf, message, methodLen);
-    methodBuf[methodLen] = '\0';
-    hm->method = create_string(methodBuf, methodLen);
-    
+    char   methodBuf[32];
+    // Bound the copy so a hostile test request cannot overflow the stack
+    // buffer; the truncated value is enough to drive the route handler.
+    size_t methodCopy =
+        methodLen < sizeof(methodBuf) - 1 ? methodLen : sizeof(methodBuf) - 1;
+    memcpy(methodBuf, message, methodCopy);
+    methodBuf[methodCopy] = '\0';
+    hm->method = create_string(methodBuf, methodCopy);
+
     // Parse URI
     const char* uriStart = methodEnd + 1;
     const char* uriEnd = strchr(uriStart, ' ');
-    if (uriEnd) {
+    if(uriEnd) {
       size_t uriLen = uriEnd - uriStart;
-      char uriBuf[1024];
-      strncpy(uriBuf, uriStart, uriLen);
-      uriBuf[uriLen] = '\0';
-      hm->uri = create_string(uriBuf, uriLen);
+      char   uriBuf[1024];
+      size_t uriCopy = uriLen < sizeof(uriBuf) - 1 ? uriLen : sizeof(uriBuf) - 1;
+      memcpy(uriBuf, uriStart, uriCopy);
+      uriBuf[uriCopy] = '\0';
+      hm->uri = create_string(uriBuf, uriCopy);
     } else {
       hm->uri = create_string("/", 1);
     }
@@ -1311,16 +1501,16 @@ DEF_PRIMITIVE(test_runRequest) {
     hm->method = create_string("GET", 3);
     hm->uri = create_string("/", 1);
   }
-  
+
   // Extract headers
   const char* headersStart = strchr(message, '\n');
-  if (headersStart) {
+  if(headersStart) {
     headersStart++; // skip \n
     const char* bodyStart = strstr(headersStart, "\r\n\r\n");
-    if (bodyStart) {
+    if(bodyStart) {
       size_t headersLen = bodyStart - headersStart;
-      char headersBuf[4096];
-      if (headersLen < sizeof(headersBuf)) {
+      char   headersBuf[4096];
+      if(headersLen < sizeof(headersBuf)) {
         strncpy(headersBuf, headersStart, headersLen);
         headersBuf[headersLen] = '\0';
         hm->headers = create_string(headersBuf, headersLen);
@@ -1333,14 +1523,15 @@ DEF_PRIMITIVE(test_runRequest) {
   } else {
     hm->headers = create_string("", 0);
   }
-  
+
   hm->routes = create_string("", 0);
-  
+
   // Call bialetRun to execute the route handler
-  extern struct BialetResponse bialetRun(char* module, char* code, struct HttpMessage* hm);
+  extern struct BialetResponse bialet_run(char* module, char* code,
+                                          struct HttpMessage* hm);
   snprintf(filePath, sizeof(filePath), "%s%s", rootDir, route);
-  struct BialetResponse response = bialetRun(filePath, code, hm);
-  
+  struct BialetResponse response = bialet_run(filePath, code, hm);
+
   // Free HttpMessage fields
   free(hm->method.str);
   free(hm->uri.str);
@@ -1349,29 +1540,52 @@ DEF_PRIMITIVE(test_runRequest) {
   free(hm->message.str);
   free(hm);
   free(code);
-  
+
   // Return [status, body, headers_string]
   ObjList* res = wrenNewList(vm, 3);
   res->elements.data[0] = NUM_VAL(response.status);
-  res->elements.data[1] = OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
-  res->elements.data[2] = OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
-  
-  // Free response data
-  if (response.body) free(response.body);
-  if (response.header) free(response.header);
-  
+  res->elements.data[1] =
+      OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
+  res->elements.data[2] =
+      OBJ_VAL(wrenNewString(vm, response.header ? response.header : ""));
+
+  // Free response data (respect ownership flags: error fallback pages are
+  // static strings and must not be freed).
+  if(response.body_owned)
+    free(response.body);
+  if(response.header_owned)
+    free(response.header);
+
   RETURN_OBJ(res);
 }
 
+DEF_PRIMITIVE(tests_skip) {
+  extern void bialet_test_mark_skip(void);
+  bialet_test_mark_skip();
+  RETURN_NULL;
+}
+
 void setTimezone(const char* tz) {
-  if(tz == NULL || tz[0] == '\0') {
-    putenv("TZ=");
-    tzset();
+  if(tz == NULL || tz[0] == '\0')
     return;
-  }
-  char tz_env[64];
-  snprintf(tz_env, sizeof(tz_env), "TZ=%s", tz);
-  putenv(tz_env);
+#if defined(_WIN32)
+  // putenv() stores the pointer it is given, so it must outlive the call.
+  // Allocate a fresh string, publish it, then release the previous one (the
+  // Windows CRT never frees the replaced value itself).
+  static char* tz_buf = NULL;
+  int          needed = snprintf(NULL, 0, "TZ=%s", tz);
+  if(needed < 0)
+    return;
+  char* new_buf = malloc((size_t)needed + 1);
+  if(new_buf == NULL)
+    return;
+  snprintf(new_buf, (size_t)needed + 1, "TZ=%s", tz);
+  putenv(new_buf);
+  free(tz_buf);
+  tz_buf = new_buf;
+#else
+  setenv("TZ", tz, 1);
+#endif
   tzset();
 }
 
@@ -1382,6 +1596,65 @@ DEF_PRIMITIVE(date_current) {
   struct tm* local = localtime(&now);
   strftime(fullDate, 20, "%Y-%m-%d %H:%M:%S", local);
   RETURN_VAL(wrenNewString(vm, fullDate));
+}
+
+/* Whether year [y] has 53 ISO 8601 weeks: it does exactly when its January 1
+ * falls on a Thursday, or on a Wednesday in a leap year. */
+static int year_has_53_iso_weeks(int y) {
+  struct tm jan1 = {0};
+  jan1.tm_year = y - 1900;
+  jan1.tm_mday = 1;
+  mktime(&jan1);
+  int iso_wday = jan1.tm_wday == 0 ? 7 : jan1.tm_wday; /* Mon=1 .. Sun=7 */
+  int leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+  return iso_wday == 4 || (leap && iso_wday == 3);
+}
+
+/* ISO 8601 week number (1-53) of [y]-[m]-[d]. strftime()'s %V produces this
+ * on glibc but is unsupported (empty output) on the msvcrt the Windows build
+ * links, so it is computed here for every platform. */
+static int iso_week_number(int y, int m, int d) {
+  struct tm t = {0};
+  t.tm_year = y - 1900;
+  t.tm_mon = m - 1;
+  t.tm_mday = d;
+  mktime(&t);
+  int iso_wday = t.tm_wday == 0 ? 7 : t.tm_wday; /* Mon=1 .. Sun=7 */
+  int week = (t.tm_yday + 1 - iso_wday + 10) / 7;
+  if(week < 1)
+    return iso_week_number(y - 1, 12, 28); /* last week of the previous year */
+  if(week == 53 && !year_has_53_iso_weeks(y))
+    return 1; /* the week of Dec 29-31 belongs to next year */
+  return week;
+}
+
+/* ISO 8601 week-numbering year for [y]-[m]-[d]: differs from [y] only for the
+ * first or last few days of the year. */
+static int iso_week_year(int y, int m, int d) {
+  struct tm t = {0};
+  t.tm_year = y - 1900;
+  t.tm_mon = m - 1;
+  t.tm_mday = d;
+  mktime(&t);
+  int iso_wday = t.tm_wday == 0 ? 7 : t.tm_wday;
+  int week = (t.tm_yday + 1 - iso_wday + 10) / 7;
+  if(week < 1)
+    return y - 1;
+  if(week == 53 && !year_has_53_iso_weeks(y))
+    return y + 1;
+  return y;
+}
+
+/* Appends the strftime expansion of [fmt] to out[*pos], growing nothing beyond
+ * [cap]. */
+static void date_format_append(char* out, size_t cap, size_t* pos,
+                               const struct tm* t, const char* fmt) {
+  char tmp[64];
+  if(strftime(tmp, sizeof(tmp), fmt, t) == 0)
+    return;
+  for(const char* p = tmp; *p && *pos + 1 < cap; p++)
+    out[(*pos)++] = *p;
+  out[*pos] = '\0';
 }
 
 DEF_PRIMITIVE(date_format) {
@@ -1402,9 +1675,87 @@ DEF_PRIMITIVE(date_format) {
   t.tm_min = minute;
   t.tm_sec = second;
 
-  char buf[64];
-  strftime(buf, sizeof(buf), format, &t);
-  RETURN_VAL(wrenNewString(vm, buf));
+  // mktime fills in tm_wday and tm_yday, which strftime() needs for %w, %j
+  // and %V. Without it, those directives always read the zero-initialized
+  // struct fields.
+  mktime(&t);
+
+  // The C library's strftime() is used for the C89 directives, but the POSIX
+  // extras are expanded here so the output matches on Windows too: the msvcrt
+  // that the MinGW build links against does not implement %F %T %V %G %g %e
+  // %u %R %r %h %n %t %s and returns empty text for them.
+  char   out[128];
+  size_t pos = 0;
+  out[0] = '\0';
+  for(const char* p = format; *p && pos + 16 < sizeof(out); p++) {
+    if(*p != '%') {
+      out[pos++] = *p;
+      continue;
+    }
+    char d = *++p;
+    if(d == '\0')
+      break;
+    switch(d) {
+      case '%':
+        out[pos++] = '%';
+        break;
+      case 'F':
+        date_format_append(out, sizeof(out), &pos, &t, "%Y-%m-%d");
+        break;
+      case 'T':
+        date_format_append(out, sizeof(out), &pos, &t, "%H:%M:%S");
+        break;
+      case 'R':
+        date_format_append(out, sizeof(out), &pos, &t, "%H:%M");
+        break;
+      case 'r':
+        date_format_append(out, sizeof(out), &pos, &t, "%I:%M:%S %p");
+        break;
+      case 'h':
+        date_format_append(out, sizeof(out), &pos, &t, "%b");
+        break;
+      case 'n':
+        out[pos++] = '\n';
+        break;
+      case 't':
+        out[pos++] = '\t';
+        break;
+      case 'V':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%02d",
+                                iso_week_number(year, month, day));
+        break;
+      case 'G':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%04d",
+                                iso_week_year(year, month, day));
+        break;
+      case 'g':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%02d",
+                                iso_week_year(year, month, day) % 100);
+        break;
+      case 'u':
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%d",
+                                t.tm_wday == 0 ? 7 : t.tm_wday);
+        break;
+      case 'e':
+        /* %e is space-padded, %d is zero-padded. */
+        pos += (size_t)snprintf(out + pos, sizeof(out) - pos, "%2d", t.tm_mday);
+        break;
+      case 's': {
+        char tmp[24];
+        snprintf(tmp, sizeof(tmp), "%ld", (long)mktime(&t));
+        for(char* c = tmp; *c && pos + 1 < sizeof(out); c++)
+          out[pos++] = *c;
+        break;
+      }
+      default: {
+        char fmt[3] = {'%', d, '\0'};
+        date_format_append(out, sizeof(out), &pos, &t, fmt);
+        break;
+      }
+    }
+  }
+  out[pos] = '\0';
+  RETURN_VAL(wrenNewString(vm, out));
 }
 
 DEF_PRIMITIVE(date_unix) {
@@ -1430,16 +1781,25 @@ DEF_PRIMITIVE(date_unix) {
 };
 
 DEF_PRIMITIVE(markdown_html) {
-  char* html = markdownToHtml(AS_CSTRING(args[1]));
-  RETURN_VAL(wrenNewString(vm, html));
+  char* html = markdown_to_html(AS_CSTRING(args[1]));
+  if(html == NULL)
+    RETURN_ERROR("Markdown output too large");
+  Value result = wrenNewString(vm, html);
+  free(html);
+  RETURN_VAL(result);
 }
 
 DEF_PRIMITIVE(markdown_file) {
-  char* content = bialetReadFile(AS_CSTRING(args[1]));
+  char* content = bialet_read_file(AS_CSTRING(args[1]));
   if(content == NULL)
     RETURN_FALSE;
-  char* html = markdownToHtml(content);
-  RETURN_VAL(wrenNewString(vm, html));
+  char* html = markdown_to_html(content);
+  free(content);
+  if(html == NULL)
+    RETURN_ERROR("Markdown output too large");
+  Value result = wrenNewString(vm, html);
+  free(html);
+  RETURN_VAL(result);
 };
 
 static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
@@ -1447,47 +1807,74 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   if(vm->config.writeFn != NULL) {
     for(int i = 0; i < params->elements.count; i++) {
       val = params->elements.data[i];
+      int ok = 0;
       if(IS_NULL(val)) {
-        addParameter(query, 0, BIALETQUERYTYPE_NULL);
+        ok = add_parameter(query, 0, BIALETQUERYTYPE_NULL);
       } else if(IS_BOOL(val)) {
-        addParameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
+        ok = add_parameter(query, AS_BOOL(val) ? "1" : "0", BIALETQUERYTYPE_BOOLEAN);
       } else if(IS_NUM(val)) {
         char num[MAX_NUMBER_LENGTH];
-        sprintf(num, "%f", AS_NUM(val));
-        addParameter(query, num, BIALETQUERYTYPE_NUMBER);
-      } else {
-        addParameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
+        // %.17g keeps full double precision and renders compactly (DBL_MAX
+        // is ~24 chars); %f expands to hundreds of chars and overflowed
+        // this fixed stack buffer.
+        int written = snprintf(num, sizeof(num), "%.17g", AS_NUM(val));
+        if(written < 0 || written >= (int)sizeof(num))
+          continue;
+        ok = add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
+      } else if(IS_STRING(val)) {
+        ok = add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       }
+      // On allocation failure, drop the parameter instead of dereferencing
+      // the un-grown array in the query runner.
+      if(ok != 0)
+        continue;
     }
     vm->config.queryFn(vm, query);
   }
 }
 
 DEF_PRIMITIVE(query_fetch) {
-  BialetQuery query = *createBialetQuery();
-  query.queryString = AS_CSTRING(args[1]);
-  queryPrepare(vm, &query, AS_LIST(args[2]));
-  ObjList* list = wrenNewList(vm, query.resultsCount);
-  for(int i = 0; i < query.resultsCount; i++) {
+  BialetQuery* query = create_bialet_query();
+  if(query == NULL)
+    RETURN_ERROR("Out of memory allocating query");
+  char* qs = strdup(AS_CSTRING(args[1]));
+  if(qs == NULL) {
+    free_bialet_query(query);
+    RETURN_ERROR("Out of memory allocating query string");
+  }
+  query->queryString = qs;
+  queryPrepare(vm, query, AS_LIST(args[2]));
+  ObjList* list = wrenNewList(vm, query->resultsCount);
+  for(int i = 0; i < query->resultsCount; i++) {
     ObjMap*           row = wrenNewMap(vm);
-    BialetQueryResult res = query.results[i];
+    BialetQueryResult res = query->results[i];
     for(int j = 0; j < res.rowCount; j++) {
       wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name),
                  wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size));
     }
     list->elements.data[i] = OBJ_VAL(row);
   }
+  free_bialet_query(query);
   RETURN_OBJ(list);
 }
 
 DEF_PRIMITIVE(query_execute) {
-  BialetQuery query = *createBialetQuery();
-  query.queryString = AS_CSTRING(args[1]);
-  queryPrepare(vm, &query, AS_LIST(args[2]));
-  if(query.lastInsertId) {
-    Value lastInsertId = wrenNewString(vm, query.lastInsertId);
+  BialetQuery* query = create_bialet_query();
+  if(query == NULL)
+    RETURN_ERROR("Out of memory allocating query");
+  char* qs = strdup(AS_CSTRING(args[1]));
+  if(qs == NULL) {
+    free_bialet_query(query);
+    RETURN_ERROR("Out of memory allocating query string");
+  }
+  query->queryString = qs;
+  queryPrepare(vm, query, AS_LIST(args[2]));
+  if(query->lastInsertId) {
+    Value lastInsertId = wrenNewString(vm, query->lastInsertId);
+    free_bialet_query(query);
     RETURN_VAL(lastInsertId);
   } else {
+    free_bialet_query(query);
     RETURN_NULL;
   }
 }
@@ -1733,6 +2120,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(vm->listClass, "remove(_)", list_removeValue);
   PRIMITIVE(vm->listClass, "indexOf(_)", list_indexOf);
   PRIMITIVE(vm->listClass, "swap(_,_)", list_swap);
+  PRIMITIVE(vm->listClass, "joinNative(_)", list_join);
 
   vm->mapClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Map"));
   PRIMITIVE(vm->mapClass->obj.classObj, "new()", map_new);
@@ -1790,25 +2178,33 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
+  PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
+
+  ObjClass* responseClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Response"));
+  PRIMITIVE(responseClass->obj.classObj, "defaultPage_(_,_)", response_default_page);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
-  PRIMITIVE(httpClass, "call_(_,_,_,_,_)", http_call);
+  PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);
 
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
-  PRIMITIVE(markdownClass->obj.classObj, "html(_)", markdown_html);
-  PRIMITIVE(markdownClass->obj.classObj, "file(_)", markdown_file);
+  PRIMITIVE(markdownClass->obj.classObj, "html_(_)", markdown_html);
+  PRIMITIVE(markdownClass->obj.classObj, "file_(_)", markdown_file);
 
   ObjClass* jsonClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Json"));
   PRIMITIVE(jsonClass->obj.classObj, "parse_(_)", json_parse_primitive);
 
   // Conditionally load test classes
   if(vm->config.enableTests) {
-    WrenInterpretResult testResult = wrenInterpret(vm, NULL, bialet_testModuleSource);
+    WrenInterpretResult testResult =
+        wrenInterpret(vm, NULL, bialet_testModuleSource);
     if(testResult != WREN_RESULT_SUCCESS) {
       fprintf(stderr, "ERROR: Failed to load test module: %d\n", testResult);
     }
 
     ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
     PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
+
+    ObjClass* testsClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Tests"));
+    PRIMITIVE(testsClass->obj.classObj, "skip_()", tests_skip);
   }
 }

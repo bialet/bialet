@@ -1,0 +1,54 @@
+name: Diag Linux test failure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    name: Reproduce Linux test failure
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev \
+            libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
+            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
+            libgnutls28-dev libsasl2-dev sqlite3
+
+      - name: Build (static)
+        run: make clean && make static
+
+      - name: Run diagnostic
+        run: |
+          set -x
+          ulimit -a
+          # Start the main server with stderr captured
+          ./build/bialet -h 127.0.0.1 -p 7001 -l /tmp/tests.log tests 2>/tmp/server.err >/tmp/server.out &
+          sleep 3
+          echo "=== processes ==="
+          pgrep -af "build/bialet" || echo "NO PROCESSES"
+          for p in $(pgrep -f "build/bialet"); do
+            echo "PID $p: $(grep -E 'VmSize|VmPeak' /proc/$p/status 2>/dev/null | tr '\n' ' ')"
+            echo "  limits: $(grep -E 'Max address space' /proc/$p/limits)"
+          done
+          echo "=== static request /donotexists ==="
+          curl -sv --max-time 8 -o /dev/null "http://127.0.0.1:7001/donotexists" 2>&1 | tail -6
+          echo "=== wren request /get?foo=bar ==="
+          curl -sv --max-time 8 -o /dev/null "http://127.0.0.1:7001/get?foo=bar" 2>&1 | tail -6
+          echo "=== processes after ==="
+          pgrep -af "build/bialet" || echo "NO PROCESSES"
+          for p in $(pgrep -f "build/bialet"); do
+            echo "PID $p: $(grep -E 'VmSize|VmPeak' /proc/$p/status 2>/dev/null | tr '\n' ' ')"
+            echo "  limits: $(grep -E 'Max address space' /proc/$p/limits)"
+          done
+          echo "=== server.err ==="
+          cat /tmp/server.err || echo "(empty)"
+          echo "=== server.out ==="
+          cat /tmp/server.out || echo "(empty)"
+          echo "=== tests.log ==="
+          tail -40 /tmp/tests.log || echo "(no log)"
+          echo "=== dmesg tail ==="
+          sudo dmesg 2>/dev/null | tail -20 || echo "(dmesg unavailable)"

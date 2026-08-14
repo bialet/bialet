@@ -1,11 +1,28 @@
+#if defined(_WIN32)
+// Must precede <stdlib.h> so rand_s() is declared.
+#define _CRT_RAND_S
+#endif
+
 #include "wren_value.h"
 
 #include "wren.h"
 #include "wren_vm.h"
+
 #include <math.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#if defined(_WIN32)
+#include <time.h>
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <time.h>
+#include <unistd.h>
+#endif
 
 #if WREN_DEBUG_TRACE_MEMORY
 #include "wren_debug.h"
@@ -638,10 +655,45 @@ static ObjString* allocateString(WrenVM* vm, size_t length) {
   return string;
 }
 
+// Randomizes the string hash seed from the OS CSPRNG. With a fixed FNV-1a
+// seed an attacker can precompute colliding keys (e.g. JSON object keys parsed
+// from a request body) that degrade the linear-probe map to O(n^2) inserts.
+static uint32_t randomStringHashSeed(void) {
+  uint32_t seed = 0;
+  int      got = 0;
+#if defined(_WIN32)
+  if(rand_s(&seed) == 0)
+    got = 1;
+#else
+  int fd = open("/dev/urandom", O_RDONLY);
+  if(fd >= 0) {
+    got = read(fd, &seed, sizeof(seed)) == (ssize_t)sizeof(seed);
+    close(fd);
+  }
+#endif
+  if(!got) {
+    // Last-resort fallback: mix ASLR-derived address bits, wall clock and CPU
+    // time. Not a CSPRNG, but it defeats precomputed collision sets.
+    seed = (uint32_t)(uintptr_t)&seed ^ (uint32_t)time(NULL) ^ (uint32_t)clock();
+  }
+  if(seed == 0)
+    seed = 0x9e3779b9u;
+  return seed;
+}
+
+// Per-process string hash seed (0 is used as the "uninitialized" sentinel).
+static uint32_t stringHashSeed(void) {
+  static uint32_t seed = 0;
+  if(seed == 0)
+    seed = randomStringHashSeed();
+  return seed;
+}
+
 // Calculates and stores the hash code for [string].
 static void hashString(ObjString* string) {
-  // FNV-1a hash. See: http://www.isthe.com/chongo/tech/comp/fnv/
-  uint32_t hash = 2166136261u;
+  // Randomly-seeded FNV-1a hash. See:
+  // http://www.isthe.com/chongo/tech/comp/fnv/
+  uint32_t hash = stringHashSeed();
 
   // This is O(n) on the length of the string, but we only call this when a new
   // string is created. Since the creation is also O(n) (to copy/initialize all

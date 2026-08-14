@@ -10,7 +10,8 @@ Write a `.wren` file, return an HTML string, and that's your page.
 
 Inline HTML Strings are delimited by angle brackets `<` and `>`. The string
 must begin and end with the same tag. Tag names must be lowercase, start with a
-letter, and contain only letters and numbers.
+letter, and contain only letters, numbers, and hyphens (hyphens enable custom
+elements like `<my-element>`).
 
 ```wren
 // A simple HTML string assigned to a variable
@@ -30,6 +31,12 @@ var greeting = <h1>Hello, {{ name }}!</h1>
 var sum = <p>{{ 5 + 3 }}</p>
 // Output: <p>8</p>
 ```
+
+Interpolation **escapes plain values automatically** — strings, numbers, and
+other non-HTML values have `&`, `<`, `>`, `"`, and `'` replaced with their
+HTML entities. HTML string literals, nested `{{ }}` results, `.raw` strings,
+and `HtmlNode` values are already marked safe and are inserted verbatim. See
+[Security](security.md) for the full rules and the escape pitfalls.
 
 ### `return` sends the response
 
@@ -60,16 +67,27 @@ var link = <a href="{{ url }}" class="nav-link">{{ label }}</a>
 
 ### Self-Closing Tags
 
-Certain HTML tags are self-closing. In Bialet, these must include a space
-before the closing slash. The final output omits the slash.
+HTML's void elements (`<br>`, `<hr>`, `<img>`, `<input>`, `<meta>`, ...) are
+accepted with or without a trailing slash, and the markup is served verbatim:
 
-- Correct: `<hr />`, `<br />`, `<input value="{{ val }}" />`, `<meta charset="utf-8" />`
-- Incorrect: `<hr/>`, `<br/>`
+```wren
+var a = <div>one<br/>two</div>   // <br/> kept as written
+var b = <div>one<br />two</div>  // <br /> kept as written
+var c = <div>one<br>two</div>    // <br> kept as written
+```
+
+When a void element is the *outermost* tag of the string it must end with a
+space and slash — `<input value="{{ val }}" />` — so the parser knows the
+string has ended. The output omits the space and slash:
 
 ```wren
 var inputField = <input value="{{ userInput }}" />
 // Renders: <input value='Hello'>
 ```
+
+Without the space (`<input/>`) the parser reads the slash as part of the tag
+name, never finds a matching close tag, and reports "Unterminated HTML
+string."
 
 ### Multi-line Inline HTML
 
@@ -79,7 +97,7 @@ the tags become part of the HTML output.
 ```wren
 var card = <article>
   <h2>Title</h2>
-  <p>{{ description.safe }}</p>
+  <p>{{ description }}</p>
 </article>
 ```
 
@@ -88,7 +106,8 @@ var card = <article>
 **The opening tag cannot nest itself.** The outermost tag of an inline HTML
 string must not appear as a direct child tag at any nesting level. Once the
 tree starts with a *different* tag, the original tag can be used freely below
-it. The parser checks this on the *whole* string, not just the first level.
+it. The parser checks this on the *whole* string, not just the first level,
+and reports `Cannot nest <div> inside <div>` on the offending line.
 
 ```wren
 // Wrong — <div> is the outermost tag AND a direct child
@@ -108,26 +127,40 @@ var fine = <section>
 </section>
 ```
 
-**Mismatched tags fail.** Opening and closing tags must match:
+**Mismatched closing tags are not validated.** The parser only matches the
+closing tag against the *outermost* opening tag. Inner tags are never checked
+for balance — the string ends at the first closing tag that matches the outer
+tag, and everything before it is served verbatim, unclosed inner tags included:
 
 ```wren
-// Wrong
+// Compiles fine — <span> is never closed, the markup is served as-is
 var bad = <div><span>Hello</div>
 
-// Correct
+// Correct — close every tag yourself
 var good = <div><span>Hello</span></div>
 ```
 
-**Invalid tag names.** Only lowercase letters and numbers are allowed. No
-hyphens, underscores, or uppercase:
+The browser receives `<div><span>Hello</div>` and auto-closes the `<span>`
+when it renders, so the page usually looks fine. But the markup is not
+validated, so write matching tags yourself. Anything after the first matching
+close tag is outside the string and fails to compile:
+
+```wren
+// Compilation error — the string already ended at </div>
+var alsoBad = <div><span>Hello</div></span>
+```
+
+**Invalid tag names.** Tag names must be lowercase, start with a letter, and
+contain only letters, numbers, and hyphens. No underscores or uppercase:
 
 ```wren
 // Wrong
-var bad1 = <custom-tag>Invalid</custom-tag>
-var bad2 = <my_component>Invalid</my_component>
+var bad1 = <my_component>Invalid</my_component>
+var bad2 = <MyElement>Invalid</MyElement>
 
 // Correct
 var good = <span class="badge">Valid</span>
+var good2 = <my-element class="badge">Custom element</my-element>
 ```
 
 **Interpolation depth** is limited to 9 nested levels.
@@ -193,14 +226,14 @@ return <main>
 
 ### Pitfall
 
-**Newlines outside HTML tags produce unexpected output.** The Wren code
-inside `{{ }}` must start on the same line as `{{`. Newlines belong inside
-the HTML string (between `<tag>` and `</tag>`), not in the surrounding Wren
-code. Breaking the Wren expression with newlines can cause parsing
-ambiguities and empty output.
+**Multiline expressions inside `{{ }}` are valid.** The Wren expression can
+span lines, and HTML strings inside it can span lines too. Wren keeps one
+newline rule: an infix operator ends its line, so put `&&`, `?`, `:`, and
+similar at the end of a line. An operator at the start of a line is a parse
+error (`Expected expression.`), exactly as in plain Wren.
 
 ```wren
-// Wrong — Wren code spans lines outside the HTML tags
+// Valid — the expression spans lines, operators end each line
 return <div>{{
   showClear &&
   <form method="post" action="/clear">
@@ -208,14 +241,18 @@ return <div>{{
   </form>
 }}</div>
 
-// Correct — Wren code starts on the same line as {{
-return <div>{{ showClear && <form method="post" action="/clear">
-  <button>Clear</button>
-</form> }}</div>
+// Invalid — the operator starts a line
+return <div>{{
+  showClear
+  && <form method="post" action="/clear">
+    <button>Clear</button>
+  </form>
+}}</div>
 ```
 
-The same rule applies to ternary expressions and `map` — keep the Wren
-expression on the same line as `{{`, let only the HTML string span lines.
+Block callbacks (`map { |v| ... }`) follow Wren's single-expression rule: the
+body must fit on the line after the `{`, otherwise the block returns `null`
+and the output is empty.
 
 ---
 
@@ -236,7 +273,7 @@ blocks of HTML based on a condition.
 ### Nested ternaries for multi-value decisions
 
 ```wren
-<span class="priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? "high" : Num.fromString(task.id.toString) % 3 == 2 ? "medium" : "low" }}"
+<span class="priority-dot {{ task.id.toNum % 3 == 1 ? "high" : task.id.toNum % 3 == 2 ? "medium" : "low" }}"
       aria-hidden="true"></span>
 ```
 
@@ -247,9 +284,9 @@ lines. The `{{ }}` must be inside an HTML tag context:
 
 ```wren
 return <main>{{ task.finished ? <span class="task-text completed">
-  {{ task.description.safe }}
+  {{ task.description }}
 </span> : <span class="task-text">
-  {{ task.description.safe }}
+  {{ task.description }}
 </span> }}</main>
 ```
 
@@ -266,7 +303,7 @@ if (task.finished) {
 }
 
 // Clean template
-<span class="{{ taskClass }}">{{ task.description.safe }}</span>
+<span class="{{ taskClass }}">{{ task.description }}</span>
 ```
 
 **Newlines outside HTML tags** — same rule as `&&`:
@@ -323,7 +360,7 @@ the HTML inside the tags has newlines.
       <span class="task-content">
         <span class="{{ task.finished ? "task-text completed" : "task-text" }}">
           <span class="priority-dot low" aria-hidden="true"></span>
-          {{ task.description.safe }}
+          {{ task.description }}
         </span>
         <span class="task-meta">{{ task.createdAt.hh }}:{{ task.createdAt.mi }}</span>
       </span>
@@ -358,7 +395,7 @@ state:
 ```wren
 return <main>
   <ul>
-    {{ tasks.map{ |task| <li>{{ task.description.safe }}</li> } }}
+    {{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
   </ul>
   {{ tasks.count == 0 && <section class="empty-state">
     <p>No tasks yet. Add your first one above.</p>
@@ -416,7 +453,7 @@ var posts = Post.list()
 return Template.new().layout(<main>
   <h1>Posts</h1>
   <ul>
-    {{ posts.map{ |p| <li><a href="/posts/{{ p.id }}">{{ p.title.safe }}</a></li> } }}
+    {{ posts.map{ |p| <li><a href="/posts/{{ p.id }}">{{ p.title }}</a></li> } }}
   </ul>
 </main>)
 ```
@@ -511,17 +548,25 @@ the Post/Redirect/Get pattern and prevents duplicate form submissions.
 
 ### Pitfall
 
-**Forgetting `return` before `Response.redirect()`** causes a double-response
-error. The redirect sends headers, then the code below still executes and
-tries to send a body. Always `return Response.redirect(...)`.
+**Forgetting `return` before `Response.redirect()`.** Code after a bare
+`Response.redirect(...)` still runs. There is no error — the server sends the
+302 with its `Location` header and attaches whatever body the rest of the
+script returns. Always `return Response.redirect(...)` so the script stops at
+the redirect and no body is sent:
 
 ```wren
-// Wrong — missing return
+// Wrong — the code below still runs and attaches a body to the 302
 if (Request.isPost) {
   task.save()
-  Response.redirect("/")  // redirect sends headers...
+  Response.redirect("/")
 }
-// ...then this still runs, trying to send a second response
+return Template.new().layout(...)
+
+// Correct — return stops the script at the redirect
+if (Request.isPost) {
+  task.save()
+  return Response.redirect("/")
+}
 return Template.new().layout(...)
 ```
 
@@ -799,14 +844,78 @@ Then use utility classes directly:
 </main>
 ```
 
-For production, self-host the compiled CSS. Run Tailwind's CLI or PostCSS build
-against the app directory — the class names in your `.wren` files are standard
-HTML attributes, so any CSS processing tool works.
+The CDN is fine for tinkering, but it renders styles in the browser at runtime
+and adds an external dependency. For production, self-host the compiled CSS
+with the Tailwind CLI.
+
+#### Self-hosting with the Tailwind CLI
+
+This works because Tailwind scans your files as plain text for class names. The
+classes in your `.wren` files are standard HTML attributes, so no special
+configuration is needed to detect them.
+
+**1. Install the CLI.** In your app directory:
+
+```bash
+npm install -D tailwindcss @tailwindcss/cli
+```
+
+**2. Create an input stylesheet.** This is the source file Tailwind reads.
+Put it in a `_`-prefixed directory so Bialet never serves it (see the pitfalls
+below) but Tailwind can still read it from disk. Create `_src/input.css`:
+
+```css
+@import "tailwindcss";
+@source "./**/*.wren";
+```
+
+The `@source` directive tells Tailwind to scan your `.wren` files for classes.
+Adjust the glob to match your app's layout if you keep pages in subdirectories.
+
+**3. Link the compiled output.** Reference the built file in your template's
+`head`. Bialet serves it as a normal static file:
+
+```wren
+head { <head>
+  <title>{{ _title }}</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/style.css" />
+</head> }
+```
+
+#### Development: watch mode
+
+Run Tailwind and Bialet side by side, in two terminals:
+
+```bash
+# Terminal 1 — start Bialet
+bialet .
+
+# Terminal 2 — compile CSS on every change
+npx @tailwindcss/cli -i _src/input.css -o style.css --watch
+```
+
+With [live reload](live-reload.md) enabled, Bialet watches the whole app
+directory. Every time Tailwind writes a new `style.css`, the browser reloads
+automatically — a full Tailwind + Bialet dev loop with no extra tooling.
+
+#### Production: one-shot build
+
+Compile once, minified:
+
+```bash
+npx @tailwindcss/cli -i _src/input.css -o style.css --minify
+```
+
+Commit `style.css` and deploy it alongside your `.wren` files. The server needs
+no Node.js — the compiled file is just a static asset. For caching and gzip on
+the compiled CSS, see [Deployment](deployment.md).
 
 ### Pitfalls
 
 **No CSS preprocessors built in.** Bialet doesn't bundle Sass, Less, or
-PostCSS. Write vanilla CSS, or use a separate build step for preprocessing.
+PostCSS. Write vanilla CSS, or use a separate build step (like Tailwind's CLI)
+for preprocessing.
 
 **`_`-prefixed CSS files are not served.** Files starting with `_` or `.`
 return 403. Name your stylesheets without a leading underscore:
@@ -820,42 +929,64 @@ return 403. Name your stylesheets without a leading underscore:
 <link rel="stylesheet" href="/_style.css" />
 ```
 
-**Framework CDNs add an external dependency.** For production, download the CSS
-file and serve it from your app directory alongside your other static assets.
+This is why the input file lives in `_src/` — Bialet blocks HTTP access to it
+while the CLI still reads it from disk. The output file (`style.css`) must not
+start with `_` or `.`.
+
+**`node_modules` is publicly served.** Everything inside the app root is served
+unless a path component starts with `_` or `.`. After `npm install`, the
+`node_modules/` directory is reachable over HTTP. Block it at your reverse
+proxy in production (see [Deployment](deployment.md)), or run the npm project
+outside the app root and point the CLI at it.
+
+**Dynamic class names are not compiled.** Tailwind scans your source as plain
+text, so it cannot see classes assembled at runtime. This compiles fine:
+
+```wren
+class="text-red-600"   // ✓
+```
+
+This does not — Tailwind never sees the full class name:
+
+```wren
+class="text-{{ error ? "red" : "green" }}-600"   // ✗
+```
+
+Use complete class names in your `.wren` files.
+
+**Framework CDNs add an external dependency.** For production, compile and serve
+the CSS from your app directory instead of loading it from a CDN.
 
 ---
 
 ## Escaping & Security
 
-The `{{ }}` interpolation does **not** escape HTML by default. When displaying
-user-generated content, database values, or URL parameters, you must use the
-`.safe` property to escape special HTML characters and prevent XSS attacks.
+The `{{ }}` interpolation **escapes HTML by default**. Plain values — strings
+from user input, database queries, or URL parameters — have `&`, `<`, `>`, `"`,
+and `'` replaced with their HTML entities before they reach the page.
 
 ```wren
 var userInput = "<script>alert('xss')</script>"
 
-// Dangerous — XSS vulnerability
-var dangerous = <p>{{ userInput }}</p>
-// Renders: <p><script>alert('xss')</script></p>
-
-// Safe — HTML characters are escaped
-var safe = <p>{{ userInput.safe }}</p>
+// Safe — HTML characters are escaped automatically
+var safe = <p>{{ userInput }}</p>
 // Renders: <p>&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</p>
 ```
 
-You can also use `Util.htmlEscape()` for manual escaping:
+You can also use `Util.htmlEscape()` for manual escaping outside of
+interpolation:
 
 ```wren
 var escaped = Util.htmlEscape(userInput)
 ```
 
-**Rule:** Always use `.safe` on any string that comes from user input, database
-queries, or URL parameters before inserting it into HTML.
+Markup that is already safe is left untouched: HTML string literals, the
+result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
+[Security](security.md) for the full rules.
 
-### Pitfall
-
-**Forgetting `.safe` is an XSS vulnerability.** Every user-supplied string
-embedded in HTML must be escaped. There is no automatic escaping.
+> ⚠️ Pitfall: **Do not add `.safe` inside `{{ }}`.** Interpolation already
+> escapes, so `{{ userInput.safe }}` escapes the text twice (`&amp;lt;`).
+> Use `HtmlNode` or `.raw` only for markup you intentionally trust.
 
 ---
 
@@ -864,26 +995,32 @@ embedded in HTML must be escaped. There is no automatic escaping.
 - **Opening-tag nesting:** The outermost tag of an inline HTML string cannot
   appear again as a child at any level. This means `<div><div>...</div></div>` fails because `<div>` is both the outermost and a nested tag. Wrap with a different tag (e.g. `<section>`) and nest freely below it:
   `<section><div><div>...</div></div></section>`.
-- **Mismatched tags:** `<div><span>Hello</div>` fails — opening and closing
-  tags must match.
-- **Invalid tag names:** Only lowercase letters and numbers — no hyphens,
-  underscores, or uppercase. Use classes and semantic tags instead.
+- **Mismatched tags are not validated:** Only the outer closing tag is
+  matched; `<div><span>Hello</div>` compiles and is served verbatim (the
+  browser auto-closes the `<span>`). Write well-formed HTML yourself.
+- **Invalid tag names:** Tag names must be lowercase, start with a letter, and
+  contain only letters, numbers, and hyphens — no underscores or uppercase.
+  Hyphens enable custom elements like `<my-element>`. Use classes and semantic
+  tags otherwise.
 - **Interpolation depth:** Maximum 9 nested `{{ }}` levels.
 - **Forgetting `return`:** Without `return`, the response body is empty.
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
-- **Newlines outside HTML tags in `{{ }}`:** Keep Wren code on the same line
-  as the opening `{{`. Only HTML strings can span lines.
-- **Map callback is a single expression:** No multiple statements, no variable
-  declarations inside the callback.
+- **Newlines inside `{{ }}`:** The Wren expression can span lines, but an
+  infix operator must end its line — a leading operator is a parse error.
+- **Map callback is a single expression:** The body must fit on the line
+  after the `{`, otherwise the block returns `null` and renders empty.
 - **Empty lists in `map`:** Produce empty output — pair with `&&` for empty
   states.
 - **`return` terminates immediately:** Code after `return` never executes.
 - **DB values are strings:** Convert with `Num.fromString()` before math.
-- **Forgetting `return` before `Response.redirect()`:** Causes double-response
-  errors.
+- **Forgetting `return` before `Response.redirect()`:** The code after it
+  still runs and attaches a body to the 302 — no error, just a redirect with
+  an unexpected body. Always `return Response.redirect(...)`.
 - **Instance vs static methods:** Instance methods need `new()`; static methods
   don't.
 - **`_`-prefixed CSS is not served:** Name stylesheets without leading `_`.
 - **CSS preprocessors not built in:** Write vanilla CSS or use a build step.
 - **Framework CDNs in production:** Self-host CSS files for reliability.
-- **`{{ }}` does not escape HTML:** Always use `.safe` on untrusted strings.
+- **`{{ }}` escapes by default:** Plain values are auto-escaped; do not add
+  `.safe` inside `{{ }}` (it double-escapes). Use `HtmlNode` or `.raw` for
+  intentionally-raw markup.

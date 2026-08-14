@@ -72,78 +72,85 @@ Ubuntu ARM):
 curl -fsSL https://get.bialet.dev | sh
 ```
 
+Check for [other installation options](https://bialet.dev/installation.html).
+
 ## Quickstart
 
-1. Create an `index.wren` file in your app directory and start the server:
+Learn how to build a simple poll app at the
+[getting started documentation](https://bialet.dev/getting-started.html).
+
+### Linux or macOS
 
 ```bash
-bialet
+cd /path/to/project
+bialet dev
 ```
 
-2. Visit [127.0.0.1:7001](http://127.0.0.1:7001) in your browser.
+### Windows
+
+Copy the `bialet.exe` file on your project folder and double click it.
+
+Double-clicking `bialet.exe` in File Explorer starts it in dev mode: live
+reload, in-browser error display, and the browser opens automatically. Run it
+from a terminal to start without dev mode.
+
+## The Bialet Manifesto — Ride Light 🚲
+
+1. **Simplicity is a superpower.** Every line of tooling you don't write is a
+   line of your app that ships faster.
+
+2. **Standards, not frameworks.** HTML, SQL, and HTTP have outlived every
+   framework. Master them and your knowledge stays relevant.
+
+3. **One file to deploy.** No containers, no orchestration, no
+   `docker-compose.yml`. Copy the binary — that's it.
+
+4. **Batteries included.** Server, database, templating — all in one small
+   binary. No external services to provision.
+
+5. **Ride light.** Complexity is a choice. Choose less, and you'll go further
+   than you think.
 
 ## Build from source
 
-### Prerequisites
+Install the build dependencies for your OS, then run `make`:
 
-- A C17-compatible compiler (`gcc` or `clang`) and `make`
-- `git`
-- Development headers for SQLite, libcurl, and OpenSSL (see below)
-- `python3` — only needed to regenerate the embedded Wren sources
-  (`make wren_files`)
-
-### Dependencies
-
-**Debian/Ubuntu**
+**Debian / Ubuntu:**
 
 ```bash
 sudo apt install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev
 ```
 
-**macOS**
+**Fedora / RHEL / CentOS:**
+
+```bash
+sudo dnf install -y gcc make sqlite-devel libcurl-devel openssl-devel
+```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S --needed base-devel sqlite curl openssl
+```
+
+**macOS:**
 
 ```bash
 brew install sqlite3 curl openssl pkg-config
 ```
 
-**Windows** — Bialet is cross-compiled from Linux with MinGW
-(`CC=x86_64-w64-mingw32-gcc make`). The resulting binary needs these DLLs
-alongside it at runtime:
-
-- `libsqlite3-0.dll`
-- `libcrypto-3-x64.dll`
-- `libssl-3-x64.dll`
-
-OpenSSL is optional but recommended for production (enables TLS). The build
-auto-detects it and defines `HAVE_SSL` when present; on macOS it is located via
-`pkg-config`.
-
-### Compile and install
+Build and install:
 
 ```bash
-git clone https://github.com/bialet/bialet.git
-cd bialet
 make               # compiles to ./build/bialet
+make check         # runs the test suite
 make install       # copies the binary to ~/.local/bin
 ```
 
-The default build uses `-Wall -Wextra -Werror` and links against `libsqlite3`,
-`libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto` when OpenSSL is
-detected).
-
-### Make targets
-
-| Target              | Description                                                                             |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `make` / `make all` | Build the binary to `./build/bialet`                                                    |
-| `make install`      | Copy the binary to `~/.local/bin`                                                       |
-| `make uninstall`    | Remove the installed binary                                                             |
-| `make check`        | Build and run the test suite                                                            |
-| `make installcheck` | Install, then run the tests against the installed binary                                |
-| `make static`       | Linux only — produce a statically linked, self-contained binary                         |
-| `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
-| `make html`         | Build the documentation with Sphinx                                                     |
-| `make clean`        | Remove `build/` and test databases                                                      |
+Requires a C17 compiler, `make`, `git`, and development headers for SQLite,
+libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites)
+for other distributions, cross-compiling (including Windows), the full list of
+`make` targets, and the development workflow.
 
 ## Development
 
@@ -151,52 +158,37 @@ Run the freshly built binary against an app directory (the last positional
 argument is the app root, defaulting to the current directory):
 
 ```bash
-make                        # rebuild after editing C sources
 ./build/bialet /path/to/dev-app
-```
-
-If you change any embedded `.wren` source under `src/`, regenerate the C string
-includes before rebuilding:
-
-```bash
-make wren_files && make
 ```
 
 ### Command-line options
 
 ```
-Usage: bialet [-h host] [-p port] [-l log] [-d database] [-t file] [-T] root_dir
+Usage: bialet [options] [dev] [root_dir]
 ```
 
-| Option        | Description                                    |
-| ------------- | ---------------------------------------------- |
-| `-h host`     | Host to bind (default `127.0.0.1`)             |
-| `-p port`     | Port to listen on                              |
-| `-l log`      | Write logs to a file (disables colored output) |
-| `-d database` | SQLite database file (default `_db.sqlite3`)   |
-| `-w`          | Enable SQLite WAL mode                         |
-| `-i files`    | Glob of files to ignore                        |
-| `-m` / `-M`   | Memory soft / hard limit in MB                 |
-| `-c` / `-C`   | CPU soft / hard limit in seconds               |
-| `-r code`     | Run an inline Wren snippet and exit            |
-| `-t file`     | Validate the syntax of a `.wren` file          |
-| `-T [dir]`    | Run the test suite                             |
-| `-v`          | Print the version and exit                     |
-| `root_dir`    | App directory to serve (default `.`)           |
+Every option has a short and a long form; values accept `--option value` or
+`--option=value`.
 
-## Documentation
+| Option                                  | Description                                    |
+| --------------------------------------- | ---------------------------------------------- |
+| `-h`, `--host`                          | Host to bind (default `127.0.0.1`)             |
+| `-p`, `--port`                          | Port to listen on                              |
+| `-l`, `--log`                           | Write logs to a file (disables colored output) |
+| `-d`, `--db`                            | SQLite database file (default `_db.sqlite3`)   |
+| `-w`, `--wal`                           | Enable SQLite WAL mode                         |
+| `-i`, `--ignore`                        | Glob of files to ignore                        |
+| `-m`, `--mem-soft` / `-M`, `--mem-hard` | Memory soft / hard limit in MB                 |
+| `-c`, `--cpu-soft` / `-C`, `--cpu-hard` | CPU soft / hard limit in %                     |
+| `-r`, `--run`                           | Run an inline Wren snippet and exit            |
+| `-t`, `--validate`                      | Validate the syntax of a `.wren` file          |
+| `-T`, `--tests`                         | Run the test suite                             |
+| `-v`, `--version`                       | Print the version and exit                     |
+| `-H`, `--help`                          | Print the help and exit                        |
+| `dev`                                   | Live reload, error display, browser auto-open  |
+| `root_dir`                              | App directory to serve (default `.`)           |
 
-Full documentation at [bialet.dev](https://bialet.dev):
-
-- [Getting Started](https://bialet.dev/getting-started.html) — Build a poll app
-  from scratch
-- [Installation](https://bialet.dev/installation.html) — Script, Homebrew,
-  Docker, or source
-- [Database](https://bialet.dev/database.html) — Queries, migrations, and
-  mappings
-- [API Reference](https://bialet.dev/reference.html) — Complete class
-  documentation
-- [FAQ](https://bialet.dev/faq.html) — Common questions and answers
+Read more on [the usage documentation](https://bialet.dev/usage.html).
 
 ## Contributing
 
@@ -218,13 +210,20 @@ several open-source projects and contributors. We extend our gratitude to:
 
 - The [Wren programming language](https://wren.io), for its lightweight,
   flexible, and high-performance capabilities.
-- Matthew Brandly, for his invaluable contributions to JSON parsing and utility
-  functions in Wren. Check out his work at
-  [Matthew Brandly's GitHub](https://github.com/brandly/wren-json).
-- @PureFox48 for the upper and lower functions.
-- @superwills for providing the `getopt` source.
+- [PureFox48](https://github.com/PureFox48) for the upper and lower functions.
+- [superwills](https://github.com/superwills) for providing the `getopt` source.
+- DeepSeek v4 Flash & Pro, Gemini 3, Sonnet 5 and Opus 4.
+- Coffee and mate cocido.
+
+First versions were helped by:
+
+- [Mongoose](https://mongoose.ws/) web server library.
+- [Matthew Brandly](https://github.com/brandly/wren-json), for his invaluable
+  contributions to JSON parsing and utility functions in Wren.
 - [Codeium](https://github.com/codeium) for the [Codeium](https://codeium.com)
-  plugin, ChatGPT and a lot of coffee.
+  plugin
+- ChatGPT 3 & 3.5
+- Even more coffee and mate cocido.
 
 We encourage users to explore these projects and recognize the efforts of their
 creators.
