@@ -348,7 +348,7 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
 
 Request bodies are rejected with `413 Payload Too Large` before parsing when
 they exceed the smaller of the `-b` limit and a memory-safe ceiling (`-m` /
-512, about 100 KB at the default 50 MB soft limit). This keeps worst-case body
+512, about 256 KB at the default 128 MB soft limit). This keeps worst-case body
 parsing (one Wren string per line) inside the enforced `RLIMIT_AS` budget, so
 a crafted body cannot crash the server child or stall it for minutes.
 

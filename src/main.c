@@ -372,8 +372,8 @@ int main(int argc, char* argv[]) {
   bialet_config.host = BIALET_DEFAULT_HOST;
   bialet_config.port = -1;
   bialet_config.log_file = stdout;
-  bialet_config.mem_soft_limit = 50;
-  bialet_config.mem_hard_limit = 100;
+  bialet_config.mem_soft_limit = 128;
+  bialet_config.mem_hard_limit = 256;
   bialet_config.cpu_soft_limit = 15;
   bialet_config.cpu_hard_limit = 30;
   /* Env config values */
@@ -458,8 +458,8 @@ int main(int argc, char* argv[]) {
   // and a memory-safe ceiling (soft limit / 512). Wren body parsing allocates
   // ~160 bytes of address space per body line (one ObjString each), so without
   // this ceiling a body allowed by -b could push the child past the enforced
-  // RLIMIT_AS budget. At the default 50MB soft limit the ceiling is 100KB, so
-  // -b 128 is effective once the soft limit reaches 64MB.
+  // RLIMIT_AS budget. At the default 128MB soft limit the ceiling is 256KB, so
+  // the default -b 128 is fully effective.
   {
     size_t mem_safe_post =
         ((size_t)bialet_config.mem_soft_limit * 1024 * 1024) / 512;

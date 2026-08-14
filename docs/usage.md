@@ -61,8 +61,8 @@ bialet --port=8080 /path/to/app
 | `-d`, `--db`            | SQLite database file location                                               | `_db.sqlite3`                                |
 | `-w`, `--wal`           | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
 | `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
-| `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `50`                                         |
-| `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `100`                                        |
+| `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `128`                                        |
+| `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `256`                                        |
 | `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
 | `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |

@@ -32,6 +32,7 @@ jobs:
           pgrep -af "build/bialet" || echo "NO PROCESSES"
           for p in $(pgrep -f "build/bialet"); do
             echo "PID $p: $(grep -E 'VmSize|VmPeak' /proc/$p/status 2>/dev/null | tr '\n' ' ')"
+            echo "  limits: $(grep -E 'Max address space' /proc/$p/limits)"
           done
           echo "=== static request /donotexists ==="
           curl -sv --max-time 8 -o /dev/null "http://127.0.0.1:7001/donotexists" 2>&1 | tail -6
@@ -41,6 +42,7 @@ jobs:
           pgrep -af "build/bialet" || echo "NO PROCESSES"
           for p in $(pgrep -f "build/bialet"); do
             echo "PID $p: $(grep -E 'VmSize|VmPeak' /proc/$p/status 2>/dev/null | tr '\n' ' ')"
+            echo "  limits: $(grep -E 'Max address space' /proc/$p/limits)"
           done
           echo "=== server.err ==="
           cat /tmp/server.err || echo "(empty)"

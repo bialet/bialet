@@ -74,9 +74,9 @@ void cli_print_version(void);
   "                        (default: README*,AGENTS*,LICENSE*,*.json,*.yml,"        \
   "*.yaml,*.exe)\n"                                                                 \
   "  -m, --mem-soft MB     Memory soft limit                      (default: "       \
-  "50)\n"                                                                           \
+  "128)\n"                                                                          \
   "  -M, --mem-hard MB     Memory hard limit                      (default: "       \
-  "100)\n"                                                                          \
+  "256)\n"                                                                          \
   "  -c, --cpu-soft PERC   CPU soft limit                         (default: "       \
   "15)\n"                                                                           \
   "  -C, --cpu-hard PERC   CPU hard limit                         (default: "       \
