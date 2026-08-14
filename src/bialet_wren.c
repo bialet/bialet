@@ -795,11 +795,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt = NULL;
-    int result = sqlite3_prepare_v2(db,
-                                    "INSERT INTO BIALET_FILES (name, "
-                                    "originalFileName, type, file, size, isTemp) "
-                                    "VALUES (?, ?, ?, ?, ?, 1)",
-                                    -1, &stmt, 0);
+    int           result = sqlite3_prepare_v2(db,
+                                              "INSERT INTO BIALET_FILES (name, "
+                                                        "originalFileName, type, file, size, isTemp) "
+                                                        "VALUES (?, ?, ?, ?, ?, 1)",
+                                              -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -1172,7 +1172,10 @@ static TestResult run_test_file(const char* testPath, const char* initPath,
   char* code = read_file(testPath);
   if(code == NULL) {
     *outLine = 0;
-    snprintf(outMsg, outMsgSize, "Cannot read test file: %s", testPath);
+    // The test path can exceed the fixed message buffer, and an unbounded %s
+    // trips -Wformat-truncation under -Werror. Bound the copy: 256-byte
+    // buffer - "Cannot read test file: " (23) - NUL = 232.
+    snprintf(outMsg, outMsgSize, "Cannot read test file: %.232s", testPath);
     return TEST_RESULT_FAIL;
   }
 
@@ -1244,7 +1247,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   while((entry = readdir(dir)) != NULL) {
     if(!is_test_file(entry->d_name))
       continue;
-    // A directory named "foo.wren" is not a test file.
+      // A directory named "foo.wren" is not a test file.
 #ifdef DT_DIR
     if(entry->d_type == DT_DIR)
       continue;
@@ -1361,14 +1364,13 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     printf("%d of %d tests failed in %.2fs\n", failed, ran, elapsed);
     for(int i = 0; i < failed; i++) {
       // Strip the ".wren" extension for the display name; is_test_file()
-      // guarantees every entry here ends with it.
-      char stem[MAX_MODULE_LEN];
-      snprintf(stem, sizeof(stem), "%s", failures[i].name);
-      size_t stemLen = strlen(stem);
+      // guarantees every entry here ends with it. A %.*s precision avoids
+      // the fixed stem buffer that -Wformat-truncation rejected.
+      size_t stemLen = strlen(failures[i].name);
       if(stemLen > 5)
-        stem[stemLen - 5] = '\0';
-      printf("\n### FAIL %s/%s:%d - %s\n%s\n", TESTS_DIR, failures[i].name,
-             failures[i].line, stem, failures[i].msg);
+        stemLen -= 5;
+      printf("\n### FAIL %s/%s:%d - %.*s\n%s\n", TESTS_DIR, failures[i].name,
+             failures[i].line, (int)stemLen, failures[i].name, failures[i].msg);
     }
   } else {
     char line[64];
