@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -429,6 +432,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-filters-without-concatenation">Optional Filters Without Concatenation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
@@ -545,7 +549,8 @@ method.</p>
 <span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sortCol</span><span class="p">,</span><span class="w"> </span><span class="n">sortDir</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span>
 <span class="w">  </span><span class="o">.</span><span class="n">fetch</span>
 
-<span class="c1">// Combined with filtering</span>
+<span class="c1">// Combined with filtering — see Optional Filters Without Concatenation below</span>
+<span class="c1">// for why the WHERE clause is written this way</span>
 <span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  SELECT * FROM users </span>
@@ -565,6 +570,50 @@ method.</p>
 </pre></div>
 </div>
 <p>This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation. For paginating sorted results, combine with <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> as shown in the <a class="reference internal" href="#pagination">Pagination</a> section.</p>
+</section>
+<section id="optional-filters-without-concatenation">
+<span id="optional-filters"></span><h2>Optional Filters Without Concatenation<a class="headerlink" href="#optional-filters-without-concatenation" title="Link to this heading">#</a></h2>
+<p>Since the Query object rejects string concatenation and interpolation (see
+above), a query whose <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause changes shape depending on which filters
+the caller supplies can’t be assembled by appending SQL fragments. Instead,
+write one static query and put a bypass condition in front of each filter, so
+<code class="docutils literal notranslate"><span class="pre">OR</span></code> short-circuits it away when the filter doesn’t apply:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Search box that matches everything when empty</span>
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM users WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same technique works with a boolean flag instead of an empty string —
+useful for a tri-state filter like “all / active / completed”:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// filter is &quot;all&quot;, &quot;active&quot;, or &quot;completed&quot;</span>
+<span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">(</span><span class="n">filter</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM tasks</span>
+<span class="sb">  WHERE session = ? AND (? = 1 OR finished = ?)</span>
+<span class="sb">  ORDER BY createdAt ASC</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;all&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">==</span> <span class="pre">&quot;all&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">==</span> <span class="pre">&quot;active&quot;</span></code> are Booleans, bound as <code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">0</span></code>.
+When the first is <code class="docutils literal notranslate"><span class="pre">1</span></code> (filter is <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">?</span> <span class="pre">=</span> <span class="pre">1</span></code> is true and the <code class="docutils literal notranslate"><span class="pre">OR</span></code> makes
+the whole condition true for every row, so <code class="docutils literal notranslate"><span class="pre">finished</span></code> is never checked. When
+it’s <code class="docutils literal notranslate"><span class="pre">0</span></code>, the clause falls through to <code class="docutils literal notranslate"><span class="pre">finished</span> <span class="pre">=</span> <span class="pre">?</span></code>, which compares against
+the second Boolean (<code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;completed&quot;</span></code>).</p>
+<p>Chain independent filters with <code class="docutils literal notranslate"><span class="pre">AND</span></code>, each with its own bypass, to let
+callers omit any combination of them:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">minAge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;minAge&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM users</span>
+<span class="sb">  WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)</span>
+<span class="sb">    AND (? = &#39;&#39; OR age &gt;= ?)</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">minAge</span><span class="p">,</span><span class="w"> </span><span class="n">minAge</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The query stays static regardless of how many filters are active — safe from
+injection, and readable as a single SQL statement instead of a string built
+up in pieces.</p>
 </section>
 <section id="pagination">
 <span id="id2"></span><h2>Pagination<a class="headerlink" href="#pagination" title="Link to this heading">#</a></h2>
@@ -760,7 +809,7 @@ descriptive name.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>: The configuration table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_MIGRATIONS</span></code>: The migration history table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_SESSIONS</span></code>: The session table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code>: The session table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_FILES</span></code>: The file storage table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_LOGS</span></code>: The logging table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>: The remote module cache table.</p></li>
@@ -820,6 +869,7 @@ correctly.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-object">Query Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#safe-sorting-with-order">Safe Sorting with .order()</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-filters-without-concatenation">Optional Filters Without Concatenation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination">Pagination</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-to-domain-classes">Mapping to Domain Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>

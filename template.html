@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,15 +58,15 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Forms" href="forms.html" />
+    <link rel="next" title="JSX to Bialet Migration" href="jsx-migration.html" />
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -481,14 +484,16 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-css">Writing CSS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-css-first-bialet-philosophy">Semantic CSS first (Bialet philosophy)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#picocss">PicoCSS</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#self-hosting-with-the-tailwind-cli">Self-hosting with the Tailwind CLI</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#development-watch-mode">Development: watch mode</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production-one-shot-build">Production: one-shot build</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Pitfalls</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Pitfall</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
 </ul>
             </nav>
@@ -511,7 +516,8 @@ Write a <code class="docutils literal notranslate"><span class="pre">.wren</span
 <h2>View: Inline HTML Strings<a class="headerlink" href="#view-inline-html-strings" title="Link to this heading">#</a></h2>
 <p>Inline HTML Strings are delimited by angle brackets <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>. The string
 must begin and end with the same tag. Tag names must be lowercase, start with a
-letter, and contain only letters and numbers.</p>
+letter, and contain only letters, numbers, and hyphens (hyphens enable custom
+elements like <code class="docutils literal notranslate"><span class="pre">&lt;my-element&gt;</span></code>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// A simple HTML string assigned to a variable</span>
 <span class="k">var</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;Hello World&lt;/p&gt;</span>
 </pre></div>
@@ -528,6 +534,11 @@ evaluated and its result is inserted into the string.</p>
 <span class="c1">// Output: &lt;p&gt;8&lt;/p&gt;</span>
 </pre></div>
 </div>
+<p>Interpolation <strong>escapes plain values automatically</strong> — strings, numbers, and
+other non-HTML values have <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">'</span></code> replaced with their
+HTML entities. HTML string literals, nested <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> results, <code class="docutils literal notranslate"><span class="pre">.raw</span></code> strings,
+and <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values are already marked safe and are inserted verbatim. See
+<a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for the full rules and the escape pitfalls.</p>
 </section>
 <section id="return-sends-the-response">
 <h3><code class="docutils literal notranslate"><span class="pre">return</span></code> sends the response<a class="headerlink" href="#return-sends-the-response" title="Link to this heading">#</a></h3>
@@ -556,16 +567,23 @@ values. You can interpolate values with <code class="docutils literal notranslat
 </section>
 <section id="self-closing-tags">
 <h3>Self-Closing Tags<a class="headerlink" href="#self-closing-tags" title="Link to this heading">#</a></h3>
-<p>Certain HTML tags are self-closing. In Bialet, these must include a space
-before the closing slash. The final output omits the slash.</p>
-<ul class="simple">
-<li><p>Correct: <code class="docutils literal notranslate"><span class="pre">&lt;hr</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;br</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;{{</span> <span class="pre">val</span> <span class="pre">}}&quot;</span> <span class="pre">/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;meta</span> <span class="pre">charset=&quot;utf-8&quot;</span> <span class="pre">/&gt;</span></code></p></li>
-<li><p>Incorrect: <code class="docutils literal notranslate"><span class="pre">&lt;hr/&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;br/&gt;</span></code></p></li>
-</ul>
+<p>HTML’s void elements (<code class="docutils literal notranslate"><span class="pre">&lt;br&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;hr&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;img&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;input&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;meta&gt;</span></code>, …) are
+accepted with or without a trailing slash, and the markup is served verbatim:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;one&lt;br/&gt;</span><span class="n">two</span><span class="x">&lt;/div&gt;   // &lt;br/&gt;</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">written</span>
+<span class="k">var</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;one&lt;br /&gt;</span><span class="n">two</span><span class="x">&lt;/div&gt;  // &lt;br /&gt;</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">written</span>
+<span class="k">var</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;one&lt;br&gt;</span><span class="n">two</span><span class="x">&lt;/div&gt;    // &lt;br&gt;</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">written</span>
+</pre></div>
+</div>
+<p>When a void element is the <em>outermost</em> tag of the string it must end with a
+space and slash — <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;{{</span> <span class="pre">val</span> <span class="pre">}}&quot;</span> <span class="pre">/&gt;</span></code> — so the parser knows the
+string has ended. The output omits the space and slash:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value=&quot;{{ userInput }}&quot; /&gt;</span>
 <span class="x">// Renders: &lt;input value=&#39;Hello&#39;&gt;</span>
 </pre></div>
 </div>
+<p>Without the space (<code class="docutils literal notranslate"><span class="pre">&lt;input/&gt;</span></code>) the parser reads the slash as part of the tag
+name, never finds a matching close tag, and reports “Unterminated HTML
+string.”</p>
 </section>
 <section id="multi-line-inline-html">
 <h3>Multi-line Inline HTML<a class="headerlink" href="#multi-line-inline-html" title="Link to this heading">#</a></h3>
@@ -573,7 +591,7 @@ before the closing slash. The final output omits the slash.</p>
 the tags become part of the HTML output.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">card</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;article&gt;</span>
 <span class="x">  &lt;h2&gt;</span><span class="nc">Title</span><span class="x">&lt;/h2&gt;</span>
-<span class="x">  &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="x">&lt;/article&gt;</span>
 </pre></div>
 </div>
@@ -583,7 +601,8 @@ the tags become part of the HTML output.</p>
 <p><strong>The opening tag cannot nest itself.</strong> The outermost tag of an inline HTML
 string must not appear as a direct child tag at any nesting level. Once the
 tree starts with a <em>different</em> tag, the original tag can be used freely below
-it. The parser checks this on the <em>whole</em> string, not just the first level.</p>
+it. The parser checks this on the <em>whole</em> string, not just the first level,
+and reports <code class="docutils literal notranslate"><span class="pre">Cannot</span> <span class="pre">nest</span> <span class="pre">&lt;div&gt;</span> <span class="pre">inside</span> <span class="pre">&lt;div&gt;</span></code> on the offending line.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — &lt;div&gt; is the outermost tag AND a direct child</span>
 <span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
 <span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
@@ -601,22 +620,34 @@ it. The parser checks this on the <em>whole</em> string, not just the first leve
 <span class="x">&lt;/section&gt;</span>
 </pre></div>
 </div>
-<p><strong>Mismatched tags fail.</strong> Opening and closing tags must match:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong</span>
+<p><strong>Mismatched closing tags are not validated.</strong> The parser only matches the
+closing tag against the <em>outermost</em> opening tag. Inner tags are never checked
+for balance — the string ends at the first closing tag that matches the outer
+tag, and everything before it is served verbatim, unclosed inner tags included:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Compiles fine — &lt;span&gt; is never closed, the markup is served as-is</span>
 <span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
 
-<span class="x">// Correct</span>
+<span class="x">// Correct — close every tag yourself</span>
 <span class="x">var good = &lt;div&gt;&lt;span&gt;Hello&lt;/span&gt;&lt;/div&gt;</span>
 </pre></div>
 </div>
-<p><strong>Invalid tag names.</strong> Only lowercase letters and numbers are allowed. No
-hyphens, underscores, or uppercase:</p>
+<p>The browser receives <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> and auto-closes the <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code>
+when it renders, so the page usually looks fine. But the markup is not
+validated, so write matching tags yourself. Anything after the first matching
+close tag is outside the string and fails to compile:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Compilation error — the string already ended at &lt;/div&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/span&gt;</span>
+</pre></div>
+</div>
+<p><strong>Invalid tag names.</strong> Tag names must be lowercase, start with a letter, and
+contain only letters, numbers, and hyphens. No underscores or uppercase:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong</span>
-<span class="k">var</span><span class="w"> </span><span class="n">bad1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;custom-tag&gt;Invalid&lt;/custom-tag&gt;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">bad2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my_component&gt;Invalid&lt;/my_component&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my_component&gt;Invalid&lt;/my_component&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="nc">MyElement</span><span class="o">&gt;</span><span class="nc">Invalid</span><span class="o">&lt;/</span><span class="nc">MyElement</span><span class="o">&gt;</span>
 
 <span class="c1">// Correct</span>
 <span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;span class=&quot;badge&quot;&gt;Valid&lt;/span&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my-element class=&quot;badge&quot;&gt;Custom element&lt;/my-element&gt;</span>
 </pre></div>
 </div>
 <p><strong>Interpolation depth</strong> is limited to 9 nested levels.</p>
@@ -675,12 +706,12 @@ an HTML tag (<code class="docutils literal notranslate"><span class="pre">{{</sp
 </section>
 <section id="pitfall">
 <h3>Pitfall<a class="headerlink" href="#pitfall" title="Link to this heading">#</a></h3>
-<p><strong>Newlines outside HTML tags produce unexpected output.</strong> The Wren code
-inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must start on the same line as <code class="docutils literal notranslate"><span class="pre">{{</span></code>. Newlines belong inside
-the HTML string (between <code class="docutils literal notranslate"><span class="pre">&lt;tag&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;/tag&gt;</span></code>), not in the surrounding Wren
-code. Breaking the Wren expression with newlines can cause parsing
-ambiguities and empty output.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — Wren code spans lines outside the HTML tags</span>
+<p><strong>Multiline expressions inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> are valid.</strong> The Wren expression can
+span lines, and HTML strings inside it can span lines too. Wren keeps one
+newline rule: an infix operator ends its line, so put <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">:</span></code>, and
+similar at the end of a line. An operator at the start of a line is a parse
+error (<code class="docutils literal notranslate"><span class="pre">Expected</span> <span class="pre">expression.</span></code>), exactly as in plain Wren.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Valid — the expression spans lines, operators end each line</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span>
 <span class="w">  </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
@@ -688,14 +719,18 @@ ambiguities and empty output.</p>
 <span class="x">  &lt;/form&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 
-<span class="c1">// Correct — Wren code starts on the same line as {{</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
-<span class="x">  &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
-<span class="x">&lt;/form&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="c1">// Invalid — the operator starts a line</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">showClear</span>
+<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 </pre></div>
 </div>
-<p>The same rule applies to ternary expressions and <code class="docutils literal notranslate"><span class="pre">map</span></code> — keep the Wren
-expression on the same line as <code class="docutils literal notranslate"><span class="pre">{{</span></code>, let only the HTML string span lines.</p>
+<p>Block callbacks (<code class="docutils literal notranslate"><span class="pre">map</span> <span class="pre">{</span> <span class="pre">|v|</span> <span class="pre">...</span> <span class="pre">}</span></code>) follow Wren’s single-expression rule: the
+body must fit on the line after the <code class="docutils literal notranslate"><span class="pre">{</span></code>, otherwise the block returns <code class="docutils literal notranslate"><span class="pre">null</span></code>
+and the output is empty.</p>
 </section>
 </section>
 <hr class="docutils" />
@@ -714,7 +749,7 @@ blocks of HTML based on a condition.</p>
 </section>
 <section id="nested-ternaries-for-multi-value-decisions">
 <h3>Nested ternaries for multi-value decisions<a class="headerlink" href="#nested-ternaries-for-multi-value-decisions" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;span class=&quot;priority-dot {{ Num.fromString(task.id.toString) % 3 == 1 ? &quot;high&quot; : Num.fromString(task.id.toString) % 3 == 2 ? &quot;medium&quot; : &quot;low&quot; }}&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;span class=&quot;priority-dot {{ task.id.toNum % 3 == 1 ? &quot;high&quot; : task.id.toNum % 3 == 2 ? &quot;medium&quot; : &quot;low&quot; }}&quot;</span>
 <span class="x">      aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
 </pre></div>
 </div>
@@ -724,9 +759,9 @@ blocks of HTML based on a condition.</p>
 <p>Each branch of a ternary can be an inline HTML string that spans multiple
 lines. The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must be inside an HTML tag context:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text completed&quot;&gt;</span>
-<span class="x">  {{ task.description.safe }}</span>
+<span class="x">  {{ task.description }}</span>
 <span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text&quot;&gt;</span>
-<span class="x">  {{ task.description.safe }}</span>
+<span class="x">  {{ task.description }}</span>
 <span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
@@ -742,7 +777,7 @@ value above the template and use a simple variable instead:</p>
 <span class="p">}</span>
 
 <span class="c1">// Clean template</span>
-<span class="x">&lt;span class=&quot;{{ taskClass }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">&lt;span class=&quot;{{ taskClass }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 </pre></div>
 </div>
 <p><strong>Newlines outside HTML tags</strong> — same rule as <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>:</p>
@@ -795,7 +830,7 @@ the HTML inside the tags has newlines.</p>
 <span class="w">      </span><span class="x">&lt;span class=&quot;task-content&quot;&gt;</span>
 <span class="x">        &lt;span class=&quot;{{ task.finished ? &quot;task-text completed&quot; : &quot;task-text&quot; }}&quot;&gt;</span>
 <span class="w">          </span><span class="x">&lt;span class=&quot;priority-dot low&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
-<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">        </span><span class="x">&lt;/span&gt;</span>
 <span class="x">        &lt;span class=&quot;task-meta&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">hh</span><span class="w"> </span><span class="si">}}</span><span class="o">:</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">mi</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="x">      &lt;/span&gt;</span>
@@ -826,7 +861,7 @@ properties to your model class, or pre-process the list).</p>
 state:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;ul&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;No tasks yet. Add your first one above.&lt;/p&gt;</span>
@@ -881,7 +916,7 @@ response and end the script</p></li>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Posts</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">  &lt;ul&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/posts/{{ p.id }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/posts/{{ p.id }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">&lt;/main&gt;</span><span class="p">)</span>
 </pre></div>
@@ -970,15 +1005,23 @@ operations:</p>
 the Post/Redirect/Get pattern and prevents duplicate form submissions.</p>
 <section id="id5">
 <h3>Pitfall<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
-<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> causes a double-response
-error. The redirect sends headers, then the code below still executes and
-tries to send a body. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — missing return</span>
+<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code>.</strong> Code after a bare
+<code class="docutils literal notranslate"><span class="pre">Response.redirect(...)</span></code> still runs. There is no error — the server sends the
+302 with its <code class="docutils literal notranslate"><span class="pre">Location</span></code> header and attaches whatever body the rest of the
+script returns. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> so the script stops at
+the redirect and no body is sent:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the code below still runs and attaches a body to the 302</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// redirect sends headers...</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 <span class="p">}</span>
-<span class="c1">// ...then this still runs, trying to send a second response</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1">// Correct — return stops the script at the redirect</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="p">}</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1258,14 +1301,67 @@ use the CDN script:</p>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>For production, self-host the compiled CSS. Run Tailwind’s CLI or PostCSS build
-against the app directory — the class names in your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files are standard
-HTML attributes, so any CSS processing tool works.</p>
+<p>The CDN is fine for tinkering, but it renders styles in the browser at runtime
+and adds an external dependency. For production, self-host the compiled CSS
+with the Tailwind CLI.</p>
+<section id="self-hosting-with-the-tailwind-cli">
+<h4>Self-hosting with the Tailwind CLI<a class="headerlink" href="#self-hosting-with-the-tailwind-cli" title="Link to this heading">#</a></h4>
+<p>This works because Tailwind scans your files as plain text for class names. The
+classes in your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files are standard HTML attributes, so no special
+configuration is needed to detect them.</p>
+<p><strong>1. Install the CLI.</strong> In your app directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npm<span class="w"> </span>install<span class="w"> </span>-D<span class="w"> </span>tailwindcss<span class="w"> </span>@tailwindcss/cli
+</pre></div>
+</div>
+<p><strong>2. Create an input stylesheet.</strong> This is the source file Tailwind reads.
+Put it in a <code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed directory so Bialet never serves it (see the pitfalls
+below) but Tailwind can still read it from disk. Create <code class="docutils literal notranslate"><span class="pre">_src/input.css</span></code>:</p>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;tailwindcss&quot;</span><span class="p">;</span>
+<span class="p">@</span><span class="k">source</span><span class="w"> </span><span class="s2">&quot;./**/*.wren&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">&#64;source</span></code> directive tells Tailwind to scan your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files for classes.
+Adjust the glob to match your app’s layout if you keep pages in subdirectories.</p>
+<p><strong>3. Link the compiled output.</strong> Reference the built file in your template’s
+<code class="docutils literal notranslate"><span class="pre">head</span></code>. Bialet serves it as a normal static file:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
+<span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">  </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">&lt;/head&gt;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="development-watch-mode">
+<h4>Development: watch mode<a class="headerlink" href="#development-watch-mode" title="Link to this heading">#</a></h4>
+<p>Run Tailwind and Bialet side by side, in two terminals:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Terminal 1 — start Bialet</span>
+bialet<span class="w"> </span>.
+
+<span class="c1"># Terminal 2 — compile CSS on every change</span>
+npx<span class="w"> </span>@tailwindcss/cli<span class="w"> </span>-i<span class="w"> </span>_src/input.css<span class="w"> </span>-o<span class="w"> </span>style.css<span class="w"> </span>--watch
+</pre></div>
+</div>
+<p>With <a class="reference internal" href="live-reload.html"><span class="std std-doc">live reload</span></a> enabled, Bialet watches the whole app
+directory. Every time Tailwind writes a new <code class="docutils literal notranslate"><span class="pre">style.css</span></code>, the browser reloads
+automatically — a full Tailwind + Bialet dev loop with no extra tooling.</p>
+</section>
+<section id="production-one-shot-build">
+<h4>Production: one-shot build<a class="headerlink" href="#production-one-shot-build" title="Link to this heading">#</a></h4>
+<p>Compile once, minified:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npx<span class="w"> </span>@tailwindcss/cli<span class="w"> </span>-i<span class="w"> </span>_src/input.css<span class="w"> </span>-o<span class="w"> </span>style.css<span class="w"> </span>--minify
+</pre></div>
+</div>
+<p>Commit <code class="docutils literal notranslate"><span class="pre">style.css</span></code> and deploy it alongside your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files. The server needs
+no Node.js — the compiled file is just a static asset. For caching and gzip on
+the compiled CSS, see <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a>.</p>
+</section>
 </section>
 <section id="id8">
 <h3>Pitfalls<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <p><strong>No CSS preprocessors built in.</strong> Bialet doesn’t bundle Sass, Less, or
-PostCSS. Write vanilla CSS, or use a separate build step for preprocessing.</p>
+PostCSS. Write vanilla CSS, or use a separate build step (like Tailwind’s CLI)
+for preprocessing.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS files are not served.</strong> Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>
 return 403. Name your stylesheets without a leading underscore:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✓ Served</span>
@@ -1276,38 +1372,54 @@ return 403. Name your stylesheets without a leading underscore:</p>
 <span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/_style.css&quot; /&gt;</span>
 </pre></div>
 </div>
-<p><strong>Framework CDNs add an external dependency.</strong> For production, download the CSS
-file and serve it from your app directory alongside your other static assets.</p>
+<p>This is why the input file lives in <code class="docutils literal notranslate"><span class="pre">_src/</span></code> — Bialet blocks HTTP access to it
+while the CLI still reads it from disk. The output file (<code class="docutils literal notranslate"><span class="pre">style.css</span></code>) must not
+start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">node_modules</span></code> is publicly served.</strong> Everything inside the app root is served
+unless a path component starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>. After <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">node_modules/</span></code> directory is reachable over HTTP. Block it at your reverse
+proxy in production (see <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a>), or run the npm project
+outside the app root and point the CLI at it.</p>
+<p><strong>Dynamic class names are not compiled.</strong> Tailwind scans your source as plain
+text, so it cannot see classes assembled at runtime. This compiles fine:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">&quot;text-red-600&quot;</span><span class="w">   </span><span class="c1">// ✓</span>
+</pre></div>
+</div>
+<p>This does not — Tailwind never sees the full class name:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">&quot;text-{{ error ? &quot;</span><span class="n">red</span><span class="s2">&quot; : &quot;</span><span class="n">green</span><span class="s2">&quot; }}-600&quot;</span><span class="w">   </span><span class="c1">// ✗</span>
+</pre></div>
+</div>
+<p>Use complete class names in your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files.</p>
+<p><strong>Framework CDNs add an external dependency.</strong> For production, compile and serve
+the CSS from your app directory instead of loading it from a CDN.</p>
 </section>
 </section>
 <hr class="docutils" />
 <section id="escaping-security">
 <h2>Escaping &amp; Security<a class="headerlink" href="#escaping-security" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation does <strong>not</strong> escape HTML by default. When displaying
-user-generated content, database values, or URL parameters, you must use the
-<code class="docutils literal notranslate"><span class="pre">.safe</span></code> property to escape special HTML characters and prevent XSS attacks.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation <strong>escapes HTML by default</strong>. Plain values — strings
+from user input, database queries, or URL parameters — have <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">'</span></code> replaced with their HTML entities before they reach the page.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
 
-<span class="c1">// Dangerous — XSS vulnerability</span>
-<span class="k">var</span><span class="w"> </span><span class="n">dangerous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="c1">// Renders: &lt;p&gt;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&lt;/p&gt;</span>
-
-<span class="c1">// Safe — HTML characters are escaped</span>
-<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Safe — HTML characters are escaped automatically</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
 </pre></div>
 </div>
-<p>You can also use <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> for manual escaping:</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> for manual escaping outside of
+interpolation:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">htmlEscape</span><span class="p">(</span><span class="n">userInput</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Rule:</strong> Always use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on any string that comes from user input, database
-queries, or URL parameters before inserting it into HTML.</p>
-<section id="id9">
-<h3>Pitfall<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
-<p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is an XSS vulnerability.</strong> Every user-supplied string
-embedded in HTML must be escaped. There is no automatic escaping.</p>
-</section>
+<p>Markup that is already safe is left untouched: HTML string literals, the
+result of a nested <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> block, <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values, and <code class="docutils literal notranslate"><span class="pre">String.raw</span></code>. See
+<a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for the full rules.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <strong>Do not add <code class="docutils literal notranslate"><span class="pre">.safe</span></code> inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>.</strong> Interpolation already
+escapes, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">userInput.safe</span> <span class="pre">}}</span></code> escapes the text twice (<code class="docutils literal notranslate"><span class="pre">&amp;amp;lt;</span></code>).
+Use <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> or <code class="docutils literal notranslate"><span class="pre">.raw</span></code> only for markup you intentionally trust.</p>
+</div></blockquote>
 </section>
 <hr class="docutils" />
 <section id="common-pitfalls">
@@ -1316,29 +1428,35 @@ embedded in HTML must be escaped. There is no automatic escaping.</p>
 <li><p><strong>Opening-tag nesting:</strong> The outermost tag of an inline HTML string cannot
 appear again as a child at any level. This means <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;</span></code> fails because <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> is both the outermost and a nested tag. Wrap with a different tag (e.g. <code class="docutils literal notranslate"><span class="pre">&lt;section&gt;</span></code>) and nest freely below it:
 <code class="docutils literal notranslate"><span class="pre">&lt;section&gt;&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;</span></code>.</p></li>
-<li><p><strong>Mismatched tags:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> fails — opening and closing
-tags must match.</p></li>
-<li><p><strong>Invalid tag names:</strong> Only lowercase letters and numbers — no hyphens,
-underscores, or uppercase. Use classes and semantic tags instead.</p></li>
+<li><p><strong>Mismatched tags are not validated:</strong> Only the outer closing tag is
+matched; <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> compiles and is served verbatim (the
+browser auto-closes the <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code>). Write well-formed HTML yourself.</p></li>
+<li><p><strong>Invalid tag names:</strong> Tag names must be lowercase, start with a letter, and
+contain only letters, numbers, and hyphens — no underscores or uppercase.
+Hyphens enable custom elements like <code class="docutils literal notranslate"><span class="pre">&lt;my-element&gt;</span></code>. Use classes and semantic
+tags otherwise.</p></li>
 <li><p><strong>Interpolation depth:</strong> Maximum 9 nested <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> levels.</p></li>
 <li><p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code>:</strong> Without <code class="docutils literal notranslate"><span class="pre">return</span></code>, the response body is empty.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>-prefixed files:</strong> Private, return 403 if accessed directly.</p></li>
-<li><p><strong>Newlines outside HTML tags in <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>:</strong> Keep Wren code on the same line
-as the opening <code class="docutils literal notranslate"><span class="pre">{{</span></code>. Only HTML strings can span lines.</p></li>
-<li><p><strong>Map callback is a single expression:</strong> No multiple statements, no variable
-declarations inside the callback.</p></li>
+<li><p><strong>Newlines inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>:</strong> The Wren expression can span lines, but an
+infix operator must end its line — a leading operator is a parse error.</p></li>
+<li><p><strong>Map callback is a single expression:</strong> The body must fit on the line
+after the <code class="docutils literal notranslate"><span class="pre">{</span></code>, otherwise the block returns <code class="docutils literal notranslate"><span class="pre">null</span></code> and renders empty.</p></li>
 <li><p><strong>Empty lists in <code class="docutils literal notranslate"><span class="pre">map</span></code>:</strong> Produce empty output — pair with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> for empty
 states.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">return</span></code> terminates immediately:</strong> Code after <code class="docutils literal notranslate"><span class="pre">return</span></code> never executes.</p></li>
 <li><p><strong>DB values are strings:</strong> Convert with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> before math.</p></li>
-<li><p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code>:</strong> Causes double-response
-errors.</p></li>
+<li><p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code>:</strong> The code after it
+still runs and attaches a body to the 302 — no error, just a redirect with
+an unexpected body. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
 <li><p><strong>Instance vs static methods:</strong> Instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>; static methods
 don’t.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS is not served:</strong> Name stylesheets without leading <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p></li>
 <li><p><strong>CSS preprocessors not built in:</strong> Write vanilla CSS or use a build step.</p></li>
 <li><p><strong>Framework CDNs in production:</strong> Self-host CSS files for reliability.</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> does not escape HTML:</strong> Always use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on untrusted strings.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> escapes by default:</strong> Plain values are auto-escaped; do not add
+<code class="docutils literal notranslate"><span class="pre">.safe</span></code> inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> (it double-escapes). Use <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> or <code class="docutils literal notranslate"><span class="pre">.raw</span></code> for
+intentionally-raw markup.</p></li>
 </ul>
 </section>
 </section>
@@ -1364,11 +1482,11 @@ don’t.</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="forms.html"
+       href="jsx-migration.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Forms</p>
+        <p class="prev-next-title">JSX to Bialet Migration</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1444,14 +1562,16 @@ don’t.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-css">Writing CSS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-css-first-bialet-philosophy">Semantic CSS first (Bialet philosophy)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#picocss">PicoCSS</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tailwind-css">Tailwind CSS</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#self-hosting-with-the-tailwind-cli">Self-hosting with the Tailwind CLI</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#development-watch-mode">Development: watch mode</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#production-one-shot-build">Production: one-shot build</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Pitfalls</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Pitfall</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping-security">Escaping &amp; Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
 </ul>
   </nav></div>

@@ -1,0 +1,890 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="JSX to Bialet Migration" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/jsx-migration.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="You are moving a React/JSX codebase to Bialet. The good news: inline HTML strings look a lot like JSX. The bad news: the surface similarity hides hard limits that will bite you on the first nested ..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="You are moving a React/JSX codebase to Bialet. The good news: inline HTML strings look a lot like JSX. The bad news: the surface similarity hides hard limits that will bite you on the first nested ..." />
+
+    <title>JSX to Bialet Migration &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'jsx-migration';</script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Forms" href="forms.html" />
+    <link rel="prev" title="Template" href="template.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data &amp; Storage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">JSX to Bialet Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/jsx-migration.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fjsx-migration.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/jsx-migration.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>JSX to Bialet Migration</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting-limitations">1. Tag Nesting Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#empty-lists-render-empty">Empty lists render empty</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-rules">3. Interpolation Rules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-the-only-interpolation-point"><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is the only interpolation point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#values-are-escaped-by-default">Values are escaped by default</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#line-breaks-follow-wren-not-jsx">Line breaks follow Wren, not JSX</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-depth-is-limited">Interpolation depth is limited</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-expressions-in-string-values">No expressions in string values</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#component-as-method-pattern">4. Component-as-Method Pattern</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raw-html-security-footguns">5. Raw HTML Security Footguns</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-1-safe-is-the-opposite-of-what-you-expect">Footgun 1: <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is the opposite of what you expect</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-2-raw-htmlnode-skip-all-sanitization">Footgun 2: <code class="docutils literal notranslate"><span class="pre">.raw</span></code> / <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> skip all sanitization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-3-markdown-html-passes-raw-html-through">Footgun 3: <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> passes raw HTML through</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-4-interpolation-inside-script-and-href-is-not-safe">Footgun 4: interpolation inside <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">href</span></code> is not “safe”</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-5-request-post-returns-null">Footgun 5: <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-checklist">Migration checklist</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="jsx-to-bialet-migration">
+<h1>JSX to Bialet Migration<a class="headerlink" href="#jsx-to-bialet-migration" title="Link to this heading">#</a></h1>
+<p>You are moving a React/JSX codebase to Bialet. The good news: inline HTML
+strings look a lot like JSX. The bad news: the surface similarity hides hard
+limits that will bite you on the first nested list. This page is the
+cheatsheet — the five differences that turn JSX code into Bialet code.</p>
+<p>The short version: inline HTML strings are <strong>plain strings</strong>, not a component
+tree. No props, no children, no expressions-in-markup outside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, and no
+<code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code>.</p>
+<hr class="docutils" />
+<section id="tag-nesting-limitations">
+<h2>1. Tag Nesting Limitations<a class="headerlink" href="#tag-nesting-limitations" title="Link to this heading">#</a></h2>
+<p>JSX lets you nest any element inside any element. Bialet has one hard rule:</p>
+<p><strong>The outermost tag of an inline HTML string must not appear again as a
+direct child tag at any nesting level.</strong></p>
+<p>The parser checks the whole string, not just the first level, and reports
+<code class="docutils literal notranslate"><span class="pre">Cannot</span> <span class="pre">nest</span> <span class="pre">&lt;div&gt;</span> <span class="pre">inside</span> <span class="pre">&lt;div&gt;</span></code> on the offending line.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — &lt;div&gt; is the outermost tag AND a child</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
+
+<span class="c1">// CORRECT — open with a different tag, then nest freely</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;section&gt;</span><span class="nc">Hello</span><span class="x">&lt;/section&gt;&lt;/div&gt;</span>
+
+<span class="c1">// CORRECT — once the tree starts with a different tag, the</span>
+<span class="c1">// original tag can appear at any depth below it</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">  &lt;div&gt;</span>
+<span class="w">    </span><span class="x">&lt;div&gt;Deeply nested same tags work here&lt;/div&gt;</span>
+<span class="w">  </span><span class="x">&lt;/div&gt;</span>
+<span class="x">&lt;/section&gt;</span>
+</pre></div>
+</div>
+<p><strong>Pitfall:</strong> this bites the common JSX pattern of a wrapper <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> inside a
+<code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> (row, then column). If you need the same tag twice, change the
+outermost wrapper or extract the inner one into a component method (see
+section 4).</p>
+<p>Two more parser quirks to unlearn from JSX:</p>
+<ul class="simple">
+<li><p><strong>Mismatched closing tags are not validated.</strong> Only the outermost closing
+tag is matched. <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> compiles and is served verbatim —
+the browser auto-closes the <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code> at render time. Write well-formed HTML
+yourself; there is no compiler checking your balance.</p></li>
+<li><p><strong>Tag names are restricted.</strong> Lowercase, start with a letter, only letters,
+numbers, and hyphens. <code class="docutils literal notranslate"><span class="pre">&lt;MyComponent&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;my_component&gt;</span></code> are compiler
+errors. PascalCase component names are a JSX thing — see section 4.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="map-callback-restrictions">
+<h2>2. Map Callback Restrictions<a class="headerlink" href="#map-callback-restrictions" title="Link to this heading">#</a></h2>
+<p>In JSX you write <code class="docutils literal notranslate"><span class="pre">{items.map(item</span> <span class="pre">=&gt;</span> <span class="pre">&lt;li&gt;{item}&lt;/li&gt;)}</span></code> and the arrow function
+can hold any logic. In Bialet the <code class="docutils literal notranslate"><span class="pre">map</span></code> callback is a <strong>single Wren
+expression</strong> — the inline HTML string itself:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cherry&quot;</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="c1">// Output: &lt;ul&gt;&lt;li&gt;Apple&lt;/li&gt;&lt;li&gt;Banana&lt;/li&gt;&lt;li&gt;Cherry&lt;/li&gt;&lt;/ul&gt;</span>
+</pre></div>
+</div>
+<p>The two restrictions that will trip you up:</p>
+<section id="no-statements-inside-the-callback">
+<h3>No statements inside the callback<a class="headerlink" href="#no-statements-inside-the-callback" title="Link to this heading">#</a></h3>
+<p>You cannot declare a variable or write multiple lines of Wren inside <code class="docutils literal notranslate"><span class="pre">map</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — multiple statements inside the map callback</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span>
+<span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="si">}}</span><span class="x"> {{ task.description }}&lt;/li&gt;</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+</pre></div>
+</div>
+<p>If you need pre-computed values, compute them <strong>before</strong> <code class="docutils literal notranslate"><span class="pre">map</span></code>, or add a
+computed property to your model class:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Tasks</span><span class="o">.</span><span class="n">list</span><span class="p">()</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">withIcon</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// pre-process the list</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">icon</span><span class="w"> </span><span class="si">}}</span><span class="x"> {{ t.description }}&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="the-body-must-start-on-the-line-after">
+<h3>The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code><a class="headerlink" href="#the-body-must-start-on-the-line-after" title="Link to this heading">#</a></h3>
+<p>A multi-line block whose body is not a single expression on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line
+returns <code class="docutils literal notranslate"><span class="pre">null</span></code> silently — the output is empty and nothing tells you why:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — the callback body breaks onto its own line, returns null, renders empty</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// CORRECT — the expression starts on the {{ line; the HTML string</span>
+<span class="c1">// itself may span many lines</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span>
+<span class="x">  {{ item.description }}</span>
+<span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="empty-lists-render-empty">
+<h3>Empty lists render empty<a class="headerlink" href="#empty-lists-render-empty" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">map</span></code> over an empty list produces nothing. In JSX you’d conditionally render a
+fallback; in Bialet you pair <code class="docutils literal notranslate"><span class="pre">map</span></code> with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;No tasks yet.&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="interpolation-rules">
+<h2>3. Interpolation Rules<a class="headerlink" href="#interpolation-rules" title="Link to this heading">#</a></h2>
+<p>JSX interpolates with <code class="docutils literal notranslate"><span class="pre">{expr}</span></code>. Bialet uses <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">expr</span> <span class="pre">}}</span></code> — the extra brace is
+what makes it valid Wren inside an HTML string. The rules differ more than the
+syntax:</p>
+<section id="is-the-only-interpolation-point">
+<h3><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is the only interpolation point<a class="headerlink" href="#is-the-only-interpolation-point" title="Link to this heading">#</a></h3>
+<p>Interpolation happens only inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>. A bare <code class="docutils literal notranslate"><span class="pre">{expr}</span></code> is not a template
+expression — inside an HTML string it is literal text, and outside one it is
+Wren map syntax.</p>
+</section>
+<section id="values-are-escaped-by-default">
+<h3>Values are escaped by default<a class="headerlink" href="#values-are-escaped-by-default" title="Link to this heading">#</a></h3>
+<p>This is the biggest safety win over JSX (where you must remember
+<code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code>). Plain values — user input, database rows, URL
+parameters — are HTML-escaped automatically:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="line-breaks-follow-wren-not-jsx">
+<h3>Line breaks follow Wren, not JSX<a class="headerlink" href="#line-breaks-follow-wren-not-jsx" title="Link to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> expression can span lines, but an infix operator must end its line.
+A leading operator is a parse error:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// CORRECT — operators end each line</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// WRONG — the operator starts a line</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
+<span class="w">  </span><span class="n">showClear</span>
+<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="interpolation-depth-is-limited">
+<h3>Interpolation depth is limited<a class="headerlink" href="#interpolation-depth-is-limited" title="Link to this heading">#</a></h3>
+<p>Nesting is capped at 9 levels of <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>. Deeply nested JSX interpolations
+must be flattened.</p>
+</section>
+<section id="no-expressions-in-string-values">
+<h3>No expressions in string values<a class="headerlink" href="#no-expressions-in-string-values" title="Link to this heading">#</a></h3>
+<p>JSX lets you write <code class="docutils literal notranslate"><span class="pre">className={</span></code>btn ${active ? ‘on’ : ‘’}<code class="docutils literal notranslate"><span class="pre">}</span></code> — a template
+literal inside an attribute. Bialet does not support string interpolation
+into attribute values. Compute the string first, then interpolate the result:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — no template literals</span>
+<span class="x">&lt;a className=&quot;btn {{ active ? &#39;on&#39; : &#39;&#39; }}&quot;&gt;...&lt;/a&gt;</span>
+
+<span class="c1">// CORRECT — compute the class, then interpolate it</span>
+<span class="k">var</span><span class="w"> </span><span class="n">cls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;btn &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">active</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;on&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="x">&lt;a class=&quot;{{ cls }}&quot;&gt;...&lt;/a&gt;</span>
+</pre></div>
+</div>
+<p>For simple two-way choices, the ternary inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is fine:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="component-as-method-pattern">
+<h2>4. Component-as-Method Pattern<a class="headerlink" href="#component-as-method-pattern" title="Link to this heading">#</a></h2>
+<p>JSX has components: functions that take props and return JSX, composed via
+<code class="docutils literal notranslate"><span class="pre">&lt;Card</span> <span class="pre">title=&quot;x&quot;</span> <span class="pre">/&gt;</span></code>. Bialet has <strong>methods that return inline HTML strings</strong>.
+There is no prop syntax, no children slot, no component invocation in markup.</p>
+<p>Define a component as a method on a class:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _template.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">card</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class=&quot;card&quot;&gt;</span>
+<span class="x">    &lt;h2&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">    &lt;div class=&quot;card-body&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">  &lt;/article&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Compose by passing markup into methods, not by nesting tags:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="w">  </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">card</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="x">&lt;p&gt;World&lt;/p&gt;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Because the method returns a plain string, the same-tag nesting rule applies
+across the boundary: if a component’s outermost tag would repeat under a
+caller’s outermost tag, the parser rejects it. <code class="docutils literal notranslate"><span class="pre">card()</span></code> returning an
+<code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code> inside a page whose outermost tag is also <code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code> fails —
+widen one of them.</p>
+<p><strong>Pitfall:</strong> instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>. <code class="docutils literal notranslate"><span class="pre">Template.layout(...)</span></code> looks for
+a static method and fails. Always instantiate first.</p>
+<p><strong>Pitfall:</strong> a method body is an expression body only when the expression
+starts on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code>. A statement body on the following line
+returns <code class="docutils literal notranslate"><span class="pre">null</span></code> silently — the component renders as empty with no error.
+Keep the opening HTML tag on the method’s first line.</p>
+</section>
+<hr class="docutils" />
+<section id="raw-html-security-footguns">
+<h2>5. Raw HTML Security Footguns<a class="headerlink" href="#raw-html-security-footguns" title="Link to this heading">#</a></h2>
+<p>Bialet escapes by default — the safety flip of JSX’s default-raw model. The
+footguns are the ways you can accidentally defeat that default and re-open
+the XSS holes <code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code> created for you.</p>
+<section id="footgun-1-safe-is-the-opposite-of-what-you-expect">
+<h3>Footgun 1: <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is the opposite of what you expect<a class="headerlink" href="#footgun-1-safe-is-the-opposite-of-what-you-expect" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">.safe</span></code> marks a string as trusted markup. Inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, interpolation
+already escapes, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">userInput.safe</span> <span class="pre">}}</span></code> escapes the text <strong>twice</strong>
+(<code class="docutils literal notranslate"><span class="pre">&amp;amp;lt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&amp;lt;</span></code>) — the raw HTML you meant is shown as text.
+Drop <code class="docutils literal notranslate"><span class="pre">.safe</span></code> from templates entirely.</p>
+</section>
+<section id="footgun-2-raw-htmlnode-skip-all-sanitization">
+<h3>Footgun 2: <code class="docutils literal notranslate"><span class="pre">.raw</span></code> / <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> skip all sanitization<a class="headerlink" href="#footgun-2-raw-htmlnode-skip-all-sanitization" title="Link to this heading">#</a></h3>
+<p>To render a runtime string as markup you must mark it safe, and that is an
+assertion, not a sanitizer:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="o">.</span><span class="n">raw</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">            </span><span class="c1">// rendered as written</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">   </span><span class="c1">// escaped: &amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.raw</span></code>, <code class="docutils literal notranslate"><span class="pre">HtmlNode.new(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values are inserted verbatim —
+no escaping, no scrubbing of <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code>, no filtering of <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> URLs.
+Never use them on untrusted input. The JSX instinct “I need raw HTML here”
+should map to “this value is markup I fully control”, and nothing else.</p>
+</section>
+<section id="footgun-3-markdown-html-passes-raw-html-through">
+<h3>Footgun 3: <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> passes raw HTML through<a class="headerlink" href="#footgun-3-markdown-html-passes-raw-html-through" title="Link to this heading">#</a></h3>
+<p>The built-in Markdown parser escapes HTML only inside code blocks. Raw HTML
+in paragraphs, headings, and lists passes through unescaped, and link URLs
+are not validated. Rendering untrusted Markdown is XSS:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — raw HTML passes through to the output</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span><span class="p">)</span>
+
+<span class="c1">// WRONG — javascript: links are not filtered</span>
+<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;[x](javascript:alert(&#39;xss&#39;))&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Render only Markdown you trust.</p>
+</section>
+<section id="footgun-4-interpolation-inside-script-and-href-is-not-safe">
+<h3>Footgun 4: interpolation inside <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">href</span></code> is not “safe”<a class="headerlink" href="#footgun-4-interpolation-inside-script-and-href-is-not-safe" title="Link to this heading">#</a></h3>
+<p>Escaping makes <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">value</span> <span class="pre">}}</span></code> safe for text and attribute values, but it does
+not neutralize JavaScript or URLs. Never interpolate untrusted input into a
+<code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> block or a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> href — restructure the page so it cannot
+happen.</p>
+</section>
+<section id="footgun-5-request-post-returns-null">
+<h3>Footgun 5: <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code><a class="headerlink" href="#footgun-5-request-post-returns-null" title="Link to this heading">#</a></h3>
+<p>Reading a missing form field gives you <code class="docutils literal notranslate"><span class="pre">null</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>. String operations on
+it crash the request. Guard every read:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="migration-checklist">
+<h2>Migration checklist<a class="headerlink" href="#migration-checklist" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>[ ] Replace <code class="docutils literal notranslate"><span class="pre">{expr}</span></code> with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">expr</span> <span class="pre">}}</span></code> — and expect values to be escaped.</p></li>
+<li><p>[ ] Open repeated same-tag nesting with a different outer tag, or extract a
+component method.</p></li>
+<li><p>[ ] Move statements out of <code class="docutils literal notranslate"><span class="pre">map</span></code> callbacks; keep the callback body a single
+expression starting on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line.</p></li>
+<li><p>[ ] Compute strings before interpolating into attributes; no template
+literals.</p></li>
+<li><p>[ ] Turn components into class methods; compose by passing markup, not by
+nesting tags.</p></li>
+<li><p>[ ] Replace <code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code> with <code class="docutils literal notranslate"><span class="pre">.raw</span></code>/<code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> only for markup
+you fully control; never for user input.</p></li>
+<li><p>[ ] Guard <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code>.</p></li>
+</ul>
+<p>See <a class="reference internal" href="template.html"><span class="std std-doc">Template</span></a> for the full inline-HTML reference and
+<a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for the escape rules and pitfalls.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="template.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Template</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="forms.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Forms</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting-limitations">1. Tag Nesting Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#empty-lists-render-empty">Empty lists render empty</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-rules">3. Interpolation Rules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-the-only-interpolation-point"><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is the only interpolation point</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#values-are-escaped-by-default">Values are escaped by default</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#line-breaks-follow-wren-not-jsx">Line breaks follow Wren, not JSX</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation-depth-is-limited">Interpolation depth is limited</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-expressions-in-string-values">No expressions in string values</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#component-as-method-pattern">4. Component-as-Method Pattern</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#raw-html-security-footguns">5. Raw HTML Security Footguns</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-1-safe-is-the-opposite-of-what-you-expect">Footgun 1: <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is the opposite of what you expect</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-2-raw-htmlnode-skip-all-sanitization">Footgun 2: <code class="docutils literal notranslate"><span class="pre">.raw</span></code> / <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> skip all sanitization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-3-markdown-html-passes-raw-html-through">Footgun 3: <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> passes raw HTML through</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-4-interpolation-inside-script-and-href-is-not-safe">Footgun 4: interpolation inside <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">href</span></code> is not “safe”</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#footgun-5-request-post-returns-null">Footgun 5: <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-checklist">Migration checklist</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

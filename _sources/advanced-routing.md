@@ -419,7 +419,8 @@ URL: `/article?id=42`
 
 > ⚠️ Pitfall: `post["content"]` is trusted content you control (it came
 > from your own database), but if you ever interpolate user-submitted
-> text into HTML this way, escape it first with `.safe` to avoid XSS. Never
+> text into HTML this way, mark it safe with `HtmlNode` or `.raw` only
+> if you trust it — `{{ }}` escapes plain strings automatically. Never
 > build SQL by string-concatenating request input — use parameterized
 > queries (`?` placeholders) as shown above to avoid SQL injection.
 

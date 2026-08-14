@@ -62,3 +62,32 @@ Custom error pages are **static HTML only**. The file is served verbatim:
 > does not execute `.wren` error pages; it only reads `.html` files. If your
 > error page must be dynamic, serve the error through your own `.wren` route
 > with `Response.status(...)` instead.
+
+## Showing Compile Errors in the Browser
+
+By default a `.wren` file that fails to parse or throws returns the generic 500
+page, and the actual error goes to the server log. During development it is
+often faster to see the error in the browser. `bialet dev` enables this for you
+(along with live reload and browser opening) — see
+[Getting Started](../getting-started/2-setup). Or enable it manually:
+
+```bash
+bialet -r 'Config.enable("BIALET_SHOW_ERRORS")' .
+```
+
+Disable it the same way:
+
+```bash
+bialet -r 'Config.disable("BIALET_SHOW_ERRORS")' .
+```
+
+> ⚠️ Pitfall: `BIALET_SHOW_ERRORS` is read when the server starts. Enabling or
+> disabling it while a server is running has no effect until you restart.
+
+When enabled, a compile or runtime error renders a page showing the error
+type, the module, the line, and the message — instead of the generic 500 page.
+This applies even if you have a custom `500.html` or `500.wren`; the error page
+wins while the flag is on.
+
+> ⚠️ Pitfall: `BIALET_SHOW_ERRORS` exposes error details to anyone who can
+> reach the server. Use it only in development, never in production.

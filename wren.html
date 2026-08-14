@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,15 +58,15 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Getting Started" href="getting-started/index.html" />
-    <link rel="prev" title="Installation and Usage" href="installation.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -460,6 +463,7 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-expression-blocks">Single-Expression Blocks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#same-line-vs-next-line">Same line vs. next line</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-you-need-return">When You Need <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
 </ul>
 </li>
@@ -504,9 +508,9 @@ at <a class="reference external" href="https://wren.io">wren.io</a>.</p>
 extended — not through libraries, but directly in the parser — to support native
 SQL queries and rich string interpolation:</p>
 <ul class="simple">
-<li><p>Native queries: <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">users</span></code>.fetch compiles into a query execution
-call. See the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p></li>
-<li><p>Template strings: var output = <p>Hello {{ name }}</p> is syntax that
+<li><p>Native queries: <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">users</span> <span class="pre">=</span> <span class="pre">`SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">users`.fetch</span></code> compiles into a
+query execution call. See the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p></li>
+<li><p>Template strings: <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">output</span> <span class="pre">=</span> <span class="pre">&lt;p&gt;Hello</span> <span class="pre">{{</span> <span class="pre">name</span> <span class="pre">}}&lt;/p&gt;</span></code> is syntax that
 evaluates to a string with interpolation. See <a class="reference internal" href="template.html"><span class="std std-doc">Templates</span></a> for
 details.</p></li>
 </ul>
@@ -589,7 +593,9 @@ with Wren syntax outside of Bialet:</p>
 <span class="kc">false</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">null</span></code> is false; everything else (including <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) is true.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">null</span></code> is false; everything else (including <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) is true.</p>
+</div></blockquote>
 </section>
 <section id="numbers">
 <h3>Numbers<a class="headerlink" href="#numbers" title="Link to this heading">#</a></h3>
@@ -620,9 +626,19 @@ byte offset <code class="docutils literal notranslate"><span class="pre">i</span
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
 </pre></div>
 </div>
-<p>In Bialet, <code class="docutils literal notranslate"><span class="pre">null</span></code> is safe: accessing a key or calling a method on null returns
-null instead of throwing an error. This makes template interpolation forgiving
-when data is missing.</p>
+<p>Bialet makes <code class="docutils literal notranslate"><span class="pre">null</span></code> forgiving in templates: a small set of methods never throws,
+so missing data renders as empty output instead of crashing the request. On
+<code class="docutils literal notranslate"><span class="pre">null</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">null[&quot;key&quot;]</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.count</span></code> returns <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.map</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> returns an empty list</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.to(Class)</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.toString</span></code> returns <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></li>
+</ul>
+<p>Any other method call on <code class="docutils literal notranslate"><span class="pre">null</span></code> still throws — <code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'x'.</span></code>
+For example <code class="docutils literal notranslate"><span class="pre">null.get(&quot;key&quot;)</span></code> is a runtime error. Use the safe methods above, or
+a <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">default</span></code> fallback, in templates.</p>
 </section>
 <section id="lists">
 <h3>Lists<a class="headerlink" href="#lists" title="Link to this heading">#</a></h3>
@@ -849,6 +865,37 @@ expression automatically — no <code class="docutils literal notranslate"><span
 </div>
 <p>This is a complete domain class. No ORM, no annotations, no configuration — just
 Wren methods that express the logic directly.</p>
+<section id="same-line-vs-next-line">
+<h3>Same line vs. next line<a class="headerlink" href="#same-line-vs-next-line" title="Link to this heading">#</a></h3>
+<p>The implicit return only applies when the expression starts on the same line as
+the opening <code class="docutils literal notranslate"><span class="pre">{</span></code>. If the body starts on a following line, Wren treats it as a
+statement body — each statement runs, the last value is discarded, and the
+method returns <code class="docutils literal notranslate"><span class="pre">null</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Shape</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Expression body — starts on the `{` line, the value is returned</span>
+<span class="w">  </span><span class="n">area</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Same for HTML — the string starts on the `{` line</span>
+<span class="w">  </span><span class="n">badge</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;span class=&quot;badge&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Expression moved to the next line — computes then discards, returns null</span>
+<span class="w">  </span><span class="n">brokenArea</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">w</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">h</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Statement body — runs the query, returns null unless you `return`</span>
+<span class="w">  </span><span class="n">increment</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`UPDATE votes SET n = n + 1 WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">brokenArea(2,</span> <span class="pre">3)</span></code> evaluates <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">3</span></code> and throws the result away, returning
+<code class="docutils literal notranslate"><span class="pre">null</span></code>. In a template this renders as empty output — no error tells you the
+value was dropped. Keep the expression on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code> when you want the
+implicit return, and use an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code> for any multi-line method that
+must return a value.</p>
+</section>
 <section id="when-you-need-return">
 <h3>When You Need <code class="docutils literal notranslate"><span class="pre">return</span></code><a class="headerlink" href="#when-you-need-return" title="Link to this heading">#</a></h3>
 <p>For multiline methods that branch early, use explicit <code class="docutils literal notranslate"><span class="pre">return</span></code>:</p>
@@ -959,7 +1006,8 @@ It provides a rich set of higher-order methods:</p>
 <h3>Bialet Extensions<a class="headerlink" href="#bialet-extensions" title="Link to this heading">#</a></h3>
 <p>Bialet adds a few convenience methods:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">]</span><span class="o">.</span><span class="n">first</span><span class="w">                  </span><span class="c1">// 1 (null for empty lists)</span>
-<span class="s2">&quot;&lt;script&gt;&quot;</span><span class="o">.</span><span class="n">safe</span><span class="w">                   </span><span class="c1">// &quot;&amp;lt;script&amp;gt;&quot; (HTML escape)</span>
+<span class="s2">&quot;&lt;script&gt;&quot;</span><span class="o">.</span><span class="n">safe</span><span class="w">                   </span><span class="c1">// &quot;&amp;lt;script&amp;gt;&quot; (HTML escape, pre-escape)</span>
+<span class="s2">&quot;&lt;b&gt;x&lt;/b&gt;&quot;</span><span class="o">.</span><span class="n">raw</span><span class="w">                    </span><span class="c1">// HtmlNode (mark as safe HTML)</span>
 <span class="s2">&quot;hello&quot;</span><span class="o">.</span><span class="n">upper</span><span class="w">                     </span><span class="c1">// &quot;HELLO&quot;</span>
 <span class="s2">&quot;HELLO&quot;</span><span class="o">.</span><span class="n">lower</span><span class="w">                     </span><span class="c1">// &quot;hello&quot;</span>
 <span class="s2">&quot;42&quot;</span><span class="o">.</span><span class="n">toNum</span><span class="w">                        </span><span class="c1">// 42 (as Number)</span>
@@ -993,8 +1041,8 @@ from GitHub:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:user/repo/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
 </pre></div>
 </div>
-<p>See the <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">advanced routing guide</span></a> for details on external imports and file-based
-module resolution.</p>
+<p>See the <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">advanced routing guide</span></a> for details on external
+imports and file-based module resolution.</p>
 </section>
 <section id="bialet-vs-standard-wren">
 <h2>Bialet vs. Standard Wren<a class="headerlink" href="#bialet-vs-standard-wren" title="Link to this heading">#</a></h2>
@@ -1048,7 +1096,7 @@ when you need to persist state across request cycles.</p>
 <td><p>Database migrations and ORM-like save/delete — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Http</span></code></p></td>
-<td><p>Outbound HTTP requests (GET/POST/PUT/DELETE) — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
+<td><p>Outbound HTTP requests (GET/POST/PUT/DELETE) — see <a class="reference internal" href="http-calls.html"><span class="std std-doc">HTTP Calls</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Date</span></code></p></td>
 <td><p>Date and time with formatting, arithmetic, and timezones — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
@@ -1100,7 +1148,7 @@ when you need to persist state across request cycles.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Installation and Usage</p>
+        <p class="prev-next-title">Installation</p>
       </div>
     </a>
     <a class="right-next"
@@ -1163,6 +1211,7 @@ when you need to persist state across request cycles.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#single-expression-blocks">Single-Expression Blocks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#same-line-vs-next-line">Same line vs. next line</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-you-need-return">When You Need <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
 </ul>
 </li>

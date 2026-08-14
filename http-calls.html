@@ -1,0 +1,978 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Making HTTP Calls" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/http-calls.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Bialet can call other HTTP services from your.wren code. Use this to integrate third-party APIs, pull remote data, or post webhooks. This page covers the Http class end to end. For exposing your ow..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Bialet can call other HTTP services from your.wren code. Use this to integrate third-party APIs, pull remote data, or post webhooks. This page covers the Http class end to end. For exposing your ow..." />
+
+    <title>Making HTTP Calls &#8212; Bialet  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'http-calls';</script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Building REST APIs" href="rest-api.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data &amp; Storage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Making HTTP Calls</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/http-calls.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fhttp-calls.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/http-calls.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Making HTTP Calls</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http-methods">HTTP Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get">GET</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post">POST</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-and-delete">PUT and DELETE</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-methods-patch-head">Other Methods (PATCH, HEAD, …)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication">Authentication</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token">Bearer Token</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-basic-auth">HTTP Basic Auth</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-auth-headers">Custom Auth Headers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-encoded-bodies">Form-Encoded Bodies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-strings">Query Strings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies">Cookies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response-handling">Response Handling</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcuts-return-convenience-values">Shortcuts Return Convenience Values</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-control-with-http-new">Full Control with <code class="docutils literal notranslate"><span class="pre">Http.new()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#response-headers">Response Headers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-cloudflare-api-client">Example: Cloudflare API Client</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-features">Missing Features</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="making-http-calls">
+<h1>Making HTTP Calls<a class="headerlink" href="#making-http-calls" title="Link to this heading">#</a></h1>
+<p>Bialet can call other HTTP services from your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> code. Use this to
+integrate third-party APIs, pull remote data, or post webhooks. This page
+covers the <code class="docutils literal notranslate"><span class="pre">Http</span></code> class end to end. For exposing your own API instead, see
+<a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Http</span></code> class is a thin wrapper around libcurl (POSIX) or a raw sockets
+client (Windows). It supports GET, POST, PUT, DELETE, and any other method,
+custom headers, Basic and bearer-token auth, form or JSON bodies, per-call
+timeouts, and a persistent cookie jar.</p>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Simple GET - returns the response body</span>
+<span class="k">var</span><span class="w"> </span><span class="n">ip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.ipify.org?format=json&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">ip</span><span class="p">[</span><span class="s2">&quot;ip&quot;</span><span class="p">])</span>
+
+<span class="c1">// Simple POST - data is sent as JSON</span>
+<span class="k">var</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Ada&quot;</span><span class="p">})</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">created</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The response of a successful (2xx) call is parsed as JSON when the server
+responds with a JSON <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>, and returned as a plain string otherwise.
+The exact rules are covered under <a class="reference internal" href="#response-handling">Response Handling</a>.</p>
+</section>
+<section id="http-methods">
+<h2>HTTP Methods<a class="headerlink" href="#http-methods" title="Link to this heading">#</a></h2>
+<section id="get">
+<h3>GET<a class="headerlink" href="#get" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">)</span>
+
+<span class="c1">// With options</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users?active=1&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;headers&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;X-API-Key&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-key&quot;</span><span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="post">
+<h3>POST<a class="headerlink" href="#post" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Http.post</span></code> sends the body as JSON (<code class="docutils literal notranslate"><span class="pre">Content-Type:</span> <span class="pre">application/json</span></code>). Pass a
+map, a list, or a pre-built JSON string. Use the <code class="docutils literal notranslate"><span class="pre">form</span></code> option for
+<code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code> bodies instead (see
+<a class="reference internal" href="#form-encoded-bodies">Form-Encoded Bodies</a>).</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Map is stringified automatically</span>
+<span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;role&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">})</span>
+
+<span class="c1">// Raw JSON string</span>
+<span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="nc">Json</span><span class="o">.</span><span class="n">stringify</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Ada&quot;</span><span class="p">}))</span>
+
+<span class="c1">// Empty body is allowed</span>
+<span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/hooks/trigger&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="put-and-delete">
+<h3>PUT and DELETE<a class="headerlink" href="#put-and-delete" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Http</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users/1&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Grace&quot;</span><span class="p">})</span>
+
+<span class="nc">Http</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users/1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="other-methods-patch-head">
+<h3>Other Methods (PATCH, HEAD, …)<a class="headerlink" href="#other-methods-patch-head" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">Http.request(url,</span> <span class="pre">method,</span> <span class="pre">data,</span> <span class="pre">options)</span></code> for anything else:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users/1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PATCH&quot;</span><span class="p">,</span>
+<span class="w">                          </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Grace&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{})</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p>Every shortcut accepts an optional options map:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">headers</span></code></p></td>
+<td><p>Map</p></td>
+<td><p>Header names to values, sent on the request</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">basicAuth</span></code></p></td>
+<td><p>Map</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">username</span></code> / <code class="docutils literal notranslate"><span class="pre">password</span></code> for Basic auth</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">token</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Sends <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">&lt;token&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">form</span></code></p></td>
+<td><p>Map</p></td>
+<td><p>Sends the body as <code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
+<td><p>Number</p></td>
+<td><p>Total transfer timeout in milliseconds (default 20000)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code></p></td>
+<td><p>Number</p></td>
+<td><p>Connect timeout in milliseconds (default 2000)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;headers&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;User-Agent&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;bialet-app&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Accept&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;application/json&quot;</span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;basicAuth&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;secret&quot;</span><span class="p">},</span>
+<span class="w">  </span><span class="s2">&quot;timeout&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">10000</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">&quot;connectTimeout&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">3000</span>
+<span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/protected&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">application/json</span></code> when you don’t set one in
+<code class="docutils literal notranslate"><span class="pre">headers</span></code> and don’t use the <code class="docutils literal notranslate"><span class="pre">form</span></code> option. Every other common header goes
+through <code class="docutils literal notranslate"><span class="pre">headers</span></code> directly.</p>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading">#</a></h2>
+<section id="bearer-token">
+<h3>Bearer Token<a class="headerlink" href="#bearer-token" title="Link to this heading">#</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">token</span></code> option to send a <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">&lt;token&gt;</span></code> header:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">zones</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.cloudflare.com/client/v4/zones&quot;</span><span class="p">,</span>
+<span class="w">                     </span><span class="p">{</span><span class="s2">&quot;token&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;API_TOKEN&quot;</span><span class="p">)})</span>
+</pre></div>
+</div>
+<p>This is equivalent to setting the header manually. Use the manual form when
+you need a non-Bearer scheme or extra headers:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;headers&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;Authorization&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bearer </span><span class="si">%(</span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;API_TOKEN&quot;</span><span class="p">)</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;Content-Type&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;application/json&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">zones</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.cloudflare.com/client/v4/zones&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="http-basic-auth">
+<h3>HTTP Basic Auth<a class="headerlink" href="#http-basic-auth" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;basicAuth&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;password&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;secret&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/basic-protected&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Bialet base64-encodes the credentials and sends the <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Basic</span> <span class="pre">...</span></code>
+header for you. Do <strong>not</strong> add a <code class="docutils literal notranslate"><span class="pre">basicAuth</span></code> entry and an <code class="docutils literal notranslate"><span class="pre">Authorization</span></code>
+header at the same time — the header wins and the credentials are sent twice.</p>
+</section>
+<section id="custom-auth-headers">
+<h3>Custom Auth Headers<a class="headerlink" href="#custom-auth-headers" title="Link to this heading">#</a></h3>
+<p>Any auth scheme that fits in a header works with plain <code class="docutils literal notranslate"><span class="pre">headers</span></code>, including
+cookies (<code class="docutils literal notranslate"><span class="pre">Cookie</span></code>), session tokens, and signatures:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;headers&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s2">&quot;Cookie&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;session=abc123&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;X-Signature&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="s2">&quot;payload&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="form-encoded-bodies">
+<span id="id1"></span><h2>Form-Encoded Bodies<a class="headerlink" href="#form-encoded-bodies" title="Link to this heading">#</a></h2>
+<p>Pass a map to the <code class="docutils literal notranslate"><span class="pre">form</span></code> option to send
+<code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code> data. Values are URL-encoded
+automatically:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">&quot;form&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;remember&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;on&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/login&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">form</span></code> option overrides both the default JSON body and any <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>
+header you set. This is the option to reach for when talking to traditional
+web forms.</p>
+</section>
+<section id="query-strings">
+<h2>Query Strings<a class="headerlink" href="#query-strings" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">Http.url(base,</span> <span class="pre">params)</span></code> to append URL-encoded query parameters to a URL.
+It inserts <code class="docutils literal notranslate"><span class="pre">?</span></code> or <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> as needed:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/search&quot;</span><span class="p">,</span>
+<span class="w">                   </span><span class="p">{</span><span class="s2">&quot;q&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">})</span>
+<span class="c1">// https://api.example.com/search?q=hello+world&amp;page=2</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Http.query(params)</span></code> returns just the encoded <code class="docutils literal notranslate"><span class="pre">key=value&amp;...</span></code> string if you
+need to build the URL yourself.</p>
+</section>
+<section id="cookies">
+<h2>Cookies<a class="headerlink" href="#cookies" title="Link to this heading">#</a></h2>
+<p>Response <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> headers are collected into a process-wide cookie jar.
+On later calls, the stored cookies are sent back as a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header — useful
+for maintaining a server-side session across calls:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// First call receives a Set-Cookie and stores it in the jar</span>
+<span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/login&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;form&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;user&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;ada&quot;</span><span class="p">}})</span>
+
+<span class="c1">// Subsequent calls automatically send Cookie: &lt;stored cookies&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">profile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/me&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The jar is scoped to the whole process, not per host or per domain. If you
+need per-host isolation or want to opt out, set an explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header in
+<code class="docutils literal notranslate"><span class="pre">headers</span></code> — it takes precedence over the jar.</p>
+</section>
+<section id="response-handling">
+<span id="id2"></span><h2>Response Handling<a class="headerlink" href="#response-handling" title="Link to this heading">#</a></h2>
+<section id="shortcuts-return-convenience-values">
+<h3>Shortcuts Return Convenience Values<a class="headerlink" href="#shortcuts-return-convenience-values" title="Link to this heading">#</a></h3>
+<p>The static shortcuts (<code class="docutils literal notranslate"><span class="pre">Http.get</span></code>, <code class="docutils literal notranslate"><span class="pre">Http.post</span></code>, …) return:</p>
+<ul class="simple">
+<li><p>The parsed JSON value when the status is 2xx and <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> is JSON.</p></li>
+<li><p>The body string when the status is 2xx and <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> is not JSON.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null</span></code> when the status is not 2xx (e.g. 404, 500).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> when the request itself failed (DNS, connection, timeout).</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Network error - DNS, connection refused, timeout, ...</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Server replied with a non-2xx status</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Success - JSON or string</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="full-control-with-http-new">
+<h3>Full Control with <code class="docutils literal notranslate"><span class="pre">Http.new()</span></code><a class="headerlink" href="#full-control-with-http-new" title="Link to this heading">#</a></h3>
+<p>When you need the status code, response headers, or raw body, build an <code class="docutils literal notranslate"><span class="pre">Http</span></code>
+instance and call <code class="docutils literal notranslate"><span class="pre">call(url,</span> <span class="pre">options)</span></code> directly:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">http</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{}))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">status</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">body</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">contentType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">headers</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Status: </span><span class="si">%(</span><span class="n">code</span><span class="si">)</span><span class="s2">, type: </span><span class="si">%(</span><span class="n">contentType</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Call failed with error code </span><span class="si">%(</span><span class="n">http</span><span class="o">.</span><span class="n">error</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Http.new()</span></code> exposes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">call(url,</span> <span class="pre">opts)</span></code></p></td>
+<td><p>Performs the request. Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> on transport success</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code>: GET (default), POST, PUT, …</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">postData</span></code></p></td>
+<td><p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code> for the request body</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
+<td><p>HTTP status code of the response</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">body</span></code></p></td>
+<td><p>Raw response body (string)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">headers(name)</span></code></p></td>
+<td><p>A single response header value, lowercased key</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">headers</span></code></p></td>
+<td><p>Map of all response headers, lowercased</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Non-zero when the transport failed</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errorMessage</span></code></p></td>
+<td><p>Human-readable transport error message (curl string)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<div><p><strong>Pitfall:</strong> <code class="docutils literal notranslate"><span class="pre">call</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for any HTTP response, including 404 and
+500. Check <code class="docutils literal notranslate"><span class="pre">http.status</span></code> yourself when you need to distinguish them.</p>
+</div></blockquote>
+<blockquote>
+<div><p><strong>Pitfall:</strong> response headers and their values are lowercased before they are
+stored. <code class="docutils literal notranslate"><span class="pre">http.headers(&quot;Content-Type&quot;)</span></code> will <strong>not</strong> find the key; use
+<code class="docutils literal notranslate"><span class="pre">http.headers(&quot;content-type&quot;)</span></code>.</p>
+</div></blockquote>
+</section>
+<section id="response-headers">
+<h3>Response Headers<a class="headerlink" href="#response-headers" title="Link to this heading">#</a></h3>
+<p>Response headers live in the <code class="docutils literal notranslate"><span class="pre">headers</span></code> map, keyed by lowercased name:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">rateLimit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">headers</span><span class="p">(</span><span class="s2">&quot;x-ratelimit-remaining&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-cloudflare-api-client">
+<h2>Example: Cloudflare API Client<a class="headerlink" href="#example-cloudflare-api-client" title="Link to this heading">#</a></h2>
+<p>This is a compact real-world client for the Cloudflare v4 API. It shows the
+core patterns: a bearer token in headers, JSON bodies, and GET/POST/DELETE
+shortcuts. (Adapted from a live deployment.)</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Cloudflare</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="si">{{</span>
+<span class="w">    </span><span class="s2">&quot;headers&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="s2">&quot;Authorization&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Bearer </span><span class="si">%(</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CLOUDFLARE_API_TOKEN&quot;</span><span class="p">)</span><span class="w"> </span><span class="si">)</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;Content-Type&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;application/json&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="si">}}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;https://api.cloudflare.com/client/v4/</span><span class="si">%(</span><span class="n">path</span><span class="si">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">urlZoneRecords</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">url</span><span class="p">(</span><span class="s2">&quot;zones/</span><span class="si">%(</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CLOUDFLARE_ZONE_ID&quot;</span><span class="p">)</span><span class="w"> </span><span class="si">)</span><span class="s2">/dns_records&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">listRecords</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">urlZoneRecords</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;?name=</span><span class="si">%(</span><span class="n">domain</span><span class="p">[</span><span class="s2">&quot;fqdn&quot;</span><span class="p">]</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">createRecord</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Json</span><span class="o">.</span><span class="n">stringify</span><span class="p">({</span>
+<span class="w">      </span><span class="s2">&quot;type&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;CNAME&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">domain</span><span class="p">[</span><span class="s2">&quot;fqdn&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;content&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">domain</span><span class="p">[</span><span class="s2">&quot;dns&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="s2">&quot;ttl&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;proxied&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="w">    </span><span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">urlZoneRecords</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">deleteRecord</span><span class="p">(</span><span class="n">record</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(</span><span class="n">urlZoneRecords</span><span class="si">)</span><span class="s2">/</span><span class="si">%(</span><span class="n">record</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Configuration values are read with <code class="docutils literal notranslate"><span class="pre">Config.get</span></code> instead of being hardcoded.
+Store secrets in the <a class="reference internal" href="configuration.html"><span class="std std-doc">Config store</span></a>, never in the <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
+files themselves.</p>
+</section>
+<section id="error-handling">
+<h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Http.error</span></code> on a manually-built instance is a numeric code; <code class="docutils literal notranslate"><span class="pre">false</span></code> on the
+shortcuts. <code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code> carries the underlying error text (from curl)
+for logging and debugging. The transport timeout defaults to 20 seconds total
+with 2 seconds to connect — override per call with <code class="docutils literal notranslate"><span class="pre">timeout</span></code> and
+<code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code> (milliseconds), so a dead service returns an error instead of
+hanging your app.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">http</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">http</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/health&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="p">{</span><span class="s2">&quot;timeout&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">5000</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;connectTimeout&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1000</span><span class="p">}))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// http.error is non-zero: DNS, connect, timeout, ...</span>
+<span class="w">  </span><span class="c1">// http.errorMessage explains why, e.g. &quot;Could not connect to server&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;down&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;message&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">errorMessage</span><span class="p">})</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Cookies are process-wide.</strong> The jar sends every stored cookie on every
+call, regardless of host. Scope your calls to trusted hosts, or set an
+explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header to override the jar.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> on the <em>other</em> side</strong> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for missing keys
+— see <a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a> when you build the receiving end.</p></li>
+<li><p><strong>Redirects are followed</strong> automatically, up to 10 hops.</p></li>
+<li><p><strong>Response bodies are not size-capped</strong> — a malicious endpoint could return
+an unbounded body. Only call APIs you trust.</p></li>
+</ul>
+</section>
+<section id="missing-features">
+<h2>Missing Features<a class="headerlink" href="#missing-features" title="Link to this heading">#</a></h2>
+<p>Not every HTTP client feature is implemented yet. Multipart/file uploads and
+per-host cookie scoping are planned — see the
+<a class="reference external" href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">Roadmap</a>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="rest-api.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Building REST APIs</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="configuration.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Configuration</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http-methods">HTTP Methods</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get">GET</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post">POST</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-and-delete">PUT and DELETE</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-methods-patch-head">Other Methods (PATCH, HEAD, …)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authentication">Authentication</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bearer-token">Bearer Token</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-basic-auth">HTTP Basic Auth</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-auth-headers">Custom Auth Headers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-encoded-bodies">Form-Encoded Bodies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-strings">Query Strings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies">Cookies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#response-handling">Response Handling</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcuts-return-convenience-values">Shortcuts Return Convenience Values</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-control-with-http-new">Full Control with <code class="docutils literal notranslate"><span class="pre">Http.new()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#response-headers">Response Headers</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-cloudflare-api-client">Example: Cloudflare API Client</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-features">Missing Features</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

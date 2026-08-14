@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,15 +58,15 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'forms';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Markdown" href="markdown.html" />
-    <link rel="prev" title="Template" href="template.html" />
+    <link rel="prev" title="JSX to Bialet Migration" href="jsx-migration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -496,7 +499,7 @@ Always guard with <code class="docutils literal notranslate"><span class="pre">|
 <span class="x">  {{ Request.get(&quot;ok&quot;) &amp;&amp; &lt;p class=&quot;success&quot;&gt;</span><span class="nc">Subscribed</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">    &lt;label&gt;</span><span class="nc">Email</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email.safe }}&quot; required /&gt;&lt;/label&gt;</span>
+<span class="x">    &lt;label&gt;</span><span class="nc">Email</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email }}&quot; required /&gt;&lt;/label&gt;</span>
 <span class="w">    </span><span class="x">&lt;button&gt;Subscribe&lt;/button&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt;</span>
 <span class="x">&lt;/main&gt;</span>
@@ -509,7 +512,7 @@ Always guard with <code class="docutils literal notranslate"><span class="pre">|
 complex; this catches most typos and empty submissions in one line</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">error</span> <span class="pre">=</span> <span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">error</span> <span class="pre">&amp;&amp;</span> <span class="pre">...</span> <span class="pre">}}</span></code> renders the message inline
 instead of short-circuiting with <code class="docutils literal notranslate"><span class="pre">return</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email.safe</span> <span class="pre">}}&quot;</span></code> preserves the input on failed submission</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email</span> <span class="pre">}}&quot;</span></code> preserves the input on failed submission</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> prevents resubmission on refresh</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;ok&quot;)</span></code> shows a success message after redirect</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">type=&quot;email&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">required</span></code> give free browser-side validation</p></li>
@@ -535,14 +538,14 @@ convenience for the user, not a security boundary.</p>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Search</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">  &lt;form method=&quot;get&quot; action=&quot;/search&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name=&quot;q&quot; value=&quot;{{ q.safe }}&quot; placeholder=&quot;Search posts...&quot; /&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name=&quot;q&quot; value=&quot;{{ q }}&quot; placeholder=&quot;Search posts...&quot; /&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Search</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 
 <span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">    &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s2">&quot;{{ q.safe }}&quot;</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s2">&quot;{{ q }}&quot;</span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;ul&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">r</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/post?id={{ r[&quot;id&quot;] }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">r</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/post?id={{ r[&quot;id&quot;] }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">    </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="si">}}</span>
 <span class="x">&lt;/main&gt;</span>
@@ -551,12 +554,12 @@ convenience for the user, not a security boundary.</p>
 <p>Key points:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">method=&quot;get&quot;</span></code> puts the query in the URL (<code class="docutils literal notranslate"><span class="pre">/search?q=term</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;q&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> avoids null — use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> so <code class="docutils literal notranslate"><span class="pre">.safe</span></code> doesn’t crash</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;q&quot;)</span> <span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> avoids null — use <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string ops</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(q</span> <span class="pre">!=</span> <span class="pre">&quot;&quot;)</span></code> checks if there’s a search term (empty string is truthy in
 Wren, so <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(q)</span></code> doesn’t work as a presence check)</p></li>
 <li><p>No redirect needed — GET forms are safe to refresh</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">q.safe</span> <span class="pre">}}&quot;</span></code> preserves the search term</p></li>
-<li><p>Escape all user input with <code class="docutils literal notranslate"><span class="pre">.safe</span></code> when outputting to HTML</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">q</span> <span class="pre">}}&quot;</span></code> preserves the search term</p></li>
+<li><p>Interpolation auto-escapes, so user input is safe to output directly</p></li>
 </ul>
 </section>
 <section id="login-form-post-csrf-password">
@@ -588,7 +591,7 @@ Wren, so <code class="docutils literal notranslate"><span class="pre">if</span> 
 <span class="x">  {{ error &amp;&amp; &lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt; }}</span>
 <span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">session</span><span class="o">.</span><span class="n">csrf</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;label&gt;Email: &lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email.safe }}&quot; required /&gt;&lt;/label&gt;</span>
+<span class="w">    </span><span class="x">&lt;label&gt;Email: &lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email }}&quot; required /&gt;&lt;/label&gt;</span>
 <span class="x">    &lt;label&gt;</span><span class="nc">Password</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;password&quot; type=&quot;password&quot; required /&gt;&lt;/label&gt;</span>
 <span class="w">    </span><span class="x">&lt;button&gt;Login&lt;/button&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt;</span>
@@ -604,7 +607,7 @@ state-changing form</p></li>
 (see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for how to hash passwords with <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">error</span></code> with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">error</span> <span class="pre">&amp;&amp;</span> <span class="pre">&lt;p</span> <span class="pre">class=&quot;error&quot;&gt;{{</span> <span class="pre">error</span> <span class="pre">}}&lt;/p&gt;</span> <span class="pre">}}</span></code> shows
 the message inline on a single form, no duplication</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email.safe</span> <span class="pre">}}&quot;</span></code> preserves the email on failed login</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email</span> <span class="pre">}}&quot;</span></code> preserves the email on failed login</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">session.login(id)</span></code> persists the session on success</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> on success, no redirect on failure</p></li>
 </ul>
@@ -639,10 +642,11 @@ guide for the full API.</p>
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></strong> — always <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string ops.</p></li>
-<li><p><strong>Missing <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> — causes double-response
-errors. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
-<li><p><strong>No <code class="docutils literal notranslate"><span class="pre">.safe</span></code> on user input in HTML</strong> — every untrusted string must be
-escaped, including in <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;...&quot;&gt;</span></code> attributes.</p></li>
+<li><p><strong>Missing <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> — the code after it still
+runs and attaches a body to the 302. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
+<li><p><strong>Double-escaping with <code class="docutils literal notranslate"><span class="pre">.safe</span></code></strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> already escapes. Writing
+<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">userInput.safe</span> <span class="pre">}}</span></code> escapes the text twice (<code class="docutils literal notranslate"><span class="pre">&amp;amp;lt;</span></code>). Interpolate the
+raw value; use <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> or <code class="docutils literal notranslate"><span class="pre">.raw</span></code> only for markup you intentionally trust.</p></li>
 <li><p><strong>Forgetting CSRF on state-changing forms</strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">session.csrf</span> <span class="pre">}}</span></code> in the
 form, <code class="docutils literal notranslate"><span class="pre">session.csrfOk</span></code> in the handler.</p></li>
 <li><p><strong>Plaintext passwords</strong> — use <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> / <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code>, never store raw
@@ -673,12 +677,12 @@ passwords in the database.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="template.html"
+       href="jsx-migration.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Template</p>
+        <p class="prev-next-title">JSX to Bialet Migration</p>
       </div>
     </a>
     <a class="right-next"

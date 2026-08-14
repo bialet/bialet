@@ -25,12 +25,22 @@ Copy the `vote.html` and `results.html` files you downloaded in the
 ## Run the server
 
 ```bash
-bialet
+bialet dev
 ```
 
-Bialet starts on port 7001. Open [127.0.0.1:7001](http://127.0.0.1:7001) in
-your browser. For now you'll see a directory listing — we haven't created
-any `.wren` files yet.
+`bialet dev` starts the server from the current directory, enables live reload
+and the in-browser error display, and opens
+[127.0.0.1:7001](http://127.0.0.1:7001) in your browser. It only needs to be
+run once — the flags are stored in the database and persist across restarts.
+
+If you don't need those development conveniences, plain `bialet` starts the
+server the same way without touching the flags or opening the browser.
+
+On Windows, double-clicking `bialet.exe` in the project folder starts it in dev
+mode, just like `bialet dev`.
+
+For now you'll see a directory listing — we haven't created any `.wren` files
+yet.
 
 ## Using Docker
 

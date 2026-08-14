@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,14 +58,14 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -166,7 +166,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -192,6 +192,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -200,10 +201,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -556,7 +559,8 @@ the upstream language). A few things you need to know to write correct code:
 <span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="c1">// null is safe: accessing a key or method on null returns null, not an error</span>
+<span class="c1">// null is forgiving: null[&quot;key&quot;], null.count, null.map, null.toString don&#39;t</span>
+<span class="c1">// throw; other method calls on null are runtime errors</span>
 <span class="sb">```</span>
 
 <span class="gs">**Inline HTML strings**</span> are Wren&#39;s template mechanism — no separate template
@@ -568,8 +572,8 @@ language:
 
 <span class="k">-</span><span class="w"> </span>Delimited by <span class="sb">`&lt;tag&gt;...&lt;/tag&gt;`</span>; the string must open and close with the
   <span class="gs">**same**</span> tag name.
-<span class="k">-</span><span class="w"> </span>Tag names: lowercase letters/numbers only — no hyphens, underscores, or
-  uppercase.
+<span class="k">-</span><span class="w"> </span>Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
+  Hyphens enable custom elements like <span class="sb">`&lt;my-element&gt;`</span>.
 <span class="k">-</span><span class="w"> </span>A tag cannot directly nest another tag of the <span class="gs">**same**</span> name
   (<span class="sb">`&lt;div&gt;&lt;div&gt;...`</span> is a parse error) — use a different tag for the inner one.
 <span class="k">-</span><span class="w"> </span>Self-closing tags need a space before the slash: <span class="sb">`&lt;br /&gt;`</span>, <span class="sb">`&lt;input ... /&gt;`</span>.
@@ -587,19 +591,20 @@ classes, attributes, or whole HTML blocks:
 <span class="x">&lt;a class=&quot;filter-tab {{ filter == &quot;all&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;All&lt;/a&gt;</span>
 <span class="x">&lt;span&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">activeCount</span><span class="w"> </span><span class="si">}}</span><span class="x"> task{{ activeCount != 1 &amp;&amp; &quot;s&quot; }} remaining&lt;/span&gt;</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;button class=&quot;clear-btn&quot;&gt;Clear completed&lt;/button&gt;</span><span class="w"> </span><span class="si">}}</span>
-<span class="x">&lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;pending&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">&lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;pending&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="sb">```</span>
 
 <span class="gs">**Iteration**</span> uses <span class="sb">`map`</span>, and the callback must be a <span class="gs">**single expression**</span>
 (no multi-statement blocks, no <span class="sb">`var`</span> declarations inside it):
 
 <span class="sb">```wren</span>
-<span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="sb">```</span>
 
-<span class="k">&gt; </span><span class="ge">**Pitfall:** the Wren expression inside `{{ }}` must start on the same line</span>
-<span class="k">&gt; </span><span class="ge">as the opening `{{`. Only the HTML *inside* the tags may span multiple</span>
-<span class="k">&gt; </span><span class="ge">lines — breaking the Wren expression itself across lines (e.g. `{{\n  cond &amp;&amp;\n  &lt;div&gt;`) causes parsing ambiguities and empty output.</span>
+<span class="k">&gt; </span><span class="ge">**Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;</span>
+<span class="k">&gt; </span><span class="ge">HTML strings inside it can too. Infix operators (`&amp;&amp;`, `?`, `:`, ...) end</span>
+<span class="k">&gt; </span><span class="ge">their line — an operator at the start of a line is a parse error, exactly</span>
+<span class="k">&gt; </span><span class="ge">as in plain Wren.</span>
 
 <span class="gu">## Code Style</span>
 
@@ -860,6 +865,27 @@ Invalid columns fall back to the first entry in <span class="sb">`allowedColumns
 prevents SQL injection through user-controlled sort parameters. Pass a limit
 as a 4th argument for quick &quot;top N&quot; queries.
 
+<span class="gu">### Optional Filters Without Concatenation</span>
+
+The Query object forbids concatenation/interpolation, so a <span class="sb">`WHERE`</span> clause
+that depends on which filters are present can&#39;t be built by appending SQL
+fragments. Write one static query and bypass each filter with <span class="sb">`OR`</span> instead:
+
+<span class="sb">```wren</span>
+<span class="c1">// Empty string bypasses the filter</span>
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">)</span>
+
+<span class="c1">// Boolean flag bypasses the filter — tri-state &quot;all/active/completed&quot;</span>
+<span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">(</span><span class="n">filter</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM tasks</span>
+<span class="sb">  WHERE session = ? AND (? = 1 OR finished = ?)</span>
+<span class="sb">  ORDER BY createdAt ASC`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;all&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="sb">```</span>
+
+Booleans bind as <span class="sb">`1`</span>/<span class="sb">`0`</span>, so <span class="sb">`? = 1`</span> short-circuits the <span class="sb">`OR`</span> and matches every
+row when the flag is true. Chain multiple filters with <span class="sb">`AND`</span>, each with its
+own bypass, to let callers omit any combination of them.
+
 <span class="gu">### Pagination</span>
 
 Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as <span class="sb">`?`</span> placeholders:
@@ -920,7 +946,7 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
 
 <span class="gu">### `BIALET_*` System Tables</span>
 
-<span class="sb">`BIALET_CONFIG`</span>, <span class="sb">`BIALET_MIGRATIONS`</span>, <span class="sb">`BIALET_SESSIONS`</span>, <span class="sb">`BIALET_FILES`</span>,
+<span class="sb">`BIALET_CONFIG`</span>, <span class="sb">`BIALET_MIGRATIONS`</span>, <span class="sb">`BIALET_SESSION`</span>, <span class="sb">`BIALET_FILES`</span>,
 <span class="sb">`BIALET_LOGS`</span>, <span class="sb">`BIALET_REMOTE_MODULES`</span>. You may read/write rows in these with
 caution, but never drop or restructure them.
 
@@ -986,7 +1012,7 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="x">    &lt;table&gt;</span>
 <span class="w">      </span><span class="x">&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
 <span class="w">      </span><span class="x">&lt;tbody&gt;</span>
-<span class="x">        {{ users.map{|u| &lt;tr&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;/tr&gt;} }}</span>
+<span class="x">        {{ users.map{|u| &lt;tr&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;/tr&gt;} }}</span>
 <span class="x">      &lt;/tbody&gt;</span>
 <span class="w">    </span><span class="x">&lt;/table&gt;</span>
 <span class="x">    &lt;form method=&quot;post&quot;&gt;</span>
@@ -999,9 +1025,9 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="sb">```</span>
 
 <span class="k">&gt; </span><span class="ge">**Pitfall:** always `return Response.redirect(...)`. A bare</span>
-<span class="k">&gt; </span><span class="ge">`Response.redirect(...)` without `return` sets the redirect headers but lets</span>
-<span class="k">&gt; </span><span class="ge">execution continue — the code below then tries to send a second response</span>
-<span class="k">&gt; </span><span class="ge">body, causing a double-response error.</span>
+<span class="k">&gt; </span><span class="ge">`Response.redirect(...)` without `return` still runs the rest of the script,</span>
+<span class="k">&gt; </span><span class="ge">so the 302 carries an unexpected body. There is no error — the redirect just</span>
+<span class="k">&gt; </span><span class="ge">isn&#39;t clean.</span>
 
 <span class="gu">## Shared Logic (Instead of Middleware)</span>
 
@@ -1193,11 +1219,11 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
 
 <span class="k">1.</span> <span class="gs">**Never concatenate or interpolate values into SQL**</span> — always use <span class="sb">`?`</span>
    placeholders and pass parameters to the query method.
-<span class="k">2.</span> <span class="gs">**Always escape untrusted output with `.safe`**</span> — <span class="sb">`{{ }}`</span> does <span class="gs">**not**</span>
-   escape HTML automatically. Escape any string from user input, the
-   database, or the URL before interpolating it into HTML.
-<span class="k">3.</span> <span class="gs">**Always `return` before `Response.redirect(...)`**</span> to avoid
-   double-response errors.
+<span class="k">2.</span> <span class="gs">**Rely on `{{ }}` auto-escaping**</span> — interpolation escapes plain strings
+   (user input, database, URL) automatically. Mark intentionally-raw markup
+   with <span class="sb">`HtmlNode`</span> or <span class="sb">`.raw`</span>.
+<span class="k">3.</span> <span class="gs">**Always `return` before `Response.redirect(...)`**</span> so the rest of the
+   script doesn&#39;t attach a body to the redirect.
 <span class="k">4.</span> <span class="gs">**Validate input**</span> in domain classes (<span class="sb">`isValid`</span>, <span class="sb">`errors`</span>) or inline
    before saving.
 <span class="k">5.</span> <span class="gs">**Pin external imports**</span> to a tag, not <span class="sb">`main`</span>, for anything beyond local
@@ -1208,11 +1234,11 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
 <span class="sb">`SELECT * FROM users WHERE name = &#39;%(name)&#39;`</span><span class="o">.</span><span class="n">fetch</span>
 
 <span class="c1">// WRONG — XSS</span>
-<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">  </span><span class="c1">// double-escaped: interpolation already escapes</span>
 
 <span class="c1">// CORRECT</span>
 <span class="sb">`SELECT * FROM users WHERE name = ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="sb">```</span>
 
 <span class="gu">## JSON APIs</span>
@@ -1334,10 +1360,7 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 
 <span class="w">  </span><span class="n">save</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`tasks`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
-<span class="w">  </span><span class="n">toggle</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_finished</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ? RETURNING finished`</span>
-<span class="w">      </span><span class="o">.</span><span class="n">toBool</span><span class="p">(</span><span class="vi">_id</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">toggle</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`UPDATE tasks SET finished = NOT finished WHERE id = ? AND session = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">delete</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`DELETE FROM tasks WHERE id = ? AND session = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
@@ -1387,7 +1410,7 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="x">        &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
 <span class="w">        </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/form&gt;</span>
-<span class="x">      &lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">      &lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="x">      &lt;form method=&quot;post&quot; action=&quot;/delete&quot; style=&quot;display:inline&quot;&gt;</span>
 <span class="w">        </span><span class="x">&lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
 <span class="x">        &lt;button&gt;</span><span class="err">✕</span><span class="x">&lt;/button&gt;</span>
@@ -1402,7 +1425,8 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="c1">// toggle.wren</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
-<span class="nc">Task</span><span class="o">.</span><span class="n">new</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">})</span><span class="o">.</span><span class="n">toggle</span><span class="p">()</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 <span class="sb">```</span>
 
@@ -1434,7 +1458,7 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
    the bottom, always <span class="sb">`return Response.redirect(...)`</span>
 <span class="k">6.</span> <span class="gs">**Models**</span>: domain classes with validation and <span class="sb">`.to(Class)`</span> mapping
 <span class="k">7.</span> <span class="gs">**Database**</span>: backtick SQL, <span class="sb">`?`</span> placeholders, <span class="sb">`_app/migration.wren`</span> for schema
-<span class="k">8.</span> <span class="gs">**Security**</span>: parameterized queries always; <span class="sb">`.safe`</span> on every untrusted string
+<span class="k">8.</span> <span class="gs">**Security**</span>: parameterized queries always; <span class="sb">`{{ }}`</span> auto-escapes untrusted strings
 <span class="k">9.</span> <span class="gs">**APIs**</span>: <span class="sb">`Response.json()`</span>, one file per resource, method + query param
    for the id, rather than per-verb files
 <span class="k">10.</span> <span class="gs">**Git**</span>: always add <span class="sb">`_db.sqlite3*`</span> to <span class="sb">`.gitignore`</span>

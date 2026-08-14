@@ -7,16 +7,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Installation and Usage" />
+<meta property="og:title" content="Installation" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: For Windows: Download the latest bialet.exe(insi..." />
+<meta property="og:description" content="For how to run and configure the bialet binary, see Command Line Usage. With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is w..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the install script: For Windows: Download the latest bialet.exe(insi..." />
+<meta name="description" content="For how to run and configure the bialet binary, see Command Line Usage. With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is w..." />
 
-    <title>Installation and Usage &#8212; Bialet  documentation</title>
+    <title>Installation &#8212; Bialet  documentation</title>
   
   
   
@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'installation';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Why Bialet?" href="why-bialet.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation and Usage</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -416,7 +419,7 @@
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Installation and Usage</h1>
+    <h1>Installation</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -435,31 +438,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-ubuntu">Debian/Ubuntu</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#macos">MacOS</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax-highlighting">Syntax Highlighting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-bialet-cli">Using the Bialet CLI</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-startup-options">Customizing Startup Options</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-parameters">CLI Parameters</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-configuration">Advanced Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limits">File Upload Limits</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run code from the Command Line</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
 </ul>
             </nav>
         </div>
@@ -471,8 +451,10 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="installation-and-usage">
-<h1>Installation and Usage<a class="headerlink" href="#installation-and-usage" title="Link to this heading">#</a></h1>
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+<p>For how to run and configure the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary, see
+<a class="reference internal" href="usage.html"><span class="std std-doc">Command Line Usage</span></a>.</p>
 <section id="with-the-install-script">
 <h2>With the Install Script<a class="headerlink" href="#with-the-install-script" title="Link to this heading">#</a></h2>
 <p>The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
@@ -485,12 +467,15 @@ x86_64, Ubuntu ARM) is with the install script:</p>
 <h2>For Windows<a class="headerlink" href="#for-windows" title="Link to this heading">#</a></h2>
 <p>Download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> (inside the zip) directly:</p>
 <ul class="simple">
-<li><p><strong><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.11.0/bialet-v0.11.0-windows-x86_64.zip">bialet-v0.11.0-windows-x86_64.zip</a></strong></p></li>
+<li><p><strong><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.0/bialet-v1.0.0-windows-x86_64.zip">bialet-v1.0.0-windows-x86_64.zip</a></strong></p></li>
 </ul>
 <p>Extract and run — no installation required:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet.exe
 </pre></div>
 </div>
+<p>Double-clicking <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> in File Explorer starts it in dev mode (live
+reload, in-browser error display, and the browser opens automatically). Run it
+from a terminal to start without dev mode.</p>
 </section>
 <section id="releases">
 <h2>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h2>
@@ -504,16 +489,16 @@ page</a>:</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>macOS ARM64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.11.0/bialet-v0.11.0-macos-arm64.tar.gz">bialet-v0.11.0-macos-arm64.tar.gz</a></p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.0/bialet-v1.0.0-macos-arm64.tar.gz">bialet-v1.0.0-macos-arm64.tar.gz</a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Linux x86_64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.11.0/bialet-v0.11.0-linux-x86_64.tar.gz">bialet-v0.11.0-linux-x86_64.tar.gz</a></p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.0/bialet-v1.0.0-linux-x86_64.tar.gz">bialet-v1.0.0-linux-x86_64.tar.gz</a></p></td>
 </tr>
 <tr class="row-even"><td><p>Linux ARM64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.11.0/bialet-v0.11.0-linux-arm64.tar.gz">bialet-v0.11.0-linux-arm64.tar.gz</a></p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.0/bialet-v1.0.0-linux-arm64.tar.gz">bialet-v1.0.0-linux-arm64.tar.gz</a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Windows x86_64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v0.11.0/bialet-v0.11.0-windows-x86_64.zip">bialet-v0.11.0-windows-x86_64.zip</a></p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.0/bialet-v1.0.0-windows-x86_64.zip">bialet-v1.0.0-windows-x86_64.zip</a></p></td>
 </tr>
 </tbody>
 </table>
@@ -521,7 +506,7 @@ page</a>:</p>
 <p>Download the archive for your platform, extract it, and place the binary
 (<code class="docutils literal notranslate"><span class="pre">bialet</span></code> on macOS/Linux, <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> on Windows) in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS / Linux</span>
-tar<span class="w"> </span>xzf<span class="w"> </span>bialet-v0.11.0-linux-x86_64.tar.gz
+tar<span class="w"> </span>xzf<span class="w"> </span>bialet-v1.0.0-linux-x86_64.tar.gz
 sudo<span class="w"> </span>mv<span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/
 </pre></div>
 </div>
@@ -562,46 +547,16 @@ environment variable:</p>
 </section>
 <section id="building-from-source">
 <h2>Building from Source<a class="headerlink" href="#building-from-source" title="Link to this heading">#</a></h2>
-<p>To build Bialet from source, you’ll need to install certain dependencies and run
-the build process.</p>
-<section id="dependencies">
-<h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
-<section id="debian-ubuntu">
-<h4>Debian/Ubuntu<a class="headerlink" href="#debian-ubuntu" title="Link to this heading">#</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libssl-dev
-<span class="c1"># Optional, but recommended for production</span>
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libcurl4-openssl-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bialet/bialet.git
+<span class="nb">cd</span><span class="w"> </span>bialet
+make
+make<span class="w"> </span>install
 </pre></div>
 </div>
-</section>
-<section id="macos">
-<h4>MacOS<a class="headerlink" href="#macos" title="Link to this heading">#</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>sqlite3<span class="w"> </span>curl
-<span class="c1"># Optional, but recommended for production</span>
-brew<span class="w"> </span>install<span class="w"> </span>openssl
-</pre></div>
-</div>
-</section>
-</section>
-<section id="windows">
-<h3>Windows<a class="headerlink" href="#windows" title="Link to this heading">#</a></h3>
-<ul class="simple">
-<li><p>libcrypto-3-x64.dll</p></li>
-<li><p>libsqlite3-0.dll</p></li>
-<li><p>libssl-3-x64.dll (Optional, but recommended for production)</p></li>
-</ul>
-</section>
-<section id="building-the-project">
-<h3>Building the Project<a class="headerlink" href="#building-the-project" title="Link to this heading">#</a></h3>
-<p>After installing the dependencies, compile the project:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make
-</pre></div>
-</div>
-<p>To install the built application, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>install
-</pre></div>
-</div>
-</section>
+<p>For per-OS dependencies, cross-compiling (including Windows), the full list
+of <code class="docutils literal notranslate"><span class="pre">make</span></code> targets, and the development workflow, see
+<a class="reference external" href="https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
+on GitHub.</p>
 </section>
 <section id="syntax-highlighting">
 <h2>Syntax Highlighting<a class="headerlink" href="#syntax-highlighting" title="Link to this heading">#</a></h2>
@@ -611,175 +566,8 @@ brew<span class="w"> </span>install<span class="w"> </span>openssl
 </pre></div>
 </div>
 <p>We are still working on supporting VSCode and other IDEs.</p>
-</section>
-<section id="using-the-bialet-cli">
-<h2>Using the Bialet CLI<a class="headerlink" href="#using-the-bialet-cli" title="Link to this heading">#</a></h2>
-<p>The Bialet CLI allows you to interact with the application directly from the
-command line.</p>
-<section id="basic-usage">
-<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
-<p>To start the application, simply run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet
-</pre></div>
-</div>
-<p>By default, the application runs in the current directory.</p>
-</section>
-<section id="customizing-startup-options">
-<h3>Customizing Startup Options<a class="headerlink" href="#customizing-startup-options" title="Link to this heading">#</a></h3>
-<p>To change the directory where the application runs or adjust other settings, you
-can use various command-line arguments:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/path/to/app
-</pre></div>
-</div>
-</section>
-<section id="cli-parameters">
-<h3>CLI Parameters<a class="headerlink" href="#cli-parameters" title="Link to this heading">#</a></h3>
-<p>The table below summarizes the available command-line parameters for the Bialet
-CLI:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Parameter</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Default Value</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-p</span></code></p></td>
-<td><p>Port number</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">7001</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
-<td><p>Host name</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
-<td><p>Run the code passed as argument</p></td>
-<td><p>None</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code></p></td>
-<td><p>Validate syntax of a Wren file</p></td>
-<td><p>None</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-T</span></code></p></td>
-<td><p>Run tests in <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder</p></td>
-<td><p>None</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
-<td><p>Log file location</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">stdout</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
-<td><p>SQLite database file location</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
-<td><p>Enable SQLite <a class="reference external" href="https://www.sqlite.org/wal.html">Write-Ahead logging mode</a></p></td>
-<td><p>Disabled</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
-<td><p>Ignored files, comma separated list of glob expressions</p></td>
-<td><p>README*, LICENSE* , *.json, *.yml, *.yaml</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
-<td><p>Memory limit (MB)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code></p></td>
-<td><p>Hard memory limit (MB)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
-<td><p>CPU limit (%)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">15</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code></p></td>
-<td><p>Hard CPU limit (%)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="advanced-configuration">
-<h3>Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Link to this heading">#</a></h3>
-<p>Bialet provides several advanced configuration options that can be set
-programmatically in the C code (future versions may expose these as CLI
-parameters):</p>
-<section id="file-upload-limits">
-<h4>File Upload Limits<a class="headerlink" href="#file-upload-limits" title="Link to this heading">#</a></h4>
-<ul class="simple">
-<li><p><strong>Max Upload Size</strong>: Controls the maximum file size for uploads (default: 10
-MB)</p></li>
-<li><p>Files exceeding this limit will be rejected with an error message</p></li>
-</ul>
-</section>
-<section id="sqlite-pragma-settings">
-<h4>SQLite Pragma Settings<a class="headerlink" href="#sqlite-pragma-settings" title="Link to this heading">#</a></h4>
-<ul class="simple">
-<li><p><strong>Foreign Keys</strong>: Enable/disable foreign key constraints (default: ON)</p></li>
-<li><p><strong>Synchronous Mode</strong>: Controls how SQLite writes to disk (default: NORMAL)</p>
-<ul>
-<li><p>OFF: Fastest, least safe</p></li>
-<li><p>NORMAL: Balanced performance and safety (default)</p></li>
-<li><p>FULL: Very safe, slower</p></li>
-<li><p>EXTRA: Maximum safety, slowest</p></li>
-</ul>
-</li>
-</ul>
-<p>These settings are optimized for most use cases but can be adjusted in the
-source code if needed.</p>
-</section>
-</section>
-</section>
-<section id="run-code-from-the-command-line">
-<h2>Run code from the Command Line<a class="headerlink" href="#run-code-from-the-command-line" title="Link to this heading">#</a></h2>
-<p>To run code from the command line, use the <code class="docutils literal notranslate"><span class="pre">-r</span></code> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;System.log(&quot;Hello, World!&quot;)&#39;</span>
-</pre></div>
-</div>
-<p>The response will be printed directly.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;return &quot;No log, plain response&quot;&#39;</span>
-</pre></div>
-</div>
-<p>You have to respect new lines in the code.</p>
-</section>
-<section id="running-tests">
-<h2>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h2>
-<p>Bialet includes a built-in testing framework. See <a class="reference internal" href="tests.html"><span class="std std-doc">Testing Guide</span></a> for full documentation.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-T<span class="w">                    </span><span class="c1"># Run all tests in _tests/</span>
-bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class="w">      </span><span class="c1"># Run tests in specific directory</span>
-</pre></div>
-</div>
-</section>
-<section id="validate-syntax-of-a-wren-file">
-<h2>Validate Syntax of a Wren File<a class="headerlink" href="#validate-syntax-of-a-wren-file" title="Link to this heading">#</a></h2>
-<p>To check the syntax of a Wren file without executing it, use the <code class="docutils literal notranslate"><span class="pre">-t</span></code> command.
-Run it the same way you run the server:</p>
-<p>If you start your server from the app directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/app
-bialet<span class="w">               </span><span class="c1"># starts server</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w"> </span><span class="c1"># validates syntax</span>
-</pre></div>
-</div>
-<p>If you start your server with an explicit root path:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>/path/to/app<span class="w">                         </span><span class="c1"># starts server</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/index.wren<span class="w"> </span>/path/to/app<span class="w"> </span><span class="c1"># validates syntax</span>
-</pre></div>
-</div>
-<p>The root path is required when your file imports from <code class="docutils literal notranslate"><span class="pre">_app/</span></code> or uses relative
-imports. If you omit it for such files, the validator will exit with an error.</p>
-<p>This will validate the syntax and exit with code <code class="docutils literal notranslate"><span class="pre">0</span></code> if the syntax is valid, or
-code <code class="docutils literal notranslate"><span class="pre">1</span></code> if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: Check syntax before deploying (explicit root path)</span>
-<span class="k">if</span><span class="w"> </span>bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/main.wren<span class="w"> </span>/path/to/app<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax OK, deploying...&quot;</span>
-<span class="k">else</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax errors found, aborting deployment&quot;</span>
-<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<span class="k">fi</span>
-</pre></div>
-</div>
+<p>For the full command-line reference — starting the server, <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code>, every
+flag, <code class="docutils literal notranslate"><span class="pre">-r</span></code>, <code class="docutils literal notranslate"><span class="pre">-t</span></code>, and <code class="docutils literal notranslate"><span class="pre">-T</span></code> — see <a class="reference internal" href="usage.html"><span class="std std-doc">Command Line Usage</span></a>.</p>
 </section>
 </section>
 
@@ -838,31 +626,8 @@ pre-commit hooks.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-ubuntu">Debian/Ubuntu</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#macos">MacOS</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-project">Building the Project</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntax-highlighting">Syntax Highlighting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-bialet-cli">Using the Bialet CLI</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-startup-options">Customizing Startup Options</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-parameters">CLI Parameters</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-configuration">Advanced Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limits">File Upload Limits</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run code from the Command Line</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
 </ul>
   </nav></div>
 

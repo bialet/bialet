@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/security.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet keeps the framework small, and that extends to security: there is no magic that escapes your output for you, and no ORM that hides your SQL. The good news is that the sharp edges are explici..." />
+<meta property="og:description" content="Bialet keeps the framework small, and that extends to security:{{ }} interpolation escapes output by default, and there is no ORM hiding your SQL — you write the queries yourself. The sharp edges a..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet keeps the framework small, and that extends to security: there is no magic that escapes your output for you, and no ORM that hides your SQL. The good news is that the sharp edges are explici..." />
+<meta name="description" content="Bialet keeps the framework small, and that extends to security:{{ }} interpolation escapes output by default, and there is no ORM hiding your SQL — you write the queries yourself. The sharp edges a..." />
 
     <title>Security &#8212; Bialet  documentation</title>
   
@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'security';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -428,6 +431,7 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#intentionally-raw-html">Intentionally raw HTML</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown-rendering">Markdown rendering</a></li>
 </ul>
 </li>
@@ -437,7 +441,9 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-hardening">Reverse Proxy Hardening</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-file-permissions">Database File Permissions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-limits">Resource Limits</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-defaults">Other Defaults</a></li>
 </ul>
@@ -456,13 +462,14 @@
                   
   <section id="security">
 <h1>Security<a class="headerlink" href="#security" title="Link to this heading">#</a></h1>
-<p>Bialet keeps the framework small, and that extends to security: there is no
-magic that escapes your output for you, and no ORM that hides your SQL. The
-good news is that the sharp edges are explicit and few. This page is the
-central reference for keeping a Bialet app safe.</p>
+<p>Bialet keeps the framework small, and that extends to security: <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
+interpolation escapes output by default, and there is no ORM hiding your SQL —
+you write the queries yourself. The sharp edges are explicit and few. This page
+is the central reference for keeping a Bialet app safe.</p>
 <p>Three rules cover most real-world damage:</p>
 <ol class="arabic simple">
-<li><p><strong>Escape untrusted output</strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> does not escape. Use <code class="docutils literal notranslate"><span class="pre">.safe</span></code>.</p></li>
+<li><p><strong>Trust <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> to escape untrusted output</strong> — interpolation escapes by
+default. Mark intentionally-raw HTML with <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> or <code class="docutils literal notranslate"><span class="pre">.raw</span></code>.</p></li>
 <li><p><strong>Parameterize SQL</strong> — never build a query from string concatenation.</p></li>
 <li><p><strong>Validate state-changing requests</strong> — check <code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code> on POSTs.</p></li>
 </ol>
@@ -481,8 +488,8 @@ central reference for keeping a Bialet app safe.</p>
 <td><p>String interpolation is rejected by the compiler</p></td>
 </tr>
 <tr class="row-odd"><td><p>HTML escaping</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.safe</span></code>, <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code></p></td>
-<td><p>You must call it — never automatic</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation</p></td>
+<td><p>Automatic; HTML literals and <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> stay raw</p></td>
 </tr>
 <tr class="row-even"><td><p>CSRF tokens</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Session.csrf</span></code> / <code class="docutils literal notranslate"><span class="pre">Session.csrfOk</span></code></p></td>
@@ -510,49 +517,65 @@ central reference for keeping a Bialet app safe.</p>
 </section>
 <section id="cross-site-scripting-xss">
 <h2>Cross-Site Scripting (XSS)<a class="headerlink" href="#cross-site-scripting-xss" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation <strong>does not escape HTML by default</strong>. When you
-display user-generated content, database values, or URL parameters, you must
-escape them yourself. This is deliberate: it keeps inline HTML readable and
-fast, and it makes the escaping explicit where it matters.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation <strong>escapes HTML by default</strong>. Any plain value you
+interpolate — a string from user input, the database, or a URL parameter — is
+escaped before it reaches the page, in attribute values as well as element
+bodies:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
 
-<span class="c1">// WRONG — XSS vulnerability</span>
-<span class="k">var</span><span class="w"> </span><span class="n">dangerous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="c1">// Renders: &lt;p&gt;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&lt;/p&gt;</span>
-
-<span class="c1">// CORRECT — HTML characters are escaped</span>
-<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">.safe</span></code> replaces <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">'</span></code> with their HTML entities. The
-equivalent helper <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape(str)</span></code> returns the same result as a plain
-string:</p>
+<p>Escaping replaces <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">'</span></code> with their HTML entities. The
+standalone helper <code class="docutils literal notranslate"><span class="pre">Util.htmlEscape(str)</span></code> returns the same result:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">htmlEscape</span><span class="p">(</span><span class="n">userInput</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
-<div><p>⚠️ Pitfall: <strong>Forgetting <code class="docutils literal notranslate"><span class="pre">.safe</span></code> is an XSS vulnerability.</strong> Every string
-that comes from user input, the database, or the URL must be escaped before
-it reaches HTML. There is no automatic escaping — not even for values pulled
-from <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code>.</p>
+<div><p>⚠️ Pitfall: <strong>Do not add <code class="docutils literal notranslate"><span class="pre">.safe</span></code> inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>.</strong> Since interpolation
+already escapes, <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">userInput.safe</span> <span class="pre">}}</span></code> escapes the text twice
+(<code class="docutils literal notranslate"><span class="pre">&amp;amp;lt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&amp;lt;</span></code>). Drop <code class="docutils literal notranslate"><span class="pre">.safe</span></code> from templates.</p>
 </div></blockquote>
-<p>Escaping applies in attributes too, not just element bodies:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — break out of the attribute, inject an event handler</span>
-<span class="x">&lt;a href=&quot;{{ url }}&quot;&gt;link&lt;/a&gt;</span>
+<section id="intentionally-raw-html">
+<h3>Intentionally raw HTML<a class="headerlink" href="#intentionally-raw-html" title="Link to this heading">#</a></h3>
+<p>Values that are already rendered HTML are marked with an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> and are
+left untouched by interpolation:</p>
+<ul class="simple">
+<li><p><strong>HTML string literals</strong> — <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;...&lt;/div&gt;</span></code> evaluates to an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>.</p></li>
+<li><p><strong>Nested <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> blocks</strong> — their result is an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, so nesting
+<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">outer</span> <span class="pre">}}</span></code> around inner markup does not double-escape it.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">.raw</span></code></strong> — <code class="docutils literal notranslate"><span class="pre">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;.raw</span></code> marks a string as safe HTML.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">HtmlNode.new(...)</span></code></strong> — wrap a runtime string explicitly.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">card</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div class=&quot;card&quot;&gt;&lt;p&gt;</span><span class="n">kept</span><span class="w"> </span><span class="x">&lt;b&gt;raw&lt;/b&gt;&lt;/p&gt;&lt;/div&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">safeMarkup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;em&gt;raw&lt;/em&gt;&quot;</span><span class="o">.</span><span class="n">raw</span>
 
-<span class="c1">// CORRECT</span>
-<span class="x">&lt;a href=&quot;{{ url.safe }}&quot;&gt;link&lt;/a&gt;</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userText</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">    </span><span class="c1">// escaped</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">card</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">        </span><span class="c1">// rendered as written</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">safeMarkup</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">  </span><span class="c1">// rendered as written</span>
+
+<span class="c1">// A string that really does contain markup must be marked safe:</span>
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="o">.</span><span class="n">raw</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 </pre></div>
 </div>
-<p>If you generate HTML in Wren code rather than inline blocks, escape with
-<code class="docutils literal notranslate"><span class="pre">Util.htmlEscape()</span></code> before concatenating it into a template string.</p>
+<p>Sequences are flattened by interpolation, so building a list of fragments
+with <code class="docutils literal notranslate"><span class="pre">map</span></code> escapes each item’s user data while keeping the surrounding
+markup:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&lt;b&gt;a&lt;/b&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">]</span>
+<span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="c1">// &lt;li&gt;&amp;lt;b&amp;gt;a&amp;lt;/b&amp;gt;&lt;/li&gt;&lt;li&gt;b&lt;/li&gt;</span>
+</pre></div>
+</div>
 <blockquote>
-<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">.safe</span></code> escapes for HTML text and attribute contexts. It does
-not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted input
-into a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> block or a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> URL — restructure the page so it
-cannot happen.</p>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> and <code class="docutils literal notranslate"><span class="pre">.raw</span></code> assert that the string is already safe.
+They do not sanitize JavaScript, CSS, or URLs. Never interpolate untrusted
+input into a <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> block or a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> URL — restructure the page
+so it cannot happen.</p>
 </div></blockquote>
+</section>
 <section id="markdown-rendering">
 <h3>Markdown rendering<a class="headerlink" href="#markdown-rendering" title="Link to this heading">#</a></h3>
 <p>The built-in Markdown parser escapes HTML <strong>only inside code blocks and inline
@@ -686,6 +709,10 @@ attacks. Keep the explicit token check on any form that writes data.</p>
 <p>Sessions are stored in SQLite in the <code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code> table. The session
 cookie (<code class="docutils literal notranslate"><span class="pre">BIALETSESSID</span></code> by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with <code class="docutils literal notranslate"><span class="pre">Session.destroy()</span></code>.</p>
+<p>The table is keyed on <code class="docutils literal notranslate"><span class="pre">(id,</span> <span class="pre">key)</span></code>: <code class="docutils literal notranslate"><span class="pre">Session.set</span></code> replaces the row for a key
+instead of appending, and <code class="docutils literal notranslate"><span class="pre">Session.get</span></code> always returns the latest value
+written. Older databases that lack the primary key are rebuilt in place on
+startup.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when the key is missing.
 Calling string methods on it crashes the request. Always guard with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code>
@@ -728,6 +755,38 @@ talks to it. See <a class="reference internal" href="deployment.html"><span clas
 attribute is decided. Only set those headers from a proxy you trust — never
 forward user-supplied ones unchanged.</p>
 </section>
+<section id="reverse-proxy-hardening">
+<h3>Reverse Proxy Hardening<a class="headerlink" href="#reverse-proxy-hardening" title="Link to this heading">#</a></h3>
+<p>Bialet is <strong>single-threaded</strong>: it accepts and serves one connection at a time
+in a blocking loop. The reverse proxy is the layer that protects it from
+hostile clients. Configure the proxy to:</p>
+<ul class="simple">
+<li><p><strong>Cap the request body.</strong> Bialet accepts bodies up to ~10 MB. Parsing large
+bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
+body still means millions of allocations in <code class="docutils literal notranslate"><span class="pre">Util.urlDecode</span></code>. Set
+<code class="docutils literal notranslate"><span class="pre">client_max_body_size</span></code>
+(nginx), <code class="docutils literal notranslate"><span class="pre">LimitRequestBody</span></code> (Apache), or an equivalent to the smallest your
+app needs — 1 MB is a sane default.</p></li>
+<li><p><strong>Enforce a total body-read deadline.</strong> Bialet’s 5-second socket timeout is
+per <code class="docutils literal notranslate"><span class="pre">recv()</span></code> call, so a peer that dribbles bytes slowly can hold a
+connection open indefinitely. Set a total read timeout at the proxy
+(<code class="docutils literal notranslate"><span class="pre">client_body_timeout</span></code> in nginx, <code class="docutils literal notranslate"><span class="pre">RequestReadTimeout</span> <span class="pre">...</span> <span class="pre">MinRate</span></code> in
+Apache) so stalled uploads are cut off.</p></li>
+<li><p><strong>Buffer the full request before forwarding</strong> (<code class="docutils literal notranslate"><span class="pre">proxy_request_buffering</span> <span class="pre">on</span></code>
+in nginx; the default in most proxies). This keeps a slow client from
+holding the upstream socket.</p></li>
+<li><p><strong>Deny private files at the proxy too.</strong> Bialet already returns 403 for
+<code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>-prefixed paths, but the proxy can return 403 first — a second layer
+in case an app or a planted symlink ever serves such a file.</p></li>
+</ul>
+<p>See <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for ready-to-paste nginx, Apache, and Caddy
+configs with these settings.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: a proxy body cap that is <em>higher</em> than your app’s needs
+re-opens the CPU-exhaustion and memory-exhaustion risks above. Keep it as
+low as your uploads actually require.</p>
+</div></blockquote>
+</section>
 <section id="private-files">
 <h3>Private Files<a class="headerlink" href="#private-files" title="Link to this heading">#</a></h3>
 <p>Files and directories whose name starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are forbidden from
@@ -741,6 +800,34 @@ not a sandbox. Keep it out of version control backups you share, and
 restrict filesystem access to the user that runs the server.</p>
 </div></blockquote>
 </section>
+<section id="database-file-permissions">
+<h3>Database File Permissions<a class="headerlink" href="#database-file-permissions" title="Link to this heading">#</a></h3>
+<p>Bialet creates <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> with SQLite’s default mode, <code class="docutils literal notranslate"><span class="pre">0666</span> <span class="pre">&amp;</span> <span class="pre">~umask</span></code>.
+Under the common <code class="docutils literal notranslate"><span class="pre">umask</span> <span class="pre">022</span></code> that yields a world-readable <code class="docutils literal notranslate"><span class="pre">0644</span></code> file, so
+any local user on a shared host can read the whole database — uploaded
+files, password hashes, and cached remote modules included. The server does
+not tighten the mode after opening the file.</p>
+<p>Run Bialet with a restrictive umask so the file is created <code class="docutils literal notranslate"><span class="pre">0600</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">umask</span><span class="w"> </span><span class="m">0077</span>
+bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<p>Under systemd, set <code class="docutils literal notranslate"><span class="pre">UMask=</span></code> on the service instead:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Service]</span>
+<span class="na">UMask</span><span class="o">=</span><span class="s">0077</span>
+</pre></div>
+</div>
+<p>If the database already exists, tighten it with <code class="docutils literal notranslate"><span class="pre">chmod</span></code>. Redo this after
+any migration or restore that recreates the file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>/www/myapp/_db.sqlite3
+</pre></div>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: a world-readable <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> is as exposed as a leaked
+backup — no HTTP request is needed to read it. Restrict the app root to
+the user that runs the server and keep the file out of shared backups.</p>
+</div></blockquote>
+</section>
 <section id="resource-limits">
 <h3>Resource Limits<a class="headerlink" href="#resource-limits" title="Link to this heading">#</a></h3>
 <p>The server can enforce memory and CPU ceilings per app with CLI flags, which
@@ -751,7 +838,13 @@ limits the blast radius of a runaway script or a memory-exhaustion attack:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> — soft / hard memory limit in MB</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> — soft / hard CPU limit in percent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-b</span></code> — max request body in KB (default 128 KB)</p></li>
 </ul>
+<p>Request bodies are rejected with <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Payload</span> <span class="pre">Too</span> <span class="pre">Large</span></code> before parsing when
+they exceed the smaller of the <code class="docutils literal notranslate"><span class="pre">-b</span></code> limit and a memory-safe ceiling (<code class="docutils literal notranslate"><span class="pre">-m</span></code> /
+512, about 256 KB at the default 128 MB soft limit). This keeps worst-case body
+parsing (one Wren string per line) inside the enforced <code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> budget, so
+a crafted body cannot crash the server child or stall it for minutes.</p>
 <p>See the resource limits table in <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for defaults.</p>
 </section>
 <section id="other-defaults">
@@ -771,8 +864,8 @@ your domain classes before saving, and again in the form handler.</p></li>
 <section id="security-checklist">
 <h2>Security Checklist<a class="headerlink" href="#security-checklist" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>Escape every string from user input, the database, or the URL with <code class="docutils literal notranslate"><span class="pre">.safe</span></code>
-before interpolating into HTML.</p></li>
+<li><p>Interpolate untrusted values with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> and rely on the automatic
+escaping; mark intentional markup with <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> or <code class="docutils literal notranslate"><span class="pre">.raw</span></code>.</p></li>
 <li><p>Never build SQL from strings — use <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholders and pass values as
 parameters.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">.order()</span></code> with an allow-list for sortable columns.</p></li>
@@ -781,6 +874,8 @@ parameters.</p></li>
 <li><p>Guard <code class="docutils literal notranslate"><span class="pre">Request.post(...)</span></code> with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string operations.</p></li>
 <li><p>Store passwords with <code class="docutils literal notranslate"><span class="pre">Util.hash</span></code> / <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code>, never plaintext.</p></li>
 <li><p>Run behind a reverse proxy with TLS; bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>.</p></li>
+<li><p>Cap the request body and set a total read deadline at the proxy; buffer
+the full body before forwarding.</p></li>
 <li><p>Keep private files (<code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed) out of shared backups and repositories.</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> / <code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> to cap memory and CPU.</p></li>
 <li><p>Validate and convert input with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> before numeric math.</p></li>
@@ -836,6 +931,7 @@ parameters.</p></li>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-protections">Built-in Protections</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-scripting-xss">Cross-Site Scripting (XSS)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#intentionally-raw-html">Intentionally raw HTML</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown-rendering">Markdown rendering</a></li>
 </ul>
 </li>
@@ -845,7 +941,9 @@ parameters.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-hardening">Reverse Proxy Hardening</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-file-permissions">Database File Permissions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-limits">Resource Limits</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-defaults">Other Defaults</a></li>
 </ul>

@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -427,6 +430,13 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-classes">Core Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlnode">HtmlNode</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-string">new(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other">+(other)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#raw">raw</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-classes">External Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files">init(message, route, files)</a></li>
@@ -535,6 +545,8 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http">Http</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcut-return-values">Shortcut return values</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-url-method-data-options">request(url, method, data, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url-options">get(url, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data-options">post(url, data, options)</a></li>
@@ -544,11 +556,24 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#call-url-options">call(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postdata">postData</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers-name">headers(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error">error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#errormessage">errorMessage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jar">jar</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-params">query(params)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#url-base-params">url(base, params)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
@@ -566,12 +591,12 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">date</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">date</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
@@ -587,13 +612,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -617,6 +642,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -630,7 +656,7 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">to(Class)</a></li>
 </ul>
 </li>
 </ul>
@@ -666,7 +692,32 @@
 <li><p><strong>File</strong> - File operations</p></li>
 <li><p><strong>Markdown</strong> - Render Markdown content to HTML</p></li>
 <li><p><strong>System</strong> - Logging and output utilities</p></li>
+<li><p><strong>HtmlNode</strong> - A string of already-safe HTML that <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> leaves unescaped</p></li>
 </ul>
+</section>
+<section id="htmlnode">
+<h2>HtmlNode<a class="headerlink" href="#htmlnode" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> wraps a string of already-rendered HTML. HTML string literals
+(<code class="docutils literal notranslate"><span class="pre">&lt;div&gt;...&lt;/div&gt;</span></code>), the result of a <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> block, and <code class="docutils literal notranslate"><span class="pre">String.raw</span></code> all produce
+<code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values. Interpolating an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> renders it verbatim, while
+plain strings are auto-escaped.</p>
+<section id="new-string">
+<h3>new(string)<a class="headerlink" href="#new-string" title="Link to this heading">#</a></h3>
+<p>Wraps a string as safe HTML. Only use this for markup you control or have
+already escaped.</p>
+</section>
+<section id="tostring">
+<h3>toString<a class="headerlink" href="#tostring" title="Link to this heading">#</a></h3>
+<p>Returns the raw HTML string.</p>
+</section>
+<section id="other">
+<h3>+(other)<a class="headerlink" href="#other" title="Link to this heading">#</a></h3>
+<p>Concatenates the raw HTML with <code class="docutils literal notranslate"><span class="pre">other.toString</span></code>, returning a new <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>.</p>
+</section>
+<section id="raw">
+<h3>raw<a class="headerlink" href="#raw" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">this</span></code> — the node is already safe.</p>
+</section>
 </section>
 <section id="external-classes">
 <h2>External Classes<a class="headerlink" href="#external-classes" title="Link to this heading">#</a></h2>
@@ -1289,14 +1340,40 @@ data manipulation.</p>
 </section>
 <section id="http">
 <h2>Http<a class="headerlink" href="#http" title="Link to this heading">#</a></h2>
-<p>A class for handling HTTP requests and responses, with methods to perform
-various types of HTTP requests.</p>
+<p>A class for making outbound HTTP requests, with shortcuts for the common
+methods and an instance API for full control over the response.</p>
+<p>For worked examples of every pattern (auth, headers, JSON, error handling),
+see the <a class="reference internal" href="http-calls.html"><span class="std std-doc">Making HTTP Calls</span></a> guide.</p>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<p>Every method accepts an optional <code class="docutils literal notranslate"><span class="pre">options</span></code> map:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">headers</span></code>: Map of header names to values, sent on the request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">basicAuth</span></code>: Map with <code class="docutils literal notranslate"><span class="pre">username</span></code> and <code class="docutils literal notranslate"><span class="pre">password</span></code> for HTTP Basic auth.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">token</span></code>: String; sends <code class="docutils literal notranslate"><span class="pre">Authorization:</span> <span class="pre">Bearer</span> <span class="pre">&lt;token&gt;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">form</span></code>: Map; sends the body as <code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code>: Number; total transfer timeout in milliseconds (default 20000).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code>: Number; connect timeout in milliseconds (default 2000).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">application/json</span></code> when not given in <code class="docutils literal notranslate"><span class="pre">headers</span></code> and
+<code class="docutils literal notranslate"><span class="pre">form</span></code> is not used.</p>
+</section>
+<section id="shortcut-return-values">
+<h3>Shortcut return values<a class="headerlink" href="#shortcut-return-values" title="Link to this heading">#</a></h3>
+<p>The static shortcuts return:</p>
+<ul class="simple">
+<li><p>The parsed JSON value for 2xx responses with a JSON <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>.</p></li>
+<li><p>The body string for 2xx responses with any other <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null</span></code> for non-2xx responses (e.g. 404, 500).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> when the transport failed (DNS, connection, timeout).</p></li>
+</ul>
+</section>
 <section id="request-url-method-data-options">
 <h3>request(url, method, data, options)<a class="headerlink" href="#request-url-method-data-options" title="Link to this heading">#</a></h3>
 <p>Performs an HTTP request with the specified options.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: The HTTP method (e.g., GET, POST).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method</span></code>: The HTTP method (e.g., GET, POST, PATCH).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
 </ul>
@@ -1311,7 +1388,8 @@ various types of HTTP requests.</p>
 </section>
 <section id="post-url-data-options">
 <h3>post(url, data, options)<a class="headerlink" href="#post-url-data-options" title="Link to this heading">#</a></h3>
-<p>Performs a POST request to the specified URL with the given data and options.</p>
+<p>Performs a POST request to the specified URL with the given data and options.
+<code class="docutils literal notranslate"><span class="pre">data</span></code> is sent as JSON unless a <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> header overrides it.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: The data to send with the request.</p></li>
@@ -1365,6 +1443,93 @@ various types of HTTP requests.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
 </ul>
 </section>
+<section id="id8">
+<h3>new()<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<p>Creates an <code class="docutils literal notranslate"><span class="pre">Http</span></code> instance for full control over the request and response.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+<span class="n">http</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span>
+<span class="n">http</span><span class="o">.</span><span class="n">postData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Ada&quot;</span><span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">ok</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/users&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">status</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">body</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">headers</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="call-url-options">
+<h3>call(url, options)<a class="headerlink" href="#call-url-options" title="Link to this heading">#</a></h3>
+<p>Performs the request. Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> when the transport succeeded — note this
+includes non-2xx HTTP responses.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
+</ul>
+</section>
+<section id="id9">
+<h3>method<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code> to choose the HTTP method. Defaults to <code class="docutils literal notranslate"><span class="pre">GET</span></code> when unset;
+assigning <code class="docutils literal notranslate"><span class="pre">postData</span></code> defaults it to <code class="docutils literal notranslate"><span class="pre">POST</span></code>.</p>
+</section>
+<section id="postdata">
+<h3>postData<a class="headerlink" href="#postdata" title="Link to this heading">#</a></h3>
+<p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code> for the request body. Maps and lists are JSON-stringified;
+strings are sent as-is.</p>
+</section>
+<section id="id10">
+<h3>status<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<p>Getter that returns the HTTP status code of the response.</p>
+</section>
+<section id="id11">
+<h3>body<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<p>Getter that returns the raw response body as a string.</p>
+</section>
+<section id="id12">
+<h3>headers<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<p>Getter that returns a map of all response headers, with lowercased keys and
+values.</p>
+</section>
+<section id="headers-name">
+<h3>headers(name)<a class="headerlink" href="#headers-name" title="Link to this heading">#</a></h3>
+<p>Getter that returns a single response header by lowercased name, or <code class="docutils literal notranslate"><span class="pre">null</span></code> if
+absent.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">http</span><span class="o">.</span><span class="n">headers</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="error">
+<h3>error<a class="headerlink" href="#error" title="Link to this heading">#</a></h3>
+<p>Getter that returns a non-zero value when the transport failed.</p>
+</section>
+<section id="errormessage">
+<h3>errorMessage<a class="headerlink" href="#errormessage" title="Link to this heading">#</a></h3>
+<p>Getter that returns a human-readable transport error message (the curl error
+string), or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when the call succeeded.</p>
+</section>
+<section id="jar">
+<h3>jar<a class="headerlink" href="#jar" title="Link to this heading">#</a></h3>
+<p>Static getter that returns the current cookie jar as a <code class="docutils literal notranslate"><span class="pre">name=value;</span> <span class="pre">...</span></code>
+string, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when empty. <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> response headers are stored in the
+jar automatically and sent back on later calls unless a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header is set
+explicitly.</p>
+</section>
+<section id="query-params">
+<h3>query(params)<a class="headerlink" href="#query-params" title="Link to this heading">#</a></h3>
+<p>Static helper that returns a URL-encoded query string from a map of
+parameters.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">qs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">query</span><span class="p">({</span><span class="s2">&quot;q&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;hello world&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">})</span><span class="w"> </span><span class="c1">// &quot;q=hello+world&amp;page=2&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="url-base-params">
+<h3>url(base, params)<a class="headerlink" href="#url-base-params" title="Link to this heading">#</a></h3>
+<p>Static helper that appends URL-encoded query parameters to a URL, inserting
+<code class="docutils literal notranslate"><span class="pre">?</span></code> or <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> as needed.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">url</span><span class="p">(</span><span class="s2">&quot;https://api.example.com/search&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;q&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;hello&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="date">
 <span id="date-reference"></span><h2>Date<a class="headerlink" href="#date" title="Link to this heading">#</a></h2>
@@ -1379,8 +1544,8 @@ and time in UTC. Equivalent to <code class="docutils literal notranslate"><span 
 </pre></div>
 </div>
 </section>
-<section id="id8">
-<h3>new()<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id13">
+<h3>new()<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
 <p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in UTC.</p>
 </section>
 <section id="new-date">
@@ -1496,8 +1661,8 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <h3>dayOfYear<a class="headerlink" href="#dayofyear" title="Link to this heading">#</a></h3>
 <p>Returns the day of the year (1-366).</p>
 </section>
-<section id="id9">
-<h3>date<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<section id="id14">
+<h3>date<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
 <p>Returns the date in <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code> format.</p>
 </section>
 <section id="time">
@@ -1516,8 +1681,8 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <h3>inUtc<a class="headerlink" href="#inutc" title="Link to this heading">#</a></h3>
 <p>Returns the date in UTC format.</p>
 </section>
-<section id="tostring">
-<h3>toString<a class="headerlink" href="#tostring" title="Link to this heading">#</a></h3>
+<section id="id15">
+<h3>toString<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
 <p>Returns the date as an ISO 8601 string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SS</span></code>).</p>
 </section>
 <section id="plus">
@@ -1607,16 +1772,16 @@ size is determined by the content.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
 </ul>
 </section>
-<section id="id10">
-<h3>id<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<section id="id16">
+<h3>id<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
 <p>Returns the file’s database ID.</p>
 </section>
 <section id="type">
 <h3>type<a class="headerlink" href="#type" title="Link to this heading">#</a></h3>
 <p>Returns the MIME type of the file.</p>
 </section>
-<section id="id11">
-<h3>name<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<section id="id17">
+<h3>name<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
 <p>Returns the name of the file.</p>
 </section>
 <section id="size">
@@ -1631,8 +1796,8 @@ size is determined by the content.</p>
 <h3>createdAt<a class="headerlink" href="#createdat" title="Link to this heading">#</a></h3>
 <p>Returns the creation date of the file.</p>
 </section>
-<section id="id12">
-<h3>destroy<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<section id="id18">
+<h3>destroy<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
 <p>Deletes the file from the database based on its ID.</p>
 </section>
 <section id="save">
@@ -1768,7 +1933,20 @@ for formatted output.</p>
 <section id="safe">
 <h4>safe<a class="headerlink" href="#safe" title="Link to this heading">#</a></h4>
 <p>Escapes special HTML characters in a string to prevent XSS attacks. Replaces <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">'</span></code> with their HTML entity equivalents.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span><span class="o">.</span><span class="n">safe</span><span class="w">  </span><span class="c1">// &quot;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span><span class="o">.</span><span class="n">safe</span><span class="w">  </span><span class="c1">// &quot;&amp;lt;script&amp;gt;alert(&amp;apos;xss&amp;apos;)&amp;lt;/script&amp;gt;&quot;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation already calls this for plain values, so you do not need
+<code class="docutils literal notranslate"><span class="pre">.safe</span></code> inside templates — adding it escapes the text twice. Use <code class="docutils literal notranslate"><span class="pre">.safe</span></code> when
+building HTML from strings outside of interpolation, or to pre-escape a value
+before storing it.</p>
+</section>
+<section id="id19">
+<h4>raw<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<p>Marks a string as already-safe HTML by wrapping it in an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
+interpolation leaves it untouched.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="o">.</span><span class="n">raw</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">  </span><span class="c1">// &lt;b&gt;bold&lt;/b&gt;, not escaped</span>
 </pre></div>
 </div>
 </section>
@@ -1829,8 +2007,8 @@ for formatted output.</p>
 </section>
 <section id="map-extensions">
 <h3>Map Extensions<a class="headerlink" href="#map-extensions" title="Link to this heading">#</a></h3>
-<section id="id13">
-<h4>to(Class)<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<section id="id20">
+<h4>to(Class)<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <p>Converts a Map to an instance of the specified class by passing the map to the class constructor.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1901,6 +2079,13 @@ for formatted output.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-classes">Core Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#htmlnode">HtmlNode</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-string">new(string)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other">+(other)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#raw">raw</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-classes">External Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files">init(message, route, files)</a></li>
@@ -2009,6 +2194,8 @@ for formatted output.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#http">Http</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcut-return-values">Shortcut return values</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-url-method-data-options">request(url, method, data, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-url-options">get(url, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data-options">post(url, data, options)</a></li>
@@ -2018,11 +2205,24 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#call-url-options">call(url, options)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postdata">postData</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers-name">headers(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error">error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#errormessage">errorMessage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jar">jar</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-params">query(params)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#url-base-params">url(base, params)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
@@ -2040,12 +2240,12 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">date</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">date</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
@@ -2061,13 +2261,13 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -2091,6 +2291,7 @@ for formatted output.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -2104,7 +2305,7 @@ for formatted output.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">to(Class)</a></li>
 </ul>
 </li>
 </ul>

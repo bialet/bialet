@@ -19,6 +19,31 @@ The following classes are available by default in all Bialet applications withou
 - **File** - File operations
 - **Markdown** - Render Markdown content to HTML
 - **System** - Logging and output utilities
+- **HtmlNode** - A string of already-safe HTML that `{{ }}` leaves unescaped
+
+## HtmlNode
+
+`HtmlNode` wraps a string of already-rendered HTML. HTML string literals
+(`<div>...</div>`), the result of a `{{ }}` block, and `String.raw` all produce
+`HtmlNode` values. Interpolating an `HtmlNode` renders it verbatim, while
+plain strings are auto-escaped.
+
+### new(string)
+
+Wraps a string as safe HTML. Only use this for markup you control or have
+already escaped.
+
+### toString
+
+Returns the raw HTML string.
+
+### +(other)
+
+Concatenates the raw HTML with `other.toString`, returning a new `HtmlNode`.
+
+### raw
+
+Returns `this` — the node is already safe.
 
 ## External Classes
 
@@ -588,15 +613,41 @@ Deletes data from a specified table based on its ID.
 
 ## Http
 
-A class for handling HTTP requests and responses, with methods to perform
-various types of HTTP requests.
+A class for making outbound HTTP requests, with shortcuts for the common
+methods and an instance API for full control over the response.
+
+For worked examples of every pattern (auth, headers, JSON, error handling),
+see the [Making HTTP Calls](http-calls.md) guide.
+
+### Options
+
+Every method accepts an optional `options` map:
+
+- `headers`: Map of header names to values, sent on the request.
+- `basicAuth`: Map with `username` and `password` for HTTP Basic auth.
+- `token`: String; sends `Authorization: Bearer <token>`.
+- `form`: Map; sends the body as `application/x-www-form-urlencoded`.
+- `timeout`: Number; total transfer timeout in milliseconds (default 20000).
+- `connectTimeout`: Number; connect timeout in milliseconds (default 2000).
+
+`Content-Type` defaults to `application/json` when not given in `headers` and
+`form` is not used.
+
+### Shortcut return values
+
+The static shortcuts return:
+
+- The parsed JSON value for 2xx responses with a JSON `Content-Type`.
+- The body string for 2xx responses with any other `Content-Type`.
+- `null` for non-2xx responses (e.g. 404, 500).
+- `false` when the transport failed (DNS, connection, timeout).
 
 ### request(url, method, data, options)
 
 Performs an HTTP request with the specified options.
 
 - `url`: The URL to send the request to.
-- `method`: The HTTP method (e.g., GET, POST).
+- `method`: The HTTP method (e.g., GET, POST, PATCH).
 - `data`: The data to send with the request.
 - `options`: Additional request options.
 
@@ -610,6 +661,7 @@ Performs a GET request to the specified URL with the given options.
 ### post(url, data, options)
 
 Performs a POST request to the specified URL with the given data and options.
+`data` is sent as JSON unless a `Content-Type` header overrides it.
 
 - `url`: The URL to send the request to.
 - `data`: The data to send with the request.
@@ -655,6 +707,96 @@ Performs a simple PUT request to the specified URL with the given data.
 Performs a simple DELETE request to the specified URL.
 
 - `url`: The URL to send the request to.
+
+### new()
+
+Creates an `Http` instance for full control over the request and response.
+
+```wren
+var http = Http.new()
+http.method = "POST"
+http.postData = {"name": "Ada"}
+var ok = http.call("https://api.example.com/users", {})
+if (ok) {
+  var status = http.status
+  var body = http.body
+  var type = http.headers("content-type")
+}
+```
+
+### call(url, options)
+
+Performs the request. Returns `true` when the transport succeeded — note this
+includes non-2xx HTTP responses.
+
+- `url`: The URL to send the request to.
+- `options`: Additional request options.
+
+### method
+
+Set before `call` to choose the HTTP method. Defaults to `GET` when unset;
+assigning `postData` defaults it to `POST`.
+
+### postData
+
+Set before `call` for the request body. Maps and lists are JSON-stringified;
+strings are sent as-is.
+
+### status
+
+Getter that returns the HTTP status code of the response.
+
+### body
+
+Getter that returns the raw response body as a string.
+
+### headers
+
+Getter that returns a map of all response headers, with lowercased keys and
+values.
+
+### headers(name)
+
+Getter that returns a single response header by lowercased name, or `null` if
+absent.
+
+```wren
+var type = http.headers("content-type")
+```
+
+### error
+
+Getter that returns a non-zero value when the transport failed.
+
+### errorMessage
+
+Getter that returns a human-readable transport error message (the curl error
+string), or `""` when the call succeeded.
+
+### jar
+
+Static getter that returns the current cookie jar as a `name=value; ...`
+string, or `""` when empty. `Set-Cookie` response headers are stored in the
+jar automatically and sent back on later calls unless a `Cookie` header is set
+explicitly.
+
+### query(params)
+
+Static helper that returns a URL-encoded query string from a map of
+parameters.
+
+```wren
+var qs = Http.query({"q": "hello world", "page": 2}) // "q=hello+world&page=2"
+```
+
+### url(base, params)
+
+Static helper that appends URL-encoded query parameters to a URL, inserting
+`?` or `&` as needed.
+
+```wren
+var url = Http.url("https://api.example.com/search", {"q": "hello"})
+```
 
 (date-reference)=
 
@@ -1049,7 +1191,22 @@ Converts a string to a boolean value by first converting to a number (using `toN
 Escapes special HTML characters in a string to prevent XSS attacks. Replaces `&`, `<`, `>`, `"`, and `'` with their HTML entity equivalents.
 
 ```wren
-"<script>alert('xss')</script>".safe  // "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+"<script>alert('xss')</script>".safe  // "&lt;script&gt;alert(&apos;xss&apos;)&lt;/script&gt;"
+```
+
+`{{ }}` interpolation already calls this for plain values, so you do not need
+`.safe` inside templates — adding it escapes the text twice. Use `.safe` when
+building HTML from strings outside of interpolation, or to pre-escape a value
+before storing it.
+
+#### raw
+
+Marks a string as already-safe HTML by wrapping it in an `HtmlNode`, so `{{ }}`
+interpolation leaves it untouched.
+
+```wren
+var markup = "<b>bold</b>".raw
+<p>{{ markup }}</p>  // <b>bold</b>, not escaped
 ```
 
 #### lower

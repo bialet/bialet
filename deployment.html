@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -438,6 +441,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardening-the-proxy">Hardening the Proxy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">nginx</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Apache</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Caddy</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cloudflare-tunnel-alternative">Cloudflare Tunnel (Alternative)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-bialet-as-a-service">Running Bialet as a Service</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-ubuntu-debian">systemd (Ubuntu / Debian)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-apps-on-one-server">Multiple Apps on One Server</a></li>
@@ -487,6 +497,11 @@ internet</p></li>
 </ul>
 <p>You <em>can</em> expose Bialet directly with <code class="docutils literal notranslate"><span class="pre">-h</span> <span class="pre">0.0.0.0</span></code>, but this is not
 recommended for production.</p>
+<p>Bialet is <strong>single-threaded</strong>: it accepts and serves one connection at a time,
+in a blocking loop. The reverse proxy is therefore not just for TLS — it is
+the layer that absorbs slow clients, connection churn, and request buffering.
+Treat the proxy as part of your security posture, not a convenience (see
+<a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> and the hardening section below).</p>
 </section>
 <section id="no-restart-needed-on-deploy">
 <h2>No Restart Needed on Deploy<a class="headerlink" href="#no-restart-needed-on-deploy" title="Link to this heading">#</a></h2>
@@ -635,6 +650,200 @@ directory.</p>
 <p>That’s it. Caddy obtains and renews certificates automatically.</p>
 </section>
 </section>
+<section id="hardening-the-proxy">
+<h2>Hardening the Proxy<a class="headerlink" href="#hardening-the-proxy" title="Link to this heading">#</a></h2>
+<p>The proxy is your first line of defense. Because Bialet is single-threaded
+and blocking, a single slow or hostile client can stall every other request
+unless the proxy caps body size, sets read deadlines, and buffers requests.</p>
+<p>Key directives, regardless of which proxy you run:</p>
+<ul class="simple">
+<li><p><strong>Cap the request body.</strong> Bialet rejects request bodies larger than the
+<code class="docutils literal notranslate"><span class="pre">-b</span></code> limit (default 128 KB) with <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Payload</span> <span class="pre">Too</span> <span class="pre">Large</span></code> <em>before</em> parsing
+them, so a body can never stall the Wren runtime. The effective cap is the
+smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> and a memory-safe ceiling (<code class="docutils literal notranslate"><span class="pre">-m</span></code> / 512) so a body can never
+push the fork()ed child past its <code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> budget — at the default 128 MB
+soft limit that ceiling is 256 KB, so the default <code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">128</span></code> is fully
+effective. Set the proxy’s body limit to the smallest your
+app needs — 1 MB is a sane default for the proxy.</p></li>
+<li><p><strong>Set a body-read deadline.</strong> Bialet’s 5-second socket timeout is per
+<code class="docutils literal notranslate"><span class="pre">recv()</span></code> call, so a peer that dribbles bytes slowly can keep a connection
+open indefinitely. Make the proxy enforce a <em>total</em> read timeout and reject
+clients that stall mid-body.</p></li>
+<li><p><strong>Buffer the body at the proxy.</strong> Read the full request before forwarding
+it, so the upstream socket is never held open by a slow client.</p></li>
+<li><p><strong>Bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code></strong> and only expose the proxy to the internet.</p></li>
+<li><p><strong>Deny private files at the proxy too.</strong> Bialet already returns 403 for
+<code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>-prefixed files, but blocking them at the proxy adds a second layer
+in case an application or symlink ever serves one (see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a>).</p></li>
+</ul>
+<section id="id1">
+<h3>nginx<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="s">[::]:80</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">example.com</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Cap body size and enforce a total read deadline.</span>
+<span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">1m</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">client_body_timeout</span><span class="w"> </span><span class="s">10s</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Deny private files at the proxy (defense in depth).</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">(^|/)[_.]</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">return</span><span class="w"> </span><span class="mi">403</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1"># Serve static files directly from disk (optional, faster)</span>
+<span class="w">    </span><span class="kn">root</span><span class="w"> </span><span class="s">/www/example.com</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1"># Try static file first, fall back to Bialet</span>
+<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">@bialet</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1"># Gzip static assets</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">immutable&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_request_buffering</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note: the <code class="docutils literal notranslate"><span class="pre">location</span> <span class="pre">~</span> <span class="pre">(^|/)[_.]</span></code> block matches any path segment that starts
+with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, which covers <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code>, and dotfiles such
+as <code class="docutils literal notranslate"><span class="pre">.env</span></code>. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.</p>
+</section>
+<section id="id2">
+<h3>Apache<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<div class="highlight-apache notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nb">ServerName</span><span class="w"> </span>example.com
+
+<span class="w">    </span><span class="c"># Cap body size (bytes) and set a total read timeout (needs mod_reqtimeout).</span>
+<span class="w">    </span><span class="nb">LimitRequestBody</span><span class="w"> </span><span class="m">1048576</span>
+<span class="w">    </span><span class="nb">RequestReadTimeout</span><span class="w"> </span>header=20-40,MinRate=500<span class="w"> </span>body=30,MinRate=500
+
+<span class="w">    </span><span class="c"># Gzip</span>
+<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_deflate.c</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/javascript
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/javascript<span class="w"> </span>application/json
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
+<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
+
+<span class="w">    </span><span class="c"># Cache static assets</span>
+<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
+<span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">&quot;access plus 30 days&quot;</span>
+<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
+
+<span class="w">    </span><span class="c"># Deny private files at the proxy (defense in depth).</span>
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^(.*)(^|/)[_.][^/]*$<span class="w"> </span>-<span class="w"> </span>[F,L]
+
+<span class="w">    </span><span class="c"># Serve static files directly</span>
+<span class="w">    </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="sx">/www/example.com</span>
+
+<span class="w">    </span><span class="nb">RewriteEngine</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="c"># If the file exists, serve it</span>
+<span class="w">    </span><span class="nb">RewriteCond</span><span class="w"> </span>%{DOCUMENT_ROOT}%{REQUEST_URI}<span class="w"> </span>-f
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^<span class="w"> </span>-<span class="w"> </span>[L]
+<span class="w">    </span><span class="c"># Otherwise proxy to Bialet</span>
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^/(.*)$<span class="w"> </span>http://127.0.0.1:7001/$1<span class="w"> </span>[P,L]
+
+<span class="w">    </span><span class="nb">ProxyPreserveHost</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="nb">ProxyPassReverse</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">RequestReadTimeout</span></code> is provided by <code class="docutils literal notranslate"><span class="pre">mod_reqtimeout</span></code>, enabled with
+<code class="docutils literal notranslate"><span class="pre">a2enmod</span> <span class="pre">reqtimeout</span></code>. The <code class="docutils literal notranslate"><span class="pre">MinRate</span></code> clause stops a slow-drip client that would
+otherwise never trip the absolute timeout.</p>
+</section>
+<section id="id3">
+<h3>Caddy<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<p>Caddy does not have a per-location body-size directive, but you can cap
+request bodies with a request matcher:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">encode</span><span class="w"> </span><span class="n">gzip</span><span class="w"> </span><span class="n">zstd</span>
+
+<span class="w">    </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">file</span>
+<span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">&quot;public, max-age=604800, immutable&quot;</span>
+
+<span class="w">    </span><span class="err">@</span><span class="n">private</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">path_regexp</span><span class="w"> </span><span class="n">private</span><span class="w"> </span><span class="p">(</span><span class="o">^|/</span><span class="p">)[</span><span class="vi">_</span><span class="o">.</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">respond</span><span class="w"> </span><span class="err">@</span><span class="n">private</span><span class="w"> </span><span class="mf">403</span>
+
+<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">flush_interval</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Caddy reads request bodies before proxying by default. For a total body
+deadline, front Caddy with a timeout-capable proxy or enforce it at the app
+level.</p>
+</section>
+</section>
+<section id="cloudflare-tunnel-alternative">
+<h2>Cloudflare Tunnel (Alternative)<a class="headerlink" href="#cloudflare-tunnel-alternative" title="Link to this heading">#</a></h2>
+<p>If you do not control a server or a domain, <a class="reference external" href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/">Cloudflare Tunnel</a>
+exposes a local Bialet server over a public HTTPS URL <strong>without opening a
+port, configuring a proxy, or buying DNS</strong>. <code class="docutils literal notranslate"><span class="pre">cloudflared</span></code> keeps an outbound
+connection to Cloudflare’s edge; requests arrive at your machine through that
+tunnel. Cloudflare terminates TLS and buffers slow clients, which covers most
+of what a reverse proxy does.</p>
+<p>Install <code class="docutils literal notranslate"><span class="pre">cloudflared</span></code> (<a class="reference external" href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/">official packages</a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>cloudflared
+</pre></div>
+</div>
+<p>Start Bialet bound to localhost, then point a quick tunnel at it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/myapp
+cloudflared<span class="w"> </span>tunnel<span class="w"> </span>--url<span class="w"> </span>http://127.0.0.1:7001
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">cloudflared</span></code> prints a <code class="docutils literal notranslate"><span class="pre">https://&lt;random&gt;.trycloudflare.com</span></code> URL. Open it and
+your app is live. No account, no configuration.</p>
+<blockquote>
+<div><p><strong>Pitfall: the URL is temporary.</strong> A quick tunnel dies when <code class="docutils literal notranslate"><span class="pre">cloudflared</span></code>
+stops, and the next run gets a <strong>new</strong> random hostname. Fine for demos and
+previews; useless as a stable endpoint.</p>
+</div></blockquote>
+<p>For a stable hostname you need a <a class="reference external" href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/">named tunnel</a>,
+which requires a Cloudflare account and a domain on their DNS:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cloudflared<span class="w"> </span>tunnel<span class="w"> </span>login
+cloudflared<span class="w"> </span>tunnel<span class="w"> </span>create<span class="w"> </span>myapp
+cloudflared<span class="w"> </span>tunnel<span class="w"> </span>route<span class="w"> </span>dns<span class="w"> </span>myapp<span class="w"> </span>app.example.com
+cloudflared<span class="w"> </span>tunnel<span class="w"> </span>run<span class="w"> </span>--url<span class="w"> </span>http://127.0.0.1:7001<span class="w"> </span>myapp
+</pre></div>
+</div>
+<p>A named tunnel persists across restarts and can run as a systemd unit with
+<code class="docutils literal notranslate"><span class="pre">cloudflared</span> <span class="pre">service</span> <span class="pre">install</span></code>.</p>
+<p>Security notes that still apply:</p>
+<ul class="simple">
+<li><p><strong>Bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>.</strong> The tunnel forwards to localhost; do not
+add <code class="docutils literal notranslate"><span class="pre">-h</span> <span class="pre">0.0.0.0</span></code>. Only Cloudflare’s edge ever talks to your server.</p></li>
+<li><p><strong>Cap the request body.</strong> Cloudflare does not enforce a body-size limit for
+you. Keep Bialet’s <code class="docutils literal notranslate"><span class="pre">-b</span></code> default (128 KB) or lower it.</p></li>
+<li><p><strong>Private files are still private.</strong> Bialet returns 403 for <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>
+prefixed files; a tunnel does not change that.</p></li>
+</ul>
+</section>
 <section id="running-bialet-as-a-service">
 <h2>Running Bialet as a Service<a class="headerlink" href="#running-bialet-as-a-service" title="Link to this heading">#</a></h2>
 <section id="systemd-ubuntu-debian">
@@ -745,7 +954,7 @@ docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </sp
 </section>
 </section>
 <section id="sqlite-wal-mode-production">
-<span id="id1"></span><h2>SQLite WAL Mode (Production)<a class="headerlink" href="#sqlite-wal-mode-production" title="Link to this heading">#</a></h2>
+<span id="id4"></span><h2>SQLite WAL Mode (Production)<a class="headerlink" href="#sqlite-wal-mode-production" title="Link to this heading">#</a></h2>
 <p>Enable WAL with the <code class="docutils literal notranslate"><span class="pre">-w</span></code> flag:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-w<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/myapp
 </pre></div>
@@ -835,12 +1044,12 @@ negligible and the concurrency benefit is immediate.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Soft memory limit (MB)</p></td>
-<td><p>50</p></td>
+<td><p>128</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">1024</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code></p></td>
 <td><p>Hard memory limit (MB)</p></td>
-<td><p>100</p></td>
+<td><p>256</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-M</span> <span class="pre">2048</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
@@ -853,7 +1062,12 @@ negligible and the concurrency benefit is immediate.</p>
 <td><p>30</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-C</span> <span class="pre">50</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span></code></p></td>
+<td><p>Max request body (KB)</p></td>
+<td><p>128</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">512</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
 <td><p>SQLite WAL mode</p></td>
 <td><p>off</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
@@ -861,6 +1075,9 @@ negligible and the concurrency benefit is immediate.</p>
 </tbody>
 </table>
 </div>
+<p>The request-body cap is the smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> and the memory-safe ceiling
+(<code class="docutils literal notranslate"><span class="pre">-m</span></code> / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
+cap are rejected with <code class="docutils literal notranslate"><span class="pre">413</span></code> before parsing; raising <code class="docutils literal notranslate"><span class="pre">-m</span></code> raises the ceiling.</p>
 <p>Example for a production app:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>-w<span class="w"> </span>-l<span class="w"> </span>/var/log/bialet/app.log<span class="w"> </span>/www/myapp
 </pre></div>
@@ -871,7 +1088,9 @@ negligible and the concurrency benefit is immediate.</p>
 <ol class="arabic simple">
 <li><p><strong>Copy the binary</strong> — <code class="docutils literal notranslate"><span class="pre">scp</span> <span class="pre">bialet</span> <span class="pre">user&#64;host:/usr/local/bin/</span></code></p></li>
 <li><p><strong>Copy your app</strong> — <code class="docutils literal notranslate"><span class="pre">scp</span> <span class="pre">-r</span> <span class="pre">*.wren</span> <span class="pre">static/</span> <span class="pre">user&#64;host:/www/myapp/</span></code></p></li>
-<li><p><strong>Set up the reverse proxy</strong> — nginx, Apache, or Caddy (see above)</p></li>
+<li><p><strong>Set up the reverse proxy</strong> — nginx, Apache, or Caddy (see above),
+including the body-size cap, read timeout, and private-file deny from the
+hardening section</p></li>
 <li><p><strong>Create the systemd unit</strong> — so it starts on boot and restarts on crash</p></li>
 <li><p><strong>Point your DNS</strong> — A/AAAA record to your server’s IP</p></li>
 <li><p><strong>Add TLS</strong> — Let’s Encrypt via certbot (nginx/Apache) or Caddy’s auto-TLS</p></li>
@@ -937,6 +1156,13 @@ negligible and the concurrency benefit is immediate.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardening-the-proxy">Hardening the Proxy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">nginx</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Apache</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Caddy</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cloudflare-tunnel-alternative">Cloudflare Tunnel (Alternative)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-bialet-as-a-service">Running Bialet as a Service</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-ubuntu-debian">systemd (Ubuntu / Debian)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-apps-on-one-server">Multiple Apps on One Server</a></li>

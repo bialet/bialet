@@ -218,5 +218,7 @@ Not yet, but you can install and run it in seconds:
 ```bash
 curl -fsSL https://get.bialet.dev | sh
 echo 'return <h1>Hello!</h1>' > index.wren
-bialet
+bialet dev
 ```
+
+`bialet dev` opens `http://127.0.0.1:7001` in your browser for you.

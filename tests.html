@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=0b90f31a" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tests';</script>
-    <script src="_static/ai-prompt.js?v=53c6f95f"></script>
+    <script src="_static/ai-prompt.js?v=6e724845"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.11.0" />
+  <meta name="docsearch:version" content="1.0.0" />
   </head>
   
   
@@ -167,7 +167,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation and Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
@@ -193,6 +193,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
@@ -201,10 +202,12 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
@@ -432,6 +435,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#skipping-tests">Skipping Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-tests">Writing Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
@@ -483,6 +487,7 @@
 <p>Use the <code class="docutils literal notranslate"><span class="pre">-T</span></code> flag to run all tests:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-T<span class="w">                    </span><span class="c1"># Run all tests in _tests/ folder</span>
 bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class="w">      </span><span class="c1"># Run tests in specific directory</span>
+bialet<span class="w"> </span>-T<span class="w"> </span>-q<span class="w">                 </span><span class="c1"># Quiet mode: no colors, minimal output (for CI)</span>
 </pre></div>
 </div>
 </section>
@@ -515,6 +520,18 @@ test files execute). Use it for common setup:</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="skipping-tests">
+<h2>Skipping Tests<a class="headerlink" href="#skipping-tests" title="Link to this heading">#</a></h2>
+<p>Call <code class="docutils literal notranslate"><span class="pre">Tests.skip()</span></code> as a test file’s first statement to mark it skipped
+instead of run. Skipped tests count separately from passed/failed and never
+affect the exit code:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/maintenance.wren</span>
+<span class="nc">Tests</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Tests.skip()</span></code> doesn’t abort the fiber, so any code after it in the same file
+still executes – put it first if the rest of the file should not run.</p>
 </section>
 <section id="writing-tests">
 <h2>Writing Tests<a class="headerlink" href="#writing-tests" title="Link to this heading">#</a></h2>
@@ -891,11 +908,31 @@ test files execute). Use it for common setup:</p>
 </div>
 <p><strong>Run tests:</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
-Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests/...
+Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
 
-✓<span class="w"> </span>_tests/hi.wren:<span class="w"> </span>Test.get<span class="o">(</span><span class="s2">&quot;/hi&quot;</span><span class="o">)</span>.status<span class="o">(</span><span class="m">200</span><span class="o">)</span>.contains<span class="o">(</span><span class="s2">&quot;Hello World&quot;</span><span class="o">)</span>
+<span class="w">  </span>✓<span class="w"> </span>hi.wren
 
-<span class="m">1</span><span class="w"> </span>passed,<span class="w"> </span><span class="m">0</span><span class="w"> </span>failed
+Summary:
+
+Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+</pre></div>
+</div>
+<p>A failing assertion reports the file and the <code class="docutils literal notranslate"><span class="pre">Fiber.abort</span></code> message under it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
+Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
+
+<span class="w">  </span>✗<span class="w"> </span>hi.wren
+<span class="w">      </span>Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>
+
+Summary:
+
+Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 </section>
@@ -905,10 +942,19 @@ Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</
 <li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: All tests passed</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: One or more tests failed</p></li>
 </ul>
-<p>This makes it easy to integrate with CI/CD pipelines:</p>
+<p>This makes it easy to integrate with CI/CD pipelines. <code class="docutils literal notranslate"><span class="pre">-q</span></code> drops the colors
+and per-test lines down to a single summary line plus a <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">FAIL</span></code> block per
+failure – friendlier for CI logs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T<span class="w"> </span>-q
+<span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>tests<span class="w"> </span>failed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">0</span>.02s
+
+<span class="c1">### FAIL _tests/hi.wren:2 - hi</span>
+Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>
+</pre></div>
+</div>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># GitHub Actions example</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run tests</span>
-<span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bialet -T</span>
+<span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bialet -T -q</span>
 </pre></div>
 </div>
 </section>
@@ -977,6 +1023,7 @@ Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#skipping-tests">Skipping Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-tests">Writing Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>

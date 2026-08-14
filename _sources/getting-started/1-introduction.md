@@ -19,6 +19,12 @@ Your project can include JavaScript, CSS, images — anything a regular
 [HTML project](https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/Dealing_with_files)
 would have. Bialet serves static files alongside your Wren pages.
 
+Throughout this tutorial you'll run the app with **`bialet dev`**, Bialet's
+development mode. It enables the in-browser error display and live reload from
+the start, so a mistake in your code shows up in the browser instead of a
+generic error page, and file changes reload automatically. You'll set it up in
+the next chapter.
+
 In the next chapter, we'll set up Bialet and get a development server
 running.
 

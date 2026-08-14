@@ -110,7 +110,8 @@ var users = `SELECT * FROM users`
   .order(sortCol, sortDir, allowedSorts)
   .fetch
 
-// Combined with filtering
+// Combined with filtering — see Optional Filters Without Concatenation below
+// for why the WHERE clause is written this way
 var search = Request.get("search") ? Request.get("search") : ""
 var users = `
   SELECT * FROM users 
@@ -130,6 +131,59 @@ var users = `SELECT * FROM users`
 ```
 
 This method is especially useful for REST APIs where sort parameters come from user input, preventing SQL injection through column name manipulation. For paginating sorted results, combine with `LIMIT`/`OFFSET` as shown in the [Pagination](#pagination) section.
+
+(optional-filters)=
+
+## Optional Filters Without Concatenation
+
+Since the Query object rejects string concatenation and interpolation (see
+above), a query whose `WHERE` clause changes shape depending on which filters
+the caller supplies can't be assembled by appending SQL fragments. Instead,
+write one static query and put a bypass condition in front of each filter, so
+`OR` short-circuits it away when the filter doesn't apply:
+
+```wren
+// Search box that matches everything when empty
+var search = Request.get("search") || ""
+var users = `
+  SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')
+`.fetch(search, search)
+```
+
+The same technique works with a boolean flag instead of an empty string —
+useful for a tri-state filter like "all / active / completed":
+
+```wren
+// filter is "all", "active", or "completed"
+static list(filter) { `
+  SELECT * FROM tasks
+  WHERE session = ? AND (? = 1 OR finished = ?)
+  ORDER BY createdAt ASC
+`.fetch(Session.id, filter == "all", filter == "active").to(Task) }
+```
+
+`filter == "all"` and `filter == "active"` are Booleans, bound as `1`/`0`.
+When the first is `1` (filter is `"all"`), `? = 1` is true and the `OR` makes
+the whole condition true for every row, so `finished` is never checked. When
+it's `0`, the clause falls through to `finished = ?`, which compares against
+the second Boolean (`true` for `"active"`, `false` for `"completed"`).
+
+Chain independent filters with `AND`, each with its own bypass, to let
+callers omit any combination of them:
+
+```wren
+var name = Request.get("name") || ""
+var minAge = Request.get("minAge") || ""
+var users = `
+  SELECT * FROM users
+  WHERE (? = '' OR name LIKE '%' || ? || '%')
+    AND (? = '' OR age >= ?)
+`.fetch([name, name, minAge, minAge])
+```
+
+The query stays static regardless of how many filters are active — safe from
+injection, and readable as a single SQL statement instead of a string built
+up in pieces.
 
 (pagination)=
 
@@ -356,7 +410,7 @@ Bialet tables are prefixed with `BIALET_`.
 
 - `BIALET_CONFIG`: The configuration table.
 - `BIALET_MIGRATIONS`: The migration history table.
-- `BIALET_SESSIONS`: The session table.
+- `BIALET_SESSION`: The session table.
 - `BIALET_FILES`: The file storage table.
 - `BIALET_LOGS`: The logging table.
 - `BIALET_REMOTE_MODULES`: The remote module cache table.
