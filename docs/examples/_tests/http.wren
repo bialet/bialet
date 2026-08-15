@@ -4,4 +4,4 @@
 // GET /http fetches users from external API and renders a table
 Test.get("/http")
     .status(200)
-    .contains("users from the JSONPlaceholder API")
+    .contains("users from the DummyJSON API")

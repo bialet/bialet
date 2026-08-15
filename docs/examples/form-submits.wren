@@ -26,7 +26,7 @@ if (Request.isPost) {
 var total = `SELECT value FROM counter WHERE name = "form"`.val
 
 // We use the `return` to finish the script and send the response to the client.
-// The `{{ ... )` syntax is used to interpolate the value of the `total` variable.
+// The `{{ ... }}` syntax is used to interpolate the value of the `total` variable.
 // and the `value` variable.
 // Apart from the interpolation, the string is regular HTML.
 return <!doctype html>
