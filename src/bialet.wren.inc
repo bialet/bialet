@@ -113,7 +113,7 @@ static const char* bialetModuleSource =
 "  static out { __out.trim() }\n"
 "  static status { __status }\n"
 "  static headers { __cookies.map{|c| c + \"\\r\\n\"}.join() + __headers.keys.map{|k| k + \": \" + __headers[k] + \"\\r\\n\"}.join() }\n"
-"  static out(out) { __out = __out + \"\\r\\n\" + out }\n"
+"  static out(out) { __out = __out + \"\\r\\n\" + out.toString }\n"
 "  static status(status) { __status = status }\n"
 "  static useErrorFallback() { __useErrorFallback }\n"
 "  static addCookieHeader(value) { __cookies.add(\"Set-Cookie: %(Util.headerValue(value))\") }\n"

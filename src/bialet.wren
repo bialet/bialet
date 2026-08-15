@@ -134,7 +134,7 @@ class Response {
   // Wren fork mis-parses a getter body whose binary operator ends a line.
   static headers { __cookies.map{|c| c + "\r\n"}.join() + __headers.keys.map{|k| k + ": " + __headers[k] + "\r\n"}.join() }
 
-  static out(out) { __out = __out + "\r\n" + out }
+  static out(out) { __out = __out + "\r\n" + out.toString }
   static status(status) { __status = status }
   static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
