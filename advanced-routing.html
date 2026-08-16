@@ -66,7 +66,7 @@
     <link rel="prev" title="Error Pages" href="errors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.0" />
+  <meta name="docsearch:version" content="1.0.1" />
   </head>
   
   
@@ -648,7 +648,7 @@ every <code class="docutils literal notranslate"><span class="pre">.wren</span><
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: blog.wren</span>
 <span class="c1">// Handles: /blog?id=42</span>
 
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">App</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
@@ -662,13 +662,11 @@ every <code class="docutils literal notranslate"><span class="pre">.wren</span><
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
 <span class="p">}</span>
 
-<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="p">({</span>
-<span class="w">  </span><span class="x">&lt;article&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">    &lt;div class=&quot;content&quot;&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
-<span class="x">  &lt;/article&gt;</span>
-<span class="p">})</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class=&quot;content&quot;&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>One file (<code class="docutils literal notranslate"><span class="pre">blog.wren</span></code>) now serves every post on the site — <code class="docutils literal notranslate"><span class="pre">/blog?id=1</span></code>,
@@ -927,7 +925,7 @@ most projects.</p>
 <h3>Example: Article Page (Query Parameters)<a class="headerlink" href="#example-article-page-query-parameters" title="Link to this heading">#</a></h3>
 <p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">article.wren</span></code></p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import shared layout from _app folder</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">App</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
 
@@ -948,22 +946,20 @@ most projects.</p>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
 <span class="p">}</span>
 
-<span class="c1">// Render using App template</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="p">({</span>
-<span class="w">  </span><span class="x">&lt;article&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">    &lt;div class=&quot;content&quot;&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;/div&gt;</span>
-<span class="x">  &lt;/article&gt;</span>
-<span class="p">})</span>
+<span class="c1">// Render using the shared template</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class=&quot;content&quot;&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/div&gt;</span>
+<span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>URL: <code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code></p>
 <blockquote>
 <div><p><strong>Note:</strong> if you’re using the root-level structure instead of <code class="docutils literal notranslate"><span class="pre">_app/</span></code>,
-import from <code class="docutils literal notranslate"><span class="pre">_app</span></code> directly: <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;_app&quot;</span> <span class="pre">for</span> <span class="pre">App</span></code></p>
+import from <code class="docutils literal notranslate"><span class="pre">_app</span></code> directly: <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;_app&quot;</span> <span class="pre">for</span> <span class="pre">Template</span></code></p>
 </div></blockquote>
 <blockquote>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">post[&quot;content&quot;]</span></code> is trusted content you control (it came
@@ -982,7 +978,7 @@ structure you don’t control. It requires a <code class="docutils literal notra
 file; most projects don’t need it, and the query-parameter version above
 should be your default.</p>
 <p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">App</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
@@ -1002,15 +998,13 @@ should be your default.</p>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
 <span class="p">}</span>
 
-<span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">render</span><span class="p">({</span>
-<span class="w">  </span><span class="x">&lt;article&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">    &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">    &lt;div class=&quot;content&quot;&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;/div&gt;</span>
-<span class="x">  &lt;/article&gt;</span>
-<span class="p">})</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class=&quot;content&quot;&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/div&gt;</span>
+<span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
