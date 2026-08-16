@@ -101,16 +101,10 @@ of `make` targets, and the development workflow, see
 [CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md)
 on GitHub.
 
-## Syntax Highlighting
+## Editor Support
 
-You have available the
-[plugin for Vim/Neovim](https://github.com/bialet/bialet.vim).
-
-```bash
-Plug 'bialet/bialet.vim'
-```
-
-We are still working on supporting VSCode and other IDEs.
+For syntax highlighting in VS Code, Vim, and Neovim, see
+[Editor Support](editor-support.md).
 
 For the full command-line reference — starting the server, `bialet dev`, every
 flag, `-r`, `-t`, and `-T` — see [Command Line Usage](usage.md).

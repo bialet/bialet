@@ -284,6 +284,7 @@ Who is Bialet for?
    self
    why-bialet
    installation
+   editor-support
    wren
 
 .. toctree::
