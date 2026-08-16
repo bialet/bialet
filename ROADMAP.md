@@ -5,7 +5,7 @@ ideas I may revisit if interest returns, but no promises.
 
 ## Editors/IDE Support
 
-- [ ] VS Code (syntax JSON, language-configuration)
+- [x] VS Code (syntax JSON, language-configuration)
 - [ ] Sublime Text (.sublime-syntax and .tmPreferences)
 - [x] Vim / Neovim (ftdetect, syntax)
 - [ ] JetBrains (IntelliJ) (TextMate bundle or custom plugin)
