@@ -13,7 +13,7 @@ if (Request.isPost) {
 System.log("Date: %(date) - Current: %(current)")
 
 // We use the `return` to finish the script and send the response to the client.
-// The `{{ ... )` syntax is used to interpolate the properties of the date object
+// The `{{ ... }}` syntax is used to interpolate the properties of the date object
 // and also any other string.
 // Apart from the interpolation, the string is regular HTML.
 return <!doctype html>

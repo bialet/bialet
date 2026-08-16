@@ -178,6 +178,7 @@ fi
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"
+run_test "Response out HTML literal   " "response-out-html" 200 "<p>hi</p>"
 run_test "Response headers getter     " "response-headers" 200 "custom:true|cookie:true"
 run_test "Response forbidden          " "response-errors?forbidden=1" 403
 run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom-404-page"

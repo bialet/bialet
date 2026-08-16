@@ -78,7 +78,7 @@ Print the installed version and exit:
 
 ```bash
 bialet -v
-# bialet 0.12.0
+# bialet {{bialet_version}}
 ```
 
 ### Quiet mode

@@ -169,7 +169,7 @@ every `.wren` file already has that ability, by default.
 // File: blog.wren
 // Handles: /blog?id=42
 
-import "_app/template" for App
+import "_app/template" for Template
 
 var id = Request.get("id")
 var post = `
@@ -183,13 +183,11 @@ if (!post) {
   return "<h1>Post not found</h1>"
 }
 
-return App.render({
-  <article>
-    <h1>{{post["title"]}}</h1>
-    <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
-    <div class="content">{{post["content"]}}</div>
-  </article>
-})
+return Template.new().layout(<article>
+  <h1>{{post["title"]}}</h1>
+  <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
+  <div class="content">{{post["content"]}}</div>
+</article>)
 ```
 
 One file (`blog.wren`) now serves every post on the site — `/blog?id=1`,
@@ -379,7 +377,7 @@ my-blog/
 
 ```wren
 // Import shared layout from _app folder
-import "_app/template" for App
+import "_app/template" for Template
 
 var id = Request.get("id")
 
@@ -400,22 +398,20 @@ if (!post) {
   return "<h1>Post not found</h1>"
 }
 
-// Render using App template
-return App.render({
-  <article>
-    <h1>{{post["title"]}}</h1>
-    <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
-    <div class="content">
-      {{post["content"]}}
-    </div>
-  </article>
-})
+// Render using the shared template
+return Template.new().layout(<article>
+  <h1>{{post["title"]}}</h1>
+  <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
+  <div class="content">
+    {{post["content"]}}
+  </div>
+</article>)
 ```
 
 URL: `/article?id=42`
 
 > **Note:** if you're using the root-level structure instead of `_app/`,
-> import from `_app` directly: `import "_app" for App`
+> import from `_app` directly: `import "_app" for Template`
 
 > ⚠️ Pitfall: `post["content"]` is trusted content you control (it came
 > from your own database), but if you ever interpolate user-submitted
@@ -435,7 +431,7 @@ should be your default.
 **File:** `blog/_route.wren`
 
 ```wren
-import "_app/template" for App
+import "_app/template" for Template
 
 var slug = Request.route(0)
 
@@ -455,15 +451,13 @@ if (!post) {
   return "<h1>Post not found</h1>"
 }
 
-return App.render({
-  <article>
-    <h1>{{post["title"]}}</h1>
-    <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
-    <div class="content">
-      {{post["content"]}}
-    </div>
-  </article>
-})
+return Template.new().layout(<article>
+  <h1>{{post["title"]}}</h1>
+  <p class="meta">By {{post["author"]}} on {{post["createdAt"]}}</p>
+  <div class="content">
+    {{post["content"]}}
+  </div>
+</article>)
 ```
 
 > ⚠️ Pitfall: this version needs a dedicated `slug` column and gives up

@@ -1098,6 +1098,10 @@ int bialet_validate_syntax(const char* filePath) {
 
   WrenVM* vm = wrenNewVM(&wren_config);
   wrenSetUserData(vm, abs_path);
+  /* Initialize core classes (Date, Response) before validating, so scripts
+   * that touch Date/Response at the top level don't read uninitialized
+   * state and crash. Mirrors bialet_run(). */
+  wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
   WrenInterpretResult result = wrenInterpret(vm, abs_path, code);
   wrenFreeVM(vm);
   free(code);
@@ -1172,7 +1176,10 @@ static TestResult run_test_file(const char* testPath, const char* initPath,
   char* code = read_file(testPath);
   if(code == NULL) {
     *outLine = 0;
-    snprintf(outMsg, outMsgSize, "Cannot read test file: %s", testPath);
+    // The test path can exceed the fixed message buffer, and an unbounded %s
+    // trips -Wformat-truncation under -Werror. Bound the copy: 256-byte
+    // buffer - "Cannot read test file: " (23) - NUL = 232.
+    snprintf(outMsg, outMsgSize, "Cannot read test file: %.232s", testPath);
     return TEST_RESULT_FAIL;
   }
 
@@ -1361,14 +1368,13 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     printf("%d of %d tests failed in %.2fs\n", failed, ran, elapsed);
     for(int i = 0; i < failed; i++) {
       // Strip the ".wren" extension for the display name; is_test_file()
-      // guarantees every entry here ends with it.
-      char stem[MAX_MODULE_LEN];
-      snprintf(stem, sizeof(stem), "%s", failures[i].name);
-      size_t stemLen = strlen(stem);
+      // guarantees every entry here ends with it. A %.*s precision avoids
+      // the fixed stem buffer that -Wformat-truncation rejected.
+      size_t stemLen = strlen(failures[i].name);
       if(stemLen > 5)
-        stem[stemLen - 5] = '\0';
-      printf("\n### FAIL %s/%s:%d - %s\n%s\n", TESTS_DIR, failures[i].name,
-             failures[i].line, stem, failures[i].msg);
+        stemLen -= 5;
+      printf("\n### FAIL %s/%s:%d - %.*s\n%s\n", TESTS_DIR, failures[i].name,
+             failures[i].line, (int)stemLen, failures[i].name, failures[i].msg);
     }
   } else {
     char line[64];
