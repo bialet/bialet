@@ -148,8 +148,8 @@ make install       # copies the binary to ~/.local/bin
 ```
 
 Requires a C17 compiler, `make`, `git`, and development headers for SQLite,
-libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites)
-for other distributions, cross-compiling (including Windows), the full list of
+libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites) for
+other distributions, cross-compiling (including Windows), the full list of
 `make` targets, and the development workflow.
 
 ## Development
@@ -212,6 +212,8 @@ several open-source projects and contributors. We extend our gratitude to:
   flexible, and high-performance capabilities.
 - [PureFox48](https://github.com/PureFox48) for the upper and lower functions.
 - [superwills](https://github.com/superwills) for providing the `getopt` source.
+- [dmon](https://github.com/septag/dmon) by Sepehr Taghidisian – a portable
+  directory monitoring library used for file-system change detection.
 - DeepSeek v4 Flash & Pro, Gemini 3, Sonnet 5 and Opus 4.
 - Coffee and mate cocido.
 
