@@ -100,11 +100,3 @@ For per-OS dependencies, cross-compiling (including Windows), the full list
 of `make` targets, and the development workflow, see
 [CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md)
 on GitHub.
-
-## Editor Support
-
-For syntax highlighting in VS Code, Vim, and Neovim, see
-[Editor Support](editor-support.md).
-
-For the full command-line reference — starting the server, `bialet dev`, every
-flag, `-r`, `-t`, and `-T` — see [Command Line Usage](usage.md).
