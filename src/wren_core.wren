@@ -679,8 +679,29 @@ class Date {
 
 class Query {
   construct new() {}
+
+  // The native layer only binds null/bool/num/string parameters. Anything else
+  // (HtmlNode, Date, ...) is stringified with toString so it binds as text
+  // instead of being silently dropped, which would shift every later `?`
+  // placeholder left and corrupt the row.
+  static bindParams_(params) {
+    if (params == null) return []
+    var result = []
+    for (param in params) {
+      if (param == null || param is Bool || param is Num || param is String) {
+        result.add(param)
+      } else {
+        result.add(param.toString)
+      }
+    }
+    return result
+  }
+
   static fromString(string, params) { Query.new().query_(string, params) }
   static fetchFromString(string, params) { Query.new().fetch_(string, params) }
+  // Stringify non-primitive params, then delegate to the native backends.
+  query_(string, params) { queryRaw_(string, Query.bindParams_(params)) }
+  fetch_(string, params) { fetchRaw_(string, Query.bindParams_(params)) }
   // Query methods, return last inserted ID
   query { query_(this, []) }
   query() { query_(this, []) }

@@ -1802,7 +1802,13 @@ DEF_PRIMITIVE(markdown_file) {
   RETURN_VAL(result);
 };
 
-static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
+// Binds each parameter in [params] to [query]. Returns false (and sets a
+// fiber error) when a parameter has a type the native layer cannot bind, so a
+// parameter is never dropped silently: that would shift every later `?`
+// placeholder left and corrupt the row. The Wren layer stringifies
+// non-primitives (HtmlNode, Date, ...) via toString before calling in, so a
+// failure here means a caller bypassed that and passed an unsupported type.
+static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
   Value val;
   if(vm->config.writeFn != NULL) {
     for(int i = 0; i < params->elements.count; i++) {
@@ -1818,11 +1824,21 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
         // is ~24 chars); %f expands to hundreds of chars and overflowed
         // this fixed stack buffer.
         int written = snprintf(num, sizeof(num), "%.17g", AS_NUM(val));
-        if(written < 0 || written >= (int)sizeof(num))
-          continue;
+        if(written < 0 || written >= (int)sizeof(num)) {
+          vm->fiber->error = wrenStringFormat(
+              vm, "Query parameter %d does not fit in a number buffer", i + 1);
+          return false;
+        }
         ok = add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else if(IS_STRING(val)) {
         ok = add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
+      } else {
+        vm->fiber->error = wrenStringFormat(
+            vm,
+            "Unsupported query parameter type @; only null, bool, num and "
+            "string are bindable. Stringify values with toString() first.",
+            OBJ_VAL(wrenGetClass(vm, val)->name));
+        return false;
       }
       // On allocation failure, drop the parameter instead of dereferencing
       // the un-grown array in the query runner.
@@ -1831,6 +1847,7 @@ static void queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
     }
     vm->config.queryFn(vm, query);
   }
+  return true;
 }
 
 DEF_PRIMITIVE(query_fetch) {
@@ -1843,7 +1860,10 @@ DEF_PRIMITIVE(query_fetch) {
     RETURN_ERROR("Out of memory allocating query string");
   }
   query->queryString = qs;
-  queryPrepare(vm, query, AS_LIST(args[2]));
+  if(!queryPrepare(vm, query, AS_LIST(args[2]))) {
+    free_bialet_query(query);
+    return false;
+  }
   ObjList* list = wrenNewList(vm, query->resultsCount);
   for(int i = 0; i < query->resultsCount; i++) {
     ObjMap*           row = wrenNewMap(vm);
@@ -1868,7 +1888,10 @@ DEF_PRIMITIVE(query_execute) {
     RETURN_ERROR("Out of memory allocating query string");
   }
   query->queryString = qs;
-  queryPrepare(vm, query, AS_LIST(args[2]));
+  if(!queryPrepare(vm, query, AS_LIST(args[2]))) {
+    free_bialet_query(query);
+    return false;
+  }
   if(query->lastInsertId) {
     Value lastInsertId = wrenNewString(vm, query->lastInsertId);
     free_bialet_query(query);
@@ -2101,8 +2124,8 @@ void wrenInitializeCore(WrenVM* vm) {
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
   PRIMITIVE(vm->queryClass->obj.classObj, "new(_)", query_new);
   PRIMITIVE(vm->queryClass, "toString", query_toString);
-  PRIMITIVE(vm->queryClass, "query_(_,_)", query_execute);
-  PRIMITIVE(vm->queryClass, "fetch_(_,_)", query_fetch);
+  PRIMITIVE(vm->queryClass, "queryRaw_(_,_)", query_execute);
+  PRIMITIVE(vm->queryClass, "fetchRaw_(_,_)", query_fetch);
 
   vm->listClass = AS_CLASS(wrenFindVariable(vm, coreModule, "List"));
   PRIMITIVE(vm->listClass->obj.classObj, "filled(_,_)", list_filled);
