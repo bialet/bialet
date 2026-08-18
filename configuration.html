@@ -472,22 +472,22 @@ in a simple key/value table. There are no <code class="docutils literal notransl
 environment variables to set.</p>
 <section id="reading-and-writing">
 <h2>Reading and Writing<a class="headerlink" href="#reading-and-writing" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;app_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;app_name&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// &quot;My App&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"app_name"</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"app_name"</span><span class="p">)</span><span class="w">  </span><span class="c1">// "My App"</span>
 </pre></div>
 </div>
 <section id="typed-access">
 <h3>Typed Access<a class="headerlink" href="#typed-access" title="Link to this heading">#</a></h3>
 <p>All values are stored as strings. Use typed getters for numbers, booleans,
 and JSON:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 20 as a number</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"items_per_page"</span><span class="p">,</span><span class="w"> </span><span class="s2">"20"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">"items_per_page"</span><span class="p">)</span><span class="w">  </span><span class="c1">// 20 as a number</span>
 
-<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// true</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"maintenance_mode"</span><span class="p">,</span><span class="w"> </span><span class="s2">"1"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"maintenance_mode"</span><span class="p">)</span><span class="w">  </span><span class="c1">// true</span>
 
-<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;darkMode&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notifications&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
-<span class="k">var</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1">// { &quot;darkMode&quot;: true, ... }</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"features"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"darkMode"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">"notifications"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
+<span class="k">var</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span><span class="w">     </span><span class="c1">// { "darkMode": true, ... }</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Config.bool</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code> (case-insensitive),
@@ -497,11 +497,11 @@ and JSON:</p>
 <h3>Enable / Disable<a class="headerlink" href="#enable-disable" title="Link to this heading">#</a></h3>
 <p>For on/off flags, use the <code class="docutils literal notranslate"><span class="pre">enable</span></code> and <code class="docutils literal notranslate"><span class="pre">disable</span></code> convenience methods
 instead of hand-writing the <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> strings:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// stores &quot;1&quot;</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// stores &quot;0&quot;</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">     </span><span class="c1">// false</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">   </span><span class="c1">// stores "1"</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">  </span><span class="c1">// stores "0"</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">     </span><span class="c1">// false</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;live_reload&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"live_reload"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// feature is on</span>
 <span class="p">}</span>
 </pre></div>
@@ -538,7 +538,7 @@ equivalent to <code class="docutils literal notranslate"><span class="pre">Confi
 </section>
 <section id="delete">
 <h3>Delete<a class="headerlink" href="#delete" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;old_setting&quot;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"old_setting"</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
@@ -571,16 +571,16 @@ invalidate, and no separate config server to run.</p>
 <h3>With <code class="docutils literal notranslate"><span class="pre">-r</span></code> at startup<a class="headerlink" href="#with-r-at-startup" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> flag runs Wren code before the server starts and then exits. Use
 it in deployment scripts to seed secrets and settings:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;stripe_key&quot;, &quot;sk_live_...&quot;)&#39;</span><span class="w"> </span>/www/myapp
-bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;mail_host&quot;, &quot;smtp.example.com&quot;)&#39;</span><span class="w"> </span>/www/myapp
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.set("stripe_key", "sk_live_...")'</span><span class="w"> </span>/www/myapp
+bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.set("mail_host", "smtp.example.com")'</span><span class="w"> </span>/www/myapp
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">-r</span></code> can run any Wren code, so you can set multiple values in one call or
 even build a setup script:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// setup.wren — run with: bialet -r &quot;$(cat setup.wren)&quot; /www/myapp</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span><span class="p">)</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;darkMode&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notifications&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// setup.wren — run with: bialet -r "$(cat setup.wren)" /www/myapp</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"items_per_page"</span><span class="p">,</span><span class="w"> </span><span class="s2">"20"</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"features"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"darkMode"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">"notifications"</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">})</span>
 </pre></div>
 </div>
 <blockquote>
@@ -593,10 +593,10 @@ environment-specific overrides that shouldn’t live in migrations.</p>
 <p>For defaults that ship with the application and should exist in every
 environment, write them in a migration:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _migration.wren</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default config&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
-<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;title&#39;, &#39;My App&#39;)`</span><span class="p">,</span>
-<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;items_per_page&#39;, &#39;20&#39;)`</span><span class="p">,</span>
-<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES (&#39;admin_email&#39;, &#39;admin@example.com&#39;)`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add default config"</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('title', 'My App')`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('items_per_page', '20')`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`INSERT OR IGNORE INTO BIALET_CONFIG VALUES ('admin_email', 'admin@example.com')`</span>
 <span class="p">])</span>
 </pre></div>
 </div>
@@ -690,37 +690,37 @@ for every setting in the system.</p>
 <h2>Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading">#</a></h2>
 <section id="feature-flags">
 <h3>Feature Flags<a class="headerlink" href="#feature-flags" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Show beta UI</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Toggle flags with <code class="docutils literal notranslate"><span class="pre">Config.enable()</span></code> / <code class="docutils literal notranslate"><span class="pre">Config.disable()</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// turn on</span>
-<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">&quot;beta_features&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// turn off</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">   </span><span class="c1">// turn on</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">  </span><span class="c1">// turn off</span>
 </pre></div>
 </div>
 </section>
 <section id="maintenance-mode">
 <h3>Maintenance Mode<a class="headerlink" href="#maintenance-mode" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;maintenance_mode&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"maintenance_mode"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">503</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;&lt;h1&gt;</span><span class="nc">We</span><span class="s1">&#39;ll be right back&lt;/h1&gt;&lt;/main&gt;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;&lt;h1&gt;</span><span class="nc">We</span><span class="s1">'ll be right back&lt;/h1&gt;&lt;/main&gt;</span>
 <span class="s1">}</span>
 </pre></div>
 </div>
 </section>
 <section id="pagination-settings">
 <h3>Pagination Settings<a class="headerlink" href="#pagination-settings" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">&quot;items_per_page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
-<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">"items_per_page"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">20</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"1"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
 </pre></div>
 </div>
 </section>
 <section id="site-wide-title">
 <h3>Site-Wide Title<a class="headerlink" href="#site-wide-title" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site_title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;My Site&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"site_title"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"My Site"</span>
 </pre></div>
 </div>
 </section>

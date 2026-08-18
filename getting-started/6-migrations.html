@@ -437,7 +437,7 @@
 <p>Manually creating tables with an external tool works, but Bialet provides
 <strong>migrations</strong> — versioned SQL that runs automatically on startup.</p>
 <p>Create <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> in your project root:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create Poll table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Create Poll table"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  CREATE TABLE poll (</span>
 <span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
 <span class="sb">    answer TEXT NOT NULL,</span>
@@ -446,10 +446,10 @@
 <span class="sb">  )</span>
 <span class="sb">`</span><span class="p">)</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add initial data&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add initial data"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  INSERT INTO poll (answer, comment) VALUES</span>
-<span class="sb">    (&#39;Yes&#39;, &#39;We need to go back to the good old times&#39;),</span>
-<span class="sb">    (&#39;No&#39;, &#39;You are just old&#39;)</span>
+<span class="sb">    ('Yes', 'We need to go back to the good old times'),</span>
+<span class="sb">    ('No', 'You are just old')</span>
 <span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>

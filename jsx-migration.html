@@ -520,7 +520,7 @@ errors. PascalCase component names are a JSX thing — see section 4.</p></li>
 <p>In JSX you write <code class="docutils literal notranslate"><span class="pre">{items.map(item</span> <span class="pre">=&gt;</span> <span class="pre">&lt;li&gt;{item}&lt;/li&gt;)}</span></code> and the arrow function
 can hold any logic. In Bialet the <code class="docutils literal notranslate"><span class="pre">map</span></code> callback is a <strong>single Wren
 expression</strong> — the inline HTML string itself:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cherry&quot;</span><span class="p">]</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Apple"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Banana"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cherry"</span><span class="p">]</span>
 <span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
 <span class="c1">// Output: &lt;ul&gt;&lt;li&gt;Apple&lt;/li&gt;&lt;li&gt;Banana&lt;/li&gt;&lt;li&gt;Cherry&lt;/li&gt;&lt;/ul&gt;</span>
 </pre></div>
@@ -531,7 +531,7 @@ expression</strong> — the inline HTML string itself:</p>
 <p>You cannot declare a variable or write multiple lines of Wren inside <code class="docutils literal notranslate"><span class="pre">map</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — multiple statements inside the map callback</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span>
 <span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="si">}}</span><span class="x"> {{ task.description }}&lt;/li&gt;</span>
 <span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 </pre></div>
@@ -568,7 +568,7 @@ fallback; in Bialet you pair <code class="docutils literal notranslate"><span cl
 <span class="x">  &lt;ul&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class="empty-state"&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;No tasks yet.&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
 <span class="x">&lt;/main&gt;</span>
@@ -593,7 +593,7 @@ Wren map syntax.</p>
 <p>This is the biggest safety win over JSX (where you must remember
 <code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code>). Plain values — user input, database rows, URL
 parameters — are HTML-escaped automatically:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;script&gt;alert('xss')&lt;/script&gt;"</span>
 <span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="c1">// Renders: &lt;p&gt;&amp;lt;script&amp;gt;alert(&amp;#x27;xss&amp;#x27;)&amp;lt;/script&amp;gt;&lt;/p&gt;</span>
 </pre></div>
@@ -606,7 +606,7 @@ A leading operator is a parse error:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// CORRECT — operators end each line</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span>
-<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;form method="post" action="/clear"&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
@@ -614,7 +614,7 @@ A leading operator is a parse error:</p>
 <span class="c1">// WRONG — the operator starts a line</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">showClear</span>
-<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method="post" action="/clear"&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
@@ -632,15 +632,15 @@ must be flattened.</p>
 literal inside an attribute. Bialet does not support string interpolation
 into attribute values. Compute the string first, then interpolate the result:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — no template literals</span>
-<span class="x">&lt;a className=&quot;btn {{ active ? &#39;on&#39; : &#39;&#39; }}&quot;&gt;...&lt;/a&gt;</span>
+<span class="x">&lt;a className="btn {{ active ? 'on' : '' }}"&gt;...&lt;/a&gt;</span>
 
 <span class="c1">// CORRECT — compute the class, then interpolate it</span>
-<span class="k">var</span><span class="w"> </span><span class="n">cls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;btn &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">active</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;on&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="x">&lt;a class=&quot;{{ cls }}&quot;&gt;...&lt;/a&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">cls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"btn "</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">active</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"on"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="x">&lt;a class="{{ cls }}"&gt;...&lt;/a&gt;</span>
 </pre></div>
 </div>
 <p>For simple two-way choices, the ternary inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is fine:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class="{{ task.finished ? "checkbox-btn checked" : "checkbox-btn" }}"&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -654,13 +654,13 @@ There is no prop syntax, no children slot, no component invocation in markup.</p
 <p>Define a component as a method on a class:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">card</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class=&quot;card&quot;&gt;</span>
+<span class="w">  </span><span class="n">card</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class="card"&gt;</span>
 <span class="x">    &lt;h2&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h2&gt;</span>
-<span class="x">    &lt;div class=&quot;card-body&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">    &lt;div class="card-body"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 <span class="x">  &lt;/article&gt;</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;body&gt;</span>
 <span class="w">        </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
@@ -670,10 +670,10 @@ There is no prop syntax, no children slot, no component invocation in markup.</p
 </div>
 <p>Compose by passing markup into methods, not by nesting tags:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="w">  </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">card</span><span class="p">(</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="x">&lt;p&gt;World&lt;/p&gt;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">card</span><span class="p">(</span><span class="s2">"Hello"</span><span class="p">,</span><span class="w"> </span><span class="x">&lt;p&gt;World&lt;/p&gt;</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -706,9 +706,9 @@ Drop <code class="docutils literal notranslate"><span class="pre">.safe</span></
 <h3>Footgun 2: <code class="docutils literal notranslate"><span class="pre">.raw</span></code> / <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> skip all sanitization<a class="headerlink" href="#footgun-2-raw-htmlnode-skip-all-sanitization" title="Link to this heading">#</a></h3>
 <p>To render a runtime string as markup you must mark it safe, and that is an
 assertion, not a sanitizer:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="o">.</span><span class="n">raw</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;b&gt;bold&lt;/b&gt;"</span><span class="o">.</span><span class="n">raw</span>
 <span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">            </span><span class="c1">// rendered as written</span>
-<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="s2">&quot;&lt;b&gt;bold&lt;/b&gt;&quot;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">   </span><span class="c1">// escaped: &amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt;</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="s2">"&lt;b&gt;bold&lt;/b&gt;"</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">   </span><span class="c1">// escaped: &amp;lt;b&amp;gt;bold&amp;lt;/b&amp;gt;</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">.raw</span></code>, <code class="docutils literal notranslate"><span class="pre">HtmlNode.new(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values are inserted verbatim —
@@ -722,10 +722,10 @@ should map to “this value is markup I fully control”, and nothing else.</p>
 in paragraphs, headings, and lists passes through unescaped, and link URLs
 are not validated. Rendering untrusted Markdown is XSS:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — raw HTML passes through to the output</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"&lt;script&gt;alert('xss')&lt;/script&gt;"</span><span class="p">)</span>
 
 <span class="c1">// WRONG — javascript: links are not filtered</span>
-<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;[x](javascript:alert(&#39;xss&#39;))&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"[x](javascript:alert('xss'))"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Render only Markdown you trust.</p>
@@ -741,7 +741,7 @@ happen.</p>
 <h3>Footgun 5: <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code><a class="headerlink" href="#footgun-5-request-post-returns-null" title="Link to this heading">#</a></h3>
 <p>Reading a missing form field gives you <code class="docutils literal notranslate"><span class="pre">null</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>. String operations on
 it crash the request. Guard every read:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 </pre></div>
 </div>
 </section>

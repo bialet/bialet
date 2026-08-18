@@ -553,7 +553,7 @@ directory.</p>
 <span class="w">    </span><span class="c1"># Gzip static assets</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">immutable&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -608,12 +608,12 @@ directory.</p>
 <span class="w">    </span><span class="c"># Cache static assets</span>
 <span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
 <span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">&quot;access plus 30 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">"access plus 30 days"</span>
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
 <span class="w">    </span><span class="c"># Serve static files directly</span>
@@ -642,7 +642,7 @@ directory.</p>
 <span class="w">        </span><span class="n">file</span>
 <span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">&quot;public, max-age=604800, immutable&quot;</span>
+<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">"public, max-age=604800, immutable"</span>
 
 <span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span>
 <span class="p">}</span>
@@ -703,7 +703,7 @@ in case an application or symlink ever serves one (see <a class="reference inter
 <span class="w">    </span><span class="c1"># Gzip static assets</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">&quot;public,</span><span class="w"> </span><span class="s">immutable&quot;</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -742,12 +742,12 @@ block — but prefer renaming those files.</p>
 <span class="w">    </span><span class="c"># Cache static assets</span>
 <span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
 <span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">&quot;access plus 7 days&quot;</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">&quot;access plus 30 days&quot;</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">"access plus 7 days"</span>
+<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">"access plus 30 days"</span>
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
 <span class="w">    </span><span class="c"># Deny private files at the proxy (defense in depth).</span>
@@ -783,7 +783,7 @@ request bodies with a request matcher:</p>
 <span class="w">        </span><span class="n">file</span>
 <span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">&quot;public, max-age=604800, immutable&quot;</span>
+<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">"public, max-age=604800, immutable"</span>
 
 <span class="w">    </span><span class="err">@</span><span class="n">private</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">path_regexp</span><span class="w"> </span><span class="n">private</span><span class="w"> </span><span class="p">(</span><span class="o">^|/</span><span class="p">)[</span><span class="vi">_</span><span class="o">.</span><span class="p">]</span>
@@ -931,7 +931,7 @@ point:</p>
 <span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
 
 <span class="k">EXPOSE</span><span class="w"> </span><span class="s">7001</span>
-<span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;bialet&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;7001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/app&quot;</span><span class="p">]</span>
+<span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">"bialet"</span><span class="p">,</span><span class="w"> </span><span class="s2">"-p"</span><span class="p">,</span><span class="w"> </span><span class="s2">"7001"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/app"</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>Build:</p>
@@ -946,7 +946,7 @@ docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </sp
 <span class="w">  </span><span class="nt">app</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myapp</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;127.0.0.1:7001:7001&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:7001:7001"</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data:/www/myapp.sqlite</span>
 <span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>

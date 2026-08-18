@@ -457,7 +457,7 @@
 <span class="w">    </span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
 <span class="w">  </span><span class="p">}</span>
 
-<span class="w">  </span><span class="c1">// Cache query results so we don&#39;t re-query on every access</span>
+<span class="w">  </span><span class="c1">// Cache query results so we don't re-query on every access</span>
 <span class="w">  </span><span class="n">options</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_opts</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="vi">_opts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">vote</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -474,7 +474,7 @@
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="c1">// Private helper — underscore suffix is a Wren convention</span>
-<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">"votes"</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -490,7 +490,7 @@ We clear the cache after voting so the results refresh.</p></li>
 <section id="build-the-results-page">
 <h2>Build the results page<a class="headerlink" href="#build-the-results-page" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">results.wren</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
@@ -498,16 +498,16 @@ We clear the cache after voting so the results refresh.</p></li>
 <span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h2&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
 <span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">poll</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">opt</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
-<span class="x">    &lt;div style=&quot;background:#e5e7eb;height:2rem;border-radius:999px&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;div style=&quot;background:#3b82f6;height:2rem;width:{{</span>
-<span class="x">        poll.percentage(opt) }}%;border-radius:999px;text-align:center;color:#fff&quot;&gt;</span>
+<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"answer"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;div style="background:#e5e7eb;height:2rem;border-radius:999px"&gt;</span>
+<span class="w">      </span><span class="x">&lt;div style="background:#3b82f6;height:2rem;width:{{</span>
+<span class="x">        poll.percentage(opt) }}%;border-radius:999px;text-align:center;color:#fff"&gt;</span>
 <span class="x">        {{ poll.percentage(opt) }}%</span>
 <span class="x">      &lt;/div&gt;</span>
 <span class="w">    </span><span class="x">&lt;/div&gt;</span>
-<span class="x">    &lt;p&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">votes</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">votes</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"votes"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">  </span><span class="x">&lt;p&gt;&lt;a href=&quot;/&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">  </span><span class="x">&lt;p&gt;&lt;a href="/"&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">&lt;/main&gt;</span>
 <span class="x">)</span>
 </pre></div>
@@ -517,13 +517,13 @@ We clear the cache after voting so the results refresh.</p></li>
 <h2>Final polish<a class="headerlink" href="#final-polish" title="Link to this heading">#</a></h2>
 <p>A few improvements we can make:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Add color to poll options via migrations</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add color column&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add color column"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  ALTER TABLE poll ADD COLUMN color TEXT</span>
 <span class="sb">`</span><span class="p">)</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Set colors&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
-<span class="sb">  UPDATE poll SET color = &#39;blue&#39; WHERE answer = &#39;Yes&#39;;</span>
-<span class="sb">  UPDATE poll SET color = &#39;red&#39; WHERE answer = &#39;No&#39;;</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Set colors"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  UPDATE poll SET color = 'blue' WHERE answer = 'Yes';</span>
+<span class="sb">  UPDATE poll SET color = 'red' WHERE answer = 'No';</span>
 <span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>

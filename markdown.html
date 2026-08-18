@@ -453,15 +453,15 @@ no bundler — the renderer ships inside the binary.</p>
 <h2>Rendering Markdown<a class="headerlink" href="#rendering-markdown" title="Link to this heading">#</a></h2>
 <p>Two methods on the <code class="docutils literal notranslate"><span class="pre">Markdown</span></code> class:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Render a Markdown string</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;## Hello **World**!&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"## Hello **World**!"</span><span class="p">)</span>
 
 <span class="c1">// Read a .md file from the app directory and render it</span>
-<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"about.md"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Use the result anywhere a string works — interpolate it into a page:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">  {{ Markdown.file(&quot;docs/readme.md&quot;) }}</span>
+<span class="x">  {{ Markdown.file("docs/readme.md") }}</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
@@ -535,8 +535,8 @@ Markdown you trust, or sanitize the output before serving it.</p>
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
 <p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code> when the file is missing</strong>, it does not
 throw. Guard against it:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">content</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;p&gt;About page not written yet.&lt;/p&gt;&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"about.md"</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">content</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;p&gt;About page not written yet.&lt;/p&gt;"</span>
 </pre></div>
 </div>
 <p><strong>Output is capped at 2 MB.</strong> Larger documents are truncated silently.</p>

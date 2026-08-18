@@ -457,18 +457,18 @@ sends data, your <code class="docutils literal notranslate"><span class="pre">.w
 <p>Every form page follows the same three steps:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// 1. Read the fields</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 
 <span class="w">  </span><span class="c1">// 2. Process (validate, save)</span>
-<span class="w">  </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">})</span>
+<span class="w">  </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="n">name</span><span class="p">})</span>
 
 <span class="w">  </span><span class="c1">// 3. Redirect to avoid resubmission</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="c1">// GET — show the form</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">  &lt;input name=&quot;name&quot; /&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post"&gt;</span>
+<span class="x">  &lt;input name="name" /&gt;</span>
 <span class="w">  </span><span class="x">&lt;button&gt;Save&lt;/button&gt;</span>
 <span class="x">&lt;/form&gt;</span>
 </pre></div>
@@ -483,24 +483,24 @@ Always guard with <code class="docutils literal notranslate"><span class="pre">|
 <p>A simple email subscription form with basic validation:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// subscribe.wren</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="k">var</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Enter a valid email.&quot;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"@"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Enter a valid email."</span>
 <span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="sb">`INSERT INTO subscribers (email) VALUES (?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/subscribe?ok=1&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/subscribe?ok=1"</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Subscribe</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  {{ Request.get(&quot;ok&quot;) &amp;&amp; &lt;p class=&quot;success&quot;&gt;</span><span class="nc">Subscribed</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
-<span class="x">    &lt;label&gt;</span><span class="nc">Email</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email }}&quot; required /&gt;&lt;/label&gt;</span>
+<span class="x">  {{ Request.get("ok") &amp;&amp; &lt;p class="success"&gt;</span><span class="nc">Subscribed</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p class="error"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;form method="post"&gt;</span>
+<span class="x">    &lt;label&gt;</span><span class="nc">Email</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name="email" type="email" value="{{ email }}" required /&gt;&lt;/label&gt;</span>
 <span class="w">    </span><span class="x">&lt;button&gt;Subscribe&lt;/button&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt;</span>
 <span class="x">&lt;/main&gt;</span>
@@ -529,24 +529,24 @@ convenience for the user, not a security boundary.</p>
 <code class="docutils literal notranslate"><span class="pre">Request.get()</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// search.wren</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"q"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="k">var</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE title LIKE ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">&quot;</span><span class="err">%</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;</span><span class="err">%</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE title LIKE ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="s2">"</span><span class="err">%</span><span class="s2">"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"</span><span class="err">%</span><span class="s2">"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Search</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;form method=&quot;get&quot; action=&quot;/search&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name=&quot;q&quot; value=&quot;{{ q }}&quot; placeholder=&quot;Search posts...&quot; /&gt;</span>
+<span class="x">  &lt;form method="get" action="/search"&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="q" value="{{ q }}" placeholder="Search posts..." /&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Search</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 
-<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">    &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s2">&quot;{{ q }}&quot;</span><span class="x">&lt;/p&gt;</span>
+<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">""</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="s2">"{{ q }}"</span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;ul&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">r</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/post?id={{ r[&quot;id&quot;] }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">r</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href="/post?id={{ r["id"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">r</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">    </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">  &lt;/section&gt;</span><span class="w"> </span><span class="si">}}</span>
 <span class="x">&lt;/main&gt;</span>
@@ -569,31 +569,31 @@ Wren, so <code class="docutils literal notranslate"><span class="pre">if</span> 
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// login.wren</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="k">var</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">session</span><span class="o">.</span><span class="n">csrfOk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Invalid form submission.&quot;</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Invalid form submission."</span>
 <span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"password"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="n">session</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
-<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/dashboard&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">session</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/dashboard"</span><span class="p">)</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Invalid email or password.&quot;</span>
+<span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Invalid email or password."</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Login</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  {{ error &amp;&amp; &lt;p class=&quot;error&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt; }}</span>
-<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
+<span class="x">  {{ error &amp;&amp; &lt;p class="error"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt; }}</span>
+<span class="x">  &lt;form method="post"&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">session</span><span class="o">.</span><span class="n">csrf</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;label&gt;Email: &lt;input name=&quot;email&quot; type=&quot;email&quot; value=&quot;{{ email }}&quot; required /&gt;&lt;/label&gt;</span>
-<span class="x">    &lt;label&gt;</span><span class="nc">Password</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name=&quot;password&quot; type=&quot;password&quot; required /&gt;&lt;/label&gt;</span>
+<span class="w">    </span><span class="x">&lt;label&gt;Email: &lt;input name="email" type="email" value="{{ email }}" required /&gt;&lt;/label&gt;</span>
+<span class="x">    &lt;label&gt;</span><span class="nc">Password</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;input name="password" type="password" required /&gt;&lt;/label&gt;</span>
 <span class="w">    </span><span class="x">&lt;button&gt;Login&lt;/button&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt;</span>
 <span class="x">&lt;/main&gt;</span>
@@ -624,14 +624,14 @@ guide for details on passwords, CSRF, and session defaults.</p>
 <p>Set <code class="docutils literal notranslate"><span class="pre">enctype=&quot;multipart/form-data&quot;</span></code> on the form and read the file with
 <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;attachment&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"attachment"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Uploaded: {{ file.name }} ({{ file.size }} bytes)&lt;/p&gt;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
-<span class="x">  &lt;input type=&quot;file&quot; name=&quot;attachment&quot; /&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post" enctype="multipart/form-data"&gt;</span>
+<span class="x">  &lt;input type="file" name="attachment" /&gt;</span>
 <span class="w">  </span><span class="x">&lt;button&gt;Upload&lt;/button&gt;</span>
 <span class="x">&lt;/form&gt;</span>
 </pre></div>

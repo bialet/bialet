@@ -512,14 +512,14 @@ extension, is its URL.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: article.wren</span>
 <span class="c1">// Handles: /article?id=42</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">article</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT title, body_html FROM articles WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">article</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">notFound</span><span class="p">()</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">&quot;body_html&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"body_html"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
@@ -649,9 +649,9 @@ every <code class="docutils literal notranslate"><span class="pre">.wren</span><
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: blog.wren</span>
 <span class="c1">// Handles: /blog?id=42</span>
 
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  SELECT title, content, createdAt, author</span>
 <span class="sb">  FROM posts</span>
@@ -660,13 +660,13 @@ every <code class="docutils literal notranslate"><span class="pre">.wren</span><
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Post not found&lt;/h1&gt;"</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">  &lt;div class=&quot;content&quot;&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class="meta"&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"author"</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class="content"&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"content"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 <span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -678,15 +678,15 @@ in the path, including simple API-style endpoints:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: api.wren</span>
 <span class="c1">// Handles: /api?action=users&amp;id=1  or  /api?action=posts&amp;id=42</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"users"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">userId</span><span class="p">])</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">user</span>
 
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;posts&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"posts"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">id</span><span class="p">)])</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">post</span>
 <span class="p">}</span>
@@ -748,12 +748,12 @@ falls back to it whenever no static file matches the requested path.</p>
 <span class="k">var</span><span class="w"> </span><span class="n">segment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// First dynamic segment</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">       </span><span class="c1">// Second dynamic segment</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;users&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"users"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">userId</span><span class="p">])</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">user</span>
 
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;posts&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">segment</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"posts"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE slug = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">slug</span><span class="p">])</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">post</span>
@@ -926,12 +926,12 @@ most projects.</p>
 <h3>Example: Article Page (Query Parameters)<a class="headerlink" href="#example-article-page-query-parameters" title="Link to this heading">#</a></h3>
 <p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">article.wren</span></code></p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import shared layout from _app folder</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/blog&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/blog"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
@@ -944,15 +944,15 @@ most projects.</p>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Post not found&lt;/h1&gt;"</span>
 <span class="p">}</span>
 
 <span class="c1">// Render using the shared template</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">  &lt;div class=&quot;content&quot;&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class="meta"&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"author"</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class="content"&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"content"</span><span class="p">]</span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/div&gt;</span>
 <span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
@@ -979,12 +979,12 @@ structure you don’t control. It requires a <code class="docutils literal notra
 file; most projects don’t need it, and the query-parameter version above
 should be your default.</p>
 <p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">slug</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/blog&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/blog"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
@@ -996,14 +996,14 @@ should be your default.</p>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">post</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Post not found&lt;/h1&gt;&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Post not found&lt;/h1&gt;"</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;p class=&quot;meta&quot;&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
-<span class="x">  &lt;div class=&quot;content&quot;&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="si">}}</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;p class="meta"&gt;</span><span class="nc">By</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"author"</span><span class="p">]</span><span class="si">}}</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;div class="content"&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="n">post</span><span class="p">[</span><span class="s2">"content"</span><span class="p">]</span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/div&gt;</span>
 <span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
@@ -1024,7 +1024,7 @@ the dynamic value lives in a query string or the path. Bialet’s default is
 the query string; Express and Django default to the path.</p>
 <p><strong>Bialet — idiomatic: query parameter, no route table:</strong></p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: blog.wren</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
 <span class="k">return</span><span class="w"> </span><span class="n">post</span>
 </pre></div>
@@ -1033,8 +1033,8 @@ the query string; Express and Django default to the path.</p>
 separate list of routes to keep in sync with your handlers, and no
 special file needed for this, the common case.</p>
 <p><strong>Express — code-based, explicit route table, path parameter:</strong></p>
-<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/blog/:slug&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;SELECT * FROM posts WHERE slug = ?&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">slug</span><span class="p">)</span>
+<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'/blog/:slug'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'SELECT * FROM posts WHERE slug = ?'</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">slug</span><span class="p">)</span>
 <span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">post</span><span class="p">)</span>
 <span class="p">})</span>
 </pre></div>
@@ -1044,13 +1044,13 @@ file that grows as the app grows.</p>
 <p><strong>Django — code-based, <code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code> + views, path parameter:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># urls.py</span>
 <span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">path</span><span class="p">(</span><span class="s1">&#39;blog/&lt;slug:slug&gt;/&#39;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">post_detail</span><span class="p">),</span>
+    <span class="n">path</span><span class="p">(</span><span class="s1">'blog/&lt;slug:slug&gt;/'</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">post_detail</span><span class="p">),</span>
 <span class="p">]</span>
 
 <span class="c1"># views.py</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">post_detail</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">slug</span><span class="p">):</span>
     <span class="n">post</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">slug</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">post</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">'post.html'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'post'</span><span class="p">:</span> <span class="n">post</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Django separates the URL pattern (<code class="docutils literal notranslate"><span class="pre">urls.py</span></code>) from the view function
@@ -1116,22 +1116,22 @@ managing them.</p>
 <h3>Import Syntax<a class="headerlink" href="#import-syntax" title="Link to this heading">#</a></h3>
 <section id="github-shorthand-recommended">
 <h4>1. GitHub Shorthand (Recommended)<a class="headerlink" href="#github-shorthand-recommended" title="Link to this heading">#</a></h4>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
 </pre></div>
 </div>
 <p>Fetches from the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch by default. Target a specific branch or tag
 with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file@branch-or-tag&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file@branch-or-tag"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
 </pre></div>
 </div>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import emoji utilities from main branch</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/emoji"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 
 <span class="c1">// Import from specific version/branch (recommended for stability)</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/export@1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">EmojiV1</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/export@1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">EmojiV1</span>
 
 <span class="c1">// Import from a specific tag</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:username/mylib/module@v2.1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">MyClass</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:username/mylib/module@v2.1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">MyClass</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1143,7 +1143,7 @@ in the import path.</p></li>
 </section>
 <section id="full-url">
 <h4>2. Full URL<a class="headerlink" href="#full-url" title="Link to this heading">#</a></h4>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;https://example.com/path/to/module.wren&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"https://example.com/path/to/module.wren"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1151,7 +1151,7 @@ in the import path.</p></li>
 <li><p>The URL must return raw Wren source code, not HTML.</p></li>
 <li><p>For GitHub, use <code class="docutils literal notranslate"><span class="pre">raw.githubusercontent.com</span></code> URLs.</p></li>
 </ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;https://raw.githubusercontent.com/4lb0/emoji/main/emoji.wren&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"https://raw.githubusercontent.com/4lb0/emoji/main/emoji.wren"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 </pre></div>
 </div>
 </section>
@@ -1181,7 +1181,7 @@ as a stability feature, not a bug.</p>
 <h3>Cache Management<a class="headerlink" href="#cache-management" title="Link to this heading">#</a></h3>
 <p>External modules are cached in <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, table <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="n">module</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w">      </span><span class="c1">-- The import path (e.g., &quot;gh:user/repo/path&quot;)</span>
+<span class="w">  </span><span class="n">module</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w">      </span><span class="c1">-- The import path (e.g., "gh:user/repo/path")</span>
 <span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                 </span><span class="c1">-- The cached Wren source code</span>
 <span class="w">  </span><span class="n">createdAt</span><span class="w"> </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span>
 <span class="p">)</span>
@@ -1240,7 +1240,7 @@ there’s a network problem.</p>
 <p><strong>“Import type not supported”</strong> — the import uses a protocol other than
 <code class="docutils literal notranslate"><span class="pre">gh:</span></code>, <code class="docutils literal notranslate"><span class="pre">http://</span></code>, or <code class="docutils literal notranslate"><span class="pre">https://</span></code>.</p>
 <p>Check the Bialet logs for details:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Debug: attempting import...&quot;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Debug: attempting import..."</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1259,17 +1259,17 @@ statement like adding a dependency, not like a link.</p>
 won’t silently change under you.</p></li>
 </ul>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good: well-known, maintained library, pinned version</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:4lb0/emoji/emoji@1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/emoji@1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 
 <span class="c1">// ❌ Avoid: unknown source, unpinned, unverified</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:random-user/suspicious-lib/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">SomeClass</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:random-user/suspicious-lib/module"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">SomeClass</span>
 </pre></div>
 </div>
 </section>
 <section id="multiple-versions">
 <h3>Multiple Versions<a class="headerlink" href="#multiple-versions" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:user/lib/module&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleLatest</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:user/lib/module@v1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleV1</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:user/lib/module"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleLatest</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:user/lib/module@v1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleV1</span>
 
 <span class="c1">// Use specific version based on your needs</span>
 <span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ModuleV1</span><span class="o">.</span><span class="n">someFunction</span><span class="p">()</span>
@@ -1291,7 +1291,7 @@ won’t silently change under you.</p></li>
 <li><p>Try the full URL format to isolate GitHub-shorthand issues.</p></li>
 </ul>
 <p><strong>Cached version is outdated:</strong></p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">&#39;gh:user/repo%&#39;</span><span class="p">;</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'gh:user/repo%'</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Then restart your Bialet application. Prefer version tags over branches

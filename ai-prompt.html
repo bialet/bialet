@@ -455,18 +455,18 @@ object-oriented <span class="gs">**Wren**</span> language with an HTTP server an
 database in a single binary — no build step, no config files, no ORM.
 
 Use this document as your complete reference for writing Bialet applications.
-Everything here reflects the actual framework behavior — don&#39;t invent syntax
-or conventions that aren&#39;t described below.
+Everything here reflects the actual framework behavior — don't invent syntax
+or conventions that aren't described below.
 
 <span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**</span>
 <span class="k">&gt; </span><span class="ge">It returns `null` when the requested key is not present in the POST payload.</span>
-<span class="k">&gt; </span><span class="ge">**NEVER assume the field exists. ALWAYS provide a default with `|| &quot;&quot;` or</span>
+<span class="k">&gt; </span><span class="ge">**NEVER assume the field exists. ALWAYS provide a default with `|| ""` or</span>
 <span class="k">&gt; </span><span class="ge">check `if (value != null)` before any string operation.** Calling `.toString`,</span>
 <span class="k">&gt; </span><span class="ge">`.count`, `.trim`, interpolation, or concatenation on a null value crashes at</span>
 <span class="k">&gt; </span><span class="ge">runtime — this is the #1 production crash cause in Bialet apps.</span>
 <span class="k">&gt;</span>
-<span class="ge">&gt; *&quot;Every code example using `Request.post()` **must** include a null-handling</span>
-<span class="k">&gt; </span><span class="ge">strategy (`|| fallback` or `if (value != null)`) by default.&quot;*</span>
+<span class="ge">&gt; *"Every code example using `Request.post()` **must** include a null-handling</span>
+<span class="k">&gt; </span><span class="ge">strategy (`|| fallback` or `if (value != null)`) by default."*</span>
 
 <span class="gu">## Step 0: Make Sure Bialet Is Installed</span>
 
@@ -487,10 +487,10 @@ directory.
 Verify it works before continuing:
 
 <span class="sb">```bash</span>
-bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;System.log(&quot;Hello, World!&quot;)&#39;</span>
+bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'System.log("Hello, World!")'</span>
 <span class="sb">```</span>
 
-If that prints <span class="sb">`Hello, World!`</span>, you&#39;re ready to build.
+If that prints <span class="sb">`Hello, World!`</span>, you're ready to build.
 
 <span class="gu">## Framework Philosophy</span>
 
@@ -498,9 +498,9 @@ Bialet applications follow a <span class="gs">**classic web development approach
 early PHP: files map directly to URLs, and the server renders full HTML pages.
 
 <span class="k">-</span><span class="w"> </span><span class="gs">**Multi-page applications**</span> with full page reloads (avoid SPAs)
-<span class="k">-</span><span class="w"> </span><span class="gs">**File-based routing**</span> — a file&#39;s path, minus <span class="sb">`.wren`</span>, is its URL
+<span class="k">-</span><span class="w"> </span><span class="gs">**File-based routing**</span> — a file's path, minus <span class="sb">`.wren`</span>, is its URL
 <span class="k">-</span><span class="w"> </span><span class="gs">**Query parameters are the default way to make a page dynamic**</span> —
-  <span class="sb">`article.wren`</span> reading <span class="sb">`?id=42`</span> via <span class="sb">`Request.get(&quot;id&quot;)`</span>. Reach for a
+  <span class="sb">`article.wren`</span> reading <span class="sb">`?id=42`</span> via <span class="sb">`Request.get("id")`</span>. Reach for a
   <span class="sb">`_route.wren`</span> path-based route only when the value must live in the URL
   path itself (SEO slugs, REST-style resource paths) — treat it as an
   advanced escape hatch, not the starting point.
@@ -517,13 +517,13 @@ the upstream language). A few things you need to know to write correct code:
 <span class="c1">// Comments use //</span>
 
 <span class="c1">// Variables</span>
-<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Alice&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Alice"</span>
 <span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">42</span>
 
 <span class="c1">// Classes: construct, getters (no parens), setters, static methods</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="n">name</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="p">}</span><span class="w">              </span><span class="c1">// getter</span>
 <span class="w">  </span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// setter</span>
@@ -535,18 +535,18 @@ the upstream language). A few things you need to know to write correct code:
 <span class="k">class</span><span class="w"> </span><span class="nc">Math</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// implicit return</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">classify</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;positive&quot;</span><span class="w">      </span><span class="c1">// explicit return needed for early exit</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;non-positive&quot;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"positive"</span><span class="w">      </span><span class="c1">// explicit return needed for early exit</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">"non-positive"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// String interpolation with %(...) in regular strings</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Hello </span><span class="si">%(</span><span class="n">name</span><span class="si">)</span><span class="s2">, you have </span><span class="si">%(</span><span class="n">count</span><span class="si">)</span><span class="s2"> items&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Hello </span><span class="si">%(</span><span class="n">name</span><span class="si">)</span><span class="s2">, you have </span><span class="si">%(</span><span class="n">count</span><span class="si">)</span><span class="s2"> items"</span><span class="p">)</span>
 
 <span class="c1">// The % character triggers interpolation — any % inside a Wren</span>
 <span class="c1">// string is parsed as %(...) start. Use \x25 for a literal %.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">pct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;99.9</span><span class="se">\x25</span><span class="s2">&quot;</span><span class="w">   </span><span class="c1">// renders &quot;99.9%&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Save 17</span><span class="se">\x25</span><span class="s2">&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">pct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"99.9</span><span class="se">\x25</span><span class="s2">"</span><span class="w">   </span><span class="c1">// renders "99.9%"</span>
+<span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Save 17</span><span class="se">\x25</span><span class="s2">"</span>
 
 <span class="c1">// Closures / block arguments</span>
 <span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="p">}</span>
@@ -557,14 +557,14 @@ the upstream language). A few things you need to know to write correct code:
 
 <span class="c1">// Privacy convention: no `private` keyword, prefix with _ instead</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Poll</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">votes_</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">opt</span><span class="p">[</span><span class="s2">"votes"</span><span class="p">])</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="c1">// null is forgiving: null[&quot;key&quot;], null.count, null.map, null.toString don&#39;t</span>
+<span class="c1">// null is forgiving: null["key"], null.count, null.map, null.toString don't</span>
 <span class="c1">// throw; other method calls on null are runtime errors</span>
 <span class="sb">```</span>
 
-<span class="gs">**Inline HTML strings**</span> are Wren&#39;s template mechanism — no separate template
+<span class="gs">**Inline HTML strings**</span> are Wren's template mechanism — no separate template
 language:
 
 <span class="sb">```wren</span>
@@ -579,7 +579,7 @@ language:
   (<span class="sb">`&lt;div&gt;&lt;div&gt;...`</span> is a parse error) — use a different tag for the inner one.
 <span class="k">-</span><span class="w"> </span>Self-closing tags need a space before the slash: <span class="sb">`&lt;br /&gt;`</span>, <span class="sb">`&lt;input ... /&gt;`</span>.
 <span class="k">-</span><span class="w"> </span><span class="sb">`{{ expr }}`</span> inside an inline HTML string evaluates any Wren expression —
-  it&#39;s sugar for <span class="sb">`%(...)`</span> interpolation inside an HTML block.
+  it's sugar for <span class="sb">`%(...)`</span> interpolation inside an HTML block.
 <span class="k">-</span><span class="w"> </span>Inside a <span class="sb">`.wren`</span> file, <span class="sb">`return`</span> sends the value as the HTTP response body
   and <span class="gs">**stops execution immediately**</span>. Without <span class="sb">`return`</span>, the response body is
   empty.
@@ -589,10 +589,10 @@ otherwise nothing) and ternaries — both are the idiomatic way to toggle
 classes, attributes, or whole HTML blocks:
 
 <span class="sb">```wren</span>
-<span class="x">&lt;a class=&quot;filter-tab {{ filter == &quot;all&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;All&lt;/a&gt;</span>
-<span class="x">&lt;span&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">activeCount</span><span class="w"> </span><span class="si">}}</span><span class="x"> task{{ activeCount != 1 &amp;&amp; &quot;s&quot; }} remaining&lt;/span&gt;</span>
-<span class="si">{{</span><span class="w"> </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;button class=&quot;clear-btn&quot;&gt;Clear completed&lt;/button&gt;</span><span class="w"> </span><span class="si">}}</span>
-<span class="x">&lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;pending&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">&lt;a class="filter-tab {{ filter == "all" &amp;&amp; "active" }}"&gt;All&lt;/a&gt;</span>
+<span class="x">&lt;span&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">activeCount</span><span class="w"> </span><span class="si">}}</span><span class="x"> task{{ activeCount != 1 &amp;&amp; "s" }} remaining&lt;/span&gt;</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;button class="clear-btn"&gt;Clear completed&lt;/button&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">&lt;span class="{{ task.finished ? "done" : "pending" }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="sb">```</span>
 
 <span class="gs">**Iteration**</span> uses <span class="sb">`map`</span>, and the callback must be a <span class="gs">**single expression**</span>
@@ -610,7 +610,7 @@ classes, attributes, or whole HTML blocks:
 <span class="gu">## Code Style</span>
 
 <span class="k">-</span><span class="w"> </span>Use <span class="gs">**2 spaces**</span> for indentation.
-<span class="k">-</span><span class="w"> </span><span class="gs">**Single-line methods**</span> when possible, to lean on Wren&#39;s implicit return:
+<span class="k">-</span><span class="w"> </span><span class="gs">**Single-line methods**</span> when possible, to lean on Wren's implicit return:
 
 <span class="sb">```wren</span>
 <span class="c1">// CORRECT</span>
@@ -668,7 +668,7 @@ Bialet is intentionally simple. These concepts <span class="gs">**do not exist**
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `routes/` folder**</span> — files ARE the routes (file-based routing)
 <span class="k">-</span><span class="w"> </span><span class="gs">**No middleware system**</span> — put shared logic in <span class="sb">`_app/`</span> helper classes
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `validators/` folder**</span> — validation goes in domain classes or inline
-<span class="k">-</span><span class="w"> </span><span class="gs">**No `static/` folder convention**</span> — static files (css, js, images) go anywhere, as long as they don&#39;t start with <span class="sb">`_`</span> or <span class="sb">`.`</span>
+<span class="k">-</span><span class="w"> </span><span class="gs">**No `static/` folder convention**</span> — static files (css, js, images) go anywhere, as long as they don't start with <span class="sb">`_`</span> or <span class="sb">`.`</span>
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `db/schema.sql`**</span> — schema is defined in <span class="sb">`_app/migration.wren`</span>
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `.env` files**</span> — configuration is stored in the database (<span class="sb">`BIALET_CONFIG`</span> table, via the <span class="sb">`Config`</span> class)
 
@@ -707,19 +707,19 @@ HTML — no route table, no <span class="sb">`app.get(...)`</span> calls.
 
 <span class="sb">```wren</span>
 <span class="c1">// article.wren — handles /article?id=42</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">article</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM articles WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">article</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">&quot;&lt;h1&gt;Not found&lt;/h1&gt;&quot;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Not found&lt;/h1&gt;"</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  {{ article[&quot;body&quot;] }}</span>
+<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  {{ article["body"] }}</span>
 <span class="x">&lt;/article&gt;</span><span class="p">)</span>
 <span class="sb">```</span>
 
@@ -730,13 +730,13 @@ no additional files or routing config.
 
 Use this <span class="gs">**only**</span> when the dynamic value must live in the URL path — a
 human-readable slug, a REST-style resource path, or a URL structure you
-inherited and can&#39;t change:
+inherited and can't change:
 
 <span class="sb">```wren</span>
 <span class="c1">// users/_route.wren — handles /users/:id</span>
-<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// first segment after this file&#39;s directory</span>
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// first segment after this file's directory</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -754,29 +754,29 @@ needs path-based handling.
 <span class="sb">```wren</span>
 <span class="c1">// _app/template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
-<span class="w">        </span><span class="x">&lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="x">        &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;</span>
+<span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
+<span class="x">        &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">        </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css&quot; /&gt;</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" /&gt;</span>
 <span class="x">      &lt;/head&gt;</span>
 <span class="w">      </span><span class="x">&lt;body&gt;</span>
-<span class="x">        &lt;header class=&quot;container&quot;&gt;</span>
+<span class="x">        &lt;header class="container"&gt;</span>
 <span class="w">          </span><span class="x">&lt;nav&gt;</span>
 <span class="x">            &lt;ul&gt;&lt;li&gt;&lt;strong&gt;</span><span class="nc">My</span><span class="w"> </span><span class="nc">App</span><span class="x">&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;</span>
 <span class="x">            &lt;ul&gt;</span>
-<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href=&quot;/&quot;&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
-<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href=&quot;/about&quot;&gt;</span><span class="nc">About</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
+<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href="/"&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
+<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href="/about"&gt;</span><span class="nc">About</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
 <span class="w">            </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">          &lt;/nav&gt;</span>
 <span class="w">        </span><span class="x">&lt;/header&gt;</span>
 <span class="x">        {{ content }}</span>
-<span class="x">        &lt;footer class=&quot;container&quot;&gt;</span>
-<span class="w">          </span><span class="x">&lt;small&gt;Built with &lt;a href=&quot;https://bialet.dev&quot;&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;&lt;/small&gt;</span>
+<span class="x">        &lt;footer class="container"&gt;</span>
+<span class="w">          </span><span class="x">&lt;small&gt;Built with &lt;a href="https://bialet.dev"&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;&lt;/small&gt;</span>
 <span class="w">        </span><span class="x">&lt;/footer&gt;</span>
 <span class="x">      &lt;/body&gt;</span>
 <span class="w">    </span><span class="x">&lt;/html&gt; }</span>
@@ -785,16 +785,16 @@ needs path-based handling.
 
 <span class="sb">```wren</span>
 <span class="c1">// index.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main class=&quot;container&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;main class="container"&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">  &lt;/main&gt;</span>
 <span class="p">)</span>
 <span class="sb">```</span>
 
-<span class="k">&gt; </span><span class="ge">**Pitfall:** if `Layout`&#39;s methods are `static` (as above), call</span>
+<span class="k">&gt; </span><span class="ge">**Pitfall:** if `Layout`'s methods are `static` (as above), call</span>
 <span class="k">&gt; </span><span class="ge">`Layout.render(...)` directly. If you instead define instance methods, you</span>
 <span class="k">&gt; </span><span class="ge">must instantiate first: `Layout.new().render(...)`.</span>
 
@@ -827,11 +827,11 @@ the query method.
 <span class="sb">`UPDATE users SET name = ? WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">)</span>
 <span class="sb">`DELETE FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 
-<span class="c1">// save() on a bare table name — insert if no &quot;id&quot; key, update otherwise</span>
-<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span><span class="p">}</span>
+<span class="c1">// save() on a bare table name — insert if no "id" key, update otherwise</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"John"</span><span class="p">,</span><span class="w"> </span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="s2">"john@example.com"</span><span class="p">}</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-<span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span>
-<span class="n">user</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John Doe&quot;</span>
+<span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">id</span>
+<span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"John Doe"</span>
 <span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">user</span><span class="p">)</span><span class="w">  </span><span class="c1">// updates</span>
 <span class="sb">```</span>
 
@@ -847,15 +847,15 @@ the query method.
 
 <span class="sb">```wren</span>
 <span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) FROM users`</span><span class="o">.</span><span class="n">toNum</span><span class="w">   </span><span class="c1">// number, direct</span>
-<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">])</span><span class="w">              </span><span class="c1">// manual conversion</span>
+<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"age"</span><span class="p">])</span><span class="w">              </span><span class="c1">// manual conversion</span>
 <span class="sb">```</span>
 
 <span class="gu">### Safe Sorting with `.order()`</span>
 
 <span class="sb">```wren</span>
-<span class="k">var</span><span class="w"> </span><span class="n">allowedSorts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span>
-<span class="k">var</span><span class="w"> </span><span class="n">sortCol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sort&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;id&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">sortDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;asc&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">allowedSorts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"id"</span><span class="p">,</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">"email"</span><span class="p">,</span><span class="w"> </span><span class="s2">"createdAt"</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">sortCol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sort"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"id"</span>
+<span class="k">var</span><span class="w"> </span><span class="n">sortDir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"order"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"asc"</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
 <span class="w">  </span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">sortCol</span><span class="p">,</span><span class="w"> </span><span class="n">sortDir</span><span class="p">,</span><span class="w"> </span><span class="n">allowedSorts</span><span class="p">)</span>
@@ -864,23 +864,23 @@ the query method.
 
 Invalid columns fall back to the first entry in <span class="sb">`allowedColumns`</span> — this
 prevents SQL injection through user-controlled sort parameters. Pass a limit
-as a 4th argument for quick &quot;top N&quot; queries.
+as a 4th argument for quick "top N" queries.
 
 <span class="gu">### Optional Filters Without Concatenation</span>
 
 The Query object forbids concatenation/interpolation, so a <span class="sb">`WHERE`</span> clause
-that depends on which filters are present can&#39;t be built by appending SQL
+that depends on which filters are present can't be built by appending SQL
 fragments. Write one static query and bypass each filter with <span class="sb">`OR`</span> instead:
 
 <span class="sb">```wren</span>
 <span class="c1">// Empty string bypasses the filter</span>
-<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE (? = &#39;&#39; OR name LIKE &#39;%&#39; || ? || &#39;%&#39;)`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"search"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">search</span><span class="p">,</span><span class="w"> </span><span class="n">search</span><span class="p">)</span>
 
-<span class="c1">// Boolean flag bypasses the filter — tri-state &quot;all/active/completed&quot;</span>
+<span class="c1">// Boolean flag bypasses the filter — tri-state "all/active/completed"</span>
 <span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">(</span><span class="n">filter</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM tasks</span>
 <span class="sb">  WHERE session = ? AND (? = 1 OR finished = ?)</span>
-<span class="sb">  ORDER BY createdAt ASC`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;all&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="sb">  ORDER BY createdAt ASC`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"all"</span><span class="p">,</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"active"</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="sb">```</span>
 
 Booleans bind as <span class="sb">`1`</span>/<span class="sb">`0`</span>, so <span class="sb">`? = 1`</span> short-circuits the <span class="sb">`OR`</span> and matches every
@@ -892,16 +892,16 @@ own bypass, to let callers omit any combination of them.
 Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as <span class="sb">`?`</span> placeholders:
 
 <span class="sb">```wren</span>
-<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;limit&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;20&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"1"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"limit"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"20"</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">page</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">limit</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) FROM users`</span><span class="o">.</span><span class="n">toNum</span>
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">)</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span>
-<span class="w">  </span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">,</span>
-<span class="w">  </span><span class="s2">&quot;pagination&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;limit&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;total&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">total</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;pages&quot;</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="n">total</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">}</span>
+<span class="w">  </span><span class="s2">"data"</span><span class="o">:</span><span class="w"> </span><span class="n">users</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"pagination"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"page"</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="p">,</span><span class="w"> </span><span class="s2">"limit"</span><span class="o">:</span><span class="w"> </span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="s2">"total"</span><span class="o">:</span><span class="w"> </span><span class="n">total</span><span class="p">,</span><span class="w"> </span><span class="s2">"pages"</span><span class="o">:</span><span class="w"> </span><span class="p">((</span><span class="n">total</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">}</span>
 <span class="p">})</span>
 <span class="sb">```</span>
 
@@ -909,7 +909,7 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
 
 <span class="sb">```wren</span>
 <span class="c1">// _app/migration.wren</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create users table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Create users table"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  CREATE TABLE users (</span>
 <span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
 <span class="sb">    name TEXT NOT NULL,</span>
@@ -919,7 +919,7 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
 <span class="sb">  )</span>
 <span class="sb">`</span><span class="p">)</span>
 
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create posts table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Create posts table"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  CREATE TABLE posts (</span>
 <span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
 <span class="sb">    title TEXT NOT NULL,</span>
@@ -930,12 +930,12 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
 <span class="sb">`</span><span class="p">)</span>
 
 <span class="c1">// Multiple statements in one migration: separate with `;`</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Add default config&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES (&#39;title&#39;, &#39;My App&#39;)`</span><span class="p">)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add default config"</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES ('title', 'My App')`</span><span class="p">)</span>
 
 <span class="c1">// Seed data across multiple inserts: wrap in Fn.new{ ... }</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Seed sample posts&quot;</span><span class="p">,</span><span class="w"> </span><span class="nc">Fn</span><span class="o">.</span><span class="n">new</span><span class="p">{</span>
-<span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;title&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;First post&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;content&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Hello world&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;userId&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
-<span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;title&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;content&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;More content&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;userId&quot;</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Seed sample posts"</span><span class="p">,</span><span class="w"> </span><span class="nc">Fn</span><span class="o">.</span><span class="n">new</span><span class="p">{</span>
+<span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"First post"</span><span class="p">,</span><span class="w"> </span><span class="s2">"content"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Hello world"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userId"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
+<span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Second post"</span><span class="p">,</span><span class="w"> </span><span class="s2">"content"</span><span class="o">:</span><span class="w"> </span><span class="s2">"More content"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userId"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
 <span class="p">})</span>
 <span class="sb">```</span>
 
@@ -957,10 +957,10 @@ caution, but never drop or restructure them.
 <span class="c1">// _app/domain.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">    </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
 
@@ -972,7 +972,7 @@ caution, but never drop or restructure them.
 <span class="w">  </span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">email</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 
-<span class="w">  </span><span class="n">isValid</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="vi">_name</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">isValid</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_email</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"@"</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="vi">_name</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">save</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`users`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">destroy</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`DELETE FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="vi">_id</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
@@ -992,23 +992,23 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 
 <span class="sb">```wren</span>
 <span class="c1">// users/index.wren — controller for /users</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">User</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">User</span>
 
 <span class="c1">// === CONTROLLER ===</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 
 <span class="c1">// === VIEW ===</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main class=&quot;container&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;main class="container"&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Users</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;table&gt;</span>
 <span class="w">      </span><span class="x">&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
@@ -1016,10 +1016,10 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="x">        {{ users.map{|u| &lt;tr&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;&lt;/tr&gt;} }}</span>
 <span class="x">      &lt;/tbody&gt;</span>
 <span class="w">    </span><span class="x">&lt;/table&gt;</span>
-<span class="x">    &lt;form method=&quot;post&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;input type=&quot;text&quot; name=&quot;name&quot; required /&gt;</span>
-<span class="x">      &lt;input type=&quot;email&quot; name=&quot;email&quot; required /&gt;</span>
-<span class="w">      </span><span class="x">&lt;button type=&quot;submit&quot;&gt;Create User&lt;/button&gt;</span>
+<span class="x">    &lt;form method="post"&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type="text" name="name" required /&gt;</span>
+<span class="x">      &lt;input type="email" name="email" required /&gt;</span>
+<span class="w">      </span><span class="x">&lt;button type="submit"&gt;Create User&lt;/button&gt;</span>
 <span class="w">    </span><span class="x">&lt;/form&gt;</span>
 <span class="x">  &lt;/main&gt;</span>
 <span class="p">)</span>
@@ -1028,11 +1028,11 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="k">&gt; </span><span class="ge">**Pitfall:** always `return Response.redirect(...)`. A bare</span>
 <span class="k">&gt; </span><span class="ge">`Response.redirect(...)` without `return` still runs the rest of the script,</span>
 <span class="k">&gt; </span><span class="ge">so the 302 carries an unexpected body. There is no error — the redirect just</span>
-<span class="k">&gt; </span><span class="ge">isn&#39;t clean.</span>
+<span class="k">&gt; </span><span class="ge">isn't clean.</span>
 
 <span class="gu">## Shared Logic (Instead of Middleware)</span>
 
-There&#39;s no middleware in Bialet. Put shared logic — auth checks, rate
+There's no middleware in Bialet. Put shared logic — auth checks, rate
 limiting — in a helper class under <span class="sb">`_app/`</span>:
 
 <span class="sb">```wren</span>
@@ -1044,10 +1044,10 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">require</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">account</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Auth</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;X-Api-Key&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">account</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Auth</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"X-Api-Key"</span><span class="p">))</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">account</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">401</span><span class="p">)</span>
-<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Unauthorized&quot;</span><span class="p">})</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"error"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Unauthorized"</span><span class="p">})</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">account</span>
 <span class="w">  </span><span class="p">}</span>
@@ -1056,7 +1056,7 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 
 <span class="sb">```wren</span>
 <span class="c1">// send.wren — POST /send</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/auth&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Auth</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/auth"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Auth</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">account</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Auth</span><span class="o">.</span><span class="n">require</span><span class="p">()</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">account</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="nc">Map</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">account</span><span class="w">  </span><span class="c1">// Auth.require() returned an error response</span>
@@ -1068,33 +1068,33 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 
 <span class="sb">```wren</span>
 <span class="c1">// Query parameters</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span>
-<span class="nc">Request</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// alias for Request.get(&quot;id&quot;)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"1"</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span><span class="w">   </span><span class="c1">// alias for Request.get("id")</span>
 
 <span class="c1">// POST form fields</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="p">}</span>
 
 <span class="c1">// JSON body</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isJson</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="w">   </span><span class="c1">// == Json.parse(Request.body)</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1">// Headers</span>
-<span class="k">var</span><span class="w"> </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;X-Api-Key&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">apiKey</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"X-Api-Key"</span><span class="p">)</span>
 
 <span class="c1">// HTTP method</span>
-<span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w">     </span><span class="c1">// &quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, ...</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w">     </span><span class="c1">// "GET", "POST", "PUT", "DELETE", ...</span>
 <span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="w">      </span><span class="c1">// true for POST</span>
 
 <span class="c1">// Path segments (only inside _route.wren)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="c1">// Basic auth</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;secret&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span><span class="w"> </span><span class="s2">"secret"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// authenticated</span>
 <span class="p">}</span>
 <span class="sb">```</span>
@@ -1102,16 +1102,16 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 <span class="gu">## Response Handling</span>
 
 <span class="sb">```wren</span>
-<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;success&quot;</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"success"</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="s2">"id"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">})</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/users&quot;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">notFound</span><span class="p">()</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">forbidden</span><span class="p">()</span>
 
 <span class="c1">// CORS</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w">                              </span><span class="c1">// allow all origins</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">&quot;https://myapp.com&quot;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w">          </span><span class="c1">// specific origin</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">&quot;https://myapp.com&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;GET, POST&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Content-Type&quot;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">"https://myapp.com"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w">          </span><span class="c1">// specific origin</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">(</span><span class="s2">"https://myapp.com"</span><span class="p">,</span><span class="w"> </span><span class="s2">"GET, POST"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Content-Type"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
 <span class="sb">```</span>
 
 <span class="sb">`Response.cors`</span> handles OPTIONS preflight automatically (204 response,
@@ -1123,19 +1123,19 @@ so processing continues.
 <span class="sb">```wren</span>
 <span class="c1">// Login</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;password&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nc">Session</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;userId&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/dashboard&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"password"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Session</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/dashboard"</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// Check logged in (on protected pages)</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;userId&quot;</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
 
 <span class="c1">// Logout</span>
 <span class="nc">Session</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="sb">```</span>
 
 <span class="sb">`Session`</span> is also useful to scope data to an anonymous visitor without any
@@ -1144,8 +1144,8 @@ login system — e.g. a per-visitor todo list:
 <span class="sb">```wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;session&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"session"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="n">save</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`Task`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">list</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT * FROM Task WHERE session = ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
@@ -1159,18 +1159,18 @@ CSRF: <span class="sb">`Session.csrf`</span> renders a hidden input field with a
 
 <span class="sb">```wren</span>
 <span class="c1">// _app/cron.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="c1">// Runs when the current minute is divisible by the given value</span>
 <span class="c1">// (safe values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 — anything that</span>
-<span class="c1">// doesn&#39;t divide 60, like 90, never fires)</span>
-<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;👋 Hello, from Cron!&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="c1">// doesn't divide 60, like 90, never fires)</span>
+<span class="nc">Cron</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mf">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"👋 Hello, from Cron!"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Runs daily at 02:00</span>
 <span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">clearAll</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 
 <span class="c1">// Runs every Monday at 04:30 (dayOfWeek: 0=Sunday .. 6=Saturday)</span>
-<span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Monday task&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="nc">Cron</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">date</span><span class="o">|</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Monday task"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <span class="sb">```</span>
 
 <span class="gu">## File Uploads</span>
@@ -1179,14 +1179,14 @@ Files are always stored in the SQLite database, never on disk.
 
 <span class="sb">```wren</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;upload_file&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"upload_file"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;No file was uploaded.&lt;/p&gt;</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Uploaded: {{ file.name }}&lt;/p&gt;</span>
 <span class="p">}</span>
 
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
-<span class="x">  &lt;input type=&quot;file&quot; name=&quot;upload_file&quot; /&gt;</span>
-<span class="w">  </span><span class="x">&lt;button type=&quot;submit&quot;&gt;Upload&lt;/button&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post" enctype="multipart/form-data"&gt;</span>
+<span class="x">  &lt;input type="file" name="upload_file" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;button type="submit"&gt;Upload&lt;/button&gt;</span>
 <span class="x">&lt;/form&gt;</span>
 <span class="sb">```</span>
 
@@ -1200,9 +1200,9 @@ with <span class="sb">`Response.file(id)`</span>. Unprocessed uploads and files 
 Import community Wren modules straight from GitHub — no package manager:
 
 <span class="sb">```wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span><span class="w">             </span><span class="c1">// main branch</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;gh:owner/repo/path/to/file@v1.0&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">V1</span><span class="w">  </span><span class="c1">// pinned tag</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;https://raw.githubusercontent.com/owner/repo/main/module.wren&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span><span class="w">             </span><span class="c1">// main branch</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file@v1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">V1</span><span class="w">  </span><span class="c1">// pinned tag</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"https://raw.githubusercontent.com/owner/repo/main/module.wren"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
 <span class="sb">```</span>
 
 The <span class="sb">`.wren`</span> extension is auto-appended for <span class="sb">`gh:`</span> imports (required for full
@@ -1212,8 +1212,8 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
 <span class="gu">## Markdown</span>
 
 <span class="sb">```wren</span>
-<span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">&quot;## Hello **World**!&quot;</span><span class="p">)</span><span class="w">   </span><span class="c1">// renders to HTML</span>
-<span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;about.md&quot;</span><span class="p">)</span><span class="w">              </span><span class="c1">// reads and renders a file from the app dir</span>
+<span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"## Hello **World**!"</span><span class="p">)</span><span class="w">   </span><span class="c1">// renders to HTML</span>
+<span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"about.md"</span><span class="p">)</span><span class="w">              </span><span class="c1">// reads and renders a file from the app dir</span>
 <span class="sb">```</span>
 
 <span class="gu">## Security Checklist</span>
@@ -1224,7 +1224,7 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
    (user input, database, URL) automatically. Mark intentionally-raw markup
    with <span class="sb">`HtmlNode`</span> or <span class="sb">`.raw`</span>.
 <span class="k">3.</span> <span class="gs">**Always `return` before `Response.redirect(...)`**</span> so the rest of the
-   script doesn&#39;t attach a body to the redirect.
+   script doesn't attach a body to the redirect.
 <span class="k">4.</span> <span class="gs">**Validate input**</span> in domain classes (<span class="sb">`isValid`</span>, <span class="sb">`errors`</span>) or inline
    before saving.
 <span class="k">5.</span> <span class="gs">**Pin external imports**</span> to a tag, not <span class="sb">`main`</span>, for anything beyond local
@@ -1232,7 +1232,7 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
 
 <span class="sb">```wren</span>
 <span class="c1">// WRONG — SQL injection</span>
-<span class="sb">`SELECT * FROM users WHERE name = &#39;%(name)&#39;`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="sb">`SELECT * FROM users WHERE name = '%(name)'`</span><span class="o">.</span><span class="n">fetch</span>
 
 <span class="c1">// WRONG — XSS</span>
 <span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="o">.</span><span class="n">safe</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">  </span><span class="c1">// double-escaped: interpolation already escapes</span>
@@ -1249,42 +1249,42 @@ they never auto-update, so pin a tag for anything beyond a quick experiment.
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Response</span><span class="o">.</span><span class="n">cors</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 
 <span class="c1">// GET /api/users?id=1</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"GET"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;User not found&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"error"</span><span class="o">:</span><span class="w"> </span><span class="s2">"User not found"</span><span class="p">})</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">})</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"id"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">})</span>
 <span class="p">}</span>
 
 <span class="c1">// GET /api/users</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;GET&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nc">User</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">u</span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">email</span><span class="p">}}</span><span class="o">.</span><span class="n">toList</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">id</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"GET"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="nc">User</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">u</span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="s2">"id"</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="n">u</span><span class="o">.</span><span class="n">email</span><span class="p">}}</span><span class="o">.</span><span class="n">toList</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="c1">// POST /api/users</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"POST"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
-<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
+<span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span>
 
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="o">.</span><span class="n">isValid</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">400</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invalid user data&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"error"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Invalid user data"</span><span class="p">})</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"id"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
 <span class="p">}</span>
 
 <span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Not found&quot;</span><span class="p">})</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"error"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Not found"</span><span class="p">})</span>
 <span class="sb">```</span>
 
 This single-file pattern — one <span class="sb">`.wren`</span> file handling GET/POST/PUT/DELETE via
@@ -1298,15 +1298,15 @@ Full page reloads are the default. Add HTMX sparingly, only where it clearly
 improves UX (inline delete, edit-in-place):
 
 <span class="sb">```wren</span>
-<span class="x">&lt;script src=&quot;https://unpkg.com/htmx.org@1.9.10&quot;&gt;&lt;/script&gt;</span>
+<span class="x">&lt;script src="https://unpkg.com/htmx.org@1.9.10"&gt;&lt;/script&gt;</span>
 
-<span class="x">&lt;button hx-delete=&quot;/users/{{ user.id }}&quot; hx-confirm=&quot;Are you sure?&quot;</span>
-<span class="x">        hx-target=&quot;closest tr&quot; hx-swap=&quot;outerHTML&quot;&gt;Delete&lt;/button&gt;</span>
+<span class="x">&lt;button hx-delete="/users/{{ user.id }}" hx-confirm="Are you sure?"</span>
+<span class="x">        hx-target="closest tr" hx-swap="outerHTML"&gt;Delete&lt;/button&gt;</span>
 <span class="sb">```</span>
 
 <span class="gu">## Semantic HTML &amp; Styling</span>
 
-Use proper elements — <span class="sb">`&lt;header&gt;`</span>, <span class="sb">`&lt;nav&gt;`</span>, <span class="sb">`&lt;main class=&quot;container&quot;&gt;`</span>,
+Use proper elements — <span class="sb">`&lt;header&gt;`</span>, <span class="sb">`&lt;nav&gt;`</span>, <span class="sb">`&lt;main class="container"&gt;`</span>,
 <span class="sb">`&lt;article&gt;`</span>, <span class="sb">`&lt;section&gt;`</span>, <span class="sb">`&lt;aside&gt;`</span>, <span class="sb">`&lt;footer&gt;`</span> — and let a classless CSS
 framework like [<span class="nt">PicoCSS</span>](<span class="na">https://picocss.com</span>) style them with zero classes.
 Tailwind (via CDN for prototyping) and vanilla CSS also work — Bialet just
@@ -1331,7 +1331,7 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 
 <span class="sb">```wren</span>
 <span class="c1">// _app/migration.wren</span>
-<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">&quot;Create tasks table&quot;</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Create tasks table"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
 <span class="sb">  CREATE TABLE tasks (</span>
 <span class="sb">    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
 <span class="sb">    description TEXT NOT NULL,</span>
@@ -1346,17 +1346,17 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="c1">// _app/domain.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">    </span><span class="vi">_finished</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;finished&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">    </span><span class="vi">_session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;session&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span>
-<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">    </span><span class="vi">_finished</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"finished"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="vi">_session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"session"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span>
+<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_description</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="n">finished</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">finished</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"1"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">save</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`tasks`</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
@@ -1372,14 +1372,14 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="c1">// _app/template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
-<span class="w">        </span><span class="x">&lt;meta charset=&quot;utf-8&quot; /&gt;</span>
+<span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;title&gt;</span><span class="nc">Todo</span><span class="x">&lt;/title&gt;</span>
-<span class="x">        &lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css&quot; /&gt;</span>
+<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" /&gt;</span>
 <span class="w">      </span><span class="x">&lt;/head&gt;</span>
 <span class="x">      &lt;body&gt;</span>
-<span class="w">        </span><span class="x">&lt;main class=&quot;container&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+<span class="w">        </span><span class="x">&lt;main class="container"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
 <span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
@@ -1387,33 +1387,33 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 
 <span class="sb">```wren</span>
 <span class="c1">// index.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"description"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Todo</span><span class="w"> </span><span class="nc">List</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name=&quot;description&quot; placeholder=&quot;What needs to be done?&quot; required /&gt;</span>
-<span class="x">    &lt;button type=&quot;submit&quot;&gt;</span><span class="nc">Add</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;form method="post"&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="description" placeholder="What needs to be done?" required /&gt;</span>
+<span class="x">    &lt;button type="submit"&gt;</span><span class="nc">Add</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="w">  </span><span class="x">&lt;ul&gt;</span>
 <span class="x">    {{ tasks.map{|task| &lt;li&gt;</span>
-<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/toggle&quot; style=&quot;display:inline&quot;&gt;</span>
-<span class="x">        &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
-<span class="w">        </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method="post" action="/toggle" style="display:inline"&gt;</span>
+<span class="x">        &lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
+<span class="w">        </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/form&gt;</span>
-<span class="x">      &lt;span class=&quot;{{ task.finished ? &quot;done&quot; : &quot;&quot; }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
-<span class="x">      &lt;form method=&quot;post&quot; action=&quot;/delete&quot; style=&quot;display:inline&quot;&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
+<span class="x">      &lt;span class="{{ task.finished ? "done" : "" }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">      &lt;form method="post" action="/delete" style="display:inline"&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
 <span class="x">        &lt;button&gt;</span><span class="err">✕</span><span class="x">&lt;/button&gt;</span>
 <span class="x">      &lt;/form&gt;</span>
 <span class="w">    </span><span class="x">&lt;/li&gt;} }}</span>
@@ -1424,19 +1424,19 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 
 <span class="sb">```wren</span>
 <span class="c1">// toggle.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="sb">```</span>
 
 <span class="sb">```wren</span>
 <span class="c1">// delete.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app/domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
-<span class="nc">Task</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="nc">Task</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="sb">```</span>
 
 <span class="gu">## Running the App</span>
@@ -1444,7 +1444,7 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="sb">```bash</span>
 bialet<span class="w">              </span><span class="c1"># runs the current directory on 127.0.0.1:7001</span>
 bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>.<span class="w">    </span><span class="c1"># explicit port and directory</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w">              </span><span class="c1"># validate a standalone file&#39;s syntax</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w">              </span><span class="c1"># validate a standalone file's syntax</span>
 bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class="w"> </span>/my/app<span class="w">   </span><span class="c1"># validate with app context (for _app/ imports)</span>
 <span class="sb">```</span>
 

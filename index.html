@@ -248,8 +248,8 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 
 <span class="c1">// 2. Handle POST requests and save data</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">  </span><span class="sb">`messages`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">&quot;text&quot;</span><span class="o">:</span><span class="w"> </span><span class="n">msg</span><span class="p">})</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">  </span><span class="sb">`messages`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"text"</span><span class="o">:</span><span class="w"> </span><span class="n">msg</span><span class="p">})</span>
 <span class="p">}</span>
 
 <span class="c1">// 3. Fetch data using pure SQL</span>
@@ -259,13 +259,13 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="nc">Guestbook</span><span class="x">&lt;/h1&gt;</span>
 
-<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name=&quot;msg&quot; placeholder=&quot;Write a message...&quot;&gt;</span>
+<span class="x">  &lt;form method="post"&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="msg" placeholder="Write a message..."&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="w">  </span><span class="x">&lt;hr&gt;</span>
 <span class="x">  &lt;ul&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>

@@ -527,7 +527,7 @@ elements like <code class="docutils literal notranslate"><span class="pre">&lt;m
 <h3>Interpolation<a class="headerlink" href="#interpolation" title="Link to this heading">#</a></h3>
 <p>Use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> to embed any Wren expression inside HTML. The expression is
 evaluated and its result is inserted into the string.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;John&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"John"</span>
 <span class="k">var</span><span class="w"> </span><span class="n">greeting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;h1&gt;Hello, {{ name }}!&lt;/h1&gt;</span>
 <span class="c1">// Output: &lt;h1&gt;Hello, John!&lt;/h1&gt;</span>
 
@@ -560,9 +560,9 @@ every page in Bialet works — the last statement is a <code class="docutils lit
 <h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h3>
 <p>Attributes follow the same rules as regular HTML — lowercase names, quoted
 values. You can interpolate values with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/about&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Learn more&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;a href=&quot;{{ url }}&quot; class=&quot;nav-link&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/about"</span>
+<span class="k">var</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Learn more"</span>
+<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;a href="{{ url }}" class="nav-link"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -578,8 +578,8 @@ accepted with or without a trailing slash, and the markup is served verbatim:</p
 <p>When a void element is the <em>outermost</em> tag of the string it must end with a
 space and slash — <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">value=&quot;{{</span> <span class="pre">val</span> <span class="pre">}}&quot;</span> <span class="pre">/&gt;</span></code> — so the parser knows the
 string has ended. The output omits the space and slash:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value=&quot;{{ userInput }}&quot; /&gt;</span>
-<span class="x">// Renders: &lt;input value=&#39;Hello&#39;&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">inputField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;input value="{{ userInput }}" /&gt;</span>
+<span class="x">// Renders: &lt;input value='Hello'&gt;</span>
 </pre></div>
 </div>
 <p>Without the space (<code class="docutils literal notranslate"><span class="pre">&lt;input/&gt;</span></code>) the parser reads the slash as part of the tag
@@ -613,8 +613,8 @@ and reports <code class="docutils literal notranslate"><span class="pre">Cannot<
 
 <span class="c1">// Also correct — wrapping with a different tag breaks the conflict</span>
 <span class="k">var</span><span class="w"> </span><span class="n">fine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
-<span class="x">  &lt;div style=&quot;border:1px solid #ccc&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;div style=&quot;background:#eee&quot;&gt;</span>
+<span class="x">  &lt;div style="border:1px solid #ccc"&gt;</span>
+<span class="w">    </span><span class="x">&lt;div style="background:#eee"&gt;</span>
 <span class="x">      Deeply nested same tags work once the outer tag differs.</span>
 <span class="x">    &lt;/div&gt;</span>
 <span class="w">  </span><span class="x">&lt;/div&gt;</span>
@@ -647,8 +647,8 @@ contain only letters, numbers, and hyphens. No underscores or uppercase:</p>
 <span class="k">var</span><span class="w"> </span><span class="n">bad2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="nc">MyElement</span><span class="o">&gt;</span><span class="nc">Invalid</span><span class="o">&lt;/</span><span class="nc">MyElement</span><span class="o">&gt;</span>
 
 <span class="c1">// Correct</span>
-<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;span class=&quot;badge&quot;&gt;Valid&lt;/span&gt;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">good2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my-element class=&quot;badge&quot;&gt;Custom element&lt;/my-element&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;span class="badge"&gt;Valid&lt;/span&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">good2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;my-element class="badge"&gt;Custom element&lt;/my-element&gt;</span>
 </pre></div>
 </div>
 <p><strong>Interpolation depth</strong> is limited to 9 nested levels.</p>
@@ -667,11 +667,11 @@ evaluates empty.</p>
 <section id="class-toggling">
 <h3>Class toggling<a class="headerlink" href="#class-toggling" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// filter is a query parameter string</span>
-<span class="k">var</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;all&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"filter"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"all"</span>
 
-<span class="x">&lt;a href=&quot;/&quot; class=&quot;filter-tab {{ filter == &quot;all&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;All&lt;/a&gt;</span>
-<span class="x">&lt;a href=&quot;/?filter=active&quot; class=&quot;filter-tab {{ filter == &quot;active&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;Active&lt;/a&gt;</span>
-<span class="x">&lt;a href=&quot;/?filter=completed&quot; class=&quot;filter-tab {{ filter == &quot;completed&quot; &amp;&amp; &quot;active&quot; }}&quot;&gt;Completed&lt;/a&gt;</span>
+<span class="x">&lt;a href="/" class="filter-tab {{ filter == "all" &amp;&amp; "active" }}"&gt;All&lt;/a&gt;</span>
+<span class="x">&lt;a href="/?filter=active" class="filter-tab {{ filter == "active" &amp;&amp; "active" }}"&gt;Active&lt;/a&gt;</span>
+<span class="x">&lt;a href="/?filter=completed" class="filter-tab {{ filter == "completed" &amp;&amp; "active" }}"&gt;Completed&lt;/a&gt;</span>
 </pre></div>
 </div>
 <p>When <code class="docutils literal notranslate"><span class="pre">filter</span> <span class="pre">==</span> <span class="pre">&quot;all&quot;</span></code> is true, <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code> is inserted as the class value.
@@ -683,24 +683,24 @@ When false, nothing is inserted.</p>
 be an inline HTML string. The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation must always appear inside
 an HTML tag (<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> outside an HTML tag is parsed as Wren map syntax).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">  {{ showClear &amp;&amp; &lt;form method=&quot;post&quot; action=&quot;/clear&quot; class=&quot;clear-form&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;button class=&quot;clear-btn&quot;&gt;Clear completed&lt;/button&gt;</span>
+<span class="x">  {{ showClear &amp;&amp; &lt;form method="post" action="/clear" class="clear-form"&gt;</span>
+<span class="w">    </span><span class="x">&lt;button class="clear-btn"&gt;Clear completed&lt;/button&gt;</span>
 <span class="w">  </span><span class="x">&lt;/form&gt; }}</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;span class=&quot;empty-icon&quot; aria-hidden=&quot;true&quot;&gt;🎉&lt;/span&gt;</span>
-<span class="w">    </span><span class="x">&lt;p class=&quot;empty-text&quot;&gt;Nothing here yet.&lt;/p&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class="empty-state"&gt;</span>
+<span class="w">    </span><span class="x">&lt;span class="empty-icon" aria-hidden="true"&gt;🎉&lt;/span&gt;</span>
+<span class="w">    </span><span class="x">&lt;p class="empty-text"&gt;Nothing here yet.&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Conditional text</span>
-<span class="x">&lt;span class=&quot;stats-count&quot;&gt;</span>
+<span class="x">&lt;span class="stats-count"&gt;</span>
 <span class="x">  &lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">activeCount</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;</span>
-<span class="x">  task{{ activeCount != 1 &amp;&amp; &quot;s&quot; }} remaining</span>
+<span class="x">  task{{ activeCount != 1 &amp;&amp; "s" }} remaining</span>
 <span class="x">&lt;/span&gt;</span>
 </pre></div>
 </div>
@@ -715,7 +715,7 @@ error (<code class="docutils literal notranslate"><span class="pre">Expected</sp
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Valid — the expression spans lines, operators end each line</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">showClear</span><span class="w"> </span><span class="o">&amp;&amp;</span>
-<span class="w">  </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;form method="post" action="/clear"&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
@@ -723,7 +723,7 @@ error (<code class="docutils literal notranslate"><span class="pre">Expected</sp
 <span class="c1">// Invalid — the operator starts a line</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">showClear</span>
-<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/clear&quot;&gt;</span>
+<span class="w">  </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;form method="post" action="/clear"&gt;</span>
 <span class="x">    &lt;button&gt;</span><span class="nc">Clear</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
@@ -741,17 +741,17 @@ and the output is empty.</p>
 blocks of HTML based on a condition.</p>
 <section id="attribute-switching">
 <h3>Attribute switching<a class="headerlink" href="#attribute-switching" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;</span>
-<span class="x">        title=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;</span>
-<span class="x">        aria-label=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;button class="{{ task.finished ? "checkbox-btn checked" : "checkbox-btn" }}"</span>
+<span class="x">        title="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"</span>
+<span class="x">        aria-label="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"&gt;</span>
 <span class="x">&lt;/button&gt;</span>
 </pre></div>
 </div>
 </section>
 <section id="nested-ternaries-for-multi-value-decisions">
 <h3>Nested ternaries for multi-value decisions<a class="headerlink" href="#nested-ternaries-for-multi-value-decisions" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;span class=&quot;priority-dot {{ task.id.toNum % 3 == 1 ? &quot;high&quot; : task.id.toNum % 3 == 2 ? &quot;medium&quot; : &quot;low&quot; }}&quot;</span>
-<span class="x">      aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;span class="priority-dot {{ task.id.toNum % 3 == 1 ? "high" : task.id.toNum % 3 == 2 ? "medium" : "low" }}"</span>
+<span class="x">      aria-hidden="true"&gt;&lt;/span&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -759,9 +759,9 @@ blocks of HTML based on a condition.</p>
 <h3>Ternary with HTML operands<a class="headerlink" href="#ternary-with-html-operands" title="Link to this heading">#</a></h3>
 <p>Each branch of a ternary can be an inline HTML string that spans multiple
 lines. The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must be inside an HTML tag context:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text completed&quot;&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class="task-text completed"&gt;</span>
 <span class="x">  {{ task.description }}</span>
-<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class=&quot;task-text&quot;&gt;</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class="task-text"&gt;</span>
 <span class="x">  {{ task.description }}</span>
 <span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 </pre></div>
@@ -772,27 +772,27 @@ lines. The <code class="docutils literal notranslate"><span class="pre">{{</span
 <p><strong>Deeply nested ternaries hurt readability.</strong> For complex logic, compute the
 value above the template and use a simple variable instead:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Compute before the template</span>
-<span class="k">var</span><span class="w"> </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;task-text&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"task-text"</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;task-text completed&quot;</span>
+<span class="w">  </span><span class="n">taskClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"task-text completed"</span>
 <span class="p">}</span>
 
 <span class="c1">// Clean template</span>
-<span class="x">&lt;span class=&quot;{{ taskClass }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">&lt;span class="{{ taskClass }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 </pre></div>
 </div>
 <p><strong>Newlines outside HTML tags</strong> — same rule as <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — Wren code broken across lines outside the HTML string</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span>
 <span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span>
-<span class="w">  </span><span class="x">&lt;span class=&quot;completed&quot;&gt;Done&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">  </span><span class="x">&lt;span class=&quot;pending&quot;&gt;Pending&lt;/span&gt;</span>
+<span class="w">  </span><span class="x">&lt;span class="completed"&gt;Done&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">  </span><span class="x">&lt;span class="pending"&gt;Pending&lt;/span&gt;</span>
 <span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 
 <span class="c1">// Correct — one expression, newlines inside the HTML strings</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class=&quot;completed&quot;&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;span class="completed"&gt;</span>
 <span class="x">  Done</span>
-<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class=&quot;pending&quot;&gt;</span>
+<span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="x">&lt;span class="pending"&gt;</span>
 <span class="x">  Pending</span>
 <span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 </pre></div>
@@ -807,7 +807,7 @@ The callback body is a single Wren expression — but the inline HTML string
 inside it can span many visual lines.</p>
 <section id="simple-list">
 <h3>Simple list<a class="headerlink" href="#simple-list" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Banana&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Cherry&quot;</span><span class="p">]</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"Apple"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Banana"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Cherry"</span><span class="p">]</span>
 <span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
 <span class="c1">// Output: &lt;ul&gt;&lt;li&gt;Apple&lt;/li&gt;&lt;li&gt;Banana&lt;/li&gt;&lt;li&gt;Cherry&lt;/li&gt;&lt;/ul&gt;</span>
 </pre></div>
@@ -818,26 +818,26 @@ inside it can span many visual lines.</p>
 <p>The callback is one expression (<code class="docutils literal notranslate"><span class="pre">|task|</span> <span class="pre">&lt;li&gt;...&lt;/li&gt;</span></code>), but the <code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code> inline
 HTML string spans multiple lines. The Wren code stays on one line of Wren, but
 the HTML inside the tags has newlines.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;ul class=&quot;task-list&quot;&gt;</span>
-<span class="x">  {{ tasks.map{ |task| &lt;li class=&quot;task-item {{ task.finished &amp;&amp; &quot;completed&quot; }}&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;section class=&quot;task-item-row&quot;&gt;</span>
-<span class="x">      &lt;form method=&quot;post&quot; action=&quot;/toggle&quot; class=&quot;checkbox-form&quot;&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
-<span class="x">        &lt;button class=&quot;{{ task.finished ? &quot;checkbox-btn checked&quot; : &quot;checkbox-btn&quot; }}&quot;</span>
-<span class="x">                title=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;</span>
-<span class="x">                aria-label=&quot;{{ task.finished ? &quot;Mark incomplete&quot; : &quot;Mark complete&quot; }}&quot;&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;ul class="task-list"&gt;</span>
+<span class="x">  {{ tasks.map{ |task| &lt;li class="task-item {{ task.finished &amp;&amp; "completed" }}"&gt;</span>
+<span class="w">    </span><span class="x">&lt;section class="task-item-row"&gt;</span>
+<span class="x">      &lt;form method="post" action="/toggle" class="checkbox-form"&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
+<span class="x">        &lt;button class="{{ task.finished ? "checkbox-btn checked" : "checkbox-btn" }}"</span>
+<span class="x">                title="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"</span>
+<span class="x">                aria-label="{{ task.finished ? "Mark incomplete" : "Mark complete" }}"&gt;</span>
 <span class="w">        </span><span class="x">&lt;/button&gt;</span>
 <span class="x">      &lt;/form&gt;</span>
-<span class="w">      </span><span class="x">&lt;span class=&quot;task-content&quot;&gt;</span>
-<span class="x">        &lt;span class=&quot;{{ task.finished ? &quot;task-text completed&quot; : &quot;task-text&quot; }}&quot;&gt;</span>
-<span class="w">          </span><span class="x">&lt;span class=&quot;priority-dot low&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;</span>
+<span class="w">      </span><span class="x">&lt;span class="task-content"&gt;</span>
+<span class="x">        &lt;span class="{{ task.finished ? "task-text completed" : "task-text" }}"&gt;</span>
+<span class="w">          </span><span class="x">&lt;span class="priority-dot low" aria-hidden="true"&gt;&lt;/span&gt;</span>
 <span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">        </span><span class="x">&lt;/span&gt;</span>
-<span class="x">        &lt;span class=&quot;task-meta&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">hh</span><span class="w"> </span><span class="si">}}</span><span class="o">:</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">mi</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">        &lt;span class="task-meta"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">hh</span><span class="w"> </span><span class="si">}}</span><span class="o">:</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">createdAt</span><span class="o">.</span><span class="n">mi</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="x">      &lt;/span&gt;</span>
-<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot; action=&quot;/delete&quot; class=&quot;delete-form&quot;&gt;</span>
-<span class="x">        &lt;input type=&quot;hidden&quot; name=&quot;id&quot; value=&quot;{{ task.id }}&quot; /&gt;</span>
-<span class="w">        </span><span class="x">&lt;button class=&quot;delete-btn&quot; title=&quot;Delete task&quot; aria-label=&quot;Delete task&quot;&gt;✕&lt;/button&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method="post" action="/delete" class="delete-form"&gt;</span>
+<span class="x">        &lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
+<span class="w">        </span><span class="x">&lt;button class="delete-btn" title="Delete task" aria-label="Delete task"&gt;✕&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/form&gt;</span>
 <span class="x">    &lt;/section&gt;</span>
 <span class="w">  </span><span class="x">&lt;/li&gt; } }}</span>
@@ -851,7 +851,7 @@ the HTML inside the tags has newlines.</p>
 statements or variable declarations inside a <code class="docutils literal notranslate"><span class="pre">map</span></code> callback:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — multiple statements inside map</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">&quot;✓&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;○&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span>
 <span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="si">}}</span><span class="x"> {{ task.description }}&lt;/li&gt;</span>
 <span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 </pre></div>
@@ -864,7 +864,7 @@ state:</p>
 <span class="x">  &lt;ul&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class=&quot;empty-state&quot;&gt;</span>
+<span class="x">  {{ tasks.count == 0 &amp;&amp; &lt;section class="empty-state"&gt;</span>
 <span class="w">    </span><span class="x">&lt;p&gt;No tasks yet. Add your first one above.&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/section&gt; }}</span>
 <span class="x">&lt;/main&gt;</span>
@@ -901,14 +901,14 @@ POST handling, data fetching, redirects</p></li>
 response and end the script</p></li>
 </ul>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// === Controller ===</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
@@ -917,7 +917,7 @@ response and end the script</p></li>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Posts</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">  &lt;ul&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href=&quot;/posts/{{ p.id }}&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href="/posts/{{ p.id }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">  </span><span class="x">&lt;/ul&gt;</span>
 <span class="x">&lt;/main&gt;</span><span class="p">)</span>
 </pre></div>
@@ -937,10 +937,10 @@ and domain logic — keeping it out of your template code.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _domain.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;body&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;createdAt&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
+<span class="w">    </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"body"</span><span class="p">]</span>
+<span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
@@ -970,8 +970,8 @@ instances — clean, testable, and separated from presentation.</p>
 <h3>Pitfall<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p><strong>Database values come back as strings.</strong> Always convert before numeric
 operations:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;cnt&quot;</span><span class="p">])</span>
-<span class="c1">// Wrong: row[&quot;cnt&quot;] + 1  —  this concatenates strings</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"cnt"</span><span class="p">])</span>
+<span class="c1">// Wrong: row["cnt"] + 1  —  this concatenates strings</span>
 </pre></div>
 </div>
 </section>
@@ -987,15 +987,15 @@ operations:</p>
 <li><p>Call model methods</p></li>
 <li><p>Redirect or prepare data for the view</p></li>
 </ol>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_domain&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Post</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Post</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"body"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="n">post</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/posts/&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">post</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">toString</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/posts/"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">post</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">toString</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">postId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span>
@@ -1014,14 +1014,14 @@ the redirect and no body is sent:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the code below still runs and attaches a body to the 302</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 
 <span class="c1">// Correct — return stops the script at the redirect</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
@@ -1038,17 +1038,17 @@ string, turning your class into a library of reusable components.</p>
 <p>Create <code class="docutils literal notranslate"><span class="pre">_template.wren</span></code> and import it from your pages:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;My App&quot;</span>
-<span class="w">    </span><span class="vi">_subtitle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;A Bialet application&quot;</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"My App"</span>
+<span class="w">    </span><span class="vi">_subtitle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"A Bialet application"</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang=&quot;en&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      {{ head(_title) }}</span>
 <span class="x">      &lt;body&gt;</span>
-<span class="w">        </span><span class="x">&lt;header class=&quot;app-header&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;header class="app-header"&gt;</span>
 <span class="x">          &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">          &lt;p class=&quot;app-subtitle&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_subtitle</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">          &lt;p class="app-subtitle"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_subtitle</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="x">        &lt;/header&gt;</span>
 <span class="w">        </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 <span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">footer</span><span class="w"> </span><span class="si">}}</span>
@@ -1057,13 +1057,13 @@ string, turning your class into a library of reusable components.</p>
 
 <span class="w">  </span><span class="n">head</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
 <span class="x">    &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">    &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;</span>
-<span class="x">    &lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">    &lt;meta charset="utf-8" /&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;</span>
+<span class="x">    &lt;link rel="stylesheet" href="/style.css" /&gt;</span>
 <span class="w">  </span><span class="x">&lt;/head&gt; }</span>
 
-<span class="x">  footer { &lt;footer class=&quot;app-footer&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;Built with &lt;a href=&quot;https://bialet.dev&quot;&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="x">  footer { &lt;footer class="app-footer"&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;Built with &lt;a href="https://bialet.dev"&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/footer&gt; }</span>
 <span class="x">}</span>
 </pre></div>
@@ -1072,7 +1072,7 @@ string, turning your class into a library of reusable components.</p>
 <section id="using-the-template">
 <h3>Using the template<a class="headerlink" href="#using-the-template" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_template&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
@@ -1087,7 +1087,7 @@ expression — no <code class="docutils literal notranslate"><span class="pre">r
 <h3>Pitfalls<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <p><strong>Instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>.</strong> If your methods are not <code class="docutils literal notranslate"><span class="pre">static</span></code>, you
 must instantiate the class:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — calls static layout, doesn&#39;t exist</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — calls static layout, doesn't exist</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 
 <span class="c1">// Correct — creates an instance first</span>
@@ -1139,29 +1139,29 @@ Use the right element for the job.</p>
 </div>
 <p>A real-world page using semantic elements:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
-<span class="x">  &lt;form method=&quot;post&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;section class=&quot;input-group&quot;&gt;</span>
-<span class="x">      &lt;input name=&quot;task&quot; placeholder=&quot;What needs to be done?&quot; required autofocus /&gt;</span>
-<span class="w">      </span><span class="x">&lt;button type=&quot;submit&quot;&gt;Add&lt;/button&gt;</span>
+<span class="x">  &lt;form method="post"&gt;</span>
+<span class="w">    </span><span class="x">&lt;section class="input-group"&gt;</span>
+<span class="x">      &lt;input name="task" placeholder="What needs to be done?" required autofocus /&gt;</span>
+<span class="w">      </span><span class="x">&lt;button type="submit"&gt;Add&lt;/button&gt;</span>
 <span class="w">    </span><span class="x">&lt;/section&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 
-<span class="w">  </span><span class="x">&lt;nav class=&quot;filters&quot; aria-label=&quot;Task filters&quot;&gt;</span>
-<span class="x">    &lt;a href=&quot;/&quot; class=&quot;filter-tab active&quot;&gt;</span><span class="nc">All</span><span class="x">&lt;/a&gt;</span>
-<span class="x">    &lt;a href=&quot;/?filter=active&quot; class=&quot;filter-tab&quot;&gt;</span><span class="nc">Active</span><span class="x">&lt;/a&gt;</span>
-<span class="x">    &lt;a href=&quot;/?filter=completed&quot; class=&quot;filter-tab&quot;&gt;</span><span class="nc">Completed</span><span class="x">&lt;/a&gt;</span>
+<span class="w">  </span><span class="x">&lt;nav class="filters" aria-label="Task filters"&gt;</span>
+<span class="x">    &lt;a href="/" class="filter-tab active"&gt;</span><span class="nc">All</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href="/?filter=active" class="filter-tab"&gt;</span><span class="nc">Active</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href="/?filter=completed" class="filter-tab"&gt;</span><span class="nc">Completed</span><span class="x">&lt;/a&gt;</span>
 <span class="x">  &lt;/nav&gt;</span>
 
-<span class="w">  </span><span class="x">&lt;aside class=&quot;stats-bar&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;aside class="stats-bar"&gt;</span>
 <span class="x">    &lt;span&gt;&lt;strong&gt;3&lt;/strong&gt;</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="n">remaining</span><span class="x">&lt;/span&gt;</span>
 <span class="x">  &lt;/aside&gt;</span>
 
-<span class="w">  </span><span class="x">&lt;article class=&quot;task-card&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;article class="task-card"&gt;</span>
 <span class="x">    &lt;h2&gt;</span><span class="nc">Buy</span><span class="w"> </span><span class="n">groceries</span><span class="x">&lt;/h2&gt;</span>
 <span class="x">    &lt;p&gt;</span><span class="nc">Added</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="n">minutes</span><span class="w"> </span><span class="n">ago</span><span class="x">&lt;/p&gt;</span>
 <span class="x">  &lt;/article&gt;</span>
 
-<span class="w">  </span><span class="x">&lt;footer class=&quot;app-footer&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;footer class="app-footer"&gt;</span>
 <span class="x">    &lt;p&gt;</span><span class="nc">Built</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="nc">Bialet</span><span class="x">&lt;/p&gt;</span>
 <span class="x">  &lt;/footer&gt;</span>
 <span class="x">&lt;/main&gt;)</span>
@@ -1200,8 +1200,8 @@ what you need to know.</p>
 in your template’s <code class="docutils literal notranslate"><span class="pre">&lt;head&gt;</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
 <span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="w">  </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">  &lt;meta charset="utf-8" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;link rel="stylesheet" href="/style.css" /&gt;</span>
 <span class="x">&lt;/head&gt;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
@@ -1272,9 +1272,9 @@ write <code class="docutils literal notranslate"><span class="pre">&lt;nav&gt;</
 classes.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
 <span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="w">  </span><span class="x">&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;</span>
-<span class="x">  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css&quot; /&gt;</span>
+<span class="x">  &lt;meta charset="utf-8" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;</span>
+<span class="x">  &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" /&gt;</span>
 <span class="x">&lt;/head&gt; }</span>
 </pre></div>
 </div>
@@ -1288,16 +1288,16 @@ overrides.</p>
 use the CDN script:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
 <span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="w">  </span><span class="x">&lt;script src=&quot;https://cdn.tailwindcss.com&quot;&gt;&lt;/script&gt;</span>
+<span class="x">  &lt;meta charset="utf-8" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</span>
 <span class="x">&lt;/head&gt; }</span>
 </pre></div>
 </div>
 <p>Then use utility classes directly:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main class=&quot;max-w-lg mx-auto py-8 px-4&quot;&gt;</span>
-<span class="x">  &lt;h1 class=&quot;text-2xl font-bold mb-6&quot;&gt;</span><span class="nc">Dashboard</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;article class=&quot;bg-white rounded-xl shadow-sm p-4&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;p class=&quot;text-gray-600&quot;&gt;Hello World&lt;/p&gt;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main class="max-w-lg mx-auto py-8 px-4"&gt;</span>
+<span class="x">  &lt;h1 class="text-2xl font-bold mb-6"&gt;</span><span class="nc">Dashboard</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;article class="bg-white rounded-xl shadow-sm p-4"&gt;</span>
+<span class="w">    </span><span class="x">&lt;p class="text-gray-600"&gt;Hello World&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/article&gt;</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
@@ -1317,8 +1317,8 @@ configuration is needed to detect them.</p>
 <p><strong>2. Create an input stylesheet.</strong> This is the source file Tailwind reads.
 Put it in a <code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed directory so Bialet never serves it (see the pitfalls
 below) but Tailwind can still read it from disk. Create <code class="docutils literal notranslate"><span class="pre">_src/input.css</span></code>:</p>
-<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;tailwindcss&quot;</span><span class="p">;</span>
-<span class="p">@</span><span class="k">source</span><span class="w"> </span><span class="s2">&quot;./**/*.wren&quot;</span><span class="p">;</span>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">import</span><span class="w"> </span><span class="s2">"tailwindcss"</span><span class="p">;</span>
+<span class="p">@</span><span class="k">source</span><span class="w"> </span><span class="s2">"./**/*.wren"</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">&#64;source</span></code> directive tells Tailwind to scan your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files for classes.
@@ -1327,8 +1327,8 @@ Adjust the glob to match your app’s layout if you keep pages in subdirectories
 <code class="docutils literal notranslate"><span class="pre">head</span></code>. Bialet serves it as a normal static file:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">head</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;head&gt;</span>
 <span class="x">  &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="x">  &lt;meta charset=&quot;utf-8&quot; /&gt;</span>
-<span class="w">  </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
+<span class="x">  &lt;meta charset="utf-8" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;link rel="stylesheet" href="/style.css" /&gt;</span>
 <span class="x">&lt;/head&gt;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
@@ -1366,11 +1366,11 @@ for preprocessing.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS files are not served.</strong> Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>
 return 403. Name your stylesheets without a leading underscore:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✓ Served</span>
-<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/style.css&quot; /&gt;</span>
-<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/theme.css&quot; /&gt;</span>
+<span class="x">&lt;link rel="stylesheet" href="/style.css" /&gt;</span>
+<span class="x">&lt;link rel="stylesheet" href="/theme.css" /&gt;</span>
 
 <span class="c1">// ✗ Returns 403</span>
-<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;/_style.css&quot; /&gt;</span>
+<span class="x">&lt;link rel="stylesheet" href="/_style.css" /&gt;</span>
 </pre></div>
 </div>
 <p>This is why the input file lives in <code class="docutils literal notranslate"><span class="pre">_src/</span></code> — Bialet blocks HTTP access to it
@@ -1383,11 +1383,11 @@ proxy in production (see <a class="reference internal" href="deployment.html"><s
 outside the app root and point the CLI at it.</p>
 <p><strong>Dynamic class names are not compiled.</strong> Tailwind scans your source as plain
 text, so it cannot see classes assembled at runtime. This compiles fine:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">&quot;text-red-600&quot;</span><span class="w">   </span><span class="c1">// ✓</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">"text-red-600"</span><span class="w">   </span><span class="c1">// ✓</span>
 </pre></div>
 </div>
 <p>This does not — Tailwind never sees the full class name:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">&quot;text-{{ error ? &quot;</span><span class="n">red</span><span class="s2">&quot; : &quot;</span><span class="n">green</span><span class="s2">&quot; }}-600&quot;</span><span class="w">   </span><span class="c1">// ✗</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="o">=</span><span class="s2">"text-{{ error ? "</span><span class="n">red</span><span class="s2">" : "</span><span class="n">green</span><span class="s2">" }}-600"</span><span class="w">   </span><span class="c1">// ✗</span>
 </pre></div>
 </div>
 <p>Use complete class names in your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files.</p>
@@ -1401,7 +1401,7 @@ the CSS from your app directory instead of loading it from a CDN.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation <strong>escapes HTML by default</strong>. Plain values — strings
 from user input, database queries, or URL parameters — have <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">'</span></code> replaced with their HTML entities before they reach the page.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;script&gt;alert('xss')&lt;/script&gt;"</span>
 
 <span class="c1">// Safe — HTML characters are escaped automatically</span>
 <span class="k">var</span><span class="w"> </span><span class="n">safe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">userInput</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>

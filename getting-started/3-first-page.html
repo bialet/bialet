@@ -464,7 +464,7 @@ directly in Wren</p></li>
 <h2>Inline HTML Strings<a class="headerlink" href="#inline-html-strings" title="Link to this heading">#</a></h2>
 <p>Inline HTML Strings work like JSX in React, but produce plain strings
 instead of objects. You can embed Wren expressions with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Bialet&quot;</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Bialet"</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;h1&gt;Hello {{ name }}!&lt;/h1&gt;</span>
 </pre></div>
 </div>
@@ -477,7 +477,7 @@ user-generated content is safe by default: <code class="docutils literal notrans
 literals and <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> values are rendered as-is. See
 <a class="reference internal" href="../template.html"><span class="std std-doc">HTML Template</span></a> and <a class="reference internal" href="../security.html"><span class="std std-doc">Security</span></a> for details.</p>
 </div></blockquote>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;apples&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;oranges&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;bananas&quot;</span><span class="p">]</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"apples"</span><span class="p">,</span><span class="w"> </span><span class="s2">"oranges"</span><span class="p">,</span><span class="w"> </span><span class="s2">"bananas"</span><span class="p">]</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;ul&gt;</span>
 <span class="x">  {{ items.map {|item| &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt; } }}</span>
 <span class="x">&lt;/ul&gt;</span>

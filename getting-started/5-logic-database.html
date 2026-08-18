@@ -456,8 +456,8 @@ automatically. Connect to it with <a class="reference external" href="https://sq
 Browser</a> or the <a class="reference external" href="https://sqlite.org/cli.html">SQLite
 CLI</a> and run:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="p">(</span><span class="n">answer</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w"> </span><span class="n">votes</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">);</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;Yes&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;No&#39;</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'Yes'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">simple_poll</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'No'</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -469,14 +469,14 @@ CLI</a> and run:</p>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;body&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
-<span class="w">    </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method="post"&gt;</span>
 <span class="x">      {{ options.map {|opt| &lt;p&gt;</span>
 <span class="w">        </span><span class="x">&lt;label&gt;</span>
-<span class="x">          &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
-<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">          &lt;input type="radio" name="vote" value="{{ opt["answer"] }}"&gt;</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"answer"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">        </span><span class="x">&lt;/label&gt;</span>
 <span class="x">      &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
-<span class="w">      </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;&lt;input type="submit" value="Vote"&gt;&lt;/p&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
@@ -490,9 +490,9 @@ list of maps.</p>
 <h2>Handle POST<a class="headerlink" href="#handle-post" title="Link to this heading">#</a></h2>
 <p>Add vote handling above the query:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"vote"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM simple_poll`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
@@ -512,7 +512,7 @@ list of maps.</p>
 <p>Use a ternary to switch between the form and the results view:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">vote</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"vote"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="sb">`UPDATE simple_poll SET votes = votes + 1 WHERE answer = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
 <span class="p">}</span>
 
@@ -522,24 +522,24 @@ list of maps.</p>
 <span class="x">  &lt;body&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;Has web development become overly complex?&lt;/h1&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="o">!</span><span class="n">vote</span><span class="w"> </span><span class="o">?</span>
-<span class="w">      </span><span class="x">&lt;form method=&quot;post&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;form method="post"&gt;</span>
 <span class="x">        {{ options.map {|opt| &lt;p&gt;</span>
 <span class="w">          </span><span class="x">&lt;label&gt;</span>
-<span class="x">            &lt;input type=&quot;radio&quot; name=&quot;vote&quot; value=&quot;{{ opt[&quot;answer&quot;] }}&quot;&gt;</span>
-<span class="w">            </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">            &lt;input type="radio" name="vote" value="{{ opt["answer"] }}"&gt;</span>
+<span class="w">            </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"answer"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">          </span><span class="x">&lt;/label&gt;</span>
 <span class="x">        &lt;/p&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type=&quot;submit&quot; value=&quot;Vote&quot;&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;input type="submit" value="Vote"&gt;&lt;/p&gt;</span>
 <span class="x">      &lt;/form&gt;</span>
 <span class="w">    </span><span class="o">:</span>
 <span class="w">      </span><span class="x">&lt;main&gt;</span>
 <span class="x">        &lt;p&gt;</span><span class="nc">Thank</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">voting</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">        </span><span class="x">&lt;ul&gt;</span>
 <span class="x">          {{ options.map {|opt|</span>
-<span class="x">            &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;votes&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">votes</span><span class="x">&lt;/li&gt;</span>
+<span class="x">            &lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"answer"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"votes"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">votes</span><span class="x">&lt;/li&gt;</span>
 <span class="x">          } }}</span>
 <span class="x">        &lt;/ul&gt;</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;&quot;&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=""&gt;</span><span class="nc">Vote</span><span class="w"> </span><span class="n">again</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;/main&gt;</span>
 <span class="x">    }}</span>
 <span class="x">  &lt;/body&gt;</span>

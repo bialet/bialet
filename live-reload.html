@@ -462,15 +462,15 @@ in-browser error display, serves the current directory, and opens your browser
 (see <a class="reference internal" href="getting-started/2-setup.html"><span class="doc std std-doc">Getting Started</span></a>). It is stored in the
 database, so it stays on for later <code class="docutils literal notranslate"><span class="pre">bialet</span></code> runs until you disable it.</p>
 <p>Or set it once in your development database:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.enable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.enable("BIALET_LIVE_RELOAD")'</span><span class="w"> </span>.
 </pre></div>
 </div>
 <p>Or directly:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.set(&quot;BIALET_LIVE_RELOAD&quot;, &quot;1&quot;)&#39;</span><span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.set("BIALET_LIVE_RELOAD", "1")'</span><span class="w"> </span>.
 </pre></div>
 </div>
 <p>Disable it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;Config.disable(&quot;BIALET_LIVE_RELOAD&quot;)&#39;</span><span class="w"> </span>.
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.disable("BIALET_LIVE_RELOAD")'</span><span class="w"> </span>.
 </pre></div>
 </div>
 <p>Since configuration lives in the SQLite database, enabling it in dev has no
@@ -481,8 +481,8 @@ effect on production — each environment has its own <code class="docutils lite
 disabling it while a server is running requires a restart.</p>
 </div></blockquote>
 <p>To check if it’s currently active:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;BIALET_LIVE_RELOAD&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Live reload is on&quot;</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"BIALET_LIVE_RELOAD"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Live reload is on"</span><span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 </div>

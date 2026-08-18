@@ -11,6 +11,9 @@ curl -fsSL https://get.bialet.dev | sh
 For other options (Homebrew, Docker, building from source), see
 [Installation](../installation.md).
 
+On Windows, download the latest `bialet.exe` directly:
+[bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}}).
+
 ## Create a project
 
 Make a new directory for your poll app:
@@ -41,17 +44,6 @@ mode, just like `bialet dev`.
 
 For now you'll see a directory listing — we haven't created any `.wren` files
 yet.
-
-## Using Docker
-
-If you prefer containers, clone the
-[Bialet Skeleton](https://github.com/bialet/skeleton) and use Docker Compose:
-
-```bash
-git clone --depth 1 https://github.com/bialet/skeleton.git poll
-cd poll
-BIALET_DIR=/path/to/your/files docker compose up
-```
 
 ## Restarting
 

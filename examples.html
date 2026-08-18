@@ -458,25 +458,25 @@
 <section id="simple-query-list">
 <h2>Simple query list<a class="headerlink" href="#simple-query-list" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🗂️ Users list&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"🗂️ Users list"</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">  &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
+<span class="x">  &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">      </span><span class="x">&lt;ul style=&quot;list-style-type:none&quot;&gt;</span>
+<span class="w">      </span><span class="x">&lt;ul style="list-style-type:none"&gt;</span>
 <span class="x">        {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">          </span><span class="x">&lt;a href=&quot;/hello?id={{ user[&quot;id&quot;] }}&quot;&gt;</span>
-<span class="x">            👋 {{ user[&quot;name&quot;] }}</span>
+<span class="w">          </span><span class="x">&lt;a href="/hello?id={{ user["id"] }}"&gt;</span>
+<span class="x">            👋 {{ user["name"] }}</span>
 <span class="x">          &lt;/a&gt;</span>
 <span class="w">        </span><span class="x">&lt;/li&gt; } }}</span>
 <span class="x">      &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
 <span class="w">      </span><span class="cm">/* Users table is empty */</span>
-<span class="w">      </span><span class="x">&lt;p&gt;No users, go to &lt;a href=&quot;/hello&quot;&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;No users, go to &lt;a href="/hello"&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
 <span class="w">    </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -491,12 +491,12 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// The name of the constructor could be anything.</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🚲 Welcome to Bialet&quot;</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"🚲 Welcome to Bialet"</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Fetch the user&#39;s name from the database using plain SQL</span>
-<span class="w">  </span><span class="c1">// or return &quot;World&quot; if the user doesn&#39;t exist.</span>
+<span class="w">  </span><span class="c1">// Fetch the user's name from the database using plain SQL</span>
+<span class="w">  </span><span class="c1">// or return "World" if the user doesn't exist.</span>
 <span class="w">  </span><span class="c1">// Single line methods return the value of the expression.</span>
-<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;World&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"World"</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="c1">// Build the HTML</span>
 <span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
@@ -504,18 +504,18 @@
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
 <span class="w">      </span><span class="x">&lt;/head&gt;</span>
-<span class="x">      &lt;body style=&quot;font: 1.5em/2.5 system-ui; text-align:center&quot;&gt;</span>
+<span class="x">      &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
 <span class="w">        </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
 <span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;simple&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nc">List</span><span class="w"> </span><span class="err">👥</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="n">to</span><span class="w"> </span><span class="nc">Home</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href="simple"&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nc">List</span><span class="w"> </span><span class="err">👥</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="n">to</span><span class="w"> </span><span class="nc">Home</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
 <span class="x">    &lt;/html&gt;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// We use the `get()` method to get the `id` parameter from the URL.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="c1">// Create an instance of the `App` class.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="c1">// Generate the HTML, with the name of the user.</span>
@@ -529,17 +529,17 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `visits` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `visits`.</span>
-<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
+<span class="c1">// This should be done with migrations; it's included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
-<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;visits&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
+<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES ("visits", 0)`</span><span class="o">.</span><span class="n">query</span>
 
 <span class="c1">// This is the proper start of the script...</span>
 
 <span class="c1">// We increment the value of the row with the name `visits` by 1.</span>
-<span class="sb">`UPDATE counter SET value = value + 1 WHERE name = &quot;visits&quot;`</span><span class="o">.</span><span class="n">query</span>
+<span class="sb">`UPDATE counter SET value = value + 1 WHERE name = "visits"`</span><span class="o">.</span><span class="n">query</span>
 
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;visits&quot;`</span><span class="o">.</span><span class="n">val</span>
+<span class="k">var</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = "visits"`</span><span class="o">.</span><span class="n">val</span>
 
 <span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `visits` variable.</span>
@@ -547,17 +547,17 @@
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="n">visited</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/h1&gt;</span>
 <span class="x">    &lt;p&gt;</span>
 <span class="w">      </span><span class="err">ℹ️</span><span class="w"> </span><span class="nc">Reload</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">browser</span><span class="w"> </span><span class="n">or</span>
-<span class="w">      </span><span class="x">&lt;a href=&quot;&quot;&gt;click here&lt;/a&gt;</span>
+<span class="w">      </span><span class="x">&lt;a href=""&gt;click here&lt;/a&gt;</span>
 <span class="w">      </span><span class="n">to</span><span class="w"> </span><span class="n">see</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">value</span><span class="o">.&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -569,23 +569,23 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `clicks` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `clicks`.</span>
-<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
+<span class="c1">// This should be done with migrations; it's included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
-<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;clicks&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
+<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES ("clicks", 0)`</span><span class="o">.</span><span class="n">query</span>
 
 <span class="c1">// We use the `get()` method to get a parameter from the URL.</span>
 <span class="c1">// When the parameter is `count`, we increment the value of the `clicks` row by 1.</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="sb">`UPDATE counter SET value = value + 1 WHERE name = &quot;clicks&quot;`</span><span class="o">.</span><span class="n">query</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"count"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="sb">`UPDATE counter SET value = value + 1 WHERE name = "clicks"`</span><span class="o">.</span><span class="n">query</span>
 <span class="p">}</span>
 
 <span class="c1">// When the parameter is `reset`, we reset the value of the `clicks` row to 0.</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reset&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="sb">`UPDATE counter SET value = 0 WHERE name = &quot;clicks&quot;`</span><span class="o">.</span><span class="n">query</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reset"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="sb">`UPDATE counter SET value = 0 WHERE name = "clicks"`</span><span class="o">.</span><span class="n">query</span>
 <span class="p">}</span>
 
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;clicks&quot;`</span><span class="o">.</span><span class="n">val</span>
+<span class="k">var</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = "clicks"`</span><span class="o">.</span><span class="n">val</span>
 
 <span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `clicks` variable.</span>
@@ -593,18 +593,18 @@
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="n">clicked</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/h1&gt;</span>
 <span class="x">    &lt;p&gt;</span>
-<span class="w">      </span><span class="x">&lt;a href=&quot;clicks?count&quot;&gt;Click me! 🔺&lt;/a&gt;</span>
+<span class="w">      </span><span class="x">&lt;a href="clicks?count"&gt;Click me! 🔺&lt;/a&gt;</span>
 <span class="w">      </span><span class="err">•</span>
-<span class="w">      </span><span class="x">&lt;a href=&quot;clicks?reset&quot;&gt;Reset 🧹&lt;/a&gt;</span>
+<span class="w">      </span><span class="x">&lt;a href="clicks?reset"&gt;Reset 🧹&lt;/a&gt;</span>
 <span class="w">    </span><span class="x">&lt;/p&gt;</span>
-<span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;&lt;a href="."&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -616,9 +616,9 @@
 <span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
 <span class="c1">// Then we insert a row with the name `form` and a value of 0, if there is no row</span>
 <span class="c1">// with the name `form`.</span>
-<span class="c1">// This should be done with migrations; it&#39;s included here so the example is self-contained.</span>
+<span class="c1">// This should be done with migrations; it's included here so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
-<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES (&quot;form&quot;, 0)`</span><span class="o">.</span><span class="n">query</span>
+<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES ("form", 0)`</span><span class="o">.</span><span class="n">query</span>
 
 <span class="c1">// Set the initial value to 1</span>
 <span class="k">var</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
@@ -626,18 +626,18 @@
 <span class="c1">// We use the `isPost` property to check if the request method is POST.</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// We use the `post()` method to get a parameter from the form.</span>
-<span class="w">  </span><span class="c1">// `|| &quot;1&quot;` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
-<span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;1&quot;</span>
+<span class="w">  </span><span class="c1">// `|| "1"` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
+<span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"1"</span>
 <span class="w">  </span><span class="c1">// We use the `query` method to execute SQL statements.</span>
 <span class="w">  </span><span class="c1">// In this case we update the value of the `form` row by the value of the `value`</span>
 <span class="w">  </span><span class="c1">// parameter.</span>
 <span class="w">  </span><span class="c1">// Note the use of the `?` placeholder for the value of the `value` parameter.</span>
-<span class="w">  </span><span class="c1">// All the queries are run as a prepared statement. You can&#39;t concatenate query strings.</span>
-<span class="w">  </span><span class="sb">`UPDATE counter SET value = value + ? WHERE name = &quot;form&quot;`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">// All the queries are run as a prepared statement. You can't concatenate query strings.</span>
+<span class="w">  </span><span class="sb">`UPDATE counter SET value = value + ? WHERE name = "form"`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = &quot;form&quot;`</span><span class="o">.</span><span class="n">val</span>
+<span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = "form"`</span><span class="o">.</span><span class="n">val</span>
 
 <span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
 <span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `total` variable.</span>
@@ -646,17 +646,17 @@
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">sum</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/h1&gt;</span>
-<span class="x">    &lt;form method=&quot;POST&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;input type=&quot;text&quot; name=&quot;value&quot; value=&quot;{{ value }}&quot;&gt;</span>
-<span class="x">      &lt;button type=&quot;submit&quot;&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;form method="POST"&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type="text" name="value" value="{{ value }}"&gt;</span>
+<span class="x">      &lt;button type="submit"&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -668,7 +668,7 @@
 
 <span class="c1">// Use the `query()` method to execute SQL statements.</span>
 <span class="c1">// This creates a table named `counter` with two columns: `name` and `value`.</span>
-<span class="c1">// In production this should be done with migrations; it&#39;s included here</span>
+<span class="c1">// In production this should be done with migrations; it's included here</span>
 <span class="c1">// so the example is self-contained.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
 
@@ -690,11 +690,11 @@
 <h2>Form Upload<a class="headerlink" href="#form-upload" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Get the uploaded file</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;form_file_name&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"form_file_name"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">uploadedFile</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="mf">400</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;❌ Upload Error&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;No file was uploaded. Please select a file first.&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="mf">400</span><span class="p">,</span><span class="w"> </span><span class="s2">"❌ Upload Error"</span><span class="p">,</span><span class="w"> </span><span class="s2">"No file was uploaded. Please select a file first."</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;File: </span><span class="si">%(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"File: </span><span class="si">%(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">name</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 <span class="w">  </span><span class="c1">// Make it temporal, it will be deleted soon</span>
 <span class="w">  </span><span class="c1">// You can still use it in the rest of the request</span>
 <span class="w">  </span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">temp</span>
@@ -702,22 +702,22 @@
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">uploadedFile</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Upload File&quot;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Upload File"</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</span>
 <span class="w">    </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
 <span class="w">    </span><span class="x">&lt;style&gt;body{ font: 1.3em system-ui; text-align: center }&lt;/style&gt;</span>
 <span class="w">  </span><span class="x">&lt;/head&gt;</span>
 <span class="x">  &lt;body&gt;</span>
 <span class="w">    </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">    </span><span class="x">&lt;form method=&quot;post&quot; enctype=&quot;multipart/form-data&quot;&gt;</span>
-<span class="x">      &lt;input type=&quot;file&quot; name=&quot;form_file_name&quot;&gt;</span>
-<span class="w">      </span><span class="x">&lt;input type=&quot;submit&quot; value=&quot;{{ title }}&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method="post" enctype="multipart/form-data"&gt;</span>
+<span class="x">      &lt;input type="file" name="form_file_name"&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type="submit" value="{{ title }}"&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -725,16 +725,16 @@
 </section>
 <section id="file-creation">
 <h2>File Creation<a class="headerlink" href="#file-creation" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;random&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"random"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
 
 <span class="c1">// Generate an emoji SVG</span>
 <span class="k">var</span><span class="w"> </span><span class="n">random</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="k">var</span><span class="w"> </span><span class="n">emojis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;🎉&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;🎂&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;❤️&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;🍔&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;🍕&quot;</span><span class="p">]</span>
-<span class="k">var</span><span class="w"> </span><span class="n">svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;&gt;</span>
-<span class="x">  &lt;text y=&quot;.9em&quot; font-size=&quot;90&quot;&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">emojis</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/text&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">emojis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"🎉"</span><span class="p">,</span><span class="w"> </span><span class="s2">"🎂"</span><span class="p">,</span><span class="w"> </span><span class="s2">"❤️"</span><span class="p">,</span><span class="w"> </span><span class="s2">"🍔"</span><span class="p">,</span><span class="w"> </span><span class="s2">"🍕"</span><span class="p">]</span>
+<span class="k">var</span><span class="w"> </span><span class="n">svg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"&gt;</span>
+<span class="x">  &lt;text y=".9em" font-size="90"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">emojis</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/text&gt;</span>
 <span class="x">&lt;/svg&gt;</span>
 <span class="c1">// Save the svg in a file</span>
-<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;emoji.svg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;image/svg+xml&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">svg</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">File</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">"emoji.svg"</span><span class="p">,</span><span class="w"> </span><span class="s2">"image/svg+xml"</span><span class="p">,</span><span class="w"> </span><span class="n">svg</span><span class="p">)</span>
 <span class="c1">// Send the file</span>
 <span class="nc">Response</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
 </pre></div>
@@ -742,17 +742,17 @@
 </section>
 <section id="http-api-call">
 <h2>HTTP API Call<a class="headerlink" href="#http-api-call" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://dummyjson.com/users?limit=5&amp;select=username,email&quot;</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;users&quot;</span><span class="p">]</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://dummyjson.com/users?limit=5&amp;select=username,email"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">res</span><span class="p">[</span><span class="s2">"users"</span><span class="p">]</span>
 
-<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Users: </span><span class="si">%(</span><span class="n">users</span><span class="si">)</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Users: </span><span class="si">%(</span><span class="n">users</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="nc">DummyJSON</span><span class="w"> </span><span class="nc">API</span><span class="x">&lt;/h1&gt;</span>
@@ -765,14 +765,14 @@
 <span class="x">        &lt;/tr&gt;</span>
 <span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="cm">/* List all the users */</span>
 <span class="w">          </span><span class="n">users</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">user</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;tr&gt;</span>
-<span class="x">            &lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;</span>
-<span class="x">            &lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;</span>
+<span class="x">            &lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"username"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;</span>
+<span class="x">            &lt;td&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/td&gt;</span>
 <span class="x">          &lt;/tr&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">      </span><span class="x">&lt;/table&gt; :</span>
 <span class="x">        /* If there are no users */</span>
 <span class="x">        &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="n">found</span><span class="x">&lt;/p&gt;</span>
 <span class="x">      }}</span>
-<span class="x">    &lt;p&gt;&lt;a href=&quot;.&quot;&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;&lt;a href="."&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -781,9 +781,9 @@
 <section id="password-utilities">
 <h2>Password utilities<a class="headerlink" href="#password-utilities" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `post()` method to get a parameter from the POST request.</span>
-<span class="c1">// `|| &quot;&quot;` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">passwordCheck</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;password-check&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="c1">// `|| ""` guards against `null`: `Request.post()` returns `null` when the key is missing.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'password'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="k">var</span><span class="w"> </span><span class="n">passwordCheck</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'password-check'</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="c1">// Set up the hash and verify variables</span>
 <span class="k">var</span><span class="w"> </span><span class="n">encrypted</span>
 <span class="k">var</span><span class="w"> </span><span class="n">verify</span>
@@ -804,37 +804,37 @@
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Password</span><span class="w"> </span><span class="n">utilities</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    {{ Request.isPost &amp;&amp; &lt;div&gt;</span>
 <span class="w">        </span><span class="x">&lt;p&gt;Hash:&lt;/p&gt;</span>
 <span class="w">        </span><span class="x">&lt;code&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">encrypted</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/code&gt;</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">verify</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;The passwords are the same&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;The passwords are different&#39;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">verify</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">'The passwords are the same'</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">'The passwords are different'</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/p&gt;</span>
 <span class="w">        </span><span class="x">&lt;hr&gt;</span>
 <span class="x">      &lt;/div&gt;</span>
 <span class="w">    </span><span class="p">}}</span>
-<span class="w">    </span><span class="x">&lt;form method=&quot;POST&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method="POST"&gt;</span>
 <span class="x">      &lt;p&gt;</span>
-<span class="w">        </span><span class="x">&lt;label for=&quot;password&quot;&gt;Password&lt;/label&gt;</span>
+<span class="w">        </span><span class="x">&lt;label for="password"&gt;Password&lt;/label&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">      &lt;p&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;password&quot; name=&quot;password&quot; value=&quot;{{password}}&quot;&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type="password" name="password" value="{{password}}"&gt;</span>
 <span class="x">      &lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;</span>
-<span class="x">        &lt;label for=&quot;password-check&quot;&gt;</span><span class="nc">Password</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">check</span><span class="x">&lt;/label&gt;</span>
+<span class="x">        &lt;label for="password-check"&gt;</span><span class="nc">Password</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">check</span><span class="x">&lt;/label&gt;</span>
 <span class="x">      &lt;/p&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;</span>
-<span class="x">        &lt;input type=&quot;password&quot; name=&quot;password-check&quot; value=&quot;{{passwordCheck}}&quot;&gt;</span>
+<span class="x">        &lt;input type="password" name="password-check" value="{{passwordCheck}}"&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">      &lt;p&gt;</span>
 <span class="w">        </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -854,23 +854,23 @@
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Cross</span><span class="o">-</span><span class="nc">Site</span><span class="w"> </span><span class="nc">Request</span><span class="w"> </span><span class="nc">Forgery</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;p&gt;</span><span class="nc">Use</span><span class="w"> </span><span class="n">different</span><span class="w"> </span><span class="n">tabs</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">verify</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="n">window</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="w"> </span><span class="o">&amp;&amp;</span>
-<span class="w">      </span><span class="x">&lt;p&gt;&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">verify</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;The post is valid&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;The post come from someone else&#39;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/p&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">verify</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">'The post is valid'</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">'The post come from someone else'</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/p&gt;</span>
 <span class="w">    </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;form method=&quot;POST&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method="POST"&gt;</span>
 <span class="x">      {{ session.csrf }}</span>
 <span class="x">      &lt;p&gt;</span>
 <span class="w">        </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href=&quot;.&quot;&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -878,7 +878,7 @@
 </section>
 <section id="markdown">
 <h2>Markdown<a class="headerlink" href="#markdown" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markdown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;&quot;</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markdown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"""</span>
 <span class="s"># Markdown Example</span>
 
 <span class="s">This is written in Markdown.</span>
@@ -886,21 +886,21 @@
 <span class="s">[Back ↩️](.)</span>
 
 <span class="s">This is the example.md file:</span>
-<span class="s">&quot;&quot;&quot;</span>
+<span class="s">"""</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
-<span class="x">    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;</span>
+<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 
 <span class="x">    {{ Markdown.html(markdown) }}</span>
 
-<span class="x">    &lt;div style=&quot;text-align: left&quot;&gt;</span>
-<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">&quot;example.md&quot;</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
+<span class="x">    &lt;div style="text-align: left"&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"example.md"</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">    </span><span class="x">&lt;/div&gt;</span>
 
 <span class="x">  &lt;/body&gt;</span>

@@ -471,24 +471,24 @@
 <section id="build-the-vote-form">
 <h2>Build the vote form<a class="headerlink" href="#build-the-vote-form" title="Link to this heading">#</a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">index.wren</span></code>, import both classes and render the form:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;form action=&quot;/&quot; method=&quot;post&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;form action="/" method="post"&gt;</span>
 <span class="x">    &lt;h2&gt;</span><span class="nc">Has</span><span class="w"> </span><span class="n">web</span><span class="w"> </span><span class="n">development</span><span class="w"> </span><span class="n">become</span><span class="w"> </span><span class="n">overly</span><span class="w"> </span><span class="n">complex</span><span class="o">?&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
 <span class="w">    </span><span class="x">&lt;ul&gt;</span>
 <span class="x">      {{ poll.options.map {|opt| &lt;li&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type=&quot;radio&quot; id=&quot;opt{{ opt[&quot;id&quot;] }}&quot; name=&quot;vote&quot;</span>
-<span class="x">               value=&quot;{{ opt[&quot;id&quot;] }}&quot; required /&gt;</span>
-<span class="x">        &lt;label for=&quot;opt{{ opt[&quot;id&quot;] }}&quot;&gt;</span>
-<span class="w">          </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;answer&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;</span>
-<span class="w">          </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;input type="radio" id="opt{{ opt["id"] }}" name="vote"</span>
+<span class="x">               value="{{ opt["id"] }}" required /&gt;</span>
+<span class="x">        &lt;label for="opt{{ opt["id"] }}"&gt;</span>
+<span class="w">          </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"answer"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;</span>
+<span class="w">          </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">opt</span><span class="p">[</span><span class="s2">"comment"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
 <span class="w">        </span><span class="x">&lt;/label&gt;</span>
 <span class="x">      &lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}}</span>
 <span class="w">    </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">    &lt;button type=&quot;submit&quot;&gt;</span><span class="nc">Vote</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;button type="submit"&gt;</span><span class="nc">Vote</span><span class="x">&lt;/button&gt;</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="p">)</span>
 </pre></div>
@@ -498,19 +498,19 @@
 <h2>Handle the form POST<a class="headerlink" href="#handle-the-form-post" title="Link to this heading">#</a></h2>
 <p>Handle form submission on the same page — show errors inline, then redirect
 on success:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;vote&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"vote"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/results"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">return</span>
 <span class="p">}</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;form action=&quot;/&quot; method=&quot;post&quot;&gt;</span>
+<span class="w">  </span><span class="x">&lt;form action="/" method="post"&gt;</span>
 <span class="x">    ...</span>
 <span class="x">  &lt;/form&gt;</span>
 <span class="p">)</span>

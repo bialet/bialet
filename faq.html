@@ -596,7 +596,7 @@ See <a class="reference internal" href="database.html"><span class="std std-doc"
 <p>Use <code class="docutils literal notranslate"><span class="pre">query.toNum()</span></code> for direct numeric retrieval, or <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code>
 for manual conversion:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COUNT(*) as c FROM votes`</span><span class="o">.</span><span class="n">toNum</span>
-<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;age&quot;</span><span class="p">])</span>
+<span class="k">var</span><span class="w"> </span><span class="n">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"age"</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
@@ -621,7 +621,7 @@ Import it and use <code class="docutils literal notranslate"><span class="pre">A
 </pre></div>
 </div>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">&quot;_app&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">App</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">App</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;h1&gt;Hello&lt;/h1&gt;</span><span class="p">)</span>
 </pre></div>
@@ -694,7 +694,7 @@ for questions and community chat (check if enabled)</p></li>
 <h3>Is there a way to try Bialet online?<a class="headerlink" href="#is-there-a-way-to-try-bialet-online" title="Link to this heading">#</a></h3>
 <p>Not yet, but you can install and run it in seconds:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-<span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;return &lt;h1&gt;Hello!&lt;/h1&gt;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>index.wren
+<span class="nb">echo</span><span class="w"> </span><span class="s1">'return &lt;h1&gt;Hello!&lt;/h1&gt;'</span><span class="w"> </span>&gt;<span class="w"> </span>index.wren
 bialet<span class="w"> </span>dev
 </pre></div>
 </div>

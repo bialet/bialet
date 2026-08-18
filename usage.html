@@ -602,11 +602,11 @@ Useful in scripts, containers, and CI:</p>
 <section id="run-code-from-the-command-line">
 <h2>Run Code from the Command Line<a class="headerlink" href="#run-code-from-the-command-line" title="Link to this heading">#</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">-r</span></code> to run Wren code once and exit:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;System.log(&quot;Hello, World!&quot;)&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'System.log("Hello, World!")'</span>
 </pre></div>
 </div>
 <p>The response will be printed directly.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;return &quot;No log, plain response&quot;&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'return "No log, plain response"'</span>
 </pre></div>
 </div>
 <p>You have to respect newlines in the code.</p>
@@ -642,9 +642,9 @@ code <code class="docutils literal notranslate"><span class="pre">1</span></code
 pre-commit hooks.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: Check syntax before deploying (explicit root path)</span>
 <span class="k">if</span><span class="w"> </span>bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/main.wren<span class="w"> </span>/path/to/app<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax OK, deploying...&quot;</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Syntax OK, deploying..."</span>
 <span class="k">else</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Syntax errors found, aborting deployment&quot;</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Syntax errors found, aborting deployment"</span>
 <span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 </pre></div>

@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/getting-started/2-setup.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Install Bialet: The quickest way is the install script: For other options (Homebrew, Docker, building from source), see Installation. Create a project: Make a new directory for your poll app: Copy ..." />
+<meta property="og:description" content="Install Bialet: The quickest way is the install script: For other options (Homebrew, Docker, building from source), see Installation. On Windows, download the latest bialet.exe directly: bialet-v1...." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Install Bialet: The quickest way is the install script: For other options (Homebrew, Docker, building from source), see Installation. Create a project: Make a new directory for your poll app: Copy ..." />
+<meta name="description" content="Install Bialet: The quickest way is the install script: For other options (Homebrew, Docker, building from source), see Installation. On Windows, download the latest bialet.exe directly: bialet-v1...." />
 
     <title>2. Setup &#8212; Bialet  documentation</title>
   
@@ -433,7 +433,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-bialet">Install Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-project">Create a project</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-server">Run the server</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-docker">Using Docker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#restarting">Restarting</a></li>
 </ul>
             </nav>
@@ -456,6 +455,8 @@
 </div>
 <p>For other options (Homebrew, Docker, building from source), see
 <a class="reference internal" href="../installation.html"><span class="std std-doc">Installation</span></a>.</p>
+<p>On Windows, download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> directly:
+<a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.0.1/bialet-v1.0.1-windows-x86_64.zip">bialet-v1.0.1-windows-x86_64.zip</a>.</p>
 </section>
 <section id="create-a-project">
 <h2>Create a project<a class="headerlink" href="#create-a-project" title="Link to this heading">#</a></h2>
@@ -481,16 +482,6 @@ server the same way without touching the flags or opening the browser.</p>
 mode, just like <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code>.</p>
 <p>For now you’ll see a directory listing — we haven’t created any <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files
 yet.</p>
-</section>
-<section id="using-docker">
-<h2>Using Docker<a class="headerlink" href="#using-docker" title="Link to this heading">#</a></h2>
-<p>If you prefer containers, clone the
-<a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> and use Docker Compose:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>poll
-<span class="nb">cd</span><span class="w"> </span>poll
-<span class="nv">BIALET_DIR</span><span class="o">=</span>/path/to/your/files<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up
-</pre></div>
-</div>
 </section>
 <section id="restarting">
 <h2>Restarting<a class="headerlink" href="#restarting" title="Link to this heading">#</a></h2>
@@ -550,7 +541,6 @@ restart the server manually after changes (<code class="docutils literal notrans
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-bialet">Install Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-project">Create a project</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-server">Run the server</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-docker">Using Docker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#restarting">Restarting</a></li>
 </ul>
   </nav></div>
