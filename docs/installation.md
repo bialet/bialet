@@ -57,34 +57,34 @@ Use [Homebrew](https://brew.sh/) to install Bialet on macOS or Linux:
 brew install bialet/bialet/bialet
 ```
 
-## With Docker Compose
+## With Docker
 
-Use the [Bialet Skeleton](https://github.com/bialet/skeleton) repository or the
-[framework repository](https://github.com/bialet/bialet) to start
-[Docker Compose](https://docs.docker.com/compose/) the application.
+Run the published image directly with [Docker](https://docs.docker.com/):
 
 ```bash
-git clone --depth 1 https://github.com/bialet/skeleton.git mywebapp
-cd mywebapp
-docker compose up
+docker run -t -p 7001:7001 -v "$PWD":/var/www bialet/bialet
 ```
+
+The `-t` flag allocates a pseudo-TTY so the server's logs are colored. Drop it
+if you want plain, uncolored output.
+
+The image serves the current directory, which is mounted at `/var/www`.
 
 ### Customizing the Application Directory
 
-To specify a custom directory for the Bialet project, set the `BIALET_DIR`
-environment variable:
+To serve a different directory, mount it at `/var/www`:
 
 ```bash
-BIALET_DIR=/path/to/app docker compose up
+docker run -t -p 7001:7001 -v /path/to/app:/var/www bialet/bialet
 ```
 
 ### Changing the Default Port
 
-The default application port is `7001`. To use a different port, set the
-`BIALET_PORT` environment variable:
+The application listens on port `7001` inside the container. To expose a
+different host port, use `-p`:
 
 ```bash
-BIALET_PORT=8080 docker compose up
+docker run -t -p 8080:7001 -v "$PWD":/var/www bialet/bialet
 ```
 
 ## Building from Source
