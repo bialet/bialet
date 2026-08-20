@@ -195,7 +195,6 @@ static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
 static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name) {
 
   char                 module[MAX_URL_LEN];
-  char*                lastSlash;
   WrenLoadModuleResult result = {0};
 
   if(strchr(name, ':') != NULL) {
@@ -318,15 +317,21 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
               name);
       return result;
     }
-    lastSlash = strrchr(calledFrom, '/');
+    // Strip the filename, keeping the calling module's directory. Windows
+    // paths use backslashes, so find the last separator of either kind.
+    char* last_sep = NULL;
+    for(char* p = calledFrom; *p != '\0'; p++) {
+      if(*p == '/' || *p == '\\')
+        last_sep = p;
+    }
     if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
        sizeof(module)) {
       message(red("Error"), "Module name too long.");
       free(calledFrom);
       return result;
     }
-    if(lastSlash)
-      *lastSlash = '\0';
+    if(last_sep)
+      *last_sep = '\0';
     snprintf(module, sizeof(module), "%s/", calledFrom);
     free(calledFrom);
   }
@@ -795,11 +800,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt = NULL;
-    int result = sqlite3_prepare_v2(db,
-                                    "INSERT INTO BIALET_FILES (name, "
-                                    "originalFileName, type, file, size, isTemp) "
-                                    "VALUES (?, ?, ?, ?, ?, 1)",
-                                    -1, &stmt, 0);
+    int           result = sqlite3_prepare_v2(db,
+                                              "INSERT INTO BIALET_FILES (name, "
+                                                        "originalFileName, type, file, size, isTemp) "
+                                                        "VALUES (?, ?, ?, ?, ?, 1)",
+                                              -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -1084,7 +1089,8 @@ int bialet_validate_syntax(const char* filePath) {
 
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(abs_path, bialet_config.full_root_dir, root_len) != 0 ||
-     (abs_path[root_len] != '/' && abs_path[root_len] != '\0')) {
+     (abs_path[root_len] != '/' && abs_path[root_len] != '\\' &&
+      abs_path[root_len] != '\0')) {
     fprintf(stderr, "Error: File '%s' is outside the application root directory\n",
             filePath);
     return 1;
@@ -1251,7 +1257,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   while((entry = readdir(dir)) != NULL) {
     if(!is_test_file(entry->d_name))
       continue;
-    // A directory named "foo.wren" is not a test file.
+      // A directory named "foo.wren" is not a test file.
 #ifdef DT_DIR
     if(entry->d_type == DT_DIR)
       continue;
