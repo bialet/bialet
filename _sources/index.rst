@@ -283,6 +283,7 @@ Who is Bialet for?
 
    self
    why-bialet
+   html-first
    installation
    editor-support
    wren

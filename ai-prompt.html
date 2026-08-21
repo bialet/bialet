@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=6e724845"></script>
+    <script src="_static/ai-prompt.js?v=c891d91c"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -166,6 +166,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
@@ -507,6 +508,37 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
 <span class="k">-</span><span class="w"> </span><span class="gs">**Server-side rendering**</span> with inline HTML strings, minimal JavaScript
 <span class="k">-</span><span class="w"> </span><span class="gs">**Direct SQL queries**</span> with parameterized placeholders instead of an ORM
 <span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, optionally styled with a classless framework like PicoCSS
+
+<span class="gu">## HTML-First: Reach for JS Last</span>
+
+Before writing a <span class="sb">`&lt;script&gt;`</span> tag, check whether native HTML/CSS already does
+it. Bialet has no bundler and no package manager — every script you add is
+hand-maintained forever, so the bar for adding one is higher than in a JS
+framework.
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**Disclosure widgets**</span> (<span class="sb">`FAQ`</span>, dropdowns, "read more") → <span class="sb">`&lt;details&gt;`</span> /
+  <span class="sb">`&lt;summary&gt;`</span>, not a click handler toggling a class.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Menus and lightweight modals/tooltips**</span> → the <span class="sb">`popover`</span> attribute +
+  <span class="sb">`popovertarget`</span> (native show/hide, light-dismiss, and <span class="sb">`Esc`</span> handling).
+<span class="k">-</span><span class="w"> </span><span class="gs">**Tabs, toggles, accordions**</span> → hidden radio/checkbox inputs + CSS
+  <span class="sb">`:checked`</span> with a sibling or <span class="sb">`:has()`</span> selector, not a tab controller.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Closing a `&lt;dialog&gt;`**</span> → <span class="sb">`&lt;form method="dialog"&gt;`</span> needs no JS. Opening
+  one as a true modal still needs one line of <span class="sb">`.showModal()`</span> — that's a
+  real limit, not something to work around.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Client-side validation feedback**</span> → <span class="sb">`required`</span>, <span class="sb">`pattern`</span>, <span class="sb">`minlength`</span>,
+  <span class="sb">`min`</span>/<span class="sb">`max`</span>, typed inputs (<span class="sb">`type="email"`</span>), styled via <span class="sb">`:invalid`</span> /
+  <span class="sb">`:user-invalid`</span> — always re-validate on the server too.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Autocomplete**</span> → <span class="sb">`&lt;datalist&gt;`</span> populated server-side from a query, not a
+  keystroke handler with a fetch call.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Sorting, filtering, pagination**</span> → links/forms with query params that
+  re-render the page server-side (see <span class="sb">`.order()`</span> below), not a client-side
+  re-sort. This is the pattern Bialet is built for: the server already
+  re-renders on every request, so there's no round trip to save.
+
+Write JS only for what HTML/CSS genuinely can't do — live search-as-you-type,
+drag-and-drop, WebSocket-driven updates — and keep it a small inline
+<span class="sb">`&lt;script&gt;`</span>, not a framework. See [<span class="nt">HTML-First</span>](<span class="na">html-first.md</span>) for the full
+pattern reference.
 
 <span class="gu">## Wren Language Essentials</span>
 
@@ -1463,6 +1495,8 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
 <span class="k">9.</span> <span class="gs">**APIs**</span>: <span class="sb">`Response.json()`</span>, one file per resource, method + query param
    for the id, rather than per-verb files
 <span class="k">10.</span> <span class="gs">**Git**</span>: always add <span class="sb">`_db.sqlite3*`</span> to <span class="sb">`.gitignore`</span>
+<span class="k">11.</span> <span class="gs">**HTML-first**</span>: reach for <span class="sb">`&lt;details&gt;`</span>, <span class="sb">`popover`</span>, the checkbox/radio CSS
+    hack, and server-side query-param filtering before writing JS
 </pre></div>
 </div>
 </section>
