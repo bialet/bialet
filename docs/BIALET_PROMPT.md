@@ -58,6 +58,37 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
 - **Direct SQL queries** with parameterized placeholders instead of an ORM
 - **Semantic HTML**, optionally styled with a classless framework like PicoCSS
 
+## HTML-First: Reach for JS Last
+
+Before writing a `<script>` tag, check whether native HTML/CSS already does
+it. Bialet has no bundler and no package manager — every script you add is
+hand-maintained forever, so the bar for adding one is higher than in a JS
+framework.
+
+- **Disclosure widgets** (`FAQ`, dropdowns, "read more") → `<details>` /
+  `<summary>`, not a click handler toggling a class.
+- **Menus and lightweight modals/tooltips** → the `popover` attribute +
+  `popovertarget` (native show/hide, light-dismiss, and `Esc` handling).
+- **Tabs, toggles, accordions** → hidden radio/checkbox inputs + CSS
+  `:checked` with a sibling or `:has()` selector, not a tab controller.
+- **Closing a `<dialog>`** → `<form method="dialog">` needs no JS. Opening
+  one as a true modal still needs one line of `.showModal()` — that's a
+  real limit, not something to work around.
+- **Client-side validation feedback** → `required`, `pattern`, `minlength`,
+  `min`/`max`, typed inputs (`type="email"`), styled via `:invalid` /
+  `:user-invalid` — always re-validate on the server too.
+- **Autocomplete** → `<datalist>` populated server-side from a query, not a
+  keystroke handler with a fetch call.
+- **Sorting, filtering, pagination** → links/forms with query params that
+  re-render the page server-side (see `.order()` below), not a client-side
+  re-sort. This is the pattern Bialet is built for: the server already
+  re-renders on every request, so there's no round trip to save.
+
+Write JS only for what HTML/CSS genuinely can't do — live search-as-you-type,
+drag-and-drop, WebSocket-driven updates — and keep it a small inline
+`<script>`, not a framework. See [HTML-First](html-first.md) for the full
+pattern reference.
+
 ## Wren Language Essentials
 
 Bialet embeds a modified dialect of Wren (see [wren.io](https://wren.io) for
@@ -1013,3 +1044,5 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
 9. **APIs**: `Response.json()`, one file per resource, method + query param
    for the id, rather than per-verb files
 10. **Git**: always add `_db.sqlite3*` to `.gitignore`
+11. **HTML-first**: reach for `<details>`, `popover`, the checkbox/radio CSS
+    hack, and server-side query-param filtering before writing JS
