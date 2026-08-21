@@ -11,7 +11,7 @@ skipped_tests=0
 # summary line (crux-style), instead of interleaving with the run.
 failures=()
 
-# Wall-clock start, used by print_summary's "in Ns" duration. python3 (already
+# Wall-clock start, used by print_summary's "in Nms" duration. python3 (already
 # a soft dependency elsewhere in this script) gives sub-second precision;
 # without it, bash's SECONDS builtin falls back to whole-second precision.
 if command -v python3 >/dev/null 2>&1; then
@@ -273,13 +273,13 @@ test_syntax_msg() {
 print_summary() {
     local elapsed
     if [[ -n "$test_start_time" ]] && command -v python3 >/dev/null 2>&1; then
-        elapsed=$(python3 -c "import time; print(f'{time.time() - $test_start_time:.2f}')")
+        elapsed=$(python3 -c "import time; print(int((time.time() - $test_start_time) * 1000))")
     else
-        elapsed="$SECONDS"
+        elapsed=$((SECONDS * 1000))
     fi
 
     if [[ "${QUIET:-0}" == 1 ]]; then
-        echo "$failed_tests of $total_tests tests failed in ${elapsed}s"
+        echo "$failed_tests of $total_tests tests failed in ${elapsed}ms"
         local entry f_line f_desc f_detail
         for entry in "${failures[@]}"; do
             IFS='|' read -r f_line f_desc f_detail <<< "$entry"
@@ -293,6 +293,7 @@ print_summary() {
         echo -e "${GREEN}Passed Tests: $passed_tests${NC}"
         echo -e "${RED}Failed Tests: $failed_tests${NC}"
         echo -e "${YELLOW}Skipped Tests: $skipped_tests${NC}"
+        echo -e "Elapsed Time: ${elapsed}ms"
     fi
 
     if [ "$failed_tests" -ne 0 ]; then

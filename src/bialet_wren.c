@@ -1367,11 +1367,11 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     fclose(quietSink);
   }
 
-  double elapsed = (double)(test_monotonic_ms() - startMs) / 1000.0;
-  int    ran = passed + failed;
+  long long elapsedMs = test_monotonic_ms() - startMs;
+  int       ran = passed + failed;
 
   if(quiet) {
-    printf("%d of %d tests failed in %.2fs\n", failed, ran, elapsed);
+    printf("%d of %d tests failed in %lldms\n", failed, ran, elapsedMs);
     for(int i = 0; i < failed; i++) {
       // Strip the ".wren" extension for the display name; is_test_file()
       // guarantees every entry here ends with it. A %.*s precision avoids
@@ -1395,6 +1395,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     snprintf(line, sizeof(line), "Skipped Tests: %d", skipped);
     print_colored(line, TEST_COLOR_YELLOW);
     printf("\n");
+    printf("Elapsed Time: %lldms\n", elapsedMs);
   }
 
   return (failed > 0) ? 1 : 0;

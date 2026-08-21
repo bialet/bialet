@@ -172,7 +172,7 @@ failure:
 
 ```
 $ ./build/bialet -T tests/ -q
-1 of 14 tests failed in 0.11s
+1 of 14 tests failed in 110ms
 
 ### FAIL _tests/login.wren:37 - login
 Expected code to be 401 but was 500
