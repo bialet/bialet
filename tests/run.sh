@@ -34,7 +34,7 @@ source "$(dirname "$0")/util.sh"
 if [[ "$TARGET_EXEC" != "-" ]]; then
   $TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log "$(dirname "$0")/echo" > /dev/null 2>&1 &
   disown
-  sleep 1
+  wait_port "$HOST" "$ECHO_PORT" 10
 fi
 
 # Capability detection for TARGET_EXEC "-" (no local binary, testing against
@@ -315,7 +315,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   "$TARGET_EXEC" -h "$HOST" -p "$SHOW_ERRORS_PORT" -l /tmp/tests-show-errors.log \
     "$show_root" > /dev/null 2>&1 &
   disown
-  sleep 2
+  wait_port "$HOST" "$SHOW_ERRORS_PORT" 10
   show_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$SHOW_ERRORS_PORT/broken")
   show_body=$(curl -s "http://$HOST:$SHOW_ERRORS_PORT/broken")
@@ -349,7 +349,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   (cd "$dev_root" && "$dev_exec" dev -q -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
     > /dev/null 2>&1 &
   disown
-  sleep 2
+  wait_http "http://$HOST:$DEV_PORT/" 200 10
   dev_code=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$DEV_PORT/")
   dev_body=$(curl -s "http://$HOST:$DEV_PORT/")
   dev_live=$(printf "%s" "$dev_body" | grep -c "_livereload")
@@ -358,8 +358,14 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   dev_v1=$(curl -s "http://$HOST:$DEV_PORT/_livereload")
   sleep 1
   printf 'reload\n' > "$dev_root/reload_scratch"
-  sleep 2
-  dev_v2=$(curl -s "http://$HOST:$DEV_PORT/_livereload")
+  # The version is time(NULL), so it only bumps once the file-watch fires in a
+  # new second. Poll for the bump instead of sleeping a fixed 2s.
+  dev_v2=""
+  reload_deadline=$(( $(now_ms) + 5000 ))
+  while [[ "$dev_v2" == "$dev_v1" && $(now_ms) -lt $reload_deadline ]]; do
+    dev_v2=$(curl -s "http://$HOST:$DEV_PORT/_livereload")
+    [[ "$dev_v2" == "$dev_v1" ]] && sleep 1
+  done
   rm -f "$dev_root/reload_scratch"
   pgrep -f "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \

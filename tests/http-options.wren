@@ -29,7 +29,7 @@ if (which == "timeout") {
   // A tiny connect timeout fails fast and surfaces a curl error message
   var http = Http.new()
   http.method = "GET"
-  var ok = http.call("http://192.0.2.1/", {"connectTimeout": 500})
+  var ok = http.call("http://192.0.2.1/", {"connectTimeout": 200})
   var msg = http.errorMessage != "" ? "error-present" : "error-empty"
   return "%(ok == false ? "false" : "true")|%(msg)"
 }

@@ -54,6 +54,53 @@ now_ms() {
     fi
 }
 
+# Wait for a TCP port to accept connections, polling instead of sleeping a fixed
+# amount. Servers start in tens of milliseconds, so a fixed 2-3s sleep wasted
+# almost all of it on every run. Returns 0 when the port comes up, 1 on timeout.
+# python3 (already a soft dependency elsewhere) gives sub-second polling; the
+# fallback polls once a second.
+wait_port() {
+    local host=$1 port=$2 timeout=${3:-10}
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "
+import socket, sys, time
+host, port, deadline = sys.argv[1], int(sys.argv[2]), time.time() + float(sys.argv[3])
+while time.time() < deadline:
+    try:
+        socket.create_connection((host, port), 0.25).close()
+        sys.exit(0)
+    except OSError:
+        time.sleep(0.05)
+sys.exit(1)
+" "$host" "$port" "$timeout"
+    else
+        local deadline=$(( $(now_ms) + timeout * 1000 ))
+        while [[ $(now_ms) -lt deadline ]]; do
+            if (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null; then
+                return 0
+            fi
+            sleep 1
+        done
+        return 1
+    fi
+}
+
+# Wait for an HTTP endpoint to return a given status code (default 200), again
+# polling rather than sleeping a fixed amount. Used where the server's port may
+# be up before the app is ready (e.g. bialet dev enables livereload after
+# binding). Returns 0 on success, 1 on timeout.
+wait_http() {
+    local url=$1 expected=${2:-200} timeout=${3:-10}
+    local deadline=$(( $(now_ms) + timeout * 1000 ))
+    local code=""
+    while [[ $(now_ms) -lt deadline ]]; do
+        code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 "$url" 2>/dev/null)
+        [[ "$code" == "$expected" ]] && return 0
+        sleep 1
+    done
+    return 1
+}
+
 # Per-test start timestamp, set at the entry of every test helper and before
 # each inline test block in run.sh; report_result() reads it for the (Nms).
 _test_start_ms=$(now_ms)
@@ -344,8 +391,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
   disown
 
-  # Wait for server to start
-  sleep 3
+  # Wait for server to start (poll the port instead of a fixed 3s sleep)
+  wait_port "$HOST" "$PORT" 10
 
   # Check if server is running
   PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
