@@ -1325,8 +1325,10 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
 
     int        line = 0;
     char       msg[TEST_FAIL_MSG_LEN];
+    long long  testStartMs = test_monotonic_ms();
     TestResult result =
         run_test_file(testPath, initPathPtr, &line, msg, sizeof(msg));
+    long long testElapsedMs = test_monotonic_ms() - testStartMs;
 
     switch(result) {
       case TEST_RESULT_PASS:
@@ -1334,7 +1336,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
         if(!quiet) {
           printf("  ");
           print_colored("✓", TEST_COLOR_GREEN);
-          printf(" %s\n", testFiles[i]);
+          printf(" %s (%lldms)\n", testFiles[i], testElapsedMs);
         }
         break;
       case TEST_RESULT_SKIP:
@@ -1354,7 +1356,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
         if(!quiet) {
           printf("  ");
           print_colored("✗", TEST_COLOR_RED);
-          printf(" %s\n      %s\n", testFiles[i], msg);
+          printf(" %s (%lldms)\n      %s\n", testFiles[i], testElapsedMs, msg);
         }
         break;
     }

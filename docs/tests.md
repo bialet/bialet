@@ -394,7 +394,7 @@ Test.get("/hi")
 $ bialet -T
 Running tests in _tests...
 
-  ✓ hi.wren
+  ✓ hi.wren (5ms)
 
 Summary:
 

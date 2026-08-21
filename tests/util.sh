@@ -36,22 +36,47 @@ else
   NC='\033[0m' # No Color
 fi
 
+# Millisecond wall-clock, used for per-test durations. bash's EPOCHREALTIME
+# (5.0+) is cheap and precise; python3 (already a soft dependency elsewhere in
+# this script) is the portable fallback; SECONDS drops to whole-second
+# precision as a last resort.
+now_ms() {
+    if [[ -n "${EPOCHREALTIME:-}" ]]; then
+        # EPOCHREALTIME uses the locale's decimal separator (a comma under some
+        # locales), so normalize before splitting.
+        local t=${EPOCHREALTIME//,/.}
+        local s=${t%.*} us=${t#*.}
+        echo $((s * 1000 + 10#$us / 1000))
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import time; print(int(time.time() * 1000))'
+    else
+        echo $((SECONDS * 1000))
+    fi
+}
+
+# Per-test start timestamp, set at the entry of every test helper and before
+# each inline test block in run.sh; report_result() reads it for the (Nms).
+_test_start_ms=$(now_ms)
+
 # Records one test's outcome. In normal mode, prints a colored symbol line (and
 # a detail line under a failure). In -q, only failures are kept (buffered for
 # the end-of-run FAIL blocks); passes print nothing.
 report_result() {
     local description=$1 line=$2 ok=$3 detail=${4:-}
+    local elapsed_ms=$(( $(now_ms) - _test_start_ms ))
 
     total_tests=$((total_tests + 1))
     if [[ "$ok" -eq 0 ]]; then
         passed_tests=$((passed_tests + 1))
-        [[ "${QUIET:-0}" != 1 ]] && echo -e "  ${GREEN}✓${NC} $description"
+        if [[ "${QUIET:-0}" != 1 ]]; then
+            echo -e "  ${GREEN}✓${NC} $description (${elapsed_ms}ms)"
+        fi
     else
         failed_tests=$((failed_tests + 1))
         if [[ "${QUIET:-0}" == 1 ]]; then
             failures+=("$line|$description|$detail")
         else
-            echo -e "  ${RED}✗${NC} $description"
+            echo -e "  ${RED}✗${NC} $description (${elapsed_ms}ms)"
             [[ -n "$detail" ]] && echo -e "      $detail"
         fi
     fi
@@ -96,6 +121,7 @@ test_get() {
     expected_status=$3
     expected_body=${4:-}
     line=$5
+    _test_start_ms=$(now_ms)
 
     response=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$PORT/$url_path")
     body=$(curl -s "http://$HOST:$PORT/$url_path")
@@ -121,6 +147,7 @@ test_post() {
     expected_status=$4
     expected_body=${5:-}
     line=$6
+    _test_start_ms=$(now_ms)
 
     response=$(curl -s -o /dev/null -w "%{http_code}" -d "$post_data" "http://$HOST:$PORT/$url_path")
     body=$(curl -s -d "$post_data" "http://$HOST:$PORT/$url_path")
@@ -161,6 +188,7 @@ test_auth() {
     expected_status=$5
     expected_body=${6:-}
     line=${BASH_LINENO[0]}
+    _test_start_ms=$(now_ms)
 
     response=$(curl -s -o /dev/null -w "%{http_code}" -u "$user:$pass" "http://$HOST:$PORT/$url_path")
     body=$(curl -s -u "$user:$pass" "http://$HOST:$PORT/$url_path")
@@ -187,6 +215,7 @@ test_method() {
     expected_header=${5:-}
     expected_body=${6:-}
     line=${BASH_LINENO[0]}
+    _test_start_ms=$(now_ms)
 
     response=$(curl -s -o /dev/null -w "%{http_code}" -X "$method" "http://$HOST:$PORT/$url_path")
     headers=$(curl -s -D- -o /dev/null -X "$method" "http://$HOST:$PORT/$url_path")
@@ -221,6 +250,7 @@ test_syntax() {
     expected_exit=$3
     root_path=${4:-}
     line=${BASH_LINENO[0]}
+    _test_start_ms=$(now_ms)
 
     filepath="$(dirname "$0")/$file"
 
@@ -246,6 +276,7 @@ test_syntax_msg() {
     expected_msg=$4
     root_path=${5:-}
     line=${BASH_LINENO[0]}
+    _test_start_ms=$(now_ms)
 
     filepath="$(dirname "$0")/$file"
 

@@ -93,6 +93,7 @@ run_test "Forbid hidden file          " "_hidden"         403
 # the leaked database bytes.
 if [[ "$FS_SHARED" == 1 ]]; then
   route_symlink_line=$LINENO
+  _test_start_ms=$(now_ms)
   route_symlink_dir="$(dirname "$0")/sub"
   route_symlink="$route_symlink_dir/_route.wren"
   rm -rf "$route_symlink_dir"
@@ -133,6 +134,7 @@ run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/requ
 # rejected promptly with 413 - never hang or crash. Payloads go through files
 # because they exceed curl's command-line argument limit.
 large_post_line=$LINENO
+_test_start_ms=$(now_ms)
 under_payload="$(mktemp)"
 over_payload="$(mktemp)"
 if command -v python3 >/dev/null 2>&1; then
@@ -159,6 +161,7 @@ fi
 # Custom 413 error page: like 404/500, an oversized body is served the app's
 # own 413.html (or 413.wren) page via custom_error.
 custom_413_line=$LINENO
+_test_start_ms=$(now_ms)
 over_payload="$(mktemp)"
 if command -v python3 >/dev/null 2>&1; then
   python3 -c "open('$over_payload', 'w').write('a\n' * 500000)"
@@ -262,6 +265,7 @@ run_test "Session CSRF check fail     " "csrf" ""         200 "fail"
 # Multi-form CSRF: every form on a page must carry a token that validates.
 # Uses a cookie jar so the POST hits the same session as the GET.
 csrf_multi_line=$LINENO
+_test_start_ms=$(now_ms)
 csrf_cookie=/tmp/bialet-csrf-cookies.txt
 csrf_page=$(curl -s -c "$csrf_cookie" "http://$HOST:$PORT/csrf-multi")
 csrf_tokens=$(printf "%s" "$csrf_page" | grep -o 'name="_bialet_csrf" value="[^"]*"' | sed 's/name="_bialet_csrf" value="//; s/"//')
@@ -306,6 +310,7 @@ run_test "CORS enabled                " "cors"            200 "cors"
 # migration that enables the flag) so it doesn't disturb the main test app.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   show_errors_line=$LINENO
+  _test_start_ms=$(now_ms)
   show_root="$(dirname "$0")/show-errors"
   "$TARGET_EXEC" -h "$HOST" -p "$SHOW_ERRORS_PORT" -l /tmp/tests-show-errors.log \
     "$show_root" > /dev/null 2>&1 &
@@ -337,6 +342,7 @@ fi
 # bump the /_livereload version when a file in the app directory changes.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   dev_starts_line=$LINENO
+  _test_start_ms=$(now_ms)
   dev_root="$(dirname "$0")/dev-app"
   dev_exec=$(realpath "$TARGET_EXEC")
   rm -f "$dev_root/_db.sqlite3"
