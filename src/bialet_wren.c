@@ -535,7 +535,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
         case SQLITE_NULL:
           type = BIALETQUERYTYPE_NULL;
           value = NULL;
-          size = 1;
+          size = 0;
           break;
         default:
           message(red("Query Error"), "Unknown type on binding result");
@@ -800,11 +800,11 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
 
     // Save file to database
     sqlite3_stmt* stmt = NULL;
-    int           result = sqlite3_prepare_v2(db,
-                                              "INSERT INTO BIALET_FILES (name, "
-                                                        "originalFileName, type, file, size, isTemp) "
-                                                        "VALUES (?, ?, ?, ?, ?, 1)",
-                                              -1, &stmt, 0);
+    int result = sqlite3_prepare_v2(db,
+                                    "INSERT INTO BIALET_FILES (name, "
+                                    "originalFileName, type, file, size, isTemp) "
+                                    "VALUES (?, ?, ?, ?, ?, 1)",
+                                    -1, &stmt, 0);
 
     if(result == SQLITE_OK) {
       sqlite3_bind_text(stmt, 1, fieldName, -1, SQLITE_STATIC);
@@ -1257,7 +1257,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   while((entry = readdir(dir)) != NULL) {
     if(!is_test_file(entry->d_name))
       continue;
-      // A directory named "foo.wren" is not a test file.
+    // A directory named "foo.wren" is not a test file.
 #ifdef DT_DIR
     if(entry->d_type == DT_DIR)
       continue;
