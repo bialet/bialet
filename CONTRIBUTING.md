@@ -227,7 +227,7 @@ make wren_files && make
 src/       — C runtime, Wren VM, HTTP server, SQLite bindings
 docs/      — User-facing documentation (Sphinx + MyST)
 tests/     — Integration tests (shell runner + .wren test files)
-tools/     — Build helpers (wren_to_c_string.py, cross-compile)
+tools/     — Build helpers (wren_to_c_string.c, cross-compile)
 ```
 
 Key C entrypoints:

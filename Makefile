@@ -7,6 +7,12 @@ INSTALL_DIR := ~/.local/bin
 DB_FILE := _db.sqlite3
 OS := $(shell uname -s)
 
+# Builds the wren_to_c_string codegen tool that runs during the build itself.
+# Deliberately NOT $(CC): the Windows cross-build invokes `CC=x86_64-w64-mingw32-gcc
+# make static`, and a tool built with that compiler would produce a Windows PE
+# binary that can't run on the Linux build host mid-build.
+HOSTCC ?= cc
+
 SPHINXBUILD ?= sphinx-build
 SPHINXOPTS ?=
 
@@ -83,11 +89,23 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 # file must be rebuilt when one of them changes.
 WREN_INCS := $(WREN_FILES:%.wren=%.wren.inc)
 
+# Without .SECONDARY, GNU Make treats .wren.inc as a disposable intermediate
+# (built by one pattern rule, consumed by another) and deletes it from the
+# working tree right after linking, whenever regeneration actually ran --
+# silently untracking a file that's meant to be committed to git.
+.SECONDARY: $(WREN_INCS)
+
 # Regenerate a .wren.inc whenever its .wren source is newer. Without this rule,
 # editing a .wren file and running plain `make` linked the OLD embedded source
 # into the binary -- only an explicit `make wren_files` picked the change up.
-%.wren.inc: %.wren
-	python3 tools/wren_to_c_string.py $@ $<
+%.wren.inc: %.wren $(BUILD_DIR)/tools/wren_to_c_string
+	$(BUILD_DIR)/tools/wren_to_c_string $@ $<
+
+$(BUILD_DIR)/tools/wren_to_c_string: tools/wren_to_c_string.c | $(BUILD_DIR)/tools
+	$(HOSTCC) -O2 -o $@ $<
+
+$(BUILD_DIR)/tools:
+	@mkdir -p $@
 
 # Header dependencies. Without these, editing a header left every object file
 # that includes it stale: a change to a constant such as HASH_AND_SALT_LENGTH

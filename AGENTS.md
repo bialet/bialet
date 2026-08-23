@@ -81,7 +81,7 @@ files.
 
 - `Makefile` uses `-lsqlite3`, `-lcurl`, and conditionally links OpenSSL
 - Changes touching networking or DB need matching LDFLAGS/CFLAGS updates
-- Wren sources embedded as C strings via `tools/wren_to_c_string.py` and
+- Wren sources embedded as C strings via `tools/wren_to_c_string.c` and
   `wren_*.wren.inc` files
 
 ## Tests & CI
