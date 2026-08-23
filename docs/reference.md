@@ -780,6 +780,10 @@ string, or `""` when empty. `Set-Cookie` response headers are stored in the
 jar automatically and sent back on later calls unless a `Cookie` header is set
 explicitly.
 
+The jar is scoped per host and honors the `Domain`, `Path`, `Secure`, and
+`Max-Age` cookie attributes, so a cookie set by one host is never sent to a
+different host.
+
 ### query(params)
 
 Static helper that returns a URL-encoded query string from a map of

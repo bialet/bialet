@@ -23,7 +23,7 @@ ideas I may revisit if interest returns, but no promises.
       handling
 - [ ] **HTTP Client - Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
-- [ ] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the
+- [x] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the
       jar is process-wide and sends cookies regardless of domain; scope by host
       and honor `Domain`/`Path`/`Secure` attributes.
 - [x] **Query params silently drop non-primitive values** — `queryPrepare`

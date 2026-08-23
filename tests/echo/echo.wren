@@ -22,7 +22,14 @@ if (mode == "status") {
   return code
 }
 if (mode == "setcookie") {
-  Response.header("Set-Cookie", "session=abc123; Path=/")
+  var cookieName = Request.get("name") || "session"
+  var cookieValue = Request.get("value") || "abc123"
+  var cookieHeader = "%(cookieName)=%(cookieValue)"
+  if (Request.get("path")) cookieHeader = cookieHeader + "; Path=%(Request.get("path"))"
+  if (Request.get("domain")) cookieHeader = cookieHeader + "; Domain=%(Request.get("domain"))"
+  if (Request.get("maxage")) cookieHeader = cookieHeader + "; Max-Age=%(Request.get("maxage"))"
+  if (Request.get("secure")) cookieHeader = cookieHeader + "; Secure"
+  Response.header("Set-Cookie", cookieHeader)
   return "set"
 }
 if (mode == "cookie") return Request.header("cookie") || "no-cookie"

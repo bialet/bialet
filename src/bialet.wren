@@ -1086,8 +1086,11 @@ class Http {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
     var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
-    if (!options["headers"].containsKey("Cookie") && Http.jar != "") {
-      headers = headers + "\nCookie: %(Http.jar)"
+    if (!options["headers"].containsKey("Cookie")) {
+      var jar = Http.jarFor(url)
+      if (jar != "") {
+        headers = headers + "\nCookie: %(jar)"
+      }
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
@@ -1110,29 +1113,107 @@ class Http {
     _body = response[2].trim()
     _error = response[3]
     _errorMessage = response[4]
-    Http.storeCookies(_fullHeaders)
+    Http.storeCookies(_fullHeaders, url)
 
     return _error == 0
   }
 
   static jar {
     if (!__cookieJar || __cookieJar.count == 0) return ""
-    return __cookieJar.map{|c| "%(c.key)=%(c.value)" }.join("; ")
+    var all = []
+    for (jarHost in __cookieJar) {
+      for (entry in jarHost.value) {
+        all.add("%(entry.key)=%(entry.value["v"])")
+      }
+    }
+    return all.join("; ")
   }
-  static storeCookies(rawHeaders) {
+  static jarFor(url) {
+    if (!__cookieJar || __cookieJar.count == 0) return ""
+    var scope = urlScope_(url)
+    var host = scope["host"]
+    var path = scope["path"]
+    var secure = scope["scheme"] == "https"
+    var now = Date.tz != null ? Date.now.unix : 0
+    var matched = []
+    for (jarHost in __cookieJar) {
+      var hostMatches = jarHost.key == host || (jarHost.key.startsWith(".") && host.endsWith(jarHost.key))
+      if (!hostMatches) continue
+      for (entry in jarHost.value) {
+        var c = entry.value
+        if (c["s"] && !secure) continue
+        if (!path.startsWith(c["p"])) continue
+        if (c["e"] > 0 && now >= c["e"]) continue
+        matched.add("%(entry.key)=%(c["v"])")
+      }
+    }
+    return matched.join("; ")
+  }
+  static storeCookies(rawHeaders, url) {
     if (rawHeaders == "") return
+    var scope = urlScope_(url)
+    var reqHost = scope["host"]
     if (!__cookieJar) __cookieJar = {}
     for (line in rawHeaders.split("\n")) {
       var sep = line.indexOf(":")
-      if (sep == null || sep <= 0) continue
-      var name = line[0...sep].trim().lower
-      if (name != "set-cookie") continue
+      if (sep <= 0) continue
+      var headerName = line[0...sep].trim().lower
+      if (headerName != "set-cookie") continue
       var value = line[sep + 1...line.count].trim()
       var parts = value.split(";")
       var kv = parts[0].split("=")
       if (kv.count < 2) continue
-      __cookieJar[kv[0].trim()] = kv[1].trim()
+      var cookieName = kv[0].trim()
+      var cookie = {"v": kv[1].trim(), "p": "/", "s": false, "e": 0}
+      var host = reqHost
+      for (i in 1...parts.count) {
+        var attr = parts[i].trim()
+        var eq = attr.indexOf("=")
+        var attrName = (eq >= 0 ? attr[0...eq] : attr).trim().lower
+        var attrValue = eq >= 0 ? attr[eq + 1...attr.count].trim() : ""
+        if (attrName == "domain" && attrValue != "") {
+          host = attrValue.lower
+          if (!host.startsWith(".")) host = "." + host
+        } else if (attrName == "path" && attrValue != "") {
+          cookie["p"] = attrValue
+        } else if (attrName == "secure") {
+          cookie["s"] = true
+        } else if (attrName == "max-age") {
+          var secs = Num.fromString(attrValue)
+          if (secs && Date.tz != null) cookie["e"] = Date.now.unix + secs
+        }
+      }
+      if (!__cookieJar.containsKey(host)) __cookieJar[host] = {}
+      __cookieJar[host][cookieName] = cookie
     }
+  }
+  static urlScope_(url) {
+    url = "%(url)"
+    var scheme = "http"
+    var rest = url
+    var schemeEnd = url.indexOf("://")
+    if (schemeEnd > 0) {
+      scheme = url[0...schemeEnd].lower
+      rest = url[schemeEnd + 3...url.count]
+    }
+    var path = "/"
+    var authority = rest
+    var pathStart = rest.indexOf("/")
+    if (pathStart >= 0) {
+      authority = rest[0...pathStart]
+      path = rest[pathStart...rest.count]
+    }
+    var queryStart = path.indexOf("?")
+    if (queryStart >= 0) path = path[0...queryStart]
+    var host = authority.lower
+    if (host.startsWith("[")) {
+      var close = host.indexOf("]")
+      if (close >= 0) host = host[0...close + 1]
+    } else {
+      var colon = host.indexOf(":")
+      if (colon >= 0) host = host[0...colon]
+    }
+    return {"scheme": scheme, "host": host, "path": path}
   }
   static query(params) { Util.params(params) }
   static url(base, params) {
