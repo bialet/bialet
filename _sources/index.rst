@@ -321,6 +321,7 @@ Who is Bialet for?
    :caption: Connecting Things
 
    advanced-routing
+   external-modules
    rest-api
    http-calls
 

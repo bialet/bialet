@@ -62,7 +62,7 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Building REST APIs" href="rest-api.html" />
+    <link rel="next" title="External Modules" href="external-modules.html" />
     <link rel="prev" title="Error Pages" href="errors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -203,6 +203,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-modules.html">External Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
 </ul>
@@ -450,22 +451,7 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routing-compared-bialet-vs-express-vs-django">Routing Compared: Bialet vs Express vs Django</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-syntax">Import Syntax</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#github-shorthand-recommended">1. GitHub Shorthand (Recommended)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#full-url">2. Full URL</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>
 </ul>
             </nav>
@@ -1110,208 +1096,18 @@ reason to.</p>
 </section>
 <section id="external-imports">
 <h2>External Imports<a class="headerlink" href="#external-imports" title="Link to this heading">#</a></h2>
-<p>Bialet supports importing external Wren modules from remote sources, so
-you can use community-created libraries without manually downloading and
-managing them.</p>
-<section id="import-syntax">
-<h3>Import Syntax<a class="headerlink" href="#import-syntax" title="Link to this heading">#</a></h3>
-<section id="github-shorthand-recommended">
-<h4>1. GitHub Shorthand (Recommended)<a class="headerlink" href="#github-shorthand-recommended" title="Link to this heading">#</a></h4>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
+<p>Bialet supports importing external Wren modules from remote sources —
+<code class="docutils literal notranslate"><span class="pre">gh:owner/repo/path</span></code> shorthand or a full URL — so you can use
+community-created libraries without manually downloading and managing
+them:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/emoji@1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
 </pre></div>
 </div>
-<p>Fetches from the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch by default. Target a specific branch or tag
-with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:owner/repo/path/to/file@branch-or-tag"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
-</pre></div>
-</div>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Import emoji utilities from main branch</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/emoji"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
-
-<span class="c1">// Import from specific version/branch (recommended for stability)</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/export@1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">EmojiV1</span>
-
-<span class="c1">// Import from a specific tag</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:username/mylib/module@v2.1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">MyClass</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is <strong>automatically appended</strong> — don’t include it
-in the import path.</p></li>
-<li><p>Default branch is <code class="docutils literal notranslate"><span class="pre">main</span></code> if you don’t specify one.</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">&#64;branch</span></code> or <code class="docutils literal notranslate"><span class="pre">&#64;tag</span></code> to pin a specific version.</p></li>
-</ul>
-</section>
-<section id="full-url">
-<h4>2. Full URL<a class="headerlink" href="#full-url" title="Link to this heading">#</a></h4>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"https://example.com/path/to/module.wren"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">ClassName</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li><p>You <strong>must</strong> include the <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension in the URL.</p></li>
-<li><p>The URL must return raw Wren source code, not HTML.</p></li>
-<li><p>For GitHub, use <code class="docutils literal notranslate"><span class="pre">raw.githubusercontent.com</span></code> URLs.</p></li>
-</ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"https://raw.githubusercontent.com/4lb0/emoji/main/emoji.wren"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="how-it-works">
-<h3>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h3>
-<ol class="arabic simple">
-<li><p><strong>Cache check</strong> — Bialet checks whether the module is already cached in
-the <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code> database table.</p></li>
-<li><p><strong>Download</strong> — if not cached, it downloads the module via HTTP GET.</p></li>
-<li><p><strong>Validation</strong> — checks for a 2xx status code.</p></li>
-<li><p><strong>Store</strong> — the content is stored in the database, keyed by import
-path.</p></li>
-<li><p><strong>Load</strong> — the module is loaded and made available to your code.</p></li>
-</ol>
-<p>The first load needs an internet connection; every load after that reads
-from the local database — fast, and works offline. Cached modules persist
-until you explicitly clear them.</p>
-<blockquote>
-<div><p>⚠️ Pitfall: cached modules don’t auto-update. If you push a fix to the
-<code class="docutils literal notranslate"><span class="pre">main</span></code> branch of an imported module, running instances keep using the
-old cached copy until you clear the cache. This is deliberate — treat it
-as a stability feature, not a bug.</p>
-</div></blockquote>
-</section>
-<section id="cache-management">
-<h3>Cache Management<a class="headerlink" href="#cache-management" title="Link to this heading">#</a></h3>
-<p>External modules are cached in <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, table <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="n">module</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w">      </span><span class="c1">-- The import path (e.g., "gh:user/repo/path")</span>
-<span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span><span class="w">                 </span><span class="c1">-- The cached Wren source code</span>
-<span class="w">  </span><span class="n">createdAt</span><span class="w"> </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Clear all cached external modules (forces re-download on next import)</span>
-<span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
-
-<span class="c1">-- View all cached modules</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="n">createdAt</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
-
-<span class="c1">-- Check cache size</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="w"> </span><span class="k">SUM</span><span class="p">(</span><span class="k">LENGTH</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">total_bytes</span>
-<span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>After clearing the cache, restart your Bialet application (or trigger a
-reload) to re-download the modules.</p>
-</section>
-<section id="github-url-format">
-<h3>GitHub URL Format<a class="headerlink" href="#github-url-format" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">gh:owner/repo/path&#64;branch</span></code> is internally converted to:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path.wren
-</pre></div>
-</div>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Import Statement</p></th>
-<th class="head"><p>Generated URL</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gh:user/lib/utils&#64;dev</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/user/lib/refs/heads/dev/utils.wren</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gh:org/pkg/sub/module&#64;v1.0</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">https://raw.githubusercontent.com/org/pkg/refs/heads/v1.0/sub/module.wren</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is added automatically.</p></li>
-<li><p>Default branch is <code class="docutils literal notranslate"><span class="pre">main</span></code> if unspecified.</p></li>
-<li><p>The path must resolve to a valid Wren file in the repository.</p></li>
-<li><p>Invalid paths or missing files trigger error messages in the logs.</p></li>
-</ul>
-</section>
-<section id="error-handling">
-<h3>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h3>
-<p><strong>“Invalid GitHub URL”</strong> — the import path doesn’t follow
-<code class="docutils literal notranslate"><span class="pre">gh:owner/repo/path</span></code>; owner, repo, or file path is missing.</p>
-<p><strong>“Module not found in GitHub”</strong> — file doesn’t exist at that path, the
-branch/tag doesn’t exist, the HTTP request returned a non-2xx status, or
-there’s a network problem.</p>
-<p><strong>“Import type not supported”</strong> — the import uses a protocol other than
-<code class="docutils literal notranslate"><span class="pre">gh:</span></code>, <code class="docutils literal notranslate"><span class="pre">http://</span></code>, or <code class="docutils literal notranslate"><span class="pre">https://</span></code>.</p>
-<p>Check the Bialet logs for details:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Debug: attempting import..."</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="security-considerations">
-<h3>Security Considerations<a class="headerlink" href="#security-considerations" title="Link to this heading">#</a></h3>
-<blockquote>
-<div><p>⚠️ Pitfall: external imports download and <strong>execute</strong> code from remote
-sources, with the same privileges as your application. Treat an import
-statement like adding a dependency, not like a link.</p>
-</div></blockquote>
-<ul class="simple">
-<li><p><strong>Verify the source</strong> before importing.</p></li>
-<li><p><strong>Review the code</strong> on GitHub when possible.</p></li>
-<li><p><strong>Use version tags</strong>, not <code class="docutils literal notranslate"><span class="pre">main</span></code>, for stability and predictability.</p></li>
-<li><p><strong>Cache behavior is a security feature</strong> — once downloaded, a module
-won’t silently change under you.</p></li>
-</ul>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Good: well-known, maintained library, pinned version</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:4lb0/emoji/emoji@1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Emoji</span>
-
-<span class="c1">// ❌ Avoid: unknown source, unpinned, unverified</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:random-user/suspicious-lib/module"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">SomeClass</span>
-</pre></div>
-</div>
-</section>
-<section id="multiple-versions">
-<h3>Multiple Versions<a class="headerlink" href="#multiple-versions" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"gh:user/lib/module"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleLatest</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:user/lib/module@v1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Module</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nc">ModuleV1</span>
-
-<span class="c1">// Use specific version based on your needs</span>
-<span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">ModuleV1</span><span class="o">.</span><span class="n">someFunction</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="troubleshooting">
-<h3>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h3>
-<p><strong>Module not found:</strong></p>
-<ul class="simple">
-<li><p>Visit the GitHub URL in a browser to confirm the path exists.</p></li>
-<li><p>Check your internet connection (required for first-time downloads).</p></li>
-<li><p>Confirm the branch name — defaults to <code class="docutils literal notranslate"><span class="pre">main</span></code>, not <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p></li>
-</ul>
-<p><strong>Import fails silently:</strong></p>
-<ul class="simple">
-<li><p>Check the Bialet server logs.</p></li>
-<li><p>Confirm the module returns raw Wren code, not HTML or an error page.</p></li>
-<li><p>Try the full URL format to isolate GitHub-shorthand issues.</p></li>
-</ul>
-<p><strong>Cached version is outdated:</strong></p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">DELETE</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'gh:user/repo%'</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>Then restart your Bialet application. Prefer version tags over branches
-going forward.</p>
-<p><strong>“Import type not supported”:</strong></p>
-<ul class="simple">
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">gh:</span></code>, <code class="docutils literal notranslate"><span class="pre">http://</span></code>, or <code class="docutils literal notranslate"><span class="pre">https://</span></code> only — no <code class="docutils literal notranslate"><span class="pre">ftp://</span></code>, no <code class="docutils literal notranslate"><span class="pre">file://</span></code>.</p></li>
-<li><p>Check for typos in the import statement.</p></li>
-</ul>
-</section>
-<section id="performance-tips">
-<h3>Performance Tips<a class="headerlink" href="#performance-tips" title="Link to this heading">#</a></h3>
-<ol class="arabic simple">
-<li><p>Use version tags to avoid unnecessary cache invalidation.</p></li>
-<li><p>Import only what you need — every import adds to first-load time.</p></li>
-<li><p>Pre-cache modules in development before deploying.</p></li>
-<li><p>Monitor cache size if you import many large modules.</p></li>
-</ol>
-</section>
+<p>See <a class="reference internal" href="external-modules.html"><span class="std std-doc">External Modules</span></a> for the full import syntax,
+how the download/cache cycle works, how to author and publish your own
+module (including the relative-import restriction inside remote code),
+and how to clear or programmatically refresh the <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>
+cache.</p>
 </section>
 <section id="key-takeaways">
 <h2>Key Takeaways<a class="headerlink" href="#key-takeaways" title="Link to this heading">#</a></h2>
@@ -1328,7 +1124,8 @@ it rarely, and only with a concrete reason.</p></li>
 <li><p><strong>No route table</strong> — the file system is the routing table. Nothing to
 register, nothing to keep in sync.</p></li>
 <li><p><strong>External imports</strong> — <code class="docutils literal notranslate"><span class="pre">gh:</span></code> shorthand or full URLs, cached in
-<code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>, never auto-updating once cached.</p></li>
+<code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>, never auto-updating once cached. See
+<a class="reference internal" href="external-modules.html"><span class="std std-doc">External Modules</span></a> for details.</p></li>
 </ul>
 </section>
 </section>
@@ -1354,11 +1151,11 @@ register, nothing to keep in sync.</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="rest-api.html"
+       href="external-modules.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Building REST APIs</p>
+        <p class="prev-next-title">External Modules</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1398,22 +1195,7 @@ register, nothing to keep in sync.</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routing-compared-bialet-vs-express-vs-django">Routing Compared: Bialet vs Express vs Django</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#import-syntax">Import Syntax</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#github-shorthand-recommended">1. GitHub Shorthand (Recommended)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#full-url">2. Full URL</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-url-format">GitHub URL Format</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-considerations">Security Considerations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-versions">Multiple Versions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>
 </ul>
   </nav></div>
