@@ -1224,21 +1224,32 @@ class Http {
     return base + "?" + qs
   }
 
+  // Shortcuts (Http.get/post/put/delete) never let a request take the page
+  // down: transport failures, non-2xx statuses, and anything unexpected
+  // while reading the response (e.g. malformed JSON) all just return null.
+  // Check Http.error / Http.errorMessage / Http.status for the last call's
+  // outcome instead of wrapping every call site in its own Fiber.
   static request(url, method, data, options) {
     __http = Http.new()
     __http.method = method
     __http.postData = data
-    if (!__http.call(url, options)) {
-      return false
-    }
-    if (__http.status >= 200 && __http.status < 300) {
-      if (__http.headers("content-type").contains("text/json") || __http.headers("content-type").contains("application/json")) {
+    var fiber = Fiber.new {
+      if (!__http.call(url, options)) return null
+      if (__http.status < 200 || __http.status >= 300) return null
+      var contentType = __http.headers("content-type") || ""
+      if (contentType.contains("text/json") || contentType.contains("application/json")) {
         return Json.parse(__http.body)
-      } else {
-        return __http.body
       }
+      return __http.body
     }
+    var value = fiber.try()
+    __error = fiber.error ? 1 : __http.error
+    __errorMessage = fiber.error ? fiber.error.toString : __http.errorMessage
+    return fiber.error ? null : value
   }
+  static error { __error || 0 }
+  static errorMessage { __errorMessage || "" }
+  static status { __http ? __http.status : 0 }
   // Shortcuts for common HTTP methods
   static get(url, options) { request(url, "GET", null, options) }
   static post(url, data, options) { request(url, "POST", data, options) }

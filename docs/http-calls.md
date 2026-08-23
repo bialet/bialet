@@ -214,19 +214,34 @@ The static shortcuts (`Http.get`, `Http.post`, ...) return:
 
 - The parsed JSON value when the status is 2xx and `Content-Type` is JSON.
 - The body string when the status is 2xx and `Content-Type` is not JSON.
-- `null` when the status is not 2xx (e.g. 404, 500).
-- `false` when the request itself failed (DNS, connection, timeout).
+- `null` for everything else: a non-2xx status, a transport failure (DNS,
+  connection, timeout), or even an unexpected error while reading the
+  response (e.g. a malformed JSON body). A shortcut call never raises a
+  runtime error and never takes the page down.
+
+Check `Http.error`, `Http.errorMessage`, and `Http.status` (all static
+getters reflecting the outcome of the *last* shortcut call) to tell these
+cases apart:
 
 ```wren
 var result = Http.get("https://api.example.com/users")
-if (result == false) {
-  // Network error - DNS, connection refused, timeout, ...
-} else if (result == null) {
-  // Server replied with a non-2xx status
+if (result == null) {
+  if (Http.error != 0) {
+    // Transport failure - DNS, connection refused, timeout, ...
+    System.log("HTTP transport error %(Http.error): %(Http.errorMessage)")
+  } else {
+    // A real response came back, just not 2xx
+    System.log("HTTP request failed with status %(Http.status)")
+  }
 } else {
   // Success - JSON or string
 }
 ```
+
+> **Pitfall:** `Http.error`/`Http.errorMessage`/`Http.status` reflect the
+> most recent shortcut call in the current request. Read them immediately
+> after the call they describe, before making another `Http.get`/`post`/
+> `put`/`delete` call that would overwrite them.
 
 ### Full Control with `Http.new()`
 
@@ -315,12 +330,14 @@ files themselves.
 
 ## Error Handling
 
-`Http.error` on a manually-built instance is a numeric code; `false` on the
-shortcuts. `Http.errorMessage` carries the underlying error text (from curl)
-for logging and debugging. The transport timeout defaults to 20 seconds total
-with 2 seconds to connect — override per call with `timeout` and
-`connectTimeout` (milliseconds), so a dead service returns an error instead of
-hanging your app.
+`Http.error` is a numeric code, non-zero when the transport itself failed;
+`Http.errorMessage` carries the underlying error text (from curl) for logging
+and debugging. On a manually-built `Http.new()` instance these are read off
+the instance; on the static shortcuts, `Http.error`/`Http.errorMessage`/
+`Http.status` reflect the last shortcut call. The transport timeout defaults
+to 20 seconds total with 2 seconds to connect — override per call with
+`timeout` and `connectTimeout` (milliseconds), so a dead service returns an
+error instead of hanging your app.
 
 ```wren
 var http = Http.new()
