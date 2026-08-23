@@ -141,38 +141,30 @@ it from any URL that returns raw Wren source), and it's importable.
 
 ### Multi-File Modules and Self-Imports
 
-This is the part that trips people up: **a relative import inside a
-remote module does not resolve relative to the remote module.**
+A relative import inside a remote module (e.g. `import "helper"` inside
+`gh:someuser/mylib/main.wren`) resolves relative to that module's own
+`owner/repo/path` — not your app's local files — so it correctly fetches
+`gh:someuser/mylib/helper` from the same repo instead of looking for a
+local `helper.wren` in your app.
 
-Bialet resolves relative imports (any import path without a colon) against
-the directory of the top-level `.wren` file that's handling the current
-request — fixed once per request, regardless of how many files or remote
-modules get imported along the way. A module fetched from GitHub has no
-real position in your app's directory tree, so if its own source does a
-plain relative import, Bialet resolves that path against *your app's*
-root, not the module's repo. Best case, the file doesn't exist there and
-you get an import error; worst case, your app happens to have a
-same-named local file and the module silently loads the wrong code.
+**The one thing this doesn't preserve is a version tag.** A relative import
+always resolves to the sibling file's default branch, even when the
+importing file itself was loaded with `@tag`:
 
 ```wren
-// ❌ Wrong — "helper" resolves against the consuming app's directory,
-// not against this module's own repo.
-// File: gh:someuser/mylib/main.wren
+// File: gh:someuser/mylib/main.wren, imported as "gh:someuser/mylib/main@v1.0"
 import "helper" for Helper
+// ❌ This actually fetches gh:someuser/mylib/helper (main branch), not
+// gh:someuser/mylib/helper@v1.0 -- the @v1.0 from main's own import path
+// is not carried over to its relative imports.
 ```
 
-```wren
-// ✅ Correct — reference your own repo explicitly, the same way any
-// consumer would.
-// File: gh:someuser/mylib/main.wren
-import "gh:someuser/mylib/helper" for Helper
-```
-
-If you pin versions internally, keep the tag consistent with the one
-you're publishing, so a given tag of `main.wren` always pulls the matching
-tag of `helper.wren`:
+For anything you publish with tagged releases, always reference your own
+repo explicitly with the matching tag instead of a plain relative import:
 
 ```wren
+// ✅ Correct — the tag travels with the reference, the same way any
+// consumer would pin it.
 // File: gh:someuser/mylib/main.wren, tagged v1.0
 import "gh:someuser/mylib/helper@v1.0" for Helper
 ```
