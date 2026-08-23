@@ -136,7 +136,7 @@ jobs:
       - name: Install MinGW toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64-posix
+          sudo apt-get install -y gcc-mingw-w64-x86-64-posix gcc
 
       - name: Build SQLite (static, for Windows)
         run: |

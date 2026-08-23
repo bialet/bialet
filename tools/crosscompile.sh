@@ -66,7 +66,7 @@ build_windows() {
         set -e
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq && apt-get install -y -qq \
-            gcc-mingw-w64-x86-64-posix make curl unzip perl > /dev/null 2>&1
+            gcc-mingw-w64-x86-64-posix gcc make curl unzip perl > /dev/null 2>&1
 
         CROSS=x86_64-w64-mingw32
         MINGW_ROOT=/usr/${CROSS}
