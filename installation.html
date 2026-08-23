@@ -521,7 +521,8 @@ sudo<span class="w"> </span>mv<span class="w"> </span>bialet<span class="w"> </s
 </section>
 <section id="with-docker">
 <h2>With Docker<a class="headerlink" href="#with-docker" title="Link to this heading">#</a></h2>
-<p>Run the published image directly with <a class="reference external" href="https://docs.docker.com/">Docker</a>:</p>
+<p>Run the published <a class="reference external" href="https://hub.docker.com/r/bialet/bialet"><code class="docutils literal notranslate"><span class="pre">bialet/bialet</span></code></a> image
+directly with <a class="reference external" href="https://docs.docker.com/">Docker</a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-t<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span>:7001<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/var/www<span class="w"> </span>bialet/bialet
 </pre></div>
 </div>
