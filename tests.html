@@ -66,7 +66,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.2" />
+  <meta name="docsearch:version" content="1.0.3" />
   </head>
   
   
@@ -912,7 +912,7 @@ still executes – put it first if the rest of the file should not run.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
 Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
 
-<span class="w">  </span>✓<span class="w"> </span>hi.wren
+<span class="w">  </span>✓<span class="w"> </span>hi.wren<span class="w"> </span><span class="o">(</span>5ms<span class="o">)</span>
 
 Summary:
 
@@ -920,6 +920,7 @@ Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</sp
 Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
 Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
 Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Elapsed<span class="w"> </span>Time:<span class="w"> </span>5ms
 </pre></div>
 </div>
 <p>A failing assertion reports the file and the <code class="docutils literal notranslate"><span class="pre">Fiber.abort</span></code> message under it:</p>
@@ -935,6 +936,7 @@ Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</sp
 Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
 Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
 Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Elapsed<span class="w"> </span>Time:<span class="w"> </span>20ms
 </pre></div>
 </div>
 </section>
@@ -948,7 +950,7 @@ Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</
 and per-test lines down to a single summary line plus a <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">FAIL</span></code> block per
 failure – friendlier for CI logs:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T<span class="w"> </span>-q
-<span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>tests<span class="w"> </span>failed<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">0</span>.02s
+<span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>tests<span class="w"> </span>failed<span class="w"> </span><span class="k">in</span><span class="w"> </span>20ms
 
 <span class="c1">### FAIL _tests/hi.wren:2 - hi</span>
 Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>

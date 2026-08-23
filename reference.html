@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.2" />
+  <meta name="docsearch:version" content="1.0.3" />
   </head>
   
   
@@ -1515,6 +1515,9 @@ string), or <code class="docutils literal notranslate"><span class="pre">&quot;&
 string, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when empty. <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> response headers are stored in the
 jar automatically and sent back on later calls unless a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header is set
 explicitly.</p>
+<p>The jar is scoped per host and honors the <code class="docutils literal notranslate"><span class="pre">Domain</span></code>, <code class="docutils literal notranslate"><span class="pre">Path</span></code>, <code class="docutils literal notranslate"><span class="pre">Secure</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">Max-Age</span></code> cookie attributes, so a cookie set by one host is never sent to a
+different host.</p>
 </section>
 <section id="query-params">
 <h3>query(params)<a class="headerlink" href="#query-params" title="Link to this heading">#</a></h3>

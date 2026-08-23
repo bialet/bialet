@@ -66,7 +66,7 @@
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.2" />
+  <meta name="docsearch:version" content="1.0.3" />
   </head>
   
   
@@ -669,9 +669,9 @@ need to build the URL yourself.</p>
 </section>
 <section id="cookies">
 <h2>Cookies<a class="headerlink" href="#cookies" title="Link to this heading">#</a></h2>
-<p>Response <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> headers are collected into a process-wide cookie jar.
-On later calls, the stored cookies are sent back as a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header — useful
-for maintaining a server-side session across calls:</p>
+<p>Response <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> headers are collected into a cookie jar. On later calls,
+the stored cookies are sent back as a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header — useful for maintaining
+a server-side session across calls:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// First call receives a Set-Cookie and stores it in the jar</span>
 <span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://api.example.com/login"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"form"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"user"</span><span class="o">:</span><span class="w"> </span><span class="s2">"ada"</span><span class="p">}})</span>
 
@@ -679,8 +679,9 @@ for maintaining a server-side session across calls:</p>
 <span class="k">var</span><span class="w"> </span><span class="n">profile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://api.example.com/me"</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The jar is scoped to the whole process, not per host or per domain. If you
-need per-host isolation or want to opt out, set an explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header in
+<p>The jar is scoped per host. <code class="docutils literal notranslate"><span class="pre">Domain</span></code>, <code class="docutils literal notranslate"><span class="pre">Path</span></code>, <code class="docutils literal notranslate"><span class="pre">Secure</span></code>, and <code class="docutils literal notranslate"><span class="pre">Max-Age</span></code> cookie
+attributes are honored, so a cookie set by one host is never sent to a
+different host. If you want to opt out, set an explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header in
 <code class="docutils literal notranslate"><span class="pre">headers</span></code> — it takes precedence over the jar.</p>
 </section>
 <section id="response-handling">
@@ -836,9 +837,9 @@ hanging your app.</p>
 <section id="pitfalls">
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Cookies are process-wide.</strong> The jar sends every stored cookie on every
-call, regardless of host. Scope your calls to trusted hosts, or set an
-explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header to override the jar.</p></li>
+<li><p><strong>The cookie jar does not support <code class="docutils literal notranslate"><span class="pre">Expires</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">Max-Age</span></code>, <code class="docutils literal notranslate"><span class="pre">Domain</span></code>, <code class="docutils literal notranslate"><span class="pre">Path</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">Secure</span></code> are honored, but a cookie that only carries an <code class="docutils literal notranslate"><span class="pre">Expires</span></code> date
+does not auto-expire in the jar.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> on the <em>other</em> side</strong> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for missing keys
 — see <a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a> when you build the receiving end.</p></li>
 <li><p><strong>Redirects are followed</strong> automatically, up to 10 hops.</p></li>
@@ -848,8 +849,8 @@ an unbounded body. Only call APIs you trust.</p></li>
 </section>
 <section id="missing-features">
 <h2>Missing Features<a class="headerlink" href="#missing-features" title="Link to this heading">#</a></h2>
-<p>Not every HTTP client feature is implemented yet. Multipart/file uploads and
-per-host cookie scoping are planned — see the
+<p>Not every HTTP client feature is implemented yet. Multipart/file uploads are
+planned — see the
 <a class="reference external" href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">Roadmap</a>.</p>
 </section>
 </section>

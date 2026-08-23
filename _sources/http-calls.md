@@ -187,9 +187,9 @@ need to build the URL yourself.
 
 ## Cookies
 
-Response `Set-Cookie` headers are collected into a process-wide cookie jar.
-On later calls, the stored cookies are sent back as a `Cookie` header — useful
-for maintaining a server-side session across calls:
+Response `Set-Cookie` headers are collected into a cookie jar. On later calls,
+the stored cookies are sent back as a `Cookie` header — useful for maintaining
+a server-side session across calls:
 
 ```wren
 // First call receives a Set-Cookie and stores it in the jar
@@ -199,8 +199,9 @@ Http.get("https://api.example.com/login", {"form": {"user": "ada"}})
 var profile = Http.get("https://api.example.com/me")
 ```
 
-The jar is scoped to the whole process, not per host or per domain. If you
-need per-host isolation or want to opt out, set an explicit `Cookie` header in
+The jar is scoped per host. `Domain`, `Path`, `Secure`, and `Max-Age` cookie
+attributes are honored, so a cookie set by one host is never sent to a
+different host. If you want to opt out, set an explicit `Cookie` header in
 `headers` — it takes precedence over the jar.
 
 (response-handling)=
@@ -335,9 +336,9 @@ if (!http.call("https://api.example.com/health",
 
 ## Pitfalls
 
-- **Cookies are process-wide.** The jar sends every stored cookie on every
-  call, regardless of host. Scope your calls to trusted hosts, or set an
-  explicit `Cookie` header to override the jar.
+- **The cookie jar does not support `Expires`.** `Max-Age`, `Domain`, `Path`,
+  and `Secure` are honored, but a cookie that only carries an `Expires` date
+  does not auto-expire in the jar.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
 - **Redirects are followed** automatically, up to 10 hops.
@@ -346,6 +347,6 @@ if (!http.call("https://api.example.com/health",
 
 ## Missing Features
 
-Not every HTTP client feature is implemented yet. Multipart/file uploads and
-per-host cookie scoping are planned — see the
+Not every HTTP client feature is implemented yet. Multipart/file uploads are
+planned — see the
 [Roadmap](https://github.com/bialet/bialet/blob/main/ROADMAP.md).

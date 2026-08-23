@@ -394,7 +394,7 @@ Test.get("/hi")
 $ bialet -T
 Running tests in _tests...
 
-  ✓ hi.wren
+  ✓ hi.wren (5ms)
 
 Summary:
 
@@ -402,6 +402,7 @@ Total Tests: 1
 Passed Tests: 1
 Failed Tests: 0
 Skipped Tests: 0
+Elapsed Time: 5ms
 ```
 
 A failing assertion reports the file and the `Fiber.abort` message under it:
@@ -419,6 +420,7 @@ Total Tests: 1
 Passed Tests: 0
 Failed Tests: 1
 Skipped Tests: 0
+Elapsed Time: 20ms
 ```
 
 ## Exit Codes
@@ -432,7 +434,7 @@ failure -- friendlier for CI logs:
 
 ```bash
 $ bialet -T -q
-1 of 1 tests failed in 0.02s
+1 of 1 tests failed in 20ms
 
 ### FAIL _tests/hi.wren:2 - hi
 Expected code to be 200 but was 500
