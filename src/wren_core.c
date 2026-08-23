@@ -1869,8 +1869,11 @@ DEF_PRIMITIVE(query_fetch) {
     ObjMap*           row = wrenNewMap(vm);
     BialetQueryResult res = query->results[i];
     for(int j = 0; j < res.rowCount; j++) {
-      wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name),
-                 wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size));
+      Value colValue =
+          res.rows[j].type == BIALETQUERYTYPE_NULL
+              ? NULL_VAL
+              : wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size);
+      wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name), colValue);
     }
     list->elements.data[i] = OBJ_VAL(row);
   }

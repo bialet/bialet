@@ -226,6 +226,7 @@ run_test "Query non-primitive params  " "query-param-stringify" 200 "node-name|t
 run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
 run_test "Db save delete migrate      " "db-more"         200 "inserted:"
+run_test "NULL column maps to null     " "db-null"         200 "literal:true|bound:true"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"
