@@ -59,7 +59,8 @@ brew install bialet/bialet/bialet
 
 ## With Docker
 
-Run the published image directly with [Docker](https://docs.docker.com/):
+Run the published [`bialet/bialet`](https://hub.docker.com/r/bialet/bialet) image
+directly with [Docker](https://docs.docker.com/):
 
 ```bash
 docker run -t -p 7001:7001 -v "$PWD":/var/www bialet/bialet
