@@ -153,7 +153,7 @@ See [Advanced Routing](advanced-routing.md) for more layout patterns.
 
 Yes, using `import` with a GitHub path:
 
-See [Advanced Routing](advanced-routing.md).
+See [External Modules](external-modules.md).
 
 ### Does Bialet support HTTPS?
 

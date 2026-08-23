@@ -534,198 +534,20 @@ reason to.
 
 ## External Imports
 
-Bialet supports importing external Wren modules from remote sources, so
-you can use community-created libraries without manually downloading and
-managing them.
-
-### Import Syntax
-
-#### 1. GitHub Shorthand (Recommended)
+Bialet supports importing external Wren modules from remote sources —
+`gh:owner/repo/path` shorthand or a full URL — so you can use
+community-created libraries without manually downloading and managing
+them:
 
 ```wren
-import "gh:owner/repo/path/to/file" for ClassName
-```
-
-Fetches from the `main` branch by default. Target a specific branch or tag
-with `@`:
-
-```wren
-import "gh:owner/repo/path/to/file@branch-or-tag" for ClassName
-```
-
-```wren
-// Import emoji utilities from main branch
-import "gh:4lb0/emoji/emoji" for Emoji
-
-// Import from specific version/branch (recommended for stability)
-import "gh:4lb0/emoji/export@1.0" for Emoji as EmojiV1
-
-// Import from a specific tag
-import "gh:username/mylib/module@v2.1.0" for MyClass
-```
-
-- The `.wren` extension is **automatically appended** — don't include it
-  in the import path.
-- Default branch is `main` if you don't specify one.
-- Use `@branch` or `@tag` to pin a specific version.
-
-#### 2. Full URL
-
-```wren
-import "https://example.com/path/to/module.wren" for ClassName
-```
-
-- You **must** include the `.wren` extension in the URL.
-- The URL must return raw Wren source code, not HTML.
-- For GitHub, use `raw.githubusercontent.com` URLs.
-
-```wren
-import "https://raw.githubusercontent.com/4lb0/emoji/main/emoji.wren" for Emoji
-```
-
-### How It Works
-
-1. **Cache check** — Bialet checks whether the module is already cached in
-   the `BIALET_REMOTE_MODULES` database table.
-2. **Download** — if not cached, it downloads the module via HTTP GET.
-3. **Validation** — checks for a 2xx status code.
-4. **Store** — the content is stored in the database, keyed by import
-   path.
-5. **Load** — the module is loaded and made available to your code.
-
-The first load needs an internet connection; every load after that reads
-from the local database — fast, and works offline. Cached modules persist
-until you explicitly clear them.
-
-> ⚠️ Pitfall: cached modules don't auto-update. If you push a fix to the
-> `main` branch of an imported module, running instances keep using the
-> old cached copy until you clear the cache. This is deliberate — treat it
-> as a stability feature, not a bug.
-
-### Cache Management
-
-External modules are cached in `_db.sqlite3`, table `BIALET_REMOTE_MODULES`:
-
-```sql
-CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (
-  module TEXT PRIMARY KEY,      -- The import path (e.g., "gh:user/repo/path")
-  content TEXT,                 -- The cached Wren source code
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-```
-
-```sql
--- Clear all cached external modules (forces re-download on next import)
-DELETE FROM BIALET_REMOTE_MODULES;
-
--- View all cached modules
-SELECT module, createdAt FROM BIALET_REMOTE_MODULES;
-
--- Check cache size
-SELECT COUNT(*), SUM(LENGTH(content)) as total_bytes
-FROM BIALET_REMOTE_MODULES;
-```
-
-After clearing the cache, restart your Bialet application (or trigger a
-reload) to re-download the modules.
-
-### GitHub URL Format
-
-`gh:owner/repo/path@branch` is internally converted to:
-
-```text
-https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path.wren
-```
-
-| Import Statement | Generated URL |
-| --- | --- |
-| `gh:user/lib/utils@dev` | `https://raw.githubusercontent.com/user/lib/refs/heads/dev/utils.wren` |
-| `gh:org/pkg/sub/module@v1.0` | `https://raw.githubusercontent.com/org/pkg/refs/heads/v1.0/sub/module.wren` |
-
-- The `.wren` extension is added automatically.
-- Default branch is `main` if unspecified.
-- The path must resolve to a valid Wren file in the repository.
-- Invalid paths or missing files trigger error messages in the logs.
-
-### Error Handling
-
-**"Invalid GitHub URL"** — the import path doesn't follow
-`gh:owner/repo/path`; owner, repo, or file path is missing.
-
-**"Module not found in GitHub"** — file doesn't exist at that path, the
-branch/tag doesn't exist, the HTTP request returned a non-2xx status, or
-there's a network problem.
-
-**"Import type not supported"** — the import uses a protocol other than
-`gh:`, `http://`, or `https://`.
-
-Check the Bialet logs for details:
-
-```wren
-System.print("Debug: attempting import...")
-```
-
-### Security Considerations
-
-> ⚠️ Pitfall: external imports download and **execute** code from remote
-> sources, with the same privileges as your application. Treat an import
-> statement like adding a dependency, not like a link.
-
-- **Verify the source** before importing.
-- **Review the code** on GitHub when possible.
-- **Use version tags**, not `main`, for stability and predictability.
-- **Cache behavior is a security feature** — once downloaded, a module
-  won't silently change under you.
-
-```wren
-// ✅ Good: well-known, maintained library, pinned version
 import "gh:4lb0/emoji/emoji@1.0" for Emoji
-
-// ❌ Avoid: unknown source, unpinned, unverified
-import "gh:random-user/suspicious-lib/module" for SomeClass
 ```
 
-### Multiple Versions
-
-```wren
-import "gh:user/lib/module" for Module as ModuleLatest
-import "gh:user/lib/module@v1.0" for Module as ModuleV1
-
-// Use specific version based on your needs
-var result = ModuleV1.someFunction()
-```
-
-### Troubleshooting
-
-**Module not found:**
-- Visit the GitHub URL in a browser to confirm the path exists.
-- Check your internet connection (required for first-time downloads).
-- Confirm the branch name — defaults to `main`, not `master`.
-
-**Import fails silently:**
-- Check the Bialet server logs.
-- Confirm the module returns raw Wren code, not HTML or an error page.
-- Try the full URL format to isolate GitHub-shorthand issues.
-
-**Cached version is outdated:**
-
-```sql
-DELETE FROM BIALET_REMOTE_MODULES WHERE module LIKE 'gh:user/repo%';
-```
-
-Then restart your Bialet application. Prefer version tags over branches
-going forward.
-
-**"Import type not supported":**
-- Use `gh:`, `http://`, or `https://` only — no `ftp://`, no `file://`.
-- Check for typos in the import statement.
-
-### Performance Tips
-
-1. Use version tags to avoid unnecessary cache invalidation.
-2. Import only what you need — every import adds to first-load time.
-3. Pre-cache modules in development before deploying.
-4. Monitor cache size if you import many large modules.
+See [External Modules](external-modules.md) for the full import syntax,
+how the download/cache cycle works, how to author and publish your own
+module (including the relative-import restriction inside remote code),
+and how to clear or programmatically refresh the `BIALET_REMOTE_MODULES`
+cache.
 
 ## Key Takeaways
 
@@ -741,4 +563,5 @@ going forward.
 - **No route table** — the file system is the routing table. Nothing to
   register, nothing to keep in sync.
 - **External imports** — `gh:` shorthand or full URLs, cached in
-  `BIALET_REMOTE_MODULES`, never auto-updating once cached.
+  `BIALET_REMOTE_MODULES`, never auto-updating once cached. See
+  [External Modules](external-modules.md) for details.

@@ -47,7 +47,7 @@ Returns `this` — the node is already safe.
 
 ## External Classes
 
-External classes must be imported explicitly using the GitHub shorthand or full URLs. See the [advanced routing documentation](advanced-routing.md) section on External Imports for details on how to import external modules.
+External classes must be imported explicitly using the GitHub shorthand or full URLs. See [External Modules](external-modules.md) for details on how to import, author, and manage external modules.
 
 ---
 
