@@ -73,7 +73,7 @@ def setup(app):
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton']
+extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton', 'sphinx_llms_txt']
 
 templates_path = ['_templates']
 exclude_patterns = ['requirements.txt', 'BIALET_PROMPT.md', 'examples/example.md']
@@ -82,6 +82,17 @@ highlight_language = 'wren'
 highlight_options = {'guess_lang': False}
 
 suppress_warnings = ['misc.highlighting_failure']
+
+# -- Options for sphinx-llms-txt ----------------------------------------------
+# https://sphinx-llms-txt.readthedocs.io/en/latest/configuration-values.html
+
+llms_txt_title = 'Bialet'
+llms_txt_summary = (
+    'A single-binary web framework. Built-in SQLite, a lightweight embedded '
+    'scripting language (Wren), a built-in HTTP server, and zero '
+    'dependencies. Ride light.'
+)
+llms_txt_exclude = ['getting-started']
 
 
 # -- Options for HTML output -------------------------------------------------
