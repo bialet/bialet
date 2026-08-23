@@ -74,10 +74,7 @@ endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
-wren_files:
-	python3 tools/wren_to_c_string.py src/bialet.wren.inc src/bialet.wren
-	python3 tools/wren_to_c_string.py src/bialet_test.wren.inc src/bialet_test.wren
-	python3 tools/wren_to_c_string.py src/wren_core.wren.inc src/wren_core.wren
+wren_files: $(WREN_INCS)
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
@@ -85,6 +82,12 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 # The Wren sources are embedded as C strings via the .inc files, so any object
 # file must be rebuilt when one of them changes.
 WREN_INCS := $(WREN_FILES:%.wren=%.wren.inc)
+
+# Regenerate a .wren.inc whenever its .wren source is newer. Without this rule,
+# editing a .wren file and running plain `make` linked the OLD embedded source
+# into the binary -- only an explicit `make wren_files` picked the change up.
+%.wren.inc: %.wren
+	python3 tools/wren_to_c_string.py $@ $<
 
 # Header dependencies. Without these, editing a header left every object file
 # that includes it stale: a change to a constant such as HASH_AND_SALT_LENGTH
