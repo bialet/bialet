@@ -192,7 +192,89 @@ static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
   free((char*)result.source);
 }
 
+// Resolve a (possibly relative) import name into an absolute, canonical
+// module path before Wren registers it as the importer for any imports the
+// loaded module makes in turn. Without this step, a relative "./x" import
+// inside a file that was itself reached transitively (e.g. "pages/a" imports
+// "./b", and "b" imports "./c") would resolve against a fixed base -- the
+// entry file's own directory -- instead of "b"'s own directory, breaking as
+// soon as "b" is imported from anywhere other than directly by the entry
+// file.
+//
+// Every write to `module` is bounded by sizeof(module). The old code mixed
+// two constants for this one buffer: it was declared MAX_URL_LEN (1024) but
+// appended to with `MAX_MODULE_LEN - strlen(module) - 1` (256-based), so once
+// the prefix passed 255 characters that bound wrapped around to a value near
+// SIZE_MAX and strncat's limit stopped limiting anything. Only an unrelated
+// length guard kept it from overflowing.
+static const char* bialet_wren_resolve_module(WrenVM* vm, const char* importer,
+                                              const char* name) {
+  (void)vm;
+
+  // URLs and "gh:" references are canonical identifiers on their own -- no
+  // directory joining applies to them.
+  if(strchr(name, ':') != NULL)
+    return name;
+
+  // Wren's built-in optional modules ("random", "meta") are looked up by
+  // this exact bare name once loadModuleFn reports no source -- see
+  // importModule() in wren_vm.c. Leave them untouched so that fallback still
+  // matches; joining them against a directory would only ever produce a
+  // nonexistent file path.
+  if(strcmp(name, "random") == 0 || strcmp(name, "meta") == 0)
+    return name;
+
+  char module[MAX_URL_LEN];
+
+  if(name[0] == '/') {
+    if(strlen(name) + strlen(bialet_config.full_root_dir) + 1 > sizeof(module)) {
+      message(red("Error"), "Module name too long.");
+      return NULL;
+    }
+    snprintf(module, sizeof(module), "%s", bialet_config.full_root_dir);
+  } else {
+    // Relative import: resolve against the *importing* module's own
+    // directory -- the `importer` argument Wren passes in here -- rather
+    // than a fixed value, so transitively imported files can use "./x"
+    // imports relative to themselves.
+    char* calledFrom = string_safe_copy(importer);
+    if(calledFrom == NULL) {
+      fprintf(stderr,
+              "Error: Cannot resolve relative import '%s' without application "
+              "context.\n       Use: bialet -t <file> <app_root>\n",
+              name);
+      return NULL;
+    }
+    // Strip the filename, keeping the calling module's directory. Windows
+    // paths use backslashes, so find the last separator of either kind.
+    char* last_sep = NULL;
+    for(char* p = calledFrom; *p != '\0'; p++) {
+      if(*p == '/' || *p == '\\')
+        last_sep = p;
+    }
+    if(strlen(name) + strlen(calledFrom) + 2 > sizeof(module)) {
+      message(red("Error"), "Module name too long.");
+      free(calledFrom);
+      return NULL;
+    }
+    if(last_sep)
+      *last_sep = '\0';
+    snprintf(module, sizeof(module), "%s/", calledFrom);
+    free(calledFrom);
+  }
+
+  size_t used = strlen(module);
+  if(used + 1 >= sizeof(module)) {
+    message(red("Error"), "Module name too long.");
+    return NULL;
+  }
+  strncat(module, name, sizeof(module) - used - 1);
+
+  return string_safe_copy(module);
+}
+
 static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name) {
+  (void)vm;
 
   char                 module[MAX_URL_LEN];
   WrenLoadModuleResult result = {0};
@@ -294,54 +376,15 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     return result;
   }
 
-  // Every write to `module` is bounded by sizeof(module). The old code mixed
-  // two constants for this one buffer: it was declared MAX_URL_LEN (1024) but
-  // appended to with `MAX_MODULE_LEN - strlen(module) - 1` (256-based), so once
-  // the prefix passed 255 characters that bound wrapped around to a value near
-  // SIZE_MAX and strncat's limit stopped limiting anything. Only an unrelated
-  // length guard kept it from overflowing.
-  if(name[0] == '/') {
-    if(strlen(name) + strlen(bialet_config.full_root_dir) + BIALET_EXTENSION_LEN +
-           1 >
-       sizeof(module)) {
-      message(red("Error"), "Module name too long.");
-      return result;
-    }
-    snprintf(module, sizeof(module), "%s", bialet_config.full_root_dir);
-  } else {
-    char* calledFrom = string_safe_copy(wrenGetUserData(vm));
-    if(calledFrom == NULL) {
-      fprintf(stderr,
-              "Error: Cannot resolve relative import '%s' without application "
-              "context.\n       Use: bialet -t <file> <app_root>\n",
-              name);
-      return result;
-    }
-    // Strip the filename, keeping the calling module's directory. Windows
-    // paths use backslashes, so find the last separator of either kind.
-    char* last_sep = NULL;
-    for(char* p = calledFrom; *p != '\0'; p++) {
-      if(*p == '/' || *p == '\\')
-        last_sep = p;
-    }
-    if(strlen(name) + strlen(calledFrom) + BIALET_EXTENSION_LEN + 2 >
-       sizeof(module)) {
-      message(red("Error"), "Module name too long.");
-      free(calledFrom);
-      return result;
-    }
-    if(last_sep)
-      *last_sep = '\0';
-    snprintf(module, sizeof(module), "%s/", calledFrom);
-    free(calledFrom);
-  }
-
-  size_t used = strlen(module);
-  if(used + 1 >= sizeof(module)) {
+  // By the time we get here, `name` is already an absolute, canonical
+  // module path produced by bialet_wren_resolve_module() -- no directory
+  // joining is needed, only the (still relative-to-this-call) extension
+  // normalization and containment check below.
+  if(strlen(name) >= sizeof(module)) {
     message(red("Error"), "Module name too long.");
     return result;
   }
-  strncat(module, name, sizeof(module) - used - 1);
+  snprintf(module, sizeof(module), "%s", name);
 
   size_t name_len = strlen(module);
   if(name_len < BIALET_EXTENSION_LEN ||
@@ -883,7 +926,6 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
   show_errors_clear();
 
   vm = wrenNewVM(&wren_config);
-  wrenSetUserData(vm, module);
   wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
   if(hm) {
     /* Initialize request */
@@ -1103,7 +1145,6 @@ int bialet_validate_syntax(const char* filePath) {
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
-  wrenSetUserData(vm, abs_path);
   /* Initialize core classes (Date, Response) before validating, so scripts
    * that touch Date/Response at the top level don't read uninitialized
    * state and crash. Mirrors bialet_run(). */
@@ -1528,6 +1569,7 @@ void bialet_init(struct BialetConfig* config) {
   wren_config.writeFn = &bialet_wren_write;
   wren_config.errorFn = &bialet_wren_error;
   wren_config.queryFn = &query_execute;
+  wren_config.resolveModuleFn = &bialet_wren_resolve_module;
   wren_config.loadModuleFn = &bialet_wren_load_module;
   wren_config.enableTests = config->enable_tests;
 

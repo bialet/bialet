@@ -80,6 +80,12 @@ else
   skip_test "Syntax validation (11 checks)  " "requires local binary access (-t flag)"
 fi
 
+# Tests - Module imports
+# Regression: a relative import ("./x") inside a file that is itself only
+# ever reached transitively (entry.wren -> ./sub/lib -> ./helper) must
+# resolve against the importing file's own directory, not the entry file's.
+run_test "Nested relative import         " "import-nested/entry" 200 "hi from helper"
+
 # Tests - Request & Response
 run_test "Get the URL parameter       " "get?foo=bar"     200 "bar"
 run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"
