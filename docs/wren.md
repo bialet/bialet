@@ -128,6 +128,14 @@ var t = s + " world"   // "hello world"
 Strings are immutable. Index with `s[i]` to get a single-character string at
 byte offset `i`. `.count` is the byte length.
 
+> ⚠️ Pitfall: strings don't implement `<`, `>`, `<=`, or `>=` —
+> `"a" < "b"` raises `String does not implement '<(_)'.`. Only `==` and
+> `!=` work directly. To sort or compare strings by value (e.g.
+> `"YYYY-MM-DD"` dates as text), convert to a comparable number first —
+> for dates, a Julian day number; for single characters, `.codePoints`
+> gives you comparable `Num`s you can rebuild with
+> `String.fromCodePoint(n)`.
+
 ### Null
 
 ```wren
@@ -425,6 +433,29 @@ value was dropped. Keep the expression on the same line as `{` when you want the
 implicit return, and use an explicit `return` for any multi-line method that
 must return a value.
 
+> ⚠️ Pitfall: this rule applies to block arguments (`.map { }`, `.where { }`,
+> `Fn.new { }`, ...) exactly the same way, and it's easy to miss there
+> because there's no error — the block just silently returns `null` for
+> every call:
+> ```wren
+> // Bug: filters out everything. `libre` never gets returned because it's
+> // not on the same line as `{`, so the block's value is null every time.
+> list.where { |x|
+>   var libre = true
+>   if (x == 2) libre = false
+>   libre
+> }.toList  // -> []
+>
+> // Fixed: explicit return
+> list.where { |x|
+>   var libre = true
+>   if (x == 2) libre = false
+>   return libre
+> }.toList  // -> the actual filtered list
+> ```
+> A single-expression block (`{ |x| x * 2 }`) is unaffected — implicit
+> return always works there since the expression is already on the `{` line.
+
 ### When You Need `return`
 
 For multiline methods that branch early, use explicit `return`:
@@ -614,6 +645,34 @@ unsupported** in Bialet.
 
 Do not rely on Fibers for application logic. Use the database or session store
 when you need to persist state across request cycles.
+
+### `Fiber.try()` for Contained Failure
+
+While cooperative multitasking (`yield`/`call`/`transfer`) is unsupported,
+`Fiber.new { ... }.try()` works well for a different, common purpose:
+containing a call that might throw so it can't take the whole request down.
+This is the idiomatic way to call an external service (or any risky code)
+as best-effort, degrading gracefully instead of failing the page:
+
+```wren
+var fiber = Fiber.new {
+  return Http.get("https://flaky-service.example.com/status")
+}
+var value = fiber.try()
+if (fiber.error) {
+  // fiber.error holds the error message (a String); log it and degrade
+  System.log("Best-effort call failed: %(fiber.error)")
+} else {
+  // use value
+}
+```
+
+`fiber.try()` never propagates the exception to the caller — `fiber.error`
+is set (non-`null`) when the block raised one, and stays `null` otherwise.
+`Http.get`/`post`/`put`/`delete` already do this internally (see
+[HTTP Calls](http-calls.md)), so you only need this pattern yourself for
+other code paths that can throw — a third-party import, `Json.parse` on
+untrusted input, or your own domain logic.
 
 ### Bialet-Specific Classes
 

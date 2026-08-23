@@ -143,7 +143,22 @@ class Poll {
 
 // null is forgiving: null["key"], null.count, null.map, null.toString don't
 // throw; other method calls on null are runtime errors
+
+// Strings only implement == and != -- no <, >, <=, >=.
+// "a" < "b" raises "String does not implement '<(_)'."
 ```
+
+> **Pitfall:** `return <tag>` on the same physical line is a compile error
+> (`Expected expression` at `return`), regardless of what's inside the tag.
+> Always put the tag on the line after `return`:
+> ```wren
+> // WRONG
+> list.map { |x| return <div>{{ x }}</div> }
+> // CORRECT
+> list.map { |x|
+>   return <div>{{ x }}</div>
+> }
+> ```
 
 **Inline HTML strings** are Wren's template mechanism — no separate template
 language:
@@ -176,12 +191,28 @@ classes, attributes, or whole HTML blocks:
 <span class="{{ task.finished ? "done" : "pending" }}">{{ task.description }}</span>
 ```
 
-**Iteration** uses `map`, and the callback must be a **single expression**
-(no multi-statement blocks, no `var` declarations inside it):
+**Iteration** uses `map`/`where`/etc. A block whose body is a single
+expression on the same line as `{` returns it implicitly:
 
 ```wren
 {{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
 ```
+
+> **Pitfall:** a multi-line block body is allowed but does **not**
+> implicitly return — without an explicit `return`, the block's value is
+> always `null` for every call, no error raised:
+> ```wren
+> // BUG: returns [] every time, "libre" is on its own line so it's discarded
+> list.where { |x|
+>   var libre = someCheck(x)
+>   libre
+> }.toList
+> // FIX: add explicit return
+> list.where { |x|
+>   var libre = someCheck(x)
+>   return libre
+> }.toList
+> ```
 
 > **Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;
 > HTML strings inside it can too. Infix operators (`&&`, `?`, `:`, ...) end
@@ -542,6 +573,7 @@ class User {
     _name = data["name"] || ""
     _email = data["email"] || ""
     _createdAt = data["createdAt"]
+    if (!_createdAt) _createdAt = Date.new().toString
   }
   static new() { User.new({}) }
 
@@ -564,8 +596,44 @@ class User {
 }
 ```
 
+> **CRITICAL: `` `table`.save(this) `` persists exactly one value per
+> underlying field, in field-declaration order — not one per getter, and
+> not one per constructor argument.** Every real table column needs a
+> corresponding field (a getter like `createdAt { _createdAt }` is enough
+> to make the field exist, even if you never assign it), or `save()` fails
+> with `table X has N columns but M values were supplied`. A field that
+> evaluates to `null` also defeats any SQL `DEFAULT` on that column, since
+> SQLite only applies `DEFAULT` when a column is omitted from the INSERT,
+> never when it's explicitly `NULL` — set the real value in the
+> constructor instead (`if (!_createdAt) _createdAt = Date.new().toString`
+> above), don't rely on the table default.
+
 `.to(Class)` maps query results (`.fetch`, `.first`, or any Map/List of Maps)
 to instances of a class whose `construct new(data)` accepts a Map.
+
+## Dates
+
+```wren
+var now = Date.new()                              // current UTC date/time
+var d = Date.new(2024, 9, 13, 15, 45, 30)          // explicit fields
+var fromDb = Date.new(row["createdAt"])            // "YYYY-MM-DD[ HH:MM:SS]" string
+
+d.year; d.month; d.day                             // singular
+d.hours; d.minutes; d.seconds                      // PLURAL -- d.hour raises an error
+d.unix                                              // Unix timestamp (seconds)
+d.format("#Y-#m-#d")                                // strftime-style tokens, # not %
+d1 < d2; d1 == d2; d1.diff(d2)                      // comparisons work; diff() is seconds
+```
+
+> **CRITICAL:** `Date` has **no** `+`/`-` operators — `date + 86400` raises
+> `Date does not implement '+(_)'.`. There is also no way to build a `Date`
+> from a Unix timestamp number (`Date.new(1700000000)` raises
+> `Num does not implement 'split(_)'.`) — the constructor only accepts a
+> `"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To
+> compare two instants, use `.diff`/`.unix` (both plain numbers); to add or
+> subtract calendar days, do the arithmetic on `year`/`month`/`day`
+> yourself (see [Date and Time](datetime.md) for a verified algorithm) —
+> there is no shortcut for either.
 
 ## Controllers: Logic at the Top, View at the Bottom
 
@@ -573,8 +641,8 @@ Each `.wren` page file is a controller: handle the request first, then render.
 
 ```wren
 // users/index.wren — controller for /users
-import "_app/template" for Layout
-import "_app/domain" for User
+import "/_app/template" for Layout
+import "/_app/domain" for User
 
 // === CONTROLLER ===
 if (Request.isPost) {
@@ -675,10 +743,20 @@ Request.isPost      // true for POST
 var id = Request.route(0)
 
 // Basic auth
-if (Request.login("admin", "secret") == false) {
-  // authenticated
-}
+if (Request.login("admin", "secret") != false) return
+// ... authenticated code below ...
 ```
+
+> **Pitfall:** `Request.get(name)` never reads the POST body, even when the
+> current request is a POST — it only ever reads the URL query string. If a
+> value needs to survive both a GET (rendering a form) and the POST that
+> submits it, read both explicitly: `Request.get("slug") || Request.post("slug")`.
+>
+> **Pitfall:** on failed Basic auth, `Request.login` sets a `401` status and
+> the `WWW-Authenticate` header but does **not** stop the script by itself
+> — always `return` immediately when it's not `false` (as above), or the
+> rest of the handler still runs and its output becomes the body of the
+> 401 response.
 
 ## Response Handling
 
@@ -740,7 +818,7 @@ CSRF: `Session.csrf` renders a hidden input field with a token; check it with
 
 ```wren
 // _app/cron.wren
-import "_app/domain" for Task
+import "/_app/domain" for Task
 
 // Runs when the current minute is divisible by the given value
 // (safe values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 — anything that
@@ -789,6 +867,17 @@ import "https://raw.githubusercontent.com/owner/repo/main/module.wren" for Class
 The `.wren` extension is auto-appended for `gh:` imports (required for full
 URLs). Modules are downloaded once and cached in `BIALET_REMOTE_MODULES` —
 they never auto-update, so pin a tag for anything beyond a quick experiment.
+
+**Local project imports without a leading `/`** (`import "_app/domain" for
+User`, `import "./helper" for Helper`) are relative to the directory of the
+file doing the importing — not to the project root — and that's true at
+every level, including files reached transitively. Writing `import
+"_app/domain" for User` from a root-level page (`index.wren`) works because
+the page's own directory *is* the project root, but the exact same string
+written inside a file that already lives under `_app/` would look for
+`_app/_app/domain.wren` instead. **Prefer a leading `/`** — `import
+"/_app/domain" for User` — for anything in `_app/`; it always resolves from
+the project root no matter which file imports it or how deep it is.
 
 ## Markdown
 
@@ -932,11 +1021,13 @@ class Task {
     _finished = data["finished"] || false
     _session = data["session"] || Session.id
     _createdAt = data["createdAt"]
+    if (!_createdAt) _createdAt = Date.new().toString
   }
   static new() { Task.new({}) }
 
   id { _id }
   description { _description }
+  createdAt { _createdAt }
   finished { _finished == "1" || _finished == true }
   description=(val) { _description = val.toString.trim() }
 

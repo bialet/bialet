@@ -431,7 +431,7 @@ should be your default.
 **File:** `blog/_route.wren`
 
 ```wren
-import "_app/template" for Template
+import "/_app/template" for Template
 
 var slug = Request.route(0)
 

@@ -15,7 +15,7 @@ Wren cron file. These methods receive a block that is called at the specified
 time.
 
 ```wren
-import "_app/domain" for Task
+import "/_app/domain" for Task
 
 // Every 2 minutes
 Cron.every(2) { |date| System.log("Hello, from Cron!") }

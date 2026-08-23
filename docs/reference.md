@@ -157,6 +157,15 @@ to prompt for credentials.
 - `pass`: The expected password.
 - Returns: `false` if authenticated successfully.
 
+> ⚠️ Pitfall: on failure, `Request.login` sets the response status to `401`
+> and the `WWW-Authenticate` header, but does **not** stop the script. Always
+> `return` immediately when it's not `false`, or the rest of the handler
+> still runs and its output becomes the body of the 401 response:
+> ```wren
+> if (Request.login("admin", "secret") != false) return
+> // ... protected code ...
+> ```
+
 ## Response
 
 A class to construct and manage HTTP responses, including setting headers,
