@@ -84,6 +84,10 @@ fi
 run_test "Get the URL parameter       " "get?foo=bar"     200 "bar"
 run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"
 run_test "Get the route parameter     " "route/baz/qux"   200 "bazqux"
+# Regression: dynamic segment sharing a letter prefix with the directory name
+# (e.g. dir "reservar", segment "reunion-30min" both start with "re") must not
+# be truncated by the route-prefix stripping logic.
+run_test "Route param w/ dir overlap   " "reservar/reunion-30min" 200 "reunion-30min"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
 # Regression: a planted sub/_route.wren -> ../_db.sqlite3 symlink must not

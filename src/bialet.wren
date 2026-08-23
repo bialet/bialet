@@ -20,7 +20,8 @@ class Request {
     __method = tmp[0].upper
     __fullUri = tmp[1]
     __body = ""
-    __route = __fullUri.trimStart(route.count>0 ? route : "/").split("/")
+    var routeRest = (route.count > 0 && __fullUri.startsWith(route)) ? __fullUri[route.count..-1] : __fullUri
+    __route = routeRest.trimStart("/").split("/")
     var uriSeparator = __fullUri.indexOf("?")
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
