@@ -5,6 +5,8 @@ Bialet
     :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
     :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
+.. llms-txt-ignore-start
+
 .. raw:: html
 
    <div style="text-align: center; margin: 2em 0 1em 0">
@@ -108,6 +110,8 @@ Bialet
        <a href="ai-prompt.html">View the full prompt →</a>
      </p>
    </div>
+
+.. llms-txt-ignore-end
 
 ----
 
@@ -269,12 +273,16 @@ Who is Bialet for?
 
 ----
 
+.. llms-txt-ignore-start
+
 .. raw:: html
 
    <div style="text-align: center; margin: 1.5em 0">
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html" style="margin: 0.35em">Full Documentation</a>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
    </div>
+
+.. llms-txt-ignore-end
 
 .. toctree::
    :hidden:
