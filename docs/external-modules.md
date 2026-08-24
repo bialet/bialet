@@ -130,7 +130,7 @@ it from any URL that returns raw Wren source), and it's importable.
 - **Tag releases with git tags** (`v1.0`, `v1.1`, ...) instead of only
   publishing to `main`. Consumers pin `@v1.0` for stability; you keep
   `main` for in-progress work. This is for *your* consumers' benefit —
-  see [Cache Management](#cache-management) for why pinning matters on
+  :ref:`Cache Management` for why pinning matters on
   the consuming side.
 - **Document the exported API** with a `README.md` in the repo (a Wren
   doc-comment format doesn't exist) — show the exact `import` line, since
@@ -175,7 +175,7 @@ import "gh:someuser/mylib/helper@v1.0" for Helper
 > intended. Bump every internal self-reference together with the release
 > tag.
 
-## Cache Management
+## Cache Management {#cache-management}
 
 External modules are cached in `_db.sqlite3`, table `BIALET_REMOTE_MODULES`:
 
