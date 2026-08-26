@@ -117,9 +117,14 @@ static void migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
-  if(snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, MIGRATION_FILE) >=
-         (int)sizeof(path) ||
-     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+  // Built from full_root_dir (already realpath()-resolved at startup), not
+  // root_dir: read_file() opens absolute paths component-by-component with
+  // O_NOFOLLOW, so a symlinked ancestor in the raw root_dir (e.g. macOS's
+  // /var -> /private/var, under which mktemp -d places its directories)
+  // made every openat() fail with ELOOP and silently dropped the migration.
+  if(snprintf(path, sizeof(path), "%s%s", bialet_config.full_root_dir,
+              MIGRATION_FILE) >= (int)sizeof(path) ||
+     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.full_root_dir,
               MIGRATION_FILE_ALT) >= (int)sizeof(altPath)) {
     message(red("Error"), "Migration path too long");
     return;
@@ -142,9 +147,11 @@ static void install_cron() {
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
   char* new_code = 0;
-  if(snprintf(path, sizeof(path), "%s%s", bialet_config.root_dir, CRON_FILE) >=
+  // See the matching comment in migrate(): must use full_root_dir, not
+  // root_dir, or read_file()'s O_NOFOLLOW walk fails on a symlinked ancestor.
+  if(snprintf(path, sizeof(path), "%s%s", bialet_config.full_root_dir, CRON_FILE) >=
          (int)sizeof(path) ||
-     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.root_dir,
+     snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.full_root_dir,
               CRON_FILE_ALT) >= (int)sizeof(altPath)) {
     message(red("Error"), "Cron path too long");
     return;
