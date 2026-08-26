@@ -58,14 +58,14 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -595,7 +595,22 @@ the upstream language). A few things you need to know to write correct code:
 
 <span class="c1">// null is forgiving: null["key"], null.count, null.map, null.toString don't</span>
 <span class="c1">// throw; other method calls on null are runtime errors</span>
+
+<span class="c1">// Strings only implement == and != -- no &lt;, &gt;, &lt;=, &gt;=.</span>
+<span class="c1">// "a" &lt; "b" raises "String does not implement '&lt;(_)'."</span>
 <span class="sb">```</span>
+
+<span class="k">&gt; </span><span class="ge">**Pitfall:** `return &lt;tag&gt;` on the same physical line is a compile error</span>
+<span class="k">&gt; </span><span class="ge">(`Expected expression` at `return`), regardless of what's inside the tag.</span>
+<span class="k">&gt; </span><span class="ge">Always put the tag on the line after `return`:</span>
+<span class="k">&gt; </span><span class="ge">```wren</span>
+<span class="k">&gt; </span><span class="ge">// WRONG</span>
+<span class="k">&gt; </span><span class="ge">list.map { |x| return &lt;div&gt;{{ x }}&lt;/div&gt; }</span>
+<span class="k">&gt; </span><span class="ge">// CORRECT</span>
+<span class="k">&gt; </span><span class="ge">list.map { |x|</span>
+<span class="k">&gt; </span><span class="ge">  return &lt;div&gt;{{ x }}&lt;/div&gt;</span>
+<span class="k">&gt; </span><span class="ge">}</span>
+<span class="k">&gt; </span><span class="ge">```</span>
 
 <span class="gs">**Inline HTML strings**</span> are Wren's template mechanism — no separate template
 language:
@@ -628,12 +643,28 @@ classes, attributes, or whole HTML blocks:
 <span class="x">&lt;span class="{{ task.finished ? "done" : "pending" }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
 <span class="sb">```</span>
 
-<span class="gs">**Iteration**</span> uses <span class="sb">`map`</span>, and the callback must be a <span class="gs">**single expression**</span>
-(no multi-statement blocks, no <span class="sb">`var`</span> declarations inside it):
+<span class="gs">**Iteration**</span> uses <span class="sb">`map`</span>/<span class="sb">`where`</span>/etc. A block whose body is a single
+expression on the same line as <span class="sb">`{`</span> returns it implicitly:
 
 <span class="sb">```wren</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="sb">```</span>
+
+<span class="k">&gt; </span><span class="ge">**Pitfall:** a multi-line block body is allowed but does **not**</span>
+<span class="k">&gt; </span><span class="ge">implicitly return — without an explicit `return`, the block's value is</span>
+<span class="k">&gt; </span><span class="ge">always `null` for every call, no error raised:</span>
+<span class="k">&gt; </span><span class="ge">```wren</span>
+<span class="k">&gt; </span><span class="ge">// BUG: returns [] every time, "libre" is on its own line so it's discarded</span>
+<span class="k">&gt; </span><span class="ge">list.where { |x|</span>
+<span class="k">&gt; </span><span class="ge">  var libre = someCheck(x)</span>
+<span class="k">&gt; </span><span class="ge">  libre</span>
+<span class="k">&gt; </span><span class="ge">}.toList</span>
+<span class="k">&gt; </span><span class="ge">// FIX: add explicit return</span>
+<span class="k">&gt; </span><span class="ge">list.where { |x|</span>
+<span class="k">&gt; </span><span class="ge">  var libre = someCheck(x)</span>
+<span class="k">&gt; </span><span class="ge">  return libre</span>
+<span class="k">&gt; </span><span class="ge">}.toList</span>
+<span class="k">&gt; </span><span class="ge">```</span>
 
 <span class="k">&gt; </span><span class="ge">**Pitfall:** the Wren expression inside `{{ }}` can span multiple lines;</span>
 <span class="k">&gt; </span><span class="ge">HTML strings inside it can too. Infix operators (`&amp;&amp;`, `?`, `:`, ...) end</span>
@@ -994,6 +1025,7 @@ caution, but never drop or restructure them.
 <span class="w">    </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">    </span><span class="vi">_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"email"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="vi">_createdAt</span><span class="p">)</span><span class="w"> </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
 
@@ -1016,8 +1048,44 @@ caution, but never drop or restructure them.
 <span class="p">}</span>
 <span class="sb">```</span>
 
+<span class="k">&gt; </span><span class="ge">**CRITICAL: `` `table`.save(this) `` persists exactly one value per</span>
+<span class="k">&gt; </span><span class="ge">underlying field, in field-declaration order — not one per getter, and</span>
+<span class="k">&gt; </span><span class="ge">not one per constructor argument.** Every real table column needs a</span>
+<span class="k">&gt; </span><span class="ge">corresponding field (a getter like `createdAt { _createdAt }` is enough</span>
+<span class="k">&gt; </span><span class="ge">to make the field exist, even if you never assign it), or `save()` fails</span>
+<span class="k">&gt; </span><span class="ge">with `table X has N columns but M values were supplied`. A field that</span>
+<span class="k">&gt; </span><span class="ge">evaluates to `null` also defeats any SQL `DEFAULT` on that column, since</span>
+<span class="k">&gt; </span><span class="ge">SQLite only applies `DEFAULT` when a column is omitted from the INSERT,</span>
+<span class="k">&gt; </span><span class="ge">never when it's explicitly `NULL` — set the real value in the</span>
+<span class="k">&gt; </span><span class="ge">constructor instead (`if (!_createdAt) _createdAt = Date.new().toString`</span>
+<span class="k">&gt; </span><span class="ge">above), don't rely on the table default.</span>
+
 <span class="sb">`.to(Class)`</span> maps query results (<span class="sb">`.fetch`</span>, <span class="sb">`.first`</span>, or any Map/List of Maps)
 to instances of a class whose <span class="sb">`construct new(data)`</span> accepts a Map.
+
+<span class="gu">## Dates</span>
+
+<span class="sb">```wren</span>
+<span class="k">var</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="w">                              </span><span class="c1">// current UTC date/time</span>
+<span class="k">var</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">)</span><span class="w">          </span><span class="c1">// explicit fields</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fromDb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">])</span><span class="w">            </span><span class="c1">// "YYYY-MM-DD[ HH:MM:SS]" string</span>
+
+<span class="n">d</span><span class="o">.</span><span class="n">year</span><span class="err">;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">month</span><span class="err">;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">day</span><span class="w">                             </span><span class="c1">// singular</span>
+<span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="err">;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">minutes</span><span class="err">;</span><span class="w"> </span><span class="n">d</span><span class="o">.</span><span class="n">seconds</span><span class="w">                      </span><span class="c1">// PLURAL -- d.hour raises an error</span>
+<span class="n">d</span><span class="o">.</span><span class="n">unix</span><span class="w">                                              </span><span class="c1">// Unix timestamp (seconds)</span>
+<span class="n">d</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w">                                </span><span class="c1">// strftime-style tokens, # not %</span>
+<span class="n">d1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">d2</span><span class="err">;</span><span class="w"> </span><span class="n">d1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">d2</span><span class="err">;</span><span class="w"> </span><span class="n">d1</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span><span class="w">                      </span><span class="c1">// comparisons work; diff() is seconds</span>
+<span class="sb">```</span>
+
+<span class="k">&gt; </span><span class="ge">**CRITICAL:** `Date` has **no** `+`/`-` operators — `date + 86400` raises</span>
+<span class="k">&gt; </span><span class="ge">`Date does not implement '+(_)'.`. There is also no way to build a `Date`</span>
+<span class="k">&gt; </span><span class="ge">from a Unix timestamp number (`Date.new(1700000000)` raises</span>
+<span class="k">&gt; </span><span class="ge">`Num does not implement 'split(_)'.`) — the constructor only accepts a</span>
+<span class="k">&gt; </span><span class="ge">`"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To</span>
+<span class="k">&gt; </span><span class="ge">compare two instants, use `.diff`/`.unix` (both plain numbers); to add or</span>
+<span class="k">&gt; </span><span class="ge">subtract calendar days, do the arithmetic on `year`/`month`/`day`</span>
+<span class="k">&gt; </span><span class="ge">yourself (see [Date and Time](datetime.md) for a verified algorithm) —</span>
+<span class="k">&gt; </span><span class="ge">there is no shortcut for either.</span>
 
 <span class="gu">## Controllers: Logic at the Top, View at the Bottom</span>
 
@@ -1025,8 +1093,8 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 
 <span class="sb">```wren</span>
 <span class="c1">// users/index.wren — controller for /users</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">User</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">User</span>
 
 <span class="c1">// === CONTROLLER ===</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1127,10 +1195,20 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="c1">// Basic auth</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span><span class="w"> </span><span class="s2">"secret"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// authenticated</span>
-<span class="p">}</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span><span class="w"> </span><span class="s2">"secret"</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+<span class="c1">// ... authenticated code below ...</span>
 <span class="sb">```</span>
+
+<span class="k">&gt; </span><span class="ge">**Pitfall:** `Request.get(name)` never reads the POST body, even when the</span>
+<span class="k">&gt; </span><span class="ge">current request is a POST — it only ever reads the URL query string. If a</span>
+<span class="k">&gt; </span><span class="ge">value needs to survive both a GET (rendering a form) and the POST that</span>
+<span class="k">&gt; </span><span class="ge">submits it, read both explicitly: `Request.get("slug") || Request.post("slug")`.</span>
+<span class="k">&gt;</span>
+<span class="ge">&gt; **Pitfall:** on failed Basic auth, `Request.login` sets a `401` status and</span>
+<span class="k">&gt; </span><span class="ge">the `WWW-Authenticate` header but does **not** stop the script by itself</span>
+<span class="k">&gt; </span><span class="ge">— always `return` immediately when it's not `false` (as above), or the</span>
+<span class="k">&gt; </span><span class="ge">rest of the handler still runs and its output becomes the body of the</span>
+<span class="k">&gt; </span><span class="ge">401 response.</span>
 
 <span class="gu">## Response Handling</span>
 
@@ -1192,7 +1270,7 @@ CSRF: <span class="sb">`Session.csrf`</span> renders a hidden input field with a
 
 <span class="sb">```wren</span>
 <span class="c1">// _app/cron.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
 
 <span class="c1">// Runs when the current minute is divisible by the given value</span>
 <span class="c1">// (safe values: 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30 — anything that</span>
@@ -1241,6 +1319,17 @@ Import community Wren modules straight from GitHub — no package manager:
 The <span class="sb">`.wren`</span> extension is auto-appended for <span class="sb">`gh:`</span> imports (required for full
 URLs). Modules are downloaded once and cached in <span class="sb">`BIALET_REMOTE_MODULES`</span> —
 they never auto-update, so pin a tag for anything beyond a quick experiment.
+
+<span class="gs">**Local project imports without a leading `/`**</span> (`import "_app/domain" for
+User`, <span class="sb">`import "./helper" for Helper`</span>) are relative to the directory of the
+file doing the importing — not to the project root — and that's true at
+every level, including files reached transitively. Writing `import
+"_app/domain" for User` from a root-level page (<span class="sb">`index.wren`</span>) works because
+the page's own directory <span class="ge">*is*</span> the project root, but the exact same string
+written inside a file that already lives under <span class="sb">`_app/`</span> would look for
+<span class="sb">`_app/_app/domain.wren`</span> instead. <span class="gs">**Prefer a leading `/`**</span> — `import
+"/_app/domain" for User` — for anything in <span class="sb">`_app/`</span>; it always resolves from
+the project root no matter which file imports it or how deep it is.
 
 <span class="gu">## Markdown</span>
 
@@ -1384,11 +1473,13 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="w">    </span><span class="vi">_finished</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"finished"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">    </span><span class="vi">_session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"session"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span>
 <span class="w">    </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="vi">_createdAt</span><span class="p">)</span><span class="w"> </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">new</span><span class="p">({})</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">description</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_description</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">createdAt</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_createdAt</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">finished</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"1"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">_finished</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
 

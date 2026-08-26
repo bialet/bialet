@@ -854,6 +854,14 @@ var t = s + " world"   // "hello world"
 Strings are immutable. Index with `s[i]` to get a single-character string at
 byte offset `i`. `.count` is the byte length.
 
+> ⚠️ Pitfall: strings don't implement `<`, `>`, `<=`, or `>=` —
+> `"a" < "b"` raises `String does not implement '<(_)'.`. Only `==` and
+> `!=` work directly. To sort or compare strings by value (e.g.
+> `"YYYY-MM-DD"` dates as text), convert to a comparable number first —
+> for dates, a Julian day number; for single characters, `.codePoints`
+> gives you comparable `Num`s you can rebuild with
+> `String.fromCodePoint(n)`.
+
 ### Null
 
 ```wren
@@ -1151,6 +1159,29 @@ value was dropped. Keep the expression on the same line as `{` when you want the
 implicit return, and use an explicit `return` for any multi-line method that
 must return a value.
 
+> ⚠️ Pitfall: this rule applies to block arguments (`.map { }`, `.where { }`,
+> `Fn.new { }`, ...) exactly the same way, and it's easy to miss there
+> because there's no error — the block just silently returns `null` for
+> every call:
+> ```wren
+> // Bug: filters out everything. `libre` never gets returned because it's
+> // not on the same line as `{`, so the block's value is null every time.
+> list.where { |x|
+>   var libre = true
+>   if (x == 2) libre = false
+>   libre
+> }.toList  // -> []
+>
+> // Fixed: explicit return
+> list.where { |x|
+>   var libre = true
+>   if (x == 2) libre = false
+>   return libre
+> }.toList  // -> the actual filtered list
+> ```
+> A single-expression block (`{ |x| x * 2 }`) is unaffected — implicit
+> return always works there since the expression is already on the `{` line.
+
 ### When You Need `return`
 
 For multiline methods that branch early, use explicit `return`:
@@ -1340,6 +1371,34 @@ unsupported** in Bialet.
 
 Do not rely on Fibers for application logic. Use the database or session store
 when you need to persist state across request cycles.
+
+### `Fiber.try()` for Contained Failure
+
+While cooperative multitasking (`yield`/`call`/`transfer`) is unsupported,
+`Fiber.new { ... }.try()` works well for a different, common purpose:
+containing a call that might throw so it can't take the whole request down.
+This is the idiomatic way to call an external service (or any risky code)
+as best-effort, degrading gracefully instead of failing the page:
+
+```wren
+var fiber = Fiber.new {
+  return Http.get("https://flaky-service.example.com/status")
+}
+var value = fiber.try()
+if (fiber.error) {
+  // fiber.error holds the error message (a String); log it and degrade
+  System.log("Best-effort call failed: %(fiber.error)")
+} else {
+  // use value
+}
+```
+
+`fiber.try()` never propagates the exception to the caller — `fiber.error`
+is set (non-`null`) when the block raised one, and stays `null` otherwise.
+`Http.get`/`post`/`put`/`delete` already do this internally (see
+[HTTP Calls](http-calls.md)), so you only need this pattern yourself for
+other code paths that can throw — a third-party import, `Json.parse` on
+untrusted input, or your own domain logic.
 
 ### Bialet-Specific Classes
 
@@ -2351,6 +2410,29 @@ class Rectangle {
 }
 ```
 
+> ⚠️ Pitfall: `save()` on a class instance persists exactly one value per
+> underlying field (`_width`, `_height`, ...), in the order those fields are
+> first referenced in the class body — **not** one per getter. In practice
+> this means every real table column needs a corresponding field, or
+> `save()` fails with a SQLite error like `table users has 5 columns but 3
+> values were supplied`. The safest way to guarantee this is to define a
+> getter for *every* column, even ones you don't otherwise need to read
+> (`createdAt { _createdAt }` is enough — you don't have to assign
+> `_createdAt` in the constructor for it to count towards the field total,
+> though it will insert as `null` if you never do). Add a new column later
+> and forget its getter, and every `save()` on that class starts failing.
+>
+> A getter that evaluates to `null` also defeats a `DEFAULT` on that
+> column: SQLite only applies `DEFAULT` when a column is *omitted* from the
+> `INSERT`, not when it's explicitly set to `NULL`, and `save()` always
+> supplies every field. For a column like `createdAt DATETIME DEFAULT
+> CURRENT_TIMESTAMP`, set the real value yourself when the field is empty
+> instead of relying on the table default:
+> ```wren
+> _createdAt = data["createdAt"]
+> if (!_createdAt) _createdAt = Date.new().toString
+> ```
+
 ## Data Types and BLOB Support
 
 SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
@@ -2612,24 +2694,75 @@ var date = Date.new()
 System.print("Year: %(date.year)")
 System.print("Month: %(date.month)")
 System.print("Day: %(date.day)")
-System.print("Hour: %(date.hour)")
-System.print("Minute: %(date.minute)")
-System.print("Second: %(date.second)")
+System.print("Hours: %(date.hours)")
+System.print("Minutes: %(date.minutes)")
+System.print("Seconds: %(date.seconds)")
 System.print("Unix Timestamp: %(date.unix)")
 ```
 
-## Adding and Subtracting Dates
+> ⚠️ Pitfall: the time-of-day getters are **plural** — `.hours`, `.minutes`,
+> `.seconds` — unlike `.year`, `.month`, and `.day`, which are singular.
+> `date.hour` raises `Date does not implement 'hour'.`.
 
-You can easily add or subtract time from a `Date` object:
+## Adding and Subtracting Time
+
+`Date` does **not** implement `+`/`-` — `date + 86400` raises
+`Date does not implement '+(_)'.`. There is also no way to build a `Date`
+directly from a Unix timestamp number — `Date.new(1700000000)` raises
+`Num does not implement 'split(_)'.` (the constructor always expects a
+string in `"YYYY-MM-DD"` or `"YYYY-MM-DD HH:MM:SS"` format, or another
+`Date`).
+
+For two **instants** (comparing "how many seconds apart"), use `.unix` and
+`.diff` directly — both already return plain numbers:
 
 ```wren
-var date = Date.new(2024, 9, 13)
-var newDate = date + 86400 // Add one day (86400 seconds)
-System.print("Date after adding a day: %(newDate)")
-
-var previousDate = date - 3600 // Subtract one hour (3600 seconds)
-System.print("Date after subtracting an hour: %(previousDate)")
+var start = Date.new("2024-09-13 10:00:00")
+var end = Date.new("2024-09-13 12:30:00")
+System.print(end.diff(start))   // 9000 (seconds)
 ```
+
+For adding/subtracting **calendar days** (which `.unix` arithmetic can't do
+safely across month/year boundaries or DST), implement civil-calendar
+arithmetic on the `year`/`month`/`day` fields yourself. This is the
+[Howard Hinnant `days_from_civil`/`civil_from_days` algorithm][hinnant],
+adapted to Wren:
+
+```wren
+class Civil {
+  static toJdn(y, m, d) {
+    y = m <= 2 ? y - 1 : y
+    var era = ((y >= 0 ? y : y - 399) / 400).floor
+    var yoe = y - era * 400
+    var doy = ((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5).floor + d - 1
+    var doe = yoe * 365 + (yoe / 4).floor - (yoe / 100).floor + doy
+    return era * 146097 + doe - 719468
+  }
+  static fromJdn(z) {
+    z = z + 719468
+    var era = ((z >= 0 ? z : z - 146096) / 146097).floor
+    var doe = z - era * 146097
+    var yoe = ((doe - (doe / 1460).floor + (doe / 36524).floor - (doe / 146096).floor) / 365).floor
+    var y = yoe + era * 400
+    var doy = doe - (365 * yoe + (yoe / 4).floor - (yoe / 100).floor)
+    var mp = ((5 * doy + 2) / 153).floor
+    var d = doy - ((153 * mp + 2) / 5).floor + 1
+    var m = mp < 10 ? mp + 3 : mp - 9
+    y = m <= 2 ? y + 1 : y
+    return [y, m, d]
+  }
+  static addDays(date, n) {
+    var ymd = fromJdn(toJdn(date.year, date.month, date.day) + n)
+    return Date.new(ymd[0], ymd[1], ymd[2], date.hours, date.minutes, date.seconds, date.tz)
+  }
+}
+
+var date = Date.new(2024, 9, 13)
+System.print(Civil.addDays(date, 1).toString)   // 2024-09-14 00:00:00
+System.print(Civil.addDays(date, 30).toString)  // 2024-10-13 00:00:00
+```
+
+[hinnant]: http://howardhinnant.github.io/date_algorithms.html
 
 ## Comparing Dates
 
@@ -2856,6 +2989,24 @@ var good2 = <my-element class="badge">Custom element</my-element>
 
 **Forgetting `return`.** Without `return`, the response body is empty. The page
 renders as blank.
+
+**`return <tag>` must be on its own line.** `return` and the opening `<tag>`
+on the same physical line is a compilation error — the error message
+(`Expected expression` at `return`) doesn't point at the real cause:
+
+```wren
+// Wrong — compilation error, no matter what's inside the tag
+list.map { |x| return <div>{{ x }}</div> }
+
+// Correct — put the tag on the line after `return`
+list.map { |x|
+  return <div>{{ x }}</div>
+}
+```
+
+This happens whether or not the `return` is itself inside a `{{ }}`
+interpolation, and regardless of what's interpolated inside the tag — the
+only trigger is `return` and `<tag` sharing a line.
 
 **Files starting with `_` or `.` are private** — they return 403 if accessed
 directly. Use them for imports and internal logic only.
@@ -4246,6 +4397,11 @@ guide for the full API.
 ## Pitfalls
 
 - **`Request.post()` returns `null`** — always `|| ""` before string ops.
+- **`Request.get()` never reads the POST body** — if a form field needs to
+  survive both a GET re-render and a POST submit, either read both explicitly
+  (`Request.get("slug") || Request.post("slug")`) or put the value in the
+  `action` URL's query string instead of a hidden field, so it's present on
+  both the GET that shows the form and the POST that submits it.
 - **Missing `return` before `Response.redirect()`** — the code after it still
   runs and attaches a body to the 302. Always `return Response.redirect(...)`.
 - **Double-escaping with `.safe`** — `{{ }}` already escapes. Writing
@@ -4876,7 +5032,7 @@ should be your default.
 **File:** `blog/_route.wren`
 
 ```wren
-import "_app/template" for Template
+import "/_app/template" for Template
 
 var slug = Request.route(0)
 
@@ -5144,7 +5300,7 @@ it from any URL that returns raw Wren source), and it's importable.
 - **Tag releases with git tags** (`v1.0`, `v1.1`, ...) instead of only
   publishing to `main`. Consumers pin `@v1.0` for stability; you keep
   `main` for in-progress work. This is for *your* consumers' benefit —
-  see [Cache Management](#cache-management) for why pinning matters on
+  :ref:`Cache Management` for why pinning matters on
   the consuming side.
 - **Document the exported API** with a `README.md` in the repo (a Wren
   doc-comment format doesn't exist) — show the exact `import` line, since
@@ -5155,38 +5311,30 @@ it from any URL that returns raw Wren source), and it's importable.
 
 ### Multi-File Modules and Self-Imports
 
-This is the part that trips people up: **a relative import inside a
-remote module does not resolve relative to the remote module.**
+A relative import inside a remote module (e.g. `import "helper"` inside
+`gh:someuser/mylib/main.wren`) resolves relative to that module's own
+`owner/repo/path` — not your app's local files — so it correctly fetches
+`gh:someuser/mylib/helper` from the same repo instead of looking for a
+local `helper.wren` in your app.
 
-Bialet resolves relative imports (any import path without a colon) against
-the directory of the top-level `.wren` file that's handling the current
-request — fixed once per request, regardless of how many files or remote
-modules get imported along the way. A module fetched from GitHub has no
-real position in your app's directory tree, so if its own source does a
-plain relative import, Bialet resolves that path against *your app's*
-root, not the module's repo. Best case, the file doesn't exist there and
-you get an import error; worst case, your app happens to have a
-same-named local file and the module silently loads the wrong code.
+**The one thing this doesn't preserve is a version tag.** A relative import
+always resolves to the sibling file's default branch, even when the
+importing file itself was loaded with `@tag`:
 
 ```wren
-// ❌ Wrong — "helper" resolves against the consuming app's directory,
-// not against this module's own repo.
-// File: gh:someuser/mylib/main.wren
+// File: gh:someuser/mylib/main.wren, imported as "gh:someuser/mylib/main@v1.0"
 import "helper" for Helper
+// ❌ This actually fetches gh:someuser/mylib/helper (main branch), not
+// gh:someuser/mylib/helper@v1.0 -- the @v1.0 from main's own import path
+// is not carried over to its relative imports.
 ```
 
-```wren
-// ✅ Correct — reference your own repo explicitly, the same way any
-// consumer would.
-// File: gh:someuser/mylib/main.wren
-import "gh:someuser/mylib/helper" for Helper
-```
-
-If you pin versions internally, keep the tag consistent with the one
-you're publishing, so a given tag of `main.wren` always pulls the matching
-tag of `helper.wren`:
+For anything you publish with tagged releases, always reference your own
+repo explicitly with the matching tag instead of a plain relative import:
 
 ```wren
+// ✅ Correct — the tag travels with the reference, the same way any
+// consumer would pin it.
 // File: gh:someuser/mylib/main.wren, tagged v1.0
 import "gh:someuser/mylib/helper@v1.0" for Helper
 ```
@@ -5197,7 +5345,7 @@ import "gh:someuser/mylib/helper@v1.0" for Helper
 > intended. Bump every internal self-reference together with the release
 > tag.
 
-## Cache Management
+## Cache Management {#cache-management}
 
 External modules are cached in `_db.sqlite3`, table `BIALET_REMOTE_MODULES`:
 
@@ -6102,19 +6250,34 @@ The static shortcuts (`Http.get`, `Http.post`, ...) return:
 
 - The parsed JSON value when the status is 2xx and `Content-Type` is JSON.
 - The body string when the status is 2xx and `Content-Type` is not JSON.
-- `null` when the status is not 2xx (e.g. 404, 500).
-- `false` when the request itself failed (DNS, connection, timeout).
+- `null` for everything else: a non-2xx status, a transport failure (DNS,
+  connection, timeout), or even an unexpected error while reading the
+  response (e.g. a malformed JSON body). A shortcut call never raises a
+  runtime error and never takes the page down.
+
+Check `Http.error`, `Http.errorMessage`, and `Http.status` (all static
+getters reflecting the outcome of the *last* shortcut call) to tell these
+cases apart:
 
 ```wren
 var result = Http.get("https://api.example.com/users")
-if (result == false) {
-  // Network error - DNS, connection refused, timeout, ...
-} else if (result == null) {
-  // Server replied with a non-2xx status
+if (result == null) {
+  if (Http.error != 0) {
+    // Transport failure - DNS, connection refused, timeout, ...
+    System.log("HTTP transport error %(Http.error): %(Http.errorMessage)")
+  } else {
+    // A real response came back, just not 2xx
+    System.log("HTTP request failed with status %(Http.status)")
+  }
 } else {
   // Success - JSON or string
 }
 ```
+
+> **Pitfall:** `Http.error`/`Http.errorMessage`/`Http.status` reflect the
+> most recent shortcut call in the current request. Read them immediately
+> after the call they describe, before making another `Http.get`/`post`/
+> `put`/`delete` call that would overwrite them.
 
 ### Full Control with `Http.new()`
 
@@ -6203,12 +6366,14 @@ files themselves.
 
 ## Error Handling
 
-`Http.error` on a manually-built instance is a numeric code; `false` on the
-shortcuts. `Http.errorMessage` carries the underlying error text (from curl)
-for logging and debugging. The transport timeout defaults to 20 seconds total
-with 2 seconds to connect — override per call with `timeout` and
-`connectTimeout` (milliseconds), so a dead service returns an error instead of
-hanging your app.
+`Http.error` is a numeric code, non-zero when the transport itself failed;
+`Http.errorMessage` carries the underlying error text (from curl) for logging
+and debugging. On a manually-built `Http.new()` instance these are read off
+the instance; on the static shortcuts, `Http.error`/`Http.errorMessage`/
+`Http.status` reflect the last shortcut call. The transport timeout defaults
+to 20 seconds total with 2 seconds to connect — override per call with
+`timeout` and `connectTimeout` (milliseconds), so a dead service returns an
+error instead of hanging your app.
 
 ```wren
 var http = Http.new()
@@ -7184,7 +7349,7 @@ Wren cron file. These methods receive a block that is called at the specified
 time.
 
 ```wren
-import "_app/domain" for Task
+import "/_app/domain" for Task
 
 // Every 2 minutes
 Cron.every(2) { |date| System.log("Hello, from Cron!") }
@@ -8465,6 +8630,15 @@ to prompt for credentials.
 - `pass`: The expected password.
 - Returns: `false` if authenticated successfully.
 
+> ⚠️ Pitfall: on failure, `Request.login` sets the response status to `401`
+> and the `WWW-Authenticate` header, but does **not** stop the script. Always
+> `return` immediately when it's not `false`, or the rest of the handler
+> still runs and its output becomes the body of the 401 response:
+> ```wren
+> if (Request.login("admin", "secret") != false) return
+> // ... protected code ...
+> ```
+
 ## Response
 
 A class to construct and manage HTTP responses, including setting headers,
@@ -9216,15 +9390,15 @@ Returns the month component of the date.
 
 Returns the day component of the date.
 
-### hour
+### hours
 
 Returns the hour component of the date.
 
-### minute
+### minutes
 
 Returns the minute component of the date.
 
-### second
+### seconds
 
 Returns the second component of the date.
 
@@ -9236,47 +9410,36 @@ Returns the day of the week as a number (0 for Sunday, 6 for Saturday).
 
 Returns the day of the year (1-366).
 
-### date
-
-Returns the date in `YYYY-MM-DD` format.
-
-### time
-
-Returns the time in `HH:MM:SS` format.
-
 ### unix
 
 Returns the Unix timestamp of the date.
 
 ### iso
 
-Returns the date as an ISO 8601 formatted string (`YYYY-MM-DDTHH:MM:SS`). Alias for `toString`.
-
-### inUtc
-
-Returns the date in UTC format.
+Returns the date as an ISO 8601 formatted string (`YYYY-MM-DD HH:MM:SS`). Alias for `toString`.
 
 ### toString
 
-Returns the date as an ISO 8601 string (`YYYY-MM-DDTHH:MM:SS`).
-
-### +(plus)
-
-Adds a date or time interval to the date.
-
-- `plus`: The date or time interval to add.
-
-### -(minus)
-
-Subtracts a date or time interval from the date.
-
-- `minus`: The date or time interval to subtract.
+Returns the date as an ISO 8601 string (`YYYY-MM-DD HH:MM:SS`).
 
 ### diff(otherDate)
 
-Returns the difference between the current date and `otherDate`.
+Returns the difference in seconds between the current date and `otherDate`
+(equivalent to `this.unix - otherDate.unix`).
 
 - `otherDate`: The `Date` object to compare against.
+
+### Comparison operators
+
+`<`, `>`, `<=`, `>=`, `==`, `!=` all work between two `Date` instances,
+comparing them by their underlying Unix timestamp (via `diff`).
+
+> ⚠️ Pitfall: `Date` does **not** implement `+`/`-`. There is no way to add
+> or subtract a time interval directly on a `Date` instance — attempting
+> `date + 86400` raises `Date does not implement '+(_)'`. To shift an
+> instant, do the arithmetic on `.unix` (seconds) and rebuild a `Date` from
+> the result, or add/subtract calendar days yourself; there is also no
+> `date` / `time` / `inUtc` getter.
 
 ## Markdown
 

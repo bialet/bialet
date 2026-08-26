@@ -168,6 +168,24 @@ var good2 = <my-element class="badge">Custom element</my-element>
 **Forgetting `return`.** Without `return`, the response body is empty. The page
 renders as blank.
 
+**`return <tag>` must be on its own line.** `return` and the opening `<tag>`
+on the same physical line is a compilation error — the error message
+(`Expected expression` at `return`) doesn't point at the real cause:
+
+```wren
+// Wrong — compilation error, no matter what's inside the tag
+list.map { |x| return <div>{{ x }}</div> }
+
+// Correct — put the tag on the line after `return`
+list.map { |x|
+  return <div>{{ x }}</div>
+}
+```
+
+This happens whether or not the `return` is itself inside a `{{ }}`
+interpolation, and regardless of what's interpolated inside the tag — the
+only trigger is `return` and `<tag` sharing a line.
+
 **Files starting with `_` or `.` are private** — they return 403 if accessed
 directly. Use them for imports and internal logic only.
 

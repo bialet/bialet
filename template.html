@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -656,6 +656,21 @@ contain only letters, numbers, and hyphens. No underscores or uppercase:</p>
 <p><strong>Interpolation depth</strong> is limited to 9 nested levels.</p>
 <p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code>.</strong> Without <code class="docutils literal notranslate"><span class="pre">return</span></code>, the response body is empty. The page
 renders as blank.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">&lt;tag&gt;</span></code> must be on its own line.</strong> <code class="docutils literal notranslate"><span class="pre">return</span></code> and the opening <code class="docutils literal notranslate"><span class="pre">&lt;tag&gt;</span></code>
+on the same physical line is a compilation error — the error message
+(<code class="docutils literal notranslate"><span class="pre">Expected</span> <span class="pre">expression</span></code> at <code class="docutils literal notranslate"><span class="pre">return</span></code>) doesn’t point at the real cause:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — compilation error, no matter what's inside the tag</span>
+<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Correct — put the tag on the line after `return`</span>
+<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This happens whether or not the <code class="docutils literal notranslate"><span class="pre">return</span></code> is itself inside a <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
+interpolation, and regardless of what’s interpolated inside the tag — the
+only trigger is <code class="docutils literal notranslate"><span class="pre">return</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;tag</span></code> sharing a line.</p>
 <p><strong>Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are private</strong> — they return 403 if accessed
 directly. Use them for imports and internal logic only.</p>
 </section>

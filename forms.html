@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'forms';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="JSX to Bialet Migration" href="jsx-migration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -645,6 +645,11 @@ guide for the full API.</p>
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></strong> — always <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> before string ops.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.get()</span></code> never reads the POST body</strong> — if a form field needs to
+survive both a GET re-render and a POST submit, either read both explicitly
+(<code class="docutils literal notranslate"><span class="pre">Request.get(&quot;slug&quot;)</span> <span class="pre">||</span> <span class="pre">Request.post(&quot;slug&quot;)</span></code>) or put the value in the
+<code class="docutils literal notranslate"><span class="pre">action</span></code> URL’s query string instead of a hidden field, so it’s present on
+both the GET that shows the form and the POST that submits it.</p></li>
 <li><p><strong>Missing <code class="docutils literal notranslate"><span class="pre">return</span></code> before <code class="docutils literal notranslate"><span class="pre">Response.redirect()</span></code></strong> — the code after it still
 runs and attaches a body to the 302. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
 <li><p><strong>Double-escaping with <code class="docutils literal notranslate"><span class="pre">.safe</span></code></strong> — <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> already escapes. Writing

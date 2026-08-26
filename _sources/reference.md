@@ -157,6 +157,15 @@ to prompt for credentials.
 - `pass`: The expected password.
 - Returns: `false` if authenticated successfully.
 
+> ⚠️ Pitfall: on failure, `Request.login` sets the response status to `401`
+> and the `WWW-Authenticate` header, but does **not** stop the script. Always
+> `return` immediately when it's not `false`, or the rest of the handler
+> still runs and its output becomes the body of the 401 response:
+> ```wren
+> if (Request.login("admin", "secret") != false) return
+> // ... protected code ...
+> ```
+
 ## Response
 
 A class to construct and manage HTTP responses, including setting headers,
@@ -908,15 +917,15 @@ Returns the month component of the date.
 
 Returns the day component of the date.
 
-### hour
+### hours
 
 Returns the hour component of the date.
 
-### minute
+### minutes
 
 Returns the minute component of the date.
 
-### second
+### seconds
 
 Returns the second component of the date.
 
@@ -928,47 +937,36 @@ Returns the day of the week as a number (0 for Sunday, 6 for Saturday).
 
 Returns the day of the year (1-366).
 
-### date
-
-Returns the date in `YYYY-MM-DD` format.
-
-### time
-
-Returns the time in `HH:MM:SS` format.
-
 ### unix
 
 Returns the Unix timestamp of the date.
 
 ### iso
 
-Returns the date as an ISO 8601 formatted string (`YYYY-MM-DDTHH:MM:SS`). Alias for `toString`.
-
-### inUtc
-
-Returns the date in UTC format.
+Returns the date as an ISO 8601 formatted string (`YYYY-MM-DD HH:MM:SS`). Alias for `toString`.
 
 ### toString
 
-Returns the date as an ISO 8601 string (`YYYY-MM-DDTHH:MM:SS`).
-
-### +(plus)
-
-Adds a date or time interval to the date.
-
-- `plus`: The date or time interval to add.
-
-### -(minus)
-
-Subtracts a date or time interval from the date.
-
-- `minus`: The date or time interval to subtract.
+Returns the date as an ISO 8601 string (`YYYY-MM-DD HH:MM:SS`).
 
 ### diff(otherDate)
 
-Returns the difference between the current date and `otherDate`.
+Returns the difference in seconds between the current date and `otherDate`
+(equivalent to `this.unix - otherDate.unix`).
 
 - `otherDate`: The `Date` object to compare against.
+
+### Comparison operators
+
+`<`, `>`, `<=`, `>=`, `==`, `!=` all work between two `Date` instances,
+comparing them by their underlying Unix timestamp (via `diff`).
+
+> ⚠️ Pitfall: `Date` does **not** implement `+`/`-`. There is no way to add
+> or subtract a time interval directly on a `Date` instance — attempting
+> `date + 86400` raises `Date does not implement '+(_)'`. To shift an
+> instant, do the arithmetic on `.unix` (seconds) and rebuild a `Date` from
+> the result, or add/subtract calendar days yourself; there is also no
+> `date` / `time` / `inUtc` getter.
 
 ## Markdown
 

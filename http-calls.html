@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'http-calls';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -693,19 +693,34 @@ different host. If you want to opt out, set an explicit <code class="docutils li
 <ul class="simple">
 <li><p>The parsed JSON value when the status is 2xx and <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> is JSON.</p></li>
 <li><p>The body string when the status is 2xx and <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> is not JSON.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">null</span></code> when the status is not 2xx (e.g. 404, 500).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> when the request itself failed (DNS, connection, timeout).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null</span></code> for everything else: a non-2xx status, a transport failure (DNS,
+connection, timeout), or even an unexpected error while reading the
+response (e.g. a malformed JSON body). A shortcut call never raises a
+runtime error and never takes the page down.</p></li>
 </ul>
+<p>Check <code class="docutils literal notranslate"><span class="pre">Http.error</span></code>, <code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code>, and <code class="docutils literal notranslate"><span class="pre">Http.status</span></code> (all static
+getters reflecting the outcome of the <em>last</em> shortcut call) to tell these
+cases apart:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://api.example.com/users"</span><span class="p">)</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// Network error - DNS, connection refused, timeout, ...</span>
-<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// Server replied with a non-2xx status</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Http</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Transport failure - DNS, connection refused, timeout, ...</span>
+<span class="w">    </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"HTTP transport error </span><span class="si">%(</span><span class="nc">Http</span><span class="o">.</span><span class="n">error</span><span class="si">)</span><span class="s2">: </span><span class="si">%(</span><span class="nc">Http</span><span class="o">.</span><span class="n">errorMessage</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// A real response came back, just not 2xx</span>
+<span class="w">    </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"HTTP request failed with status </span><span class="si">%(</span><span class="nc">Http</span><span class="o">.</span><span class="n">status</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Success - JSON or string</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+<blockquote>
+<div><p><strong>Pitfall:</strong> <code class="docutils literal notranslate"><span class="pre">Http.error</span></code>/<code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code>/<code class="docutils literal notranslate"><span class="pre">Http.status</span></code> reflect the
+most recent shortcut call in the current request. Read them immediately
+after the call they describe, before making another <code class="docutils literal notranslate"><span class="pre">Http.get</span></code>/<code class="docutils literal notranslate"><span class="pre">post</span></code>/
+<code class="docutils literal notranslate"><span class="pre">put</span></code>/<code class="docutils literal notranslate"><span class="pre">delete</span></code> call that would overwrite them.</p>
+</div></blockquote>
 </section>
 <section id="full-control-with-http-new">
 <h3>Full Control with <code class="docutils literal notranslate"><span class="pre">Http.new()</span></code><a class="headerlink" href="#full-control-with-http-new" title="Link to this heading">#</a></h3>
@@ -817,12 +832,14 @@ files themselves.</p>
 </section>
 <section id="error-handling">
 <h2>Error Handling<a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Http.error</span></code> on a manually-built instance is a numeric code; <code class="docutils literal notranslate"><span class="pre">false</span></code> on the
-shortcuts. <code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code> carries the underlying error text (from curl)
-for logging and debugging. The transport timeout defaults to 20 seconds total
-with 2 seconds to connect — override per call with <code class="docutils literal notranslate"><span class="pre">timeout</span></code> and
-<code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code> (milliseconds), so a dead service returns an error instead of
-hanging your app.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Http.error</span></code> is a numeric code, non-zero when the transport itself failed;
+<code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code> carries the underlying error text (from curl) for logging
+and debugging. On a manually-built <code class="docutils literal notranslate"><span class="pre">Http.new()</span></code> instance these are read off
+the instance; on the static shortcuts, <code class="docutils literal notranslate"><span class="pre">Http.error</span></code>/<code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code>/
+<code class="docutils literal notranslate"><span class="pre">Http.status</span></code> reflect the last shortcut call. The transport timeout defaults
+to 20 seconds total with 2 seconds to connect — override per call with
+<code class="docutils literal notranslate"><span class="pre">timeout</span></code> and <code class="docutils literal notranslate"><span class="pre">connectTimeout</span></code> (milliseconds), so a dead service returns an
+error instead of hanging your app.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="n">http</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"GET"</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">http</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">"https://api.example.com/health"</span><span class="p">,</span>

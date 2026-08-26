@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -489,6 +489,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-standard-wren">Bialet vs. Standard Wren</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-concurrency">No Concurrency</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-is-not-tested">Fiber Is Not Tested</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-try-for-contained-failure"><code class="docutils literal notranslate"><span class="pre">Fiber.try()</span></code> for Contained Failure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-specific-classes">Bialet-Specific Classes</a></li>
 </ul>
 </li>
@@ -623,6 +624,15 @@ database values come back as strings:</p>
 </div>
 <p>Strings are immutable. Index with <code class="docutils literal notranslate"><span class="pre">s[i]</span></code> to get a single-character string at
 byte offset <code class="docutils literal notranslate"><span class="pre">i</span></code>. <code class="docutils literal notranslate"><span class="pre">.count</span></code> is the byte length.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: strings don’t implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, or <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> —
+<code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;b&quot;</span></code> raises <code class="docutils literal notranslate"><span class="pre">String</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'&lt;(_)'.</span></code>. Only <code class="docutils literal notranslate"><span class="pre">==</span></code> and
+<code class="docutils literal notranslate"><span class="pre">!=</span></code> work directly. To sort or compare strings by value (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD&quot;</span></code> dates as text), convert to a comparable number first —
+for dates, a Julian day number; for single characters, <code class="docutils literal notranslate"><span class="pre">.codePoints</span></code>
+gives you comparable <code class="docutils literal notranslate"><span class="pre">Num</span></code>s you can rebuild with
+<code class="docutils literal notranslate"><span class="pre">String.fromCodePoint(n)</span></code>.</p>
+</div></blockquote>
 </section>
 <section id="null">
 <h3>Null<a class="headerlink" href="#null" title="Link to this heading">#</a></h3>
@@ -898,6 +908,30 @@ method returns <code class="docutils literal notranslate"><span class="pre">null
 value was dropped. Keep the expression on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code> when you want the
 implicit return, and use an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code> for any multi-line method that
 must return a value.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: this rule applies to block arguments (<code class="docutils literal notranslate"><span class="pre">.map</span> <span class="pre">{</span> <span class="pre">}</span></code>, <code class="docutils literal notranslate"><span class="pre">.where</span> <span class="pre">{</span> <span class="pre">}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Fn.new</span> <span class="pre">{</span> <span class="pre">}</span></code>, …) exactly the same way, and it’s easy to miss there
+because there’s no error — the block just silently returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for
+every call:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Bug: filters out everything. `libre` never gets returned because it's</span>
+<span class="c1">// not on the same line as `{`, so the block's value is null every time.</span>
+<span class="n">list</span><span class="o">.</span><span class="n">where</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">libre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="n">libre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="n">libre</span>
+<span class="p">}</span><span class="o">.</span><span class="n">toList</span><span class="w">  </span><span class="c1">// -&gt; []</span>
+
+<span class="c1">// Fixed: explicit return</span>
+<span class="n">list</span><span class="o">.</span><span class="n">where</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">libre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="n">libre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">libre</span>
+<span class="p">}</span><span class="o">.</span><span class="n">toList</span><span class="w">  </span><span class="c1">// -&gt; the actual filtered list</span>
+</pre></div>
+</div>
+<p>A single-expression block (<code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">|x|</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">2</span> <span class="pre">}</span></code>) is unaffected — implicit
+return always works there since the expression is already on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line.</p>
+</div></blockquote>
 </section>
 <section id="when-you-need-return">
 <h3>When You Need <code class="docutils literal notranslate"><span class="pre">return</span></code><a class="headerlink" href="#when-you-need-return" title="Link to this heading">#</a></h3>
@@ -1071,6 +1105,32 @@ unsupported</strong> in Bialet.</p>
 <p>Do not rely on Fibers for application logic. Use the database or session store
 when you need to persist state across request cycles.</p>
 </section>
+<section id="fiber-try-for-contained-failure">
+<h3><code class="docutils literal notranslate"><span class="pre">Fiber.try()</span></code> for Contained Failure<a class="headerlink" href="#fiber-try-for-contained-failure" title="Link to this heading">#</a></h3>
+<p>While cooperative multitasking (<code class="docutils literal notranslate"><span class="pre">yield</span></code>/<code class="docutils literal notranslate"><span class="pre">call</span></code>/<code class="docutils literal notranslate"><span class="pre">transfer</span></code>) is unsupported,
+<code class="docutils literal notranslate"><span class="pre">Fiber.new</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}.try()</span></code> works well for a different, common purpose:
+containing a call that might throw so it can’t take the whole request down.
+This is the idiomatic way to call an external service (or any risky code)
+as best-effort, degrading gracefully instead of failing the page:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">fiber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Fiber</span><span class="o">.</span><span class="n">new</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://flaky-service.example.com/status"</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="k">var</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fiber</span><span class="o">.</span><span class="n">try</span><span class="p">()</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// fiber.error holds the error message (a String); log it and degrade</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Best-effort call failed: </span><span class="si">%(</span><span class="n">fiber</span><span class="o">.</span><span class="n">error</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// use value</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fiber.try()</span></code> never propagates the exception to the caller — <code class="docutils literal notranslate"><span class="pre">fiber.error</span></code>
+is set (non-<code class="docutils literal notranslate"><span class="pre">null</span></code>) when the block raised one, and stays <code class="docutils literal notranslate"><span class="pre">null</span></code> otherwise.
+<code class="docutils literal notranslate"><span class="pre">Http.get</span></code>/<code class="docutils literal notranslate"><span class="pre">post</span></code>/<code class="docutils literal notranslate"><span class="pre">put</span></code>/<code class="docutils literal notranslate"><span class="pre">delete</span></code> already do this internally (see
+<a class="reference internal" href="http-calls.html"><span class="std std-doc">HTTP Calls</span></a>), so you only need this pattern yourself for
+other code paths that can throw — a third-party import, <code class="docutils literal notranslate"><span class="pre">Json.parse</span></code> on
+untrusted input, or your own domain logic.</p>
+</section>
 <section id="bialet-specific-classes">
 <h3>Bialet-Specific Classes<a class="headerlink" href="#bialet-specific-classes" title="Link to this heading">#</a></h3>
 <p>Bialet adds these classes on top of standard Wren:</p>
@@ -1238,6 +1298,7 @@ when you need to persist state across request cycles.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-standard-wren">Bialet vs. Standard Wren</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-concurrency">No Concurrency</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-is-not-tested">Fiber Is Not Tested</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-try-for-contained-failure"><code class="docutils literal notranslate"><span class="pre">Fiber.try()</span></code> for Contained Failure</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-specific-classes">Bialet-Specific Classes</a></li>
 </ul>
 </li>

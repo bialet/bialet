@@ -193,6 +193,11 @@ guide for the full API.
 ## Pitfalls
 
 - **`Request.post()` returns `null`** — always `|| ""` before string ops.
+- **`Request.get()` never reads the POST body** — if a form field needs to
+  survive both a GET re-render and a POST submit, either read both explicitly
+  (`Request.get("slug") || Request.post("slug")`) or put the value in the
+  `action` URL's query string instead of a hidden field, so it's present on
+  both the GET that shows the form and the POST that submits it.
 - **Missing `return` before `Response.redirect()`** — the code after it still
   runs and attaches a body to the 302. Always `return Response.redirect(...)`.
 - **Double-escaping with `.safe`** — `{{ }}` already escapes. Writing

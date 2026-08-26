@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -589,20 +589,16 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#year">year</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hours">hours</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minutes">minutes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seconds">seconds</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">date</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-operators">Comparison operators</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
@@ -615,13 +611,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -645,7 +641,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -659,7 +655,7 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">to(Class)</a></li>
 </ul>
 </li>
 </ul>
@@ -840,6 +836,16 @@ to prompt for credentials.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pass</span></code>: The expected password.</p></li>
 <li><p>Returns: <code class="docutils literal notranslate"><span class="pre">false</span></code> if authenticated successfully.</p></li>
 </ul>
+<blockquote>
+<div><p>⚠️ Pitfall: on failure, <code class="docutils literal notranslate"><span class="pre">Request.login</span></code> sets the response status to <code class="docutils literal notranslate"><span class="pre">401</span></code>
+and the <code class="docutils literal notranslate"><span class="pre">WWW-Authenticate</span></code> header, but does <strong>not</strong> stop the script. Always
+<code class="docutils literal notranslate"><span class="pre">return</span></code> immediately when it’s not <code class="docutils literal notranslate"><span class="pre">false</span></code>, or the rest of the handler
+still runs and its output becomes the body of the 401 response:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span><span class="w"> </span><span class="s2">"secret"</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="k">return</span>
+<span class="c1">// ... protected code ...</span>
+</pre></div>
+</div>
+</div></blockquote>
 </section>
 </section>
 <section id="response">
@@ -1647,16 +1653,16 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <h3>day<a class="headerlink" href="#day" title="Link to this heading">#</a></h3>
 <p>Returns the day component of the date.</p>
 </section>
-<section id="hour">
-<h3>hour<a class="headerlink" href="#hour" title="Link to this heading">#</a></h3>
+<section id="hours">
+<h3>hours<a class="headerlink" href="#hours" title="Link to this heading">#</a></h3>
 <p>Returns the hour component of the date.</p>
 </section>
-<section id="minute">
-<h3>minute<a class="headerlink" href="#minute" title="Link to this heading">#</a></h3>
+<section id="minutes">
+<h3>minutes<a class="headerlink" href="#minutes" title="Link to this heading">#</a></h3>
 <p>Returns the minute component of the date.</p>
 </section>
-<section id="second">
-<h3>second<a class="headerlink" href="#second" title="Link to this heading">#</a></h3>
+<section id="seconds">
+<h3>seconds<a class="headerlink" href="#seconds" title="Link to this heading">#</a></h3>
 <p>Returns the second component of the date.</p>
 </section>
 <section id="dayofweek">
@@ -1667,50 +1673,38 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <h3>dayOfYear<a class="headerlink" href="#dayofyear" title="Link to this heading">#</a></h3>
 <p>Returns the day of the year (1-366).</p>
 </section>
-<section id="id14">
-<h3>date<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
-<p>Returns the date in <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code> format.</p>
-</section>
-<section id="time">
-<h3>time<a class="headerlink" href="#time" title="Link to this heading">#</a></h3>
-<p>Returns the time in <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code> format.</p>
-</section>
 <section id="unix">
 <h3>unix<a class="headerlink" href="#unix" title="Link to this heading">#</a></h3>
 <p>Returns the Unix timestamp of the date.</p>
 </section>
 <section id="iso">
 <h3>iso<a class="headerlink" href="#iso" title="Link to this heading">#</a></h3>
-<p>Returns the date as an ISO 8601 formatted string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SS</span></code>). Alias for <code class="docutils literal notranslate"><span class="pre">toString</span></code>.</p>
+<p>Returns the date as an ISO 8601 formatted string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code>). Alias for <code class="docutils literal notranslate"><span class="pre">toString</span></code>.</p>
 </section>
-<section id="inutc">
-<h3>inUtc<a class="headerlink" href="#inutc" title="Link to this heading">#</a></h3>
-<p>Returns the date in UTC format.</p>
-</section>
-<section id="id15">
-<h3>toString<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
-<p>Returns the date as an ISO 8601 string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DDTHH:MM:SS</span></code>).</p>
-</section>
-<section id="plus">
-<h3>+(plus)<a class="headerlink" href="#plus" title="Link to this heading">#</a></h3>
-<p>Adds a date or time interval to the date.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">plus</span></code>: The date or time interval to add.</p></li>
-</ul>
-</section>
-<section id="minus">
-<h3>-(minus)<a class="headerlink" href="#minus" title="Link to this heading">#</a></h3>
-<p>Subtracts a date or time interval from the date.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">minus</span></code>: The date or time interval to subtract.</p></li>
-</ul>
+<section id="id14">
+<h3>toString<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
+<p>Returns the date as an ISO 8601 string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code>).</p>
 </section>
 <section id="diff-otherdate">
 <h3>diff(otherDate)<a class="headerlink" href="#diff-otherdate" title="Link to this heading">#</a></h3>
-<p>Returns the difference between the current date and <code class="docutils literal notranslate"><span class="pre">otherDate</span></code>.</p>
+<p>Returns the difference in seconds between the current date and <code class="docutils literal notranslate"><span class="pre">otherDate</span></code>
+(equivalent to <code class="docutils literal notranslate"><span class="pre">this.unix</span> <span class="pre">-</span> <span class="pre">otherDate.unix</span></code>).</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">otherDate</span></code>: The <code class="docutils literal notranslate"><span class="pre">Date</span></code> object to compare against.</p></li>
 </ul>
+</section>
+<section id="comparison-operators">
+<h3>Comparison operators<a class="headerlink" href="#comparison-operators" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">==</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code> all work between two <code class="docutils literal notranslate"><span class="pre">Date</span></code> instances,
+comparing them by their underlying Unix timestamp (via <code class="docutils literal notranslate"><span class="pre">diff</span></code>).</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Date</span></code> does <strong>not</strong> implement <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code>. There is no way to add
+or subtract a time interval directly on a <code class="docutils literal notranslate"><span class="pre">Date</span></code> instance — attempting
+<code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">+</span> <span class="pre">86400</span></code> raises <code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'+(_)'</span></code>. To shift an
+instant, do the arithmetic on <code class="docutils literal notranslate"><span class="pre">.unix</span></code> (seconds) and rebuild a <code class="docutils literal notranslate"><span class="pre">Date</span></code> from
+the result, or add/subtract calendar days yourself; there is also no
+<code class="docutils literal notranslate"><span class="pre">date</span></code> / <code class="docutils literal notranslate"><span class="pre">time</span></code> / <code class="docutils literal notranslate"><span class="pre">inUtc</span></code> getter.</p>
+</div></blockquote>
 </section>
 </section>
 <section id="markdown">
@@ -1778,16 +1772,16 @@ size is determined by the content.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
 </ul>
 </section>
-<section id="id16">
-<h3>id<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<section id="id15">
+<h3>id<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
 <p>Returns the file’s database ID.</p>
 </section>
 <section id="type">
 <h3>type<a class="headerlink" href="#type" title="Link to this heading">#</a></h3>
 <p>Returns the MIME type of the file.</p>
 </section>
-<section id="id17">
-<h3>name<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<section id="id16">
+<h3>name<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
 <p>Returns the name of the file.</p>
 </section>
 <section id="size">
@@ -1802,8 +1796,8 @@ size is determined by the content.</p>
 <h3>createdAt<a class="headerlink" href="#createdat" title="Link to this heading">#</a></h3>
 <p>Returns the creation date of the file.</p>
 </section>
-<section id="id18">
-<h3>destroy<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<section id="id17">
+<h3>destroy<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
 <p>Deletes the file from the database based on its ID.</p>
 </section>
 <section id="save">
@@ -1947,8 +1941,8 @@ for formatted output.</p>
 building HTML from strings outside of interpolation, or to pre-escape a value
 before storing it.</p>
 </section>
-<section id="id19">
-<h4>raw<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<section id="id18">
+<h4>raw<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <p>Marks a string as already-safe HTML by wrapping it in an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
 interpolation leaves it untouched.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;b&gt;bold&lt;/b&gt;"</span><span class="o">.</span><span class="n">raw</span>
@@ -2013,8 +2007,8 @@ interpolation leaves it untouched.</p>
 </section>
 <section id="map-extensions">
 <h3>Map Extensions<a class="headerlink" href="#map-extensions" title="Link to this heading">#</a></h3>
-<section id="id20">
-<h4>to(Class)<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<section id="id19">
+<h4>to(Class)<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
 <p>Converts a Map to an instance of the specified class by passing the map to the class constructor.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2241,20 +2235,16 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#year">year</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hours">hours</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minutes">minutes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seconds">seconds</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">date</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time">time</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inutc">inUtc</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plus">+(plus)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minus">-(minus)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-operators">Comparison operators</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
@@ -2267,13 +2257,13 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -2297,7 +2287,7 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -2311,7 +2301,7 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">to(Class)</a></li>
 </ul>
 </li>
 </ul>

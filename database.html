@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -760,6 +760,27 @@ used freely for business logic.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">save()</span></code> on a class instance persists exactly one value per
+underlying field (<code class="docutils literal notranslate"><span class="pre">_width</span></code>, <code class="docutils literal notranslate"><span class="pre">_height</span></code>, …), in the order those fields are
+first referenced in the class body — <strong>not</strong> one per getter. In practice
+this means every real table column needs a corresponding field, or
+<code class="docutils literal notranslate"><span class="pre">save()</span></code> fails with a SQLite error like <code class="docutils literal notranslate"><span class="pre">table</span> <span class="pre">users</span> <span class="pre">has</span> <span class="pre">5</span> <span class="pre">columns</span> <span class="pre">but</span> <span class="pre">3</span> <span class="pre">values</span> <span class="pre">were</span> <span class="pre">supplied</span></code>. The safest way to guarantee this is to define a
+getter for <em>every</em> column, even ones you don’t otherwise need to read
+(<code class="docutils literal notranslate"><span class="pre">createdAt</span> <span class="pre">{</span> <span class="pre">_createdAt</span> <span class="pre">}</span></code> is enough — you don’t have to assign
+<code class="docutils literal notranslate"><span class="pre">_createdAt</span></code> in the constructor for it to count towards the field total,
+though it will insert as <code class="docutils literal notranslate"><span class="pre">null</span></code> if you never do). Add a new column later
+and forget its getter, and every <code class="docutils literal notranslate"><span class="pre">save()</span></code> on that class starts failing.</p>
+<p>A getter that evaluates to <code class="docutils literal notranslate"><span class="pre">null</span></code> also defeats a <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code> on that
+column: SQLite only applies <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code> when a column is <em>omitted</em> from the
+<code class="docutils literal notranslate"><span class="pre">INSERT</span></code>, not when it’s explicitly set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and <code class="docutils literal notranslate"><span class="pre">save()</span></code> always
+supplies every field. For a column like <code class="docutils literal notranslate"><span class="pre">createdAt</span> <span class="pre">DATETIME</span> <span class="pre">DEFAULT</span> <span class="pre">CURRENT_TIMESTAMP</span></code>, set the real value yourself when the field is empty
+instead of relying on the table default:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="vi">_createdAt</span><span class="p">)</span><span class="w"> </span><span class="vi">_createdAt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">toString</span>
+</pre></div>
+</div>
+</div></blockquote>
 </section>
 <section id="data-types-and-blob-support">
 <h2>Data Types and BLOB Support<a class="headerlink" href="#data-types-and-blob-support" title="Link to this heading">#</a></h2>

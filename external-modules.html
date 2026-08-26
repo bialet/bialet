@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'external-modules';</script>
-    <script src="_static/ai-prompt.js?v=c891d91c"></script>
+    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Advanced Routing" href="advanced-routing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.3" />
+  <meta name="docsearch:version" content="1.0.4" />
   </head>
   
   
@@ -445,7 +445,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-file-modules-and-self-imports">Multi-File Modules and Self-Imports</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management-cache-management">Cache Management {#cache-management}</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#refreshing-a-module-programmatically">Refreshing a Module Programmatically</a></li>
 </ul>
 </li>
@@ -593,7 +593,7 @@ don’t run queries, print logs, or mutate state just by being imported.</p></li
 <li><p><strong>Tag releases with git tags</strong> (<code class="docutils literal notranslate"><span class="pre">v1.0</span></code>, <code class="docutils literal notranslate"><span class="pre">v1.1</span></code>, …) instead of only
 publishing to <code class="docutils literal notranslate"><span class="pre">main</span></code>. Consumers pin <code class="docutils literal notranslate"><span class="pre">&#64;v1.0</span></code> for stability; you keep
 <code class="docutils literal notranslate"><span class="pre">main</span></code> for in-progress work. This is for <em>your</em> consumers’ benefit —
-see <a class="reference internal" href="#cache-management"><span class="xref myst">Cache Management</span></a> for why pinning matters on
+:ref:<code class="docutils literal notranslate"><span class="pre">Cache</span> <span class="pre">Management</span></code> for why pinning matters on
 the consuming side.</p></li>
 <li><p><strong>Document the exported API</strong> with a <code class="docutils literal notranslate"><span class="pre">README.md</span></code> in the repo (a Wren
 doc-comment format doesn’t exist) — show the exact <code class="docutils literal notranslate"><span class="pre">import</span></code> line, since
@@ -605,33 +605,26 @@ See <a class="reference internal" href="tests.html"><span class="std std-doc">Te
 </section>
 <section id="multi-file-modules-and-self-imports">
 <h3>Multi-File Modules and Self-Imports<a class="headerlink" href="#multi-file-modules-and-self-imports" title="Link to this heading">#</a></h3>
-<p>This is the part that trips people up: <strong>a relative import inside a
-remote module does not resolve relative to the remote module.</strong></p>
-<p>Bialet resolves relative imports (any import path without a colon) against
-the directory of the top-level <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file that’s handling the current
-request — fixed once per request, regardless of how many files or remote
-modules get imported along the way. A module fetched from GitHub has no
-real position in your app’s directory tree, so if its own source does a
-plain relative import, Bialet resolves that path against <em>your app’s</em>
-root, not the module’s repo. Best case, the file doesn’t exist there and
-you get an import error; worst case, your app happens to have a
-same-named local file and the module silently loads the wrong code.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ❌ Wrong — "helper" resolves against the consuming app's directory,</span>
-<span class="c1">// not against this module's own repo.</span>
-<span class="c1">// File: gh:someuser/mylib/main.wren</span>
+<p>A relative import inside a remote module (e.g. <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;helper&quot;</span></code> inside
+<code class="docutils literal notranslate"><span class="pre">gh:someuser/mylib/main.wren</span></code>) resolves relative to that module’s own
+<code class="docutils literal notranslate"><span class="pre">owner/repo/path</span></code> — not your app’s local files — so it correctly fetches
+<code class="docutils literal notranslate"><span class="pre">gh:someuser/mylib/helper</span></code> from the same repo instead of looking for a
+local <code class="docutils literal notranslate"><span class="pre">helper.wren</span></code> in your app.</p>
+<p><strong>The one thing this doesn’t preserve is a version tag.</strong> A relative import
+always resolves to the sibling file’s default branch, even when the
+importing file itself was loaded with <code class="docutils literal notranslate"><span class="pre">&#64;tag</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: gh:someuser/mylib/main.wren, imported as "gh:someuser/mylib/main@v1.0"</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">"helper"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Helper</span>
+<span class="c1">// ❌ This actually fetches gh:someuser/mylib/helper (main branch), not</span>
+<span class="c1">// gh:someuser/mylib/helper@v1.0 -- the @v1.0 from main's own import path</span>
+<span class="c1">// is not carried over to its relative imports.</span>
 </pre></div>
 </div>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Correct — reference your own repo explicitly, the same way any</span>
-<span class="c1">// consumer would.</span>
-<span class="c1">// File: gh:someuser/mylib/main.wren</span>
-<span class="k">import</span><span class="w"> </span><span class="s2">"gh:someuser/mylib/helper"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Helper</span>
-</pre></div>
-</div>
-<p>If you pin versions internally, keep the tag consistent with the one
-you’re publishing, so a given tag of <code class="docutils literal notranslate"><span class="pre">main.wren</span></code> always pulls the matching
-tag of <code class="docutils literal notranslate"><span class="pre">helper.wren</span></code>:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: gh:someuser/mylib/main.wren, tagged v1.0</span>
+<p>For anything you publish with tagged releases, always reference your own
+repo explicitly with the matching tag instead of a plain relative import:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// ✅ Correct — the tag travels with the reference, the same way any</span>
+<span class="c1">// consumer would pin it.</span>
+<span class="c1">// File: gh:someuser/mylib/main.wren, tagged v1.0</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">"gh:someuser/mylib/helper@v1.0"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Helper</span>
 </pre></div>
 </div>
@@ -644,8 +637,8 @@ tag.</p>
 </div></blockquote>
 </section>
 </section>
-<section id="cache-management">
-<h2>Cache Management<a class="headerlink" href="#cache-management" title="Link to this heading">#</a></h2>
+<section id="cache-management-cache-management">
+<h2>Cache Management {#cache-management}<a class="headerlink" href="#cache-management-cache-management" title="Link to this heading">#</a></h2>
 <p>External modules are cached in <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, table <code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">BIALET_REMOTE_MODULES</span><span class="w"> </span><span class="p">(</span>
 <span class="w">  </span><span class="n">module</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span><span class="w">      </span><span class="c1">-- The import path (e.g., "gh:user/repo/path")</span>
@@ -891,7 +884,7 @@ stability guarantee — only do it for libraries you own.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-file-modules-and-self-imports">Multi-File Modules and Self-Imports</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management">Cache Management</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-management-cache-management">Cache Management {#cache-management}</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#refreshing-a-module-programmatically">Refreshing a Module Programmatically</a></li>
 </ul>
 </li>

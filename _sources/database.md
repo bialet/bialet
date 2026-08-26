@@ -349,6 +349,29 @@ class Rectangle {
 }
 ```
 
+> ⚠️ Pitfall: `save()` on a class instance persists exactly one value per
+> underlying field (`_width`, `_height`, ...), in the order those fields are
+> first referenced in the class body — **not** one per getter. In practice
+> this means every real table column needs a corresponding field, or
+> `save()` fails with a SQLite error like `table users has 5 columns but 3
+> values were supplied`. The safest way to guarantee this is to define a
+> getter for *every* column, even ones you don't otherwise need to read
+> (`createdAt { _createdAt }` is enough — you don't have to assign
+> `_createdAt` in the constructor for it to count towards the field total,
+> though it will insert as `null` if you never do). Add a new column later
+> and forget its getter, and every `save()` on that class starts failing.
+>
+> A getter that evaluates to `null` also defeats a `DEFAULT` on that
+> column: SQLite only applies `DEFAULT` when a column is *omitted* from the
+> `INSERT`, not when it's explicitly set to `NULL`, and `save()` always
+> supplies every field. For a column like `createdAt DATETIME DEFAULT
+> CURRENT_TIMESTAMP`, set the real value yourself when the field is empty
+> instead of relying on the table default:
+> ```wren
+> _createdAt = data["createdAt"]
+> if (!_createdAt) _createdAt = Date.new().toString
+> ```
+
 ## Data Types and BLOB Support
 
 SQLite supports several data types including TEXT, INTEGER, REAL, BLOB, and
