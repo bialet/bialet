@@ -381,9 +381,13 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   wait_port "$HOST" "$CRON_PORT" 10
   cron_installs_before=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
   cron_installs_before=${cron_installs_before:-0}
+  # 30s per phase: on GitHub's macOS runners, FSEvents delivery for a
+  # freshly-created ephemeral volume/dir has been observed to lag well past
+  # 10s (the create/edit installs still land, just later), which flaked this
+  # test even though the underlying reinstall logic was correct.
   printf 'Cron.every(1) { |d| System.print("CRON-MARKER") }\n' > "$cron_root/_cron.wren"
   cron_installs_create=0
-  cron_deadline=$(( $(now_ms) + 10000 ))
+  cron_deadline=$(( $(now_ms) + 30000 ))
   while [[ $cron_installs_create -le $cron_installs_before && $(now_ms) -lt $cron_deadline ]]; do
     cron_installs_create=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
     cron_installs_create=${cron_installs_create:-0}
@@ -391,7 +395,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   done
   printf 'Cron.every(1) { |d| System.print("CRON-MARKER-EDIT") }\n' > "$cron_root/_cron.wren"
   cron_installs_edit=$cron_installs_create
-  cron_deadline=$(( $(now_ms) + 10000 ))
+  cron_deadline=$(( $(now_ms) + 30000 ))
   while [[ $cron_installs_edit -le $cron_installs_create && $(now_ms) -lt $cron_deadline ]]; do
     cron_installs_edit=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
     cron_installs_edit=${cron_installs_edit:-0}
