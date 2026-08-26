@@ -450,62 +450,33 @@ the matching port.
 
 ## Docker
 
-Use the [Bialet Skeleton](https://github.com/bialet/skeleton) as a starting
-point:
+Run the published [`bialet/bialet`](https://hub.docker.com/r/bialet/bialet) image
+directly with [Docker](https://docs.docker.com/):
 
 ```bash
-git clone --depth 1 https://github.com/bialet/skeleton.git myapp
-cd myapp
+docker run -t -p 7001:7001 -v "$PWD":/var/www bialet/bialet
 ```
 
-The skeleton includes a `Dockerfile` and `compose.yml`. Build and run:
+The `-t` flag allocates a pseudo-TTY so the server's logs are colored. Drop it
+if you want plain, uncolored output.
+
+The image serves the current directory, which is mounted at `/var/www`.
+
+### Customizing the Application Directory
+
+To serve a different directory, mount it at `/var/www`:
 
 ```bash
-docker compose up -d
+docker run -t -p 7001:7001 -v /path/to/app:/var/www bialet/bialet
 ```
 
-### Custom Port and App Directory
+### Changing the Default Port
+
+The application listens on port `7001` inside the container. To expose a
+different host port, use `-p`:
 
 ```bash
-BIALET_PORT=8080 BIALET_DIR=/app/mysite docker compose up -d
-```
-
-### Dockerfile (from scratch)
-
-If you prefer a minimal setup:
-
-```dockerfile
-FROM ubuntu:22.04
-
-RUN apt-get update && apt-get install -y libsqlite3-0 libcurl4 && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY bialet /usr/local/bin/bialet
-COPY . /app
-WORKDIR /app
-
-EXPOSE 7001
-CMD ["bialet", "-p", "7001", "/app"]
-```
-
-Build:
-
-```bash
-docker build -t myapp .
-docker run -d -p 127.0.0.1:7001:7001 -v ./data:/www/myapp.sqlite myapp
-```
-
-### Docker Compose
-
-```yaml
-services:
-  app:
-    image: myapp
-    ports:
-      - "127.0.0.1:7001:7001"
-    volumes:
-      - ./data:/www/myapp.sqlite
-    restart: unless-stopped
+docker run -t -p 8080:7001 -v "$PWD":/var/www bialet/bialet
 ```
 
 (sqlite-wal-mode-production)=

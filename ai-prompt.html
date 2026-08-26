@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
+    <script src="_static/ai-prompt.js?v=a6e8949a"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -600,6 +600,81 @@ the upstream language). A few things you need to know to write correct code:
 <span class="c1">// "a" &lt; "b" raises "String does not implement '&lt;(_)'."</span>
 <span class="sb">```</span>
 
+<span class="gu">### Newlines</span>
+
+Newlines (<span class="sb">`\n`</span>) are meaningful: they separate statements.
+
+<span class="sb">```wren</span>
+<span class="c1">// Two statements:</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"hi"</span><span class="p">)</span><span class="w"> </span><span class="c1">// Newline.</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"bye"</span><span class="p">)</span>
+<span class="sb">```</span>
+
+A statement can wrap across lines, though. Wren ignores a newline that follows
+any token which can't end a statement, so this parses fine:
+
+<span class="sb">```wren</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="w"> </span><span class="c1">// Newline here is ignored.</span>
+<span class="w">    </span><span class="s2">"hi"</span><span class="p">)</span>
+<span class="sb">```</span>
+
+In practice: put each statement on its own line, and wrap long expressions
+across lines as needed.
+
+<span class="gu">### Blocks</span>
+
+Blocks use curly braces and can appear anywhere a statement is allowed
+(control flow, method bodies, function bodies). They come in two forms:
+
+<span class="k">1.</span> <span class="gs">**Statement block**</span> — a newline right after <span class="sb">`{`</span>. Contains a series of
+   statements and, when used as a method/function body, automatically returns
+   <span class="sb">`null`</span> after the block completes. Return a different value with an explicit
+   <span class="sb">`return`</span>:
+
+<span class="sb">```wren</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"one"</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"two"</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="k">2.</span> <span class="gs">**Single-expression block**</span> — no newline after <span class="sb">`{`</span> (or after the parameter
+   list). It may contain only one expression and automatically returns its
+   result:
+
+<span class="sb">```wren</span>
+<span class="p">{</span><span class="w"> </span><span class="s2">"single expression"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// Exactly like:</span>
+<span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"single expression"</span><span class="w"> </span><span class="p">}</span>
+<span class="sb">```</span>
+
+Statements are not allowed in this form (they don't produce values), so nothing
+starting with <span class="sb">`class`</span>, <span class="sb">`for`</span>, <span class="sb">`if`</span>, <span class="sb">`import`</span>, <span class="sb">`return`</span>, <span class="sb">`var`</span>, or <span class="sb">`while`</span>. To
+use a statement, put a newline after <span class="sb">`{`</span>:
+
+<span class="sb">```wren</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">happy</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"I'm feelin' it!"</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+The explicit <span class="sb">`}`</span> delimiter is what makes chaining read cleanly:
+
+<span class="sb">```wren</span>
+<span class="n">numbers</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">where</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="gu">### Use `.count`, Not `len`/`length`</span>
+
+Wren has no <span class="sb">`len`</span> or <span class="sb">`length`</span>. Strings and lists expose <span class="sb">`.count`</span>:
+
+<span class="sb">```wren</span>
+<span class="k">var</span><span class="w"> </span><span class="n">charCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="o">.</span><span class="n">count</span><span class="w">        </span><span class="c1">// string length</span>
+<span class="k">var</span><span class="w"> </span><span class="n">itemTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">count</span><span class="w">       </span><span class="c1">// list size</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span>
+<span class="sb">```</span>
+
 <span class="k">&gt; </span><span class="ge">**Pitfall:** `return &lt;tag&gt;` on the same physical line is a compile error</span>
 <span class="k">&gt; </span><span class="ge">(`Expected expression` at `return`), regardless of what's inside the tag.</span>
 <span class="k">&gt; </span><span class="ge">Always put the tag on the line after `return`:</span>
@@ -674,6 +749,7 @@ expression on the same line as <span class="sb">`{`</span> returns it implicitly
 <span class="gu">## Code Style</span>
 
 <span class="k">-</span><span class="w"> </span>Use <span class="gs">**2 spaces**</span> for indentation.
+<span class="k">-</span><span class="w"> </span>Use <span class="sb">`.count`</span> for both strings and lists — there is no <span class="sb">`len`</span>/<span class="sb">`length`</span>.
 <span class="k">-</span><span class="w"> </span><span class="gs">**Single-line methods**</span> when possible, to lean on Wren's implicit return:
 
 <span class="sb">```wren</span>

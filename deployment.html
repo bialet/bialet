@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script src="_static/ai-prompt.js?v=cfb8d9c0"></script>
+    <script src="_static/ai-prompt.js?v=a6e8949a"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -457,9 +457,8 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-port-and-app-directory">Custom Port and App Directory</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dockerfile-from-scratch">Dockerfile (from scratch)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose">Docker Compose</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-wal-mode-production">SQLite WAL Mode (Production)</a><ul class="nav section-nav flex-column">
@@ -904,54 +903,26 @@ the matching port.</p>
 </section>
 <section id="docker">
 <h2>Docker<a class="headerlink" href="#docker" title="Link to this heading">#</a></h2>
-<p>Use the <a class="reference external" href="https://github.com/bialet/skeleton">Bialet Skeleton</a> as a starting
-point:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/bialet/skeleton.git<span class="w"> </span>myapp
-<span class="nb">cd</span><span class="w"> </span>myapp
+<p>Run the published <a class="reference external" href="https://hub.docker.com/r/bialet/bialet"><code class="docutils literal notranslate"><span class="pre">bialet/bialet</span></code></a> image
+directly with <a class="reference external" href="https://docs.docker.com/">Docker</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-t<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span>:7001<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/var/www<span class="w"> </span>bialet/bialet
 </pre></div>
 </div>
-<p>The skeleton includes a <code class="docutils literal notranslate"><span class="pre">Dockerfile</span></code> and <code class="docutils literal notranslate"><span class="pre">compose.yml</span></code>. Build and run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
-</pre></div>
-</div>
-<section id="custom-port-and-app-directory">
-<h3>Custom Port and App Directory<a class="headerlink" href="#custom-port-and-app-directory" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BIALET_PORT</span><span class="o">=</span><span class="m">8080</span><span class="w"> </span><span class="nv">BIALET_DIR</span><span class="o">=</span>/app/mysite<span class="w"> </span>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d
-</pre></div>
-</div>
-</section>
-<section id="dockerfile-from-scratch">
-<h3>Dockerfile (from scratch)<a class="headerlink" href="#dockerfile-from-scratch" title="Link to this heading">#</a></h3>
-<p>If you prefer a minimal setup:</p>
-<div class="highlight-dockerfile notranslate"><div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:22.04</span>
-
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libsqlite3-0<span class="w"> </span>libcurl4<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
-
-<span class="k">COPY</span><span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/bialet
-<span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>/app
-<span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-
-<span class="k">EXPOSE</span><span class="w"> </span><span class="s">7001</span>
-<span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">"bialet"</span><span class="p">,</span><span class="w"> </span><span class="s2">"-p"</span><span class="p">,</span><span class="w"> </span><span class="s2">"7001"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/app"</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Build:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>myapp<span class="w"> </span>.
-docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:7001:7001<span class="w"> </span>-v<span class="w"> </span>./data:/www/myapp.sqlite<span class="w"> </span>myapp
+<p>The <code class="docutils literal notranslate"><span class="pre">-t</span></code> flag allocates a pseudo-TTY so the server’s logs are colored. Drop it
+if you want plain, uncolored output.</p>
+<p>The image serves the current directory, which is mounted at <code class="docutils literal notranslate"><span class="pre">/var/www</span></code>.</p>
+<section id="customizing-the-application-directory">
+<h3>Customizing the Application Directory<a class="headerlink" href="#customizing-the-application-directory" title="Link to this heading">#</a></h3>
+<p>To serve a different directory, mount it at <code class="docutils literal notranslate"><span class="pre">/var/www</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-t<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span>:7001<span class="w"> </span>-v<span class="w"> </span>/path/to/app:/var/www<span class="w"> </span>bialet/bialet
 </pre></div>
 </div>
 </section>
-<section id="docker-compose">
-<h3>Docker Compose<a class="headerlink" href="#docker-compose" title="Link to this heading">#</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">app</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">myapp</span>
-<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"127.0.0.1:7001:7001"</span>
-<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data:/www/myapp.sqlite</span>
-<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<section id="changing-the-default-port">
+<h3>Changing the Default Port<a class="headerlink" href="#changing-the-default-port" title="Link to this heading">#</a></h3>
+<p>The application listens on port <code class="docutils literal notranslate"><span class="pre">7001</span></code> inside the container. To expose a
+different host port, use <code class="docutils literal notranslate"><span class="pre">-p</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-t<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:7001<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/var/www<span class="w"> </span>bialet/bialet
 </pre></div>
 </div>
 </section>
@@ -1172,9 +1143,8 @@ hardening section</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-port-and-app-directory">Custom Port and App Directory</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dockerfile-from-scratch">Dockerfile (from scratch)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docker-compose">Docker Compose</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-wal-mode-production">SQLite WAL Mode (Production)</a><ul class="nav section-nav flex-column">
