@@ -110,6 +110,12 @@ jobs:
         run: make clean && make
 
       - name: Run test suite
+        # BIALET_SKIP_CRON_RELOAD_TEST: GitHub's hosted macOS runners have been
+        # observed to drop the cron file's FSEvents notification outright
+        # (not just delay it) -- see tests/run.sh for the full explanation.
+        # Not reproducible on a local macOS install, so skip only here.
+        env:
+          BIALET_SKIP_CRON_RELOAD_TEST: "1"
         run: ./tests/run.sh ./build/bialet
 
       - name: Package
