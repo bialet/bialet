@@ -209,21 +209,27 @@ static void atfork_child(void) {
 
 /* Reload files */
 static void trigger_reload_files(const char* filepath) {
+  // Cron installs must never be debounced. Cron jobs are installed once at
+  // process start and re-installed only when their file changes; a cron event
+  // inside the WAIT_FOR_RELOAD debounce window was silently dropped, so a
+  // _cron.wren/_app/cron.wren created or edited shortly after startup never
+  // took effect without a restart. Installing on every cron event is cheap
+  // (read the file, swap a pointer) and a save burst is harmless: the last
+  // write wins.
+  if(filepath != NULL && (!strcmp(filepath, "_cron" BIALET_EXTENSION) ||
+                          !strcmp(filepath, "_app/cron" BIALET_EXTENSION))) {
+    install_cron();
+    return;
+  }
   time_t current_time = time(NULL);
   if(current_time - last_reload > WAIT_FOR_RELOAD) {
     last_reload = current_time;
     if(filepath == NULL) {
       migrate();
       install_cron();
-      return;
-    }
-    if(!strcmp(filepath, "_migration" BIALET_EXTENSION) ||
-       !strcmp(filepath, "_app/migration" BIALET_EXTENSION)) {
+    } else if(!strcmp(filepath, "_migration" BIALET_EXTENSION) ||
+              !strcmp(filepath, "_app/migration" BIALET_EXTENSION)) {
       migrate();
-    }
-    if(!strcmp(filepath, "_cron" BIALET_EXTENSION) ||
-       !strcmp(filepath, "_app/cron" BIALET_EXTENSION)) {
-      install_cron();
     }
   }
 }

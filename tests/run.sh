@@ -27,6 +27,7 @@ PORT="${args[2]:-7001}"
 ECHO_PORT="${args[3]:-7100}"
 SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
+CRON_PORT="${args[6]:-7103}"
 
 source "$(dirname "$0")/util.sh"
 
@@ -361,6 +362,53 @@ fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
   pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+fi
+
+# Tests - Cron reload
+# A cron job is installed at process start and re-installed only when its file
+# changes. Regression: a _cron.wren created or edited while the server runs
+# fell inside the 3s reload debounce window and was silently dropped, so the
+# cron never took effect without a restart. Creating then editing the file must
+# both re-install the cron immediately, right after startup (inside the window).
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cron_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cron_root=$(mktemp -d)
+  rm -f /tmp/tests-cron.log
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -l /tmp/tests-cron.log \
+    "$cron_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  cron_installs_before=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
+  cron_installs_before=${cron_installs_before:-0}
+  printf 'Cron.every(1) { |d| System.print("CRON-MARKER") }\n' > "$cron_root/_cron.wren"
+  cron_installs_create=0
+  cron_deadline=$(( $(now_ms) + 10000 ))
+  while [[ $cron_installs_create -le $cron_installs_before && $(now_ms) -lt $cron_deadline ]]; do
+    cron_installs_create=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
+    cron_installs_create=${cron_installs_create:-0}
+    [[ $cron_installs_create -le $cron_installs_before ]] && sleep 1
+  done
+  printf 'Cron.every(1) { |d| System.print("CRON-MARKER-EDIT") }\n' > "$cron_root/_cron.wren"
+  cron_installs_edit=$cron_installs_create
+  cron_deadline=$(( $(now_ms) + 10000 ))
+  while [[ $cron_installs_edit -le $cron_installs_create && $(now_ms) -lt $cron_deadline ]]; do
+    cron_installs_edit=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
+    cron_installs_edit=${cron_installs_edit:-0}
+    [[ $cron_installs_edit -le $cron_installs_create ]] && sleep 1
+  done
+  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT -l /tmp/tests-cron.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$cron_root"
+  if [[ $cron_installs_create -gt $cron_installs_before \
+        && $cron_installs_edit -gt $cron_installs_create ]]; then
+    report_result "Cron reload on file create/edit" "$cron_line" 0
+  else
+    report_result "Cron reload on file create/edit" "$cron_line" 1 \
+      "Creating/editing _cron.wren while the server runs did not re-install the cron. before:$cron_installs_before create:$cron_installs_create edit:$cron_installs_edit"
+  fi
+else
+  skip_test "Cron reload on file create/edit" "requires local binary access"
 fi
 
 # Tests - bialet dev
