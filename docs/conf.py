@@ -53,16 +53,16 @@ def _replace_placeholders(app, docname, source):
 
 
 def _generate_ai_prompt_js(app):
-    """Build _static/ai-prompt.js from BIALET_PROMPT.md so the homepage's
+    """Build _static/ai-prompt.js from prompt-guide.md so the homepage's
     "Copy AI Prompt" button can copy it without duplicating the text."""
-    src = os.path.join(os.path.dirname(__file__), 'BIALET_PROMPT.md')
+    src = os.path.join(os.path.dirname(__file__), 'prompt-guide.md')
     dest_dir = os.path.join(os.path.dirname(__file__), '_static')
     dest = os.path.join(dest_dir, 'ai-prompt.js')
     with open(src, encoding='utf-8') as f:
         content = f.read()
     os.makedirs(dest_dir, exist_ok=True)
     with open(dest, 'w', encoding='utf-8') as f:
-        f.write('// Auto-generated from BIALET_PROMPT.md during the docs build. Do not edit directly.\n')
+        f.write('// Auto-generated from prompt-guide.md during the docs build. Do not edit directly.\n')
         f.write('window.BIALET_AI_PROMPT = ' + json.dumps(content) + ';\n')
 
 
@@ -76,7 +76,7 @@ def setup(app):
 extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton', 'sphinx_llms_txt']
 
 templates_path = ['_templates']
-exclude_patterns = ['requirements.txt', 'BIALET_PROMPT.md', 'examples/example.md']
+exclude_patterns = ['requirements.txt', 'prompt-guide.md', 'examples/example.md']
 
 highlight_language = 'wren'
 highlight_options = {'guess_lang': False}
