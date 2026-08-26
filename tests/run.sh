@@ -381,16 +381,13 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   wait_port "$HOST" "$CRON_PORT" 10
   cron_installs_before=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
   cron_installs_before=${cron_installs_before:-0}
-  # 75s per phase: install_cron() now also runs on every 60s cron tick (see
-  # cron_thread() in main.c), as a safety net for when the dmon/FSEvents
-  # watch itself never delivers the event -- confirmed happening on GitHub's
-  # macOS runners, where a diagnostic run showed the *create* fsevent dropped
-  # outright (not merely delayed) while the watch was still "starting up".
-  # 75s covers that worst case (60s tick + margin) without weakening the
-  # assertion; the common path (dmon fires promptly) still resolves in ~1s.
+  # 30s per phase: on GitHub's macOS runners, FSEvents delivery for a
+  # freshly-created ephemeral volume/dir has been observed to lag well past
+  # 10s (the create/edit installs still land, just later), which flaked this
+  # test even though the underlying reinstall logic was correct.
   printf 'Cron.every(1) { |d| System.print("CRON-MARKER") }\n' > "$cron_root/_cron.wren"
   cron_installs_create=0
-  cron_deadline=$(( $(now_ms) + 75000 ))
+  cron_deadline=$(( $(now_ms) + 30000 ))
   while [[ $cron_installs_create -le $cron_installs_before && $(now_ms) -lt $cron_deadline ]]; do
     cron_installs_create=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
     cron_installs_create=${cron_installs_create:-0}
@@ -398,7 +395,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   done
   printf 'Cron.every(1) { |d| System.print("CRON-MARKER-EDIT") }\n' > "$cron_root/_cron.wren"
   cron_installs_edit=$cron_installs_create
-  cron_deadline=$(( $(now_ms) + 75000 ))
+  cron_deadline=$(( $(now_ms) + 30000 ))
   while [[ $cron_installs_edit -le $cron_installs_create && $(now_ms) -lt $cron_deadline ]]; do
     cron_installs_edit=$(grep -c "Installing cron" /tmp/tests-cron.log 2>/dev/null)
     cron_installs_edit=${cron_installs_edit:-0}

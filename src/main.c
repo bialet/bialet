@@ -187,13 +187,6 @@ static void cron_run() {
 void* cron_thread(void* arg) {
   (void)arg;
   while(1) {
-    // Safety net alongside the dmon file-watch reinstall in
-    // trigger_reload_files(): FSEvents delivery isn't always reliable (seen on
-    // some CI/virtualized filesystems, a freshly-created cron file's event was
-    // dropped outright rather than merely delayed) so a watch alone can miss a
-    // cron file forever. Re-reading it here every tick bounds that to one
-    // 60s cycle regardless of whether the watch ever fires.
-    install_cron();
     cron_run();
     sleep(60);
   }
@@ -667,9 +660,6 @@ int main(int argc, char* argv[]) {
     server_poll(SERVER_POLL_DELAY);
     time_t now = time(NULL);
     if(difftime(now, last_cron) >= 60) {
-      // See the matching comment in cron_thread(): a watch-only reinstall can
-      // miss a cron file if FSEvents/dmon never delivers the event.
-      install_cron();
       cron_run();
       last_cron = now;
     }
