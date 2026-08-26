@@ -1,0 +1,43 @@
+name: Diag macOS cron reload
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    name: Reproduce macOS cron reload delay
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: brew install openssl
+
+      - name: Build
+        run: make clean && make
+
+      - name: Run diagnostic
+        run: |
+          set -x
+          rm -f /tmp/tests-cron.log
+          cron_root=$(mktemp -d)
+          echo "cron_root=$cron_root"
+          date +%s
+          ./build/bialet -h 127.0.0.1 -p 7103 -l /tmp/tests-cron.log "$cron_root" > /tmp/tests-cron-stdout.log 2>&1 &
+          BPID=$!
+          for i in $(seq 1 20); do
+            if curl -s -o /dev/null "http://127.0.0.1:7103/" 2>/dev/null; then break; fi
+            sleep 0.5
+          done
+          echo "port up at $(date +%s)"
+          printf 'Cron.every(1) { |d| System.print("CRON-MARKER") }\n' > "$cron_root/_cron.wren"
+          echo "wrote create at $(date +%s)"
+          sleep 25
+          echo "wrote edit at $(date +%s)"
+          printf 'Cron.every(1) { |d| System.print("CRON-MARKER-EDIT") }\n' > "$cron_root/_cron.wren"
+          sleep 10
+          echo "=== stdout/stderr (DIAG) ==="
+          cat /tmp/tests-cron-stdout.log
+          echo "=== log ==="
+          cat /tmp/tests-cron.log
+          kill -9 $BPID 2>/dev/null || true
