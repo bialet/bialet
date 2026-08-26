@@ -148,6 +148,81 @@ class Poll {
 // "a" < "b" raises "String does not implement '<(_)'."
 ```
 
+### Newlines
+
+Newlines (`\n`) are meaningful: they separate statements.
+
+```wren
+// Two statements:
+System.print("hi") // Newline.
+System.print("bye")
+```
+
+A statement can wrap across lines, though. Wren ignores a newline that follows
+any token which can't end a statement, so this parses fine:
+
+```wren
+System.print( // Newline here is ignored.
+    "hi")
+```
+
+In practice: put each statement on its own line, and wrap long expressions
+across lines as needed.
+
+### Blocks
+
+Blocks use curly braces and can appear anywhere a statement is allowed
+(control flow, method bodies, function bodies). They come in two forms:
+
+1. **Statement block** — a newline right after `{`. Contains a series of
+   statements and, when used as a method/function body, automatically returns
+   `null` after the block completes. Return a different value with an explicit
+   `return`:
+
+```wren
+{
+  System.print("one")
+  System.print("two")
+}
+```
+
+2. **Single-expression block** — no newline after `{` (or after the parameter
+   list). It may contain only one expression and automatically returns its
+   result:
+
+```wren
+{ "single expression" } // Exactly like:
+{ return "single expression" }
+```
+
+Statements are not allowed in this form (they don't produce values), so nothing
+starting with `class`, `for`, `if`, `import`, `return`, `var`, or `while`. To
+use a statement, put a newline after `{`:
+
+```wren
+{
+  if (happy) {
+    System.print("I'm feelin' it!")
+  }
+}
+```
+
+The explicit `}` delimiter is what makes chaining read cleanly:
+
+```wren
+numbers.map {|n| n * 2 }.where {|n| n < 100 }
+```
+
+### Use `.count`, Not `len`/`length`
+
+Wren has no `len` or `length`. Strings and lists expose `.count`:
+
+```wren
+var charCount = name.count        // string length
+var itemTotal = items.count       // list size
+if (name.count > 0 && items.count == 0) { ... }
+```
+
 > **Pitfall:** `return <tag>` on the same physical line is a compile error
 > (`Expected expression` at `return`), regardless of what's inside the tag.
 > Always put the tag on the line after `return`:
@@ -222,6 +297,7 @@ expression on the same line as `{` returns it implicitly:
 ## Code Style
 
 - Use **2 spaces** for indentation.
+- Use `.count` for both strings and lists — there is no `len`/`length`.
 - **Single-line methods** when possible, to lean on Wren's implicit return:
 
 ```wren
