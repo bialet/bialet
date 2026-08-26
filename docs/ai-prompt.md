@@ -17,6 +17,6 @@ templates, the database API, and project structure — so it writes idiomatic
 
 ---
 
-```{literalinclude} BIALET_PROMPT.md
+```{literalinclude} prompt-guide.md
 :language: markdown
 ```
