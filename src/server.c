@@ -158,7 +158,7 @@ static int parse_content_length(const char* v, size_t max, size_t* out) {
 }
 
 // Returns 1 when any path component of [uri] starts with '_' or '.', closing
-// the private-file boundary for "//_db.sqlite3", "/sub/_route.wren" and
+// the private-file boundary for "//_db.sqlite3", "/sub/.env" and
 // "/./..." style requests that the old prefix/strstr checks missed.
 static int has_forbidden_uri_component(const char* uri) {
   if(!uri)
@@ -774,11 +774,10 @@ void handle_client(bialet_socket_t client_socket) {
   char                  path[PATH_SIZE];
   char                  wren_path[PATH_SIZE + 5];
   struct stat           file_stat;
-  int                   private_path_internal = 0;
 
   // Reject any URI whose decoded path component starts with '_' or '.'
-  // (private files such as _db.sqlite3, _route.wren, .env). This runs before
-  // any stat/fopen so "/sub/_route.wren" and "//_db.sqlite3" cannot bypass it.
+  // (private files such as _db.sqlite3, .env). This runs before
+  // any stat/fopen so "/sub/.env" and "//_db.sqlite3" cannot bypass it.
   if(has_forbidden_uri_component(hm->uri.str)) {
     clean_http_message(hm);
     custom_error(403, &response);
@@ -817,6 +816,13 @@ void handle_client(bialet_socket_t client_socket) {
   if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
     snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
     if(stat(wren_path, &file_stat) == 0) {
+      // Set the route prefix to this file's URL path so Request.route(n)
+      // reads the segments that follow it (null at the bare URL). Without
+      // this, route() falls back to the full URI and /about would report
+      // "about" as its own first segment.
+      free(hm->routes.str);
+      const char* route_prefix = path + strlen(bialet_config.root_dir);
+      hm->routes = create_string(route_prefix, strlen(route_prefix));
       strncpy(path, wren_path, PATH_SIZE - 1);
       path[PATH_SIZE - 1] = '\0'; // Ensure null termination
     }
@@ -825,7 +831,11 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   if(stat(path, &file_stat) == 0 && S_ISDIR(file_stat.st_mode)) {
-    // Serve index.html or index.wren
+    // Serve index.html or index.wren. A directory's index is the route file
+    // for its own URL only, so the prefix is set the same way as above.
+    free(hm->routes.str);
+    const char* route_prefix = path + strlen(bialet_config.root_dir);
+    hm->routes = create_string(route_prefix, strlen(route_prefix));
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
     if(stat(path, &file_stat) != 0) {
       // Replace the ".wren" suffix with ".html"
@@ -837,7 +847,12 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   if(stat(path, &file_stat) != 0) {
-    // Search for _route.wren
+    // Search for a path-based route handler. For every URL prefix, test the
+    // file named after that segment: /blog/my-first-post probes
+    // blog/my-first-post.wren, then blog.wren once the path has been
+    // truncated back to /blog. The deepest match wins, and the file that
+    // serves a folder's subtree is <folder>.wren, so Request.route(0) reads
+    // the segments the same way the old per-directory route file did.
     char* url_copy = strdup(hm->uri.str);
     if(!url_copy) {
       perror("strdup");
@@ -848,23 +863,27 @@ void handle_client(bialet_socket_t client_socket) {
       return;
     }
     while(1) {
-      snprintf(path, PATH_SIZE, "%s%s/_route.wren", bialet_config.root_dir,
-               url_copy);
-      // lstat/no-follow: a planted sub/_route.wren -> ../_db.sqlite3 must not
-      // be accepted as a route file, otherwise realpath resolves it to the
-      // database and private_path_internal waives the private-file check.
+      // The first probe (the full URL) repeats the ".wren" append above and
+      // only runs when that literal file does not exist; each deeper prefix
+      // probes the folder.wren route file. lstat/no-follow: a planted
+      // folder.wren -> ../_db.sqlite3 symlink must not be accepted as a route
+      // file, otherwise realpath resolves it to the database and the
+      // private-file check is bypassed.
+      snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.root_dir, url_copy,
+               BIALET_EXTENSION);
       if(is_regular_file_no_follow(path, &file_stat)) {
         // parse_request() already allocated an empty placeholder here, which
         // this assignment used to drop on the floor.
         free(hm->routes.str);
         hm->routes = create_string(url_copy, strlen(url_copy));
-        private_path_internal = 1;
         break;
       }
       char* last_slash = strrchr(url_copy, '/');
-      if(!last_slash) { // Stop if root is reached
+      if(!last_slash || last_slash == url_copy) {
+        // Stop if root is reached. The root has no folder name to name a
+        // route file after, so there is no root-level route file.
         free(url_copy);
-        // If no index.wren or index.html or _route.wren in root
+        // If no index.wren or index.html or route file in root
         // serve welcome page
         if(strncmp(hm->uri.str, "/", 2) == 0) {
           response.status = 200;
@@ -904,13 +923,10 @@ void handle_client(bialet_socket_t client_socket) {
     // Re-apply the private-file rule to the resolved target. A symlink named
     // "x" -> "_db.sqlite3" passes the URI check, so the canonical path must
     // be validated too. Only the root-relative portion is checked so an app
-    // hosted under a "_"/"."-named directory is not blocked. The framework's
-    // own _route.wren (found only through the lstat-based route search) is
-    // exempt, and only when the resolved basename is exactly "_route.wren" so
-    // a planted sub/_route.wren -> ../_db.sqlite3 cannot waive the boundary.
-    int route_wren_waived = private_path_internal &&
-                            strcmp(path_basename(resolved_path), "_route.wren") == 0;
-    if(!route_wren_waived && has_forbidden_uri_component(resolved_path + root_len)) {
+    // hosted under a "_"/"."-named directory is not blocked. Route handlers
+    // (folder.wren) are ordinary .wren files, so they pass this check like
+    // any other page and need no exemption.
+    if(has_forbidden_uri_component(resolved_path + root_len)) {
       message(red("Security Error"), "Private file access blocked", path);
       clean_http_message(hm);
       custom_error(403, &response);

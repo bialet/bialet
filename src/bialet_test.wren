@@ -11,14 +11,14 @@ class TestResponse {
 
 class Test {
   construct new() {
-    _route = ""
+    _path = ""
     _method = "GET"
     _postData = {}
     _headers = {}
     _response = null
   }
   route(r) {
-    _route = r
+    _path = r
     return this
   }
   method(m) {
@@ -153,7 +153,7 @@ class Test {
       body = parts.join("&")
     }
     
-    var message = "%(_method) %(_route) HTTP/1.1\r\n"
+    var message = "%(_method) %(_path) HTTP/1.1\r\n"
     message = message + "Host: localhost\r\n"
     if (body.count > 0 && !_headers.containsKey("Content-Type")) {
       message = message + "Content-Type: application/x-www-form-urlencoded\r\n"
@@ -169,7 +169,7 @@ class Test {
       message = message + body
     }
     
-    var result = runTestRequest_(_route, message)
+    var result = runTestRequest_(_path, message)
     var headerMap = {}
     if (result[2] != "") {
       var lines = result[2].split("\r\n")

@@ -52,8 +52,9 @@ make clean && make
 Wren app files are plain `.wren` files served from a root app directory:
 
 - `_app.wren` - Site template / app namespace
-- `_route.wren` - Per-directory route handlers (server searches upward), used
-  only when SEO friendly URLs is a must. Prefer GET parameters otherwise.
+- `<folder>.wren` - Path-based route handlers (server walks up the URL path
+  and probes a `.wren` file named after each segment; deepest match wins),
+  used only when SEO friendly URLs is a must. Prefer GET parameters otherwise.
 - `_migration.wren` or `/_app/migration.wren` - DB migrations (run at start)
 - `/_cron.wren` or `/_app/cron.wren` - Optional cron tasks
 - `_db.sqlite3` - SQLite DB file for the app

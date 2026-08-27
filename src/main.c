@@ -64,7 +64,6 @@
 #define CRON_FILE "/_cron" BIALET_EXTENSION
 #define CRON_FILE_ALT "/_app/cron" BIALET_EXTENSION
 #define DB_FILE "_db.sqlite3"
-#define ROUTE_FILE "_route" BIALET_EXTENSION
 #define IGNORED_FILES "README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe"
 #define WAIT_FOR_RELOAD 3
 #define SERVER_POLL_DELAY 200

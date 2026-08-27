@@ -21,7 +21,7 @@ class Request {
     __fullUri = tmp[1]
     __body = ""
     var routeRest = (route.count > 0 && __fullUri.startsWith(route)) ? __fullUri[route.count..-1] : __fullUri
-    __route = routeRest.trimStart("/").split("/")
+    __segments = routeRest.trimStart("/").split("/")
     var uriSeparator = __fullUri.indexOf("?")
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
@@ -86,7 +86,7 @@ class Request {
   static get(name) { __get[name] ? __get[name]:null }
   static query(name) { get(name) }
   static post(name) { __post[name] ? __post[name]:null }
-  static route(pos) { __route.count > pos && __route[pos] != "" ? __route[pos]:null}
+  static route(pos) { __segments.count > pos && __segments[pos] != "" ? __segments[pos]:null}
   static file(name) {
     if (!__files || __files.trim() == "") return null
     for (fileId in __files.split(",")) {

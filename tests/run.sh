@@ -91,39 +91,43 @@ run_test "Nested relative import         " "import-nested/entry" 200 "hi from he
 run_test "Get the URL parameter       " "get?foo=bar"     200 "bar"
 run_test "Get the post parameter      " "post" "foo=bar"  200 "bar"
 run_test "Get the route parameter     " "route/baz/qux"   200 "bazqux"
-# Regression: dynamic segment sharing a letter prefix with the directory name
-# (e.g. dir "reservar", segment "reunion-30min" both start with "re") must not
-# be truncated by the route-prefix stripping logic.
+# Regression: dynamic segment sharing a letter prefix with the route file name
+# (e.g. file "reservar.wren", segment "reunion-30min" both start with "re") must
+# not be truncated by the route-prefix stripping logic.
 run_test "Route param w/ dir overlap   " "reservar/reunion-30min" 200 "reunion-30min"
+# A single folder.wren file serves both the bare folder URL (Request.route(0)
+# is null) and every deeper path (Request.route(n) reads the remaining
+# segments) -- the classic list + detail resource pattern.
+run_test "Route file base URL         " "notes"          200 "notes-list"
+run_test "Route file with segment     " "notes/42"       200 "note:42"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
-# Regression: a planted sub/_route.wren -> ../_db.sqlite3 symlink must not
-# bypass the private-file rule. The _route.wren directory search must not
-# follow symlinks, and the resolved-path check is only waived for a real
-# _route.wren basename. The probe returns 404 (no _route.wren found), never
-# the leaked database bytes.
+# Regression: a planted folder.wren -> ../_db.sqlite3 symlink must not bypass
+# the private-file rule. The route-file search must not follow symlinks, and
+# the resolved-path check re-validates the canonical target. The probe returns
+# 404 (no route file found), never the leaked database bytes.
 if [[ "$FS_SHARED" == 1 ]]; then
   route_symlink_line=$LINENO
   _test_start_ms=$(now_ms)
-  route_symlink_dir="$(dirname "$0")/sub"
-  route_symlink="$route_symlink_dir/_route.wren"
-  rm -rf "$route_symlink_dir"
+  route_symlink_dir="$(dirname "$0")"
+  route_symlink="$route_symlink_dir/sub.wren"
+  rm -f "$route_symlink"
   route_symlink_code=""
   route_symlink_body=""
-  if mkdir -p "$route_symlink_dir" && ln -s "../_db.sqlite3" "$route_symlink"; then
+  if ln -s "../_db.sqlite3" "$route_symlink"; then
     route_symlink_code=$(curl -s -o /dev/null -w "%{http_code}" \
       "http://$HOST:$PORT/sub/does-not-exist")
     route_symlink_body=$(curl -s "http://$HOST:$PORT/sub/does-not-exist")
   fi
-  rm -rf "$route_symlink_dir"
+  rm -f "$route_symlink"
   if [[ "$route_symlink_code" == "404" && "$route_symlink_body" != "SQLite format 3"* ]]; then
-    report_result "_route.wren symlink no bypass" "$route_symlink_line" 0
+    report_result "folder.wren symlink no bypass" "$route_symlink_line" 0
   else
-    report_result "_route.wren symlink no bypass" "$route_symlink_line" 1 \
+    report_result "folder.wren symlink no bypass" "$route_symlink_line" 1 \
       "Expected 404, no DB bytes. Got code:$route_symlink_code body:'${route_symlink_body:0:40}'"
   fi
 else
-  skip_test "_route.wren symlink no bypass" "server filesystem is not shared with this script"
+  skip_test "folder.wren symlink no bypass" "server filesystem is not shared with this script"
 fi
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
@@ -198,8 +202,8 @@ run_test "Response forbidden          " "response-errors?forbidden=1" 403
 run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom-404-page"
 run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallback:fallback-value|missing:null"
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
-run_test "Directory index resolution  " "route"           200 "route-index"
-run_test "Directory index trailing /  " "route/"          200 "route-index"
+run_test "Directory index resolution  " "blog"           200 "route-index"
+run_test "Directory index trailing /  " "blog/"          200 "route-index"
 run_test "Wren extension is optional  " "method-check.wren" 200 "GET"
 
 test_method "PUT method                " "PUT"    "method-check" 200 "" "PUT"

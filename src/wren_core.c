@@ -1361,7 +1361,7 @@ DEF_PRIMITIVE(response_default_page) {
   size_t foot_len = strlen(BIALET_FOOTER_PAGE);
   size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
                   message->length + foot_len + 1;
-  char*  buffer = (char*)malloc(needed);
+  char* buffer = (char*)malloc(needed);
   if(buffer == NULL)
     RETURN_ERROR("Out of memory building page.");
 
@@ -1433,9 +1433,15 @@ DEF_PRIMITIVE(test_runRequest) {
   const char* qmark = strchr(route, '?');
   int         routePathLen = (int)(qmark ? (size_t)(qmark - route) : strlen(route));
 
-  // Resolve route to .wren file path
+  // Resolve route to a .wren file path, mirroring the real server: probe the
+  // exact ".wren" file, then the directory index, then walk up the path
+  // looking for a <folder>.wren route handler (deepest match wins). routesLen
+  // is the length of the URL prefix of the matched file, so Request.route(n)
+  // reads the segments that follow it (null at the bare folder URL) exactly
+  // as it does over HTTP.
   char path[4096];
   char filePath[4096];
+  int  routesLen = 0;
   {
     char tmp[4096];
     snprintf(tmp, sizeof(tmp), "%s%.*s.wren", rootDir, routePathLen, route);
@@ -1452,6 +1458,33 @@ DEF_PRIMITIVE(test_runRequest) {
     strncpy(path, tmp2, sizeof(path) - 1);
     path[sizeof(path) - 1] = '\0';
     code = read_file(path);
+    if(code != NULL)
+      routesLen = routePathLen;
+  } else {
+    routesLen = routePathLen;
+  }
+
+  if(code == NULL) {
+    // No exact file or directory index: walk up the path probing
+    // <folder>.wren route handlers, deepest first, matching the server.
+    int prefixLen = routePathLen;
+    while(prefixLen > 0) {
+      int slash = prefixLen - 1;
+      while(slash >= 0 && route[slash] != '/')
+        slash--;
+      if(slash <= 0)
+        break; // reached the root: no folder name to name a route file after
+      prefixLen = slash;
+      char tmp3[4096];
+      snprintf(tmp3, sizeof(tmp3), "%s%.*s.wren", rootDir, prefixLen, route);
+      strncpy(path, tmp3, sizeof(path) - 1);
+      path[sizeof(path) - 1] = '\0';
+      code = read_file(path);
+      if(code != NULL) {
+        routesLen = prefixLen;
+        break;
+      }
+    }
   }
 
   if(code == NULL) {
@@ -1524,7 +1557,7 @@ DEF_PRIMITIVE(test_runRequest) {
     hm->headers = create_string("", 0);
   }
 
-  hm->routes = create_string("", 0);
+  hm->routes = create_string(route, routesLen);
 
   // Call bialetRun to execute the route handler
   extern struct BialetResponse bialet_run(char* module, char* code,

@@ -101,8 +101,9 @@ Once a file is saved in the database, the only way to show it in the browser is
 by using `Response.file(id)`. This will take the file ID and return the file to
 the browser.
 
-You can also use `_route` to dynamically fetch files from your database and
-display them based on user input, such as a filename.
+You can also use a path-based route file (`<folder>.wren`) to dynamically
+fetch files from your database and display them based on user input, such
+as a filename.
 
 ### Example: Serving Files by Name from a Custom Table
 

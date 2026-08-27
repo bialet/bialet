@@ -73,4 +73,13 @@ Markdown
 .. include:: examples/markdown.wren
    :code: wren
 
+Path-based route (``users.wren``)
+----------------------------------
+
+A single file serving both ``/users`` (list) and ``/users/:id`` (detail) via
+``Request.route(0)``. See `Advanced Routing <advanced-routing.html>`_.
+
+.. include:: examples/users.wren
+   :code: wren
+
 

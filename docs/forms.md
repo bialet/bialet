@@ -214,4 +214,4 @@ guide for the full API.
 - [File Handling](file.md) — uploading, serving, and managing files
 - [Database](database.md) — saving form data with parameterized queries
 - [Advanced Routing](advanced-routing.md) — where to place form handlers with query params vs
-  `_route.wren`
+  path-based routes (`<folder>.wren`)

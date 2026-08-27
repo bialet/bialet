@@ -51,8 +51,8 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
 - **File-based routing** — a file's path, minus `.wren`, is its URL
 - **Query parameters are the default way to make a page dynamic** —
   `article.wren` reading `?id=42` via `Request.get("id")`. Reach for a
-  `_route.wren` path-based route only when the value must live in the URL
-  path itself (SEO slugs, REST-style resource paths) — treat it as an
+  path-based route (`<folder>.wren`) only when the value must live in the
+  URL path itself (SEO slugs, REST-style resource paths) — treat it as an
   advanced escape hatch, not the starting point.
 - **Server-side rendering** with inline HTML strings, minimal JavaScript
 - **Direct SQL queries** with parameterized placeholders instead of an ORM
@@ -332,9 +332,7 @@ my-app/
 ├── about.wren                # About page (/about)
 ├── article.wren              # Single item, via ?id= (/article?id=42)
 │
-├── users/
-│   ├── index.wren           # Users list (/users)
-│   └── _route.wren          # Path-based route (/users/:id) — advanced, optional
+├── users.wren               # Users list + detail (/users, /users/:id) — advanced, optional
 │
 ├── api/
 │   └── users.wren           # API endpoint (/api/users)
@@ -386,9 +384,8 @@ HTML — no route table, no `app.get(...)` calls.
 |---------------------------|----------------------|
 | `index.wren`              | `/`                  |
 | `about.wren`              | `/about` (and `/about.wren`) |
-| `users/index.wren`        | `/users`             |
+| `users.wren`              | `/users` and `/users/:id` (path-based, advanced) |
 | `article.wren`            | `/article` (dynamic via `?id=`) |
-| `users/_route.wren`       | `/users/:id` (path-based, advanced) |
 | `api/users.wren`          | `/api/users`         |
 
 ### Default: Query Parameters
@@ -414,17 +411,20 @@ return Layout.render(<article>
 One file serves every article — `/article?id=1`, `/article?id=2`, etc. — with
 no additional files or routing config.
 
-### Advanced: Path-Based Routes (`_route.wren`)
+### Advanced: Path-Based Routes (`<folder>.wren`)
 
 Use this **only** when the dynamic value must live in the URL path — a
 human-readable slug, a REST-style resource path, or a URL structure you
 inherited and can't change:
 
 ```wren
-// users/_route.wren — handles /users/:id
-var userId = Request.route(0)  // first segment after this file's directory
+// users.wren — handles /users (list) and /users/:id (detail)
+var userId = Request.route(0)  // first segment after this file's URL
 
-if (!userId) return Response.redirect("/users")
+if (userId == null) {
+  // render the /users list
+  return `SELECT * FROM users`.fetch.to(User)
+}
 
 var user = User.find(userId)
 if (!user) {
@@ -434,8 +434,10 @@ if (!user) {
 ```
 
 `Request.route(n)` never matches across a `/` — each segment is one path
-component. You can have multiple `_route.wren` files, one per directory that
-needs path-based handling.
+component. You can have multiple `<folder>.wren` files, one per folder
+that needs path-based handling: `blog.wren`, `api.wren`, `admin/posts.wren`
+can all coexist. The file that serves a folder's subtree is named after
+the folder; the deepest match wins.
 
 ## Views: Templates in `_app/template.wren`
 
@@ -815,7 +817,7 @@ var apiKey = Request.header("X-Api-Key")
 Request.method     // "GET", "POST", "PUT", "DELETE", ...
 Request.isPost      // true for POST
 
-// Path segments (only inside _route.wren)
+// Path segments (only inside a <folder>.wren route handler)
 var id = Request.route(0)
 
 // Basic auth
@@ -1035,8 +1037,9 @@ return Response.json({"error": "Not found"})
 
 This single-file pattern — one `.wren` file handling GET/POST/PUT/DELETE via
 `Request.method`, with the resource id from a query parameter — is the
-idiomatic way to build a REST endpoint in Bialet. Reach for `_route.wren`
-only when the id truly needs to live in the URL path.
+idiomatic way to build a REST endpoint in Bialet. Reach for a
+`<folder>.wren` route file only when the id truly needs to live in the URL
+path.
 
 ## HTMX Integration (Optional)
 
@@ -1201,7 +1204,7 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
 1. **Code Style**: 2-space indentation, single-line methods when possible
 2. **Structure**: `_app/` folder for template, migrations, and domain classes
 3. **No extra folders**: no `routes/`, `validators/`, `middleware/`, `static/`
-4. **Routing**: query parameters by default (`Request.get`); `_route.wren` +
+4. **Routing**: query parameters by default (`Request.get`); `<folder>.wren` +
    `Request.route(n)` only for path-based URLs, as an exception
 5. **Controllers**: each `.wren` file IS a route — logic at the top, view at
    the bottom, always `return Response.redirect(...)`
