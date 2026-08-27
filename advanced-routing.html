@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/advanced-routing.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet routing is exactly like serving static HTML files. A file named about.wren is the route/about, just as about.html would be. The.wren extension is optional in the URL. The primary way to pass..." />
+<meta property="og:description" content="Bialet routing is exactly like serving static HTML files. A file named about.wren is the route/about, just as about.html would be. The.wren extension is optional in the URL. Dynamic data comes from..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet routing is exactly like serving static HTML files. A file named about.wren is the route/about, just as about.html would be. The.wren extension is optional in the URL. The primary way to pass..." />
+<meta name="description" content="Bialet routing is exactly like serving static HTML files. A file named about.wren is the route/about, just as about.html would be. The.wren extension is optional in the URL. Dynamic data comes from..." />
 
     <title>Advanced Routing &#8212; Bialet  documentation</title>
   
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'advanced-routing';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Error Pages" href="errors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -432,8 +432,11 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">Direct File Mapping</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">Direct File Mapping</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-request-is-resolved">How a Request Is Resolved</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#protected-files">Protected Files</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-the-app-folder">Preferred: the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: root-level special files</a></li>
@@ -441,8 +444,9 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-content-with-query-parameters">Dynamic Content with Query Parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-request-is-resolved">How a Request Is Resolved</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-dynamic-routes">Path-Based Dynamic Routes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-string-or-path-segment">Query string or path segment?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-project-structure">Complete Example Project Structure</a><ul class="nav section-nav flex-column">
@@ -450,6 +454,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-the-same-page-as-a-path-based-slug">Optional: The Same Page as a Path-Based Slug</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-deep-should-your-dynamic-routes-go">How Deep Should Your Dynamic Routes Go?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routing-compared-bialet-vs-express-vs-django">Routing Compared: Bialet vs Express vs Django</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>
@@ -469,22 +475,22 @@
 <p>Bialet routing is exactly like serving static HTML files. A file named
 <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> is the route <code class="docutils literal notranslate"><span class="pre">/about</span></code>, just as <code class="docutils literal notranslate"><span class="pre">about.html</span></code> would be. The
 <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is optional in the URL.</p>
-<p><strong>The primary way to pass dynamic data is via query strings, not path
-segments.</strong> A file named <code class="docutils literal notranslate"><span class="pre">article.wren</span></code> at <code class="docutils literal notranslate"><span class="pre">/article</span></code> can read <code class="docutils literal notranslate"><span class="pre">?id=42</span></code>
-with <code class="docutils literal notranslate"><span class="pre">Request.get(&quot;id&quot;)</span></code> — no <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> needed. This keeps your
-project purely file-based, just like static HTML: one file, one URL, any
-number of query-string variations.</p>
-<p>If you’ve ever put an HTML file in a folder and served it with a static
-file server, you already understand Bialet routing. There is no router to
-configure, no <code class="docutils literal notranslate"><span class="pre">app.get(...)</span></code> calls, no <code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code> list. You put a file
+<p>Dynamic data comes from two equally simple places: <strong>query strings</strong>
+(<code class="docutils literal notranslate"><span class="pre">article.wren</span></code> reading <code class="docutils literal notranslate"><span class="pre">?id=42</span></code> with <code class="docutils literal notranslate"><span class="pre">Request.get(&quot;id&quot;)</span></code>) or <strong>path
+segments</strong> (<code class="docutils literal notranslate"><span class="pre">blog.wren</span></code> reading <code class="docutils literal notranslate"><span class="pre">/blog/my-post</span></code> with <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code>).
+Both are first-class — pick whichever fits the URL you want. What Bialet
+discourages is <em>complex</em> routing: deep nesting and convoluted URL
+hierarchies. Keep it simple.</p>
+<p>There is no router to configure, no <code class="docutils literal notranslate"><span class="pre">app.get(...)</span></code> calls, no <code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code>
+list. <strong>The layout of your project <em>is</em> the routing table</strong> — you put a file
 where you want a URL, and the URL exists.</p>
-<section id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
 <p>Here’s the entire mental model in one directory tree:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-site/
 ├── index.wren          # /
 ├── about.wren          # /about
-└── article.wren        # /article  (dynamic via ?id=...)
+└── article.wren        # /article/my-article  (dynamic via path slug)
 </pre></div>
 </div>
 <p><strong>The rule:</strong> a file’s path relative to the project root, minus the <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
@@ -493,49 +499,39 @@ extension, is its URL.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">index.wren</span></code> at the root of a folder serves that folder’s URL (<code class="docutils literal notranslate"><span class="pre">/</span></code>,
 <code class="docutils literal notranslate"><span class="pre">/blog</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">about.wren</span></code> serves <code class="docutils literal notranslate"><span class="pre">/about</span></code> or <code class="docutils literal notranslate"><span class="pre">/about.wren</span></code> — both work.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">article.wren</span></code> serves <code class="docutils literal notranslate"><span class="pre">/article</span></code> — and reads whatever comes after the
-<code class="docutils literal notranslate"><span class="pre">?</span></code> to decide what to render.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">article.wren</span></code> serves <code class="docutils literal notranslate"><span class="pre">/article</span></code> — and reads whatever follows it in the
+path to decide what to render.</p></li>
 </ul>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: article.wren</span>
-<span class="c1">// Handles: /article?id=42</span>
+<span class="c1">// Handles: /article/my-article</span>
 
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">article</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT title, body_html FROM articles WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
+<span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">article</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT title, body_html FROM articles WHERE slug = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">slug</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">article</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">notFound</span><span class="p">()</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="si">}}</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"body_html"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"body_html"</span><span class="p">]</span><span class="o">.</span><span class="n">raw</span><span class="w"> </span><span class="si">}}</span>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>No new file, no special name, no <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> — just a normal <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
-file reading <code class="docutils literal notranslate"><span class="pre">Request.get(&quot;id&quot;)</span></code>, the same way a static-page backend
-would read <code class="docutils literal notranslate"><span class="pre">$_GET['id']</span></code>.</p>
-<p><strong>Mental model:</strong> Bialet resolves URLs by walking the file system. You
-never declare routes explicitly — the layout of your project <em>is</em> the
-routing table. Dynamic <em>data</em> comes from the query string; dynamic
-<em>routes</em> are a rare, separate case covered later in
-<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a>.</p>
+<p>No new file, no special name — the same file serves <code class="docutils literal notranslate"><span class="pre">/article</span></code> and every
+<code class="docutils literal notranslate"><span class="pre">/article/&lt;slug&gt;</span></code> URL via <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code>.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">/about.wren</span></code> and <code class="docutils literal notranslate"><span class="pre">/about</span></code> both serve <code class="docutils literal notranslate"><span class="pre">about.wren</span></code>, but the
 <code class="docutils literal notranslate"><span class="pre">.wren</span></code> extension is never required in links you write. Always link to
 the extension-less form.</p>
 </div></blockquote>
 <blockquote>
-<div><p><strong>Note:</strong> if you truly need the dynamic value <em>in the path</em> —
-<code class="docutils literal notranslate"><span class="pre">/article/42</span></code> instead of <code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code> — Bialet supports that too,
-via a special <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file. Treat it as an advanced escape hatch,
-not your starting point; see
-<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a>.</p>
+<div><p><strong>Both styles are equal.</strong> A dynamic value can live in the query string
+(<code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code>) or in the path (<code class="docutils literal notranslate"><span class="pre">/article/my-post</span></code> via a
+<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> file) — Bialet treats them the same. Pick whichever
+produces the URL you want; the path form is covered in
+<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes</a>.</p>
 </div></blockquote>
-<p>The rest of this page fills in the details: direct mapping, protected
-files, dynamic content via query parameters, path-based routes (advanced),
-a full example project, and external imports.</p>
-</section>
 <section id="direct-file-mapping">
-<h2>Direct File Mapping<a class="headerlink" href="#direct-file-mapping" title="Link to this heading">#</a></h2>
+<h3>Direct File Mapping<a class="headerlink" href="#direct-file-mapping" title="Link to this heading">#</a></h3>
 <p>Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file maps to a URL path the same way a static HTML file
 would.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>contact-us.wren  →  /contact-us
@@ -569,11 +565,35 @@ would.</p>
 </div>
 <p>This is not a regex router. There’s no pattern matching, no wildcards, no
 route priority to reason about. A file either exists at that path or it
-doesn’t. For dynamic data, start with
+doesn’t. For dynamic data, see
 <a class="reference internal" href="#dynamic-content-with-query-parameters">Dynamic Content with Query Parameters</a>
-below — reach for
-<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes</a> only if
-the value truly needs to live in the URL path.</p>
+and <a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes</a>
+below — pick whichever gives you the URL you want, and keep it shallow.</p>
+</section>
+</section>
+<section id="how-a-request-is-resolved">
+<h2>How a Request Is Resolved<a class="headerlink" href="#how-a-request-is-resolved" title="Link to this heading">#</a></h2>
+<p>When a request arrives, Bialet resolves the URL in this order:</p>
+<ol class="arabic simple">
+<li><p><strong>Exact file match</strong> – if <code class="docutils literal notranslate"><span class="pre">&lt;full_path&gt;.wren</span></code> exists, execute it.</p></li>
+<li><p><strong>Folder-file walk-up</strong> – walk up the directory tree, checking each
+parent folder for a <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> file. The <strong>deepest</strong> match (closest
+to the URL) wins.</p></li>
+<li><p><strong>404 Not Found</strong> – if no file is found.</p></li>
+</ol>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">/some/lorem/ipsum</span></code></p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">/some/lorem/ipsum.wren</span></code> exists → execute it (no dynamic segments).</p></li>
+<li><p>Else if <code class="docutils literal notranslate"><span class="pre">/some/lorem.wren</span></code> exists → execute it; <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> =
+<code class="docutils literal notranslate"><span class="pre">&quot;ipsum&quot;</span></code>.</p></li>
+<li><p>Else if <code class="docutils literal notranslate"><span class="pre">/some.wren</span></code> exists → execute it; <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;lorem&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Request.route(1)</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;ipsum&quot;</span></code>.</p></li>
+<li><p>Else → 404.</p></li>
+</ul>
+<blockquote>
+<div><p>Protected folders (<code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>) are never considered during the walk-up —
+they return 403 immediately.</p>
+</div></blockquote>
 </section>
 <section id="protected-files">
 <h2>Protected Files<a class="headerlink" href="#protected-files" title="Link to this heading">#</a></h2>
@@ -610,7 +630,6 @@ with <code class="docutils literal notranslate"><span class="pre">_</span></code
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>_app.wren        # Application-wide template
 _migration.wren  # Database migrations
 _cron.wren       # Scheduled tasks
-_route.wren      # Dynamic route handler (advanced, see below)
 </pre></div>
 </div>
 <p>Both approaches work identically. The <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder keeps your root
@@ -627,12 +646,12 @@ without worrying about them leaking through routing.</p>
 </section>
 <section id="dynamic-content-with-query-parameters">
 <span id="id1"></span><h2>Dynamic Content with Query Parameters<a class="headerlink" href="#dynamic-content-with-query-parameters" title="Link to this heading">#</a></h2>
-<p>This is the default way to make a page dynamic in Bialet — reach for it
-first, every time. Any <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, with no special name and no extra
-file, can read query parameters with <code class="docutils literal notranslate"><span class="pre">Request.get(name)</span></code>. It’s the same
-model a static HTML page would use if it handed off to a server-side
-script reading <code class="docutils literal notranslate"><span class="pre">$_GET</span></code> in PHP, or <code class="docutils literal notranslate"><span class="pre">req.query</span></code> in Express — except here,
-every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file already has that ability, by default.</p>
+<p>This is one of the two simple ways to make a page dynamic in Bialet. Any
+<code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, with no special name and no extra file, can read query
+parameters with <code class="docutils literal notranslate"><span class="pre">Request.get(name)</span></code>. It’s the same model a static HTML
+page would use if it handed off to a server-side script reading <code class="docutils literal notranslate"><span class="pre">$_GET</span></code> in
+PHP, or <code class="docutils literal notranslate"><span class="pre">req.query</span></code> in Express — except here, every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file already
+has that ability.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: blog.wren</span>
 <span class="c1">// Handles: /blog?id=42</span>
 
@@ -707,29 +726,45 @@ in the path, including simple API-style endpoints:</p>
 </table>
 </div>
 <blockquote>
-<div><p>⚠️ Pitfall: don’t reach for <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> just because you have a single
-dynamic page. Query parameters are simpler, more cache-friendly, and
-keep your project structure flat. Use path segments only when the URL
-truly represents a resource hierarchy (like a REST API) or you need the
-SEO benefit of human-readable slugs.</p>
+<div><p>⚠️ Pitfall: don’t over-engineer either style. A single dynamic value can
+live in a query string or a path segment — both are equally fine. What
+Bialet discourages is <em>complex</em> routing: deep nesting, many segments, or
+elaborate URL hierarchies. Keep dynamic URLs one or two levels deep.</p>
 </div></blockquote>
 </section>
-<section id="path-based-dynamic-routes-advanced">
-<span id="id2"></span><h2>Path-Based Dynamic Routes (Advanced)<a class="headerlink" href="#path-based-dynamic-routes-advanced" title="Link to this heading">#</a></h2>
+<section id="path-based-dynamic-routes">
+<span id="path-based-dynamic-routes-advanced"></span><h2>Path-Based Dynamic Routes<a class="headerlink" href="#path-based-dynamic-routes" title="Link to this heading">#</a></h2>
 <blockquote>
-<div><p><strong>When to use this:</strong> only when the dynamic value must live in the URL
-<em>path</em> itself — a human-readable slug for SEO (<code class="docutils literal notranslate"><span class="pre">/blog/how-to-cook-rice</span></code>),
-a REST-style resource path (<code class="docutils literal notranslate"><span class="pre">/api/users/123</span></code>), or because you’re
-preserving a URL structure you inherited and can’t change. If none of
-those apply, use
-<a class="reference internal" href="#dynamic-content-with-query-parameters">query parameters</a> instead — see
-the pitfall above. This is an escape hatch, not a starting point, and
-most Bialet projects never need it.</p>
+<div><p>Path-based routing is a first-class option, equal to query parameters.
+Use it when the dynamic value reads naturally as part of the path —
+human-readable slugs (<code class="docutils literal notranslate"><span class="pre">/blog/how-to-cook-rice</span></code>), REST-style resources
+(<code class="docutils literal notranslate"><span class="pre">/api/users/123</span></code>), or a URL structure you inherited. Like query
+strings, keep it shallow — see
+<a class="reference internal" href="#how-deep-should-your-dynamic-routes-go">How Deep Should Your Dynamic Routes Go?</a>.</p>
 </div></blockquote>
-<p>Fixed files can’t cover URLs with variable path segments. For those rare
-cases, create a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file in the relevant directory. Bialet
-falls back to it whenever no static file matches the requested path.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: api/_route.wren</span>
+<section id="query-string-or-path-segment">
+<h3>Query string or path segment?<a class="headerlink" href="#query-string-or-path-segment" title="Link to this heading">#</a></h3>
+<p>Both are simple, first-class options — pick by how the URL should read:</p>
+<ul class="simple">
+<li><p><strong>Query string (<code class="docutils literal notranslate"><span class="pre">Request.get</span></code>)</strong> – dynamic data that feels like a
+variable: <code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code>, <code class="docutils literal notranslate"><span class="pre">/search?q=hello</span></code>, <code class="docutils literal notranslate"><span class="pre">/api/users?id=7</span></code>.</p></li>
+<li><p><strong>Path segment (<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> + <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code>)</strong> – dynamic data
+that reads as part of the URL itself: <code class="docutils literal notranslate"><span class="pre">/blog/my-article</span></code>,
+<code class="docutils literal notranslate"><span class="pre">/api/users/123</span></code>.</p></li>
+</ul>
+<p>What Bialet discourages is <em>complex</em> routing: deeply nested paths, many
+segments, or elaborate URL schemes. Keep either style shallow — see
+<a class="reference internal" href="#how-deep-should-your-dynamic-routes-go">How Deep Should Your Dynamic Routes Go?</a>.</p>
+</section>
+<section id="how-it-works">
+<h3>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h3>
+<p>Fixed files can’t cover URLs with variable path segments. For those URLs,
+name a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file after a folder: <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>. When a URL
+doesn’t resolve to a static file, Bialet walks up the path looking for a
+<code class="docutils literal notranslate"><span class="pre">.wren</span></code> file named after each segment, deepest first. <code class="docutils literal notranslate"><span class="pre">/api/users/123</span></code>
+matches <code class="docutils literal notranslate"><span class="pre">api.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">/blog/how-to-cook-rice</span></code> matches <code class="docutils literal notranslate"><span class="pre">blog.wren</span></code>, and a
+file that doesn’t exist gets a 404.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: api.wren</span>
 <span class="c1">// Handles URLs like: /api/users/123 or /api/posts/my-slug</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">segment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// First dynamic segment</span>
@@ -748,77 +783,86 @@ falls back to it whenever no static file matches the requested path.</p>
 </pre></div>
 </div>
 <blockquote>
-<div><p>⚠️ Pitfall: dynamic segments start at index <code class="docutils literal notranslate"><span class="pre">0</span></code>, not <code class="docutils literal notranslate"><span class="pre">1</span></code>. <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code>
-is the first segment after the <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file’s own directory.</p>
+<div><p>⚠️ Pitfall: dynamic segments start at index <code class="docutils literal notranslate"><span class="pre">0</span></code>, not <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+<code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> is the first segment after the <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> file’s
+own URL. At the bare folder URL itself (<code class="docutils literal notranslate"><span class="pre">/api</span></code>), <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> is
+<code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
 </div></blockquote>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>URL</p></th>
-<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code></p></th>
-<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.route(1)</span></code></p></th>
-<th class="head"><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;fields&quot;)</span></code></p></th>
+<th class="head"><p>Matching file (if any)</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">route(0)</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">route(1)</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">route(2)</span></code></p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/api/users/1</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;users&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/some</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">some.wren</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/api/posts/hello-world</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;posts&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;hello-world&quot;</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/some/lorem</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">some.wren</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;lorem&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/api/users/1?fields=name,email</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;users&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;name,email&quot;</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/some/lorem/ipsum</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">some.wren</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;lorem&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ipsum&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/some/lorem/ipsum</span></code> (if <code class="docutils literal notranslate"><span class="pre">lorem.wren</span></code> exists)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">some/lorem.wren</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ipsum&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/some/lorem/ipsum</span></code> (if <code class="docutils literal notranslate"><span class="pre">ipsum.wren</span></code> exists)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">some/lorem/ipsum.wren</span></code></p></td>
+<td><p><em>not used</em> (exact match)</p></td>
+<td><p><em>not used</em></p></td>
+<td><p><em>not used</em></p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> is the <strong>first</strong> segment after the <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>
+file’s own URL.</p></li>
+<li><p>If the request matches an exact file, <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code> always returns
+<code class="docutils literal notranslate"><span class="pre">null</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<p>A single <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> therefore covers a whole resource: the bare URL
+(<code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> is <code class="docutils literal notranslate"><span class="pre">null</span></code>) renders the list, and every deeper path
+renders an item. This is the classic REST-style list + detail pattern in
+one file.</p>
 <p>Each segment is captured as a single path component — this is not a regex
 router. <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code> never matches across a <code class="docutils literal notranslate"><span class="pre">/</span></code>. Query parameters
-still work alongside path segments, as the <code class="docutils literal notranslate"><span class="pre">fields</span></code> column above shows —
-the two aren’t mutually exclusive, you’re just choosing where the primary
-identifier lives.</p>
-<p>You don’t need one global <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> for the whole site. Create a
-separate <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> in each directory that needs path-based handling —
-<code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">admin/posts/_route.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code> can all
-coexist and handle their own subtree independently.</p>
-<section id="how-a-request-is-resolved">
-<h3>How a Request Is Resolved<a class="headerlink" href="#how-a-request-is-resolved" title="Link to this heading">#</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>                 ┌────────────────────┐
-                 │  Incoming request  │
-                 └──────────┬─────────┘
-                            │
-                            v
-              ┌─────────────────────────────┐
-              │ Matching .wren file exists?  │
-              └───────┬─────────────┬───────┘
-                   yes │             │ no
-                       v             v
-              ┌────────────────┐   ┌───────────────────────────────┐
-              │ Execute that   │   │ _route.wren exists in this    │
-              │ file           │   │ directory?                    │
-              └────────────────┘   └───────┬───────────────┬───────┘
-                                        yes │               │ no
-                                            v               v
-                              ┌─────────────────────────┐ ┌──────────────┐
-                              │ Execute _route.wren with │ │ 404 Not Found│
-                              │ Request.route(n) segments│ └──────────────┘
-                              └─────────────────────────┘
-</pre></div>
-</div>
-<p>Protected paths (<code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code> prefixed) short-circuit this diagram entirely —
-they return 403 before file resolution is attempted.</p>
+still work alongside path segments, so the two aren’t mutually exclusive —
+you’re just choosing where the primary identifier lives.</p>
+<p>You don’t need one global route file for the whole site. Create a
+separate <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> for each folder that needs path-based handling —
+<code class="docutils literal notranslate"><span class="pre">blog.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">admin/posts.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">api.wren</span></code> can all coexist and handle
+their own subtree independently. The deepest match wins, so <code class="docutils literal notranslate"><span class="pre">admin.wren</span></code>
+and <code class="docutils literal notranslate"><span class="pre">admin/posts.wren</span></code> can coexist: <code class="docutils literal notranslate"><span class="pre">/admin/posts/456</span></code> runs
+<code class="docutils literal notranslate"><span class="pre">admin/posts.wren</span></code>, anything else under <code class="docutils literal notranslate"><span class="pre">/admin</span></code> runs <code class="docutils literal notranslate"><span class="pre">admin.wren</span></code>.</p>
+<p>When a folder has both an <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> and a <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> wins for the folder URL itself — Bialet probes the <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
+file before the directory index.</p>
 </section>
 </section>
 <section id="complete-example-project-structure">
 <h2>Complete Example Project Structure<a class="headerlink" href="#complete-example-project-structure" title="Link to this heading">#</a></h2>
-<p>A blog application using the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder approach, with query
-parameters as the default dynamic-content strategy:</p>
+<p>A blog application using the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder approach. Query parameters are
+the dynamic-content strategy here, but path-based routes would work just
+as well:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-blog/
 ├── _app/                  # Protected folder for app configuration
 │   ├── template.wren      # Site-wide template (header, footer, nav)
@@ -839,10 +883,7 @@ parameters as the default dynamic-content strategy:</p>
 ├── admin/
 │   ├── index.wren         # Admin dashboard (/admin)
 │   ├── login.wren         # Admin login (/admin/login)
-│   └── posts/
-│       ├── index.wren     # Post list (/admin/posts)
-│       ├── new.wren       # Create post (/admin/posts/new)
-│       └── _route.wren    # Edit post (/admin/posts/:id)
+│   └── posts.wren         # Post list + edit (/admin/posts, /admin/posts/:id)
 │
 ├── api.wren                # API endpoint, by ?action=&amp;id= (/api?action=posts&amp;id=42)
 │
@@ -855,12 +896,10 @@ parameters as the default dynamic-content strategy:</p>
 </div>
 <blockquote>
 <div><p><strong>Optional alternative:</strong> both <code class="docutils literal notranslate"><span class="pre">blog</span></code> and <code class="docutils literal notranslate"><span class="pre">api</span></code> could instead be built
-with <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> for path-based URLs — <code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code> for
-<code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code>, <code class="docutils literal notranslate"><span class="pre">api/_route.wren</span></code> for <code class="docutils literal notranslate"><span class="pre">/api/posts/456</span></code>. Only do
-that if you need the slug or a REST-style path; see
-<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a>.
-The structure above uses query parameters instead, which is simpler for
-most projects.</p>
+with <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> for path-based URLs — <code class="docutils literal notranslate"><span class="pre">blog.wren</span></code> for
+<code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code>, <code class="docutils literal notranslate"><span class="pre">api.wren</span></code> for <code class="docutils literal notranslate"><span class="pre">/api/posts/456</span></code>. The choice is
+yours; see
+<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes</a>.</p>
 </div></blockquote>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -890,12 +929,12 @@ most projects.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">admin/index.wren</span></code></p></td>
 <td><p>Admin dashboard</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/admin/posts/new</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts/new.wren</span></code></p></td>
-<td><p>Create new post form</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/admin/posts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts.wren</span></code></p></td>
+<td><p>Post list</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/admin/posts/123</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts/_route.wren</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">admin/posts.wren</span></code></p></td>
 <td><p>Edit post with ID 123</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">/api?action=posts&amp;id=456</span></code></p></td>
@@ -960,19 +999,20 @@ queries (<code class="docutils literal notranslate"><span class="pre">?</span></
 </section>
 <section id="optional-the-same-page-as-a-path-based-slug">
 <h3>Optional: The Same Page as a Path-Based Slug<a class="headerlink" href="#optional-the-same-page-as-a-path-based-slug" title="Link to this heading">#</a></h3>
-<p>Only do this if you need <code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code> in the address bar instead
-of <code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code> — typically for SEO, or because you’re matching a URL
-structure you don’t control. It requires a <code class="docutils literal notranslate"><span class="pre">slug</span></code> column and an extra
-file; most projects don’t need it, and the query-parameter version above
-should be your default.</p>
-<p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">blog/_route.wren</span></code></p>
+<p>Use this when <code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code> reads better in the address bar than
+<code class="docutils literal notranslate"><span class="pre">/article?id=42</span></code>. It requires a <code class="docutils literal notranslate"><span class="pre">slug</span></code> column and a <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> file —
+a small cost, and the choice is yours: pick whichever URL you prefer.</p>
+<p><strong>File:</strong> <code class="docutils literal notranslate"><span class="pre">blog.wren</span></code></p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"/_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">slug</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">slug</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/blog"</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT title, slug FROM posts WHERE published = 1 ORDER BY createdAt DESC`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Blog</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;ul&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">posts</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">p</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href="/blog/{{ p["slug"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="x">  &lt;/main&gt;</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
@@ -995,104 +1035,90 @@ should be your default.</p>
 <span class="x">&lt;/article&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">blog.wren</span></code> now serves both <code class="docutils literal notranslate"><span class="pre">/blog</span></code> (the list, when <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> is
+<code class="docutils literal notranslate"><span class="pre">null</span></code>) and <code class="docutils literal notranslate"><span class="pre">/blog/my-first-post</span></code> (a single post).</p>
 <blockquote>
-<div><p>⚠️ Pitfall: this version needs a dedicated <code class="docutils literal notranslate"><span class="pre">slug</span></code> column and gives up
-the simplicity of a single query-string-driven file. Only add it if the
-SEO or URL-structure requirement is real — see
-<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a>.</p>
+<div><p>⚠️ Pitfall: this version needs a dedicated <code class="docutils literal notranslate"><span class="pre">slug</span></code> column. Trade it for a
+path-based URL only if the URL shape matters to you — see
+<a class="reference internal" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes</a>.</p>
 </div></blockquote>
 </section>
 </section>
+<section id="how-deep-should-your-dynamic-routes-go">
+<span id="id2"></span><h2>How Deep Should Your Dynamic Routes Go?<a class="headerlink" href="#how-deep-should-your-dynamic-routes-go" title="Link to this heading">#</a></h2>
+<p>Bialet supports <strong>any depth</strong> – the filesystem is the only limit. However,
+for practical maintainability:</p>
+<ul class="simple">
+<li><p><strong>1–2 levels</strong> – covers 90% of use cases (e.g., <code class="docutils literal notranslate"><span class="pre">/category/&lt;slug&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">/api/&lt;resource&gt;/&lt;id&gt;</span></code>).</p></li>
+<li><p><strong>3 levels</strong> – rare but acceptable (e.g.,
+<code class="docutils literal notranslate"><span class="pre">/api/&lt;version&gt;/&lt;resource&gt;/&lt;id&gt;</span></code>).</p></li>
+<li><p><strong>4+ levels</strong> – usually a sign that you’re over-encoding data in the
+path. Consider using query parameters instead.</p></li>
+</ul>
+<blockquote>
+<div><p>There is <strong>no performance penalty</strong> for deeper routes – the walk-up is a
+few filesystem checks, negligible compared to rendering or database
+queries. But deep URLs are harder for users and search engines, and
+often indicate a design smell.</p>
+</div></blockquote>
+</section>
+<section id="common-pitfalls">
+<h2>Common Pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">route(0)</span></code> is not the first segment of the URL</strong> – it’s the first
+segment <em>after</em> the <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> file’s own URL. For <code class="docutils literal notranslate"><span class="pre">/api/users/123</span></code>
+handled by <code class="docutils literal notranslate"><span class="pre">api.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">route(0)</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;users&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;api&quot;</span></code>.</p></li>
+<li><p><strong>If both <code class="docutils literal notranslate"><span class="pre">some/index.wren</span></code> and <code class="docutils literal notranslate"><span class="pre">some.wren</span></code> exist</strong> – the <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>
+(<code class="docutils literal notranslate"><span class="pre">some.wren</span></code>) wins for <code class="docutils literal notranslate"><span class="pre">/some</span></code>. This is because Bialet checks for <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
+files before directory indexes.</p></li>
+<li><p><strong>Protected folders are never matched</strong> – a <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> inside
+<code class="docutils literal notranslate"><span class="pre">_app/</span></code> will never be reached because <code class="docutils literal notranslate"><span class="pre">_app/</span></code> is blocked entirely.</p></li>
+<li><p><strong>Exact matches always win</strong> – if <code class="docutils literal notranslate"><span class="pre">/blog/my-post.wren</span></code> exists, it will be
+executed for <code class="docutils literal notranslate"><span class="pre">/blog/my-post</span></code> even if <code class="docutils literal notranslate"><span class="pre">blog.wren</span></code> also exists. The walk-up
+stops at the exact match.</p></li>
+<li><p><strong>Query parameters are still available</strong> – you can use both
+<code class="docutils literal notranslate"><span class="pre">Request.get(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code> in the same file.</p></li>
+</ul>
+</section>
 <section id="routing-compared-bialet-vs-express-vs-django">
 <h2>Routing Compared: Bialet vs Express vs Django<a class="headerlink" href="#routing-compared-bialet-vs-express-vs-django" title="Link to this heading">#</a></h2>
-<p>The same feature — fetching one blog post dynamically — looks different
-depending on whether routing is file-based or code-based, and on whether
-the dynamic value lives in a query string or the path. Bialet’s default is
-the query string; Express and Django default to the path.</p>
-<p><strong>Bialet — idiomatic: query parameter, no route table:</strong></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// File: blog.wren</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
-<span class="k">var</span><span class="w"> </span><span class="n">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">([</span><span class="n">id</span><span class="p">])</span>
-<span class="k">return</span><span class="w"> </span><span class="n">post</span>
-</pre></div>
-</div>
-<p>URL: <code class="docutils literal notranslate"><span class="pre">/blog?id=42</span></code>. The route exists because the file exists — there’s no
-separate list of routes to keep in sync with your handlers, and no
-special file needed for this, the common case.</p>
-<p><strong>Express — code-based, explicit route table, path parameter:</strong></p>
-<div class="highlight-js notranslate"><div class="highlight"><pre><span></span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'/blog/:slug'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="w"> </span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">post</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'SELECT * FROM posts WHERE slug = ?'</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">slug</span><span class="p">)</span>
-<span class="w">  </span><span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">post</span><span class="p">)</span>
-<span class="p">})</span>
-</pre></div>
-</div>
-<p>You register the path pattern and handler together, usually in a routes
-file that grows as the app grows.</p>
-<p><strong>Django — code-based, <code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code> + views, path parameter:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># urls.py</span>
-<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">path</span><span class="p">(</span><span class="s1">'blog/&lt;slug:slug&gt;/'</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">post_detail</span><span class="p">),</span>
-<span class="p">]</span>
-
-<span class="c1"># views.py</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">post_detail</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">slug</span><span class="p">):</span>
-    <span class="n">post</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">slug</span><span class="o">=</span><span class="n">slug</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">'post.html'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'post'</span><span class="p">:</span> <span class="n">post</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>Django separates the URL pattern (<code class="docutils literal notranslate"><span class="pre">urls.py</span></code>) from the view function
-(<code class="docutils literal notranslate"><span class="pre">views.py</span></code>) — two files to keep aligned for every route.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p></p></th>
-<th class="head"><p>Bialet (idiomatic)</p></th>
-<th class="head"><p>Bialet (path-based, advanced)</p></th>
-<th class="head"><p>Express</p></th>
-<th class="head"><p>Django</p></th>
+<tr class="row-odd"><th class="head"><p>Framework</p></th>
+<th class="head"><p>Route declared by</p></th>
+<th class="head"><p>Dynamic value from</p></th>
+<th class="head"><p>Typical default</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Route declared by</p></td>
+<tr class="row-even"><td><p>Bialet (query string)</p></td>
 <td><p>file path</p></td>
-<td><p>file path + <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">app.get(...)</span></code> call</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code> entry</p></td>
-</tr>
-<tr class="row-odd"><td><p>Dynamic value from</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Request.get(&quot;id&quot;)</span></code></p></td>
+<td><p>query string</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bialet (path-based)</p></td>
+<td><p>file path + <code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code></p></td>
+<td><p>path segment</p></td>
+</tr>
+<tr class="row-even"><td><p>Express</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">app.get(...)</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">req.params.slug</span></code></p></td>
+<td><p>path segment</p></td>
+</tr>
+<tr class="row-odd"><td><p>Django</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">urlpatterns</span></code> + view</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&lt;type:name&gt;</span></code> in path</p></td>
-</tr>
-<tr class="row-even"><td><p>Handler location</p></td>
-<td><p>same file as the route</p></td>
-<td><p>same file as the route</p></td>
-<td><p>inline callback</p></td>
-<td><p>separate <code class="docutils literal notranslate"><span class="pre">views.py</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Adding a route</p></td>
-<td><p>add a file</p></td>
-<td><p>add a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file</p></td>
-<td><p>add a line to a routes file</p></td>
-<td><p>add a <code class="docutils literal notranslate"><span class="pre">path()</span></code> and a view</p></td>
-</tr>
-<tr class="row-even"><td><p>Typical use</p></td>
-<td><p>default — most pages</p></td>
-<td><p>rare — SEO slugs, REST APIs</p></td>
-<td><p>default</p></td>
-<td><p>default</p></td>
+<td><p>path segment</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The path-based Bialet row exists for parity with how Express and Django
-work by default. In Bialet it’s the exception, not the rule — most
-projects never write a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> file.</p>
-<p>If you’re coming from Express or Django, the biggest mental shift isn’t
-file-based vs. code-based routing — it’s that the dynamic value usually
-comes from the query string, not the path. Reach for <code class="docutils literal notranslate"><span class="pre">Request.get(...)</span></code>
-by default; reach for <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code> only when you have a concrete
-reason to.</p>
+<p><strong>Key insight:</strong> Bialet treats query strings and path segments as equal —
+pick whichever reads best in the URL. Express and Django put dynamic
+values in the path by default; Bialet leaves the choice to you, and
+discourages complex routing either way.</p>
 </section>
 <section id="external-imports">
 <h2>External Imports<a class="headerlink" href="#external-imports" title="Link to this heading">#</a></h2>
@@ -1112,20 +1138,18 @@ cache.</p>
 <section id="key-takeaways">
 <h2>Key Takeaways<a class="headerlink" href="#key-takeaways" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><strong>Query parameters are the default</strong> — any <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file reads dynamic
-data with <code class="docutils literal notranslate"><span class="pre">Request.get(name)</span></code>; no special file or extra route needed.</p></li>
-<li><p><strong>File-based routing</strong> — every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a route, exactly like a
-static HTML file.</p></li>
-<li><p><strong>Protected files</strong> — anything starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> is inaccessible
-directly and returns 403.</p></li>
-<li><p><strong>Path-based routes are the exception</strong> — <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> plus
-<code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code> exists for SEO slugs and REST-style APIs; reach for
-it rarely, and only with a concrete reason.</p></li>
-<li><p><strong>No route table</strong> — the file system is the routing table. Nothing to
-register, nothing to keep in sync.</p></li>
-<li><p><strong>External imports</strong> — <code class="docutils literal notranslate"><span class="pre">gh:</span></code> shorthand or full URLs, cached in
-<code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>, never auto-updating once cached. See
-<a class="reference internal" href="external-modules.html"><span class="std std-doc">External Modules</span></a> for details.</p></li>
+<li><p><strong>Simple routing either way</strong> – query strings (<code class="docutils literal notranslate"><span class="pre">Request.get</span></code>) and path
+segments (<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code> + <code class="docutils literal notranslate"><span class="pre">Request.route(n)</span></code>) are equal, first-class
+options. Pick whichever reads best in the URL.</p></li>
+<li><p><strong>File-based routing</strong> – every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a route; the filesystem
+<em>is</em> the routing table.</p></li>
+<li><p><strong>Protected files (<code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>)</strong> – never served directly, and never
+considered in the walk-up.</p></li>
+<li><p><strong>Complex routing is discouraged</strong> – keep dynamic URLs 1–2 levels deep;
+deep nesting and elaborate schemes are a design smell.</p></li>
+<li><p><strong>No route table</strong> – nothing to register, nothing to keep in sync.</p></li>
+<li><p><strong>External imports</strong> – use <code class="docutils literal notranslate"><span class="pre">gh:</span></code> or full URLs for remote modules (cached
+locally).</p></li>
 </ul>
 </section>
 </section>
@@ -1176,8 +1200,11 @@ register, nothing to keep in sync.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">Direct File Mapping</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-file-mapping">Direct File Mapping</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-request-is-resolved">How a Request Is Resolved</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#protected-files">Protected Files</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-the-app-folder">Preferred: the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: root-level special files</a></li>
@@ -1185,8 +1212,9 @@ register, nothing to keep in sync.</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-content-with-query-parameters">Dynamic Content with Query Parameters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-dynamic-routes-advanced">Path-Based Dynamic Routes (Advanced)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-a-request-is-resolved">How a Request Is Resolved</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-dynamic-routes">Path-Based Dynamic Routes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-string-or-path-segment">Query string or path segment?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-project-structure">Complete Example Project Structure</a><ul class="nav section-nav flex-column">
@@ -1194,6 +1222,8 @@ register, nothing to keep in sync.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-the-same-page-as-a-path-based-slug">Optional: The Same Page as a Path-Based Slug</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-deep-should-your-dynamic-routes-go">How Deep Should Your Dynamic Routes Go?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#routing-compared-bialet-vs-express-vs-django">Routing Compared: Bialet vs Express vs Django</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-imports">External Imports</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-takeaways">Key Takeaways</a></li>

@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'file';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Database" href="database.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -553,8 +553,9 @@ works for uploaded and dynamically created files.</p>
 <p>Once a file is saved in the database, the only way to show it in the browser is
 by using <code class="docutils literal notranslate"><span class="pre">Response.file(id)</span></code>. This will take the file ID and return the file to
 the browser.</p>
-<p>You can also use <code class="docutils literal notranslate"><span class="pre">_route</span></code> to dynamically fetch files from your database and
-display them based on user input, such as a filename.</p>
+<p>You can also use a path-based route file (<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>) to dynamically
+fetch files from your database and display them based on user input, such
+as a filename.</p>
 <section id="example-serving-files-by-name-from-a-custom-table">
 <h3>Example: Serving Files by Name from a Custom Table<a class="headerlink" href="#example-serving-files-by-name-from-a-custom-table" title="Link to this heading">#</a></h3>
 <p>In this example, we have a custom table <code class="docutils literal notranslate"><span class="pre">images</span></code> with fields <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">file_id</span></code>,

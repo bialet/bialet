@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Examples" href="examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -573,9 +573,11 @@ but <a class="reference external" href="https://picocss.com">Pico CSS</a>, Boots
 <section id="how-does-routing-work">
 <h3>How does routing work?<a class="headerlink" href="#how-does-routing-work" title="Link to this heading">#</a></h3>
 <p>Bialet uses file-based routing. A request to <code class="docutils literal notranslate"><span class="pre">/about</span></code> maps to
-<code class="docutils literal notranslate"><span class="pre">about.wren</span></code> (or <code class="docutils literal notranslate"><span class="pre">about.html</span></code>). For dynamic routes, create a <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code>
-file in a directory and use <code class="docutils literal notranslate"><span class="pre">Request.route(pos)</span></code> to read URL segments. See
-<a class="reference internal" href="advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a>.</p>
+<code class="docutils literal notranslate"><span class="pre">about.wren</span></code> (or <code class="docutils literal notranslate"><span class="pre">about.html</span></code>). For dynamic data, read the query string
+with <code class="docutils literal notranslate"><span class="pre">Request.get(&quot;id&quot;)</span></code> (<code class="docutils literal notranslate"><span class="pre">/users?id=42</span></code>) or use a <code class="docutils literal notranslate"><span class="pre">users.wren</span></code> file named
+after the folder and read path segments with <code class="docutils literal notranslate"><span class="pre">Request.route(pos)</span></code>
+(<code class="docutils literal notranslate"><span class="pre">/users/42</span></code>) — both are equally valid. Keep routes shallow; Bialet
+discourages complex routing. See <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a>.</p>
 </section>
 <section id="how-do-i-handle-forms">
 <h3>How do I handle forms?<a class="headerlink" href="#how-do-i-handle-forms" title="Link to this heading">#</a></h3>

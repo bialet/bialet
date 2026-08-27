@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'rest-api';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="External Modules" href="external-modules.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -601,7 +601,7 @@
 <span class="nc">Response</span><span class="o">.</span><span class="n">json</span><span class="p">({</span><span class="s2">"error"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Invalid request"</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>This single-file pattern — one <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code> needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p>
+<p>This single-file pattern — one <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No route file needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> guide.</p>
 </section>
 <section id="cors-configuration">
 <h2>CORS Configuration<a class="headerlink" href="#cors-configuration" title="Link to this heading">#</a></h2>
@@ -978,7 +978,7 @@ curl<span class="w"> </span><span class="s2">"http://localhost:7001/api/products
 <li><p>Set up database <a class="reference internal" href="database.html"><span class="std std-doc">migrations</span></a> to define your API’s schema</p></li>
 <li><p>Explore <a class="reference internal" href="reference.html"><span class="std std-doc">Session management</span></a></p></li>
 <li><p>Read about <a class="reference internal" href="file.html"><span class="std std-doc">File uploads</span></a></p></li>
-<li><p>Understand <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> — when to use query parameters vs <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code></p></li>
+<li><p>Understand <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> — when to use query parameters vs path-based routes (<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>)</p></li>
 </ul>
 </section>
 </section>

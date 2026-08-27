@@ -132,7 +132,7 @@ Response.status(404)
 Response.json({"error": "Invalid request"})
 ```
 
-This single-file pattern — one `.wren` file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No `_route.wren` needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the [Database](database.md) guide.
+This single-file pattern — one `.wren` file handling GET, POST, PUT, and DELETE — is the idiomatic Bialet approach for API endpoints. No route file needed: the query string carries the dynamic data while the HTTP method determines the action. For complete REST APIs that need pagination and sorting, combine this pattern with the techniques from the [Database](database.md) guide.
 
 ## CORS Configuration
 
@@ -504,4 +504,4 @@ await fetch('http://localhost:7001/api/products?id=1', {
 - Set up database [migrations](database.md) to define your API's schema
 - Explore [Session management](reference.md)
 - Read about [File uploads](file.md)
-- Understand [Advanced Routing](advanced-routing.md) — when to use query parameters vs `_route.wren`
+- Understand [Advanced Routing](advanced-routing.md) — when to use query parameters vs path-based routes (`<folder>.wren`)

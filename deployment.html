@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -720,9 +720,9 @@ in case an application or symlink ever serves one (see <a class="reference inter
 </pre></div>
 </div>
 <p>Note: the <code class="docutils literal notranslate"><span class="pre">location</span> <span class="pre">~</span> <span class="pre">(^|/)[_.]</span></code> block matches any path segment that starts
-with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, which covers <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, <code class="docutils literal notranslate"><span class="pre">_route.wren</span></code>, and dotfiles such
-as <code class="docutils literal notranslate"><span class="pre">.env</span></code>. If your app legitimately serves files with such names, drop this
-block — but prefer renaming those files.</p>
+with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, which covers <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and dotfiles such as <code class="docutils literal notranslate"><span class="pre">.env</span></code>. If
+your app legitimately serves files with such names, drop this block — but
+prefer renaming those files.</p>
 </section>
 <section id="id2">
 <h3>Apache<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>

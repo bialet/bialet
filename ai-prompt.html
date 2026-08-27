@@ -58,14 +58,14 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -501,11 +501,11 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
 
 <span class="k">-</span><span class="w"> </span><span class="gs">**Multi-page applications**</span> with full page reloads (avoid SPAs)
 <span class="k">-</span><span class="w"> </span><span class="gs">**File-based routing**</span> — a file's path, minus <span class="sb">`.wren`</span>, is its URL
-<span class="k">-</span><span class="w"> </span><span class="gs">**Query parameters are the default way to make a page dynamic**</span> —
-  <span class="sb">`article.wren`</span> reading <span class="sb">`?id=42`</span> via <span class="sb">`Request.get("id")`</span>. Reach for a
-  <span class="sb">`_route.wren`</span> path-based route only when the value must live in the URL
-  path itself (SEO slugs, REST-style resource paths) — treat it as an
-  advanced escape hatch, not the starting point.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Simple routing either way**</span> — dynamic data lives in the query string
+  (<span class="sb">`article.wren`</span> reading <span class="sb">`?id=42`</span> via <span class="sb">`Request.get("id")`</span>) or in path
+  segments (<span class="sb">`blog.wren`</span> reading <span class="sb">`/blog/my-post`</span> via <span class="sb">`Request.route(0)`</span>).
+  Both are first-class; keep routes shallow. Bialet discourages complex
+  routing: deep nesting, many segments, elaborate URL schemes.
 <span class="k">-</span><span class="w"> </span><span class="gs">**Server-side rendering**</span> with inline HTML strings, minimal JavaScript
 <span class="k">-</span><span class="w"> </span><span class="gs">**Direct SQL queries**</span> with parameterized placeholders instead of an ORM
 <span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, optionally styled with a classless framework like PicoCSS
@@ -784,9 +784,7 @@ this guide uses the <span class="gs">**`_app/` folder**</span>, which keeps the 
 <span class="sb">├── about.wren                # About page (/about)</span>
 <span class="sb">├── article.wren              # Single item, via ?id= (/article?id=42)</span>
 <span class="sb">│</span>
-<span class="sb">├── users/</span>
-<span class="sb">│   ├── index.wren           # Users list (/users)</span>
-<span class="sb">│   └── _route.wren          # Path-based route (/users/:id) — advanced, optional</span>
+<span class="sb">├── users.wren               # Users list + detail (/users, /users/:id) — advanced, optional</span>
 <span class="sb">│</span>
 <span class="sb">├── api/</span>
 <span class="sb">│   └── users.wren           # API endpoint (/api/users)</span>
@@ -838,9 +836,8 @@ HTML — no route table, no <span class="sb">`app.get(...)`</span> calls.
 |---------------------------|----------------------|
 | <span class="sb">`index.wren`</span>              | <span class="sb">`/`</span>                  |
 | <span class="sb">`about.wren`</span>              | <span class="sb">`/about`</span> (and <span class="sb">`/about.wren`</span>) |
-| <span class="sb">`users/index.wren`</span>        | <span class="sb">`/users`</span>             |
+| <span class="sb">`users.wren`</span>              | <span class="sb">`/users`</span> and <span class="sb">`/users/:id`</span> (path-based, advanced) |
 | <span class="sb">`article.wren`</span>            | <span class="sb">`/article`</span> (dynamic via <span class="sb">`?id=`</span>) |
-| <span class="sb">`users/_route.wren`</span>       | <span class="sb">`/users/:id`</span> (path-based, advanced) |
 | <span class="sb">`api/users.wren`</span>          | <span class="sb">`/api/users`</span>         |
 
 <span class="gu">### Default: Query Parameters</span>
@@ -866,17 +863,20 @@ HTML — no route table, no <span class="sb">`app.get(...)`</span> calls.
 One file serves every article — <span class="sb">`/article?id=1`</span>, <span class="sb">`/article?id=2`</span>, etc. — with
 no additional files or routing config.
 
-<span class="gu">### Advanced: Path-Based Routes (`_route.wren`)</span>
+<span class="gu">### Advanced: Path-Based Routes (`&lt;folder&gt;.wren`)</span>
 
 Use this <span class="gs">**only**</span> when the dynamic value must live in the URL path — a
 human-readable slug, a REST-style resource path, or a URL structure you
 inherited and can't change:
 
 <span class="sb">```wren</span>
-<span class="c1">// users/_route.wren — handles /users/:id</span>
-<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// first segment after this file's directory</span>
+<span class="c1">// users.wren — handles /users (list) and /users/:id (detail)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w">  </span><span class="c1">// first segment after this file's URL</span>
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">userId</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// render the /users list</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">User</span><span class="p">)</span>
+<span class="p">}</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -886,8 +886,10 @@ inherited and can't change:
 <span class="sb">```</span>
 
 <span class="sb">`Request.route(n)`</span> never matches across a <span class="sb">`/`</span> — each segment is one path
-component. You can have multiple <span class="sb">`_route.wren`</span> files, one per directory that
-needs path-based handling.
+component. You can have multiple <span class="sb">`&lt;folder&gt;.wren`</span> files, one per folder
+that needs path-based handling: <span class="sb">`blog.wren`</span>, <span class="sb">`api.wren`</span>, <span class="sb">`admin/posts.wren`</span>
+can all coexist. The file that serves a folder's subtree is named after
+the folder; the deepest match wins.
 
 <span class="gu">## Views: Templates in `_app/template.wren`</span>
 
@@ -1267,7 +1269,7 @@ limiting — in a helper class under <span class="sb">`_app/`</span>:
 <span class="nc">Request</span><span class="o">.</span><span class="n">method</span><span class="w">     </span><span class="c1">// "GET", "POST", "PUT", "DELETE", ...</span>
 <span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="w">      </span><span class="c1">// true for POST</span>
 
-<span class="c1">// Path segments (only inside _route.wren)</span>
+<span class="c1">// Path segments (only inside a &lt;folder&gt;.wren route handler)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
 <span class="c1">// Basic auth</span>
@@ -1487,8 +1489,9 @@ the project root no matter which file imports it or how deep it is.
 
 This single-file pattern — one <span class="sb">`.wren`</span> file handling GET/POST/PUT/DELETE via
 <span class="sb">`Request.method`</span>, with the resource id from a query parameter — is the
-idiomatic way to build a REST endpoint in Bialet. Reach for <span class="sb">`_route.wren`</span>
-only when the id truly needs to live in the URL path.
+idiomatic way to build a REST endpoint in Bialet. Reach for a
+<span class="sb">`&lt;folder&gt;.wren`</span> route file only when the id truly needs to live in the URL
+path.
 
 <span class="gu">## HTMX Integration (Optional)</span>
 
@@ -1653,7 +1656,7 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
 <span class="k">1.</span> <span class="gs">**Code Style**</span>: 2-space indentation, single-line methods when possible
 <span class="k">2.</span> <span class="gs">**Structure**</span>: <span class="sb">`_app/`</span> folder for template, migrations, and domain classes
 <span class="k">3.</span> <span class="gs">**No extra folders**</span>: no <span class="sb">`routes/`</span>, <span class="sb">`validators/`</span>, <span class="sb">`middleware/`</span>, <span class="sb">`static/`</span>
-<span class="k">4.</span> <span class="gs">**Routing**</span>: query parameters by default (<span class="sb">`Request.get`</span>); <span class="sb">`_route.wren`</span> +
+<span class="k">4.</span> <span class="gs">**Routing**</span>: query parameters by default (<span class="sb">`Request.get`</span>); <span class="sb">`&lt;folder&gt;.wren`</span> +
    <span class="sb">`Request.route(n)`</span> only for path-based URLs, as an exception
 <span class="k">5.</span> <span class="gs">**Controllers**</span>: each <span class="sb">`.wren`</span> file IS a route — logic at the top, view at
    the bottom, always <span class="sb">`return Response.redirect(...)`</span>

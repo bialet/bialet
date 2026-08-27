@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
-    <script src="_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -444,6 +444,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
 </ul>
             </nav>
         </div>
@@ -910,6 +911,51 @@
 </pre></div>
 </div>
 </section>
+<section id="path-based-route-users-wren">
+<h2>Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)<a class="headerlink" href="#path-based-route-users-wren" title="Link to this heading">#</a></h2>
+<p>A single file serving both <code class="docutils literal notranslate"><span class="pre">/users</span></code> (list) and <code class="docutils literal notranslate"><span class="pre">/users/:id</span></code> (detail) via
+<code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code>. See <a class="reference external" href="advanced-routing.html">Advanced Routing</a>.</p>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// --- Path-Based Route (folder.wren) ---</span>
+<span class="c1">// Demonstrates: a single file serving both the bare URL and every deeper</span>
+<span class="c1">// path. users.wren handles /users (list) and /users/:id (detail) by reading</span>
+<span class="c1">// Request.route(0). See advanced-routing.md for details.</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users ORDER BY name`</span><span class="o">.</span><span class="n">fetch</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html&gt;</span>
+<span class="x">      &lt;head&gt;&lt;title&gt;Users&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">      &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
+<span class="w">        </span><span class="x">&lt;h1&gt;Users&lt;/h1&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
+<span class="w">          </span><span class="x">&lt;ul style="list-style-type:none"&gt;</span>
+<span class="x">            {{ users.map{|user| &lt;li&gt;</span>
+<span class="w">              </span><span class="x">&lt;a href="/users/{{ user["id"] }}"&gt;👤 {{ user["name"] }}&lt;/a&gt;</span>
+<span class="w">            </span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">          &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
+<span class="w">          </span><span class="x">&lt;p&gt;No users yet.&lt;/p&gt;</span>
+<span class="w">        </span><span class="si">}}</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">notFound</span><span class="p">()</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">  </span><span class="x">&lt;html&gt;</span>
+<span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">    &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
+<span class="w">      </span><span class="x">&lt;h1&gt;👤 {{ user["name"] }}&lt;/h1&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;User id: {{ user["id"] }}&lt;/p&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/users"&gt;</span><span class="err">←</span><span class="w"> </span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">users</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;/body&gt;</span>
+<span class="x">  &lt;/html&gt;</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -970,6 +1016,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-utilities">Password utilities</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
 </ul>
   </nav></div>
 

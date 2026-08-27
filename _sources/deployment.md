@@ -249,9 +249,9 @@ server {
 ```
 
 Note: the `location ~ (^|/)[_.]` block matches any path segment that starts
-with `_` or `.`, which covers `_db.sqlite3`, `_route.wren`, and dotfiles such
-as `.env`. If your app legitimately serves files with such names, drop this
-block — but prefer renaming those files.
+with `_` or `.`, which covers `_db.sqlite3` and dotfiles such as `.env`. If
+your app legitimately serves files with such names, drop this block — but
+prefer renaming those files.
 
 ### Apache
 

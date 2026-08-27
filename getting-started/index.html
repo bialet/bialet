@@ -58,7 +58,7 @@
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/index';</script>
-    <script src="../_static/ai-prompt.js?v=8af4d42f"></script>
+    <script src="../_static/ai-prompt.js?v=2034fa06"></script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Wren Language Guide" href="../wren.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.0.4" />
+  <meta name="docsearch:version" content="1.1.0" />
   </head>
   
   
@@ -454,9 +454,11 @@ form submissions, and render dynamic HTML — all with zero configuration.</p>
 <blockquote>
 <div><p>ℹ️ <strong>Bialet has no router to configure.</strong> Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a URL at the
 same path, just like a static HTML file: <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/about</span></code>.</p>
-<p>Use the query string for dynamic data <code class="docutils literal notranslate"><span class="pre">article.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/article?id=123</span></code> with
-<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">id</span> <span class="pre">=</span> <span class="pre">Request.get(&quot;id&quot;)</span></code>. See <a class="reference internal" href="../advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a>
-for the full routing model.</p>
+<p>Dynamic data lives in the query string or the path — both are equal:
+<code class="docutils literal notranslate"><span class="pre">article.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/article?id=123</span></code> with <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">id</span> <span class="pre">=</span> <span class="pre">Request.get(&quot;id&quot;)</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">/article/my-post</span></code> with <code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">slug</span> <span class="pre">=</span> <span class="pre">Request.route(0)</span></code>. Keep routes
+shallow; Bialet discourages complex routing. See
+<a class="reference internal" href="../advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> for the full routing model.</p>
 </div></blockquote>
 <p>Already familiar with Bialet? Jump to <a class="reference internal" href="../installation.html"><span class="std std-doc">Installation</span></a> or the
 <a class="reference internal" href="../reference.html"><span class="std std-doc">API Reference</span></a>.</p>

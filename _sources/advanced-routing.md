@@ -4,18 +4,18 @@ Bialet routing is exactly like serving static HTML files. A file named
 `about.wren` is the route `/about`, just as `about.html` would be. The
 `.wren` extension is optional in the URL.
 
-**The primary way to pass dynamic data is via query strings, not path
-segments.** A file named `article.wren` at `/article` can read `?id=42`
-with `Request.get("id")` — no `_route.wren` needed. This keeps your
-project purely file-based, just like static HTML: one file, one URL, any
-number of query-string variations.
+Dynamic data comes from two equally simple places: **query strings**
+(`article.wren` reading `?id=42` with `Request.get("id")`) or **path
+segments** (`blog.wren` reading `/blog/my-post` with `Request.route(0)`).
+Both are first-class — pick whichever fits the URL you want. What Bialet
+discourages is *complex* routing: deep nesting and convoluted URL
+hierarchies. Keep it simple.
 
-If you've ever put an HTML file in a folder and served it with a static
-file server, you already understand Bialet routing. There is no router to
-configure, no `app.get(...)` calls, no `urlpatterns` list. You put a file
+There is no router to configure, no `app.get(...)` calls, no `urlpatterns`
+list. **The layout of your project *is* the routing table** — you put a file
 where you want a URL, and the URL exists.
 
-## Quick Start
+## Overview
 
 Here's the entire mental model in one directory tree:
 
@@ -23,7 +23,7 @@ Here's the entire mental model in one directory tree:
 my-site/
 ├── index.wren          # /
 ├── about.wren          # /about
-└── article.wren        # /article  (dynamic via ?id=...)
+└── article.wren        # /article/my-article  (dynamic via path slug)
 ```
 
 **The rule:** a file's path relative to the project root, minus the `.wren`
@@ -32,49 +32,38 @@ extension, is its URL.
 - `index.wren` at the root of a folder serves that folder's URL (`/`,
   `/blog`).
 - `about.wren` serves `/about` or `/about.wren` — both work.
-- `article.wren` serves `/article` — and reads whatever comes after the
-  `?` to decide what to render.
+- `article.wren` serves `/article` — and reads whatever follows it in the
+  path to decide what to render.
 
 ```wren
 // File: article.wren
-// Handles: /article?id=42
+// Handles: /article/my-article
 
-var id = Request.get("id")
-var article = `SELECT title, body_html FROM articles WHERE id = ?`.first([id])
+var slug = Request.route(0)
+var article = `SELECT title, body_html FROM articles WHERE slug = ?`.first(slug)
 
 if (!article) return Response.notFound()
 
 return <main>
     <h1>{{ article["title"]}}
-    {{ article["body_html"] }}
+    {{ article["body_html"].raw }}
 </main>
 ```
 
-No new file, no special name, no `_route.wren` — just a normal `.wren`
-file reading `Request.get("id")`, the same way a static-page backend
-would read `$_GET['id']`.
-
-**Mental model:** Bialet resolves URLs by walking the file system. You
-never declare routes explicitly — the layout of your project *is* the
-routing table. Dynamic *data* comes from the query string; dynamic
-*routes* are a rare, separate case covered later in
-[Path-Based Dynamic Routes (Advanced)](#path-based-dynamic-routes-advanced).
+No new file, no special name — the same file serves `/article` and every
+`/article/<slug>` URL via `Request.route(0)`.
 
 > ⚠️ Pitfall: `/about.wren` and `/about` both serve `about.wren`, but the
 > `.wren` extension is never required in links you write. Always link to
 > the extension-less form.
 
-> **Note:** if you truly need the dynamic value *in the path* —
-> `/article/42` instead of `/article?id=42` — Bialet supports that too,
-> via a special `_route.wren` file. Treat it as an advanced escape hatch,
-> not your starting point; see
-> [Path-Based Dynamic Routes (Advanced)](#path-based-dynamic-routes-advanced).
+> **Both styles are equal.** A dynamic value can live in the query string
+> (`/article?id=42`) or in the path (`/article/my-post` via a
+> `<folder>.wren` file) — Bialet treats them the same. Pick whichever
+> produces the URL you want; the path form is covered in
+> [Path-Based Dynamic Routes](#path-based-dynamic-routes-advanced).
 
-The rest of this page fills in the details: direct mapping, protected
-files, dynamic content via query parameters, path-based routes (advanced),
-a full example project, and external imports.
-
-## Direct File Mapping
+### Direct File Mapping
 
 Every `.wren` file maps to a URL path the same way a static HTML file
 would.
@@ -97,11 +86,32 @@ landing/newsletter/cool-campaign.wren  →  /landing/newsletter/cool-campaign
 
 This is not a regex router. There's no pattern matching, no wildcards, no
 route priority to reason about. A file either exists at that path or it
-doesn't. For dynamic data, start with
+doesn't. For dynamic data, see
 [Dynamic Content with Query Parameters](#dynamic-content-with-query-parameters)
-below — reach for
-[Path-Based Dynamic Routes](#path-based-dynamic-routes-advanced) only if
-the value truly needs to live in the URL path.
+and [Path-Based Dynamic Routes](#path-based-dynamic-routes-advanced)
+below — pick whichever gives you the URL you want, and keep it shallow.
+
+## How a Request Is Resolved
+
+When a request arrives, Bialet resolves the URL in this order:
+
+1. **Exact file match** – if `<full_path>.wren` exists, execute it.
+2. **Folder-file walk-up** – walk up the directory tree, checking each
+   parent folder for a `<folder>.wren` file. The **deepest** match (closest
+   to the URL) wins.
+3. **404 Not Found** – if no file is found.
+
+Example: `/some/lorem/ipsum`
+
+- If `/some/lorem/ipsum.wren` exists → execute it (no dynamic segments).
+- Else if `/some/lorem.wren` exists → execute it; `Request.route(0)` =
+  `"ipsum"`.
+- Else if `/some.wren` exists → execute it; `Request.route(0)` = `"lorem"`,
+  `Request.route(1)` = `"ipsum"`.
+- Else → 404.
+
+> Protected folders (`_` or `.`) are never considered during the walk-up —
+> they return 403 immediately.
 
 ## Protected Files
 
@@ -140,7 +150,6 @@ with `_`:
 _app.wren        # Application-wide template
 _migration.wren  # Database migrations
 _cron.wren       # Scheduled tasks
-_route.wren      # Dynamic route handler (advanced, see below)
 ```
 
 Both approaches work identically. The `_app/` folder keeps your root
@@ -158,12 +167,12 @@ without worrying about them leaking through routing.
 
 ## Dynamic Content with Query Parameters
 
-This is the default way to make a page dynamic in Bialet — reach for it
-first, every time. Any `.wren` file, with no special name and no extra
-file, can read query parameters with `Request.get(name)`. It's the same
-model a static HTML page would use if it handed off to a server-side
-script reading `$_GET` in PHP, or `req.query` in Express — except here,
-every `.wren` file already has that ability, by default.
+This is one of the two simple ways to make a page dynamic in Bialet. Any
+`.wren` file, with no special name and no extra file, can read query
+parameters with `Request.get(name)`. It's the same model a static HTML
+page would use if it handed off to a server-side script reading `$_GET` in
+PHP, or `req.query` in Express — except here, every `.wren` file already
+has that ability.
 
 ```wren
 // File: blog.wren
@@ -221,31 +230,47 @@ if (action == "users") {
 | `/api?action=posts&id=42` | `"posts"` | `"42"` | `null` |
 | `/api?action=users&id=1&fields=name,email` | `"users"` | `"1"` | `"name,email"` |
 
-> ⚠️ Pitfall: don't reach for `_route.wren` just because you have a single
-> dynamic page. Query parameters are simpler, more cache-friendly, and
-> keep your project structure flat. Use path segments only when the URL
-> truly represents a resource hierarchy (like a REST API) or you need the
-> SEO benefit of human-readable slugs.
+> ⚠️ Pitfall: don't over-engineer either style. A single dynamic value can
+> live in a query string or a path segment — both are equally fine. What
+> Bialet discourages is *complex* routing: deep nesting, many segments, or
+> elaborate URL hierarchies. Keep dynamic URLs one or two levels deep.
 
 (path-based-dynamic-routes-advanced)=
 
-## Path-Based Dynamic Routes (Advanced)
+## Path-Based Dynamic Routes
 
-> **When to use this:** only when the dynamic value must live in the URL
-> *path* itself — a human-readable slug for SEO (`/blog/how-to-cook-rice`),
-> a REST-style resource path (`/api/users/123`), or because you're
-> preserving a URL structure you inherited and can't change. If none of
-> those apply, use
-> [query parameters](#dynamic-content-with-query-parameters) instead — see
-> the pitfall above. This is an escape hatch, not a starting point, and
-> most Bialet projects never need it.
+> Path-based routing is a first-class option, equal to query parameters.
+> Use it when the dynamic value reads naturally as part of the path —
+> human-readable slugs (`/blog/how-to-cook-rice`), REST-style resources
+> (`/api/users/123`), or a URL structure you inherited. Like query
+> strings, keep it shallow — see
+> [How Deep Should Your Dynamic Routes Go?](#how-deep-should-your-dynamic-routes-go).
 
-Fixed files can't cover URLs with variable path segments. For those rare
-cases, create a `_route.wren` file in the relevant directory. Bialet
-falls back to it whenever no static file matches the requested path.
+### Query string or path segment?
+
+Both are simple, first-class options — pick by how the URL should read:
+
+- **Query string (`Request.get`)** – dynamic data that feels like a
+  variable: `/article?id=42`, `/search?q=hello`, `/api/users?id=7`.
+- **Path segment (`<folder>.wren` + `Request.route(n)`)** – dynamic data
+  that reads as part of the URL itself: `/blog/my-article`,
+  `/api/users/123`.
+
+What Bialet discourages is *complex* routing: deeply nested paths, many
+segments, or elaborate URL schemes. Keep either style shallow — see
+[How Deep Should Your Dynamic Routes Go?](#how-deep-should-your-dynamic-routes-go).
+
+### How it works
+
+Fixed files can't cover URLs with variable path segments. For those URLs,
+name a `.wren` file after a folder: `<folder>.wren`. When a URL
+doesn't resolve to a static file, Bialet walks up the path looking for a
+`.wren` file named after each segment, deepest first. `/api/users/123`
+matches `api.wren`, `/blog/how-to-cook-rice` matches `blog.wren`, and a
+file that doesn't exist gets a 404.
 
 ```wren
-// File: api/_route.wren
+// File: api.wren
 // Handles URLs like: /api/users/123 or /api/posts/my-slug
 
 var segment = Request.route(0)  // First dynamic segment
@@ -263,58 +288,50 @@ if (segment == "users") {
 }
 ```
 
-> ⚠️ Pitfall: dynamic segments start at index `0`, not `1`. `Request.route(0)`
-> is the first segment after the `_route.wren` file's own directory.
+> ⚠️ Pitfall: dynamic segments start at index `0`, not `1`.
+> `Request.route(0)` is the first segment after the `<folder>.wren` file's
+> own URL. At the bare folder URL itself (`/api`), `Request.route(0)` is
+> `null`.
 
-| URL | `Request.route(0)` | `Request.route(1)` | `Request.get("fields")` |
-| --- | --- | --- | --- |
-| `/api/users/1` | `"users"` | `"1"` | `null` |
-| `/api/posts/hello-world` | `"posts"` | `"hello-world"` | `null` |
-| `/api/users/1?fields=name,email` | `"users"` | `"1"` | `"name,email"` |
+| URL | Matching file (if any) | `route(0)` | `route(1)` | `route(2)` |
+|-----|------------------------|------------|------------|------------|
+| `/some` | `some.wren` | `null` | `null` | `null` |
+| `/some/lorem` | `some.wren` | `"lorem"` | `null` | `null` |
+| `/some/lorem/ipsum` | `some.wren` | `"lorem"` | `"ipsum"` | `null` |
+| `/some/lorem/ipsum` (if `lorem.wren` exists) | `some/lorem.wren` | `"ipsum"` | `null` | `null` |
+| `/some/lorem/ipsum` (if `ipsum.wren` exists) | `some/lorem/ipsum.wren` | *not used* (exact match) | *not used* | *not used* |
+
+> - `Request.route(0)` is the **first** segment after the `<folder>.wren`
+>   file's own URL.
+> - If the request matches an exact file, `Request.route(n)` always returns
+>   `null`.
+
+A single `<folder>.wren` therefore covers a whole resource: the bare URL
+(`Request.route(0)` is `null`) renders the list, and every deeper path
+renders an item. This is the classic REST-style list + detail pattern in
+one file.
 
 Each segment is captured as a single path component — this is not a regex
 router. `Request.route(n)` never matches across a `/`. Query parameters
-still work alongside path segments, as the `fields` column above shows —
-the two aren't mutually exclusive, you're just choosing where the primary
-identifier lives.
+still work alongside path segments, so the two aren't mutually exclusive —
+you're just choosing where the primary identifier lives.
 
-You don't need one global `_route.wren` for the whole site. Create a
-separate `_route.wren` in each directory that needs path-based handling —
-`blog/_route.wren`, `admin/posts/_route.wren`, `api/_route.wren` can all
-coexist and handle their own subtree independently.
+You don't need one global route file for the whole site. Create a
+separate `<folder>.wren` for each folder that needs path-based handling —
+`blog.wren`, `admin/posts.wren`, `api.wren` can all coexist and handle
+their own subtree independently. The deepest match wins, so `admin.wren`
+and `admin/posts.wren` can coexist: `/admin/posts/456` runs
+`admin/posts.wren`, anything else under `/admin` runs `admin.wren`.
 
-### How a Request Is Resolved
-
-```text
-                 ┌────────────────────┐
-                 │  Incoming request  │
-                 └──────────┬─────────┘
-                            │
-                            v
-              ┌─────────────────────────────┐
-              │ Matching .wren file exists?  │
-              └───────┬─────────────┬───────┘
-                   yes │             │ no
-                       v             v
-              ┌────────────────┐   ┌───────────────────────────────┐
-              │ Execute that   │   │ _route.wren exists in this    │
-              │ file           │   │ directory?                    │
-              └────────────────┘   └───────┬───────────────┬───────┘
-                                        yes │               │ no
-                                            v               v
-                              ┌─────────────────────────┐ ┌──────────────┐
-                              │ Execute _route.wren with │ │ 404 Not Found│
-                              │ Request.route(n) segments│ └──────────────┘
-                              └─────────────────────────┘
-```
-
-Protected paths (`_`/`.` prefixed) short-circuit this diagram entirely —
-they return 403 before file resolution is attempted.
+When a folder has both an `index.wren` and a `<folder>.wren`, the
+`<folder>.wren` wins for the folder URL itself — Bialet probes the `.wren`
+file before the directory index.
 
 ## Complete Example Project Structure
 
-A blog application using the `_app/` folder approach, with query
-parameters as the default dynamic-content strategy:
+A blog application using the `_app/` folder approach. Query parameters are
+the dynamic-content strategy here, but path-based routes would work just
+as well:
 
 ```text
 my-blog/
@@ -337,10 +354,7 @@ my-blog/
 ├── admin/
 │   ├── index.wren         # Admin dashboard (/admin)
 │   ├── login.wren         # Admin login (/admin/login)
-│   └── posts/
-│       ├── index.wren     # Post list (/admin/posts)
-│       ├── new.wren       # Create post (/admin/posts/new)
-│       └── _route.wren    # Edit post (/admin/posts/:id)
+│   └── posts.wren         # Post list + edit (/admin/posts, /admin/posts/:id)
 │
 ├── api.wren                # API endpoint, by ?action=&id= (/api?action=posts&id=42)
 │
@@ -352,12 +366,10 @@ my-blog/
 ```
 
 > **Optional alternative:** both `blog` and `api` could instead be built
-> with `_route.wren` for path-based URLs — `blog/_route.wren` for
-> `/blog/my-first-post`, `api/_route.wren` for `/api/posts/456`. Only do
-> that if you need the slug or a REST-style path; see
-> [Path-Based Dynamic Routes (Advanced)](#path-based-dynamic-routes-advanced).
-> The structure above uses query parameters instead, which is simpler for
-> most projects.
+> with `<folder>.wren` for path-based URLs — `blog.wren` for
+> `/blog/my-first-post`, `api.wren` for `/api/posts/456`. The choice is
+> yours; see
+> [Path-Based Dynamic Routes](#path-based-dynamic-routes-advanced).
 
 | URL | File Executed | Purpose |
 | --- | --- | --- |
@@ -366,8 +378,8 @@ my-blog/
 | `/blog` | `blog/index.wren` | Blog post list |
 | `/article?id=42` | `article.wren` | Single post, looked up by `?id=` |
 | `/admin` | `admin/index.wren` | Admin dashboard |
-| `/admin/posts/new` | `admin/posts/new.wren` | Create new post form |
-| `/admin/posts/123` | `admin/posts/_route.wren` | Edit post with ID 123 |
+| `/admin/posts` | `admin/posts.wren` | Post list |
+| `/admin/posts/123` | `admin/posts.wren` | Edit post with ID 123 |
 | `/api?action=posts&id=456` | `api.wren` | API endpoint for post 456, via query params |
 | `/_app` | ❌ **403 Forbidden** | Protected file |
 
@@ -422,13 +434,11 @@ URL: `/article?id=42`
 
 ### Optional: The Same Page as a Path-Based Slug
 
-Only do this if you need `/blog/my-first-post` in the address bar instead
-of `/article?id=42` — typically for SEO, or because you're matching a URL
-structure you don't control. It requires a `slug` column and an extra
-file; most projects don't need it, and the query-parameter version above
-should be your default.
+Use this when `/blog/my-first-post` reads better in the address bar than
+`/article?id=42`. It requires a `slug` column and a `<folder>.wren` file —
+a small cost, and the choice is yours: pick whichever URL you prefer.
 
-**File:** `blog/_route.wren`
+**File:** `blog.wren`
 
 ```wren
 import "/_app/template" for Template
@@ -436,8 +446,11 @@ import "/_app/template" for Template
 var slug = Request.route(0)
 
 if (!slug) {
-  Response.redirect("/blog")
-  return
+  var posts = `SELECT title, slug FROM posts WHERE published = 1 ORDER BY createdAt DESC`.fetch
+  return Template.new().layout(<main>
+    <h1>Blog</h1>
+    <ul>{{ posts.map{|p| <li><a href="/blog/{{ p["slug"] }}">{{ p["title"] }}</a></li>} }}</ul>
+  </main>)
 }
 
 var post = `
@@ -460,77 +473,61 @@ return Template.new().layout(<article>
 </article>)
 ```
 
-> ⚠️ Pitfall: this version needs a dedicated `slug` column and gives up
-> the simplicity of a single query-string-driven file. Only add it if the
-> SEO or URL-structure requirement is real — see
-> [Path-Based Dynamic Routes (Advanced)](#path-based-dynamic-routes-advanced).
+`blog.wren` now serves both `/blog` (the list, when `Request.route(0)` is
+`null`) and `/blog/my-first-post` (a single post).
+
+> ⚠️ Pitfall: this version needs a dedicated `slug` column. Trade it for a
+> path-based URL only if the URL shape matters to you — see
+> [Path-Based Dynamic Routes](#path-based-dynamic-routes-advanced).
+
+(how-deep-should-your-dynamic-routes-go)=
+
+## How Deep Should Your Dynamic Routes Go?
+
+Bialet supports **any depth** – the filesystem is the only limit. However,
+for practical maintainability:
+
+- **1–2 levels** – covers 90% of use cases (e.g., `/category/<slug>`,
+  `/api/<resource>/<id>`).
+- **3 levels** – rare but acceptable (e.g.,
+  `/api/<version>/<resource>/<id>`).
+- **4+ levels** – usually a sign that you're over-encoding data in the
+  path. Consider using query parameters instead.
+
+> There is **no performance penalty** for deeper routes – the walk-up is a
+> few filesystem checks, negligible compared to rendering or database
+> queries. But deep URLs are harder for users and search engines, and
+> often indicate a design smell.
+
+## Common Pitfalls
+
+- **`route(0)` is not the first segment of the URL** – it's the first
+  segment *after* the `<folder>.wren` file's own URL. For `/api/users/123`
+  handled by `api.wren`, `route(0)` is `"users"`, not `"api"`.
+- **If both `some/index.wren` and `some.wren` exist** – the `<folder>.wren`
+  (`some.wren`) wins for `/some`. This is because Bialet checks for `.wren`
+  files before directory indexes.
+- **Protected folders are never matched** – a `<folder>.wren` inside
+  `_app/` will never be reached because `_app/` is blocked entirely.
+- **Exact matches always win** – if `/blog/my-post.wren` exists, it will be
+  executed for `/blog/my-post` even if `blog.wren` also exists. The walk-up
+  stops at the exact match.
+- **Query parameters are still available** – you can use both
+  `Request.get(...)` and `Request.route(n)` in the same file.
 
 ## Routing Compared: Bialet vs Express vs Django
 
-The same feature — fetching one blog post dynamically — looks different
-depending on whether routing is file-based or code-based, and on whether
-the dynamic value lives in a query string or the path. Bialet's default is
-the query string; Express and Django default to the path.
+| Framework | Route declared by | Dynamic value from | Typical default |
+|-----------|-------------------|-------------------|-----------------|
+| Bialet (query string) | file path | `Request.get("id")` | query string |
+| Bialet (path-based) | file path + `<folder>.wren` | `Request.route(n)` | path segment |
+| Express | `app.get(...)` | `req.params.slug` | path segment |
+| Django | `urlpatterns` + view | `<type:name>` in path | path segment |
 
-**Bialet — idiomatic: query parameter, no route table:**
-
-```wren
-// File: blog.wren
-var id = Request.get("id")
-var post = `SELECT * FROM posts WHERE id = ?`.first([id])
-return post
-```
-
-URL: `/blog?id=42`. The route exists because the file exists — there's no
-separate list of routes to keep in sync with your handlers, and no
-special file needed for this, the common case.
-
-**Express — code-based, explicit route table, path parameter:**
-
-```js
-app.get('/blog/:slug', (req, res) => {
-  const post = db.get('SELECT * FROM posts WHERE slug = ?', req.params.slug)
-  res.send(post)
-})
-```
-
-You register the path pattern and handler together, usually in a routes
-file that grows as the app grows.
-
-**Django — code-based, `urlpatterns` + views, path parameter:**
-
-```python
-# urls.py
-urlpatterns = [
-    path('blog/<slug:slug>/', views.post_detail),
-]
-
-# views.py
-def post_detail(request, slug):
-    post = Post.objects.get(slug=slug)
-    return render(request, 'post.html', {'post': post})
-```
-
-Django separates the URL pattern (`urls.py`) from the view function
-(`views.py`) — two files to keep aligned for every route.
-
-| | Bialet (idiomatic) | Bialet (path-based, advanced) | Express | Django |
-| --- | --- | --- | --- | --- |
-| Route declared by | file path | file path + `_route.wren` | `app.get(...)` call | `urlpatterns` entry |
-| Dynamic value from | `Request.get("id")` | `Request.route(n)` | `req.params.slug` | `<type:name>` in path |
-| Handler location | same file as the route | same file as the route | inline callback | separate `views.py` |
-| Adding a route | add a file | add a `_route.wren` file | add a line to a routes file | add a `path()` and a view |
-| Typical use | default — most pages | rare — SEO slugs, REST APIs | default | default |
-
-The path-based Bialet row exists for parity with how Express and Django
-work by default. In Bialet it's the exception, not the rule — most
-projects never write a `_route.wren` file.
-
-If you're coming from Express or Django, the biggest mental shift isn't
-file-based vs. code-based routing — it's that the dynamic value usually
-comes from the query string, not the path. Reach for `Request.get(...)`
-by default; reach for `Request.route(n)` only when you have a concrete
-reason to.
+**Key insight:** Bialet treats query strings and path segments as equal —
+pick whichever reads best in the URL. Express and Django put dynamic
+values in the path by default; Bialet leaves the choice to you, and
+discourages complex routing either way.
 
 ## External Imports
 
@@ -551,17 +548,15 @@ cache.
 
 ## Key Takeaways
 
-- **Query parameters are the default** — any `.wren` file reads dynamic
-  data with `Request.get(name)`; no special file or extra route needed.
-- **File-based routing** — every `.wren` file is a route, exactly like a
-  static HTML file.
-- **Protected files** — anything starting with `_` or `.` is inaccessible
-  directly and returns 403.
-- **Path-based routes are the exception** — `_route.wren` plus
-  `Request.route(n)` exists for SEO slugs and REST-style APIs; reach for
-  it rarely, and only with a concrete reason.
-- **No route table** — the file system is the routing table. Nothing to
-  register, nothing to keep in sync.
-- **External imports** — `gh:` shorthand or full URLs, cached in
-  `BIALET_REMOTE_MODULES`, never auto-updating once cached. See
-  [External Modules](external-modules.md) for details.
+- **Simple routing either way** – query strings (`Request.get`) and path
+  segments (`<folder>.wren` + `Request.route(n)`) are equal, first-class
+  options. Pick whichever reads best in the URL.
+- **File-based routing** – every `.wren` file is a route; the filesystem
+  *is* the routing table.
+- **Protected files (`_` or `.`)** – never served directly, and never
+  considered in the walk-up.
+- **Complex routing is discouraged** – keep dynamic URLs 1–2 levels deep;
+  deep nesting and elaborate schemes are a design smell.
+- **No route table** – nothing to register, nothing to keep in sync.
+- **External imports** – use `gh:` or full URLs for remote modules (cached
+  locally).
