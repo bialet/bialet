@@ -49,11 +49,11 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
 
 - **Multi-page applications** with full page reloads (avoid SPAs)
 - **File-based routing** — a file's path, minus `.wren`, is its URL
-- **Query parameters are the default way to make a page dynamic** —
-  `article.wren` reading `?id=42` via `Request.get("id")`. Reach for a
-  path-based route (`<folder>.wren`) only when the value must live in the
-  URL path itself (SEO slugs, REST-style resource paths) — treat it as an
-  advanced escape hatch, not the starting point.
+- **Simple routing either way** — dynamic data lives in the query string
+  (`article.wren` reading `?id=42` via `Request.get("id")`) or in path
+  segments (`blog.wren` reading `/blog/my-post` via `Request.route(0)`).
+  Both are first-class; keep routes shallow. Bialet discourages complex
+  routing: deep nesting, many segments, elaborate URL schemes.
 - **Server-side rendering** with inline HTML strings, minimal JavaScript
 - **Direct SQL queries** with parameterized placeholders instead of an ORM
 - **Semantic HTML**, optionally styled with a classless framework like PicoCSS

@@ -86,9 +86,11 @@ but [Pico CSS](https://picocss.com), Bootstrap, or plain CSS work fine.
 ### How does routing work?
 
 Bialet uses file-based routing. A request to `/about` maps to
-`about.wren` (or `about.html`). For dynamic routes, create a `users.wren`
-file named after the folder and use `Request.route(pos)` to read URL
-segments (`/users/42`). See [Advanced Routing](advanced-routing.md).
+`about.wren` (or `about.html`). For dynamic data, read the query string
+with `Request.get("id")` (`/users?id=42`) or use a `users.wren` file named
+after the folder and read path segments with `Request.route(pos)`
+(`/users/42`) — both are equally valid. Keep routes shallow; Bialet
+discourages complex routing. See [Advanced Routing](advanced-routing.md).
 
 ### How do I handle forms?
 

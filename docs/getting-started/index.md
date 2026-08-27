@@ -7,9 +7,11 @@ form submissions, and render dynamic HTML — all with zero configuration.
 > ℹ️ **Bialet has no router to configure.** Every `.wren` file is a URL at the
 > same path, just like a static HTML file: `about.wren` → `/about`.
 >
-> Use the query string for dynamic data `article.wren` → `/article?id=123` with
-> `var id = Request.get("id")`. See [Advanced Routing](../advanced-routing.md)
-> for the full routing model.
+> Dynamic data lives in the query string or the path — both are equal:
+> `article.wren` → `/article?id=123` with `var id = Request.get("id")`, or
+> `/article/my-post` with `var slug = Request.route(0)`. Keep routes
+> shallow; Bialet discourages complex routing. See
+> [Advanced Routing](../advanced-routing.md) for the full routing model.
 
 Already familiar with Bialet? Jump to [Installation](../installation.md) or the
 [API Reference](../reference.md).
