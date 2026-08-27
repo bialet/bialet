@@ -1,4 +1,4 @@
-import "/_app" for Template, Posts
+import "_app" for Template, Posts
 
 var slug = Request.route(0)
 if (!slug) {
@@ -11,7 +11,7 @@ return Template.layout(
   <main>
     <p><a href="/">Back to home</a></p>
     <h1>{{ post.title }}</h1>
-    {{ post.content }}
+    {{ post.content.raw }}
     <p style="margin-top: 2em"><a href="/api/{{ post.id }}">API JSON</a></p>
   </main>
 )

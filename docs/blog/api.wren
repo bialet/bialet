@@ -1,4 +1,4 @@
-import "../_app" for Posts
+import "_app" for Posts
 
 var id = Request.route(0)
 
