@@ -1,7 +1,24 @@
 # Roadmap
 
-Bialet is stable and feature-complete for my personal use. This roadmap tracks
+Bialet is stable for personal use. Items under *Priority* are real
+dependencies of deployments that run on it and take priority. The rest are
 ideas I may revisit if interest returns, but no promises.
+
+## Priority
+
+- [ ] **Expose upload and SQLite limits as startup config** — `max_upload_size`
+      (default 2 MB, set in `src/main.c`) and the SQLite tuning pragmas are C
+      constants. Read them at startup from `Config` (like the `BIALET_*`
+      flags) or CLI flags so an operator can set them per app without
+      recompiling. The file-upload docs say "10 MB" but the code defaults to
+      2 MB — reconcile them.
+- [ ] **`bialet check` — whole-tree validation** — `-t` validates a single
+      `.wren` file. A deploy hook needs a command that validates every `.wren`
+      in an app tree and exits `0`/`1`. The docs and manifesto advertise
+      `init`/`check`/`test`, but only `validate`/`tests`/`dev` exist.
+- [ ] **Hidden health endpoint** — a reserved `_`-prefixed route (e.g.
+      `/_health`) returning version, uptime, and DB status so supervisors and
+      watchdogs can health-check an app without relying on an app route.
 
 ## Editors/IDE Support
 
@@ -12,6 +29,15 @@ ideas I may revisit if interest returns, but no promises.
 
 ## On my radar
 
+- [ ] **Per-request access logs** — `-l` should record one line per request
+      (method, path, status, duration, bytes) so a host can meter usage and
+      detect abuse without parsing proxy logs.
+- [ ] **Optional on-disk file storage** — a flag to store uploads on disk
+      (under the app's data dir, outside the code release) instead of only as
+      DB blobs. Large files currently inflate the database, backups, and the
+      disk quota all at once.
+- [ ] **`bialet init`** — scaffold a new app directory, completing the
+      `init`/`check`/`test` story the docs promise.
 - [ ] **Admin dashboard** — External lib UI for browsing the database and
       viewing logs
 - [ ] **Data filtering lib** — External lib for query sanitization and type-safe
@@ -34,6 +60,10 @@ ideas I may revisit if interest returns, but no promises.
 
 ## Someday maybe
 
+- [ ] **Official "hosted" deployment recipe** — a doc page showing the
+      recommended hosted pattern: immutable release root + external DB via
+      `-d` + `umask 0077`. `deployment.md` covers the pieces; this would be
+      the full recipe.
 - [ ] **Warn when a block callback returns null** — a multi-statement `map`
       callback (or any block whose body is not a single expression) renders
       empty output with no error. Log a warning so a silent empty `<ul>` is
