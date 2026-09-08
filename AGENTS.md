@@ -92,6 +92,52 @@ files.
 - Documentation built with Sphinx (`docs/`); workflow in
   `.github/workflows/sphinx.yml`
 
+## Windows Build & Test (cross-compile on Linux)
+
+Releases build the Windows binary on Linux (see `.github/workflows/release.yml`);
+no Windows host is needed. The mingw sysroot must provide static `sqlite3` and
+`openssl` libs (`/usr/x86_64-w64-mingw32/lib/{libsqlite3,libssl,libcrypto}.a`).
+
+```bash
+# Toolchain
+sudo apt-get install -y gcc-mingw-w64-x86-64-posix wine
+
+# Static Windows build -> build/bialet.exe
+make clean && CC=x86_64-w64-mingw32-gcc make static
+```
+
+Run the suite under Wine by registering a binfmt handler so PE executables run
+directly (needs root), then remove it when done:
+
+```bash
+sudo sh -c 'echo ":WinePE:M::MZ::/usr/bin/wine:" > /proc/sys/fs/binfmt_misc/register'
+WINEDEBUG=-all ./tests/run.sh ./build/bialet.exe 127.0.0.1 7221
+sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WinePE'
+```
+
+Two tests fail under Wine but pass on Linux, and fail identically on a clean
+`HEAD` build, so they are environmental, not regressions:
+
+- `Nested relative import` (expects 200, gets 500)
+- `folder.wren symlink no bypass` (expects 404, gets 403)
+
+The symlink one is a Wine artifact: the stray root-level `_db.sqlite3` (see
+Gotchas below) makes the planted `tests/sub.wren -> ../_db.sqlite3` symlink
+resolve to an existing file, so the server answers 403 instead of 404.
+Isolated, with no stray file present, it passes.
+
+## Gotchas
+
+- `bialet -t FILE` (validate) and `bialet -r CODE` open the default DB before
+  running, so from a directory without an app root they create an empty
+  0-byte `_db.sqlite3` in the current directory. `tests/run.sh` runs `-t` from
+  the repo root, so that file reappears mid-suite even after `make clean`.
+- `make clean` deletes **every** `_db.sqlite3*` under the tree
+  (`find . -name "_db.sqlite3*" -type f -delete`), not just build artifacts.
+  Intentional — do not "fix" it, and do not keep app data under the repo root.
+- Before blaming a test failure on code, check for stray DBs with
+  `find . -name "_db.sqlite3*"`.
+
 ## Documentation Tone
 
 `docs/` is plain, technical, and no-nonsense — short declarative sentences,
