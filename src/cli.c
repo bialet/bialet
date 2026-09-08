@@ -10,8 +10,10 @@
  */
 #include "cli.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -37,6 +39,9 @@ typedef enum {
   CLI_OPT_CPU_SOFT,
   CLI_OPT_CPU_HARD,
   CLI_OPT_MAX_POST,
+  CLI_OPT_MAX_UPLOAD,
+  CLI_OPT_FOREIGN_KEYS,
+  CLI_OPT_SYNCHRONOUS,
   CLI_OPT_QUIET,
   CLI_OPT_COUNT
 } CliOptId;
@@ -48,12 +53,26 @@ typedef struct {
 } CliOptSpec;
 
 static const CliOptSpec cli_opts[] = {
-    {"port", 'p', 1},     {"host", 'h', 1},     {"help", 'H', 0},
-    {"run", 'r', 1},      {"validate", 't', 1}, {"tests", 'T', 2},
-    {"version", 'v', 0},  {"log", 'l', 1},      {"db", 'd', 1},
-    {"wal", 'w', 0},      {"ignore", 'i', 1},   {"mem-soft", 'm', 1},
-    {"mem-hard", 'M', 1}, {"cpu-soft", 'c', 1}, {"cpu-hard", 'C', 1},
-    {"max-post", 'b', 1}, {"quiet", 'q', 0},
+    {"port", 'p', 1},
+    {"host", 'h', 1},
+    {"help", 'H', 0},
+    {"run", 'r', 1},
+    {"validate", 't', 1},
+    {"tests", 'T', 2},
+    {"version", 'v', 0},
+    {"log", 'l', 1},
+    {"db", 'd', 1},
+    {"wal", 'w', 0},
+    {"ignore", 'i', 1},
+    {"mem-soft", 'm', 1},
+    {"mem-hard", 'M', 1},
+    {"cpu-soft", 'c', 1},
+    {"cpu-hard", 'C', 1},
+    {"max-post", 'b', 1},
+    {"max-upload-size", 'u', 1},
+    {"foreign-keys", 'f', 1},
+    {"synchronous", 's', 1},
+    {"quiet", 'q', 0},
 };
 
 /* cli_opts[] is indexed by CliOptId, so the two must stay the same length and
@@ -83,6 +102,55 @@ static void cli_error(BialetCliOptions* opts, const char* fmt, ...) {
 static int path_exists(const char* path) {
   struct stat st;
   return stat(path, &st) == 0;
+}
+
+/* Case-insensitive string equality for the on/off and mode values. */
+static int strieq(const char* a, const char* b) {
+  for(;; a++, b++) {
+    unsigned char ca = (unsigned char)tolower((unsigned char)*a);
+    unsigned char cb = (unsigned char)tolower((unsigned char)*b);
+    if(ca != cb)
+      return 0;
+    if(ca == '\0')
+      return 1;
+  }
+}
+
+/* Parses a byte size that may carry a K/M/G suffix (KiB/MiB/GiB, so 4MB is
+ * 4194304 bytes). A bare number is bytes. Returns 0 on success. */
+static int parse_byte_size(const char* value, size_t* out) {
+  if(*value == '\0')
+    return -1;
+  errno = 0;
+  char*              end;
+  unsigned long long num = strtoull(value, &end, 10);
+  if(errno == ERANGE || end == value)
+    return -1;
+  size_t mult = 1;
+  if(*end != '\0') {
+    switch(tolower((unsigned char)*end)) {
+      case 'k':
+        mult = 1024UL;
+        break;
+      case 'm':
+        mult = 1024UL * 1024;
+        break;
+      case 'g':
+        mult = 1024UL * 1024 * 1024;
+        break;
+      default:
+        return -1;
+    }
+    end++;
+    if(*end == 'b' || *end == 'B')
+      end++;
+    if(*end != '\0')
+      return -1;
+  }
+  if(num > SIZE_MAX / mult)
+    return -1;
+  *out = (size_t)num * mult;
+  return 0;
 }
 
 static void set_option(CliOptId id, const char* value, struct BialetConfig* config,
@@ -175,6 +243,44 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
         return;
       }
       config->max_post_size = (size_t)num * 1024;
+      break;
+    case CLI_OPT_MAX_UPLOAD: {
+      size_t bytes;
+      if(parse_byte_size(value, &bytes) != 0 || bytes == 0) {
+        cli_error(opts,
+                  "Invalid max upload size: %s (use bytes or a K/M/G suffix, "
+                  "e.g. 4MB)",
+                  value);
+        return;
+      }
+      config->max_upload_size = bytes;
+    } break;
+    case CLI_OPT_FOREIGN_KEYS:
+      if(strieq(value, "on") || strieq(value, "1")) {
+        config->sqlite_foreign_keys = 1;
+      } else if(strieq(value, "off") || strieq(value, "0")) {
+        config->sqlite_foreign_keys = 0;
+      } else {
+        cli_error(opts, "Invalid foreign keys mode: %s (use on or off)", value);
+        return;
+      }
+      break;
+    case CLI_OPT_SYNCHRONOUS:
+      if(strieq(value, "off") || strieq(value, "0")) {
+        config->sqlite_synchronous = 0;
+      } else if(strieq(value, "normal") || strieq(value, "1")) {
+        config->sqlite_synchronous = 1;
+      } else if(strieq(value, "full") || strieq(value, "2")) {
+        config->sqlite_synchronous = 2;
+      } else if(strieq(value, "extra") || strieq(value, "3")) {
+        config->sqlite_synchronous = 3;
+      } else {
+        cli_error(opts,
+                  "Invalid synchronous mode: %s (use off, normal, full, or "
+                  "extra)",
+                  value);
+        return;
+      }
       break;
     case CLI_OPT_QUIET:
       config->quiet = 1;

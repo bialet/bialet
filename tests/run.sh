@@ -193,6 +193,42 @@ else
     "Expected the custom 413 page. Got: '$over_page'"
 fi
 
+# Per-file upload cap (-u): the effective limit with default flags is ~120 KB
+# (128 KB body cap minus ~8 KB of multipart framing). A 100 KB file must be
+# accepted; a 124 KB file fits inside the 128 KB body but must be rejected as
+# over the per-file cap, so upload.wren answers 400 "No file was uploaded".
+upload_ok_line=$LINENO
+_test_start_ms=$(now_ms)
+upload_file="$(mktemp /tmp/bialet-upload-ok.XXXXXX)"
+head -c 102400 /dev/zero > "$upload_file" 2>/dev/null
+upload_ok_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+  -F "form_file_name=@$upload_file" "http://$HOST:$PORT/upload")
+upload_ok_body=$(curl -s --max-time 20 \
+  -F "form_file_name=@$upload_file" "http://$HOST:$PORT/upload")
+rm -f "$upload_file"
+if [[ "$upload_ok_code" == "200" && "$upload_ok_body" == *"102400"* ]]; then
+  report_result "Upload within -u limit        " "$upload_ok_line" 0
+else
+  report_result "Upload within -u limit        " "$upload_ok_line" 1 \
+    "Expected 200 with size 102400. Got status:$upload_ok_code body:'$upload_ok_body'"
+fi
+
+upload_over_line=$LINENO
+_test_start_ms=$(now_ms)
+upload_file="$(mktemp /tmp/bialet-upload-over.XXXXXX)"
+head -c 126976 /dev/zero > "$upload_file" 2>/dev/null  # 124 KB, over the ~120 KB cap
+upload_over_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+  -F "form_file_name=@$upload_file" "http://$HOST:$PORT/upload")
+upload_over_body=$(curl -s --max-time 20 \
+  -F "form_file_name=@$upload_file" "http://$HOST:$PORT/upload")
+rm -f "$upload_file"
+if [[ "$upload_over_code" == "400" && "$upload_over_body" == *"No file was uploaded"* ]]; then
+  report_result "Upload over -u limit rejected " "$upload_over_line" 0
+else
+  report_result "Upload over -u limit rejected " "$upload_over_line" 1 \
+    "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
+fi
+
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"

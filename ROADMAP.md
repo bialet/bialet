@@ -6,12 +6,13 @@ ideas I may revisit if interest returns, but no promises.
 
 ## Priority
 
-- [ ] **Expose upload and SQLite limits as startup config** — `max_upload_size`
-      (default 2 MB, set in `src/main.c`) and the SQLite tuning pragmas are C
-      constants. Read them at startup from `Config` (like the `BIALET_*`
-      flags) or CLI flags so an operator can set them per app without
-      recompiling. The file-upload docs say "10 MB" but the code defaults to
-      2 MB — reconcile them.
+- [x] **Expose upload and SQLite limits as startup config** — `-u /
+      --max-upload-size` (bytes or K/M/G suffix; default 4 MB), `-f /
+      --foreign-keys` (on/off), and `-s / --synchronous` (off/normal/full/
+      extra). The upload cap is clamped at startup to what the request-body
+      cap (`-b` / `-m`) can actually deliver, so rejection logs state a
+      reachable limit; docs updated to match (default effective upload is ~120
+      KB until `-b` and `-m` are raised).
 - [ ] **`bialet check` — whole-tree validation** — `-t` validates a single
       `.wren` file. A deploy hook needs a command that validates every `.wren`
       in an app tree and exits `0`/`1`. The docs and manifesto advertise

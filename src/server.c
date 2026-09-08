@@ -692,6 +692,15 @@ void handle_client(bialet_socket_t client_socket) {
              already < declared) {
             drain_request_body(client_socket, declared - already);
           }
+          {
+            char oversized_msg[160];
+            snprintf(oversized_msg, sizeof(oversized_msg),
+                     "Request body (%zu bytes) exceeds the %zu-byte limit; "
+                     "max upload is %zu bytes",
+                     declared, bialet_config.max_post_size,
+                     bialet_config.max_upload_size);
+            message(red("413"), oversized_msg);
+          }
         }
         struct BialetResponse too_large = {0};
         custom_error(413, &too_large);

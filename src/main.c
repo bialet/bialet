@@ -52,6 +52,13 @@
 #endif
 
 #define MEGABYTE (1024 * 1024)
+/* Default per-file upload cap. The reachable limit at startup is smaller:
+ * a file part must fit inside the request body (see the clamp after
+ * message_init()). */
+#define DEFAULT_MAX_UPLOAD_SIZE (4 * MEGABYTE)
+/* Bytes of a multipart body that are not file content: the boundary lines,
+ * per-part headers, and any other form fields that accompany the upload. */
+#define MAX_UPLOAD_FRAMING (8 * 1024)
 #define MAX_URL 256
 /* Paths get PATH_MAX. This was 100, which is shorter than many real project
  * paths: realpath_n() refuses to truncate, so `bialet /some/deep/app/dir`
@@ -395,8 +402,8 @@ int main(int argc, char* argv[]) {
   bialet_config.db_path = DB_FILE;
   bialet_config.wal_mode = 0;
   bialet_config.ignored_files = IGNORED_FILES;
-  bialet_config.max_upload_size = 2 * 1024 * 1024; // Default 2MB
-  bialet_config.max_post_size = 128 * 1024;        // Default 128KB
+  bialet_config.max_upload_size = DEFAULT_MAX_UPLOAD_SIZE; // Default 4MB
+  bialet_config.max_post_size = 128 * 1024;                // Default 128KB
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
@@ -502,6 +509,31 @@ int main(int argc, char* argv[]) {
   bialet_config.full_root_dir = resolved_root;
 
   message_init(&bialet_config);
+  /* The per-file upload cap is bounded by the request-body cap: a file part
+   * travels inside a multipart body whose Content-Length must be under
+   * max_post_size. Reserve MAX_UPLOAD_FRAMING for the multipart framing and
+   * any other form fields, then clamp max_upload_size to a limit that can
+   * actually arrive, so the upload rejection logs state the real maximum.
+   * Raising -b (and -m, which sets the memory-safe body ceiling) lifts it. */
+  {
+    size_t max_file = bialet_config.max_post_size;
+    if(max_file > MAX_UPLOAD_FRAMING)
+      max_file -= MAX_UPLOAD_FRAMING;
+    else
+      max_file = 0;
+    if(bialet_config.max_upload_size > max_file) {
+      int operator_set = bialet_config.max_upload_size != DEFAULT_MAX_UPLOAD_SIZE;
+      bialet_config.max_upload_size = max_file;
+      if(operator_set) {
+        char upload_note[160];
+        snprintf(upload_note, sizeof(upload_note),
+                 "capped at %zu bytes (%zu KB) by the request-body limit; "
+                 "raise -m and -b to allow larger uploads",
+                 max_file, max_file / 1024);
+        message(yellow("Upload limit"), upload_note);
+      }
+    }
+  }
   bialet_init(&bialet_config);
   // Registered rather than called at each exit point: main() leaves through a
   // dozen exit() calls plus the forked child's exit(0), and neither the SQLite

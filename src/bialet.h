@@ -86,7 +86,9 @@ struct BialetConfig {
   char* ignored_files;
   int   wal_mode;
 
-  /* Max upload size in bytes (default 10MB) */
+  /* Max upload file size in bytes. Configured with -u / --max-upload-size
+   * (default 4 MB) and clamped at startup to fit the request-body cap (see
+   * src/main.c), so it is the per-file limit the rejection logs report. */
   size_t max_upload_size;
 
   /* Max request body size in bytes. Configured with -b (default 128KB) and

@@ -83,6 +83,15 @@ void cli_print_version(void);
   "30)\n"                                                                           \
   "  -b, --max-post KB     Max request body                       (default: "       \
   "128)\n"                                                                          \
+  "  -u, --max-upload-size BYTES\n"                                                 \
+  "                        Max upload file size; bare number is bytes, K/M/G "      \
+  "scale\n"                                                                         \
+  "                        it (4MB, 4096KB)                      (default: 4 MB)\n" \
+  "  -f, --foreign-keys MODE\n"                                                     \
+  "                        SQLite foreign keys: on or off        (default: on)\n"   \
+  "  -s, --synchronous MODE\n"                                                      \
+  "                        SQLite synchronous: off, normal, full, or extra\n"       \
+  "                                                            (default: normal)\n" \
   "  -q, --quiet           Quiet: suppress the browser auto-open and colored "      \
   "output\n\n"                                                                      \
   "Long options take a value as `--port 8080` or `--port=8080`.\n\n"                \

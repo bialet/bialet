@@ -550,17 +550,29 @@ Use CLI flags to constrain resources per app:
 | `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
 | `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
 | `-b` | Max request body (KB)  | 128     | `-b 512`         |
+| `-u` | Max per-file upload    | 4 MB    | `-u 8MB`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
 
 The request-body cap is the smaller of `-b` and the memory-safe ceiling
 (`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
 
+Uploads are capped by `-u` and must also fit inside the body cap, so the
+effective per-file limit is the smaller of the two minus ~8 KB of multipart
+framing — about 120 KB at the defaults. Raise `-b` (and `-m` when the ceiling
+binds) together with `-u` to allow large files. See
+[File Size Limits](file.md). SQLite foreign keys (`-f`) and synchronous mode
+(`-s`) are also startup flags; see [Upload and SQLite Tuning](usage.md).
+
 Example for a production app:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -l /var/log/bialet/app.log /www/myapp
+bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
+  -l /var/log/bialet/app.log /www/myapp
 ```
+
+Raises the default body cap so the app accepts uploads up to ~1 MB; drop
+`-b`/`-u` if it does not handle uploads at all.
 
 ## Quick Deploy Checklist
 
