@@ -382,6 +382,7 @@ run_test "Date constructors and get   " "date-more"       200 "dow:5|doy:366|woy
 # Tests - Util functions
 run_test "Util functions              " "util"            200 "true"
 run_test "Util encoding and helpers   " "util-more"       200 "hex:255|hexLower:26|toHex:FF|lpad:007|rev:cba"
+run_test "SHA-256 and base64 helpers  " "sha256"         200 "all-passed"
 
 # Tests - Cookie & Session
 run_test "Cookie set                  " "cookie?set=1"    200 "set"

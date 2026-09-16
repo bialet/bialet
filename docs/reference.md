@@ -503,7 +503,9 @@ Encodes a dictionary of parameters into a URL-encoded string.
 
 ### encodeBase64(input)
 
-Encodes a given input string to Base64.
+Encodes a given input string to Base64 using the standard alphabet with `=`
+padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
+`decodeBase64`.
 
 - `input`: The string to encode.
 
@@ -512,6 +514,29 @@ Encodes a given input string to Base64.
 Decodes a Base64 encoded string.
 
 - `input`: The Base64 encoded string to decode.
+
+### base64UrlEncode(input)
+
+Encodes a string to Base64url (RFC 4648 §5): the URL-safe `-`/`_` alphabet with
+no `=` padding.
+
+- `input`: The string to encode.
+
+### sha256(input)
+
+Returns the lowercase hex SHA-256 of the UTF-8 bytes of `input` (64 characters).
+Non-string arguments are coerced to strings. Available in every build, with or
+without OpenSSL.
+
+- `input`: The string to hash.
+
+### sha256Base64Url(input)
+
+Returns `BASE64URL(SHA256(input))` with no padding. This is exactly PKCE's
+`code_challenge` for the `S256` method (RFC 7636), useful for OAuth 2.1 and
+OIDC flows.
+
+- `input`: The string to hash and encode.
 
 ## Config
 

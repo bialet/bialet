@@ -121,8 +121,10 @@ Two tests fail under Wine but pass on Linux, and fail identically on a clean
 - `Nested relative import` (expects 200, gets 500)
 - `folder.wren symlink no bypass` (expects 404, gets 403)
 
-The symlink one is a Wine artifact: the stray root-level `_db.sqlite3` (see
-Gotchas below) makes the planted `tests/sub.wren -> ../_db.sqlite3` symlink
+`tests/run.sh` detects a `.exe` target and skips both automatically (reported as
+skipped, not failed), so the Wine run exits 0. On any other target they run as
+usual. The symlink one is a Wine artifact: the stray root-level `_db.sqlite3`
+(see Gotchas below) makes the planted `tests/sub.wren -> ../_db.sqlite3` symlink
 resolve to an existing file, so the server answers 403 instead of 404.
 Isolated, with no stray file present, it passes.
 

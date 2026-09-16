@@ -35,6 +35,16 @@
 // than degrading to a predictable fallback.
 void random_bytes_fill(unsigned char* buf, size_t len);
 
+// SHA-256 of [data] ([len] bytes, which may contain NUL). [out] must be at
+// least 32 bytes. Self-contained, deliberately not gated on OpenSSL: PKCE and
+// JWT/OIDC need it in every build, so it has no degraded fallback.
+void sha256_raw(const char* data, size_t len, unsigned char* out);
+
+// Lowercase hex SHA-256 of [data] ([len] bytes). [out] must be at least 65
+// bytes. Hashes exactly [len] bytes (not strlen), so embedded NULs count and
+// leading zeros are preserved (unlike Util.toHex).
+void sha256_hex(const char* data, size_t len, char* out);
+
 int  verify_password(char* password, char* hash_and_salt);
 void hash_password(char* password, char* output);
 

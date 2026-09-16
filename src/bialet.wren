@@ -868,40 +868,16 @@ class Util {
     }
   }
 
-  static encodeBase64(input) {
-    var encoded = ""
-    var i = 0
+  static sha256(input) { sha256_("%( input )") }
 
-    while (i < input.count) {
-      i = i + 1
-      var b1 = input.byteAt(i) & 0xFF
-      if (i == input.count) {
-        encoded = encoded + BASE64_CHARS[b1 >> 2]
-        encoded = encoded + BASE64_CHARS[(b1 & 0x3) << 4]
-        encoded = encoded + "=="
-        break
-      }
+  // BASE64URL(SHA256(input)) without padding: PKCE's code_challenge for S256.
+  static sha256Base64Url(input) { sha256Base64Url_("%( input )") }
 
-      i = i + 1
-      var b2 = input.byteAt(i) & 0xFF
-      if (i == input.count) {
-        encoded = encoded + BASE64_CHARS[b1 >> 2]
-        encoded = encoded + BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
-        encoded = encoded + BASE64_CHARS[(b2 & 0xF) << 2]
-        encoded = encoded + "="
-        break
-      }
+  // RFC 4648 §5: URL-safe alphabet, no padding.
+  static base64UrlEncode(input) { base64UrlEncode_("%( input )") }
 
-      i = i + 1
-      var b3 = input.byteAt(i) & 0xFF
-      encoded = encoded + BASE64_CHARS[b1 >> 2]
-      encoded = encoded + BASE64_CHARS[((b1 & 0x3) << 4) | ((b2 & 0xF0) >> 4)]
-      encoded = encoded + BASE64_CHARS[((b2 & 0xF) << 2) | ((b3 & 0xC0) >> 6)]
-      encoded = encoded + BASE64_CHARS[b3 & 0x3F]
-    }
-
-    return encoded
-  }
+  // Standard alphabet with '=' padding; round-trips with decodeBase64.
+  static encodeBase64(input) { encodeBase64_("%( input )") }
 
   static decodeBase64(input) {
     var decoded = ""

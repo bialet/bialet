@@ -1342,6 +1342,98 @@ DEF_PRIMITIVE(util_urlDecode) {
   RETURN_VAL(result);
 }
 
+// Shared Base64 encoder behind Util.encodeBase64 (standard alphabet, '='
+// padding) and Util.base64UrlEncode (RFC 4648 §5 alphabet, no padding). Both
+// are byte-oriented over the ObjString's stored length, so they stay consistent
+// with each other and with decodeBase64. Returns a heap buffer the caller owns,
+// or NULL on allocation failure.
+static const char BASE64_STD_CHARS[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char BASE64_URL_CHARS[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+static char* base64_encode_alloc(const unsigned char* data, size_t len,
+                                 const char* alphabet, int pad) {
+  size_t groups = (len + 2) / 3;
+  size_t out_len = groups * 4;
+  if(!pad) {
+    if(len % 3 == 1)
+      out_len -= 2;
+    else if(len % 3 == 2)
+      out_len -= 1;
+  }
+
+  char* out = (char*)malloc(out_len + 1);
+  if(out == NULL)
+    return NULL;
+
+  size_t o = 0;
+  for(size_t i = 0; i < len; i += 3) {
+    size_t   rem = len - i;
+    unsigned b0 = data[i];
+    unsigned b1 = rem > 1 ? data[i + 1] : 0;
+    unsigned b2 = rem > 2 ? data[i + 2] : 0;
+
+    out[o++] = alphabet[b0 >> 2];
+    out[o++] = alphabet[((b0 & 0x3) << 4) | (b1 >> 4)];
+    if(rem > 1)
+      out[o++] = alphabet[((b1 & 0xF) << 2) | (b2 >> 6)];
+    else if(pad)
+      out[o++] = '=';
+    if(rem > 2)
+      out[o++] = alphabet[b2 & 0x3F];
+    else if(pad)
+      out[o++] = '=';
+  }
+  out[o] = '\0';
+  return out;
+}
+
+DEF_PRIMITIVE(util_encodeBase64) {
+  ObjString* input = AS_STRING(args[1]);
+  char*      encoded = base64_encode_alloc((const unsigned char*)input->value,
+                                           input->length, BASE64_STD_CHARS, 1);
+  if(encoded == NULL)
+    RETURN_ERROR("Out of memory encoding Base64.");
+  Value result = wrenNewString(vm, encoded);
+  free(encoded);
+  RETURN_VAL(result);
+}
+
+DEF_PRIMITIVE(util_base64UrlEncode) {
+  ObjString* input = AS_STRING(args[1]);
+  char*      encoded = base64_encode_alloc((const unsigned char*)input->value,
+                                           input->length, BASE64_URL_CHARS, 0);
+  if(encoded == NULL)
+    RETURN_ERROR("Out of memory encoding Base64url.");
+  Value result = wrenNewString(vm, encoded);
+  free(encoded);
+  RETURN_VAL(result);
+}
+
+// Hashes the string's stored bytes (input->length), not strlen(input->value),
+// so embedded NULs are part of the digest.
+DEF_PRIMITIVE(util_sha256) {
+  ObjString* input = AS_STRING(args[1]);
+  char       hex[65];
+  sha256_hex(input->value, input->length, hex);
+  RETURN_VAL(wrenNewString(vm, hex));
+}
+
+// BASE64URL(SHA256(input)) without padding: exactly PKCE's code_challenge for
+// the S256 method (RFC 7636).
+DEF_PRIMITIVE(util_sha256Base64Url) {
+  ObjString*    input = AS_STRING(args[1]);
+  unsigned char digest[32];
+  sha256_raw(input->value, input->length, digest);
+  char* encoded = base64_encode_alloc(digest, sizeof(digest), BASE64_URL_CHARS, 0);
+  if(encoded == NULL)
+    RETURN_ERROR("Out of memory encoding SHA-256 digest.");
+  Value result = wrenNewString(vm, encoded);
+  free(encoded);
+  RETURN_VAL(result);
+}
+
 // Builds a default page from the shared C-side template (BIALET_HEADER_PAGE /
 // BIALET_FOOTER_PAGE). This is the single source of truth for the default page
 // chrome; Wren's Response.page/pageHtml call this instead of redefining the
@@ -1361,7 +1453,7 @@ DEF_PRIMITIVE(response_default_page) {
   size_t foot_len = strlen(BIALET_FOOTER_PAGE);
   size_t needed = head_len + title->length + sizeof(kMessageWrap) - 1 +
                   message->length + foot_len + 1;
-  char* buffer = (char*)malloc(needed);
+  char*  buffer = (char*)malloc(needed);
   if(buffer == NULL)
     RETURN_ERROR("Out of memory building page.");
 
@@ -2238,6 +2330,10 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
+  PRIMITIVE(utilClass->obj.classObj, "sha256_(_)", util_sha256);
+  PRIMITIVE(utilClass->obj.classObj, "sha256Base64Url_(_)", util_sha256Base64Url);
+  PRIMITIVE(utilClass->obj.classObj, "base64UrlEncode_(_)", util_base64UrlEncode);
+  PRIMITIVE(utilClass->obj.classObj, "encodeBase64_(_)", util_encodeBase64);
 
   ObjClass* responseClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Response"));
   PRIMITIVE(responseClass->obj.classObj, "defaultPage_(_,_)", response_default_page);
