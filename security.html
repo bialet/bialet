@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'security';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -764,12 +764,16 @@ forward user-supplied ones unchanged.</p>
 in a blocking loop. The reverse proxy is the layer that protects it from
 hostile clients. Configure the proxy to:</p>
 <ul class="simple">
-<li><p><strong>Cap the request body.</strong> Bialet accepts bodies up to ~10 MB. Parsing large
-bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
-body still means millions of allocations in <code class="docutils literal notranslate"><span class="pre">Util.urlDecode</span></code>. Set
-<code class="docutils literal notranslate"><span class="pre">client_max_body_size</span></code>
-(nginx), <code class="docutils literal notranslate"><span class="pre">LimitRequestBody</span></code> (Apache), or an equivalent to the smallest your
-app needs — 1 MB is a sane default.</p></li>
+<li><p><strong>Cap the request body.</strong> Bialet rejects bodies over its own cap with <code class="docutils literal notranslate"><span class="pre">413</span></code>
+before parsing: the cap is the smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> (default 128 KB) and a
+memory-safe ceiling set by <code class="docutils literal notranslate"><span class="pre">-m</span></code> (soft limit / 512). Keep these defaults for
+forms that send only fields; raise them only when your app genuinely accepts
+large uploads, and raise <code class="docutils literal notranslate"><span class="pre">-u</span></code> (the per-file upload cap) alongside — the
+effective upload limit is the smaller of <code class="docutils literal notranslate"><span class="pre">-u</span></code> and the body cap minus ~8 KB
+of multipart framing. At the proxy, set <code class="docutils literal notranslate"><span class="pre">client_max_body_size</span></code> (nginx),
+<code class="docutils literal notranslate"><span class="pre">LimitRequestBody</span></code> (Apache), or an equivalent to match your app’s real
+upload limit — a cap <em>above</em> it just lets oversized bodies reach the
+framework’s own check, and a cap <em>below</em> it breaks legitimate uploads.</p></li>
 <li><p><strong>Enforce a total body-read deadline.</strong> Bialet’s 5-second socket timeout is
 per <code class="docutils literal notranslate"><span class="pre">recv()</span></code> call, so a peer that dribbles bytes slowly can hold a
 connection open indefinitely. Set a total read timeout at the proxy
@@ -796,6 +800,15 @@ low as your uploads actually require.</p>
 direct HTTP access — the server returns 403. This is what protects
 <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, and your configuration from
 being downloaded. Name anything private with a leading <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
+<p>The single exception is the RFC 8615 <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> namespace: a URL whose
+first segment is exactly <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> is public, and everything below it is
+served like any other file. That is required by ACME/Let’s Encrypt, OAuth 2.0
+and OpenID Connect, WebFinger, app links, and <code class="docutils literal notranslate"><span class="pre">security.txt</span></code>. The exemption is
+case-sensitive, applies only as the first path segment (<code class="docutils literal notranslate"><span class="pre">/foo/.well-known/x</span></code>
+is still 403), and does not survive path traversal
+(<code class="docutils literal notranslate"><span class="pre">/.well-known/../.env</span></code> is still 403). See
+<a class="reference internal" href="advanced-routing.html#the-well-known-exception"><span class="std std-ref">Advanced Routing</span></a>. Never place
+secrets under <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> — it is world-readable by definition.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> contains your data and your session table.
 It is already blocked from HTTP access, but the app directory on disk is

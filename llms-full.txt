@@ -2556,10 +2556,45 @@ database. By default, files handled through `Request.file()` are marked as
 permanent. However, any file that is uploaded but not processed remains
 temporary, meaning it will be deleted within a day or less.
 
-**File Size Limits**: Bialet enforces a maximum upload size limit (default: 10
-MB) to prevent disk abuse. Files exceeding this limit will be rejected with an
-error message. This limit is configurable in the source code through the
-`max_upload_size` configuration option.
+**File Size Limits**: Bialet enforces a maximum file size per upload. Files
+over the limit are skipped and the server logs the rejection with the maximum
+it accepts. The per-file cap defaults to **4 MB** and is set at startup with
+`-u` / `--max-upload-size`:
+
+```bash
+bialet -u 8MB /path/to/app
+bialet --max-upload-size 2MB /path/to/app
+```
+
+The value is a byte count; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales it.
+`-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+> ⚠️ Pitfall: an upload travels inside a multipart request body, and the whole
+> body is capped by `-b` (default 128 KB) plus a memory-safe ceiling derived
+> from `-m` (soft limit / 512). The *effective* per-file limit is the smaller
+> of `-u` and that body cap minus ~8 KB of multipart framing. With the
+> defaults that is about **120 KB**, not 4 MB, and raising `-u` alone does
+> nothing until the body cap also goes up. Two rules of thumb:
+>
+> - effective body cap (bytes) ≈ `min(-b KB × 1024, -m × 2048)`
+> - effective file limit ≈ `min(-u, body cap − 8 KB)`
+>
+> Raise `-b` (and `-m`/`-M`, which set the memory ceiling) to accept larger
+> files:
+
+```bash
+# ~1 MB uploads
+bialet -m 1024 -M 2048 -b 1100 -u 1MB /path/to/app
+
+# ~4 MB uploads
+bialet -m 2100 -M 4200 -b 4200 -u 4MB /path/to/app
+```
+
+A file larger than the body cap never reaches your code — the request is
+answered with `413` before parsing and the server logs both sizes. A file over
+the effective per-file limit is skipped and logged with the maximum it will
+accept. Every accepted upload is stored in SQLite, so raising the limit also
+grows the database and backups.
 
 ### Example 1: Permanent File Upload
 
@@ -4751,7 +4786,9 @@ Example: `/some/lorem/ipsum`
 - Else → 404.
 
 > Protected folders (`_` or `.`) are never considered during the walk-up —
-> they return 403 immediately.
+> they return 403 immediately. The one exception is `.well-known`, which is
+> walked into like any other folder (see
+> [The `.well-known` exception](#the-well-known-exception)).
 
 ## Protected Files
 
@@ -4802,6 +4839,71 @@ Some files are ignored entirely and are never served, protected or not:
 `README*`, `AGENTS*`, `LICENSE*`, `*.json`, `*.yml`, `*.yaml`. Keep
 documentation, AI agent instructions, and config files in your project
 without worrying about them leaking through routing.
+
+(the-well-known-exception)=
+
+### The `.well-known` exception
+
+Every dot-prefixed path is protected **except one**: a URL whose first
+segment is exactly `.well-known`. The whole subtree below it is served
+normally — static files, `.wren` routes, nested folders, and even dotfiles:
+
+```text
+.well-known/openid-configuration             # /.well-known/openid-configuration
+.well-known/security.txt                     # /.well-known/security.txt
+.well-known/acme-challenge/<token>           # /.well-known/acme-challenge/<token>
+.well-known/oauth-authorization-server.wren  # /.well-known/oauth-authorization-server
+.well-known/sub/folder/file                  # /.well-known/sub/folder/file
+```
+
+The namespace is public by design (RFC 8615): ACME/Let's Encrypt challenges,
+OAuth 2.0 and OpenID Connect metadata, WebFinger, Android/iOS app links,
+Apple Pay, MTA-STS, and `security.txt` all live there. Everywhere else,
+dotfiles stay protected because they leak secrets and config (`.env`,
+`.git/`, `.htaccess`, `.DS_Store`).
+
+The rule is deliberately narrow:
+
+- **Path-prefix, first segment only.** `/.well-known/x` is allowed, but
+  `/foo/.well-known/x` is not — there `.well-known` is just another
+  dotfolder.
+- **Case-sensitive.** `.Well-Known` is not exempt; RFC 8615 matches the
+  literal lowercase spelling.
+- **No decoding.** Bialet matches the raw path. Percent-encoded forms such
+  as `/%2ewell-known/x` are not treated as the exempt prefix; they simply
+  don't resolve.
+- **Traversal still blocked.** `/.well-known/../.env` is a 403, and a
+  symlink inside `.well-known` that points at a protected file is rejected
+  after resolution.
+
+> ⚠️ Pitfall: `.well-known` only counts as the **first** URL segment. If you
+> mount your app under a prefix at the proxy, strip that prefix before
+> forwarding — a request that arrives as `/prefix/.well-known/...` gets a
+> 403.
+
+#### How to add a well-known resource
+
+Drop the file (or `.wren` route) under `.well-known/` at your project root.
+To serve `/.well-known/security.txt`, create:
+
+```text
+.well-known/security.txt
+```
+
+```text
+Contact: mailto:security@example.com
+Expires: 2027-01-01T00:00:00.000Z
+```
+
+No route and no configuration — the file path is the URL, exactly like the
+rest of the tree. A `.wren` route works too: `.well-known/token.wren` serves
+`/.well-known/token`.
+
+> **JSON caveat:** the default ignore list names `*.json`, `*.yml`, and
+> `*.yaml`, but `.well-known` resources are served like any other file, so
+> JSON metadata (`assetlinks.json`, `jwks.json`, `did.json`,
+> `apple-app-site-association`) works. Keep secrets out of `.well-known`
+> regardless — the namespace is public.
 
 (dynamic-content-with-query-parameters)=
 
@@ -6771,11 +6873,23 @@ bialet --port=8080 /path/to/app
 | `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
 | `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
+| `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
+| `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
+| `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
+
+Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
+them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+> The upload cap is also bounded by the request-body limit (`-b`). A file must
+> fit inside a multipart body smaller than `-b` (default 128 KB), so the
+> effective per-file limit is the smaller of `-u` and that body cap minus ~8 KB
+> of multipart framing. With defaults that is about **120 KB**, not 4 MB. See
+> [File Size Limits](file.md) for how to raise it.
 
 ### Version
 
@@ -6858,29 +6972,35 @@ else
 fi
 ```
 
-## Advanced Configuration
+## Upload and SQLite Tuning
 
-Bialet provides several advanced configuration options that can be set
-programmatically in the C code (future versions may expose these as CLI
-parameters):
+These limits and SQLite pragmas are startup flags, set per app per launch:
 
-### File Upload Limits
+### File Upload Limit
 
-- **Max Upload Size**: Controls the maximum file size for uploads (default: 10
-  MB)
-- Files exceeding this limit will be rejected with an error message
+- **Max Upload Size** (`-u`, `--max-upload-size`): the per-file cap for
+  `Request.file()`. Files over it are rejected and logged with the limit.
+  Default 4 MB, and bounded by the request-body cap — see
+  [File Size Limits](file.md). Example: `bialet -u 8MB /path/to/app`.
 
 ### SQLite Pragma Settings
 
-- **Foreign Keys**: Enable/disable foreign key constraints (default: ON)
-- **Synchronous Mode**: Controls how SQLite writes to disk (default: NORMAL)
-  - OFF: Fastest, least safe
-  - NORMAL: Balanced performance and safety (default)
-  - FULL: Very safe, slower
-  - EXTRA: Maximum safety, slowest
+- **Foreign Keys** (`-f`, `--foreign-keys`): enable or disable foreign key
+  constraints (default: `on`). Disable with `-f off` only when you know a
+  migration depends on it; otherwise orphaned rows go unchecked.
+- **Synchronous** (`-s`, `--synchronous`): controls how SQLite writes to disk
+  (default: `normal`).
+  - `off`: Fastest, least safe
+  - `normal`: Balanced performance and safety (default)
+  - `full`: Very safe, slower
+  - `extra`: Maximum safety, slowest
 
-These settings are optimized for most use cases but can be adjusted in the
-source code if needed.
+```bash
+bialet -f off -s full -u 2MB /path/to/app
+```
+
+SQLite applies these at connection open, so changing them requires restarting
+the server.
 
 
 # Live Reload
@@ -7245,12 +7365,16 @@ Bialet is **single-threaded**: it accepts and serves one connection at a time
 in a blocking loop. The reverse proxy is the layer that protects it from
 hostile clients. Configure the proxy to:
 
-- **Cap the request body.** Bialet accepts bodies up to ~10 MB. Parsing large
-  bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
-  body still means millions of allocations in `Util.urlDecode`. Set
-  `client_max_body_size`
-  (nginx), `LimitRequestBody` (Apache), or an equivalent to the smallest your
-  app needs — 1 MB is a sane default.
+- **Cap the request body.** Bialet rejects bodies over its own cap with `413`
+  before parsing: the cap is the smaller of `-b` (default 128 KB) and a
+  memory-safe ceiling set by `-m` (soft limit / 512). Keep these defaults for
+  forms that send only fields; raise them only when your app genuinely accepts
+  large uploads, and raise `-u` (the per-file upload cap) alongside — the
+  effective upload limit is the smaller of `-u` and the body cap minus ~8 KB
+  of multipart framing. At the proxy, set `client_max_body_size` (nginx),
+  `LimitRequestBody` (Apache), or an equivalent to match your app's real
+  upload limit — a cap *above* it just lets oversized bodies reach the
+  framework's own check, and a cap *below* it breaks legitimate uploads.
 - **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
   per `recv()` call, so a peer that dribbles bytes slowly can hold a
   connection open indefinitely. Set a total read timeout at the proxy
@@ -7276,6 +7400,16 @@ Files and directories whose name starts with `_` or `.` are forbidden from
 direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
+
+The single exception is the RFC 8615 `.well-known` namespace: a URL whose
+first segment is exactly `.well-known` is public, and everything below it is
+served like any other file. That is required by ACME/Let's Encrypt, OAuth 2.0
+and OpenID Connect, WebFinger, app links, and `security.txt`. The exemption is
+case-sensitive, applies only as the first path segment (`/foo/.well-known/x`
+is still 403), and does not survive path traversal
+(`/.well-known/../.env` is still 403). See
+[Advanced Routing](advanced-routing.md#the-well-known-exception). Never place
+secrets under `.well-known` — it is world-readable by definition.
 
 > ⚠️ Pitfall: `_db.sqlite3` contains your data and your session table.
 > It is already blocked from HTTP access, but the app directory on disk is
@@ -8452,17 +8586,29 @@ Use CLI flags to constrain resources per app:
 | `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
 | `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
 | `-b` | Max request body (KB)  | 128     | `-b 512`         |
+| `-u` | Max per-file upload    | 4 MB    | `-u 8MB`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
 
 The request-body cap is the smaller of `-b` and the memory-safe ceiling
 (`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
 
+Uploads are capped by `-u` and must also fit inside the body cap, so the
+effective per-file limit is the smaller of the two minus ~8 KB of multipart
+framing — about 120 KB at the defaults. Raise `-b` (and `-m` when the ceiling
+binds) together with `-u` to allow large files. See
+[File Size Limits](file.md). SQLite foreign keys (`-f`) and synchronous mode
+(`-s`) are also startup flags; see [Upload and SQLite Tuning](usage.md).
+
 Example for a production app:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -l /var/log/bialet/app.log /www/myapp
+bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
+  -l /var/log/bialet/app.log /www/myapp
 ```
+
+Raises the default body cap so the app accepts uploads up to ~1 MB; drop
+`-b`/`-u` if it does not handle uploads at all.
 
 ## Quick Deploy Checklist
 
@@ -8981,7 +9127,9 @@ Encodes a dictionary of parameters into a URL-encoded string.
 
 ### encodeBase64(input)
 
-Encodes a given input string to Base64.
+Encodes a given input string to Base64 using the standard alphabet with `=`
+padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
+`decodeBase64`.
 
 - `input`: The string to encode.
 
@@ -8990,6 +9138,29 @@ Encodes a given input string to Base64.
 Decodes a Base64 encoded string.
 
 - `input`: The Base64 encoded string to decode.
+
+### base64UrlEncode(input)
+
+Encodes a string to Base64url (RFC 4648 §5): the URL-safe `-`/`_` alphabet with
+no `=` padding.
+
+- `input`: The string to encode.
+
+### sha256(input)
+
+Returns the lowercase hex SHA-256 of the UTF-8 bytes of `input` (64 characters).
+Non-string arguments are coerced to strings. Available in every build, with or
+without OpenSSL.
+
+- `input`: The string to hash.
+
+### sha256Base64Url(input)
+
+Returns `BASE64URL(SHA256(input))` with no padding. This is exactly PKCE's
+`code_challenge` for the `S256` method (RFC 7636), useful for OAuth 2.1 and
+OIDC flows.
+
+- `input`: The string to hash and encode.
 
 ## Config
 

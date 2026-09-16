@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'file';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Database" href="database.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -468,10 +468,42 @@ manage file storage. Below are the three main parts of file handling in Bialet.<
 database. By default, files handled through <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> are marked as
 permanent. However, any file that is uploaded but not processed remains
 temporary, meaning it will be deleted within a day or less.</p>
-<p><strong>File Size Limits</strong>: Bialet enforces a maximum upload size limit (default: 10
-MB) to prevent disk abuse. Files exceeding this limit will be rejected with an
-error message. This limit is configurable in the source code through the
-<code class="docutils literal notranslate"><span class="pre">max_upload_size</span></code> configuration option.</p>
+<p><strong>File Size Limits</strong>: Bialet enforces a maximum file size per upload. Files
+over the limit are skipped and the server logs the rejection with the maximum
+it accepts. The per-file cap defaults to <strong>4 MB</strong> and is set at startup with
+<code class="docutils literal notranslate"><span class="pre">-u</span></code> / <code class="docutils literal notranslate"><span class="pre">--max-upload-size</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-u<span class="w"> </span>8MB<span class="w"> </span>/path/to/app
+bialet<span class="w"> </span>--max-upload-size<span class="w"> </span>2MB<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p>The value is a byte count; a <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code>, or <code class="docutils literal notranslate"><span class="pre">G</span></code> suffix (KiB/MiB/GiB) scales it.
+<code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4MB</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4096KB</span></code>, and <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4194304</span></code> are the same limit.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: an upload travels inside a multipart request body, and the whole
+body is capped by <code class="docutils literal notranslate"><span class="pre">-b</span></code> (default 128 KB) plus a memory-safe ceiling derived
+from <code class="docutils literal notranslate"><span class="pre">-m</span></code> (soft limit / 512). The <em>effective</em> per-file limit is the smaller
+of <code class="docutils literal notranslate"><span class="pre">-u</span></code> and that body cap minus ~8 KB of multipart framing. With the
+defaults that is about <strong>120 KB</strong>, not 4 MB, and raising <code class="docutils literal notranslate"><span class="pre">-u</span></code> alone does
+nothing until the body cap also goes up. Two rules of thumb:</p>
+<ul class="simple">
+<li><p>effective body cap (bytes) ≈ <code class="docutils literal notranslate"><span class="pre">min(-b</span> <span class="pre">KB</span> <span class="pre">×</span> <span class="pre">1024,</span> <span class="pre">-m</span> <span class="pre">×</span> <span class="pre">2048)</span></code></p></li>
+<li><p>effective file limit ≈ <code class="docutils literal notranslate"><span class="pre">min(-u,</span> <span class="pre">body</span> <span class="pre">cap</span> <span class="pre">−</span> <span class="pre">8</span> <span class="pre">KB)</span></code></p></li>
+</ul>
+<p>Raise <code class="docutils literal notranslate"><span class="pre">-b</span></code> (and <code class="docutils literal notranslate"><span class="pre">-m</span></code>/<code class="docutils literal notranslate"><span class="pre">-M</span></code>, which set the memory ceiling) to accept larger
+files:</p>
+</div></blockquote>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># ~1 MB uploads</span>
+bialet<span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-b<span class="w"> </span><span class="m">1100</span><span class="w"> </span>-u<span class="w"> </span>1MB<span class="w"> </span>/path/to/app
+
+<span class="c1"># ~4 MB uploads</span>
+bialet<span class="w"> </span>-m<span class="w"> </span><span class="m">2100</span><span class="w"> </span>-M<span class="w"> </span><span class="m">4200</span><span class="w"> </span>-b<span class="w"> </span><span class="m">4200</span><span class="w"> </span>-u<span class="w"> </span>4MB<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p>A file larger than the body cap never reaches your code — the request is
+answered with <code class="docutils literal notranslate"><span class="pre">413</span></code> before parsing and the server logs both sizes. A file over
+the effective per-file limit is skipped and logged with the maximum it will
+accept. Every accepted upload is stored in SQLite, so raising the limit also
+grows the database and backups.</p>
 <section id="example-1-permanent-file-upload">
 <h3>Example 1: Permanent File Upload<a class="headerlink" href="#example-1-permanent-file-upload" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

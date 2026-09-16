@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -525,6 +525,9 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#params-params">params(params)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base64urlencode-input">base64UrlEncode(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sha256-input">sha256(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sha256base64url-input">sha256Base64Url(input)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">
@@ -1217,7 +1220,9 @@ URL-safe equivalents.</p>
 </section>
 <section id="encodebase64-input">
 <h3>encodeBase64(input)<a class="headerlink" href="#encodebase64-input" title="Link to this heading">#</a></h3>
-<p>Encodes a given input string to Base64.</p>
+<p>Encodes a given input string to Base64 using the standard alphabet with <code class="docutils literal notranslate"><span class="pre">=</span></code>
+padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
+<code class="docutils literal notranslate"><span class="pre">decodeBase64</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The string to encode.</p></li>
 </ul>
@@ -1227,6 +1232,32 @@ URL-safe equivalents.</p>
 <p>Decodes a Base64 encoded string.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The Base64 encoded string to decode.</p></li>
+</ul>
+</section>
+<section id="base64urlencode-input">
+<h3>base64UrlEncode(input)<a class="headerlink" href="#base64urlencode-input" title="Link to this heading">#</a></h3>
+<p>Encodes a string to Base64url (RFC 4648 §5): the URL-safe <code class="docutils literal notranslate"><span class="pre">-</span></code>/<code class="docutils literal notranslate"><span class="pre">_</span></code> alphabet with
+no <code class="docutils literal notranslate"><span class="pre">=</span></code> padding.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The string to encode.</p></li>
+</ul>
+</section>
+<section id="sha256-input">
+<h3>sha256(input)<a class="headerlink" href="#sha256-input" title="Link to this heading">#</a></h3>
+<p>Returns the lowercase hex SHA-256 of the UTF-8 bytes of <code class="docutils literal notranslate"><span class="pre">input</span></code> (64 characters).
+Non-string arguments are coerced to strings. Available in every build, with or
+without OpenSSL.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The string to hash.</p></li>
+</ul>
+</section>
+<section id="sha256base64url-input">
+<h3>sha256Base64Url(input)<a class="headerlink" href="#sha256base64url-input" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">BASE64URL(SHA256(input))</span></code> with no padding. This is exactly PKCE’s
+<code class="docutils literal notranslate"><span class="pre">code_challenge</span></code> for the <code class="docutils literal notranslate"><span class="pre">S256</span></code> method (RFC 7636), useful for OAuth 2.1 and
+OIDC flows.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The string to hash and encode.</p></li>
 </ul>
 </section>
 </section>
@@ -2171,6 +2202,9 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#params-params">params(params)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodebase64-input">encodeBase64(input)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decodebase64-input">decodeBase64(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#base64urlencode-input">base64UrlEncode(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sha256-input">sha256(input)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sha256base64url-input">sha256Base64Url(input)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">

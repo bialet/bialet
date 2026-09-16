@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'advanced-routing';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Error Pages" href="errors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -441,6 +441,10 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-the-app-folder">Preferred: the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: root-level special files</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ignored-files">Ignored files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-well-known-exception">The <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> exception</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-add-a-well-known-resource">How to add a well-known resource</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-content-with-query-parameters">Dynamic Content with Query Parameters</a></li>
@@ -592,7 +596,9 @@ to the URL) wins.</p></li>
 </ul>
 <blockquote>
 <div><p>Protected folders (<code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>) are never considered during the walk-up —
-they return 403 immediately.</p>
+they return 403 immediately. The one exception is <code class="docutils literal notranslate"><span class="pre">.well-known</span></code>, which is
+walked into like any other folder (see
+<a class="reference internal" href="#the-well-known-exception">The <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> exception</a>).</p>
 </div></blockquote>
 </section>
 <section id="protected-files">
@@ -643,9 +649,69 @@ folders.</p>
 documentation, AI agent instructions, and config files in your project
 without worrying about them leaking through routing.</p>
 </section>
+<section id="the-well-known-exception">
+<span id="id1"></span><h3>The <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> exception<a class="headerlink" href="#the-well-known-exception" title="Link to this heading">#</a></h3>
+<p>Every dot-prefixed path is protected <strong>except one</strong>: a URL whose first
+segment is exactly <code class="docutils literal notranslate"><span class="pre">.well-known</span></code>. The whole subtree below it is served
+normally — static files, <code class="docutils literal notranslate"><span class="pre">.wren</span></code> routes, nested folders, and even dotfiles:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>.well-known/openid-configuration             # /.well-known/openid-configuration
+.well-known/security.txt                     # /.well-known/security.txt
+.well-known/acme-challenge/&lt;token&gt;           # /.well-known/acme-challenge/&lt;token&gt;
+.well-known/oauth-authorization-server.wren  # /.well-known/oauth-authorization-server
+.well-known/sub/folder/file                  # /.well-known/sub/folder/file
+</pre></div>
+</div>
+<p>The namespace is public by design (RFC 8615): ACME/Let’s Encrypt challenges,
+OAuth 2.0 and OpenID Connect metadata, WebFinger, Android/iOS app links,
+Apple Pay, MTA-STS, and <code class="docutils literal notranslate"><span class="pre">security.txt</span></code> all live there. Everywhere else,
+dotfiles stay protected because they leak secrets and config (<code class="docutils literal notranslate"><span class="pre">.env</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.git/</span></code>, <code class="docutils literal notranslate"><span class="pre">.htaccess</span></code>, <code class="docutils literal notranslate"><span class="pre">.DS_Store</span></code>).</p>
+<p>The rule is deliberately narrow:</p>
+<ul class="simple">
+<li><p><strong>Path-prefix, first segment only.</strong> <code class="docutils literal notranslate"><span class="pre">/.well-known/x</span></code> is allowed, but
+<code class="docutils literal notranslate"><span class="pre">/foo/.well-known/x</span></code> is not — there <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> is just another
+dotfolder.</p></li>
+<li><p><strong>Case-sensitive.</strong> <code class="docutils literal notranslate"><span class="pre">.Well-Known</span></code> is not exempt; RFC 8615 matches the
+literal lowercase spelling.</p></li>
+<li><p><strong>No decoding.</strong> Bialet matches the raw path. Percent-encoded forms such
+as <code class="docutils literal notranslate"><span class="pre">/%2ewell-known/x</span></code> are not treated as the exempt prefix; they simply
+don’t resolve.</p></li>
+<li><p><strong>Traversal still blocked.</strong> <code class="docutils literal notranslate"><span class="pre">/.well-known/../.env</span></code> is a 403, and a
+symlink inside <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> that points at a protected file is rejected
+after resolution.</p></li>
+</ul>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> only counts as the <strong>first</strong> URL segment. If you
+mount your app under a prefix at the proxy, strip that prefix before
+forwarding — a request that arrives as <code class="docutils literal notranslate"><span class="pre">/prefix/.well-known/...</span></code> gets a
+403.</p>
+</div></blockquote>
+<section id="how-to-add-a-well-known-resource">
+<h4>How to add a well-known resource<a class="headerlink" href="#how-to-add-a-well-known-resource" title="Link to this heading">#</a></h4>
+<p>Drop the file (or <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route) under <code class="docutils literal notranslate"><span class="pre">.well-known/</span></code> at your project root.
+To serve <code class="docutils literal notranslate"><span class="pre">/.well-known/security.txt</span></code>, create:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>.well-known/security.txt
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Contact: mailto:security@example.com
+Expires: 2027-01-01T00:00:00.000Z
+</pre></div>
+</div>
+<p>No route and no configuration — the file path is the URL, exactly like the
+rest of the tree. A <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route works too: <code class="docutils literal notranslate"><span class="pre">.well-known/token.wren</span></code> serves
+<code class="docutils literal notranslate"><span class="pre">/.well-known/token</span></code>.</p>
+<blockquote>
+<div><p><strong>JSON caveat:</strong> the default ignore list names <code class="docutils literal notranslate"><span class="pre">*.json</span></code>, <code class="docutils literal notranslate"><span class="pre">*.yml</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">*.yaml</span></code>, but <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> resources are served like any other file, so
+JSON metadata (<code class="docutils literal notranslate"><span class="pre">assetlinks.json</span></code>, <code class="docutils literal notranslate"><span class="pre">jwks.json</span></code>, <code class="docutils literal notranslate"><span class="pre">did.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">apple-app-site-association</span></code>) works. Keep secrets out of <code class="docutils literal notranslate"><span class="pre">.well-known</span></code>
+regardless — the namespace is public.</p>
+</div></blockquote>
+</section>
+</section>
 </section>
 <section id="dynamic-content-with-query-parameters">
-<span id="id1"></span><h2>Dynamic Content with Query Parameters<a class="headerlink" href="#dynamic-content-with-query-parameters" title="Link to this heading">#</a></h2>
+<span id="id2"></span><h2>Dynamic Content with Query Parameters<a class="headerlink" href="#dynamic-content-with-query-parameters" title="Link to this heading">#</a></h2>
 <p>This is one of the two simple ways to make a page dynamic in Bialet. Any
 <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, with no special name and no extra file, can read query
 parameters with <code class="docutils literal notranslate"><span class="pre">Request.get(name)</span></code>. It’s the same model a static HTML
@@ -1045,7 +1111,7 @@ path-based URL only if the URL shape matters to you — see
 </section>
 </section>
 <section id="how-deep-should-your-dynamic-routes-go">
-<span id="id2"></span><h2>How Deep Should Your Dynamic Routes Go?<a class="headerlink" href="#how-deep-should-your-dynamic-routes-go" title="Link to this heading">#</a></h2>
+<span id="id3"></span><h2>How Deep Should Your Dynamic Routes Go?<a class="headerlink" href="#how-deep-should-your-dynamic-routes-go" title="Link to this heading">#</a></h2>
 <p>Bialet supports <strong>any depth</strong> – the filesystem is the only limit. However,
 for practical maintainability:</p>
 <ul class="simple">
@@ -1209,6 +1275,10 @@ locally).</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preferred-the-app-folder">Preferred: the <code class="docutils literal notranslate"><span class="pre">_app/</span></code> folder</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-root-level-special-files">Alternative: root-level special files</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ignored-files">Ignored files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-well-known-exception">The <code class="docutils literal notranslate"><span class="pre">.well-known</span></code> exception</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-add-a-well-known-resource">How to add a well-known resource</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-content-with-query-parameters">Dynamic Content with Query Parameters</a></li>

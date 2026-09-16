@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -1041,7 +1041,12 @@ negligible and the concurrency benefit is immediate.</p>
 <td><p>128</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">512</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-u</span></code></p></td>
+<td><p>Max per-file upload</p></td>
+<td><p>4 MB</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">8MB</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
 <td><p>SQLite WAL mode</p></td>
 <td><p>off</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
@@ -1052,10 +1057,19 @@ negligible and the concurrency benefit is immediate.</p>
 <p>The request-body cap is the smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> and the memory-safe ceiling
 (<code class="docutils literal notranslate"><span class="pre">-m</span></code> / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with <code class="docutils literal notranslate"><span class="pre">413</span></code> before parsing; raising <code class="docutils literal notranslate"><span class="pre">-m</span></code> raises the ceiling.</p>
+<p>Uploads are capped by <code class="docutils literal notranslate"><span class="pre">-u</span></code> and must also fit inside the body cap, so the
+effective per-file limit is the smaller of the two minus ~8 KB of multipart
+framing — about 120 KB at the defaults. Raise <code class="docutils literal notranslate"><span class="pre">-b</span></code> (and <code class="docutils literal notranslate"><span class="pre">-m</span></code> when the ceiling
+binds) together with <code class="docutils literal notranslate"><span class="pre">-u</span></code> to allow large files. See
+<a class="reference internal" href="file.html"><span class="std std-doc">File Size Limits</span></a>. SQLite foreign keys (<code class="docutils literal notranslate"><span class="pre">-f</span></code>) and synchronous mode
+(<code class="docutils literal notranslate"><span class="pre">-s</span></code>) are also startup flags; see <a class="reference internal" href="usage.html"><span class="std std-doc">Upload and SQLite Tuning</span></a>.</p>
 <p>Example for a production app:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>-w<span class="w"> </span>-l<span class="w"> </span>/var/log/bialet/app.log<span class="w"> </span>/www/myapp
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>-w<span class="w"> </span>-b<span class="w"> </span><span class="m">1100</span><span class="w"> </span>-u<span class="w"> </span>1MB<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-l<span class="w"> </span>/var/log/bialet/app.log<span class="w"> </span>/www/myapp
 </pre></div>
 </div>
+<p>Raises the default body cap so the app accepts uploads up to ~1 MB; drop
+<code class="docutils literal notranslate"><span class="pre">-b</span></code>/<code class="docutils literal notranslate"><span class="pre">-u</span></code> if it does not handle uploads at all.</p>
 </section>
 <section id="quick-deploy-checklist">
 <h2>Quick Deploy Checklist<a class="headerlink" href="#quick-deploy-checklist" title="Link to this heading">#</a></h2>

@@ -58,14 +58,14 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -814,8 +814,14 @@ Bialet is intentionally simple. These concepts <span class="gs">**do not exist**
 
 <span class="k">-</span><span class="w"> </span>Files/folders starting with <span class="sb">`_`</span> or <span class="sb">`.`</span> are <span class="gs">**protected**</span>: they return
   <span class="gs">**403 Forbidden**</span> if requested directly, but can be imported.
+<span class="k">-</span><span class="w"> </span>The one exception is <span class="sb">`.well-known`</span> as the <span class="gs">**first**</span> URL segment (RFC 8615):
+  <span class="sb">`/.well-known/...`</span> is served, including everything below it (static files
+  and <span class="sb">`.wren`</span> routes). It is case-sensitive, only applies as the first
+  segment, and never bypasses traversal checks. Don't put secrets there.
 <span class="k">-</span><span class="w"> </span><span class="sb">`README*`</span>, <span class="sb">`AGENTS*`</span>, <span class="sb">`LICENSE*`</span>, <span class="sb">`*.json`</span>, <span class="sb">`*.yml`</span>, <span class="sb">`*.yaml`</span> are <span class="gs">**ignored**</span>
   entirely — never served, protected or not. Safe place for docs and config.
+  <span class="sb">`.well-known`</span> resources are served regardless, so JSON metadata
+  (<span class="sb">`jwks.json`</span>, <span class="sb">`assetlinks.json`</span>) works there.
 
 <span class="gu">### Git Configuration</span>
 

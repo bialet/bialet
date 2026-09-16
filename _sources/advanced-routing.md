@@ -111,7 +111,9 @@ Example: `/some/lorem/ipsum`
 - Else → 404.
 
 > Protected folders (`_` or `.`) are never considered during the walk-up —
-> they return 403 immediately.
+> they return 403 immediately. The one exception is `.well-known`, which is
+> walked into like any other folder (see
+> [The `.well-known` exception](#the-well-known-exception)).
 
 ## Protected Files
 
@@ -162,6 +164,71 @@ Some files are ignored entirely and are never served, protected or not:
 `README*`, `AGENTS*`, `LICENSE*`, `*.json`, `*.yml`, `*.yaml`. Keep
 documentation, AI agent instructions, and config files in your project
 without worrying about them leaking through routing.
+
+(the-well-known-exception)=
+
+### The `.well-known` exception
+
+Every dot-prefixed path is protected **except one**: a URL whose first
+segment is exactly `.well-known`. The whole subtree below it is served
+normally — static files, `.wren` routes, nested folders, and even dotfiles:
+
+```text
+.well-known/openid-configuration             # /.well-known/openid-configuration
+.well-known/security.txt                     # /.well-known/security.txt
+.well-known/acme-challenge/<token>           # /.well-known/acme-challenge/<token>
+.well-known/oauth-authorization-server.wren  # /.well-known/oauth-authorization-server
+.well-known/sub/folder/file                  # /.well-known/sub/folder/file
+```
+
+The namespace is public by design (RFC 8615): ACME/Let's Encrypt challenges,
+OAuth 2.0 and OpenID Connect metadata, WebFinger, Android/iOS app links,
+Apple Pay, MTA-STS, and `security.txt` all live there. Everywhere else,
+dotfiles stay protected because they leak secrets and config (`.env`,
+`.git/`, `.htaccess`, `.DS_Store`).
+
+The rule is deliberately narrow:
+
+- **Path-prefix, first segment only.** `/.well-known/x` is allowed, but
+  `/foo/.well-known/x` is not — there `.well-known` is just another
+  dotfolder.
+- **Case-sensitive.** `.Well-Known` is not exempt; RFC 8615 matches the
+  literal lowercase spelling.
+- **No decoding.** Bialet matches the raw path. Percent-encoded forms such
+  as `/%2ewell-known/x` are not treated as the exempt prefix; they simply
+  don't resolve.
+- **Traversal still blocked.** `/.well-known/../.env` is a 403, and a
+  symlink inside `.well-known` that points at a protected file is rejected
+  after resolution.
+
+> ⚠️ Pitfall: `.well-known` only counts as the **first** URL segment. If you
+> mount your app under a prefix at the proxy, strip that prefix before
+> forwarding — a request that arrives as `/prefix/.well-known/...` gets a
+> 403.
+
+#### How to add a well-known resource
+
+Drop the file (or `.wren` route) under `.well-known/` at your project root.
+To serve `/.well-known/security.txt`, create:
+
+```text
+.well-known/security.txt
+```
+
+```text
+Contact: mailto:security@example.com
+Expires: 2027-01-01T00:00:00.000Z
+```
+
+No route and no configuration — the file path is the URL, exactly like the
+rest of the tree. A `.wren` route works too: `.well-known/token.wren` serves
+`/.well-known/token`.
+
+> **JSON caveat:** the default ignore list names `*.json`, `*.yml`, and
+> `*.yaml`, but `.well-known` resources are served like any other file, so
+> JSON metadata (`assetlinks.json`, `jwks.json`, `did.json`,
+> `apple-app-site-association`) works. Keep secrets out of `.well-known`
+> regardless — the namespace is public.
 
 (dynamic-content-with-query-parameters)=
 

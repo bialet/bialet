@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
-    <script src="_static/ai-prompt.js?v=2034fa06"></script>
+    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.1.0" />
+  <meta name="docsearch:version" content="1.2.0" />
   </head>
   
   
@@ -444,8 +444,8 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-configuration">Advanced Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limits">File Upload Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-and-sqlite-tuning">Upload and SQLite Tuning</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limit">File Upload Limit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
 </ul>
 </li>
@@ -574,7 +574,19 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>Max request body (KB)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">128</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-u</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-upload-size</span></code></p></td>
+<td><p>Max per-file upload (bytes; <code class="docutils literal notranslate"><span class="pre">K</span></code>/<code class="docutils literal notranslate"><span class="pre">M</span></code>/<code class="docutils literal notranslate"><span class="pre">G</span></code> suffix scales it, e.g. <code class="docutils literal notranslate"><span class="pre">4MB</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">MB</span></code> (see note below)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span></code>, <code class="docutils literal notranslate"><span class="pre">--foreign-keys</span></code></p></td>
+<td><p>SQLite foreign keys: <code class="docutils literal notranslate"><span class="pre">on</span></code> or <code class="docutils literal notranslate"><span class="pre">off</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">on</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">--synchronous</span></code></p></td>
+<td><p>SQLite synchronous: <code class="docutils literal notranslate"><span class="pre">off</span></code>, <code class="docutils literal notranslate"><span class="pre">normal</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, or <code class="docutils literal notranslate"><span class="pre">extra</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">normal</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
 <td><p>Quiet: suppress the browser auto-open and colored output</p></td>
 <td><p>Disabled</p></td>
 </tr>
@@ -584,11 +596,20 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <p>Long options that require a value reject an empty one (<code class="docutils literal notranslate"><span class="pre">--port</span></code> alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.</p>
+<p>Size values for <code class="docutils literal notranslate"><span class="pre">-u</span></code> are bytes; a <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code>, or <code class="docutils literal notranslate"><span class="pre">G</span></code> suffix (KiB/MiB/GiB) scales
+them. <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4MB</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4096KB</span></code>, and <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4194304</span></code> are the same limit.</p>
+<blockquote>
+<div><p>The upload cap is also bounded by the request-body limit (<code class="docutils literal notranslate"><span class="pre">-b</span></code>). A file must
+fit inside a multipart body smaller than <code class="docutils literal notranslate"><span class="pre">-b</span></code> (default 128 KB), so the
+effective per-file limit is the smaller of <code class="docutils literal notranslate"><span class="pre">-u</span></code> and that body cap minus ~8 KB
+of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4 MB. See
+<a class="reference internal" href="file.html"><span class="std std-doc">File Size Limits</span></a> for how to raise it.</p>
+</div></blockquote>
 <section id="version">
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.1.0</span>
+<span class="c1"># bialet 1.2.0</span>
 </pre></div>
 </div>
 </section>
@@ -652,34 +673,39 @@ pre-commit hooks.</p>
 </pre></div>
 </div>
 </section>
-<section id="advanced-configuration">
-<h2>Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Link to this heading">#</a></h2>
-<p>Bialet provides several advanced configuration options that can be set
-programmatically in the C code (future versions may expose these as CLI
-parameters):</p>
-<section id="file-upload-limits">
-<h3>File Upload Limits<a class="headerlink" href="#file-upload-limits" title="Link to this heading">#</a></h3>
+<section id="upload-and-sqlite-tuning">
+<h2>Upload and SQLite Tuning<a class="headerlink" href="#upload-and-sqlite-tuning" title="Link to this heading">#</a></h2>
+<p>These limits and SQLite pragmas are startup flags, set per app per launch:</p>
+<section id="file-upload-limit">
+<h3>File Upload Limit<a class="headerlink" href="#file-upload-limit" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p><strong>Max Upload Size</strong>: Controls the maximum file size for uploads (default: 10
-MB)</p></li>
-<li><p>Files exceeding this limit will be rejected with an error message</p></li>
+<li><p><strong>Max Upload Size</strong> (<code class="docutils literal notranslate"><span class="pre">-u</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-upload-size</span></code>): the per-file cap for
+<code class="docutils literal notranslate"><span class="pre">Request.file()</span></code>. Files over it are rejected and logged with the limit.
+Default 4 MB, and bounded by the request-body cap — see
+<a class="reference internal" href="file.html"><span class="std std-doc">File Size Limits</span></a>. Example: <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-u</span> <span class="pre">8MB</span> <span class="pre">/path/to/app</span></code>.</p></li>
 </ul>
 </section>
 <section id="sqlite-pragma-settings">
 <h3>SQLite Pragma Settings<a class="headerlink" href="#sqlite-pragma-settings" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p><strong>Foreign Keys</strong>: Enable/disable foreign key constraints (default: ON)</p></li>
-<li><p><strong>Synchronous Mode</strong>: Controls how SQLite writes to disk (default: NORMAL)</p>
+<li><p><strong>Foreign Keys</strong> (<code class="docutils literal notranslate"><span class="pre">-f</span></code>, <code class="docutils literal notranslate"><span class="pre">--foreign-keys</span></code>): enable or disable foreign key
+constraints (default: <code class="docutils literal notranslate"><span class="pre">on</span></code>). Disable with <code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">off</span></code> only when you know a
+migration depends on it; otherwise orphaned rows go unchecked.</p></li>
+<li><p><strong>Synchronous</strong> (<code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">--synchronous</span></code>): controls how SQLite writes to disk
+(default: <code class="docutils literal notranslate"><span class="pre">normal</span></code>).</p>
 <ul>
-<li><p>OFF: Fastest, least safe</p></li>
-<li><p>NORMAL: Balanced performance and safety (default)</p></li>
-<li><p>FULL: Very safe, slower</p></li>
-<li><p>EXTRA: Maximum safety, slowest</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">off</span></code>: Fastest, least safe</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">normal</span></code>: Balanced performance and safety (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">full</span></code>: Very safe, slower</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extra</span></code>: Maximum safety, slowest</p></li>
 </ul>
 </li>
 </ul>
-<p>These settings are optimized for most use cases but can be adjusted in the
-source code if needed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-f<span class="w"> </span>off<span class="w"> </span>-s<span class="w"> </span>full<span class="w"> </span>-u<span class="w"> </span>2MB<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p>SQLite applies these at connection open, so changing them requires restarting
+the server.</p>
 </section>
 </section>
 </section>
@@ -742,8 +768,8 @@ source code if needed.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-configuration">Advanced Configuration</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limits">File Upload Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-and-sqlite-tuning">Upload and SQLite Tuning</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limit">File Upload Limit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
 </ul>
 </li>

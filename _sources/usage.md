@@ -66,11 +66,23 @@ bialet --port=8080 /path/to/app
 | `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
 | `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
+| `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
+| `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
+| `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
+
+Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
+them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+> The upload cap is also bounded by the request-body limit (`-b`). A file must
+> fit inside a multipart body smaller than `-b` (default 128 KB), so the
+> effective per-file limit is the smaller of `-u` and that body cap minus ~8 KB
+> of multipart framing. With defaults that is about **120 KB**, not 4 MB. See
+> [File Size Limits](file.md) for how to raise it.
 
 ### Version
 
@@ -153,26 +165,32 @@ else
 fi
 ```
 
-## Advanced Configuration
+## Upload and SQLite Tuning
 
-Bialet provides several advanced configuration options that can be set
-programmatically in the C code (future versions may expose these as CLI
-parameters):
+These limits and SQLite pragmas are startup flags, set per app per launch:
 
-### File Upload Limits
+### File Upload Limit
 
-- **Max Upload Size**: Controls the maximum file size for uploads (default: 10
-  MB)
-- Files exceeding this limit will be rejected with an error message
+- **Max Upload Size** (`-u`, `--max-upload-size`): the per-file cap for
+  `Request.file()`. Files over it are rejected and logged with the limit.
+  Default 4 MB, and bounded by the request-body cap — see
+  [File Size Limits](file.md). Example: `bialet -u 8MB /path/to/app`.
 
 ### SQLite Pragma Settings
 
-- **Foreign Keys**: Enable/disable foreign key constraints (default: ON)
-- **Synchronous Mode**: Controls how SQLite writes to disk (default: NORMAL)
-  - OFF: Fastest, least safe
-  - NORMAL: Balanced performance and safety (default)
-  - FULL: Very safe, slower
-  - EXTRA: Maximum safety, slowest
+- **Foreign Keys** (`-f`, `--foreign-keys`): enable or disable foreign key
+  constraints (default: `on`). Disable with `-f off` only when you know a
+  migration depends on it; otherwise orphaned rows go unchecked.
+- **Synchronous** (`-s`, `--synchronous`): controls how SQLite writes to disk
+  (default: `normal`).
+  - `off`: Fastest, least safe
+  - `normal`: Balanced performance and safety (default)
+  - `full`: Very safe, slower
+  - `extra`: Maximum safety, slowest
 
-These settings are optimized for most use cases but can be adjusted in the
-source code if needed.
+```bash
+bialet -f off -s full -u 2MB /path/to/app
+```
+
+SQLite applies these at connection open, so changing them requires restarting
+the server.

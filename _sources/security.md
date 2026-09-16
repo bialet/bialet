@@ -263,12 +263,16 @@ Bialet is **single-threaded**: it accepts and serves one connection at a time
 in a blocking loop. The reverse proxy is the layer that protects it from
 hostile clients. Configure the proxy to:
 
-- **Cap the request body.** Bialet accepts bodies up to ~10 MB. Parsing large
-  bodies is expensive: every byte of a decoded value allocates, so a ~10 MB
-  body still means millions of allocations in `Util.urlDecode`. Set
-  `client_max_body_size`
-  (nginx), `LimitRequestBody` (Apache), or an equivalent to the smallest your
-  app needs — 1 MB is a sane default.
+- **Cap the request body.** Bialet rejects bodies over its own cap with `413`
+  before parsing: the cap is the smaller of `-b` (default 128 KB) and a
+  memory-safe ceiling set by `-m` (soft limit / 512). Keep these defaults for
+  forms that send only fields; raise them only when your app genuinely accepts
+  large uploads, and raise `-u` (the per-file upload cap) alongside — the
+  effective upload limit is the smaller of `-u` and the body cap minus ~8 KB
+  of multipart framing. At the proxy, set `client_max_body_size` (nginx),
+  `LimitRequestBody` (Apache), or an equivalent to match your app's real
+  upload limit — a cap *above* it just lets oversized bodies reach the
+  framework's own check, and a cap *below* it breaks legitimate uploads.
 - **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
   per `recv()` call, so a peer that dribbles bytes slowly can hold a
   connection open indefinitely. Set a total read timeout at the proxy
@@ -294,6 +298,16 @@ Files and directories whose name starts with `_` or `.` are forbidden from
 direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
+
+The single exception is the RFC 8615 `.well-known` namespace: a URL whose
+first segment is exactly `.well-known` is public, and everything below it is
+served like any other file. That is required by ACME/Let's Encrypt, OAuth 2.0
+and OpenID Connect, WebFinger, app links, and `security.txt`. The exemption is
+case-sensitive, applies only as the first path segment (`/foo/.well-known/x`
+is still 403), and does not survive path traversal
+(`/.well-known/../.env` is still 403). See
+[Advanced Routing](advanced-routing.md#the-well-known-exception). Never place
+secrets under `.well-known` — it is world-readable by definition.
 
 > ⚠️ Pitfall: `_db.sqlite3` contains your data and your session table.
 > It is already blocked from HTTP access, but the app directory on disk is

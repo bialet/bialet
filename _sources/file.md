@@ -11,10 +11,45 @@ database. By default, files handled through `Request.file()` are marked as
 permanent. However, any file that is uploaded but not processed remains
 temporary, meaning it will be deleted within a day or less.
 
-**File Size Limits**: Bialet enforces a maximum upload size limit (default: 10
-MB) to prevent disk abuse. Files exceeding this limit will be rejected with an
-error message. This limit is configurable in the source code through the
-`max_upload_size` configuration option.
+**File Size Limits**: Bialet enforces a maximum file size per upload. Files
+over the limit are skipped and the server logs the rejection with the maximum
+it accepts. The per-file cap defaults to **4 MB** and is set at startup with
+`-u` / `--max-upload-size`:
+
+```bash
+bialet -u 8MB /path/to/app
+bialet --max-upload-size 2MB /path/to/app
+```
+
+The value is a byte count; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales it.
+`-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+> ⚠️ Pitfall: an upload travels inside a multipart request body, and the whole
+> body is capped by `-b` (default 128 KB) plus a memory-safe ceiling derived
+> from `-m` (soft limit / 512). The *effective* per-file limit is the smaller
+> of `-u` and that body cap minus ~8 KB of multipart framing. With the
+> defaults that is about **120 KB**, not 4 MB, and raising `-u` alone does
+> nothing until the body cap also goes up. Two rules of thumb:
+>
+> - effective body cap (bytes) ≈ `min(-b KB × 1024, -m × 2048)`
+> - effective file limit ≈ `min(-u, body cap − 8 KB)`
+>
+> Raise `-b` (and `-m`/`-M`, which set the memory ceiling) to accept larger
+> files:
+
+```bash
+# ~1 MB uploads
+bialet -m 1024 -M 2048 -b 1100 -u 1MB /path/to/app
+
+# ~4 MB uploads
+bialet -m 2100 -M 4200 -b 4200 -u 4MB /path/to/app
+```
+
+A file larger than the body cap never reaches your code — the request is
+answered with `413` before parsing and the server logs both sizes. A file over
+the effective per-file limit is skipped and logged with the maximum it will
+accept. Every accepted upload is stored in SQLite, so raising the limit also
+grows the database and backups.
 
 ### Example 1: Permanent File Upload
 
