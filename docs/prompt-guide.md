@@ -362,8 +362,14 @@ Bialet is intentionally simple. These concepts **do not exist**:
 
 - Files/folders starting with `_` or `.` are **protected**: they return
   **403 Forbidden** if requested directly, but can be imported.
+- The one exception is `.well-known` as the **first** URL segment (RFC 8615):
+  `/.well-known/...` is served, including everything below it (static files
+  and `.wren` routes). It is case-sensitive, only applies as the first
+  segment, and never bypasses traversal checks. Don't put secrets there.
 - `README*`, `AGENTS*`, `LICENSE*`, `*.json`, `*.yml`, `*.yaml` are **ignored**
   entirely — never served, protected or not. Safe place for docs and config.
+  `.well-known` resources are served regardless, so JSON metadata
+  (`jwks.json`, `assetlinks.json`) works there.
 
 ### Git Configuration
 

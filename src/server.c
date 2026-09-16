@@ -160,10 +160,22 @@ static int parse_content_length(const char* v, size_t max, size_t* out) {
 // Returns 1 when any path component of [uri] starts with '_' or '.', closing
 // the private-file boundary for "//_db.sqlite3", "/sub/.env" and
 // "/./..." style requests that the old prefix/strstr checks missed.
+//
+// RFC 8615 carves out a single exception: when the *first* segment is exactly
+// ".well-known", the whole subtree below it is allowed. That namespace is
+// public by design (ACME, OAuth/OIDC, WebFinger, security.txt); every other
+// dotfile/dotfolder keeps the 403. Matching is case-sensitive per the RFC, so
+// ".Well-Known" is not exempt, and it is a path-prefix rule, not per-segment:
+// "/foo/.well-known/x" stays forbidden.
 static int has_forbidden_uri_component(const char* uri) {
   if(!uri)
     return 0;
   const char* c = uri;
+  while(*c == '/' || *c == '\\')
+    c++;
+  if(strncmp(c, ".well-known", 11) == 0 &&
+     (c[11] == '\0' || c[11] == '/' || c[11] == '\\'))
+    return 0;
   while(*c) {
     while(*c == '/' || *c == '\\')
       c++;

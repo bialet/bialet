@@ -102,6 +102,52 @@ run_test "Route file base URL         " "notes"          200 "notes-list"
 run_test "Route file with segment     " "notes/42"       200 "note:42"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
+
+# RFC 8615: ".well-known" is the one exempt dot-segment. Everything below it
+# is served -- static files and .wren routes alike -- while every other
+# dot/underscore path keeps the 403 above. Fixtures live under
+# tests/.well-known/.
+run_test "Well-known static file      " ".well-known/openid-configuration" 200 "wk-static-oidc"
+run_test "Well-known wren route       " ".well-known/oauth-authorization-server" 200 "wk-wren-oauth"
+run_test "Well-known ACME challenge   " ".well-known/acme-challenge/token-abc123" 200 "wk-acme-token"
+run_test "Well-known deep folder      " ".well-known/sub/folder/file" 200 "wk-deep"
+run_test "Well-known JSON resource    " ".well-known/jwks.json" 200 "wk-jwks-json"
+
+# The exemption is a path-prefix on the *first* segment only, and the match is
+# exact and case-sensitive: a nested ".well-known" is still protected, and so
+# is ".Well-Known". Protected paths return 403 whether or not they exist.
+run_test "Well-known nested not exempt" "foo/.well-known/x" 403
+run_test "Well-known case-sensitive   " ".Well-Known/x"   403
+run_test "Forbid dotenv               " ".env"            403
+run_test "Forbid git config           " ".git/config"     403
+run_test "Forbid htaccess             " ".htaccess"       403
+run_test "Forbid DS_Store             " ".DS_Store"       403
+run_test "Forbid protected folder     " "_app/foo"        403
+
+# Path traversal must not slip through the exemption. curl normalizes ".."
+# and some percent-escapes, so send the raw path with --path-as-is.
+well_known_traversal_line=$LINENO
+_test_start_ms=$(now_ms)
+wk_traversal_ok=1
+wk_code=""
+for wk_path in "/.well-known/../.env" "/%2e%2e/.env"; do
+  wk_code=$(curl -s -o /dev/null -w "%{http_code}" --path-as-is \
+    "http://$HOST:$PORT$wk_path")
+  [[ "$wk_code" == "403" ]] || wk_traversal_ok=0
+done
+# A percent-encoded ".well-known" must not become an exempt prefix by
+# accident: the server does not decode paths, so it resolves to nothing
+# (404), never a 200 that would imply the exemption matched it.
+wk_encoded=$(curl -s -o /dev/null -w "%{http_code}" --path-as-is \
+  "http://$HOST:$PORT/%2ewell-known/openid-configuration")
+[[ "$wk_encoded" != "200" ]] || wk_traversal_ok=0
+if [[ "$wk_traversal_ok" == 1 ]]; then
+  report_result "Well-known traversal blocked" "$well_known_traversal_line" 0
+else
+  report_result "Well-known traversal blocked" "$well_known_traversal_line" 1 \
+    "Expected 403 for the traversal paths and non-200 for %2ewell-known. Got .env:$wk_code encoded:$wk_encoded"
+fi
+
 # Regression: a planted folder.wren -> ../_db.sqlite3 symlink must not bypass
 # the private-file rule. The route-file search must not follow symlinks, and
 # the resolved-path check re-validates the canonical target. The probe returns

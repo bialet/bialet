@@ -299,6 +299,16 @@ direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
 
+The single exception is the RFC 8615 `.well-known` namespace: a URL whose
+first segment is exactly `.well-known` is public, and everything below it is
+served like any other file. That is required by ACME/Let's Encrypt, OAuth 2.0
+and OpenID Connect, WebFinger, app links, and `security.txt`. The exemption is
+case-sensitive, applies only as the first path segment (`/foo/.well-known/x`
+is still 403), and does not survive path traversal
+(`/.well-known/../.env` is still 403). See
+[Advanced Routing](advanced-routing.md#the-well-known-exception). Never place
+secrets under `.well-known` — it is world-readable by definition.
+
 > ⚠️ Pitfall: `_db.sqlite3` contains your data and your session table.
 > It is already blocked from HTTP access, but the app directory on disk is
 > not a sandbox. Keep it out of version control backups you share, and
