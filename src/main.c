@@ -534,6 +534,16 @@ int main(int argc, char* argv[]) {
       }
     }
   }
+  /* Quiet syntax validation buffers message() output (migration notes, compile
+   * diagnostics) so `bialet -t -q FILE` prints nothing on success and only the
+   * diagnostics on failure. */
+  FILE* validate_capture = NULL;
+  FILE* validate_prev_log = NULL;
+  if(validate_file != NULL && bialet_config.quiet) {
+    validate_capture = tmpfile();
+    if(validate_capture != NULL)
+      validate_prev_log = message_set_log_file(validate_capture);
+  }
   bialet_init(&bialet_config);
   // Registered rather than called at each exit point: main() leaves through a
   // dozen exit() calls plus the forked child's exit(0), and neither the SQLite
@@ -546,8 +556,24 @@ int main(int argc, char* argv[]) {
 
   if(validate_file != NULL) {
     int result = bialet_validate_syntax(validate_file);
+    if(validate_prev_log != NULL)
+      message_set_log_file(validate_prev_log);
+    if(validate_capture != NULL) {
+      // On failure, surface whatever message() buffered (compile errors,
+      // migration notes) to stderr. On success it is discarded so a quiet
+      // validation prints nothing at all.
+      if(result != 0) {
+        rewind(validate_capture);
+        char   copy_buf[4096];
+        size_t copy_n;
+        while((copy_n = fread(copy_buf, 1, sizeof(copy_buf), validate_capture)) > 0)
+          fwrite(copy_buf, 1, copy_n, stderr);
+      }
+      fclose(validate_capture);
+    }
     if(result == 0) {
-      printf("✓ Syntax OK: %s\n", validate_file);
+      if(!bialet_config.quiet)
+        printf("✓ Syntax OK: %s\n", validate_file);
     } else {
       fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
     }
