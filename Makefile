@@ -130,7 +130,14 @@ check: $(BUILD_DIR)/$(TARGET_EXEC)
 
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
-	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)
+	@# Overwriting a running binary in place corrupts its on-disk image and
+	@# makes later execs hang: on macOS the code signature and page cache are
+	@# tied to the inode, so `cp` over a live process breaks the file at that
+	@# path. Write a sibling and rename it into place -- the swap is atomic and
+	@# running processes keep the old inode.
+	cp $(BUILD_DIR)/$(TARGET_EXEC) $(INSTALL_DIR)/.$(TARGET_EXEC).tmp
+	chmod 755 $(INSTALL_DIR)/.$(TARGET_EXEC).tmp
+	mv -f $(INSTALL_DIR)/.$(TARGET_EXEC).tmp $(INSTALL_DIR)/$(TARGET_EXEC)
 
 install-hooks:
 	git config core.hooksPath .githooks
