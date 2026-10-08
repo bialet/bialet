@@ -863,26 +863,45 @@ so processing continues.
 
 ## Sessions and Authentication
 
+Session data is server-side and per visitor. You always work with an
+**instance** created by `Session.new()`; only a few members are static:
+
+- static: `Session.new()`, `Session.id`, `Session.name` / `Session.name=`,
+  `Session.destroy()`
+- instance (on the object from `Session.new()`): `.id`, `.get(key)`,
+  `.set(key, value)`, `.csrf`, `.csrfOk`
+
 ```wren
+var session = Session.new()
+
 // Login
 if (Request.isPost) {
   var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email") || "")
   if (user && Util.verify(Request.post("password") || "", user["password"])) {
-    Session.set("userId", user["id"])
+    session.set("userId", user["id"])
     return Response.redirect("/dashboard")
   }
 }
 
 // Check logged in (on protected pages)
-if (!Session.get("userId")) return Response.redirect("/login")
+if (!session.get("userId")) return Response.redirect("/login")
 
 // Logout
-Session.destroy()
+Session.destroy()               // static
 return Response.redirect("/")
 ```
 
+> ⚠️ Pitfall: `Session.get(key)` returns `null` when the key is absent, exactly
+> like `Request.post(name)` — guard it before using the value:
+> `var name = session.get("name") || "guest"` or
+> `session.get("name") ? ... : ...`. Calling `Session.set(...)`,
+> `Session.get(...)`, `Session.csrf` or `Session.csrfOk` on the class (instead
+> of on an instance) fails at runtime with
+> `Session metaclass does not implement '...'`.
+
 `Session` is also useful to scope data to an anonymous visitor without any
-login system — e.g. a per-visitor todo list:
+login system — e.g. a per-visitor todo list (here the static `Session.id` is
+fine):
 
 ```wren
 class Task {
@@ -895,8 +914,8 @@ class Task {
 }
 ```
 
-CSRF: `Session.csrf` renders a hidden input field with a token; check it with
-`Session.csrfOk` when processing the form submission.
+CSRF: with an instance, `session.csrf` renders a hidden input field with a
+token, and `session.csrfOk` validates it when processing the submission.
 
 ## Cron
 
