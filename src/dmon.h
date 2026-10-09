@@ -1684,7 +1684,11 @@ _DMON_PRIVATE void _dmon_fsevent_callback(ConstFSEventStreamRef stream_ref, void
 
             // normalize path, so it would be the same on both MacOS file-system types (case/nocase)
             _dmon_tolower(abs_filepath_lower, sizeof(abs_filepath), abs_filepath);
-            DMON_ASSERT(strstr(abs_filepath_lower, watch->rootdir) == abs_filepath_lower);
+            // Events on the watched root itself arrive without the trailing
+            // slash watch->rootdir carries (e.g. `touch` on the root dir), so
+            // they do not match the prefix. Skip them instead of aborting.
+            if (strstr(abs_filepath_lower, watch->rootdir) != abs_filepath_lower)
+                continue;
 
             // strip the root dir from the beginning
             _dmon_strcpy(ev.filepath, sizeof(ev.filepath), abs_filepath + strlen(watch->rootdir));
