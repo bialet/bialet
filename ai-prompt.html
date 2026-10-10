@@ -58,14 +58,14 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=e44dfa33"></script>
+    <script src="_static/ai-prompt.js?v=3979b7ea"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.0" />
+  <meta name="docsearch:version" content="1.2.2" />
   </head>
   
   
@@ -469,6 +469,17 @@ or conventions that aren't described below.
 <span class="k">&gt;</span>
 <span class="ge">&gt; *"Every code example using `Request.post()` **must** include a null-handling</span>
 <span class="k">&gt; </span><span class="ge">strategy (`|| fallback` or `if (value != null)`) by default."*</span>
+
+<span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: inline HTML strings cannot nest the same tag.**</span>
+<span class="k">&gt; </span><span class="ge">`&lt;div&gt;...&lt;div&gt;...&lt;/div&gt;...&lt;/div&gt;` is a parse error, and it is the mistake</span>
+<span class="k">&gt; </span><span class="ge">that costs the most round-trips in practice. When a `&lt;div&gt;` needs a child</span>
+<span class="k">&gt; </span><span class="ge">wrapper, use a **different** element — `&lt;section&gt;`, `&lt;article&gt;`,</span>
+<span class="k">&gt; </span><span class="ge">`&lt;fieldset&gt;` — never another `&lt;div&gt;`. Do not paste the same nesting back</span>
+<span class="k">&gt; </span><span class="ge">after a `bialet_validate` error.</span>
+
+<span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**</span>
+<span class="k">&gt; </span><span class="ge">`SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at</span>
+<span class="k">&gt; </span><span class="ge">runtime. Never write your own `LIMIT 1` for those methods.</span>
 
 <span class="gu">## Step 0: Make Sure Bialet Is Installed</span>
 
@@ -1315,26 +1326,45 @@ so processing continues.
 
 <span class="gu">## Sessions and Authentication</span>
 
+Session data is server-side and per visitor. You always work with an
+<span class="gs">**instance**</span> created by <span class="sb">`Session.new()`</span>; only a few members are static:
+
+<span class="k">-</span><span class="w"> </span>static: <span class="sb">`Session.new()`</span>, <span class="sb">`Session.id`</span>, <span class="sb">`Session.name`</span> / <span class="sb">`Session.name=`</span>,
+  <span class="sb">`Session.destroy()`</span>
+<span class="k">-</span><span class="w"> </span>instance (on the object from <span class="sb">`Session.new()`</span>): <span class="sb">`.id`</span>, <span class="sb">`.get(key)`</span>,
+  <span class="sb">`.set(key, value)`</span>, <span class="sb">`.csrf`</span>, <span class="sb">`.csrfOk`</span>
+
 <span class="sb">```wren</span>
+<span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+
 <span class="c1">// Login</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"password"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nc">Session</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="w">    </span><span class="n">session</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/dashboard"</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
 <span class="c1">// Check logged in (on protected pages)</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
 
 <span class="c1">// Logout</span>
-<span class="nc">Session</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+<span class="nc">Session</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span><span class="w">               </span><span class="c1">// static</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="sb">```</span>
 
+<span class="k">&gt; </span><span class="ge">⚠️ Pitfall: `Session.get(key)` returns `null` when the key is absent, exactly</span>
+<span class="k">&gt; </span><span class="ge">like `Request.post(name)` — guard it before using the value:</span>
+<span class="k">&gt; </span><span class="ge">`var name = session.get("name") || "guest"` or</span>
+<span class="k">&gt; </span><span class="ge">`session.get("name") ? ... : ...`. Calling `Session.set(...)`,</span>
+<span class="k">&gt; </span><span class="ge">`Session.get(...)`, `Session.csrf` or `Session.csrfOk` on the class (instead</span>
+<span class="k">&gt; </span><span class="ge">of on an instance) fails at runtime with</span>
+<span class="k">&gt; </span><span class="ge">`Session metaclass does not implement '...'`.</span>
+
 <span class="sb">`Session`</span> is also useful to scope data to an anonymous visitor without any
-login system — e.g. a per-visitor todo list:
+login system — e.g. a per-visitor todo list (here the static <span class="sb">`Session.id`</span> is
+fine):
 
 <span class="sb">```wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="w"> </span><span class="p">{</span>
@@ -1347,8 +1377,8 @@ login system — e.g. a per-visitor todo list:
 <span class="p">}</span>
 <span class="sb">```</span>
 
-CSRF: <span class="sb">`Session.csrf`</span> renders a hidden input field with a token; check it with
-<span class="sb">`Session.csrfOk`</span> when processing the form submission.
+CSRF: with an instance, <span class="sb">`session.csrf`</span> renders a hidden input field with a
+token, and <span class="sb">`session.csrfOk`</span> validates it when processing the submission.
 
 <span class="gu">## Cron</span>
 
