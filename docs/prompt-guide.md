@@ -18,6 +18,17 @@ or conventions that aren't described below.
 > *"Every code example using `Request.post()` **must** include a null-handling
 > strategy (`|| fallback` or `if (value != null)`) by default."*
 
+> ⚠️ **CRITICAL: inline HTML strings cannot nest the same tag.**
+> `<div>...<div>...</div>...</div>` is a parse error, and it is the mistake
+> that costs the most round-trips in practice. When a `<div>` needs a child
+> wrapper, use a **different** element — `<section>`, `<article>`,
+> `<fieldset>` — never another `<div>`. Do not paste the same nesting back
+> after a `bialet_validate` error.
+
+> ⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**
+> `SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at
+> runtime. Never write your own `LIMIT 1` for those methods.
+
 ## Step 0: Make Sure Bialet Is Installed
 
 Before writing any code, confirm the `bialet` binary is installed and on the
