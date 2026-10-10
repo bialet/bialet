@@ -60,8 +60,7 @@ Bialet integrates the object-oriented [Wren language](https://wren.io) with an
 HTTP server and a built-in SQLite database — **in a single small binary**, with
 zero configuration files, zero dependencies, and no build step. Requests are
 routed from the filesystem: each `.wren` file is a handler that returns a
-response body. It is written in C17 and runs on Linux and macOS (and Windows via
-cross-compilation).
+response body. It is written in C17 and runs on Linux and macOS and Windows.
 
 ## Install
 
