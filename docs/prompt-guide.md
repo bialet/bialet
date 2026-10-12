@@ -67,7 +67,8 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
   routing: deep nesting, many segments, elaborate URL schemes.
 - **Server-side rendering** with inline HTML strings, minimal JavaScript
 - **Direct SQL queries** with parameterized placeholders instead of an ORM
-- **Semantic HTML**, optionally styled with a classless framework like PicoCSS
+- **Semantic HTML**, styled with a classless CSS framework such as **Beak CSS**
+  (loaded from the CDN at `@latest`, with a palette chosen to fit the project)
 
 ## HTML-First: Reach for JS Last
 
@@ -464,15 +465,16 @@ class Layout {
   static render(content) { Layout.render(content, "My App") }
 
   static render(content, title) { <!doctype html>
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{{ title }}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/indigo.css" />
       </head>
       <body>
-        <header class="container">
+        <header>
           <nav>
             <ul><li><strong>My App</strong></li></ul>
             <ul>
@@ -482,7 +484,7 @@ class Layout {
           </nav>
         </header>
         {{ content }}
-        <footer class="container">
+        <footer>
           <small>Built with <a href="https://bialet.dev">Bialet</a></small>
         </footer>
       </body>
@@ -495,7 +497,7 @@ class Layout {
 import "_app/template" for Layout
 
 return Layout.render(
-  <main class="container">
+  <main>
     <h1>Welcome</h1>
   </main>
 )
@@ -752,7 +754,7 @@ var users = User.all()
 
 // === VIEW ===
 return Layout.render(
-  <main class="container">
+  <main>
     <h1>Users</h1>
     <table>
       <thead><tr><th>Name</th><th>Email</th></tr></thead>
@@ -1091,12 +1093,43 @@ improves UX (inline delete, edit-in-place):
 
 ## Semantic HTML & Styling
 
-Use proper elements — `<header>`, `<nav>`, `<main class="container">`,
-`<article>`, `<section>`, `<aside>`, `<footer>` — and let a classless CSS
-framework like [PicoCSS](https://picocss.com) style them with zero classes.
-Tailwind (via CDN for prototyping) and vanilla CSS also work — Bialet just
-outputs plain HTML, so any CSS approach applies unchanged. Stylesheets go
-anywhere except behind a `_`/`.` prefix (those return 403).
+Use proper elements — `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`,
+`<aside>`, `<footer>` — and let a classless CSS framework style them with zero
+classes. The default is **Beak CSS**, a classless pure-CSS framework (a fork of
+Pico CSS): there are no utility classes to learn, plain semantic HTML comes
+pre-styled. Load it from the jsDelivr CDN — base first, then one palette,
+**always at `@latest`** (do not pin a version):
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/blue.css" />
+```
+
+Pick **one** base layout for the whole project:
+
+- `beak.min.css` — full-width/fluid, for apps and dashboards
+- `beak.contained.min.css` — centered readable column, for blogs, docs, landing
+
+**Choose the palette to match the project — don't default to blue out of
+habit.** Swap the second `<link>` href to one of: `amber`, `blue`, `cyan`,
+`fuchsia`, `green`, `grey`, `indigo`, `jade`, `lime`, `orange`, `pink`,
+`pumpkin`, `purple`, `red`, `sand`, `slate`, `violet`, `yellow`, `zinc`. Set the
+color scheme on `<html>` with `data-theme="light"` or `data-theme="dark"` (omit
+it to follow the OS preference).
+
+Never edit the framework files. Customize through CSS variables in your own
+stylesheet loaded last — everything in Beak lives in `@layer beak`, so
+unlayered app CSS always wins the cascade. Key variables: `--beak-primary`,
+`--beak-primary-hover`, `--beak-primary-background`, `--beak-primary-focus`,
+`--beak-secondary*`, `--beak-contrast*`, `--beak-background-color`,
+`--beak-color`, `--beak-muted-color`, `--beak-muted-border-color`,
+`--beak-h1-color`…`--beak-h6-color`, `--beak-font-family`, `--beak-font-size`,
+`--beak-line-height`, `--beak-spacing`, `--beak-border-radius`,
+`--beak-border-width`, `--beak-transition`.
+
+Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
+approach applies unchanged. Stylesheets go anywhere except behind a `_`/`.`
+prefix (those return 403).
 
 ## Complete Example: Todo List App
 
@@ -1159,14 +1192,15 @@ class Task {
 // _app/template.wren
 class Layout {
   static render(content) { <!doctype html>
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <head>
         <meta charset="utf-8" />
         <title>Todo</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.contained.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/green.css" />
       </head>
       <body>
-        <main class="container">{{ content }}</main>
+        <main>{{ content }}</main>
       </body>
     </html> }
 }
@@ -1252,3 +1286,5 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
 10. **Git**: always add `_db.sqlite3*` to `.gitignore`
 11. **HTML-first**: reach for `<details>`, `popover`, the checkbox/radio CSS
     hack, and server-side query-param filtering before writing JS
+12. **Styling**: semantic HTML + **Beak CSS** (classless) from jsDelivr at
+    `@latest`; pick the base variant and a palette that fit the project
