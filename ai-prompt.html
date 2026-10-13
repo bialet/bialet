@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=3979b7ea"></script>
+    <script src="_static/ai-prompt.js?v=f2bcdaf3"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -519,7 +519,8 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
   routing: deep nesting, many segments, elaborate URL schemes.
 <span class="k">-</span><span class="w"> </span><span class="gs">**Server-side rendering**</span> with inline HTML strings, minimal JavaScript
 <span class="k">-</span><span class="w"> </span><span class="gs">**Direct SQL queries**</span> with parameterized placeholders instead of an ORM
-<span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, optionally styled with a classless framework like PicoCSS
+<span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, styled with a classless CSS framework such as <span class="gs">**Beak CSS**</span>
+  (loaded from the CDN at <span class="sb">`@latest`</span>, with a palette chosen to fit the project)
 
 <span class="gu">## HTML-First: Reach for JS Last</span>
 
@@ -916,30 +917,31 @@ the folder; the deepest match wins.
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en" data-theme="light"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" /&gt;</span>
-<span class="x">      &lt;/head&gt;</span>
-<span class="w">      </span><span class="x">&lt;body&gt;</span>
-<span class="x">        &lt;header class="container"&gt;</span>
-<span class="w">          </span><span class="x">&lt;nav&gt;</span>
-<span class="x">            &lt;ul&gt;&lt;li&gt;&lt;strong&gt;</span><span class="nc">My</span><span class="w"> </span><span class="nc">App</span><span class="x">&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;</span>
-<span class="x">            &lt;ul&gt;</span>
-<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href="/"&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
-<span class="w">              </span><span class="x">&lt;li&gt;&lt;a href="/about"&gt;</span><span class="nc">About</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span>
-<span class="w">            </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">          &lt;/nav&gt;</span>
-<span class="w">        </span><span class="x">&lt;/header&gt;</span>
-<span class="x">        {{ content }}</span>
-<span class="x">        &lt;footer class="container"&gt;</span>
-<span class="w">          </span><span class="x">&lt;small&gt;Built with &lt;a href="https://bialet.dev"&gt;</span><span class="nc">Bialet</span><span class="x">&lt;/a&gt;&lt;/small&gt;</span>
-<span class="w">        </span><span class="x">&lt;/footer&gt;</span>
-<span class="x">      &lt;/body&gt;</span>
-<span class="w">    </span><span class="x">&lt;/html&gt; }</span>
-<span class="x">}</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" /&gt;</span>
+<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/indigo.css" /&gt;</span>
+<span class="w">      </span><span class="x">&lt;/head&gt;</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="x">&lt;header&gt;</span>
+<span class="x">          &lt;nav&gt;</span>
+<span class="w">            </span><span class="x">&lt;ul&gt;&lt;li&gt;&lt;strong&gt;My App&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;</span>
+<span class="w">            </span><span class="x">&lt;ul&gt;</span>
+<span class="x">              &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
+<span class="x">              &lt;li&gt;&lt;a href="/about"&gt;About&lt;/a&gt;&lt;/li&gt;</span>
+<span class="x">            &lt;/ul&gt;</span>
+<span class="w">          </span><span class="x">&lt;/nav&gt;</span>
+<span class="x">        &lt;/header&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;footer&gt;</span>
+<span class="x">          &lt;small&gt;</span><span class="nc">Built</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="x">&lt;a href="https://bialet.dev"&gt;Bialet&lt;/a&gt;&lt;/small&gt;</span>
+<span class="x">        &lt;/footer&gt;</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
 <span class="sb">```</span>
 
 <span class="sb">```wren</span>
@@ -947,7 +949,7 @@ the folder; the deepest match wins.
 <span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main class="container"&gt;</span>
+<span class="w">  </span><span class="x">&lt;main&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">  &lt;/main&gt;</span>
 <span class="p">)</span>
@@ -1204,7 +1206,7 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 
 <span class="c1">// === VIEW ===</span>
 <span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main class="container"&gt;</span>
+<span class="w">  </span><span class="x">&lt;main&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Users</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;table&gt;</span>
 <span class="w">      </span><span class="x">&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
@@ -1543,12 +1545,43 @@ improves UX (inline delete, edit-in-place):
 
 <span class="gu">## Semantic HTML &amp; Styling</span>
 
-Use proper elements — <span class="sb">`&lt;header&gt;`</span>, <span class="sb">`&lt;nav&gt;`</span>, <span class="sb">`&lt;main class="container"&gt;`</span>,
-<span class="sb">`&lt;article&gt;`</span>, <span class="sb">`&lt;section&gt;`</span>, <span class="sb">`&lt;aside&gt;`</span>, <span class="sb">`&lt;footer&gt;`</span> — and let a classless CSS
-framework like [<span class="nt">PicoCSS</span>](<span class="na">https://picocss.com</span>) style them with zero classes.
-Tailwind (via CDN for prototyping) and vanilla CSS also work — Bialet just
-outputs plain HTML, so any CSS approach applies unchanged. Stylesheets go
-anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span> prefix (those return 403).
+Use proper elements — <span class="sb">`&lt;header&gt;`</span>, <span class="sb">`&lt;nav&gt;`</span>, <span class="sb">`&lt;main&gt;`</span>, <span class="sb">`&lt;article&gt;`</span>, <span class="sb">`&lt;section&gt;`</span>,
+<span class="sb">`&lt;aside&gt;`</span>, <span class="sb">`&lt;footer&gt;`</span> — and let a classless CSS framework style them with zero
+classes. The default is <span class="gs">**Beak CSS**</span>, a classless pure-CSS framework (a fork of
+Pico CSS): there are no utility classes to learn, plain semantic HTML comes
+pre-styled. Load it from the jsDelivr CDN — base first, then one palette,
+<span class="gs">**always at `@latest`**</span> (do not pin a version):
+
+<span class="sb">```html</span>
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css"</span> <span class="p">/&gt;</span>
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/blue.css"</span> <span class="p">/&gt;</span>
+<span class="sb">```</span>
+
+Pick <span class="gs">**one**</span> base layout for the whole project:
+
+<span class="k">-</span><span class="w"> </span><span class="sb">`beak.min.css`</span> — full-width/fluid, for apps and dashboards
+<span class="k">-</span><span class="w"> </span><span class="sb">`beak.contained.min.css`</span> — centered readable column, for blogs, docs, landing
+
+**Choose the palette to match the project — don't default to blue out of
+habit.** Swap the second <span class="sb">`&lt;link&gt;`</span> href to one of: <span class="sb">`amber`</span>, <span class="sb">`blue`</span>, <span class="sb">`cyan`</span>,
+<span class="sb">`fuchsia`</span>, <span class="sb">`green`</span>, <span class="sb">`grey`</span>, <span class="sb">`indigo`</span>, <span class="sb">`jade`</span>, <span class="sb">`lime`</span>, <span class="sb">`orange`</span>, <span class="sb">`pink`</span>,
+<span class="sb">`pumpkin`</span>, <span class="sb">`purple`</span>, <span class="sb">`red`</span>, <span class="sb">`sand`</span>, <span class="sb">`slate`</span>, <span class="sb">`violet`</span>, <span class="sb">`yellow`</span>, <span class="sb">`zinc`</span>. Set the
+color scheme on <span class="sb">`&lt;html&gt;`</span> with <span class="sb">`data-theme="light"`</span> or <span class="sb">`data-theme="dark"`</span> (omit
+it to follow the OS preference).
+
+Never edit the framework files. Customize through CSS variables in your own
+stylesheet loaded last — everything in Beak lives in <span class="sb">`@layer beak`</span>, so
+unlayered app CSS always wins the cascade. Key variables: <span class="sb">`--beak-primary`</span>,
+<span class="sb">`--beak-primary-hover`</span>, <span class="sb">`--beak-primary-background`</span>, <span class="sb">`--beak-primary-focus`</span>,
+<span class="sb">`--beak-secondary*`</span>, <span class="sb">`--beak-contrast*`</span>, <span class="sb">`--beak-background-color`</span>,
+<span class="sb">`--beak-color`</span>, <span class="sb">`--beak-muted-color`</span>, <span class="sb">`--beak-muted-border-color`</span>,
+<span class="sb">`--beak-h1-color`</span>…<span class="sb">`--beak-h6-color`</span>, <span class="sb">`--beak-font-family`</span>, <span class="sb">`--beak-font-size`</span>,
+<span class="sb">`--beak-line-height`</span>, <span class="sb">`--beak-spacing`</span>, <span class="sb">`--beak-border-radius`</span>,
+<span class="sb">`--beak-border-width`</span>, <span class="sb">`--beak-transition`</span>.
+
+Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
+approach applies unchanged. Stylesheets go anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
+prefix (those return 403).
 
 <span class="gu">## Complete Example: Todo List App</span>
 
@@ -1611,17 +1644,18 @@ anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
 <span class="c1">// _app/template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en" data-theme="dark"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;title&gt;</span><span class="nc">Todo</span><span class="x">&lt;/title&gt;</span>
-<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" /&gt;</span>
-<span class="w">      </span><span class="x">&lt;/head&gt;</span>
-<span class="x">      &lt;body&gt;</span>
-<span class="w">        </span><span class="x">&lt;main class="container"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
-<span class="w">      </span><span class="x">&lt;/body&gt;</span>
-<span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
+<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.contained.min.css" /&gt;</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/green.css" /&gt;</span>
+<span class="x">      &lt;/head&gt;</span>
+<span class="w">      </span><span class="x">&lt;body&gt;</span>
+<span class="x">        &lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+<span class="x">      &lt;/body&gt;</span>
+<span class="w">    </span><span class="x">&lt;/html&gt; }</span>
+<span class="x">}</span>
 <span class="sb">```</span>
 
 <span class="sb">```wren</span>
@@ -1704,6 +1738,8 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
 <span class="k">10.</span> <span class="gs">**Git**</span>: always add <span class="sb">`_db.sqlite3*`</span> to <span class="sb">`.gitignore`</span>
 <span class="k">11.</span> <span class="gs">**HTML-first**</span>: reach for <span class="sb">`&lt;details&gt;`</span>, <span class="sb">`popover`</span>, the checkbox/radio CSS
     hack, and server-side query-param filtering before writing JS
+<span class="k">12.</span> <span class="gs">**Styling**</span>: semantic HTML + <span class="gs">**Beak CSS**</span> (classless) from jsDelivr at
+    <span class="sb">`@latest`</span>; pick the base variant and a palette that fit the project
 </pre></div>
 </div>
 </section>
