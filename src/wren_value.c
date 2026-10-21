@@ -919,13 +919,22 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle, uint32_t start) 
   // determine how far the search window can be advanced if that character is
   // the last character in the haystack where we are searching for the needle
   // and the needle doesn't match there.
-  uint32_t shift[UINT8_MAX];
+  // 256 entries, not 255. The table is indexed by the *byte* value of a
+  // haystack or needle character, and 0xFF is a legal byte value, so with
+  // UINT8_MAX entries the byte 0xFF indexed one element past the end of the
+  // array: an out-of-bounds read in the search loop below -- whose value then
+  // decides how far the window advances, and a zero there never advances it
+  // and spins forever -- and an out-of-bounds write in the needle loop, of
+  // the needle length minus the offset. Both are reachable from any request
+  // whose body or query string contains a 0xFF byte, because every request
+  // splits its raw message on newlines before the handler runs.
+  uint32_t shift[UINT8_MAX + 1];
   uint32_t needleEnd = needle->length - 1;
 
   // By default, we assume the character is not the needle at all. In that case
   // case, if a match fails on that character, we can advance one whole needle
   // width since.
-  for(uint32_t index = 0; index < UINT8_MAX; index++) {
+  for(uint32_t index = 0; index <= UINT8_MAX; index++) {
     shift[index] = needle->length;
   }
 
