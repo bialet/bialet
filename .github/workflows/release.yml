@@ -237,16 +237,91 @@ jobs:
             dist/*.zip
           generate_release_notes: true
 
+      # Bumps the formula in bialet/homebrew-bialet to the released version.
+      #
+      # Auth: an SSH deploy key (HOMEBREW_TAP_SSH_KEY) is the primary path.
+      # It is scoped to that one repo, grants write access, and cannot expire,
+      # so it cannot break a release the way the PAT did. The PAT
+      # (HOMEBREW_TAP_TOKEN) is kept as a fallback: GitHub strips credentials
+      # from a URL when it redirects, which is why a token in the clone URL
+      # can authenticate the clone and then fail the push.
+      #
+      # The step is non-fatal on purpose: the release assets are the point of
+      # this workflow, and a formula bump must not invalidate them. A failure
+      # surfaces as a warning annotation on the run.
       - name: Update Homebrew formula
+        continue-on-error: true
+        env:
+          TAP_SSH_KEY: ${{ secrets.HOMEBREW_TAP_SSH_KEY }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
+          set -euo pipefail
+          trap 'rc=$?; rm -f /tmp/tap_key; [ $rc -eq 0 ] || echo "::warning::Homebrew tap bump failed (exit ${rc}). The release itself is unaffected, but the formula was not updated."' EXIT
+
           VERSION="${{ github.ref_name }}"
-          SHA256=$(curl -sL "https://github.com/bialet/bialet/archive/refs/tags/${VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}')
-          git clone "https://${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/bialet/homebrew-bialet.git" /tmp/homebrew-bialet
-          sed -i "s|/v[0-9.]*\.tar\.gz|/${VERSION}.tar.gz|" /tmp/homebrew-bialet/bialet.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${SHA256}\"|" /tmp/homebrew-bialet/bialet.rb
-          cd /tmp/homebrew-bialet
+          TAP_REPO="bialet/homebrew-bialet"
+          TAP_DIR="/tmp/homebrew-bialet"
+
+          # Pin GitHub's SSH host keys. The deploy key must never be offered
+          # to a host we have not verified.
+          cat > /tmp/github_known_hosts <<'KNOWN_HOSTS'
+          github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+          github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+          github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+          KNOWN_HOSTS
+
+          # Report whether the PAT is still accepted, even when the deploy
+          # key is the one in use. 200 means it works, 401 means it expired
+          # or was revoked and needs rotating.
+          if [ -n "${TAP_TOKEN}" ]; then
+            echo "PAT check: api.github.com/user -> $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TAP_TOKEN}" https://api.github.com/user)"
+          fi
+
+          if [ -n "${TAP_SSH_KEY}" ]; then
+            printf '%s\n' "${TAP_SSH_KEY}" > /tmp/tap_key
+            chmod 600 /tmp/tap_key
+            export GIT_SSH_COMMAND="ssh -i /tmp/tap_key -o IdentitiesOnly=yes -o UserKnownHostsFile=/tmp/github_known_hosts -o StrictHostKeyChecking=yes"
+            TAP_URL="git@github.com:${TAP_REPO}.git"
+            echo "Using SSH deploy key for ${TAP_REPO}"
+          elif [ -n "${TAP_TOKEN}" ]; then
+            # Send the token as an Authorization header instead of embedding
+            # it in the URL: GitHub strips credentials from a URL when it
+            # redirects, which silently turns an authenticated clone into an
+            # unauthenticated push.
+            AUTH=$(printf 'x-access-token:%s' "${TAP_TOKEN}" | base64 | tr -d '\n')
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+            export GIT_CONFIG_VALUE_0="Authorization: Basic ${AUTH}"
+            export GIT_TERMINAL_PROMPT=0
+            TAP_URL="https://github.com/${TAP_REPO}.git"
+            echo "Using PAT fallback for ${TAP_REPO}"
+          else
+            echo "::warning::No Homebrew tap credentials configured; skipping the formula bump."
+            exit 0
+          fi
+
+          SHA256=$(curl -fsSL "https://github.com/bialet/bialet/archive/refs/tags/${VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}')
+          echo "Source tarball sha256: ${SHA256}"
+
+          git clone "${TAP_URL}" "${TAP_DIR}"
+          cd "${TAP_DIR}"
+
+          # Rewrite the tag in the source URL and the checksum. Match on the
+          # tag path so pre-release versions (v1.2.3-rc.1) work too.
+          sed -e "s|refs/tags/[^\"]*\.tar\.gz|refs/tags/${VERSION}.tar.gz|" \
+              -e "s|sha256 \"[0-9a-f]*\"|sha256 \"${SHA256}\"|" \
+              bialet.rb > bialet.rb.new
+          mv bialet.rb.new bialet.rb
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add bialet.rb
-          git commit -m "bump to ${VERSION}" || true
-          git push
+          if git diff --cached --quiet; then
+            echo "Formula already points at ${VERSION}; nothing to commit."
+          else
+            git commit -m "bump to ${VERSION}"
+            git push origin HEAD:main
+            echo "Formula updated to ${VERSION}"
+          fi
+
+          rm -f /tmp/tap_key
