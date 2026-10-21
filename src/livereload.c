@@ -133,6 +133,10 @@ int livereload_inject_response(struct BialetResponse* response) {
     return 0;
   if(strstr(response->header, "text/html") == NULL)
     return 0;
+  // Nothing to inject into. A body-less response with a non-zero length is
+  // inconsistent, and the memcpy() below would read from NULL.
+  if(response->body == NULL)
+    return 0;
 
   size_t body_len = response->length;
   if(body_len == 0 && response->body != NULL && response->body_owned) {
