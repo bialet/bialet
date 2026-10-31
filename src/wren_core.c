@@ -1989,19 +1989,44 @@ DEF_PRIMITIVE(query_fetch) {
     free_bialet_query(query);
     return false;
   }
-  ObjList* list = wrenNewList(vm, query->resultsCount);
+
+  // The rows, their keys and their values below are reachable only from C
+  // locals until the finished list is returned, so a collection landing inside
+  // wrenNew*/wrenMapSet would free a half-built row: a 20000-row SELECT
+  // reliably killed the HTTP child by handing the collector a partially built
+  // list. Rooting every temporary works but makes the collector re-mark the
+  // whole growing result set on each collection; pausing it instead is bounded
+  // work proportional to the result set (which the query itself bounds), and is
+  // the same choice prim_json_parse_primitive makes for the same reason.
+  size_t saved_next_gc = vm->nextGC;
+  vm->nextGC = SIZE_MAX;
+
+  // wrenNewList(n) leaves its n slots uninitialized, so both lists grow by
+  // appending: a slot only ever holds a real Value.
+  ObjList* list = wrenNewList(vm, 0);
   for(int i = 0; i < query->resultsCount; i++) {
-    ObjMap*           row = wrenNewMap(vm);
     BialetQueryResult res = query->results[i];
+    ObjMap*           row = wrenNewMap(vm);
+
+    // Column names repeat on every row of a result set, so each name becomes a
+    // Wren string once here instead of once per cell: a 2000-row, 4-column
+    // SELECT used to intern 8000 copies of the same four names.
+    ObjList* names = wrenNewList(vm, 0);
+    for(int j = 0; j < res.rowCount; j++) {
+      wrenValueBufferWrite(vm, &names->elements,
+                           wrenNewString(vm, res.rows[j].name));
+    }
+
     for(int j = 0; j < res.rowCount; j++) {
       Value colValue =
           res.rows[j].type == BIALETQUERYTYPE_NULL
               ? NULL_VAL
               : wrenNewStringLength(vm, res.rows[j].value, res.rows[j].size);
-      wrenMapSet(vm, row, wrenNewString(vm, res.rows[j].name), colValue);
+      wrenMapSet(vm, row, names->elements.data[j], colValue);
     }
-    list->elements.data[i] = OBJ_VAL(row);
+    wrenValueBufferWrite(vm, &list->elements, OBJ_VAL(row));
   }
+  vm->nextGC = saved_next_gc;
   free_bialet_query(query);
   RETURN_OBJ(list);
 }
