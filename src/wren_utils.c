@@ -1,7 +1,6 @@
 #include "wren_utils.h"
 
 #include "wren_vm.h"
-
 #include <string.h>
 
 DEFINE_BUFFER(Byte, uint8_t);
@@ -9,11 +8,50 @@ DEFINE_BUFFER(Int, int);
 DEFINE_BUFFER(String, ObjString*);
 
 void wrenSymbolTableInit(SymbolTable* symbols) {
-  wrenStringBufferInit(symbols);
+  symbols->data = NULL;
+  symbols->count = 0;
+  symbols->capacity = 0;
+  symbols->ids = NULL;
+  symbols->idsCapacity = 0;
 }
 
 void wrenSymbolTableClear(WrenVM* vm, SymbolTable* symbols) {
-  wrenStringBufferClear(vm, symbols);
+  wrenReallocate(vm, symbols->data, 0, 0);
+  wrenReallocate(vm, symbols->ids, 0, 0);
+  wrenSymbolTableInit(symbols);
+}
+
+// FNV-1a over the name, used only to pick a bucket in the [ids] index. A fixed
+// seed is fine here: the names come from the source being compiled and method
+// signatures, never from request data, and an attacker who picks them already
+// runs the code.
+static uint32_t symbol_hash(const char* name, size_t length) {
+  uint32_t hash = 2166136261u;
+  for(size_t i = 0; i < length; i++) {
+    hash ^= (unsigned char)name[i];
+    hash *= 16777619u;
+  }
+  return hash;
+}
+
+// Rebuilds [symbols]->ids at [idsCapacity] (a power of two) from the current
+// symbol list.
+static void symbol_index_rebuild(WrenVM* vm, SymbolTable* symbols, int idsCapacity) {
+  symbols->ids = (int*)wrenReallocate(vm, symbols->ids,
+                                      (size_t)symbols->idsCapacity * sizeof(int),
+                                      (size_t)idsCapacity * sizeof(int));
+  symbols->idsCapacity = idsCapacity;
+  memset(symbols->ids, 0, (size_t)idsCapacity * sizeof(int));
+
+  uint32_t mask = (uint32_t)idsCapacity - 1;
+  for(int i = 0; i < symbols->count; i++) {
+    uint32_t slot =
+        symbol_hash(symbols->data[i]->value, (size_t)symbols->data[i]->length) &
+        mask;
+    while(symbols->ids[slot] != 0)
+      slot = (slot + 1) & mask;
+    symbols->ids[slot] = i + 1;
+  }
 }
 
 int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
@@ -21,7 +59,28 @@ int wrenSymbolTableAdd(WrenVM* vm, SymbolTable* symbols, const char* name,
   ObjString* symbol = AS_STRING(wrenNewStringLength(vm, name, length));
 
   wrenPushRoot(vm, &symbol->obj);
-  wrenStringBufferWrite(vm, symbols, symbol);
+  // Grows both arrays: the symbol list in powers of two, and the lookup index
+  // so it stays under a 3/4 load factor.
+  if(symbols->count + 1 > symbols->capacity) {
+    int capacity = wrenPowerOf2Ceil(symbols->count + 1);
+    symbols->data = (ObjString**)wrenReallocate(
+        vm, symbols->data, (size_t)symbols->capacity * sizeof(ObjString*),
+        (size_t)capacity * sizeof(ObjString*));
+    symbols->capacity = capacity;
+  }
+  symbols->data[symbols->count++] = symbol;
+
+  if(symbols->idsCapacity == 0 || symbols->count * 4 >= symbols->idsCapacity * 3) {
+    int idsCapacity =
+        symbols->idsCapacity == 0 ? 64 : wrenPowerOf2Ceil(symbols->idsCapacity * 2);
+    symbol_index_rebuild(vm, symbols, idsCapacity);
+  } else {
+    uint32_t mask = (uint32_t)symbols->idsCapacity - 1;
+    uint32_t slot = symbol_hash(name, length) & mask;
+    while(symbols->ids[slot] != 0)
+      slot = (slot + 1) & mask;
+    symbols->ids[slot] = symbols->count;
+  }
   wrenPopRoot(vm);
 
   return symbols->count - 1;
@@ -40,14 +99,31 @@ int wrenSymbolTableEnsure(WrenVM* vm, SymbolTable* symbols, const char* name,
 
 int wrenSymbolTableFind(const SymbolTable* symbols, const char* name,
                         size_t length) {
-  // See if the symbol is already defined.
-  // TODO: O(n). Do something better.
-  for(int i = 0; i < symbols->count; i++) {
-    if(wrenStringEqualsCString(symbols->data[i], name, length))
-      return i;
+  if(symbols->count == 0)
+    return -1;
+
+  // No index (only possible for a table built before an id was added through
+  // wrenSymbolTableAdd): fall back to the linear scan.
+  if(symbols->idsCapacity == 0) {
+    for(int i = 0; i < symbols->count; i++) {
+      if(wrenStringEqualsCString(symbols->data[i], name, length))
+        return i;
+    }
+    return -1;
   }
 
-  return -1;
+  uint32_t mask = (uint32_t)symbols->idsCapacity - 1;
+  uint32_t slot = symbol_hash(name, length) & mask;
+  for(;;) {
+    int id = symbols->ids[slot];
+    if(id == 0)
+      return -1;
+    ObjString* symbol = symbols->data[id - 1];
+    if((size_t)symbol->length == length &&
+       (length == 0 || memcmp(symbol->value, name, length) == 0))
+      return id - 1;
+    slot = (slot + 1) & mask;
+  }
 }
 
 void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable) {
@@ -57,6 +133,7 @@ void wrenBlackenSymbolTable(WrenVM* vm, SymbolTable* symbolTable) {
 
   // Keep track of how much memory is still in use.
   vm->bytesAllocated += symbolTable->capacity * sizeof(*symbolTable->data);
+  vm->bytesAllocated += (size_t)symbolTable->idsCapacity * sizeof(int);
 }
 
 int wrenUtf8EncodeNumBytes(int value) {
