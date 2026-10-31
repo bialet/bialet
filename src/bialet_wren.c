@@ -138,6 +138,17 @@ char* bialet_read_file(const char* path) {
     return NULL;
   }
 
+  // Apply the same private-file boundary the HTTP layer enforces: a component
+  // starting with '_' or '.' is not readable through the Wren file API either.
+  // Without this, Markdown.file(Request.get("page")) could read the app's own
+  // _db.sqlite3, .env or .git/config, all of which the URL router refuses to
+  // serve. Only the root-relative portion is checked so an app hosted under a
+  // "_"- or "."-named directory still works.
+  if(has_forbidden_uri_component(resolved + root_len)) {
+    message(red("Error"), "Private file access blocked in bialetReadFile", path);
+    return NULL;
+  }
+
   // Reopen the already-contained resolved path without following a symlink, so
   // a link swapped in after the realpath() check cannot feed out-of-root bytes
   // to Markdown.file. On POSIX this mirrors the module loader's no-follow open;
