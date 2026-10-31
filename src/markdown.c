@@ -17,12 +17,17 @@ typedef struct {
 
 // Ensures [extra] more bytes (plus a NUL terminator) fit in the buffer.
 // The output is hard-capped at MAX_OUTPUT, so inputs that cannot fit are
-// rejected instead of overflowing the allocation.
+// rejected instead of overflowing the allocation. Growth starts small and
+// doubles: the buffer used to be calloc'd at the full 2 MB cap up front, so
+// every Markdown.html() call zeroed 2 MB of address space even for a one-line
+// document.
+#define MD_INITIAL_CAP 4096
+
 static bool md_reserve(MdBuf* b, size_t extra) {
   if(b->pos + extra + 1 <= b->cap)
     return true;
   size_t needed = b->pos + extra + 1;
-  size_t new_cap = b->cap * 2;
+  size_t new_cap = b->cap > 0 ? b->cap * 2 : MD_INITIAL_CAP;
   if(new_cap < needed)
     new_cap = needed;
   if(new_cap > MAX_OUTPUT)
@@ -32,6 +37,8 @@ static bool md_reserve(MdBuf* b, size_t extra) {
   char* tmp = realloc(b->data, new_cap);
   if(tmp == NULL)
     return false;
+  if(b->cap == 0)
+    tmp[0] = '\0';
   b->data = tmp;
   b->cap = new_cap;
   return true;
@@ -251,14 +258,9 @@ static bool render_inline(const char* src, MdBuf* b) {
 
 char* markdown_to_html(const char* markdown) {
   MdBuf buf = {0};
-  buf.data = calloc(1, MAX_OUTPUT);
-  buf.cap = MAX_OUTPUT;
   char* input = strdup(markdown);
-  if(buf.data == NULL || input == NULL) {
-    free(input);
-    free(buf.data);
+  if(input == NULL)
     return NULL;
-  }
 
   // Split into lines preserving empty lines
   int    line_capacity = 256;
@@ -551,6 +553,17 @@ char* markdown_to_html(const char* markdown) {
     goto fail;
   if(in_codeblock && !md_append(&buf, "</code></pre>\n"))
     goto fail;
+
+  // An empty document produced no output at all, so the buffer was never
+  // grown. Callers treat NULL as "output too large", so hand back an
+  // allocated empty string instead.
+  if(buf.data == NULL) {
+    buf.data = malloc(MD_INITIAL_CAP);
+    if(buf.data == NULL)
+      goto fail;
+    buf.cap = MD_INITIAL_CAP;
+    buf.data[0] = '\0';
+  }
 
   free(lines);
   free(input);
