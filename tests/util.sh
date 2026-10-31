@@ -161,6 +161,23 @@ check_port() {
     return $status
 }
 
+# Abort before running a single test when a port this suite needs is already
+# held by another process. Without this the startup probes connect happily to
+# the foreign listener, every request goes to the wrong app, and the run ends
+# with a wall of meaningless 404s (e.g. another project's dev server sitting on
+# the default 7001). Failing loudly with the lsof hint is far clearer.
+require_free_port() {
+    local host=$1 port=$2 what=$3
+    if check_port "$host" "$port" 1; then
+        echo -e "${RED}FAIL${NC}: $what port $host:$port is already in use"
+        echo "  Something else is listening there, so tests would hit that server."
+        echo "  Find it:   lsof -nP -iTCP:$port -sTCP:LISTEN"
+        echo "  Stop it, or run on other ports, e.g.:"
+        echo "    ./tests/run.sh ./build/bialet $host 7201 7200 7205 7202 7203"
+        exit 1
+    fi
+}
+
 # Function to run and assert GET requests
 test_get() {
     description=$1
@@ -387,17 +404,19 @@ fi
 
 # Start server
 if [[ "$TARGET_EXEC" != "-" ]]; then
+  require_free_port "$HOST" "$PORT" "test server"
   [[ "${QUIET:-0}" != 1 ]] && echo -e -n "${BLUE}Start server process...\t"
   $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
+  SERVER_PID=$!
   disown
 
   # Wait for server to start (poll the port instead of a fixed 3s sleep)
   wait_port "$HOST" "$PORT" 10
 
-  # Check if server is running
-  PID=$(pgrep -f -o "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log")
-
-  if [[ ${#PID} != 0 ]]
+  # Check if the server we just spawned is still alive. Matching on the
+  # command line via pgrep can hit an unrelated leftover process, which hides
+  # a crash-on-startup (e.g. bind failure).
+  if kill -0 "$SERVER_PID" 2>/dev/null
   then
     [[ "${QUIET:-0}" != 1 ]] && echo -e "${GREEN}OK${NC}"
   else

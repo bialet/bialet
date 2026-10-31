@@ -40,6 +40,7 @@ source "$(dirname "$0")/util.sh"
 
 # Start echo server used by the Http.* method tests (POST/PUT/DELETE targets)
 if [[ "$TARGET_EXEC" != "-" ]]; then
+  require_free_port "$HOST" "$ECHO_PORT" "echo server"
   $TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log "$(dirname "$0")/echo" > /dev/null 2>&1 &
   disown
   wait_port "$HOST" "$ECHO_PORT" 10
@@ -440,6 +441,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   show_errors_line=$LINENO
   _test_start_ms=$(now_ms)
   show_root="$(dirname "$0")/show-errors"
+  require_free_port "$HOST" "$SHOW_ERRORS_PORT" "show-errors server"
   "$TARGET_EXEC" -h "$HOST" -p "$SHOW_ERRORS_PORT" -l /tmp/tests-show-errors.log \
     "$show_root" > /dev/null 2>&1 &
   disown
@@ -481,6 +483,7 @@ if [[ "$TARGET_EXEC" != "-" && -z "$BIALET_SKIP_CRON_RELOAD_TEST" ]]; then
   _test_start_ms=$(now_ms)
   cron_root=$(mktemp -d)
   rm -f /tmp/tests-cron.log
+  require_free_port "$HOST" "$CRON_PORT" "cron reload server"
   "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -l /tmp/tests-cron.log \
     "$cron_root" > /dev/null 2>&1 &
   disown
@@ -533,6 +536,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   dev_root="$(dirname "$0")/dev-app"
   dev_exec=$(realpath "$TARGET_EXEC")
   rm -f "$dev_root/_db.sqlite3"
+  require_free_port "$HOST" "$DEV_PORT" "bialet dev server"
   (cd "$dev_root" && "$dev_exec" dev -q -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
     > /dev/null 2>&1 &
   disown
