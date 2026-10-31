@@ -7,7 +7,6 @@
 
 #include "wren.h"
 #include "wren_vm.h"
-
 #include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -16,8 +15,9 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#include <time.h>
 #include <windows.h>
+
+#include <time.h>
 #else
 #include <fcntl.h>
 #include <time.h>
@@ -377,6 +377,10 @@ static inline uint32_t hashNumber(double num) {
 }
 
 // Generates a hash code for [object].
+// String hashes are computed on first use; a 0 in ObjString.hash means "not
+// computed yet". Declared here because hashObject() below is defined before it.
+static void ensureStringHash(ObjString* string);
+
 static uint32_t hashObject(Obj* object) {
   switch(object->type) {
     case OBJ_CLASS:
@@ -397,11 +401,17 @@ static uint32_t hashObject(Obj* object) {
       return hashNumber(range->from) ^ hashNumber(range->to);
     }
 
-    case OBJ_STRING:
-      return ((ObjString*)object)->hash;
+    case OBJ_STRING: {
+      ObjString* string = (ObjString*)object;
+      ensureStringHash(string);
+      return string->hash;
+    }
 
-    case OBJ_QUERY:
-      return ((ObjString*)object)->hash;
+    case OBJ_QUERY: {
+      ObjString* query = (ObjString*)object;
+      ensureStringHash(query);
+      return query->hash;
+    }
 
     default:
       ASSERT(false, "Only immutable objects can be hashed.");
@@ -644,13 +654,14 @@ Value wrenNewRange(WrenVM* vm, double from, double to, bool isInclusive) {
 // Creates a new string object with a null-terminated buffer large enough to
 // hold a string of [length] but does not fill in the bytes.
 //
-// The caller is expected to fill in the buffer and then calculate the string's
-// hash.
+// The caller is expected to fill in the buffer. The hash is computed lazily
+// (see ensureStringHash), so 0 here means "not hashed yet".
 static ObjString* allocateString(WrenVM* vm, size_t length) {
   ObjString* string = ALLOCATE_FLEX(vm, ObjString, char, length + 1);
   initObj(vm, &string->obj, OBJ_STRING, vm->stringClass);
   string->length = (int)length;
   string->value[length] = '\0';
+  string->hash = 0;
 
   return string;
 }
@@ -690,20 +701,33 @@ static uint32_t stringHashSeed(void) {
 }
 
 // Calculates and stores the hash code for [string].
+//
+// Called on demand rather than eagerly at creation: a string that is never used
+// as a map key or compared never pays for the O(n) hash pass. Concatenation
+// (string_plus, wrenStringFormat, slicing) is the common case in templates, and
+// eagerly hashing every intermediate result doubled the cost of building a
+// string by appending, on top of the copy the append already does.
+//
+// 0 is the "not computed yet" sentinel, so a hash that computes to 0 is stored
+// as 1: the only cost of that nudge is a spurious cache miss for equality
+// checks, never a wrong comparison.
 static void hashString(ObjString* string) {
   // Randomly-seeded FNV-1a hash. See:
   // http://www.isthe.com/chongo/tech/comp/fnv/
   uint32_t hash = stringHashSeed();
 
-  // This is O(n) on the length of the string, but we only call this when a new
-  // string is created. Since the creation is also O(n) (to copy/initialize all
-  // the bytes), we allow this here.
   for(uint32_t i = 0; i < string->length; i++) {
     hash ^= string->value[i];
     hash *= 16777619;
   }
 
-  string->hash = hash;
+  string->hash = hash == 0 ? 1 : hash;
+}
+
+// Computes the hash of [string] if no one has needed it yet.
+static void ensureStringHash(ObjString* string) {
+  if(string->hash == 0)
+    hashString(string);
 }
 
 Value wrenNewString(WrenVM* vm, const char* text) {
@@ -721,7 +745,6 @@ Value wrenNewStringLength(WrenVM* vm, const char* text, size_t length) {
   if(length > 0 && text != NULL)
     memcpy(string->value, text, length);
 
-  hashString(string);
   return OBJ_VAL(string);
 }
 
@@ -738,12 +761,12 @@ Value wrenNewQueryLength(WrenVM* vm, const char* text, size_t length) {
   initObj(vm, &query->obj, OBJ_QUERY, vm->queryClass);
   query->length = (int)length;
   query->value[length] = '\0';
+  query->hash = 0; // not hashed yet (see ensureStringHash)
 
   // Copy the string (if given one).
   if(length > 0 && text != NULL)
     memcpy(query->value, text, length);
 
-  hashString(query);
   return OBJ_VAL(query);
 }
 
@@ -768,7 +791,6 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
     }
   }
 
-  hashString(result);
   return OBJ_VAL(result);
 }
 
@@ -814,7 +836,6 @@ Value wrenStringFromCodePoint(WrenVM* vm, int value) {
   ObjString* string = allocateString(vm, length);
 
   wrenUtf8Encode(value, (uint8_t*)string->value);
-  hashString(string);
 
   return OBJ_VAL(string);
 }
@@ -823,7 +844,6 @@ Value wrenStringFromByte(WrenVM* vm, uint8_t value) {
   int        length = 1;
   ObjString* string = allocateString(vm, length);
   string->value[0] = value;
-  hashString(string);
   return OBJ_VAL(string);
 }
 
@@ -879,8 +899,6 @@ Value wrenStringFormat(WrenVM* vm, const char* format, ...) {
     }
   }
   va_end(argList);
-
-  hashString(result);
 
   return OBJ_VAL(result);
 }
@@ -1336,6 +1354,9 @@ bool wrenValuesEqual(Value a, Value b) {
     case OBJ_STRING: {
       ObjString* aString = (ObjString*)aObj;
       ObjString* bString = (ObjString*)bObj;
+      // Hashes are lazy, so both must be materialized before comparing them.
+      ensureStringHash(aString);
+      ensureStringHash(bString);
       return aString->hash == bString->hash &&
              wrenStringEqualsCString(aString, bString->value, bString->length);
     }
