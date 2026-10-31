@@ -212,6 +212,16 @@ static int is_regular_file_no_follow(const char* path, struct stat* st) {
 #endif
 }
 
+// Same, for directories: a symlinked directory must not be treated as a real
+// directory inside the app root.
+static int is_directory_no_follow(const char* path, struct stat* st) {
+#ifdef _WIN32
+  return stat(path, st) == 0 && S_ISDIR(st->st_mode);
+#else
+  return lstat(path, st) == 0 && S_ISDIR(st->st_mode);
+#endif
+}
+
 static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
@@ -809,7 +819,16 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
-  snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
+  // Build the path from full_root_dir -- the realpath()-resolved root captured
+  // at startup -- rather than the raw root_dir. Every directory in it is a real
+  // directory, which is what lets open_file_within_root() walk it component by
+  // component with O_NOFOLLOW and have that walk alone prove containment: no
+  // symlink (not even one in the root's own prefix, e.g. macOS /tmp ->
+  // /private/tmp) can be traversed. That removes the per-request realpath()
+  // and its containment check from the hot path; before, a static file request
+  // resolved the same path twice, once with realpath() and again with the
+  // no-follow walk, at roughly one syscall per path component each time.
+  snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
   // Remove query parameters if present
   char* query_start = strchr(path, '?');
   if(query_start) {
@@ -834,15 +853,22 @@ void handle_client(bialet_socket_t client_socket) {
     path[pathlen - 1] = '\0';
   }
 
+  // Length of the served root, so a request path can be turned back into the
+  // route prefix Request.route(n) reads from.
+  size_t root_len = strlen(bialet_config.full_root_dir);
+
   if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
     snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
-    if(stat(wren_path, &file_stat) == 0) {
+    // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
+    // accepted as a route file, which is exactly what a following stat() did
+    // before the realpath() private-file check caught it further down.
+    if(is_regular_file_no_follow(wren_path, &file_stat)) {
       // Set the route prefix to this file's URL path so Request.route(n)
       // reads the segments that follow it (null at the bare URL). Without
       // this, route() falls back to the full URI and /about would report
       // "about" as its own first segment.
       free(hm->routes.str);
-      const char* route_prefix = path + strlen(bialet_config.root_dir);
+      const char* route_prefix = path + root_len;
       hm->routes = create_string(route_prefix, strlen(route_prefix));
       strncpy(path, wren_path, PATH_SIZE - 1);
       path[PATH_SIZE - 1] = '\0'; // Ensure null termination
@@ -851,14 +877,14 @@ void handle_client(bialet_socket_t client_socket) {
     perror("Path too long to append .wren suffix");
   }
 
-  if(stat(path, &file_stat) == 0 && S_ISDIR(file_stat.st_mode)) {
+  if(is_directory_no_follow(path, &file_stat)) {
     // Serve index.html or index.wren. A directory's index is the route file
     // for its own URL only, so the prefix is set the same way as above.
     free(hm->routes.str);
-    const char* route_prefix = path + strlen(bialet_config.root_dir);
+    const char* route_prefix = path + root_len;
     hm->routes = create_string(route_prefix, strlen(route_prefix));
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
-    if(stat(path, &file_stat) != 0) {
+    if(!is_regular_file_no_follow(path, &file_stat)) {
       // Replace the ".wren" suffix with ".html"
       size_t L = strlen(path);
       if(L >= 5) {
@@ -867,7 +893,7 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  if(stat(path, &file_stat) != 0) {
+  if(!is_regular_file_no_follow(path, &file_stat)) {
     // Search for a path-based route handler. For every URL prefix, test the
     // file named after that segment: /blog/my-first-post probes
     // blog/my-first-post.wren, then blog.wren once the path has been
@@ -888,9 +914,8 @@ void handle_client(bialet_socket_t client_socket) {
       // only runs when that literal file does not exist; each deeper prefix
       // probes the folder.wren route file. lstat/no-follow: a planted
       // folder.wren -> ../_db.sqlite3 symlink must not be accepted as a route
-      // file, otherwise realpath resolves it to the database and the
-      // private-file check is bypassed.
-      snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.root_dir, url_copy,
+      // file, otherwise it would be resolved to the database and served.
+      snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.full_root_dir, url_copy,
                BIALET_EXTENSION);
       if(is_regular_file_no_follow(path, &file_stat)) {
         // parse_request() already allocated an empty placeholder here, which
@@ -925,51 +950,26 @@ void handle_client(bialet_socket_t client_socket) {
     free(url_copy);
   }
 
-  // Validate final path is within root_dir before opening file
-  char resolved_path[PATH_SIZE];
-  if(realpath_n(path, resolved_path, sizeof(resolved_path)) != NULL) {
-    size_t root_len = strlen(bialet_config.full_root_dir);
-    if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
-       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' &&
-        resolved_path[root_len] != '\0')) {
-      message(red("Security Error"), "Path traversal blocked", path);
-      clean_http_message(hm);
-      custom_error(403, &response);
-      write_response(client_socket, &response);
-      free_response_owned(&response);
-      if(should_free_request)
-        free(full_request);
-      return;
-    }
-    // Re-apply the private-file rule to the resolved target. A symlink named
-    // "x" -> "_db.sqlite3" passes the URI check, so the canonical path must
-    // be validated too. Only the root-relative portion is checked so an app
-    // hosted under a "_"/"."-named directory is not blocked. Route handlers
-    // (folder.wren) are ordinary .wren files, so they pass this check like
-    // any other page and need no exemption.
-    if(has_forbidden_uri_component(resolved_path + root_len)) {
-      message(red("Security Error"), "Private file access blocked", path);
-      clean_http_message(hm);
-      custom_error(403, &response);
-      write_response(client_socket, &response);
-      free_response_owned(&response);
-      if(should_free_request)
-        free(full_request);
-      return;
-    }
-    // Use the verified resolved path
-    strncpy(path, resolved_path, PATH_SIZE - 1);
-    path[PATH_SIZE - 1] = '\0';
-  }
-
-  // Open file and read content
+  // No realpath() containment check is needed here: [path] is built from the
+  // already-resolved root, the URI was rejected above if any of its components
+  // is private ('_' or '.'), and open_file_within_root() refuses to traverse
+  // a symlink anywhere in the path. Containment is therefore a structural
+  // property of the open, not a check that has to be repeated (and re-raced)
+  // before it.
   FILE* file = open_file_within_root(path);
   if(file == NULL) {
+    // The path passed the component walk's parent check but could not be
+    // opened: a symlinked component (the probe above stats through the link,
+    // the open refuses to follow it), a permission problem, or a directory
+    // that vanished. Answer 404 rather than closing the socket with no reply,
+    // which is what clients saw before.
     perror("Error opening file");
+    custom_error(404, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
     return;
   }
   if(fseek(file, 0, SEEK_END) != 0) {
