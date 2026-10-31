@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
 #if IS_MAC
@@ -234,6 +235,64 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
     sent += (size_t)n;
   }
   return (ssize_t)sent;
+}
+
+// Writes the response head and the body. One writev/WSASend call covers both,
+// which is one syscall fewer per response than sending them separately, and it
+// also means a small page never sits in the socket as two segments.
+// Returns 0 on success (including a peer that closed early), -1 on error.
+static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_len,
+                              const char* body, size_t body_len) {
+  size_t total = head_len + body_len;
+  size_t sent = 0;
+  if(body == NULL)
+    body_len = 0;
+
+  while(sent < total) {
+    size_t body_done = sent > head_len ? sent - head_len : 0;
+#ifdef _WIN32
+    WSABUF bufs[2];
+    DWORD  count = 0;
+    if(sent < head_len) {
+      bufs[count].buf = (CHAR*)(head + sent);
+      bufs[count].len = (ULONG)(head_len - sent);
+      count++;
+    }
+    if(body_done < body_len) {
+      bufs[count].buf = (CHAR*)(body + body_done);
+      bufs[count].len = (ULONG)(body_len - body_done);
+      count++;
+    }
+    DWORD written = 0;
+    if(count == 0 || WSASend(fd, bufs, count, &written, 0, NULL, NULL) != 0)
+      return -1;
+    if(written == 0)
+      break;
+#else
+    struct iovec iov[2];
+    int          count = 0;
+    if(sent < head_len) {
+      iov[count].iov_base = (void*)(head + sent);
+      iov[count].iov_len = head_len - sent;
+      count++;
+    }
+    if(body_done < body_len) {
+      iov[count].iov_base = (void*)(body + body_done);
+      iov[count].iov_len = body_len - body_done;
+      count++;
+    }
+    if(count == 0)
+      break;
+    ssize_t n = writev(fd, iov, count);
+    if(n < 0)
+      return -1;
+    if(n == 0)
+      break;
+    size_t written = (size_t)n;
+#endif
+    sent += written;
+  }
+  return 0;
 }
 
 // Applies receive/send timeouts so a half-open or stalling connection is
@@ -577,35 +636,51 @@ void write_response(int client_socket, struct BialetResponse* response) {
   const char* hdr = response->header ? response->header : "";
 
   // %zu rather than %lu: unsigned long is 32-bit under Windows LLP64.
-  int needed = snprintf(NULL, 0,
-                        "HTTP/1.1 %d %s\r\n"
-                        "%s"
-                        "Content-Length: %zu\r\n\r\n",
-                        response->status, desc, hdr, body_len);
-  if(needed < 0) {
+  //
+  // A response head is a few hundred bytes in the overwhelming majority of
+  // cases, so it is formatted once into a stack buffer and sent together with
+  // the body. Only a response with unusually long headers falls back to a heap
+  // copy, and only that path formats it twice.
+  char head[512];
+  int  head_len = snprintf(head, sizeof(head),
+                           "HTTP/1.1 %d %s\r\n"
+                           "%s"
+                           "Content-Length: %zu\r\n\r\n",
+                           response->status, desc, hdr, body_len);
+  if(head_len < 0) {
     perror("Failed to format HTTP response");
     socket_close(client_socket); // was leaked on this path
     return;
   }
 
-  char* message = (char*)malloc((size_t)needed + 1);
+  if((size_t)head_len < sizeof(head)) {
+    if(response->body && body_len > 0)
+      (void)send_head_and_body(client_socket, head, (size_t)head_len, response->body,
+                               body_len);
+    else
+      (void)send_all(client_socket, head, (size_t)head_len);
+    socket_close(client_socket);
+    return;
+  }
+
+  char* message = (char*)malloc((size_t)head_len + 1);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
     socket_close(client_socket);
     return;
   }
-  snprintf(message, (size_t)needed + 1,
+  snprintf(message, (size_t)head_len + 1,
            "HTTP/1.1 %d %s\r\n"
            "%s"
            "Content-Length: %zu\r\n\r\n",
            response->status, desc, hdr, body_len);
 
-  (void)send_all(client_socket, message, (size_t)needed);
+  if(response->body && body_len > 0)
+    (void)send_head_and_body(client_socket, message, (size_t)head_len,
+                             response->body, body_len);
+  else
+    (void)send_all(client_socket, message, (size_t)head_len);
   free(message);
-
-  if(response->body && body_len > 0) {
-    (void)send_all(client_socket, response->body, body_len);
-  }
 
   socket_close(client_socket);
 }
