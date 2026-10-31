@@ -636,13 +636,30 @@ char* escape_special_chars(const char* input) {
 // over hm->message.str, all of which stop at the first NUL -- so uploading any
 // file containing a zero byte (every PNG, PDF, zip or executable) silently
 // truncated or dropped the part.
+//
+// memchr() finds the candidate positions of the needle's first byte using the
+// platform's vectorized scan, so a multipart body is walked once per searched
+// pattern instead of comparing [needle] bytes at every offset. With up to
+// MAX_UPLOAD_FILES parts, each part previously rescanned the whole remaining
+// body byte by byte.
 static const char* mem_find(const char* hay, size_t hay_len, const char* needle,
                             size_t needle_len) {
   if(needle_len == 0 || hay_len < needle_len)
     return NULL;
-  for(size_t i = 0; i + needle_len <= hay_len; i++) {
-    if(memcmp(hay + i, needle, needle_len) == 0)
-      return hay + i;
+  if(needle_len == 1)
+    return (const char*)memchr(hay, needle[0], hay_len);
+
+  const char* p = hay;
+  size_t      remaining = hay_len - needle_len + 1;
+  while(remaining > 0) {
+    const char* hit = (const char*)memchr(p, needle[0], remaining);
+    if(hit == NULL)
+      return NULL;
+    if(memcmp(hit, needle, needle_len) == 0)
+      return hit;
+    // Resume one byte after this candidate; recompute how much is left.
+    remaining -= (size_t)(hit - p) + 1;
+    p = hit + 1;
   }
   return NULL;
 }
