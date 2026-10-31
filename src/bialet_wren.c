@@ -20,7 +20,9 @@
 #include "wren.h"
 #include "wren_vm.h"
 #include <ctype.h>
+#include <limits.h>
 #include <sqlite3.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 
@@ -1614,17 +1616,44 @@ BialetQuery* create_bialet_query() {
     return NULL;
   query->results = NULL;
   query->resultsCount = 0;
+  query->resultsCapacity = 0;
   query->parameters = NULL;
   query->parametersCount = 0;
+  query->parametersCapacity = 0;
   query->queryString = NULL;
   query->lastInsertId = NULL;
   return query;
 }
 
+// Grows a dynamically sized array of [elem_size] elements so that at least
+// [needed] fit, doubling the previous capacity (starting at 8). Returns the new
+// base pointer, or NULL on allocation failure with [*data] left untouched.
+//
+// Collecting results used to realloc one element at a time, so a 2000-row
+// SELECT performed 2000 reallocs each copying the whole array: quadratic in
+// rows, and the dominant cost of any non-trivial query.
+static void* grow_array(void* data, int* capacity, int needed, size_t elem_size) {
+  if(needed <= *capacity)
+    return data;
+  int new_capacity = *capacity > 0 ? *capacity : 8;
+  while(new_capacity < needed) {
+    if(new_capacity > INT_MAX / 2)
+      return NULL;
+    new_capacity *= 2;
+  }
+  if((size_t)new_capacity > SIZE_MAX / elem_size)
+    return NULL;
+  void* grown = realloc(data, (size_t)new_capacity * elem_size);
+  if(grown == NULL)
+    return NULL;
+  *capacity = new_capacity;
+  return grown;
+}
+
 int add_result(BialetQuery* query) {
   int                count = query->resultsCount + 1;
-  BialetQueryResult* new_results = (BialetQueryResult*)realloc(
-      query->results, (size_t)count * sizeof(BialetQueryResult));
+  BialetQueryResult* new_results = (BialetQueryResult*)grow_array(
+      query->results, &query->resultsCapacity, count, sizeof(BialetQueryResult));
   if(new_results == NULL)
     return -1;
   query->results = new_results;
@@ -1632,6 +1661,7 @@ int add_result(BialetQuery* query) {
   BialetQueryResult* newResult = &query->results[count - 1];
   newResult->rows = NULL;
   newResult->rowCount = 0;
+  newResult->rowCapacity = 0;
   return 0;
 }
 
@@ -1642,8 +1672,8 @@ int add_result_row(BialetQuery* query, int resultIndex, const char* name,
 
   BialetQueryResult* result = &query->results[resultIndex];
   int                count = result->rowCount + 1;
-  BialetQueryRow*    new_rows =
-      (BialetQueryRow*)realloc(result->rows, (size_t)count * sizeof(BialetQueryRow));
+  BialetQueryRow*    new_rows = (BialetQueryRow*)grow_array(
+      result->rows, &result->rowCapacity, count, sizeof(BialetQueryRow));
   if(new_rows == NULL)
     return -1;
   result->rows = new_rows;
@@ -1666,8 +1696,9 @@ int add_parameter(BialetQuery* query, const char* value, BialetQueryType type) {
   if(value != NULL && copy == NULL)
     return -1;
   int                   count = query->parametersCount + 1;
-  BialetQueryParameter* new_parameters = (BialetQueryParameter*)realloc(
-      query->parameters, (size_t)count * sizeof(BialetQueryParameter));
+  BialetQueryParameter* new_parameters = (BialetQueryParameter*)grow_array(
+      query->parameters, &query->parametersCapacity, count,
+      sizeof(BialetQueryParameter));
   if(new_parameters == NULL) {
     free(copy);
     return -1;
