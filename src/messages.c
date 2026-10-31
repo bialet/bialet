@@ -66,6 +66,8 @@ FILE* message_set_log_file(FILE* f) {
  * so the list is always drained by the matching message_internal() call. */
 #define MSG_MAX_ARGS 9
 #define MSG_MAX_PENDING MSG_MAX_ARGS
+/* Longest log line written without touching the heap. */
+#define MSG_STACK_LINE 256
 
 static _Thread_local char*  msg_pending[MSG_MAX_PENDING];
 static _Thread_local size_t msg_pending_count;
@@ -108,15 +110,24 @@ char* cyan(char* str) {
   return colorize(str, CYAN_COLOR);
 }
 
-void message_internal(int num, ...) {
-  va_list args;
-  va_start(args, num);
+/* The leading "YYYY-MM-DD HH:MM:SS " stamp, cached per thread for the second it
+ * was computed for. Every log line used to call time(), localtime_r() (which
+ * lands in tzload()/tzset internals on a cold cache) and six fprintf
+ * conversions, which is most of the cost of logging a request line. */
+static _Thread_local struct {
+  time_t second;
+  int    valid;
+  /* Large enough for the worst case the compiler can prove for the %d fields,
+   * so -Wformat-truncation (glibc) does not reject the snprintf. A real
+   * timestamp is 20 bytes. */
+  char text[80];
+} msg_stamp;
 
-  /* localtime() returns a pointer to shared static storage and is called here
-   * from the main, cron and dmon threads; localtime_r/localtime_s keeps each
-   * caller's tm private. The NULL return is checked -- it was dereferenced
-   * unconditionally before. */
-  time_t     now = time(NULL);
+static const char* message_stamp(void) {
+  time_t now = time(NULL);
+  if(msg_stamp.valid && msg_stamp.second == now)
+    return msg_stamp.text;
+
   struct tm  tmbuf;
   struct tm* tm;
 #ifdef _WIN32
@@ -124,28 +135,87 @@ void message_internal(int num, ...) {
 #else
   tm = localtime_r(&now, &tmbuf);
 #endif
+  if(tm == NULL) {
+    msg_stamp.text[0] = '\0';
+    msg_stamp.valid = 0;
+    return msg_stamp.text;
+  }
+  snprintf(msg_stamp.text, sizeof(msg_stamp.text), "%d-%02d-%02d %02d:%02d:%02d ",
+           (tm->tm_year + 1900), (tm->tm_mon + 1), tm->tm_mday, tm->tm_hour,
+           tm->tm_min, tm->tm_sec);
+  msg_stamp.second = now;
+  msg_stamp.valid = 1;
+  return msg_stamp.text;
+}
+
+void message_internal(int num, ...) {
   /* Survive a message() emitted before message_init() set log_file. */
   FILE* out = log_file ? log_file : stderr;
-  if(tm != NULL) {
-    fprintf(out, "%d-%02d-%02d %02d:%02d:%02d ", (tm->tm_year + 1900),
-            (tm->tm_mon + 1), tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-  }
 
   /* Clamped instead of using a VLA sized by a varargs count: VLAs are optional
    * in C11/C17 and absent from MSVC. */
   if(num > MSG_MAX_ARGS)
     num = MSG_MAX_ARGS;
 
+  /* The line is assembled into one buffer and written with a single fwrite:
+   * the old version issued a fprintf plus an fputc per argument, each taking
+   * the stream lock. */
+  char        stack_line[MSG_STACK_LINE];
+  char*       line = stack_line;
+  size_t      cap = sizeof(stack_line);
+  size_t      len = 0;
+  const char* stamp = message_stamp();
+
+  va_list measure;
+  va_start(measure, num);
+  size_t needed = strlen(stamp);
+  for(int i = 0; i < num; ++i) {
+    const char* str = va_arg(measure, const char*);
+    /* fprintf("%s", NULL) is undefined behavior, not a printed "(null)". */
+    needed += strlen(str != NULL ? str : "(null)");
+    if(i < num - 1)
+      needed++;
+  }
+  va_end(measure);
+
+  if(needed + 1 > cap) {
+    line = (char*)malloc(needed + 1);
+    if(line == NULL) {
+      line = stack_line;
+    } else {
+      cap = needed + 1;
+    }
+  }
+
+  {
+    size_t n = strlen(stamp);
+    if(n > cap - 1)
+      n = cap - 1;
+    memcpy(line, stamp, n);
+    len = n;
+  }
+
+  va_list args;
+  va_start(args, num);
   for(int i = 0; i < num; ++i) {
     const char* str = va_arg(args, const char*);
-    /* fprintf("%s", NULL) is undefined behavior, not a printed "(null)". */
-    fputs(str != NULL ? str : "(null)", out);
-    if(i < num - 1)
-      fputc(' ', out);
+    if(str == NULL)
+      str = "(null)";
+    size_t n = strlen(str);
+    if(len + n > cap - 1)
+      n = cap - 1 - len;
+    memcpy(line + len, str, n);
+    len += n;
+    if(i < num - 1 && len < cap - 1)
+      line[len++] = ' ';
   }
+  va_end(args);
+
+  fwrite(line, 1, len, out);
   fputc('\n', out);
   fflush(out);
-  va_end(args);
+  if(line != stack_line)
+    free(line);
 
   /* Free exactly what colorize() allocated for this message -- no guessing. */
   for(size_t i = 0; i < msg_pending_count; ++i) {
