@@ -356,6 +356,15 @@ int main(int argc, char* argv[]) {
   int              dev_mode = 0;
   BialetCliOptions cli_opts;
 #ifndef _WIN32
+  // A client that resets the connection (RST) right after sending its request
+  // makes the server's first send() raise SIGPIPE, whose default action
+  // terminates the process: 20 reset connections in a row killed the HTTP child
+  // 20 times. Ignoring the signal turns that into EPIPE, which send_all()/
+  // send_head_and_body() already treat as a dead peer. Windows has no SIGPIPE;
+  // send() there returns WSAECONNRESET instead.
+  signal(SIGPIPE, SIG_IGN);
+#endif
+#ifndef _WIN32
   struct sigaction sa;
   sa.sa_handler = sigint_handler;
   sa.sa_flags = 0;
