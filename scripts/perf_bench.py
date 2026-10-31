@@ -70,6 +70,24 @@ for (i in 0...500) {
 }
 return <ul>{{ items.map { |it| <li>{{ it["name"] }}={{ it["value"] }}</li> } }}</ul>
 """,
+    "escape.wren": """
+var doc = ""
+for (i in 0...200) {
+  doc = doc + "line " + i.toString + " with <tags> & 'apostrophes' and more text\n"
+}
+return <pre>{{ doc }}</pre>
+""",
+    "upload.wren": """
+var file = Request.file("file")
+if (!file) return "no-file"
+return "saved:" + file.name
+""",
+    "post.wren": """
+if (Request.isPost) {
+  return "a:" + (Request.post("a") ? "1" : "0") + ",b:" + (Request.post("b") ? "1" : "0")
+}
+return "get"
+""",
     "_migration.wren": """
 `CREATE TABLE IF NOT EXISTS bench_rows (id INTEGER PRIMARY KEY, name TEXT, value TEXT)`.query
 var n = `SELECT COUNT(*) FROM bench_rows`.toNum
@@ -81,14 +99,30 @@ if (n == 0) {
 """,
 }
 
-# (name, path, weight) -- weight is the share of each measurement round.
+# Binary payload for the upload endpoint: NUL bytes, CRLFs and a byte range that
+# no memchr-based scanner can shortcut.
+UPLOAD_BOUNDARY = "----bialetperfboundary"
+UPLOAD_PAYLOAD = bytes(range(256)) * 256  # 64 KiB
+
+# (name, path, body) -- body is None for GET.
 ENDPOINTS = [
-    ("static", "/static.html"),
-    ("hello", "/hello"),
-    ("markdown", "/markdown"),
-    ("json", "/json"),
-    ("rows", "/rows"),
-    ("render", "/render"),
+    ("static", "/static.html", None),
+    ("hello", "/hello", None),
+    ("markdown", "/markdown", None),
+    ("json", "/json", None),
+    ("rows", "/rows", None),
+    ("render", "/render", None),
+    ("escape", "/escape", None),
+    ("post", "/post", b"a=1&b=2&" + b"k" * 8192),
+    (
+        "upload",
+        "/upload",
+        b"--" + UPLOAD_BOUNDARY.encode() + b'\r\n'
+        b'Content-Disposition: form-data; name="file"; filename="blob.bin"\r\n'
+        b"Content-Type: application/octet-stream\r\n\r\n"
+        + UPLOAD_PAYLOAD
+        + b"\r\n--" + UPLOAD_BOUNDARY.encode() + b"--\r\n",
+    ),
 ]
 
 
@@ -121,20 +155,28 @@ def wait_for_port(port, proc, timeout=30.0):
     return False
 
 
-def fetch_once(port, path):
+def fetch_once(port, path, body=None):
     url = "http://127.0.0.1:%d%s" % (port, path)
+    if body is not None:
+        content_type = ("multipart/form-data; boundary=" + UPLOAD_BOUNDARY
+                        if path == "/upload" else
+                        "application/x-www-form-urlencoded")
+        req = urllib.request.Request(url, data=body, method="POST",
+                                     headers={"Content-Type": content_type})
+    else:
+        req = url
     start = time.perf_counter()
-    with urllib.request.urlopen(url, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         resp.read()
     return time.perf_counter() - start
 
 
-def measure_sequential(port, path, requests):
+def measure_sequential(port, path, requests, body=None):
     for _ in range(5):  # warmup
-        fetch_once(port, path)
+        fetch_once(port, path, body)
     samples = []
     for _ in range(requests):
-        samples.append(fetch_once(port, path))
+        samples.append(fetch_once(port, path, body))
     samples.sort()
     return {
         "median": statistics.median(samples),
@@ -145,13 +187,13 @@ def measure_sequential(port, path, requests):
     }
 
 
-def measure_concurrent(port, path, requests, concurrency):
+def measure_concurrent(port, path, requests, concurrency, body=None):
     errors = []
 
     def worker(count):
         for _ in range(count):
             try:
-                fetch_once(port, path)
+                fetch_once(port, path, body)
             except Exception as exc:  # noqa: BLE001 - report, do not abort
                 errors.append(exc)
 
@@ -193,9 +235,10 @@ def run(args):
             sys.exit("server did not start on port %d" % port)
 
         results = {}
-        for name, path in ENDPOINTS:
-            seq = measure_sequential(port, path, args.requests)
-            conc = measure_concurrent(port, path, args.requests, args.concurrency)
+        for name, path, body in ENDPOINTS:
+            seq = measure_sequential(port, path, args.requests, body)
+            conc = measure_concurrent(port, path, args.requests,
+                                      args.concurrency, body)
             results[name] = {"sequential": seq, "concurrent": conc}
             print(
                 "%-9s median %7.2fms  p95 %7.2fms  %8.1f req/s (%d threads)"
@@ -222,7 +265,7 @@ def compare(baseline, current):
     print("\n%-9s %12s %12s %9s %10s" % ("endpoint", "base median", "new median",
                                          "delta", "base rps"))
     print("-" * 58)
-    for name, _ in ENDPOINTS:
+    for name, _path, _body in ENDPOINTS:
         if name not in baseline or name not in current:
             continue
         b = baseline[name]["sequential"]["median"]

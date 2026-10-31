@@ -327,45 +327,65 @@ class String is Sequence {
   }
 
   // Add lower and upper case from https://github.com/wren-lang/wren/issues/1134
+  // Collect into a list and join once: growing the result with `+` in the loop
+  // copied the whole prefix per code point.
   lower {
-    var output = ""
+    var output = []
     for (c in codePoints) {
         if ((c >= 65 && c <= 90) || (c >= 192 && c <= 214) || (c >= 216 && c <= 222)) {
             c = c + 32
         }
-        output = output + String.fromCodePoint(c)
+        output.add(String.fromCodePoint(c))
     }
-    return output
+    return output.join("")
   }
   upper {
-    var output = ""
+    var output = []
     for (c in codePoints) {
         if ((c >= 97 && c <= 122) || (c >= 224 && c <= 246) || (c >= 248 && c <= 254)) {
             c = c - 32
         }
-        output = output + String.fromCodePoint(c)
+        output.add(String.fromCodePoint(c))
     }
-    return output
+    return output.join("")
   }
 
+  // Escapes the five HTML specials in runs. The previous version built the
+  // result one code point at a time with `output = output + ...`, which is
+  // quadratic in the input length and allocates twice per character. Here only
+  // a special forces a break, so a string without any is returned as-is and a
+  // string with a few becomes a handful of slices.
   safe {
-    var output = ""
-    for (c in codePoints) {
-        if (c == 38) {
-            output = output + "&amp;"
-        } else if (c == 60) {
-            output = output + "&lt;"
-        } else if (c == 62) {
-            output = output + "&gt;"
-        } else if (c == 34) {
-            output = output + "&quot;"
-        } else if (c == 39) {
-            output = output + "&apos;"
-        } else {
-            output = output + String.fromCodePoint(c)
-        }
+    var size = byteCount_
+    var parts = []
+    var last = 0
+    var off = iterate(null)
+    while (off) {
+      var c = codePointAt_(off)
+      var repl
+      if (c == 38) {
+        repl = "&amp;"
+      } else if (c == 60) {
+        repl = "&lt;"
+      } else if (c == 62) {
+        repl = "&gt;"
+      } else if (c == 34) {
+        repl = "&quot;"
+      } else if (c == 39) {
+        repl = "&apos;"
+      }
+      if (repl) {
+        if (off > last) parts.add(this[last...off])
+        parts.add(repl)
+        // Every escaped character is ASCII, so the next byte starts the next
+        // run.
+        last = off + 1
+      }
+      off = iterate(off)
     }
-    return output
+    if (parts.count == 0) return this
+    if (last < size) parts.add(this[last..-1])
+    return parts.join("")
   }
   raw { HtmlNode.new(this) }
   toNum { Num.fromString(this) }
