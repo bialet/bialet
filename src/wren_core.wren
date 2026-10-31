@@ -496,11 +496,13 @@ class List is Sequence {
 
   // Joins the elements of an HTML interpolation. Every element is an HtmlNode
   // by the time this runs, so it concatenates their raw strings.
-  joinHtml_() {
-    var res = ""
-    for (element in this) res = res + element.toString
-    return HtmlNode.new(res)
-  }
+  //
+  // join() collects the element strings in a list and hands them to the native
+  // joiner, which measures the total length once and copies once. The old loop
+  // did `res = res + element.toString`, reallocating and copying the whole
+  // accumulated document per element: quadratic in both elements and bytes, and
+  // the single most expensive thing a template loop did.
+  joinHtml_() { HtmlNode.new(join()) }
 }
 
 class Map is Sequence {
