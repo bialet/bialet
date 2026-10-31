@@ -1043,6 +1043,37 @@ class Http {
     }
     _postData = data ? (data is String ? data : Json.stringify(data)) : ""
   }
+  // An outbound request is assembled as raw header text, so a header *value*
+  // carrying CRLF would append headers of the attacker's choosing to the
+  // request Bialet sends (e.g. "X-Forwarded-For: 127.0.0.1", or a second Host:
+  // when the value is forwarded from user input). Reject control characters,
+  // blank names and names containing ':' exactly like a response header, and
+  // validate the method so it cannot rewrite the request line either.
+  static safeMethod(method) {
+    var value = method == null ? "GET" : "%(method)".trim()
+    if (value.count == 0 || value.count > 32) {
+      Fiber.abort("Invalid HTTP method")
+    }
+    for (char in value) {
+      var byte = char.bytes[0]
+      if (!((byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122))) {
+        Fiber.abort("Invalid HTTP method")
+      }
+    }
+    return value.upper
+  }
+
+  static safeUrl(url) {
+    var value = url == null ? "" : "%(url)"
+    for (char in value) {
+      var byte = char.bytes[0]
+      if (byte <= 32 || byte == 127) {
+        Fiber.abort("Invalid URL: control characters are not allowed")
+      }
+    }
+    return value
+  }
+
   call(url, options) {
     if (!_method) {
       _method = "GET"
@@ -1062,16 +1093,17 @@ class Http {
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
-    var headers = options["headers"].map{|h| "%(h.key): %(h.value)" }.join("\n")
+    var headers = options["headers"].map{|h| "%(Util.headerName(h.key)): %(Util.headerValue(h.value))" }.join("\n")
     if (!options["headers"].containsKey("Cookie")) {
       var jar = Http.jarFor(url)
       if (jar != "") {
-        headers = headers + "\nCookie: %(jar)"
+        headers = headers + "\nCookie: %(Util.headerValue(jar))"
       }
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
-    var response = call_(url, _method, headers, _postData, _basicAuth, timeout, connectTimeout)
+    var method = Http.safeMethod(_method)
+    var response = call_(Http.safeUrl(url), method, headers, _postData, _basicAuth, timeout, connectTimeout)
 
     if (response[1]) {
       var lines = response[1].split("\n")

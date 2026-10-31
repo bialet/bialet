@@ -15,6 +15,12 @@ void  trim(char* str);
 // rejected outright. Returns NULL on failure or when the target is a link.
 FILE* open_file_no_follow(const char* path);
 
+// Returns 1 when any path component of [uri] starts with '_' or '.', i.e. when
+// it names a private file (a database, .env, a dotfile). Shared by the HTTP
+// path and the Wren file API so both enforce the same boundary. The single
+// exception is an RFC 8615 ".well-known" first segment.
+int has_forbidden_uri_component(const char* uri);
+
 #ifndef _WIN32
 // POSIX building blocks behind open_file_no_follow, shared with the module
 // loader and the static-file path. [path] must be absolute.

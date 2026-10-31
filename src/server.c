@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
 #if IS_MAC
@@ -157,38 +158,6 @@ static int parse_content_length(const char* v, size_t max, size_t* out) {
   return 0;
 }
 
-// Returns 1 when any path component of [uri] starts with '_' or '.', closing
-// the private-file boundary for "//_db.sqlite3", "/sub/.env" and
-// "/./..." style requests that the old prefix/strstr checks missed.
-//
-// RFC 8615 carves out a single exception: when the *first* segment is exactly
-// ".well-known", the whole subtree below it is allowed. That namespace is
-// public by design (ACME, OAuth/OIDC, WebFinger, security.txt); every other
-// dotfile/dotfolder keeps the 403. Matching is case-sensitive per the RFC, so
-// ".Well-Known" is not exempt, and it is a path-prefix rule, not per-segment:
-// "/foo/.well-known/x" stays forbidden.
-static int has_forbidden_uri_component(const char* uri) {
-  if(!uri)
-    return 0;
-  const char* c = uri;
-  while(*c == '/' || *c == '\\')
-    c++;
-  if(strncmp(c, ".well-known", 11) == 0 &&
-     (c[11] == '\0' || c[11] == '/' || c[11] == '\\'))
-    return 0;
-  while(*c) {
-    while(*c == '/' || *c == '\\')
-      c++;
-    if(!*c)
-      break;
-    if(*c == '_' || *c == '.')
-      return 1;
-    while(*c && *c != '/' && *c != '\\')
-      c++;
-  }
-  return 0;
-}
-
 // Returns a pointer to the final component of [path], honoring both POSIX and
 // Windows separators. Never returns a pointer to a separator itself.
 static const char* path_basename(const char* path) {
@@ -212,6 +181,16 @@ static int is_regular_file_no_follow(const char* path, struct stat* st) {
 #endif
 }
 
+// Same, for directories: a symlinked directory must not be treated as a real
+// directory inside the app root.
+static int is_directory_no_follow(const char* path, struct stat* st) {
+#ifdef _WIN32
+  return stat(path, st) == 0 && S_ISDIR(st->st_mode);
+#else
+  return lstat(path, st) == 0 && S_ISDIR(st->st_mode);
+#endif
+}
+
 static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
   size_t      sent = 0;
   const char* p = (const char*)buf;
@@ -224,6 +203,64 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
     sent += (size_t)n;
   }
   return (ssize_t)sent;
+}
+
+// Writes the response head and the body. One writev/WSASend call covers both,
+// which is one syscall fewer per response than sending them separately, and it
+// also means a small page never sits in the socket as two segments.
+// Returns 0 on success (including a peer that closed early), -1 on error.
+static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_len,
+                              const char* body, size_t body_len) {
+  size_t total = head_len + body_len;
+  size_t sent = 0;
+  if(body == NULL)
+    body_len = 0;
+
+  while(sent < total) {
+    size_t body_done = sent > head_len ? sent - head_len : 0;
+#ifdef _WIN32
+    WSABUF bufs[2];
+    DWORD  count = 0;
+    if(sent < head_len) {
+      bufs[count].buf = (CHAR*)(head + sent);
+      bufs[count].len = (ULONG)(head_len - sent);
+      count++;
+    }
+    if(body_done < body_len) {
+      bufs[count].buf = (CHAR*)(body + body_done);
+      bufs[count].len = (ULONG)(body_len - body_done);
+      count++;
+    }
+    DWORD written = 0;
+    if(count == 0 || WSASend(fd, bufs, count, &written, 0, NULL, NULL) != 0)
+      return -1;
+    if(written == 0)
+      break;
+#else
+    struct iovec iov[2];
+    int          count = 0;
+    if(sent < head_len) {
+      iov[count].iov_base = (void*)(head + sent);
+      iov[count].iov_len = head_len - sent;
+      count++;
+    }
+    if(body_done < body_len) {
+      iov[count].iov_base = (void*)(body + body_done);
+      iov[count].iov_len = body_len - body_done;
+      count++;
+    }
+    if(count == 0)
+      break;
+    ssize_t n = writev(fd, iov, count);
+    if(n < 0)
+      return -1;
+    if(n == 0)
+      break;
+    size_t written = (size_t)n;
+#endif
+    sent += written;
+  }
+  return 0;
 }
 
 // Applies receive/send timeouts so a half-open or stalling connection is
@@ -567,35 +604,51 @@ void write_response(int client_socket, struct BialetResponse* response) {
   const char* hdr = response->header ? response->header : "";
 
   // %zu rather than %lu: unsigned long is 32-bit under Windows LLP64.
-  int needed = snprintf(NULL, 0,
-                        "HTTP/1.1 %d %s\r\n"
-                        "%s"
-                        "Content-Length: %zu\r\n\r\n",
-                        response->status, desc, hdr, body_len);
-  if(needed < 0) {
+  //
+  // A response head is a few hundred bytes in the overwhelming majority of
+  // cases, so it is formatted once into a stack buffer and sent together with
+  // the body. Only a response with unusually long headers falls back to a heap
+  // copy, and only that path formats it twice.
+  char head[512];
+  int  head_len = snprintf(head, sizeof(head),
+                           "HTTP/1.1 %d %s\r\n"
+                           "%s"
+                           "Content-Length: %zu\r\n\r\n",
+                           response->status, desc, hdr, body_len);
+  if(head_len < 0) {
     perror("Failed to format HTTP response");
     socket_close(client_socket); // was leaked on this path
     return;
   }
 
-  char* message = (char*)malloc((size_t)needed + 1);
+  if((size_t)head_len < sizeof(head)) {
+    if(response->body && body_len > 0)
+      (void)send_head_and_body(client_socket, head, (size_t)head_len, response->body,
+                               body_len);
+    else
+      (void)send_all(client_socket, head, (size_t)head_len);
+    socket_close(client_socket);
+    return;
+  }
+
+  char* message = (char*)malloc((size_t)head_len + 1);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
     socket_close(client_socket);
     return;
   }
-  snprintf(message, (size_t)needed + 1,
+  snprintf(message, (size_t)head_len + 1,
            "HTTP/1.1 %d %s\r\n"
            "%s"
            "Content-Length: %zu\r\n\r\n",
            response->status, desc, hdr, body_len);
 
-  (void)send_all(client_socket, message, (size_t)needed);
+  if(response->body && body_len > 0)
+    (void)send_head_and_body(client_socket, message, (size_t)head_len,
+                             response->body, body_len);
+  else
+    (void)send_all(client_socket, message, (size_t)head_len);
   free(message);
-
-  if(response->body && body_len > 0) {
-    (void)send_all(client_socket, response->body, body_len);
-  }
 
   socket_close(client_socket);
 }
@@ -809,7 +862,16 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
-  snprintf(path, PATH_SIZE, "%s%s", bialet_config.root_dir, hm->uri.str);
+  // Build the path from full_root_dir -- the realpath()-resolved root captured
+  // at startup -- rather than the raw root_dir. Every directory in it is a real
+  // directory, which is what lets open_file_within_root() walk it component by
+  // component with O_NOFOLLOW and have that walk alone prove containment: no
+  // symlink (not even one in the root's own prefix, e.g. macOS /tmp ->
+  // /private/tmp) can be traversed. That removes the per-request realpath()
+  // and its containment check from the hot path; before, a static file request
+  // resolved the same path twice, once with realpath() and again with the
+  // no-follow walk, at roughly one syscall per path component each time.
+  snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
   // Remove query parameters if present
   char* query_start = strchr(path, '?');
   if(query_start) {
@@ -834,15 +896,22 @@ void handle_client(bialet_socket_t client_socket) {
     path[pathlen - 1] = '\0';
   }
 
+  // Length of the served root, so a request path can be turned back into the
+  // route prefix Request.route(n) reads from.
+  size_t root_len = strlen(bialet_config.full_root_dir);
+
   if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
     snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
-    if(stat(wren_path, &file_stat) == 0) {
+    // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
+    // accepted as a route file, which is exactly what a following stat() did
+    // before the realpath() private-file check caught it further down.
+    if(is_regular_file_no_follow(wren_path, &file_stat)) {
       // Set the route prefix to this file's URL path so Request.route(n)
       // reads the segments that follow it (null at the bare URL). Without
       // this, route() falls back to the full URI and /about would report
       // "about" as its own first segment.
       free(hm->routes.str);
-      const char* route_prefix = path + strlen(bialet_config.root_dir);
+      const char* route_prefix = path + root_len;
       hm->routes = create_string(route_prefix, strlen(route_prefix));
       strncpy(path, wren_path, PATH_SIZE - 1);
       path[PATH_SIZE - 1] = '\0'; // Ensure null termination
@@ -851,14 +920,14 @@ void handle_client(bialet_socket_t client_socket) {
     perror("Path too long to append .wren suffix");
   }
 
-  if(stat(path, &file_stat) == 0 && S_ISDIR(file_stat.st_mode)) {
+  if(is_directory_no_follow(path, &file_stat)) {
     // Serve index.html or index.wren. A directory's index is the route file
     // for its own URL only, so the prefix is set the same way as above.
     free(hm->routes.str);
-    const char* route_prefix = path + strlen(bialet_config.root_dir);
+    const char* route_prefix = path + root_len;
     hm->routes = create_string(route_prefix, strlen(route_prefix));
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
-    if(stat(path, &file_stat) != 0) {
+    if(!is_regular_file_no_follow(path, &file_stat)) {
       // Replace the ".wren" suffix with ".html"
       size_t L = strlen(path);
       if(L >= 5) {
@@ -867,7 +936,7 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  if(stat(path, &file_stat) != 0) {
+  if(!is_regular_file_no_follow(path, &file_stat)) {
     // Search for a path-based route handler. For every URL prefix, test the
     // file named after that segment: /blog/my-first-post probes
     // blog/my-first-post.wren, then blog.wren once the path has been
@@ -888,9 +957,8 @@ void handle_client(bialet_socket_t client_socket) {
       // only runs when that literal file does not exist; each deeper prefix
       // probes the folder.wren route file. lstat/no-follow: a planted
       // folder.wren -> ../_db.sqlite3 symlink must not be accepted as a route
-      // file, otherwise realpath resolves it to the database and the
-      // private-file check is bypassed.
-      snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.root_dir, url_copy,
+      // file, otherwise it would be resolved to the database and served.
+      snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.full_root_dir, url_copy,
                BIALET_EXTENSION);
       if(is_regular_file_no_follow(path, &file_stat)) {
         // parse_request() already allocated an empty placeholder here, which
@@ -925,51 +993,26 @@ void handle_client(bialet_socket_t client_socket) {
     free(url_copy);
   }
 
-  // Validate final path is within root_dir before opening file
-  char resolved_path[PATH_SIZE];
-  if(realpath_n(path, resolved_path, sizeof(resolved_path)) != NULL) {
-    size_t root_len = strlen(bialet_config.full_root_dir);
-    if(strncmp(resolved_path, bialet_config.full_root_dir, root_len) != 0 ||
-       (resolved_path[root_len] != '/' && resolved_path[root_len] != '\\' &&
-        resolved_path[root_len] != '\0')) {
-      message(red("Security Error"), "Path traversal blocked", path);
-      clean_http_message(hm);
-      custom_error(403, &response);
-      write_response(client_socket, &response);
-      free_response_owned(&response);
-      if(should_free_request)
-        free(full_request);
-      return;
-    }
-    // Re-apply the private-file rule to the resolved target. A symlink named
-    // "x" -> "_db.sqlite3" passes the URI check, so the canonical path must
-    // be validated too. Only the root-relative portion is checked so an app
-    // hosted under a "_"/"."-named directory is not blocked. Route handlers
-    // (folder.wren) are ordinary .wren files, so they pass this check like
-    // any other page and need no exemption.
-    if(has_forbidden_uri_component(resolved_path + root_len)) {
-      message(red("Security Error"), "Private file access blocked", path);
-      clean_http_message(hm);
-      custom_error(403, &response);
-      write_response(client_socket, &response);
-      free_response_owned(&response);
-      if(should_free_request)
-        free(full_request);
-      return;
-    }
-    // Use the verified resolved path
-    strncpy(path, resolved_path, PATH_SIZE - 1);
-    path[PATH_SIZE - 1] = '\0';
-  }
-
-  // Open file and read content
+  // No realpath() containment check is needed here: [path] is built from the
+  // already-resolved root, the URI was rejected above if any of its components
+  // is private ('_' or '.'), and open_file_within_root() refuses to traverse
+  // a symlink anywhere in the path. Containment is therefore a structural
+  // property of the open, not a check that has to be repeated (and re-raced)
+  // before it.
   FILE* file = open_file_within_root(path);
   if(file == NULL) {
+    // The path passed the component walk's parent check but could not be
+    // opened: a symlinked component (the probe above stats through the link,
+    // the open refuses to follow it), a permission problem, or a directory
+    // that vanished. Answer 404 rather than closing the socket with no reply,
+    // which is what clients saw before.
     perror("Error opening file");
+    custom_error(404, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
-    socket_close(client_socket);
     return;
   }
   if(fseek(file, 0, SEEK_END) != 0) {

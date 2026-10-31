@@ -327,45 +327,65 @@ class String is Sequence {
   }
 
   // Add lower and upper case from https://github.com/wren-lang/wren/issues/1134
+  // Collect into a list and join once: growing the result with `+` in the loop
+  // copied the whole prefix per code point.
   lower {
-    var output = ""
+    var output = []
     for (c in codePoints) {
         if ((c >= 65 && c <= 90) || (c >= 192 && c <= 214) || (c >= 216 && c <= 222)) {
             c = c + 32
         }
-        output = output + String.fromCodePoint(c)
+        output.add(String.fromCodePoint(c))
     }
-    return output
+    return output.join("")
   }
   upper {
-    var output = ""
+    var output = []
     for (c in codePoints) {
         if ((c >= 97 && c <= 122) || (c >= 224 && c <= 246) || (c >= 248 && c <= 254)) {
             c = c - 32
         }
-        output = output + String.fromCodePoint(c)
+        output.add(String.fromCodePoint(c))
     }
-    return output
+    return output.join("")
   }
 
+  // Escapes the five HTML specials in runs. The previous version built the
+  // result one code point at a time with `output = output + ...`, which is
+  // quadratic in the input length and allocates twice per character. Here only
+  // a special forces a break, so a string without any is returned as-is and a
+  // string with a few becomes a handful of slices.
   safe {
-    var output = ""
-    for (c in codePoints) {
-        if (c == 38) {
-            output = output + "&amp;"
-        } else if (c == 60) {
-            output = output + "&lt;"
-        } else if (c == 62) {
-            output = output + "&gt;"
-        } else if (c == 34) {
-            output = output + "&quot;"
-        } else if (c == 39) {
-            output = output + "&apos;"
-        } else {
-            output = output + String.fromCodePoint(c)
-        }
+    var size = byteCount_
+    var parts = []
+    var last = 0
+    var off = iterate(null)
+    while (off) {
+      var c = codePointAt_(off)
+      var repl
+      if (c == 38) {
+        repl = "&amp;"
+      } else if (c == 60) {
+        repl = "&lt;"
+      } else if (c == 62) {
+        repl = "&gt;"
+      } else if (c == 34) {
+        repl = "&quot;"
+      } else if (c == 39) {
+        repl = "&apos;"
+      }
+      if (repl) {
+        if (off > last) parts.add(this[last...off])
+        parts.add(repl)
+        // Every escaped character is ASCII, so the next byte starts the next
+        // run.
+        last = off + 1
+      }
+      off = iterate(off)
     }
-    return output
+    if (parts.count == 0) return this
+    if (last < size) parts.add(this[last..-1])
+    return parts.join("")
   }
   raw { HtmlNode.new(this) }
   toNum { Num.fromString(this) }
@@ -496,11 +516,13 @@ class List is Sequence {
 
   // Joins the elements of an HTML interpolation. Every element is an HtmlNode
   // by the time this runs, so it concatenates their raw strings.
-  joinHtml_() {
-    var res = ""
-    for (element in this) res = res + element.toString
-    return HtmlNode.new(res)
-  }
+  //
+  // join() collects the element strings in a list and hands them to the native
+  // joiner, which measures the total length once and copies once. The old loop
+  // did `res = res + element.toString`, reallocating and copying the whole
+  // accumulated document per element: quadratic in both elements and bytes, and
+  // the single most expensive thing a template loop did.
+  joinHtml_() { HtmlNode.new(join()) }
 }
 
 class Map is Sequence {
@@ -747,8 +769,30 @@ class Query {
   toBool(p1, p2) { toNum(p1, p2) != 0 }
   toBool(p1, p2, p3) { toNum(p1, p2, p3) != 0 }
   order(col,direction, allowwedCols) { order(col, direction, allowwedCols, -1) }
+  // The column is interpolated into the query text, so it must be an identifier
+  // and nothing else. allowedCols is optional (documented as `.order(col, dir,
+  // null)`), and with it null the old code pasted whatever string it was given
+  // after ORDER BY: `.order(Request.get("sort"), "asc", null)` was injectable
+  // ("(CASE WHEN ... THEN (SELECT ...) END)"), which defeats the point of the
+  // allow-list. Letters, digits, '_' and '.' (table.column) are accepted, plus
+  // double quotes so a caller can quote a reserved word; every character that
+  // could end the clause, comment it out or start a subquery is rejected.
+  static orderColumn_(col) {
+    var value = col == null ? "" : "%(col)".trim()
+    if (value.count == 0 || value.count > 64) Fiber.abort("Invalid ORDER BY column")
+    for (char in value) {
+      var b = char.bytes[0]
+      if (!((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122) ||
+            b == 95 || b == 46 || b == 34)) {
+        Fiber.abort("Invalid ORDER BY column: %(value)")
+      }
+    }
+    return value
+  }
   order(col, direction, allowedCols, limit) {
-    if (allowedCols != null && allowedCols is List && !allowedCols.contains(col)) col = allowedCols[0]
+    if (allowedCols != null && allowedCols is List && allowedCols.count > 0 &&
+        !allowedCols.contains(col)) col = allowedCols[0]
+    col = Query.orderColumn_(col)
     var dir = direction is String ? direction.lower : "asc"
     if (dir != "asc" && dir != "desc") dir = "asc"
     if (limit > 0) {

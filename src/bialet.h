@@ -11,7 +11,7 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#define BIALET_VERSION "1.2.3"
+#define BIALET_VERSION "1.2.4"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -133,6 +133,9 @@ typedef struct {
 typedef struct {
   BialetQueryRow* rows;
   int             rowCount;
+  /* Allocated slots in rows[]; rowCount <= rowCapacity. Grown geometrically
+   * so collecting a result set is O(n) instead of one realloc per row. */
+  int rowCapacity;
 } BialetQueryResult;
 
 typedef struct {
@@ -143,8 +146,10 @@ typedef struct {
 typedef struct {
   BialetQueryResult*    results;
   int                   resultsCount;
+  int                   resultsCapacity;
   BialetQueryParameter* parameters;
   int                   parametersCount;
+  int                   parametersCapacity;
   char*                 queryString;
   char*                 lastInsertId;
 } BialetQuery;

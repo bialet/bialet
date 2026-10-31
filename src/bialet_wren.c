@@ -20,7 +20,9 @@
 #include "wren.h"
 #include "wren_vm.h"
 #include <ctype.h>
+#include <limits.h>
 #include <sqlite3.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 
@@ -133,6 +135,17 @@ char* bialet_read_file(const char* path) {
      (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
       resolved[root_len] != '\0')) {
     message(red("Error"), "Path traversal attempt in bialetReadFile");
+    return NULL;
+  }
+
+  // Apply the same private-file boundary the HTTP layer enforces: a component
+  // starting with '_' or '.' is not readable through the Wren file API either.
+  // Without this, Markdown.file(Request.get("page")) could read the app's own
+  // _db.sqlite3, .env or .git/config, all of which the URL router refuses to
+  // serve. Only the root-relative portion is checked so an app hosted under a
+  // "_"- or "."-named directory still works.
+  if(has_forbidden_uri_component(resolved + root_len)) {
+    message(red("Error"), "Private file access blocked in bialetReadFile", path);
     return NULL;
   }
 
@@ -634,13 +647,30 @@ char* escape_special_chars(const char* input) {
 // over hm->message.str, all of which stop at the first NUL -- so uploading any
 // file containing a zero byte (every PNG, PDF, zip or executable) silently
 // truncated or dropped the part.
+//
+// memchr() finds the candidate positions of the needle's first byte using the
+// platform's vectorized scan, so a multipart body is walked once per searched
+// pattern instead of comparing [needle] bytes at every offset. With up to
+// MAX_UPLOAD_FILES parts, each part previously rescanned the whole remaining
+// body byte by byte.
 static const char* mem_find(const char* hay, size_t hay_len, const char* needle,
                             size_t needle_len) {
   if(needle_len == 0 || hay_len < needle_len)
     return NULL;
-  for(size_t i = 0; i + needle_len <= hay_len; i++) {
-    if(memcmp(hay + i, needle, needle_len) == 0)
-      return hay + i;
+  if(needle_len == 1)
+    return (const char*)memchr(hay, needle[0], hay_len);
+
+  const char* p = hay;
+  size_t      remaining = hay_len - needle_len + 1;
+  while(remaining > 0) {
+    const char* hit = (const char*)memchr(p, needle[0], remaining);
+    if(hit == NULL)
+      return NULL;
+    if(memcmp(hit, needle, needle_len) == 0)
+      return hit;
+    // Resume one byte after this candidate; recompute how much is left.
+    remaining -= (size_t)(hit - p) + 1;
+    p = hit + 1;
   }
   return NULL;
 }
@@ -1614,17 +1644,44 @@ BialetQuery* create_bialet_query() {
     return NULL;
   query->results = NULL;
   query->resultsCount = 0;
+  query->resultsCapacity = 0;
   query->parameters = NULL;
   query->parametersCount = 0;
+  query->parametersCapacity = 0;
   query->queryString = NULL;
   query->lastInsertId = NULL;
   return query;
 }
 
+// Grows a dynamically sized array of [elem_size] elements so that at least
+// [needed] fit, doubling the previous capacity (starting at 8). Returns the new
+// base pointer, or NULL on allocation failure with [*data] left untouched.
+//
+// Collecting results used to realloc one element at a time, so a 2000-row
+// SELECT performed 2000 reallocs each copying the whole array: quadratic in
+// rows, and the dominant cost of any non-trivial query.
+static void* grow_array(void* data, int* capacity, int needed, size_t elem_size) {
+  if(needed <= *capacity)
+    return data;
+  int new_capacity = *capacity > 0 ? *capacity : 8;
+  while(new_capacity < needed) {
+    if(new_capacity > INT_MAX / 2)
+      return NULL;
+    new_capacity *= 2;
+  }
+  if((size_t)new_capacity > SIZE_MAX / elem_size)
+    return NULL;
+  void* grown = realloc(data, (size_t)new_capacity * elem_size);
+  if(grown == NULL)
+    return NULL;
+  *capacity = new_capacity;
+  return grown;
+}
+
 int add_result(BialetQuery* query) {
   int                count = query->resultsCount + 1;
-  BialetQueryResult* new_results = (BialetQueryResult*)realloc(
-      query->results, (size_t)count * sizeof(BialetQueryResult));
+  BialetQueryResult* new_results = (BialetQueryResult*)grow_array(
+      query->results, &query->resultsCapacity, count, sizeof(BialetQueryResult));
   if(new_results == NULL)
     return -1;
   query->results = new_results;
@@ -1632,6 +1689,7 @@ int add_result(BialetQuery* query) {
   BialetQueryResult* newResult = &query->results[count - 1];
   newResult->rows = NULL;
   newResult->rowCount = 0;
+  newResult->rowCapacity = 0;
   return 0;
 }
 
@@ -1642,8 +1700,8 @@ int add_result_row(BialetQuery* query, int resultIndex, const char* name,
 
   BialetQueryResult* result = &query->results[resultIndex];
   int                count = result->rowCount + 1;
-  BialetQueryRow*    new_rows =
-      (BialetQueryRow*)realloc(result->rows, (size_t)count * sizeof(BialetQueryRow));
+  BialetQueryRow*    new_rows = (BialetQueryRow*)grow_array(
+      result->rows, &result->rowCapacity, count, sizeof(BialetQueryRow));
   if(new_rows == NULL)
     return -1;
   result->rows = new_rows;
@@ -1666,8 +1724,9 @@ int add_parameter(BialetQuery* query, const char* value, BialetQueryType type) {
   if(value != NULL && copy == NULL)
     return -1;
   int                   count = query->parametersCount + 1;
-  BialetQueryParameter* new_parameters = (BialetQueryParameter*)realloc(
-      query->parameters, (size_t)count * sizeof(BialetQueryParameter));
+  BialetQueryParameter* new_parameters = (BialetQueryParameter*)grow_array(
+      query->parameters, &query->parametersCapacity, count,
+      sizeof(BialetQueryParameter));
   if(new_parameters == NULL) {
     free(copy);
     return -1;

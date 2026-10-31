@@ -61,8 +61,23 @@ DECLARE_BUFFER(Byte, uint8_t);
 DECLARE_BUFFER(Int, int);
 DECLARE_BUFFER(String, ObjString*);
 
-// TODO: Change this to use a map.
-typedef StringBuffer SymbolTable;
+// An append-only list of interned names. A symbol's index in [data] is its id,
+// and ids are never removed or reordered (bytecode, field slots and method
+// tables store them), so this stays a plain array.
+//
+// [ids] is an open-addressed index over the same names (each slot holds
+// symbol id + 1, 0 meaning empty) so a lookup does not have to scan the array.
+// It is what makes compiling a module linear: the compiler asks "is this name
+// already a symbol?" once per identifier occurrence, and against an array of a
+// few hundred core/bialet method names every one of those was a linear scan.
+typedef struct {
+  ObjString** data;
+  int         count;
+  int         capacity;
+
+  int* ids;
+  int  idsCapacity; // power of two, 0 before the first symbol
+} SymbolTable;
 
 // Initializes the symbol table.
 void wrenSymbolTableInit(SymbolTable* symbols);
