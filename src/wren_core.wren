@@ -769,8 +769,30 @@ class Query {
   toBool(p1, p2) { toNum(p1, p2) != 0 }
   toBool(p1, p2, p3) { toNum(p1, p2, p3) != 0 }
   order(col,direction, allowwedCols) { order(col, direction, allowwedCols, -1) }
+  // The column is interpolated into the query text, so it must be an identifier
+  // and nothing else. allowedCols is optional (documented as `.order(col, dir,
+  // null)`), and with it null the old code pasted whatever string it was given
+  // after ORDER BY: `.order(Request.get("sort"), "asc", null)` was injectable
+  // ("(CASE WHEN ... THEN (SELECT ...) END)"), which defeats the point of the
+  // allow-list. Letters, digits, '_' and '.' (table.column) are accepted, plus
+  // double quotes so a caller can quote a reserved word; every character that
+  // could end the clause, comment it out or start a subquery is rejected.
+  static orderColumn_(col) {
+    var value = col == null ? "" : "%(col)".trim()
+    if (value.count == 0 || value.count > 64) Fiber.abort("Invalid ORDER BY column")
+    for (char in value) {
+      var b = char.bytes[0]
+      if (!((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122) ||
+            b == 95 || b == 46 || b == 34)) {
+        Fiber.abort("Invalid ORDER BY column: %(value)")
+      }
+    }
+    return value
+  }
   order(col, direction, allowedCols, limit) {
-    if (allowedCols != null && allowedCols is List && !allowedCols.contains(col)) col = allowedCols[0]
+    if (allowedCols != null && allowedCols is List && allowedCols.count > 0 &&
+        !allowedCols.contains(col)) col = allowedCols[0]
+    col = Query.orderColumn_(col)
     var dir = direction is String ? direction.lower : "asc"
     if (dir != "asc" && dir != "desc") dir = "asc"
     if (limit > 0) {
