@@ -1119,13 +1119,41 @@ it to follow the OS preference).
 
 Never edit the framework files. Customize through CSS variables in your own
 stylesheet loaded last — everything in Beak lives in `@layer beak`, so
-unlayered app CSS always wins the cascade. Key variables: `--beak-primary`,
-`--beak-primary-hover`, `--beak-primary-background`, `--beak-primary-focus`,
-`--beak-secondary*`, `--beak-contrast*`, `--beak-background-color`,
-`--beak-color`, `--beak-muted-color`, `--beak-muted-border-color`,
-`--beak-h1-color`…`--beak-h6-color`, `--beak-font-family`, `--beak-font-size`,
-`--beak-line-height`, `--beak-spacing`, `--beak-border-radius`,
-`--beak-border-width`, `--beak-transition`.
+unlayered app CSS always wins the cascade.
+
+**Color roles: a solid fill is not a surface.** `--beak-primary-background` is
+the **solid button fill**, not a light background. It is the same strong color
+as `--beak-primary`, and the text that goes on it is `--beak-primary-inverse`.
+Use it only behind a filled control (button, badge, progress bar) with inverse
+text. Never use it for cards, callouts, alerts, table rows, chips or hover
+states: it produces a loud, unreadable block. Do not lighten it with `opacity`
+or `filter` either.
+
+For a soft surface derived from the primary, define your own tokens by mixing
+the primary with the page background, and use them in your stylesheet:
+
+```css
+:root {
+  --beak-primary-soft: color-mix(in srgb, var(--beak-primary) 12%, var(--beak-background-color));
+  --beak-primary-soft-border: color-mix(in srgb, var(--beak-primary) 28%, var(--beak-background-color));
+}
+.callout {
+  background: var(--beak-primary-soft);
+  color: var(--beak-primary);
+  border: 1px solid var(--beak-primary-soft-border);
+}
+```
+
+Other useful variables: `--beak-primary`, `--beak-primary-hover`,
+`--beak-primary-focus`, `--beak-secondary*`, `--beak-contrast*`,
+`--beak-background-color`, `--beak-color`, `--beak-muted-color`,
+`--beak-muted-border-color`, `--beak-h1-color`…`--beak-h6-color`,
+`--beak-font-family`, `--beak-font-size`, `--beak-line-height`,
+`--beak-spacing`, `--beak-border-radius`, `--beak-border-width`,
+`--beak-transition`. Before inventing a `--beak-*`, check that it exists in the
+`:root` block of `beak.css`. If you override a color token, override its whole
+family (`--beak-primary`, `--beak-primary-background`, `--beak-primary-border`,
+`--beak-primary-hover*`), not just one.
 
 Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
 approach applies unchanged. Stylesheets go anywhere except behind a `_`/`.`
