@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script src="_static/ai-prompt.js?v=f2bcdaf3"></script>
+    <script src="_static/ai-prompt.js?v=43adc148"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -1571,13 +1571,41 @@ it to follow the OS preference).
 
 Never edit the framework files. Customize through CSS variables in your own
 stylesheet loaded last — everything in Beak lives in <span class="sb">`@layer beak`</span>, so
-unlayered app CSS always wins the cascade. Key variables: <span class="sb">`--beak-primary`</span>,
-<span class="sb">`--beak-primary-hover`</span>, <span class="sb">`--beak-primary-background`</span>, <span class="sb">`--beak-primary-focus`</span>,
-<span class="sb">`--beak-secondary*`</span>, <span class="sb">`--beak-contrast*`</span>, <span class="sb">`--beak-background-color`</span>,
-<span class="sb">`--beak-color`</span>, <span class="sb">`--beak-muted-color`</span>, <span class="sb">`--beak-muted-border-color`</span>,
-<span class="sb">`--beak-h1-color`</span>…<span class="sb">`--beak-h6-color`</span>, <span class="sb">`--beak-font-family`</span>, <span class="sb">`--beak-font-size`</span>,
-<span class="sb">`--beak-line-height`</span>, <span class="sb">`--beak-spacing`</span>, <span class="sb">`--beak-border-radius`</span>,
-<span class="sb">`--beak-border-width`</span>, <span class="sb">`--beak-transition`</span>.
+unlayered app CSS always wins the cascade.
+
+<span class="gs">**Color roles: a solid fill is not a surface.**</span> <span class="sb">`--beak-primary-background`</span> is
+the <span class="gs">**solid button fill**</span>, not a light background. It is the same strong color
+as <span class="sb">`--beak-primary`</span>, and the text that goes on it is <span class="sb">`--beak-primary-inverse`</span>.
+Use it only behind a filled control (button, badge, progress bar) with inverse
+text. Never use it for cards, callouts, alerts, table rows, chips or hover
+states: it produces a loud, unreadable block. Do not lighten it with <span class="sb">`opacity`</span>
+or <span class="sb">`filter`</span> either.
+
+For a soft surface derived from the primary, define your own tokens by mixing
+the primary with the page background, and use them in your stylesheet:
+
+<span class="sb">```css</span>
+<span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nv">--beak-primary-soft</span><span class="p">:</span><span class="w"> </span><span class="nf">color-mix</span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">srgb</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">)</span><span class="w"> </span><span class="mi">12</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-background-color</span><span class="p">));</span>
+<span class="w">  </span><span class="nv">--beak-primary-soft-border</span><span class="p">:</span><span class="w"> </span><span class="nf">color-mix</span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">srgb</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">)</span><span class="w"> </span><span class="mi">28</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-background-color</span><span class="p">));</span>
+<span class="p">}</span>
+<span class="p">.</span><span class="nc">callout</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary-soft</span><span class="p">);</span>
+<span class="w">  </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">);</span>
+<span class="w">  </span><span class="k">border</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary-soft-border</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+Other useful variables: <span class="sb">`--beak-primary`</span>, <span class="sb">`--beak-primary-hover`</span>,
+<span class="sb">`--beak-primary-focus`</span>, <span class="sb">`--beak-secondary*`</span>, <span class="sb">`--beak-contrast*`</span>,
+<span class="sb">`--beak-background-color`</span>, <span class="sb">`--beak-color`</span>, <span class="sb">`--beak-muted-color`</span>,
+<span class="sb">`--beak-muted-border-color`</span>, <span class="sb">`--beak-h1-color`</span>…<span class="sb">`--beak-h6-color`</span>,
+<span class="sb">`--beak-font-family`</span>, <span class="sb">`--beak-font-size`</span>, <span class="sb">`--beak-line-height`</span>,
+<span class="sb">`--beak-spacing`</span>, <span class="sb">`--beak-border-radius`</span>, <span class="sb">`--beak-border-width`</span>,
+<span class="sb">`--beak-transition`</span>. Before inventing a <span class="sb">`--beak-*`</span>, check that it exists in the
+<span class="sb">`:root`</span> block of <span class="sb">`beak.css`</span>. If you override a color token, override its whole
+family (<span class="sb">`--beak-primary`</span>, <span class="sb">`--beak-primary-background`</span>, <span class="sb">`--beak-primary-border`</span>,
+<span class="sb">`--beak-primary-hover*`</span>), not just one.
 
 Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
 approach applies unchanged. Stylesheets go anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
