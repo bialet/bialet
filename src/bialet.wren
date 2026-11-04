@@ -1023,7 +1023,9 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     // Run again the initiliziation once we know the table exists
-    Date.init(Config.get("BIALET_TIMEZONE"))
+    // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the
+    // primitives reject a non-string with a catchable error).
+    Date.init(Config.get("BIALET_TIMEZONE") || "")
   }
 
   static clean {

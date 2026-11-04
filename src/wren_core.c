@@ -1714,8 +1714,29 @@ void setTimezone(const char* tz) {
   tzset();
 }
 
+// Accepts the Wren-level timezone argument for the date primitives: a string,
+// or null/absent (which means "keep the current zone"). AS_CSTRING on a Wren
+// null yields the bogus pointer 0x21, not a C NULL, so the guard setTimezone()
+// already has was unreachable from Wren and a null Date.tz (Db.init installs
+// one when BIALET_TIMEZONE is unset) crashed the process.
+static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
+  if(IS_NULL(arg) || IS_UNDEFINED(arg)) {
+    *out = NULL;
+    return 1;
+  }
+  if(!IS_STRING(arg)) {
+    vm->fiber->error = wrenStringFormat(vm, "Timezone must be a string.");
+    return 0;
+  }
+  *out = AS_CSTRING(arg);
+  return 1;
+}
+
 DEF_PRIMITIVE(date_current) {
-  setTimezone(AS_CSTRING(args[1]));
+  const char* tz;
+  if(!date_timezone_arg(vm, args[1], &tz))
+    return false;
+  setTimezone(tz);
   char       fullDate[20];
   time_t     now = time(NULL);
   struct tm* local = localtime(&now);
@@ -1783,6 +1804,8 @@ static void date_format_append(char* out, size_t cap, size_t* pos,
 }
 
 DEF_PRIMITIVE(date_format) {
+  if(!validateString(vm, args[1], "Format"))
+    return false;
   const char* format = AS_CSTRING(args[1]);
   int         year = AS_NUM(args[2]);
   int         month = AS_NUM(args[3]);
@@ -1790,7 +1813,9 @@ DEF_PRIMITIVE(date_format) {
   int         hour = AS_NUM(args[5]);
   int         minute = AS_NUM(args[6]);
   int         second = AS_NUM(args[7]);
-  const char* tz = AS_CSTRING(args[8]);
+  const char* tz;
+  if(!date_timezone_arg(vm, args[8], &tz))
+    return false;
   setTimezone(tz);
   struct tm t = {0};
   t.tm_year = year - 1900;
@@ -1890,7 +1915,9 @@ DEF_PRIMITIVE(date_unix) {
   int         hour = AS_NUM(args[4]);
   int         minute = AS_NUM(args[5]);
   int         second = AS_NUM(args[6]);
-  const char* tz = AS_CSTRING(args[7]);
+  const char* tz;
+  if(!date_timezone_arg(vm, args[7], &tz))
+    return false;
   setTimezone(tz);
 
   struct tm t = {0};

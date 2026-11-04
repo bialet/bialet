@@ -870,7 +870,7 @@ static const char* bialetModuleSource =
 "    `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()\n"
 "    `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()\n"
 "    `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()\n"
-"    Date.init(Config.get(\"BIALET_TIMEZONE\"))\n"
+"    Date.init(Config.get(\"BIALET_TIMEZONE\") || \"\")\n"
 "  }\n"
 "  static clean {\n"
 "    `DELETE FROM BIALET_SESSION WHERE updatedAt < date('now', '-1 year')`.query()\n"
