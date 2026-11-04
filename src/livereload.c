@@ -56,7 +56,10 @@ void livereload_init(void) {
   sqlite3_bind_text(stmt, 1, LIVERELOAD_KEY, -1, SQLITE_STATIC);
   if(sqlite3_step(stmt) == SQLITE_ROW) {
     const char* val = (const char*)sqlite3_column_text(stmt, 0);
-    if(val != NULL && strcmp(val, "0") != 0 && val[0] != '\0') {
+    // Allow-list, matching Config.bool: only "1"/"true" enable the flag. The
+    // old denylist treated "false" and "off" as true.
+    if(val != NULL && (strcmp(val, "1") == 0 || strcmp(val, "true") == 0 ||
+                       strcmp(val, "TRUE") == 0 || strcmp(val, "True") == 0)) {
       enabled = 1;
 #if IS_LINUX || IS_MAC
       if(shared_version != NULL)

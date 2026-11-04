@@ -922,7 +922,16 @@ class Util {
 class Config {
   static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"] }
   static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
-  static bool(key) { get(key) != "0" }
+  // Allow-list, as documented: true only for "1"/"true" (case-insensitive),
+  // false for everything else including a missing key. The old denylist
+  // (`!= "0"`) made "false", "off", "" and an absent row all true, so a
+  // config-gated security decision failed open.
+  static bool(key) {
+    var v = get(key)
+    if (v == null) return false
+    var s = "%(v)".trim().lower
+    return s == "1" || s == "true"
+  }
   static num(key) { Num.fromString(get(key)) }
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
   static json(key) { Json.parse(get(key)) }
