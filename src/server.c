@@ -928,6 +928,22 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
+  // Origin-form only (RFC 9112 3.2.1): a client sends "/path". Any other shape
+  // means full_root_dir + uri does not name a child of the root -- "/srv/app"
+  // plus "-backup/db.sqlite3" is the sibling "/srv/app-backup/db.sqlite3" --
+  // and the O_NOFOLLOW walk in open_fd_no_follow() starts at "/", so it would
+  // open it. Containment here is structural, so the target must be a child path
+  // by construction.
+  if(hm->uri.str[0] != '/') {
+    clean_http_message(hm);
+    custom_error(400, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
+
   // Build the path from full_root_dir -- the realpath()-resolved root captured
   // at startup -- rather than the raw root_dir. Every directory in it is a real
   // directory, which is what lets open_file_within_root() walk it component by
@@ -938,6 +954,29 @@ void handle_client(bialet_socket_t client_socket) {
   // resolved the same path twice, once with realpath() and again with the
   // no-follow walk, at roughly one syscall per path component each time.
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
+  // Defense in depth: whatever the probes below do to `path`, it must stay the
+  // root itself or a path below it. Cheap (no syscalls) and independent of the
+  // component walk, so a future route-probe change cannot escape the root the
+  // way a non-origin-form target did.
+  {
+    size_t root_prefix_len = strlen(bialet_config.full_root_dir);
+    while(root_prefix_len > 1 &&
+          bialet_config.full_root_dir[root_prefix_len - 1] == '/')
+      root_prefix_len--;
+    if(strncmp(path, bialet_config.full_root_dir, root_prefix_len) != 0 ||
+       (root_prefix_len > 1 && path[root_prefix_len] != '/' &&
+        path[root_prefix_len] != '\0')) {
+      message(red("Security Error"), "Path outside the app root blocked", path);
+      clean_http_message(hm);
+      custom_error(403, &response);
+      write_response(client_socket, &response);
+      free_response_owned(&response);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+  }
+
   // Remove query parameters if present
   char* query_start = strchr(path, '?');
   if(query_start) {
