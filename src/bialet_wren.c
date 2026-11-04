@@ -846,6 +846,54 @@ static void field_buf_put_encoded(struct FieldBuf* fb, const char* src, size_t n
   }
 }
 
+// Case-insensitive equality of two spans of [n] bytes.
+static int header_name_eq(const char* a, const char* b, size_t n) {
+  for(size_t i = 0; i < n; i++) {
+    if(tolower((unsigned char)a[i]) != tolower((unsigned char)b[i]))
+      return 0;
+  }
+  return 1;
+}
+
+// Returns the value of the LAST header line whose field name is [name],
+// anchored at the start of a line (so "X-Content-Type:" does not match) and
+// bounded to that line, matching the Wren header map's last-wins semantics.
+// On a hit, *value_end points at the CR/LF that ends the value line.
+static const char* find_last_header_value(const char* msg, size_t head_len,
+                                          const char* name, size_t name_len,
+                                          const char** value_end) {
+  const char* p = msg;
+  const char* end = msg + head_len;
+  const char* found = NULL;
+
+  // Skip the request line first: a header name must start a header line.
+  while(p + 1 < end && !(p[0] == '\r' && p[1] == '\n'))
+    p++;
+  if(p + 1 >= end)
+    return NULL;
+  p += 2;
+
+  while(p < end) {
+    const char* eol = p;
+    while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
+      eol++;
+    size_t line_len = (size_t)(eol - p);
+    if(line_len > name_len && p[name_len] == ':' &&
+       header_name_eq(p, name, name_len)) {
+      const char* v = p + name_len + 1;
+      while(v < eol && (*v == ' ' || *v == '\t'))
+        v++;
+      found = v;
+      if(value_end != NULL)
+        *value_end = eol;
+    }
+    if(eol + 1 >= end)
+      break;
+    p = eol + 2;
+  }
+  return found;
+}
+
 static int ascii_ieq(char a, char b) {
   return tolower((unsigned char)a) == tolower((unsigned char)b);
 }
@@ -960,22 +1008,27 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     return 0;
   size_t head_len = (size_t)(headerEnd - msg);
 
-  static const char kContentType[] = "Content-Type:";
-  const char*       ctStart =
-      mem_find_ci(msg, head_len, kContentType, sizeof(kContentType) - 1);
-  if(!ctStart)
+  // The declaration must be the value of a real Content-Type field, not a
+  // substring of some other header (or of the request line): the old
+  // unanchored search let "X-Content-Type: multipart/form-data; boundary=zz"
+  // select the multipart parser while Request.header("content-type") was null.
+  static const char kContentType[] = "Content-Type";
+  const char*       ctEnd = NULL;
+  const char* ctStart = find_last_header_value(msg, head_len, kContentType,
+                                               sizeof(kContentType) - 1, &ctEnd);
+  if(!ctStart || ctEnd == NULL || ctEnd <= ctStart)
     return 0;
-  ctStart += sizeof(kContentType) - 1;
-  while(ctStart < headerEnd && (*ctStart == ' ' || *ctStart == '\t'))
-    ctStart++;
 
   static const char kMultipart[] = "multipart/form-data";
-  size_t            ct_avail = (size_t)(headerEnd - ctStart);
+  size_t            ct_avail = (size_t)(ctEnd - ctStart);
   if(ct_avail < sizeof(kMultipart) - 1 ||
      mem_find_ci(ctStart, sizeof(kMultipart) - 1, kMultipart,
                  sizeof(kMultipart) - 1) != ctStart)
     return 0;
 
+  // The boundary is a parameter of this field only, so the search ends at the
+  // header line's CRLF instead of running to the end of the header block (where
+  // a later "X-Boundary: boundary=zz" used to supply it).
   static const char kBoundary[] = "boundary=";
   const char*       boundaryStart =
       mem_find_ci(ctStart, ct_avail, kBoundary, sizeof(kBoundary) - 1);
@@ -987,13 +1040,12 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
   // contains characters such as ':' or ' ').
   char   boundary[256];
   size_t boundary_len;
-  if(boundaryStart < headerEnd && *boundaryStart == '"') {
-    boundary_len =
-        copy_until(boundaryStart + 1, (size_t)(headerEnd - boundaryStart) - 1,
-                   "\"\r\n", boundary, sizeof(boundary));
+  if(boundaryStart < ctEnd && *boundaryStart == '"') {
+    boundary_len = copy_until(boundaryStart + 1, (size_t)(ctEnd - boundaryStart) - 1,
+                              "\"", boundary, sizeof(boundary));
   } else {
-    boundary_len = copy_until(boundaryStart, (size_t)(headerEnd - boundaryStart),
-                              "\r\n; \t", boundary, sizeof(boundary));
+    boundary_len = copy_until(boundaryStart, (size_t)(ctEnd - boundaryStart), "; \t",
+                              boundary, sizeof(boundary));
   }
   // RFC 2046 caps a boundary at 70 characters. One that fills the buffer was
   // truncated, and matching on a truncated delimiter would split the body at the
@@ -1136,11 +1188,12 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       continue;
     }
 
-    char        contentTypeStr[256] = "application/octet-stream";
-    const char* partCtStart = find_part_header(part, part_head_len, kContentType,
-                                               sizeof(kContentType) - 1);
+    char              contentTypeStr[256] = "application/octet-stream";
+    static const char kPartContentType[] = "Content-Type:";
+    const char* partCtStart = find_part_header(part, part_head_len, kPartContentType,
+                                               sizeof(kPartContentType) - 1);
     if(partCtStart != NULL) {
-      partCtStart += sizeof(kContentType) - 1;
+      partCtStart += sizeof(kPartContentType) - 1;
       while(partCtStart < partHeaderEnd &&
             (*partCtStart == ' ' || *partCtStart == '\t'))
         partCtStart++;
