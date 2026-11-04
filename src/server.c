@@ -724,6 +724,73 @@ static char* log_escape(const char* s) {
   return out;
 }
 
+// Case-insensitive glob match used only against a file basename, so there are
+// no '/' subtleties: '*' matches any run of characters, everything else is
+// literal. Returns 1 on a match.
+static int glob_match(const char* pattern, size_t plen, const char* name) {
+  size_t i = 0, j = 0;
+  size_t star = (size_t)-1, mark = 0;
+  while(name[j] != '\0') {
+    if(i < plen && (pattern[i] == '*' || tolower((unsigned char)pattern[i]) ==
+                                             tolower((unsigned char)name[j]))) {
+      if(pattern[i] == '*') {
+        star = i++;
+        mark = j;
+      } else {
+        i++;
+        j++;
+      }
+      continue;
+    }
+    if(star != (size_t)-1) {
+      i = star + 1;
+      j = ++mark;
+      continue;
+    }
+    return 0;
+  }
+  while(i < plen && pattern[i] == '*')
+    i++;
+  return i == plen;
+}
+
+// Returns 1 when [name] matches one of the comma-separated glob patterns in
+// bialet_config.ignored_files. That list is documented ("README*,AGENTS*,
+// LICENSE*,*.json,*.yml,*.yaml,*.exe") and settable with -i/--ignore, but was
+// parsed and then never consulted, so those files were served like any other
+// static file.
+static int is_ignored_file_name(const char* name) {
+  const char* list = bialet_config.ignored_files;
+  if(list == NULL || name == NULL)
+    return 0;
+  const char* p = list;
+  while(*p != '\0') {
+    while(*p == ' ' || *p == ',')
+      p++;
+    const char* start = p;
+    while(*p != '\0' && *p != ',')
+      p++;
+    size_t plen = (size_t)(p - start);
+    while(plen > 0 && (start[plen - 1] == ' ' || start[plen - 1] == '\t'))
+      plen--;
+    if(plen > 0 && glob_match(start, plen, name))
+      return 1;
+  }
+  return 0;
+}
+
+// True when the URI is inside the RFC 8615 .well-known namespace, which the
+// ignore list must not touch: jwks.json and assetlinks.json live there.
+static int uri_is_well_known(const char* uri) {
+  if(uri == NULL)
+    return 0;
+  const char* c = uri;
+  while(*c == '/' || *c == '\\')
+    c++;
+  return strncmp(c, ".well-known", 11) == 0 &&
+         (c[11] == '\0' || c[11] == '/' || c[11] == '\\');
+}
+
 void handle_client(bialet_socket_t client_socket) {
   char   buffer[BUFFER_SIZE];
   size_t total_read = 0;
@@ -1109,6 +1176,19 @@ void handle_client(bialet_socket_t client_socket) {
   // a symlink anywhere in the path. Containment is therefore a structural
   // property of the open, not a check that has to be repeated (and re-raced)
   // before it.
+  // Apply the documented ignore list at the single point where the served path
+  // is final: the .wren route probe and the directory index both rewrite `path`
+  // before this, so one check covers them all.
+  if(!uri_is_well_known(hm->uri.str) && is_ignored_file_name(path_basename(path))) {
+    clean_http_message(hm);
+    custom_error(404, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
+
   FILE* file = open_file_within_root(path);
   if(file == NULL) {
     // The path passed the component walk's parent check but could not be
