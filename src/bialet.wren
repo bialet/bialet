@@ -292,9 +292,35 @@ class Session {
     Cookie.delete(Session.name)
     `DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')`.query([id])
   }
+  // A session identifier must look like one: non-empty, at most 128 bytes, and
+  // URL-safe. The server only ever mints 40 random characters, so anything else
+  // is either a client-chosen value (fixation) or a truncated/oversized cookie.
+  static validId_(id) {
+    if (id == null) return false
+    if (id.count == 0 || id.count > 128) return false
+    for (char in id) {
+      var b = char.bytes[0]
+      var ok = (b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122) ||
+               b == 95 || b == 45
+      if (!ok) return false
+    }
+    return true
+  }
+  // Mint a fresh identifier and drop the old session's rows. Call this after a
+  // successful login so a session identifier planted before authentication is
+  // worthless afterwards; the framework has no login hook of its own.
+  static rotate() {
+    var old = Cookie.get(Session.name)
+    if (Session.validId_(old)) {
+      `DELETE FROM BIALET_SESSION WHERE id = ?`.query([old])
+    }
+    var id = Util.randomString(40)
+    Cookie.set(Session.name, id)
+    return id
+  }
   construct new() {
     _id = Cookie.get(Session.name)
-    if (!_id) {
+    if (!Session.validId_(_id)) {
       _id = Util.randomString(40)
       Cookie.set(Session.name, _id)
     }
