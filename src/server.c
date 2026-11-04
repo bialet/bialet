@@ -833,6 +833,17 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
+  // The interpreter must see exactly the framed request: the header block plus
+  // the declared Content-Length. recv() may already have buffered bytes beyond
+  // that (they arrived with the headers), and a request with no Content-Length
+  // has no body at all. Passing the surplus to Wren let a client append form
+  // fields and a body that the -b cap and its 413 gate never saw.
+  {
+    size_t framed = hdr_len + content_length;
+    if(total_read > framed)
+      total_read = framed;
+  }
+
   struct HttpMessage* hm = parse_request(full_request, total_read);
   if(hm == NULL) {
     if(should_free_request)
