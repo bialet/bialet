@@ -72,6 +72,45 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
+// Aggregate ceiling for unprocessed uploads stored in BIALET_FILES. The
+// per-request caps only bound one request; without an aggregate bound an
+// unauthenticated client could keep posting 100-part bodies and grow the shared
+// database until every write fails with SQLITE_FULL. Storage is refused (the
+// part is skipped, like an over-size part) once this ceiling is reached.
+#define MAX_TEMP_UPLOAD_BYTES ((sqlite3_int64)64 * 1024 * 1024)
+
+// Deletes temp uploads older than a day. Called at startup and, throttled, from
+// the upload path: the old code only purged inside save_uploaded_files, so an
+// app that stopped receiving multipart requests never reclaimed anything.
+static void purge_temp_uploads(void) {
+  if(db == NULL)
+    return;
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "DELETE FROM BIALET_FILES WHERE isTemp = 1 AND "
+                        "createdAt < datetime('now', '-1 day')",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
+// Total bytes currently held by temporary uploads.
+static sqlite3_int64 temp_upload_bytes(void) {
+  sqlite3_int64 total = 0;
+  sqlite3_stmt* stmt = NULL;
+  if(db != NULL &&
+     sqlite3_prepare_v2(db,
+                        "SELECT IFNULL(SUM(size), 0) FROM BIALET_FILES "
+                        "WHERE isTemp = 1",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    if(sqlite3_step(stmt) == SQLITE_ROW)
+      total = sqlite3_column_int64(stmt, 0);
+    sqlite3_finalize(stmt);
+  }
+  return total;
+}
+
 // Test-runner failure capture. bialet_wren_error() is the global Wren error
 // callback for every VM in the process (requests, migrations, cron, and
 // -T test files alike); while test_capturing is set, it records the abort
@@ -983,6 +1022,18 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
   size_t sb_len = (size_t)sb;
   size_t dl_len = (size_t)dl;
 
+  // Reclaim expired temp uploads before accepting more (at most once a minute
+  // per process; startup does an unconditional purge).
+  {
+    static time_t last_purge = 0;
+    time_t        now = time(NULL);
+    if(now - last_purge >= 60) {
+      last_purge = now;
+      purge_temp_uploads();
+    }
+  }
+  sqlite3_int64 tempBytes = temp_upload_bytes();
+
   const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
   int         uploadedFiles = 0;
@@ -1123,6 +1174,16 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       continue;
     }
 
+    // Aggregate cap: per-request limits do not bound total stored bytes.
+    if(tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
+      if(!filesCapped)
+        message(red("Upload Error"),
+                "Temporary upload storage is full, skipping remaining files");
+      filesCapped = 1;
+      cursor = next_part(resume, end, startBoundary, sb_len);
+      continue;
+    }
+
     // Save file to database
     sqlite3_stmt* stmt = NULL;
     int result = sqlite3_prepare_v2(db,
@@ -1141,6 +1202,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
+        tempBytes += (sqlite3_int64)fileSize;
 
         // Append file ID to filesIds string safely
         char idStr[32];
@@ -1179,26 +1241,6 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     mp->fields_len = fb.len;
   } else {
     free(fb.data);
-  }
-
-  // Steady-state recovery for BIALET_FILES: without a purge the temp blobs
-  // accumulate ~10 MB per upload request indefinitely. The Wren-side Db.clean
-  // only runs during migrations, so enforce the same purge here, throttled to
-  // at most once a minute to keep the per-request cost near zero.
-  {
-    static time_t last_purge = 0;
-    time_t        now = time(NULL);
-    if(now - last_purge >= 60) {
-      last_purge = now;
-      sqlite3_stmt* purge_stmt;
-      if(sqlite3_prepare_v2(db,
-                            "DELETE FROM BIALET_FILES WHERE isTemp = 1 AND "
-                            "createdAt < datetime('now', '-1 day')",
-                            -1, &purge_stmt, 0) == SQLITE_OK) {
-        sqlite3_step(purge_stmt);
-        sqlite3_finalize(purge_stmt);
-      }
-    }
   }
 
   return 1;
@@ -1919,6 +1961,7 @@ void bialet_init(struct BialetConfig* config) {
     exit(BIALET_SQLITE_ERROR);
   }
   apply_sqlite_pragmas();
+  purge_temp_uploads();
 
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &bialet_wren_write;
