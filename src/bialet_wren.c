@@ -1387,13 +1387,19 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
         int           result = sqlite3_prepare_v2(
             db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
         if(!(error = result != SQLITE_OK)) {
-          int len = 0;
           sqlite3_bind_int64(stmt, 1, (sqlite3_int64)wrenGetSlotDouble(vm, 0));
           if(sqlite3_step(stmt) == SQLITE_ROW) {
-            len = sqlite3_column_bytes(stmt, 0);
-            r.body = safe_malloc((size_t)len + 1);
-            memcpy(r.body, sqlite3_column_blob(stmt, 0), (size_t)len);
-            r.length = (size_t)len;
+            const void* blob = sqlite3_column_blob(stmt, 0);
+            size_t      len = (size_t)sqlite3_column_bytes(stmt, 0);
+            r.body = safe_malloc(len + 1);
+            /* A zero-length BLOB makes sqlite3_column_blob() return NULL, and an
+             * owned body must be NUL-terminated at r.length: write_response,
+             * handle_client, custom_error and livereload_inject_response all fall
+             * back to strlen() when length == 0. */
+            if(len > 0 && blob != NULL)
+              memcpy(r.body, blob, len);
+            r.body[len] = '\0';
+            r.length = len;
             r.body_owned = 1;
             fileApplied = 1;
           } else {
