@@ -1178,17 +1178,47 @@ class Http {
     var now = Date.tz != null ? Date.now.unix : 0
     var matched = []
     for (jarHost in __cookieJar) {
-      var hostMatches = jarHost.key == host || (jarHost.key.startsWith(".") && host.endsWith(jarHost.key))
+      // A Domain-derived key is stored with a leading '.' and covers the
+      // domain itself plus its subdomains; a host-only key matches exactly.
+      var domain = jarHost.key.startsWith(".") ? jarHost.key[1...jarHost.key.count] : jarHost.key
+      var hostMatches = host == domain
+      if (!hostMatches && jarHost.key.startsWith(".") && host.endsWith("." + domain)) {
+        hostMatches = true
+      }
       if (!hostMatches) continue
       for (entry in jarHost.value) {
         var c = entry.value
         if (c["s"] && !secure) continue
-        if (!path.startsWith(c["p"])) continue
+        var cp = c["p"]
+        // RFC 6265 path-match: exact, or a prefix ending on a '/' boundary.
+        var pathMatches = path == cp || (path.startsWith(cp) && (cp.endsWith("/") || path[cp.count] == "/"))
+        if (!pathMatches) continue
         if (c["e"] > 0 && now >= c["e"]) continue
         matched.add("%(entry.key)=%(c["v"])")
       }
     }
     return matched.join("; ")
+  }
+  // RFC 6265 5.3.3: a Set-Cookie Domain attribute is accepted only when the
+  // responding host domain-matches it. Without this check any origin the app
+  // fetches could plant a cookie that jarFor() later sends to a different
+  // host. IP-literal and single-label (TLD) scopes are refused too; without an
+  // embedded public-suffix list a multi-label suffix remains possible, which is
+  // strictly narrower than the previous accept-anything behaviour.
+  static domainScope_(reqHost, attrValue) {
+    var d = attrValue.trim().lower
+    if (d.startsWith(".")) d = d[1...d.count]
+    if (d == "" || d.contains(":") || d.contains("[") || d.contains("]")) return null
+    if (reqHost == "" || reqHost.contains("[") || reqHost.contains(":")) return null
+    if (!d.contains(".")) return null
+    var numeric = true
+    for (label in d.split(".")) {
+      if (label == "" || Num.fromString(label) == null) numeric = false
+    }
+    if (numeric) return null
+    if (reqHost == d) return d
+    if (reqHost.endsWith("." + d)) return d
+    return null
   }
   static storeCookies(rawHeaders, url) {
     if (rawHeaders == "") return
@@ -1207,14 +1237,21 @@ class Http {
       var cookieName = kv[0].trim()
       var cookie = {"v": kv[1].trim(), "p": "/", "s": false, "e": 0}
       var host = reqHost
+      var rejected = false
       for (i in 1...parts.count) {
         var attr = parts[i].trim()
         var eq = attr.indexOf("=")
         var attrName = (eq >= 0 ? attr[0...eq] : attr).trim().lower
         var attrValue = eq >= 0 ? attr[eq + 1...attr.count].trim() : ""
         if (attrName == "domain" && attrValue != "") {
-          host = attrValue.lower
-          if (!host.startsWith(".")) host = "." + host
+          var scopeHost = Http.domainScope_(reqHost, attrValue)
+          // RFC 6265 5.3.3: a Domain attribute that does not domain-match the
+          // responding host makes the whole cookie ignored, not host-only.
+          if (scopeHost == null) {
+            rejected = true
+          } else {
+            host = "." + scopeHost
+          }
         } else if (attrName == "path" && attrValue != "") {
           cookie["p"] = attrValue
         } else if (attrName == "secure") {
@@ -1224,6 +1261,7 @@ class Http {
           if (secs && Date.tz != null) cookie["e"] = Date.now.unix + secs
         }
       }
+      if (rejected) continue
       if (!__cookieJar.containsKey(host)) __cookieJar[host] = {}
       __cookieJar[host][cookieName] = cookie
     }
