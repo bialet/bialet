@@ -676,8 +676,23 @@ static void free_response_owned(struct BialetResponse* response) {
 // between the check and the open. On Windows the shared helper opens with
 // FILE_FLAG_OPEN_REPARSE_POINT and rejects reparse points (junctions/symlinks)
 // instead of following them.
+static int resolve_within_root(const char* path, char* resolved);
+
 static FILE* open_file_within_root(const char* path) {
+#ifdef _WIN32
+  // FILE_FLAG_OPEN_REPARSE_POINT constrains only the final component, so an
+  // intermediate directory junction inside the app root would be traversed by
+  // CreateFileW and the opened target carries no reparse attribute. The
+  // per-request realpath check was removed from this path, so resolve first:
+  // realpath_n canonicalizes junctions on Windows and resolve_within_root
+  // enforces the root prefix.
+  char resolved[PATH_SIZE];
+  if(!resolve_within_root(path, resolved))
+    return NULL;
+  return open_file_no_follow(resolved);
+#else
   return open_file_no_follow(path);
+#endif
 }
 
 // Resolves [path] to an absolute path inside the application root, writing the
