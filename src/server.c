@@ -695,6 +695,35 @@ static int resolve_within_root(const char* path, char* resolved) {
   return 1;
 }
 
+// Hex-escapes every control byte in a wire-derived value before it reaches the
+// log. The request line is tokenized on spaces only, so a bare LF, CR, TAB or
+// ESC can sit inside the method or URI; fwrite()ing it verbatim let one request
+// open a second log record and emit terminal/OSC sequences into the operator's
+// log or journal. Returns a heap string (caller frees) or NULL on OOM.
+static char* log_escape(const char* s) {
+  if(s == NULL)
+    return NULL;
+  size_t len = strlen(s);
+  char*  out = malloc(len * 4 + 1);
+  if(out == NULL)
+    return NULL;
+  static const char hex[] = "0123456789abcdef";
+  size_t            n = 0;
+  for(size_t i = 0; i < len; i++) {
+    unsigned char b = (unsigned char)s[i];
+    if(b < 0x20 || b == 0x7f) {
+      out[n++] = '\\';
+      out[n++] = 'x';
+      out[n++] = hex[b >> 4];
+      out[n++] = hex[b & 15];
+    } else {
+      out[n++] = (char)b;
+    }
+  }
+  out[n] = '\0';
+  return out;
+}
+
 void handle_client(bialet_socket_t client_socket) {
   char   buffer[BUFFER_SIZE];
   size_t total_read = 0;
@@ -851,8 +880,14 @@ void handle_client(bialet_socket_t client_socket) {
     socket_close(client_socket);
     return;
   }
-  if(!livereload_is_poll(hm->uri.str))
-    message(magenta("Request"), hm->method.str, hm->uri.str);
+  if(!livereload_is_poll(hm->uri.str)) {
+    char* log_method = log_escape(hm->method.str);
+    char* log_uri = log_escape(hm->uri.str);
+    message(magenta("Request"), log_method ? log_method : hm->method.str,
+            log_uri ? log_uri : hm->uri.str);
+    free(log_method);
+    free(log_uri);
+  }
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
@@ -911,7 +946,12 @@ void handle_client(bialet_socket_t client_socket) {
 
   // Check for directory traversal patterns in the URI before processing
   if(strstr(hm->uri.str, "..") != NULL) {
-    message(red("Security Error"), "Path traversal attempt blocked", hm->uri.str);
+    {
+      char* log_uri = log_escape(hm->uri.str);
+      message(red("Security Error"), "Path traversal attempt blocked",
+              log_uri ? log_uri : hm->uri.str);
+      free(log_uri);
+    }
     clean_http_message(hm);
     custom_error(403, &response);
     write_response(client_socket, &response);
