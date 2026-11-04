@@ -28,6 +28,7 @@ ECHO_PORT="${args[3]:-7100}"
 SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
 CRON_PORT="${args[6]:-7103}"
+MULTIPART_PORT="${args[7]:-7104}"
 
 # The Windows binary is cross-compiled on Linux and exercised under Wine. Two
 # tests rely on POSIX semantics Wine does not reproduce and fail identically on
@@ -287,6 +288,92 @@ if [[ "$upload_over_code" == "400" && "$upload_over_body" == *"No file was uploa
 else
   report_result "Upload over -u limit rejected " "$upload_over_line" 1 \
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
+fi
+
+# Multipart text fields: Request.post must read the text fields of a
+# multipart form next to Request.file, in any order around the file.
+multipart_line=$LINENO
+_test_start_ms=$(now_ms)
+mp_file="$(mktemp /tmp/bialet-multipart.XXXXXX)"
+printf 'hi' > "$mp_file"
+mp_both=$(curl -s --max-time 20 -F "a=hola" -F "excel=@$mp_file;filename=x.csv" \
+  -F "b=after" "http://$HOST:$PORT/multipart")
+mp_text=$(curl -s --max-time 20 -F "a=hola" "http://$HOST:$PORT/multipart")
+mp_rich=$(curl -s --max-time 20 -F $'note=línea1\nlínea2 a=b&c' \
+  "http://$HOST:$PORT/multipart")
+mp_urlencoded=$(curl -s --max-time 20 -d "a=url" "http://$HOST:$PORT/multipart")
+rm -f "$mp_file"
+if [[ "$mp_both" == "a=hola|b=after|"*"|file=x.csv:2" \
+      && "$mp_both" == *"excel=null"* \
+      && "$mp_text" == "a=hola|"*"|file=none" \
+      && "$mp_rich" == *$'note=línea1\nlínea2 a=b&c|'* \
+      && "$mp_urlencoded" == "a=url|"* ]]; then
+  report_result "Multipart text fields          " "$multipart_line" 0
+else
+  report_result "Multipart text fields          " "$multipart_line" 1 \
+    "Got both:'$mp_both' text:'$mp_text' rich:'$mp_rich' urlencoded:'$mp_urlencoded'"
+fi
+
+# CSRF: Session.csrfOk must accept the token sent as a multipart field.
+mp_csrf_line=$LINENO
+_test_start_ms=$(now_ms)
+mp_cookie="$(mktemp /tmp/bialet-mp-csrf.XXXXXX)"
+mp_token=$(curl -s -c "$mp_cookie" "http://$HOST:$PORT/csrf" \
+  | grep -o 'value="[^"]*"' | sed 's/value="//; s/"//')
+mp_csrf_ok=$(curl -s -b "$mp_cookie" -F "_bialet_csrf=$mp_token" -F "x=1" \
+  "http://$HOST:$PORT/csrf")
+mp_csrf_bad=$(curl -s -b "$mp_cookie" -F "_bialet_csrf=wrong" "http://$HOST:$PORT/csrf")
+rm -f "$mp_cookie"
+if [[ -n "$mp_token" && "$mp_csrf_ok" == "ok" && "$mp_csrf_bad" == "fail" ]]; then
+  report_result "Multipart CSRF token           " "$mp_csrf_line" 0
+else
+  report_result "Multipart CSRF token           " "$mp_csrf_line" 1 \
+    "Expected ok/fail. Got token:'$mp_token' ok:'$mp_csrf_ok' bad:'$mp_csrf_bad'"
+fi
+
+# A large upload (5 MB) next to a text field, on a server with the limits
+# raised: the field must survive and the upload must not fail on memory.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  mp_big_line=$LINENO
+  _test_start_ms=$(now_ms)
+  mp_db="$(mktemp /tmp/bialet-mp-big.XXXXXX)"
+  mp_big="$(mktemp /tmp/bialet-mp-big-file.XXXXXX)"
+  head -c 5242880 /dev/zero > "$mp_big" 2>/dev/null
+  require_free_port "$HOST" "$MULTIPART_PORT" "multipart server"
+  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l /tmp/tests-multipart.log \
+    -m 5300 -M 10600 -b 10500 -u 10MB -d "$mp_db" "$(dirname "$0")" \
+    > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  mp_big_body=$(curl -s --max-time 60 -F "a=before" -F "excel=@$mp_big" \
+    -F "b=after" "http://$HOST:$MULTIPART_PORT/multipart")
+  # Many parts with no blank line after their headers: each one used to rescan
+  # the rest of the body, so this took minutes. It must be linear.
+  mp_many_code="skipped"
+  if command -v python3 >/dev/null 2>&1; then
+    mp_many="$(mktemp /tmp/bialet-mp-many.XXXXXX)"
+    python3 -c "
+b = '--BND\r\nContent-Disposition: form-data; name=\"a\"\r\n'
+open('$mp_many', 'w').write(b * 100000 + '--BND--\r\n')"
+    mp_many_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -H "Content-Type: multipart/form-data; boundary=BND" \
+      --data-binary "@$mp_many" "http://$HOST:$MULTIPART_PORT/multipart")
+    rm -f "$mp_many"
+  fi
+  mp_big_alive=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    "http://$HOST:$MULTIPART_PORT/multipart")
+  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-multipart.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -f "$mp_big" "$mp_db" "$mp_db"-*
+  if [[ "$mp_big_body" == "a=before|b=after|"*"|file="*":5242880" \
+        && "$mp_many_code" != "000" && "$mp_big_alive" == "200" ]]; then
+    report_result "Multipart 5 MB + many parts    " "$mp_big_line" 0
+  else
+    report_result "Multipart 5 MB + many parts    " "$mp_big_line" 1 \
+      "Expected both fields and a 5242880-byte file. Got body:'${mp_big_body:0:200}' many-parts:$mp_many_code alive:$mp_big_alive"
+  fi
+else
+  skip_test "Multipart 5 MB + many parts    " "requires local binary access"
 fi
 
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
