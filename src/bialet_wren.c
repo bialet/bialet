@@ -1858,6 +1858,59 @@ void bialet_init(struct BialetConfig* config) {
       exit(BIALET_SQLITE_ERROR);
     }
   }
+  // A relative -d is joined onto root_dir, so the database can land inside the
+  // served tree, where the static handler's only name-based protection is the
+  // '_'/'.' rule. Resolve the real location and refuse to start when the
+  // database (or its -wal/-shm siblings, which share the base name) would be
+  // downloadable. The default _db.sqlite3 passes; -d data.sqlite3 does not.
+  {
+    char real_db[PATH_MAX];
+    int  have_real = realpath_n(db_path, real_db, sizeof(real_db)) != NULL;
+    if(!have_real) {
+      // The file does not exist yet: resolve the parent directory and re-join
+      // the base name, so a relative path is still checked at its real place.
+      char        dir[PATH_MAX];
+      char*       slash = strrchr(db_path, '/');
+      const char* base = slash ? slash + 1 : db_path;
+      int         ok = 0;
+      if(slash == NULL) {
+        ok = realpath_n(".", real_db, sizeof(real_db)) != NULL;
+      } else {
+        size_t dlen = (size_t)(slash - db_path);
+        if(dlen == 0)
+          dlen = 1; // "/name"
+        if(dlen < sizeof(dir)) {
+          memcpy(dir, db_path, dlen);
+          dir[dlen] = '\0';
+          ok = realpath_n(dir, real_db, sizeof(real_db)) != NULL;
+        }
+      }
+      if(ok) {
+        size_t rlen = strlen(real_db);
+        size_t blen = strlen(base);
+        if(rlen > 0 && real_db[rlen - 1] == '/')
+          rlen--;
+        if(rlen + 1 + blen < sizeof(real_db)) {
+          real_db[rlen] = '/';
+          memcpy(real_db + rlen + 1, base, blen + 1);
+          have_real = 1;
+        }
+      }
+    }
+    if(have_real) {
+      size_t root_len = strlen(bialet_config.full_root_dir);
+      if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
+         real_db[root_len] == '/' &&
+         !has_forbidden_uri_component(real_db + root_len)) {
+        message(red("Error"),
+                "Database inside the app root must start with '_' or '.' "
+                "(like _db.sqlite3), or live outside the app root:",
+                db_path);
+        exit(BIALET_SQLITE_ERROR);
+      }
+    }
+  }
+
   strncpy(resolved_db_path, db_path, sizeof(resolved_db_path) - 1);
   resolved_db_path[sizeof(resolved_db_path) - 1] = '\0';
   if(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
