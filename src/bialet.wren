@@ -9,7 +9,7 @@
 // For full license text, see LICENSE.md.
 
 class Request {
-  static init(message, route, files) {
+  static init(message, route, files, fields) {
     __message = message
     __headers = {}
     __get = {}
@@ -52,8 +52,21 @@ class Request {
     }
     __body = bodyLines.join("")
     if (__method == "POST") {
-      __post = parseQuery(__body)
+      __post = fields != "" ? parseFields_(fields) : parseQuery(__body)
     }
+  }
+
+  // The text fields of a multipart body, extracted by the server as
+  // percent-encoded "name=value" pairs (every pair has its "="). File parts are
+  // not included: they are read with Request.file.
+  static parseFields_(encoded) {
+    var all = {}
+    for (pair in encoded.split("&")) {
+      var eq = pair.indexOf("=")
+      if (eq < 0) continue
+      all[Util.urlDecode(pair[0...eq])] = Util.urlDecode(pair[eq + 1...pair.count])
+    }
+    return all
   }
 
   static parseQuery(query) {

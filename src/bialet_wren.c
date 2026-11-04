@@ -704,11 +704,214 @@ static size_t copy_until(const char* src, size_t avail, const char* delims,
   return n;
 }
 
-int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
+// What save_uploaded_files() learned about the request beyond the file ids.
+//
+// For a multipart request the parts are already being walked there, so the
+// text fields are collected in the same pass. [fields] is a heap string of
+// percent-encoded "name=value&name=value" pairs for Request.init to decode
+// (NULL when there are none); the caller frees it. [head_len] is how many bytes
+// of the message Wren needs to see: the request line and headers only, so that
+// file content is never copied into the VM or split by it line by line. For any
+// other request it is the whole message.
+struct MultipartInfo {
+  char*  fields;
+  size_t fields_len;
+  size_t head_len;
+  int    is_multipart;
+};
+
+struct FieldBuf {
+  char*  data;
+  size_t len;
+  size_t cap;
+  int    failed;
+};
+
+static int field_buf_reserve(struct FieldBuf* fb, size_t extra) {
+  if(fb->failed)
+    return 0;
+  if(extra > SIZE_MAX - fb->len - 1) {
+    fb->failed = 1;
+    return 0;
+  }
+  size_t need = fb->len + extra + 1;
+  if(need <= fb->cap)
+    return 1;
+  size_t cap = fb->cap ? fb->cap : 256;
+  while(cap < need) {
+    if(cap > SIZE_MAX / 2) {
+      cap = need;
+      break;
+    }
+    cap *= 2;
+  }
+  char* grown = (char*)realloc(fb->data, cap);
+  if(grown == NULL) {
+    fb->failed = 1;
+    return 0;
+  }
+  fb->data = grown;
+  fb->cap = cap;
+  return 1;
+}
+
+static void field_buf_put(struct FieldBuf* fb, char c) {
+  if(field_buf_reserve(fb, 1))
+    fb->data[fb->len++] = c;
+}
+
+// Appends [src] percent-encoded. With [normalize_newlines], CRLF becomes a
+// single LF, which is what a <textarea> value should look like to the app.
+//
+// Only ASCII letters, digits and "-_.~" are left as they are. isalnum() is not
+// used: it follows the process locale and may accept bytes above 127.
+static int is_unreserved(unsigned char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~';
+}
+
+static int skips_cr(const char* src, size_t n, size_t i, int normalize_newlines) {
+  return normalize_newlines && src[i] == '\r' && i + 1 < n && src[i + 1] == '\n';
+}
+
+static void field_buf_put_encoded(struct FieldBuf* fb, const char* src, size_t n,
+                                  int normalize_newlines) {
+  static const char hex[] = "0123456789ABCDEF";
+  // Measure first so the buffer grows by exactly what is needed. Reserving the
+  // worst case (3 bytes per input byte) would triple the footprint of a large
+  // text field for nothing.
+  size_t out = 0;
+  for(size_t i = 0; i < n; i++) {
+    if(skips_cr(src, n, i, normalize_newlines))
+      continue;
+    size_t add = is_unreserved((unsigned char)src[i]) ? 1 : 3;
+    if(out > SIZE_MAX - add) {
+      fb->failed = 1;
+      return;
+    }
+    out += add;
+  }
+  if(!field_buf_reserve(fb, out))
+    return;
+  for(size_t i = 0; i < n; i++) {
+    unsigned char c = (unsigned char)src[i];
+    if(skips_cr(src, n, i, normalize_newlines))
+      continue;
+    if(is_unreserved(c)) {
+      fb->data[fb->len++] = (char)c;
+    } else {
+      fb->data[fb->len++] = '%';
+      fb->data[fb->len++] = hex[c >> 4];
+      fb->data[fb->len++] = hex[c & 15];
+    }
+  }
+}
+
+static int ascii_ieq(char a, char b) {
+  return tolower((unsigned char)a) == tolower((unsigned char)b);
+}
+
+// Finds a header line inside a part's header block. Anchored to the start of a
+// line so the name cannot match inside another header's value.
+static const char* find_part_header(const char* head, size_t head_len,
+                                    const char* name, size_t name_len) {
+  const char* p = head;
+  size_t      left = head_len;
+  while(left >= name_len) {
+    const char* hit = mem_find_ci(p, left, name, name_len);
+    if(hit == NULL)
+      return NULL;
+    if(hit == head || hit[-1] == '\n')
+      return hit;
+    left -= (size_t)(hit - p) + 1;
+    p = hit + 1;
+  }
+  return NULL;
+}
+
+// Reads parameter [key] from a header value such as
+//   form-data; name="a\"b"; filename="x.csv"
+// into [out], bounded by [out_size]. Quoted values may escape '"' and '\' with
+// a backslash; unquoted tokens are accepted too. Returns 1 when the parameter
+// is present, even with an empty value, and [out] is always NUL-terminated.
+// Matching whole parameter names is what keeps `name` from matching the tail of
+// `filename`, and only the requested parameter is ever copied into [out].
+static int header_param(const char* v, size_t len, const char* key, char* out,
+                        size_t out_size) {
+  size_t key_len = strlen(key);
+  size_t i = 0;
+  out[0] = '\0';
+  while(i < len && v[i] != ';')
+    i++;
+  while(i < len) {
+    i++; // the ';'
+    while(i < len && (v[i] == ' ' || v[i] == '\t'))
+      i++;
+    size_t key_start = i;
+    while(i < len && v[i] != '=' && v[i] != ';')
+      i++;
+    size_t key_end = i;
+    while(key_end > key_start && (v[key_end - 1] == ' ' || v[key_end - 1] == '\t'))
+      key_end--;
+    int match = key_end - key_start == key_len;
+    for(size_t k = 0; match && k < key_len; k++)
+      match = ascii_ieq(v[key_start + k], key[k]);
+
+    size_t n = 0;
+    if(i < len && v[i] == '=') {
+      i++;
+      while(i < len && (v[i] == ' ' || v[i] == '\t'))
+        i++;
+      if(i < len && v[i] == '"') {
+        i++;
+        while(i < len && v[i] != '"') {
+          char c = v[i];
+          if(c == '\\' && i + 1 < len && (v[i + 1] == '"' || v[i + 1] == '\\'))
+            c = v[++i];
+          if(match && n + 1 < out_size)
+            out[n++] = c;
+          i++;
+        }
+        if(i < len)
+          i++; // the closing quote
+      } else {
+        while(i < len && v[i] != ';' && v[i] != ' ' && v[i] != '\t' &&
+              v[i] != '\r' && v[i] != '\n') {
+          if(match && n + 1 < out_size)
+            out[n++] = v[i];
+          i++;
+        }
+      }
+    }
+    if(match) {
+      out[n] = '\0';
+      return 1;
+    }
+    while(i < len && v[i] != ';')
+      i++;
+  }
+  return 0;
+}
+
+static const char* next_part(const char* resume, const char* end,
+                             const char* start_boundary, size_t sb_len) {
+  return resume ? mem_find(resume, (size_t)(end - resume), start_boundary, sb_len)
+                : NULL;
+}
+
+// Saves the file parts of a multipart request to BIALET_FILES (their ids go to
+// [filesIds]) and collects its text fields into [mp]. Returns 1 when the
+// request carried a multipart body.
+int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
+                        struct MultipartInfo* mp) {
   filesIds[0] = '\0'; // Initialize empty string
+  mp->fields = NULL;
+  mp->fields_len = 0;
+  mp->is_multipart = 0;
 
   const char* msg = hm->message.str;
   size_t      msg_len = hm->message.len;
+  mp->head_len = msg_len;
   if(msg == NULL || msg_len == 0)
     return 0;
 
@@ -741,11 +944,22 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
     return 0;
   boundaryStart += sizeof(kBoundary) - 1;
 
+  // The boundary may be quoted (RFC 2046 allows it, and it is required when it
+  // contains characters such as ':' or ' ').
   char   boundary[256];
-  size_t boundary_len =
-      copy_until(boundaryStart, (size_t)(headerEnd - boundaryStart), "\r\n;",
-                 boundary, sizeof(boundary));
-  if(boundary_len == 0)
+  size_t boundary_len;
+  if(boundaryStart < headerEnd && *boundaryStart == '"') {
+    boundary_len =
+        copy_until(boundaryStart + 1, (size_t)(headerEnd - boundaryStart) - 1,
+                   "\"\r\n", boundary, sizeof(boundary));
+  } else {
+    boundary_len = copy_until(boundaryStart, (size_t)(headerEnd - boundaryStart),
+                              "\r\n; \t", boundary, sizeof(boundary));
+  }
+  // RFC 2046 caps a boundary at 70 characters. One that fills the buffer was
+  // truncated, and matching on a truncated delimiter would split the body at the
+  // wrong places.
+  if(boundary_len == 0 || boundary_len >= sizeof(boundary) - 1)
     return 0;
 
   const char* body = headerEnd + 4;
@@ -772,6 +986,16 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
   const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
   int         uploadedFiles = 0;
+  int         filesCapped = 0;
+  int         fieldsCapped = 0;
+  size_t      fieldBytes = 0;
+
+  struct FieldBuf fb = {0};
+
+  if(cursor != NULL) {
+    mp->is_multipart = 1;
+    mp->head_len = (size_t)(body - msg);
+  }
 
   while(cursor != NULL) {
     const char* part = cursor + sb_len;
@@ -784,60 +1008,86 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
     if(part >= end)
       break;
 
-    const char* partHeaderEnd = mem_find(part, (size_t)(end - part), "\r\n\r\n", 4);
-    if(!partHeaderEnd)
-      break;
-    size_t      part_head_len = (size_t)(partHeaderEnd - part);
-    const char* fileData = partHeaderEnd + 4;
-
-    // Where this part's data ends, and where to resume scanning.
-    const char* nextDelim =
-        mem_find(fileData, (size_t)(end - fileData), delimiter, dl_len);
+    // Where this part ends comes first, and the header search is bounded by it.
+    // Searching for the blank line up to the end of the whole body let a part
+    // without one run into the next parts (swallowing their fields), and made
+    // each such part rescan the rest of the body: quadratic in the part count.
+    const char* nextDelim = mem_find(part, (size_t)(end - part), delimiter, dl_len);
     const char* fileEnd = nextDelim ? nextDelim : end;
     const char* resume = nextDelim ? nextDelim + 2 : NULL; // skip the CRLF
+    // The blank line may end on the CRLF that opens the delimiter, which is
+    // what an empty value looks like.
+    const char* searchEnd = nextDelim ? nextDelim + 2 : end;
+
+    const char* partHeaderEnd =
+        mem_find(part, (size_t)(searchEnd - part), "\r\n\r\n", 4);
+    if(!partHeaderEnd) {
+      cursor = next_part(resume, end, startBoundary, sb_len);
+      continue;
+    }
+    size_t      part_head_len = (size_t)(partHeaderEnd - part);
+    const char* fileData = partHeaderEnd + 4;
+    if(fileData > fileEnd)
+      fileData = fileEnd;
 
     static const char kDisposition[] = "Content-Disposition:";
-    const char*       cdStart =
-        mem_find_ci(part, part_head_len, kDisposition, sizeof(kDisposition) - 1);
+    const char*       cdStart = find_part_header(part, part_head_len, kDisposition,
+                                                 sizeof(kDisposition) - 1);
     if(!cdStart) {
-      cursor = resume
-                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
-                   : NULL;
+      cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
     }
-    size_t cd_avail = part_head_len - (size_t)(cdStart - part);
+    const char* cdValue = cdStart + sizeof(kDisposition) - 1;
+    size_t      cd_avail = part_head_len - (size_t)(cdValue - part);
+    const char* cdEol = (const char*)memchr(cdValue, '\n', cd_avail);
+    size_t      cd_len = cdEol ? (size_t)(cdEol - cdValue) : cd_avail;
 
-    static const char kFilename[] = "filename=\"";
-    const char*       filenameStart =
-        mem_find_ci(cdStart, cd_avail, kFilename, sizeof(kFilename) - 1);
+    char fieldName[1024];
+    header_param(cdValue, cd_len, "name", fieldName, sizeof(fieldName));
+
     char filename[256];
-    filename[0] = '\0';
-    if(filenameStart != NULL) {
-      filenameStart += sizeof(kFilename) - 1;
-      copy_until(filenameStart, (size_t)(partHeaderEnd - filenameStart), "\"",
-                 filename, sizeof(filename));
+    int  isFile =
+        header_param(cdValue, cd_len, "filename", filename, sizeof(filename));
+    if(!isFile) {
+      char ignored[2];
+      isFile = header_param(cdValue, cd_len, "filename*", ignored, sizeof(ignored));
     }
-    // A part with no filename is a plain form field, not an upload.
-    if(filename[0] == '\0') {
-      cursor = resume
-                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
-                   : NULL;
+
+    // A part without a filename is a plain text field. The body is already
+    // capped by max_post_size, but enforce the same cap on what is collected
+    // here so a field can never outgrow it.
+    if(!isFile) {
+      if(fieldName[0] != '\0' && !fieldsCapped) {
+        size_t nameLen = strlen(fieldName);
+        size_t valueLen = (size_t)(fileEnd - fileData);
+        if(nameLen > bialet_config.max_post_size ||
+           valueLen > bialet_config.max_post_size - nameLen ||
+           fieldBytes > bialet_config.max_post_size - nameLen - valueLen) {
+          message(red("Upload Error"),
+                  "Form fields exceed the maximum post size, skipping the rest");
+          fieldsCapped = 1;
+        } else {
+          fieldBytes += nameLen + valueLen;
+          if(fb.len > 0)
+            field_buf_put(&fb, '&');
+          field_buf_put_encoded(&fb, fieldName, nameLen, 0);
+          field_buf_put(&fb, '=');
+          field_buf_put_encoded(&fb, fileData, valueLen, 1);
+        }
+      }
+      cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
     }
 
-    static const char kName[] = "name=\"";
-    const char* nameStart = mem_find_ci(cdStart, cd_avail, kName, sizeof(kName) - 1);
-    char        fieldName[256];
-    fieldName[0] = '\0';
-    if(nameStart != NULL) {
-      nameStart += sizeof(kName) - 1;
-      copy_until(nameStart, (size_t)(partHeaderEnd - nameStart), "\"", fieldName,
-                 sizeof(fieldName));
+    // An empty filename is a file input left blank in the browser.
+    if(filename[0] == '\0') {
+      cursor = next_part(resume, end, startBoundary, sb_len);
+      continue;
     }
 
     char        contentTypeStr[256] = "application/octet-stream";
-    const char* partCtStart =
-        mem_find_ci(part, part_head_len, kContentType, sizeof(kContentType) - 1);
+    const char* partCtStart = find_part_header(part, part_head_len, kContentType,
+                                               sizeof(kContentType) - 1);
     if(partCtStart != NULL) {
       partCtStart += sizeof(kContentType) - 1;
       while(partCtStart < partHeaderEnd &&
@@ -857,18 +1107,20 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
           "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
           filename, fileSize, bialet_config.max_upload_size);
       message(red("Upload Error"), sizeMsg);
-      cursor = resume
-                   ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
-                   : NULL;
+      cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
     }
 
-    // Skip further parts once the per-request file count cap is reached so a
+    // Skip further files once the per-request file count cap is reached so a
     // single request cannot insert an unbounded number of rows into
-    // BIALET_FILES (CPU/disk amplification).
+    // BIALET_FILES (CPU/disk amplification). Text fields after the cap are
+    // still read.
     if(uploadedFiles >= MAX_UPLOAD_FILES) {
-      message(red("Upload Error"), "Too many files in request, skipping rest");
-      break;
+      if(!filesCapped)
+        message(red("Upload Error"), "Too many files in request, skipping rest");
+      filesCapped = 1;
+      cursor = next_part(resume, end, startBoundary, sb_len);
+      continue;
     }
 
     // Save file to database
@@ -915,8 +1167,18 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds) {
       message(red("Upload Error"), sqlite3_errmsg(db));
     }
 
-    cursor = resume ? mem_find(resume, (size_t)(end - resume), startBoundary, sb_len)
-                    : NULL;
+    cursor = next_part(resume, end, startBoundary, sb_len);
+  }
+
+  if(fb.failed) {
+    message(red("Upload Error"), "Out of memory reading form fields");
+    free(fb.data);
+  } else if(fb.len > 0) {
+    fb.data[fb.len] = '\0';
+    mp->fields = fb.data;
+    mp->fields_len = fb.len;
+  } else {
+    free(fb.data);
   }
 
   // Steady-state recovery for BIALET_FILES: without a purge the temp blobs
@@ -959,18 +1221,28 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
   wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
   if(hm) {
     /* Initialize request */
-    wrenEnsureSlots(vm, 4);
+    wrenEnsureSlots(vm, 5);
     wrenGetVariable(vm, MAIN_MODULE_NAME, "Request", 0);
     WrenHandle* requestClass = wrenGetSlotHandle(vm, 0);
-    WrenHandle* initMethod = wrenMakeCallHandle(vm, "init(_,_,_)");
+    WrenHandle* initMethod = wrenMakeCallHandle(vm, "init(_,_,_,_)");
     wrenSetSlotHandle(vm, 0, requestClass);
-    wrenSetSlotString(vm, 1, hm->message.str);
-    wrenSetSlotString(vm, 2, hm->routes.str);
 
-    char filesIds[MAX_URL_LEN] = "";
-    // Save uploaded files with size validation (max_upload_size config)
-    save_uploaded_files(hm, filesIds);
+    char                 filesIds[MAX_URL_LEN] = "";
+    struct MultipartInfo mp;
+    // Save uploaded files with size validation (max_upload_size config) and
+    // collect the text fields of a multipart body.
+    save_uploaded_files(hm, filesIds, &mp);
+    if(mp.is_multipart) {
+      // Only the request line and headers: the body is file content and form
+      // fields, which reach Wren already parsed (Request.post / Request.file).
+      wrenSetSlotBytes(vm, 1, hm->message.str, mp.head_len);
+    } else {
+      wrenSetSlotString(vm, 1, hm->message.str);
+    }
+    wrenSetSlotString(vm, 2, hm->routes.str);
     wrenSetSlotString(vm, 3, filesIds);
+    wrenSetSlotString(vm, 4, mp.fields ? mp.fields : "");
+    free(mp.fields);
 
     if((error = wrenCall(vm, initMethod) != WREN_RESULT_SUCCESS))
       message(red("Runtime Error"), "Failed to initialize request");
