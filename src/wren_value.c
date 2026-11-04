@@ -773,9 +773,25 @@ Value wrenNewQueryLength(WrenVM* vm, const char* text, size_t length) {
 Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
                              uint32_t count, int step) {
   uint8_t* from = (uint8_t*)source->value;
-  int      length = 0;
+
+  // Size the result from what the copy loop below will actually write. Sizing
+  // from wrenUtf8DecodeNumBytes() over-counted every element whose sequence
+  // does not decode (a truncated lead byte reserves 2-4 bytes and then writes
+  // none), leaving never-written bytes inside a string whose length included
+  // them: such a value truncated every C-string consumer and inflated
+  // String.count. A byte that fails to decode is carried through raw, the same
+  // rule wrenStringCodePointAt uses; a decoded value above U+10FFFF (possible
+  // from a 0xF5-0xF7 lead byte) is treated the same way, because
+  // wrenUtf8Encode cannot encode it.
+  size_t length = 0;
   for(uint32_t i = 0; i < count; i++) {
-    length += wrenUtf8DecodeNumBytes(from[start + i * step]);
+    int index = start + i * step;
+    int codePoint = wrenUtf8Decode(from + index, source->length - index);
+    if(codePoint == -1 || codePoint > 0x10ffff) {
+      length += 1;
+    } else {
+      length += (size_t)wrenUtf8EncodeNumBytes(codePoint);
+    }
   }
 
   ObjString* result = allocateString(vm, length);
@@ -786,7 +802,9 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
     int index = start + i * step;
     int codePoint = wrenUtf8Decode(from + index, source->length - index);
 
-    if(codePoint != -1) {
+    if(codePoint == -1 || codePoint > 0x10ffff) {
+      *to++ = from[index];
+    } else {
       to += wrenUtf8Encode(codePoint, to);
     }
   }
