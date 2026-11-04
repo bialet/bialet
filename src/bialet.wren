@@ -135,6 +135,7 @@ class Response {
     __status = 200
     __out = ""
     __useErrorFallback = false
+    __fileId = null
     Cookie.init
   }
 
@@ -153,12 +154,17 @@ class Response {
   static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
   static header(header, value) { __headers[Util.headerName(header)] = Util.headerValue(value) }
+  // Out of band: the id of the blob Response.file selected, or null. The id
+  // used to live in the body as a leading 0x1A marker, which client-influenced
+  // output could forge to read an arbitrary BIALET_FILES row.
+  static fileId { __fileId }
   static file(id) {
     var type = `SELECT type FROM BIALET_FILES WHERE id = ?`.val([id])
     if (!type) return false
-    // To output the file, you send the char BELL and the image id.
-    // This will be replaced by the file.
-    __out = String.fromByte(26) + "%(id)"
+    var numeric = id is Num ? id : Num.fromString("%(id)")
+    if (!numeric) return false
+    __fileId = numeric
+    __out = ""
     header("Content-Type", type)
     return true
   }

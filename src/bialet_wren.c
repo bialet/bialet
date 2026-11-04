@@ -52,7 +52,6 @@
 #define MAX_MODULE_LEN 256
 #define HTTP_OK 200
 #define HTTP_ERROR 500
-#define BIALET_FILE_CHAR 26
 #define BIALET_EXTERNAL_MODULE_LEN 3
 #define BIALET_MODULE_GITHUB_PREFIX "gh:"
 #define BIALET_REMOTE_MODULE_GITHUB_URL                                             \
@@ -1374,50 +1373,57 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenGetVariable(vm, module, "Response", 0);
     WrenHandle* responseClass = wrenGetSlotHandle(vm, 0);
     if(r.body == NULL || strlen(r.body) == 0) {
-      /* Get body from response */
-      WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
+      /* A blob selected by Response.file(id) replaces the body. The id is read
+       * from Response's own field, out of band: it used to be a 0x1A marker at
+       * the start of the body, which any client-influenced Response.out output
+       * could forge to read an arbitrary BIALET_FILES row. */
+      int         fileApplied = 0;
+      WrenHandle* fileIdMethod = wrenMakeCallHandle(vm, "fileId");
+      wrenEnsureSlots(vm, 1);
       wrenSetSlotHandle(vm, 0, responseClass);
-      if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
-        message(red("Runtime Error"), "Failed to get body");
-      } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
-        /* wrenGetSlotString only asserts the slot type, and asserts compile out
-         * with NDEBUG -- so a handler returning a non-string from Response.out
-         * reinterpreted whatever was in the slot as a char*. */
-        message(red("Runtime Error"), "Response body is not a string");
-        error = 1;
-      } else {
-        const char* body = wrenGetSlotString(vm, 0);
-        if(body[0] != BIALET_FILE_CHAR) {
-          r.body = string_safe_copy(body);
-          r.body_owned = 1;
-        } else {
-          /* Handle BIALET_FILE_CHAR response for file serving.
-           * This retrieves file content from the database when the response body
-           * starts with BIALET_FILE_CHAR. Consider moving this logic to the server
-           * layer in the future to better separate concerns between the Wren runtime
-           * and response preparation. */
-          sqlite3_stmt* stmt;
-          int           result = sqlite3_prepare_v2(
-              db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
-          if(!(error = result != SQLITE_OK)) {
-            sqlite3_bind_text(stmt, 1, body + 1, -1, SQLITE_STATIC);
-            if(sqlite3_step(stmt) == SQLITE_ROW) {
-              int len = 0;
-              len = sqlite3_column_bytes(stmt, 0);
-              r.body = safe_malloc(len + 1);
-              memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
-              r.length = len;
-              r.body_owned = 1;
-            } else {
-              // If the id is not found, we will send an internal server error.
-              message(red("Error file not found"), sqlite3_errmsg(db));
-              error = 1;
-            }
-            sqlite3_finalize(stmt);
+      if(wrenCall(vm, fileIdMethod) == WREN_RESULT_SUCCESS &&
+         wrenGetSlotType(vm, 0) == WREN_TYPE_NUM) {
+        sqlite3_stmt* stmt;
+        int           result = sqlite3_prepare_v2(
+            db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
+        if(!(error = result != SQLITE_OK)) {
+          int len = 0;
+          sqlite3_bind_int64(stmt, 1, (sqlite3_int64)wrenGetSlotDouble(vm, 0));
+          if(sqlite3_step(stmt) == SQLITE_ROW) {
+            len = sqlite3_column_bytes(stmt, 0);
+            r.body = safe_malloc((size_t)len + 1);
+            memcpy(r.body, sqlite3_column_blob(stmt, 0), (size_t)len);
+            r.length = (size_t)len;
+            r.body_owned = 1;
+            fileApplied = 1;
+          } else {
+            // If the id is not found, we will send an internal server error.
+            message(red("Error file not found"), sqlite3_errmsg(db));
+            error = 1;
           }
+          sqlite3_finalize(stmt);
         }
       }
-      wrenReleaseHandle(vm, outMethod);
+      wrenReleaseHandle(vm, fileIdMethod);
+
+      if(!fileApplied && !error) {
+        /* Get body from response */
+        WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
+        wrenSetSlotHandle(vm, 0, responseClass);
+        if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
+          message(red("Runtime Error"), "Failed to get body");
+        } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
+          /* wrenGetSlotString only asserts the slot type, and asserts compile out
+           * with NDEBUG -- so a handler returning a non-string from Response.out
+           * reinterpreted whatever was in the slot as a char*. */
+          message(red("Runtime Error"), "Response body is not a string");
+          error = 1;
+        } else {
+          r.body = string_safe_copy(wrenGetSlotString(vm, 0));
+          r.body_owned = 1;
+        }
+        wrenReleaseHandle(vm, outMethod);
+      }
     }
     /* Get status from response */
     wrenEnsureSlots(vm, 1);
