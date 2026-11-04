@@ -702,12 +702,15 @@ void handle_client(bialet_socket_t client_socket) {
 
   // Read until the header block is complete. Taking whatever the first recv()
   // returned meant headers split across two TCP segments -- routine for any
-  // real client -- were parsed as a truncated request. Bounded by the same
-  // wall-clock deadline used for bodies so a slow-drip peer cannot park the
-  // accept loop.
-  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
+  // real client -- were parsed as a truncated request.
+  //
+  // The header phase gets the *short* socket timeout, not the body deadline: a
+  // peer that never sends CRLFCRLF parks the single accept loop for however
+  // long this budget is, and 30 s per 70-byte request was a cheap outage. The
+  // body phase keeps its own total budget below.
+  long long hdr_deadline = monotonic_ms() + BIALET_SOCKET_TIMEOUT_MS;
   for(;;) {
-    long long remaining = deadline - monotonic_ms();
+    long long remaining = hdr_deadline - monotonic_ms();
     if(remaining <= 0 || total_read >= sizeof(buffer) - 1)
       break;
     if(!wait_readable(client_socket, (int)remaining))
@@ -728,6 +731,23 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
   buffer[total_read] = '\0';
+
+  // No complete header block (deadline, buffer full, or a malformed request
+  // that never produces CRLFCRLF). Fail closed instead of parsing and serving a
+  // truncated request with no header accounting: that old fallthrough both
+  // answered an unterminated request as if it were complete and let one peer
+  // hold the only worker for the whole body deadline.
+  if(hdr_len == 0) {
+    struct BialetResponse bad = {0};
+    custom_error(400, &bad);
+    write_response(client_socket, &bad);
+    free_response_owned(&bad);
+    return;
+  }
+
+  // Total wall-clock budget for the body phase. A single recv() is bounded by
+  // the socket timeout; this bounds the whole body against a slow-drip peer.
+  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
 
   char*  full_request = buffer;
   size_t content_length = 0;
