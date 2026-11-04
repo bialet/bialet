@@ -800,8 +800,25 @@ class Query {
     }
     return Query.new("%(this) ORDER BY %(col) %(dir.upper)")
   }
+  // Identifiers interpolated into SQL must be plain identifiers. Same rule as
+  // orderColumn_ (minus quoting): a map key or table name that came from a
+  // request could otherwise close the column list and append a VALUES clause.
+  static identifier_(value, label) {
+    var name = value == null ? "" : "%(value)".trim()
+    if (name.count == 0 || name.count > 64) {
+      Fiber.abort("Invalid %(label)")
+    }
+    for (char in name) {
+      var b = char.bytes[0]
+      if (!((b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122) || b == 95)) {
+        Fiber.abort("Invalid %(label): %(name)")
+      }
+    }
+    return name
+  }
   save(values) {
-    if (this.toString.trim().upper.startsWith("BIALET_")) return false
+    var table = Query.identifier_(this, "table name")
+    if (table.upper.startsWith("BIALET_")) return false
     var keys = []
     var bind = []
     var params = []
@@ -810,7 +827,7 @@ class Query {
       v = val
       if (v is MapEntry) {
         v = val.value
-        keys.add(val.key)
+        keys.add("`%(Query.identifier_(val.key, "column name"))`")
       }
       if (val is Date) {
         v = val.toString.replace("T", " ")
@@ -823,6 +840,6 @@ class Query {
       }
     }
     var k = keys.count > 0 ? "(%(keys.join(",")))" : ""
-    return Query.fromString("REPLACE INTO `%(this)` %(k) VALUES (%(bind.join(',')))", params)
+    return Query.fromString("REPLACE INTO `%(table)` %(k) VALUES (%(bind.join(',')))", params)
   }
 }
