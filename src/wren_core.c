@@ -1933,6 +1933,8 @@ DEF_PRIMITIVE(date_unix) {
 };
 
 DEF_PRIMITIVE(markdown_html) {
+  if(!validateString(vm, args[1], "Markdown"))
+    return false;
   char* html = markdown_to_html(AS_CSTRING(args[1]));
   if(html == NULL)
     RETURN_ERROR("Markdown output too large");
@@ -1942,6 +1944,8 @@ DEF_PRIMITIVE(markdown_html) {
 }
 
 DEF_PRIMITIVE(markdown_file) {
+  if(!validateString(vm, args[1], "Markdown file name"))
+    return false;
   char* content = bialet_read_file(AS_CSTRING(args[1]));
   if(content == NULL)
     RETURN_FALSE;
@@ -1953,6 +1957,15 @@ DEF_PRIMITIVE(markdown_file) {
   free(html);
   RETURN_VAL(result);
 };
+
+// A query argument is either a plain string (Query.fromString, Query.new) or a
+// backtick literal, which is an OBJ_QUERY instance -- an ObjString with a
+// different object kind, so IS_STRING/validateString rejects it.
+static bool is_query_text(Value v) {
+  if(IS_STRING(v))
+    return true;
+  return IS_OBJ(v) && AS_OBJ(v)->type == OBJ_QUERY;
+}
 
 // Binds each parameter in [params] to [query]. Returns false (and sets a
 // fiber error) when a parameter has a type the native layer cannot bind, so a
@@ -2003,6 +2016,14 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 }
 
 DEF_PRIMITIVE(query_fetch) {
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(!IS_LIST(args[2])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query parameters must be a list.");
+    return false;
+  }
   BialetQuery* query = create_bialet_query();
   if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
@@ -2059,6 +2080,14 @@ DEF_PRIMITIVE(query_fetch) {
 }
 
 DEF_PRIMITIVE(query_execute) {
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(!IS_LIST(args[2])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query parameters must be a list.");
+    return false;
+  }
   BialetQuery* query = create_bialet_query();
   if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
@@ -2083,11 +2112,22 @@ DEF_PRIMITIVE(query_execute) {
 }
 
 DEF_PRIMITIVE(query_toString) {
+  if(!is_query_text(args[0])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
   const char* queryString = AS_CSTRING(args[0]);
   RETURN_VAL(wrenNewString(vm, queryString));
 }
 
 DEF_PRIMITIVE(query_new) {
+  // Query.new() (used by Query.fromString) supplies no text.
+  if(IS_NULL(args[1]))
+    RETURN_VAL(wrenNewQuery(vm, ""));
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
   const char* queryString = AS_CSTRING(args[1]);
   RETURN_VAL(wrenNewQuery(vm, queryString));
 }
