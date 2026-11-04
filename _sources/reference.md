@@ -56,13 +56,17 @@ External classes must be imported explicitly using the GitHub shorthand or full 
 A class to handle incoming HTTP requests, parsing their content, and providing
 convenient access to their components.
 
-### init(message, route, files)
+### init(message, route, files, fields)
 
-Initializes a new Request object with a given message, route, and files.
+Initializes a new Request object. Bialet calls this for you before your code
+runs.
 
-- `message`: The raw HTTP request message.
+- `message`: The raw HTTP request message. For a `multipart/form-data` request
+  it holds the request line and headers only (see [body](#body)).
 - `route`: The route the request is targeting.
 - `files`: The uploaded files data.
+- `fields`: The text fields of a `multipart/form-data` body, already extracted.
+  Empty for any other request.
 
 ### parseQuery(query)
 
@@ -81,6 +85,11 @@ Returns the URI of the request.
 ### body
 
 Returns the body content of the request.
+
+For a `multipart/form-data` request the body is an empty string. The file
+content never enters Wren, and the text fields are read with
+[post(name)](#postname). Use `Request.post()` and `Request.file()` instead of
+parsing the body.
 
 ### isPost
 
@@ -133,6 +142,12 @@ Returns the value of a specified POST parameter, or `null` if not found.
 
 - `name`: The name of the POST parameter.
 - **Returns**: `String` if the key exists in the POST body, `Null` otherwise.
+
+Works for `application/x-www-form-urlencoded` and `multipart/form-data` forms.
+For a multipart form it returns the text fields only: a file part is read with
+[file(name)](#filename) and never appears here. Line breaks in a value (a
+`<textarea>`) are kept, with `\r\n` normalized to `\n`. If a field is repeated,
+the last value wins.
 
 ### route(pos)
 

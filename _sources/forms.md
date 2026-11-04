@@ -170,22 +170,32 @@ Key points:
 
 ## File Uploads
 
-Set `enctype="multipart/form-data"` on the form and read the file with
-`Request.file()`:
+Set `enctype="multipart/form-data"` on the form. Read the file with
+`Request.file()` and the text fields of the same form with `Request.post()`:
 
 ```wren
 if (Request.isPost) {
+  var title = Request.post("title") || ""
   var file = Request.file("attachment")
   if (file) {
-    return <p>Uploaded: {{ file.name }} ({{ file.size }} bytes)</p>
+    return <p>Uploaded {{ file.name }} ({{ file.size }} bytes) as "{{ title }}"</p>
   }
 }
 
+var session = Session.new()
 return <form method="post" enctype="multipart/form-data">
+  {{ session.csrf }}
+  <input type="text" name="title" />
   <input type="file" name="attachment" />
   <button>Upload</button>
 </form>
 ```
+
+`session.csrfOk` works the same as in any other form.
+
+`Request.post()` returns the text fields only. A file part never appears in it,
+and `Request.body` is empty for a multipart request. Do not parse the body by
+hand.
 
 Files are stored in the SQLite database. See the [File Handling](file.md)
 guide for the full API.

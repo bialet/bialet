@@ -66,7 +66,7 @@
     <link rel="prev" title="JSX to Bialet Migration" href="jsx-migration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.4" />
+  <meta name="docsearch:version" content="1.2.5" />
   </head>
   
   
@@ -623,21 +623,29 @@ guide for details on passwords, CSRF, and session defaults.</p>
 </section>
 <section id="file-uploads">
 <h2>File Uploads<a class="headerlink" href="#file-uploads" title="Link to this heading">#</a></h2>
-<p>Set <code class="docutils literal notranslate"><span class="pre">enctype=&quot;multipart/form-data&quot;</span></code> on the form and read the file with
-<code class="docutils literal notranslate"><span class="pre">Request.file()</span></code>:</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">enctype=&quot;multipart/form-data&quot;</span></code> on the form. Read the file with
+<code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> and the text fields of the same form with <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"attachment"</span><span class="p">)</span>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Uploaded: {{ file.name }} ({{ file.size }} bytes)&lt;/p&gt;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Uploaded {{ file.name }} ({{ file.size }} bytes) as "{{ title }}"&lt;/p&gt;</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 
+<span class="k">var</span><span class="w"> </span><span class="n">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post" enctype="multipart/form-data"&gt;</span>
-<span class="x">  &lt;input type="file" name="attachment" /&gt;</span>
-<span class="w">  </span><span class="x">&lt;button&gt;Upload&lt;/button&gt;</span>
+<span class="x">  {{ session.csrf }}</span>
+<span class="x">  &lt;input type="text" name="title" /&gt;</span>
+<span class="w">  </span><span class="x">&lt;input type="file" name="attachment" /&gt;</span>
+<span class="x">  &lt;button&gt;</span><span class="nc">Upload</span><span class="x">&lt;/button&gt;</span>
 <span class="x">&lt;/form&gt;</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">session.csrfOk</span></code> works the same as in any other form.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> returns the text fields only. A file part never appears in it,
+and <code class="docutils literal notranslate"><span class="pre">Request.body</span></code> is empty for a multipart request. Do not parse the body by
+hand.</p>
 <p>Files are stored in the SQLite database. See the <a class="reference internal" href="file.html"><span class="std std-doc">File Handling</span></a>
 guide for the full API.</p>
 </section>

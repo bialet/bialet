@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.4" />
+  <meta name="docsearch:version" content="1.2.5" />
   </head>
   
   
@@ -442,7 +442,7 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-classes">External Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files">init(message, route, files)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files-fields">init(message, route, files, fields)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parsequery-query">parseQuery(query)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
@@ -730,13 +730,17 @@ already escaped.</p>
 <h2>Request<a class="headerlink" href="#request" title="Link to this heading">#</a></h2>
 <p>A class to handle incoming HTTP requests, parsing their content, and providing
 convenient access to their components.</p>
-<section id="init-message-route-files">
-<h3>init(message, route, files)<a class="headerlink" href="#init-message-route-files" title="Link to this heading">#</a></h3>
-<p>Initializes a new Request object with a given message, route, and files.</p>
+<section id="init-message-route-files-fields">
+<h3>init(message, route, files, fields)<a class="headerlink" href="#init-message-route-files-fields" title="Link to this heading">#</a></h3>
+<p>Initializes a new Request object. Bialet calls this for you before your code
+runs.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The raw HTTP request message.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">message</span></code>: The raw HTTP request message. For a <code class="docutils literal notranslate"><span class="pre">multipart/form-data</span></code> request
+it holds the request line and headers only (see <a class="reference internal" href="#body"><span class="xref myst">body</span></a>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">route</span></code>: The route the request is targeting.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">files</span></code>: The uploaded files data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fields</span></code>: The text fields of a <code class="docutils literal notranslate"><span class="pre">multipart/form-data</span></code> body, already extracted.
+Empty for any other request.</p></li>
 </ul>
 </section>
 <section id="parsequery-query">
@@ -757,6 +761,10 @@ convenient access to their components.</p>
 <section id="body">
 <h3>body<a class="headerlink" href="#body" title="Link to this heading">#</a></h3>
 <p>Returns the body content of the request.</p>
+<p>For a <code class="docutils literal notranslate"><span class="pre">multipart/form-data</span></code> request the body is an empty string. The file
+content never enters Wren, and the text fields are read with
+<a class="reference internal" href="#postname"><span class="xref myst">post(name)</span></a>. Use <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> instead of
+parsing the body.</p>
 </section>
 <section id="ispost">
 <h3>isPost<a class="headerlink" href="#ispost" title="Link to this heading">#</a></h3>
@@ -813,6 +821,11 @@ concatenation, interpolation). This is the #1 production crash cause.
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the POST parameter.</p></li>
 <li><p><strong>Returns</strong>: <code class="docutils literal notranslate"><span class="pre">String</span></code> if the key exists in the POST body, <code class="docutils literal notranslate"><span class="pre">Null</span></code> otherwise.</p></li>
 </ul>
+<p>Works for <code class="docutils literal notranslate"><span class="pre">application/x-www-form-urlencoded</span></code> and <code class="docutils literal notranslate"><span class="pre">multipart/form-data</span></code> forms.
+For a multipart form it returns the text fields only: a file part is read with
+<a class="reference internal" href="#filename"><span class="xref myst">file(name)</span></a> and never appears here. Line breaks in a value (a
+<code class="docutils literal notranslate"><span class="pre">&lt;textarea&gt;</span></code>) are kept, with <code class="docutils literal notranslate"><span class="pre">\r\n</span></code> normalized to <code class="docutils literal notranslate"><span class="pre">\n</span></code>. If a field is repeated,
+the last value wins.</p>
 </section>
 <section id="route-pos">
 <h3>route(pos)<a class="headerlink" href="#route-pos" title="Link to this heading">#</a></h3>
@@ -2119,7 +2132,7 @@ interpolation leaves it untouched.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-classes">External Classes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request">Request</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files">init(message, route, files)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#init-message-route-files-fields">init(message, route, files, fields)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parsequery-query">parseQuery(query)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
