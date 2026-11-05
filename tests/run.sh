@@ -376,6 +376,57 @@ else
   skip_test "Multipart 5 MB + many parts    " "requires local binary access"
 fi
 
+# Aggregate temp-upload ceiling: a file part with a filename and no data is a
+# legal row of size 0, so a byte-only ceiling never engaged and 100-part
+# requests grew BIALET_FILES without bound. The retained set must be bounded in
+# rows too, the aggregate must come from the isTemp index rather than a full
+# scan, and a refused upload must be answered explicitly (507) instead of a 200
+# with the file silently missing.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cap_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cap_db="$(mktemp /tmp/bialet-cap.XXXXXX)"
+  cap_body="$(mktemp /tmp/bialet-cap-body.XXXXXX)"
+  require_free_port "$HOST" "$MULTIPART_PORT" "upload ceiling server"
+  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l /tmp/tests-cap.log \
+    -d "$cap_db" "$(dirname "$0")" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  cap_first="skipped"
+  cap_last="skipped"
+  cap_usage="skipped"
+  cap_legit="skipped"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c "
+part = '--zz\r\nContent-Disposition: form-data; name=\"g\"; filename=\"z\"\r\n\r\n\r\n'
+open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
+    cap_first=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -H "Content-Type: multipart/form-data; boundary=zz" \
+      --data-binary "@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    for _ in $(seq 1 44); do
+      cap_last=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+        -H "Content-Type: multipart/form-data; boundary=zz" \
+        --data-binary "@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    done
+    cap_usage=$(curl -s --max-time 5 "http://$HOST:$MULTIPART_PORT/upload-usage")
+    cap_legit=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -F "a=1" -F "excel=@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+  fi
+  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -f "$cap_body" "$cap_db" "$cap_db"-*
+  if [[ "$cap_first" == "200" && "$cap_last" == "507" \
+        && "$cap_usage" == "rows:4096|index:true|scan:" \
+        && "$cap_legit" == "507" ]]; then
+    report_result "Upload ceiling bounds rows     " "$cap_line" 0
+  else
+    report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
+      "Expected 200 then 507, rows:4096 from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+  fi
+else
+  skip_test "Upload ceiling bounds rows     " "requires local binary access"
+fi
+
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"

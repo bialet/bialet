@@ -51,6 +51,15 @@ the effective per-file limit is skipped and logged with the maximum it will
 accept. Every accepted upload is stored in SQLite, so raising the limit also
 grows the database and backups.
 
+**Aggregate temporary storage**: unprocessed uploads are held in a shared pool
+bounded at 64 MiB and 4096 rows, and rows older than a day are purged. The row
+bound matters because a file part with a filename and no data is a legal row of
+size 0: a byte-only ceiling never engaged for those. Once either bound is
+reached the request is answered with `507 Insufficient Storage` and your handler
+does not run, so a refused upload is never mistaken for a successful one. Free
+space by calling `save` on the files your handler accepted (which moves them out
+of the temporary pool) or by destroying them.
+
 ### Example 1: Permanent File Upload
 
 ```wren

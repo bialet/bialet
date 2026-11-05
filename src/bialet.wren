@@ -1047,6 +1047,10 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    // The upload path reads SUM(size) and COUNT(*) WHERE isTemp = 1 before the
+    // handler runs, so without this index every multipart request scans every
+    // file row, including the app's own saved files.
+    `CREATE INDEX IF NOT EXISTS BIALET_FILES_ISTEMP ON BIALET_FILES (isTemp)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     // Run again the initiliziation once we know the table exists
     // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the

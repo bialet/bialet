@@ -512,6 +512,8 @@ const char* get_http_status_description(int status_code) {
       return "Gateway Timeout";
     case 505:
       return "HTTP Version Not Supported";
+    case 507:
+      return "Insufficient Storage";
     default:
       return "Unknown Status";
   }

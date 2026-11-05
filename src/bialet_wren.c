@@ -71,12 +71,16 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
-// Aggregate ceiling for unprocessed uploads stored in BIALET_FILES. The
+// Aggregate ceilings for unprocessed uploads stored in BIALET_FILES. The
 // per-request caps only bound one request; without an aggregate bound an
 // unauthenticated client could keep posting 100-part bodies and grow the shared
-// database until every write fails with SQLITE_FULL. Storage is refused (the
-// part is skipped, like an over-size part) once this ceiling is reached.
+// database until every write fails with SQLITE_FULL. A byte sum alone is not
+// enough: a file part with a filename and no data is a legal row of size 0, so
+// a row ceiling is needed too. Both aggregates are read through the index on
+// isTemp. When either is exhausted the request is refused with 507 instead of
+// being served with the file silently missing.
 #define MAX_TEMP_UPLOAD_BYTES ((sqlite3_int64)64 * 1024 * 1024)
+#define MAX_TEMP_UPLOAD_ROWS 4096
 
 // Deletes temp uploads older than a day. Called at startup and, throttled, from
 // the upload path: the old code only purged inside save_uploaded_files, so an
@@ -94,20 +98,25 @@ static void purge_temp_uploads(void) {
   }
 }
 
-// Total bytes currently held by temporary uploads.
-static sqlite3_int64 temp_upload_bytes(void) {
-  sqlite3_int64 total = 0;
+// Total bytes and row count currently held by temporary uploads. One statement
+// for both aggregates, over the index on isTemp: the pre-handler path must not
+// pay a full scan of every file row, including the app's own saved files.
+static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
+  *bytes = 0;
+  *rows = 0;
   sqlite3_stmt* stmt = NULL;
-  if(db != NULL &&
-     sqlite3_prepare_v2(db,
-                        "SELECT IFNULL(SUM(size), 0) FROM BIALET_FILES "
+  if(db == NULL)
+    return;
+  if(sqlite3_prepare_v2(db,
+                        "SELECT IFNULL(SUM(size), 0), COUNT(*) FROM BIALET_FILES "
                         "WHERE isTemp = 1",
                         -1, &stmt, 0) == SQLITE_OK) {
-    if(sqlite3_step(stmt) == SQLITE_ROW)
-      total = sqlite3_column_int64(stmt, 0);
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+      *bytes = sqlite3_column_int64(stmt, 0);
+      *rows = sqlite3_column_int64(stmt, 1);
+    }
     sqlite3_finalize(stmt);
   }
-  return total;
 }
 
 // Test-runner failure capture. bialet_wren_error() is the global Wren error
@@ -756,6 +765,7 @@ struct MultipartInfo {
   size_t fields_len;
   size_t head_len;
   int    is_multipart;
+  int    storage_full;
 };
 
 struct FieldBuf {
@@ -994,6 +1004,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
   mp->fields = NULL;
   mp->fields_len = 0;
   mp->is_multipart = 0;
+  mp->storage_full = 0;
 
   const char* msg = hm->message.str;
   size_t      msg_len = hm->message.len;
@@ -1083,7 +1094,9 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       purge_temp_uploads();
     }
   }
-  sqlite3_int64 tempBytes = temp_upload_bytes();
+  sqlite3_int64 tempBytes = 0;
+  sqlite3_int64 tempRows = 0;
+  temp_upload_usage(&tempBytes, &tempRows);
 
   const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
@@ -1226,12 +1239,16 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       continue;
     }
 
-    // Aggregate cap: per-request limits do not bound total stored bytes.
-    if(tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
-      if(!filesCapped)
+    // Aggregate cap: per-request limits do not bound total stored bytes and
+    // rows. A refusal is reported to the caller (507) rather than served as a
+    // 200 with the file silently missing, so an app cannot answer as if the
+    // upload succeeded.
+    if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
+       tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
+      if(!mp->storage_full)
         message(red("Upload Error"),
-                "Temporary upload storage is full, skipping remaining files");
-      filesCapped = 1;
+                "Temporary upload storage is full, refusing the remaining files");
+      mp->storage_full = 1;
       cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
     }
@@ -1255,6 +1272,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
         tempBytes += (sqlite3_int64)fileSize;
+        tempRows++;
 
         // Append file ID to filesIds string safely
         char idStr[32];
@@ -1326,6 +1344,19 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     // Save uploaded files with size validation (max_upload_size config) and
     // collect the text fields of a multipart body.
     save_uploaded_files(hm, filesIds, &mp);
+    if(mp.storage_full) {
+      // The aggregate temporary-upload ceiling is exhausted. Answer explicitly
+      // instead of running the handler with the file missing, so the client
+      // cannot mistake a refused upload for a successful one.
+      free(mp.fields);
+      wrenReleaseHandle(vm, requestClass);
+      wrenReleaseHandle(vm, initMethod);
+      wrenFreeVM(vm);
+      r.status = 507;
+      r.body = string_safe_copy("Temporary upload storage is full");
+      r.body_owned = 1;
+      return r;
+    }
     if(mp.is_multipart) {
       // Only the request line and headers: the body is file content and form
       // fields, which reach Wren already parsed (Request.post / Request.file).
