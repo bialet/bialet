@@ -192,7 +192,10 @@ char* bialet_read_file(const char* path) {
   // serve. Only the root-relative portion is checked so an app hosted under a
   // "_"- or "."-named directory still works.
   if(has_forbidden_uri_component(resolved + root_len)) {
-    message(red("Error"), "Private file access blocked in bialetReadFile", path);
+    char* log_path = log_escape(path);
+    message(red("Error"), "Private file access blocked in bialetReadFile",
+            log_path ? log_path : "(unprintable)");
+    free(log_path);
     return NULL;
   }
 
@@ -1217,11 +1220,17 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
     // Validate file size to prevent disk abuse
     if(fileSize > bialet_config.max_upload_size) {
-      char sizeMsg[512];
+      // The filename is wire-supplied: it comes from the part's
+      // Content-Disposition byte for byte and may carry ESC or CR. Escape it
+      // before it reaches the log, like every other attacker-controlled value.
+      char  sizeMsg[1200];
+      char* safeName = log_escape(filename);
       snprintf(
           sizeMsg, sizeof(sizeMsg),
           "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
-          filename, fileSize, bialet_config.max_upload_size);
+          safeName ? safeName : "(unprintable)", fileSize,
+          bialet_config.max_upload_size);
+      free(safeName);
       message(red("Upload Error"), sizeMsg);
       cursor = next_part(resume, end, startBoundary, sb_len);
       continue;

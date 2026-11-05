@@ -36,6 +36,36 @@ char* safe_malloc(size_t size) {
   return p;
 }
 
+// Hex-escapes every control byte in a wire-derived value before it reaches the
+// log. Request lines, URIs and multipart filenames are attacker-supplied and
+// may carry a bare LF, CR, TAB or ESC: written verbatim they let one request
+// open a second log record and emit terminal/OSC sequences into the operator's
+// log or journal. Two hex digits per byte keeps the value readable while making
+// every control byte inert. Returns a heap string (caller frees) or NULL on OOM.
+char* log_escape(const char* s) {
+  if(s == NULL)
+    return NULL;
+  size_t len = strlen(s);
+  char*  out = malloc(len * 4 + 1);
+  if(out == NULL)
+    return NULL;
+  static const char hex[] = "0123456789abcdef";
+  size_t            n = 0;
+  for(size_t i = 0; i < len; i++) {
+    unsigned char b = (unsigned char)s[i];
+    if(b < 0x20 || b == 0x7f) {
+      out[n++] = '\\';
+      out[n++] = 'x';
+      out[n++] = hex[b >> 4];
+      out[n++] = hex[b & 15];
+    } else {
+      out[n++] = (char)b;
+    }
+  }
+  out[n] = '\0';
+  return out;
+}
+
 char* string_safe_copy(const char* zSrc) {
   char*  zDest;
   size_t size;

@@ -719,35 +719,6 @@ static int resolve_within_root(const char* path, char* resolved) {
   return 1;
 }
 
-// Hex-escapes every control byte in a wire-derived value before it reaches the
-// log. The request line is tokenized on spaces only, so a bare LF, CR, TAB or
-// ESC can sit inside the method or URI; fwrite()ing it verbatim let one request
-// open a second log record and emit terminal/OSC sequences into the operator's
-// log or journal. Returns a heap string (caller frees) or NULL on OOM.
-static char* log_escape(const char* s) {
-  if(s == NULL)
-    return NULL;
-  size_t len = strlen(s);
-  char*  out = malloc(len * 4 + 1);
-  if(out == NULL)
-    return NULL;
-  static const char hex[] = "0123456789abcdef";
-  size_t            n = 0;
-  for(size_t i = 0; i < len; i++) {
-    unsigned char b = (unsigned char)s[i];
-    if(b < 0x20 || b == 0x7f) {
-      out[n++] = '\\';
-      out[n++] = 'x';
-      out[n++] = hex[b >> 4];
-      out[n++] = hex[b & 15];
-    } else {
-      out[n++] = (char)b;
-    }
-  }
-  out[n] = '\0';
-  return out;
-}
-
 // Case-insensitive glob match used only against a file basename, so there are
 // no '/' subtleties: '*' matches any run of characters, everything else is
 // literal. Returns 1 on a match.
@@ -1067,7 +1038,10 @@ void handle_client(bialet_socket_t client_socket) {
     if(strncmp(path, bialet_config.full_root_dir, root_prefix_len) != 0 ||
        (root_prefix_len > 1 && path[root_prefix_len] != '/' &&
         path[root_prefix_len] != '\0')) {
-      message(red("Security Error"), "Path outside the app root blocked", path);
+      char* log_path = log_escape(path);
+      message(red("Security Error"), "Path outside the app root blocked",
+              log_path ? log_path : "(unprintable)");
+      free(log_path);
       clean_http_message(hm);
       custom_error(403, &response);
       write_response(client_socket, &response);

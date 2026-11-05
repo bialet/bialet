@@ -290,6 +290,67 @@ else
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
 fi
 
+# A rejected upload logs the wire-supplied filename: it must be escaped, so a
+# control byte cannot inject terminal sequences or split the record. The
+# filename is sent raw over a socket (no form encoder) with an over-limit part.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  loginj_line=$LINENO
+  _test_start_ms=$(now_ms)
+  loginj_out=$(python3 - "$HOST" "$PORT" /tmp/tests.log <<'PY'
+import socket, sys, time
+
+host, port, logpath = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+name = b'ev\x1b[2Jil.txt'
+payload = b'x' * 126976
+
+# The log is opened in append mode, so only bytes written from here on count:
+# a stale record from an earlier run must not decide this check.
+try:
+    offset = len(open(logpath, 'rb').read())
+except OSError:
+    offset = 0
+
+boundary = b'BOUND'
+body = (b'--' + boundary +
+        b'\r\nContent-Disposition: form-data; name="form_file_name"; filename="' +
+        name + b'"\r\n\r\n' + payload + b'\r\n--' + boundary + b'--\r\n')
+req = (b'POST /upload HTTP/1.1\r\nHost: x\r\n'
+       b'Content-Type: multipart/form-data; boundary=' + boundary +
+       b'\r\nContent-Length: ' + str(len(body)).encode() + b'\r\n\r\n' + body)
+s = socket.create_connection((host, port), 10)
+s.settimeout(20)
+s.sendall(req)
+resp = b''
+try:
+    while True:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        resp += chunk
+except OSError:
+    pass
+s.close()
+time.sleep(0.3)
+try:
+    log = open(logpath, 'rb').read()
+except OSError:
+    log = b''
+print("status:%d|escaped:%s|raw:%s" % (
+    int(resp.split(b' ')[1]) if resp.startswith(b'HTTP/') and len(resp.split(b' ')) > 1 else 0,
+    b'ev\\x1b[2Jil.txt' in log,
+    b'\x1b[2Jil.txt' in log))
+PY
+)
+  if [[ "$loginj_out" == "status:400|escaped:True|raw:False" ]]; then
+    report_result "Upload filename log escaped " "$loginj_line" 0
+  else
+    report_result "Upload filename log escaped " "$loginj_line" 1 \
+      "Expected 400 with the filename hex-escaped in the log and no raw ESC. Got $loginj_out"
+  fi
+else
+  skip_test "Upload filename log escaped " "requires local binary access and python3"
+fi
+
 # Multipart text fields: Request.post must read the text fields of a
 # multipart form next to Request.file, in any order around the file.
 multipart_line=$LINENO
