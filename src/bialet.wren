@@ -1074,7 +1074,13 @@ class Db {
     Db.clean
   }
   static save(table, values) { Query.new(table).save(values) }
-  static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
+  static delete(table, id) {
+    // Same contract as save(): the table is interpolated into SQL, so it must
+    // be a plain identifier and it must not name a framework table.
+    var name = Query.identifier_(table, "table name")
+    if (name.upper.startsWith("BIALET_")) return false
+    return Query.fromString("DELETE FROM `%(name)` WHERE id = ?", [id])
+  }
 }
 
 class Http {
