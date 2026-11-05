@@ -384,6 +384,7 @@ run_test "Response headers getter     " "response-headers" 200 "custom:true|cook
 run_test "Response forbidden          " "response-errors?forbidden=1" 403
 run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom-404-page"
 run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallback:fallback-value|missing:null"
+run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|own:[a1=evil]|hosted:[]|parent:[]|sub:[]"
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
 run_test "Directory index resolution  " "blog"           200 "route-index"
 run_test "Directory index trailing /  " "blog/"          200 "route-index"
@@ -434,7 +435,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar round-trip  " "http-options?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "session=abc123"
   run_test "Http cookie jar host scope  " "http-options?which=cookie-scope&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar path scope  " "http-options?which=cookie-path&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
-  run_test "Http cookie jar domain scope" "http-options?which=cookie-domain&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
+  run_test "Http cookie jar domain scope" "http-options?which=cookie-domain&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|session=abc123|no-cookie"
   run_test "Http cookie jar secure flag " "http-options?which=cookie-secure&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar expire      " "http-options?which=cookie-expire&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"

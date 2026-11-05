@@ -841,9 +841,11 @@ string, or `""` when empty. `Set-Cookie` response headers are stored in the
 jar automatically and sent back on later calls unless a `Cookie` header is set
 explicitly.
 
-The jar is scoped per host and honors the `Domain`, `Path`, `Secure`, and
-`Max-Age` cookie attributes, so a cookie set by one host is never sent to a
-different host.
+The jar is scoped per host: cookies are keyed on the host that set them, so a
+cookie set by one host is never sent to a different host. `Path`, `Secure`, and
+`Max-Age` are honored; the `Domain` attribute is ignored (host-only jar), since
+a `Domain` covering a multi-label public suffix cannot be validated without an
+embedded suffix list.
 
 ### query(params)
 

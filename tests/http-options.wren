@@ -34,10 +34,12 @@ if (which == "cookie-path") {
   return "%(set)|%(jar)"
 }
 if (which == "cookie-domain") {
-  // A cookie for a foreign Domain must not be sent to the request host
+  // A Domain attribute never widens the jar: the cookie stays keyed on the
+  // host that set it, so it comes back to that host and to no other host.
   var set = Http.get(target + "/echo?mode=setcookie&domain=.example.com")
   var jar = Http.get(target + "/echo?mode=cookie")
-  return "%(set)|%(jar)"
+  var otherJar = Http.jarFor(other + "/")
+  return "%(set)|%(jar)|%(otherJar == "" ? "no-cookie" : otherJar)"
 }
 if (which == "cookie-secure") {
   // A Secure cookie must not be sent over plain http
