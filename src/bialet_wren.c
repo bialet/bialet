@@ -119,6 +119,53 @@ static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
   }
 }
 
+// Delete the oldest [count] retained uploads. A full pool must cost the request
+// that fills it, not deny every later upload app-wide: the bound protects the
+// disk, so the oldest unreferenced row is the right thing to drop, and only a
+// part that still cannot fit after eviction is refused.
+static void evict_oldest_temp_uploads(sqlite3_int64 count) {
+  if(db == NULL || count <= 0)
+    return;
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "DELETE FROM BIALET_FILES WHERE id IN (SELECT id FROM "
+                        "BIALET_FILES WHERE isTemp = 1 ORDER BY createdAt ASC, "
+                        "id ASC LIMIT ?)",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    sqlite3_bind_int64(stmt, 1, count);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
+// Make room for a part of [fileSize] bytes by evicting the oldest temporary
+// rows, then report the aggregates after eviction. A part larger than the whole
+// byte budget still cannot fit; the caller's second test refuses that one.
+static void make_room_for_temp_upload(sqlite3_int64 fileSize) {
+  for(int attempt = 0; attempt < 3; attempt++) {
+    sqlite3_int64 bytes = 0;
+    sqlite3_int64 rows = 0;
+    temp_upload_usage(&bytes, &rows);
+    if(rows < MAX_TEMP_UPLOAD_ROWS && bytes + fileSize <= MAX_TEMP_UPLOAD_BYTES)
+      return;
+    sqlite3_int64 evict = 0;
+    if(rows >= MAX_TEMP_UPLOAD_ROWS)
+      evict = rows - MAX_TEMP_UPLOAD_ROWS + 1;
+    sqlite3_int64 over = bytes + fileSize - MAX_TEMP_UPLOAD_BYTES;
+    if(over > 0 && rows > 0) {
+      sqlite3_int64 average = bytes / rows;
+      sqlite3_int64 by_bytes = average > 0 ? (over + average - 1) / average : rows;
+      if(by_bytes > evict)
+        evict = by_bytes;
+    }
+    if(evict > rows)
+      evict = rows;
+    if(evict <= 0)
+      evict = 1;
+    evict_oldest_temp_uploads(evict);
+  }
+}
+
 // Test-runner failure capture. bialet_wren_error() is the global Wren error
 // callback for every VM in the process (requests, migrations, cron, and
 // -T test files alike); while test_capturing is set, it records the abort
@@ -151,16 +198,24 @@ void bialet_test_mark_skip(void) {
 
 static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
-  message(yellow("Log"), message);
+  // Wren text is not trusted at the log boundary: an app may log a request
+  // value (docs/reference.md shows System.log("Request from %(Request.uri)")),
+  // and this stream is the operator's log file, stdout and BIALET_LOGS. Escape
+  // control bytes exactly like every C-side wire-derived log value, so a value
+  // cannot forge a record or drive the terminal.
+  char*       safe = log_escape(message);
+  const char* text = safe ? safe : "(unprintable log line)";
+  message(yellow("Log"), text);
   // A failed prepare (e.g. SQLITE_BUSY on the shared connection) leaves stmt
   // NULL; binding/stepping it would NULL-deref the request thread.
   sqlite3_stmt* stmt = NULL;
   if(sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1,
                         &stmt, 0) == SQLITE_OK) {
-    sqlite3_bind_text(stmt, 1, message, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, text, -1, SQLITE_STATIC);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
   }
+  free(safe);
 }
 
 char* bialet_read_file(const char* path) {
@@ -512,20 +567,27 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
   char lineMessage[MAX_LINE_ERROR_LEN];
   snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
+  // Wren error text can embed request bytes (Fiber.abort of a request value, or
+  // the framework's JsonScanner quoting the token it rejected). Escape it for
+  // the log only; show_errors_capture() keeps the raw text for the error page,
+  // which HTML-escapes it before rendering.
+  char*       safeMsg = log_escape(msg);
+  const char* logMsg = safeMsg ? safeMsg : "(unprintable)";
   switch(errorType) {
     case WREN_ERROR_COMPILE: {
-      message(red("Compilation Error"), lineMessage, (char*)msg);
+      message(red("Compilation Error"), lineMessage, (char*)logMsg);
       show_errors_capture("Compilation Error", module, line, msg);
     } break;
     case WREN_ERROR_STACK_TRACE: {
-      message(red("Stack Error"), lineMessage, (char*)msg);
+      message(red("Stack Error"), lineMessage, (char*)logMsg);
       show_errors_capture("Stack Error", module, line, msg);
     } break;
     case WREN_ERROR_RUNTIME: {
-      message(red("Runtime Error"), (char*)msg);
+      message(red("Runtime Error"), (char*)logMsg);
       show_errors_capture("Runtime Error", module, line, msg);
     } break;
   }
+  free(safeMsg);
 }
 
 static char* sqlite_int_to_string(sqlite3_int64 value) {
@@ -890,6 +952,18 @@ static const char* find_last_header_value(const char* msg, size_t head_len,
     while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
       eol++;
     size_t line_len = (size_t)(eol - p);
+    // A line that is blank after trimming SP/HTAB ends the header block, the
+    // same rule Request.init applies. Without this the detector read a
+    // Content-Type the app-visible map had already treated as body bytes.
+    size_t visible = 0;
+    for(size_t i = 0; i < line_len; i++)
+      if(p[i] != ' ' && p[i] != '\t')
+        visible++;
+    if(visible == 0)
+      break;
+    // A field name may not contain whitespace before the colon; the app-visible
+    // map skips such a line too, so a request can never be multipart to one
+    // parser and not to the other.
     if(line_len > name_len && p[name_len] == ':' &&
        header_name_eq(p, name, name_len)) {
       const char* v = p + name_len + 1;
@@ -1252,6 +1326,14 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     // rows. A refusal is reported to the caller (507) rather than served as a
     // 200 with the file silently missing, so an app cannot answer as if the
     // upload succeeded.
+    if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
+       tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
+      // Reclaim the oldest retained rows before refusing: without this an
+      // anonymous client can fill the pool with zero-byte parts and deny every
+      // other upload for the whole one-day retention window.
+      make_room_for_temp_upload((sqlite3_int64)fileSize);
+      temp_upload_usage(&tempBytes, &tempRows);
+    }
     if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
        tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
       if(!mp->storage_full)

@@ -190,6 +190,32 @@ elif [[ "$FS_SHARED" == 1 ]]; then
 else
   skip_test "folder.wren symlink no bypass" "server filesystem is not shared with this script"
 fi
+# The ".wren" probe must only synthesize a name strictly below the root. The
+# bare-root URI used to strip to full_root_dir exactly and probe
+# "<root>.wren" - a sibling of the app directory - then open and interpret it;
+# "//" probed "<root>/.wren", a dot-file a direct request forbids.
+sibling_line=$LINENO
+_test_start_ms=$(now_ms)
+sibling_path="$(dirname "$0").wren"
+dot_path="$(dirname "$0")/.wren"
+printf 'return "SIBLING-OUTSIDE-ROOT"' > "$sibling_path"
+sibling_home=$(curl -s --max-time 10 "http://$HOST:$PORT/")
+sibling_query=$(curl -s --max-time 10 "http://$HOST:$PORT/?x")
+rm -f "$sibling_path"
+printf 'RAWDOTFILE' > "$dot_path"
+dot_direct_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://$HOST:$PORT/.wren")
+dot_slash=$(curl -s --max-time 10 "http://$HOST:$PORT//")
+rm -f "$dot_path"
+if [[ "$sibling_home" != *"SIBLING-OUTSIDE-ROOT"* \
+      && "$sibling_query" != *"SIBLING-OUTSIDE-ROOT"* \
+      && "$dot_direct_code" == "403" \
+      && "$dot_slash" != *"RAWDOTFILE"* ]]; then
+  report_result "Root probe stays in root      " "$sibling_line" 0
+else
+  report_result "Root probe stays in root      " "$sibling_line" 1 \
+    "Expected / and /?x to skip <root>.wren and // to skip <root>/.wren. Got home:'${sibling_home:0:80}' query:'${sibling_query:0:80}' dot:$dot_direct_code slash:'${dot_slash:0:40}'"
+fi
+
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
@@ -288,6 +314,101 @@ if [[ "$upload_over_code" == "400" && "$upload_over_body" == *"No file was uploa
 else
   report_result "Upload over -u limit rejected " "$upload_over_line" 1 \
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
+fi
+
+# Header-block agreement: a whitespace-only line must end the header block for
+# both the C multipart detector and the app-visible map, and a field name with
+# whitespace before the colon must be invisible to both. Otherwise a request the
+# app classifies as text/plain still stores multipart files, and one it
+# classifies as multipart delivers no parts and the raw framing as the body.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  mpdetect_line=$LINENO
+  _test_start_ms=$(now_ms)
+  mpdetect_out=$(python3 - "$HOST" "$PORT" <<'PY'
+import socket, sys
+
+host, port = sys.argv[1], int(sys.argv[2])
+body = (b'--zz\r\nContent-Disposition: form-data; name="note"\r\n\r\n'
+        b'injected\r\n--zz\r\nContent-Disposition: form-data; name="doc"; '
+        b'filename="e.txt"\r\nContent-Type: text/plain\r\n\r\nPAY\r\n--zz--\r\n')
+
+def send(extra):
+    head = (b'POST /multipart-detect HTTP/1.1\r\nHost: x\r\nConnection: close\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n' + extra + b'\r\n')
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(20)
+    s.sendall(head + body)
+    data = b''
+    try:
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    except OSError:
+        pass
+    s.close()
+    return data.split(b'\r\n\r\n', 1)[1].decode('utf-8', 'replace').strip()
+
+ws = send(b'Content-Type: text/plain\r\n \r\n'
+          b'Content-Type: multipart/form-data; boundary=zz\r\n')
+colon = send(b'Content-Type : multipart/form-data; boundary=zz\r\n')
+control = send(b'Content-Type: multipart/form-data; boundary=zz\r\n')
+print('ws:%s|colon:%s|control:%s' % (ws, colon, control))
+PY
+)
+  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3" ]]; then
+    report_result "Multipart header agreement    " "$mpdetect_line" 0
+  else
+    report_result "Multipart header agreement    " "$mpdetect_line" 1 \
+      "Expected both parsers to agree on the header block. Got $mpdetect_out"
+  fi
+else
+  skip_test "Multipart header agreement    " "requires local binary access and python3"
+fi
+
+# App-supplied log text: System.log() writes the operator log, stdout and
+# BIALET_LOGS, so a request value logged by the app (the documented shape) must
+# be escaped exactly like the framework's own wire-derived log values.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  applog_line=$LINENO
+  _test_start_ms=$(now_ms)
+  applog_out=$(python3 - "$HOST" "$PORT" /tmp/tests.log <<'PY'
+import http.client, sys, time
+
+host, port, logpath = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+try:
+    offset = len(open(logpath, 'rb').read())
+except OSError:
+    offset = 0
+
+conn = http.client.HTTPConnection(host, port, timeout=20)
+body = 'v=abc%0aFORGED%1b%5b31mEND'
+conn.request('POST', '/log-escape', body,
+             {'Content-Type': 'application/x-www-form-urlencoded'})
+resp = conn.getresponse()
+resp.read()
+conn.close()
+time.sleep(0.3)
+try:
+    log = open(logpath, 'rb').read()[offset:]
+except OSError:
+    log = b''
+print("status:%d|escaped:%s|rawEsc:%s|forged:%s" % (
+    resp.status,
+    b'Log probe abc\\x0aFORGED\\x1b[31mEND' in log,
+    b'\x1b' in log,
+    b'\nFORGED' in log))
+PY
+)
+  if [[ "$applog_out" == "status:200|escaped:True|rawEsc:False|forged:False" ]]; then
+    report_result "App log text escaped         " "$applog_line" 0
+  else
+    report_result "App log text escaped         " "$applog_line" 1 \
+      "Expected one escaped Log record and no raw ESC. Got $applog_out"
+  fi
+else
+  skip_test "App log text escaped         " "requires local binary access and python3"
 fi
 
 # A rejected upload logs the wire-supplied filename: it must be escaped, so a
@@ -392,6 +513,24 @@ else
     "Expected ok/fail. Got token:'$mp_token' ok:'$mp_csrf_ok' bad:'$mp_csrf_bad'"
 fi
 
+# Reading an upload must not persist it: Request.file() used to call .save, so
+# a handler that inspected a file and rejected it still moved the row out of the
+# temporary pool and out of the one-day purge, letting a client grow the shared
+# database without bound.
+mp_persist_line=$LINENO
+_test_start_ms=$(now_ms)
+mp_persist_file="$(mktemp /tmp/bialet-persist.XXXXXX)"
+printf 'hello' > "$mp_persist_file"
+mp_persist=$(curl -s --max-time 20 -F "form_file_name=@$mp_persist_file" \
+  "http://$HOST:$PORT/upload-persist")
+rm -f "$mp_persist_file"
+if [[ "$mp_persist" == "isTemp:true|rowAfterRead:1|rowAfterSave:0" ]]; then
+  report_result "Reading upload keeps it temp  " "$mp_persist_line" 0
+else
+  report_result "Reading upload keeps it temp  " "$mp_persist_line" 1 \
+    "Expected the row to stay temporary until .save. Got '$mp_persist'"
+fi
+
 # A large upload (5 MB) next to a text field, on a server with the limits
 # raised: the field must survive and the upload must not fail on memory.
 if [[ "$TARGET_EXEC" != "-" ]]; then
@@ -440,9 +579,9 @@ fi
 # Aggregate temp-upload ceiling: a file part with a filename and no data is a
 # legal row of size 0, so a byte-only ceiling never engaged and 100-part
 # requests grew BIALET_FILES without bound. The retained set must be bounded in
-# rows too, the aggregate must come from the isTemp index rather than a full
-# scan, and a refused upload must be answered explicitly (507) instead of a 200
-# with the file silently missing.
+# rows too and the aggregate must come from the isTemp index rather than a full
+# scan. A full pool must evict the oldest rows instead of refusing every later
+# upload: otherwise 41 anonymous requests deny uploads app-wide for a day.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   cap_line=$LINENO
   _test_start_ms=$(now_ms)
@@ -476,13 +615,13 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
   pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
-  if [[ "$cap_first" == "200" && "$cap_last" == "507" \
+  if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:" \
-        && "$cap_legit" == "507" ]]; then
+        && "$cap_legit" == "200" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
     report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
-      "Expected 200 then 507, rows:4096 from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
   fi
 else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
@@ -521,25 +660,34 @@ def stall(payload):
     return s
 
 baseline = probe()
+# Zero body bytes: the peer never sends anything after the header block.
 stalled = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 1\r\n\r\n")
 time.sleep(0.3)
 body = probe()
 stalled.close()
+# One body byte in a second segment: this used to buy the full 30 s budget.
+started = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 2\r\n\r\n")
+time.sleep(0.5)
+started.sendall(b"A")
+started_body = probe()
+started.close()
 oversized = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 999999\r\n\r\n")
 time.sleep(0.3)
 drain = probe()
 oversized.close()
-print("baseline=%.2f body=%.2f drain=%.2f" % (baseline, body, drain))
+print("baseline=%.2f body=%.2f started=%.2f drain=%.2f" %
+      (baseline, body, started_body, drain))
 PY
 )
   stall_body=$(printf '%s' "$stall_out" | sed -n 's/.*body=\([0-9.]*\).*/\1/p')
   stall_drain=$(printf '%s' "$stall_out" | sed -n 's/.*drain=\([0-9.]*\).*/\1/p')
-  if awk -v b="$stall_body" -v d="$stall_drain" \
-      'BEGIN { exit !(b != "" && d != "" && b < 12 && d < 12) }'; then
+  stall_started=$(printf '%s' "$stall_out" | sed -n 's/.*started=\([0-9.]*\).*/\1/p')
+  if awk -v b="$stall_body" -v s="$stall_started" -v d="$stall_drain" \
+      'BEGIN { exit !(b != "" && s != "" && d != "" && b < 12 && s < 12 && d < 12) }'; then
     report_result "Stalled body bounded          " "$stall_line" 0
   else
     report_result "Stalled body bounded          " "$stall_line" 1 \
-      "Expected both probes under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
+      "Expected every probe under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
   fi
 else
   skip_test "Stalled body bounded          " "requires local binary access and python3"
@@ -591,6 +739,7 @@ run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
 run_test "Db save delete migrate      " "db-more"         200 "inserted:"
 run_test "Db delete validates table     " "db-delete-guard" 200 "literal:1|aborted:true|intact:1|other:2|refused:false|session:1"
+run_test "Query binds reject NUL bytes  " "nul-bind" 200 "paramAborted:true|textAborted:true|bindAborted:true|control:admin"
 run_test "For-in rejects non-instances   " "iterate-guard" 200 "bool:true|num:true|null:true|missing:true|fromString:true|fetchFromString:true|saveBool:true|saveMissing:true|control:9"
 run_test "NULL column maps to null     " "db-null"         200 "literal:true|bound:true"
 run_test "UTF-8 range slices stay intact" "utf8-range" "v=café" 200 "lit:true|litHex:63,61,66,c3,a9|emoji:true|emojiHex:61,f0,9f,98,80,62|reverseHex:c3,a9,66,61,63|reverse:true|tailHex:a9|midHex:f0,9f,98,80|split:true|splitHex:64,c3,b3,73|trim:true|trimHex:73,65,c3,b1,6f,72|replace:true|replaceHex:63,61,66,c3,a9,20,73,69,6e,20,6c,65,63,68,65|posted:true|postedHex:63,61,66,c3,a9"
@@ -612,6 +761,17 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"
   run_test "Http shortcuts never crash   " "http-error-handling?target=http://$HOST:$ECHO_PORT" 200 \
     "down:true|downError:true|downHasMessage:true|missing:true|missingStatus:404|missingError:false"
+  run_test "Http follows same-host redirect" "http-redirect?which=follow&target=http://$HOST:$ECHO_PORT" 200 "redirected"
+  run_test "Http redirect cookie scoped   " "http-redirect?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|no-cookie|session=abc123"
+  # The Win32 transport's URL parser rejects "host:port@host" (the port field
+  # does not fit), so the request fails closed there and no cookie is ever
+  # keyed. The invariant still holds; only the positive control needs libcurl.
+  if [[ "$IS_WINE" == 1 ]]; then
+    skip_test "Http userinfo key is real host" "Wine: Win32 URL parser rejects userinfo with a port (fails closed)"
+  else
+    run_test "Http userinfo key is real host" "http-redirect?which=userinfo&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|session=abc123"
+  fi
+  run_test "Http redirect cookie control  " "http-redirect?which=control&target=http://$HOST:$ECHO_PORT" 200 "set|session=abc123"
   run_test "Http cookie jar manual hdr  " "http-options?which=cookie-manual&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|manual=1"
   run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
   run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"

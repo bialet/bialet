@@ -43,7 +43,12 @@ class Request {
         continue
       }
       tmp = line.split(":")
-      headerName = tmp.removeAt(0).trim().lower
+      var rawName = tmp.removeAt(0)
+      // RFC 7230 forbids whitespace before the colon. Skipping such a line
+      // keeps the app-visible map in step with the C multipart detector, which
+      // never matches a name followed by anything but ':'.
+      if (rawName != rawName.trim()) continue
+      headerName = rawName.trim().lower
       headerValue = tmp.join(":").trim()
       if (headerName == "cookie") {
         Cookie.parseHeader(headerValue)
@@ -107,7 +112,11 @@ class Request {
       if (fileId == "") continue
       if (!Util.isDigits(fileId)) Fiber.abort("Invalid uploaded file id")
       var file = `SELECT * FROM BIALET_FILES WHERE name = ? AND id = ?`.first([name, fileId])
-      if (file) return File.new(file).save
+      // Reading an upload does not keep it: the row stays isTemp = 1 and inside
+      // the aggregate pool until the handler calls .save (or .destroy). The old
+      // getter called .save, so simply inspecting a file - including to reject
+      // it - moved it out of the ceiling and the purge forever.
+      if (file) return File.new(file)
     }
     return null
   }
@@ -1007,7 +1016,9 @@ class File {
     _type = f["type"]
     _size = Num.fromString("%(f["size"])")
     _createdAt = f["createdAt"]
-    _isTemp = f["isTemp"] == "0"
+    // isTemp is 1 for a temporary row; the old comparison reported the
+    // opposite of the row it described.
+    _isTemp = f["isTemp"] == "1"
   }
   id { _id }
   type { _type }
@@ -1163,38 +1174,141 @@ class Http {
     if (options["basicAuth"] != null) {
       _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
-    var headers = options["headers"].map{|h| "%(Util.headerName(h.key)): %(Util.headerValue(h.value))" }.join("\n")
-    if (!options["headers"].containsKey("Cookie")) {
-      var jar = Http.jarFor(url)
-      if (jar != "") {
-        headers = headers + "\nCookie: %(Util.headerValue(jar))"
-      }
-    }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
     var method = Http.safeMethod(_method)
-    var response = call_(Http.safeUrl(url), method, headers, _postData, _basicAuth, timeout, connectTimeout)
+    var postData = _postData
+    var current = Http.safeUrl(url)
 
-    if (response[1]) {
-      var lines = response[1].split("\n")
+    // Follow redirects here, one transfer per hop, instead of in the transport:
+    // the transport merges every hop's header block into one buffer, so a
+    // Set-Cookie from the redirect target was stored under the host of the
+    // original URL. One transfer per hop keeps each cookie with the host that
+    // emitted it, and lets credentials stop at the origin that issued them.
+    var hops = 0
+    while (true) {
+      var hopHeaders = Http.headerBlock_(options["headers"], current)
+      var response = call_(current, method, hopHeaders, postData, _basicAuth,
+                           timeout, connectTimeout)
+      _error = response[3]
+      _errorMessage = response[4]
+      var rawHeaders = response[1] ? response[1].trim() : ""
+      if (_error == 0) {
+        Http.storeCookies(rawHeaders, current)
+      }
+      var status = response[0]
+      var location = Http.locationOf_(rawHeaders)
+      if (_error != 0 || status < 300 || status >= 400 || location == null || hops >= 10) {
+        _status = status
+        _fullHeaders = rawHeaders
+        _body = response[2] ? response[2].trim() : ""
+        break
+      }
+      var next = Http.resolveUrl_(current, location)
+      if (!Http.sameOrigin_(current, next)) {
+        // Credentials, explicit cookies and basic auth belong to one origin.
+        options["headers"].remove("Authorization")
+        options["headers"].remove("Cookie")
+        options["headers"].remove("authorization")
+        options["headers"].remove("cookie")
+        // The native call expects a string here, not null.
+        _basicAuth = ""
+      }
+      // curl's default: 303, and a POST answered by 301/302, continue as GET.
+      if (status == 303 || ((status == 301 || status == 302) && method == "POST")) {
+        method = "GET"
+        postData = ""
+      }
+      current = next
+      hops = hops + 1
+    }
+
+    _headers = {}
+    if (_fullHeaders) {
       var tmp
       var headerName
       var headerValue
-      for (line in lines) {
+      for (line in _fullHeaders.split("\n")) {
         tmp = line.split(":")
         headerName = tmp.removeAt(0).trim().lower
         headerValue = tmp.join(":").trim().lower
         _headers[headerName] = headerValue
       }
     }
-    _status = response[0]
-    _fullHeaders = response[1].trim()
-    _body = response[2].trim()
-    _error = response[3]
-    _errorMessage = response[4]
-    Http.storeCookies(_fullHeaders, url)
 
     return _error == 0
+  }
+
+  // Header block for one transfer: caller headers plus the cookies the jar holds
+  // for exactly this host.
+  static headerBlock_(headers, url) {
+    var lines = []
+    for (h in headers) {
+      lines.add("%(Util.headerName(h.key)): %(Util.headerValue(h.value))")
+    }
+    if (!headers.containsKey("Cookie") && !headers.containsKey("cookie")) {
+      var jar = Http.jarFor(url)
+      if (jar != "") {
+        lines.add("Cookie: %(Util.headerValue(jar))")
+      }
+    }
+    return lines.join("\n")
+  }
+
+  // Last Location header of a response block, or null when there is none.
+  static locationOf_(rawHeaders) {
+    var found = null
+    for (line in rawHeaders.split("\n")) {
+      var sep = line.indexOf(":")
+      if (sep <= 0) continue
+      if (line[0...sep].trim().lower != "location") continue
+      found = line[sep + 1...line.count].trim()
+    }
+    return found
+  }
+
+  // Resolve a Location value against the URL that produced it.
+  static resolveUrl_(base, location) {
+    var loc = location.trim()
+    if (loc == "") return base
+    var lower = loc.lower
+    if (lower.startsWith("http://") || lower.startsWith("https://")) return loc
+    var scope = urlScope_(base)
+    var origin = "%(scope["scheme"])://%(scope["authority"])"
+    if (loc.startsWith("//")) return "%(scope["scheme"]):%(loc)"
+    if (loc.startsWith("/")) return origin + loc
+    var path = scope["path"]
+    var dir = "/"
+    for (i in 0...path.count) {
+      if (path[i] == "/") dir = path[0...i + 1]
+    }
+    return origin + Http.normalizePath_(dir + loc)
+  }
+
+  // Collapse "." and ".." segments so a relative Location cannot walk above
+  // the origin root.
+  static normalizePath_(path) {
+    var out = []
+    for (seg in path.split("/")) {
+      if (seg == "" || seg == ".") {
+        if (seg == "" && out.count == 0) out.add("")
+        continue
+      }
+      if (seg == "..") {
+        if (out.count > 1) out.removeAt(out.count - 1)
+        continue
+      }
+      out.add(seg)
+    }
+    var joined = out.join("/")
+    if (!joined.startsWith("/")) joined = "/" + joined
+    return joined
+  }
+
+  static sameOrigin_(a, b) {
+    var sa = urlScope_(a)
+    var sb = urlScope_(b)
+    return sa["scheme"] == sb["scheme"] && sa["authority"] == sb["authority"]
   }
 
   static jar {
@@ -1294,7 +1408,15 @@ class Http {
     }
     var queryStart = path.indexOf("?")
     if (queryStart >= 0) path = path[0...queryStart]
-    var host = authority.lower
+    // A URL may carry userinfo; the transport connects to the host after the
+    // last '@', so the jar key must not include it (String has no lastIndexOf).
+    var at = authority.indexOf("@")
+    while (at >= 0) {
+      authority = authority[at + 1...authority.count]
+      at = authority.indexOf("@")
+    }
+    authority = authority.lower
+    var host = authority
     if (host.startsWith("[")) {
       var close = host.indexOf("]")
       if (close >= 0) host = host[0...close + 1]
@@ -1302,7 +1424,7 @@ class Http {
       var colon = host.indexOf(":")
       if (colon >= 0) host = host[0...colon]
     }
-    return {"scheme": scheme, "host": host, "path": path}
+    return {"scheme": scheme, "host": host, "authority": authority, "path": path}
   }
   static query(params) { Util.params(params) }
   static url(base, params) {

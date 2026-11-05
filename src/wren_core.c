@@ -1984,6 +1984,17 @@ static bool is_query_text(Value v) {
   return IS_OBJ(v) && AS_OBJ(v)->type == OBJ_QUERY;
 }
 
+// True when the text carries a NUL inside its recorded length. Query text and
+// string parameters are stored, prepared and bound as C strings (strdup,
+// sqlite3_prepare_v2 and sqlite3_bind_text with a length of -1), and results
+// are read back with strlen, so an embedded NUL would silently make SQLite see
+// a prefix of the value the application validated. Rejecting it keeps the
+// bound value byte-identical to the Wren string.
+static bool has_embedded_nul(Value v) {
+  ObjString* text = AS_STRING(v);
+  return (size_t)text->length != strlen(text->value);
+}
+
 // Binds each parameter in [params] to [query]. Returns false (and sets a
 // fiber error) when a parameter has a type the native layer cannot bind, so a
 // parameter is never dropped silently: that would shift every later `?`
@@ -2013,6 +2024,14 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
         }
         ok = add_parameter(query, num, BIALETQUERYTYPE_NUMBER);
       } else if(IS_STRING(val)) {
+        if(has_embedded_nul(val)) {
+          vm->fiber->error =
+              wrenStringFormat(vm,
+                               "Query parameter %d contains a NUL byte, which "
+                               "cannot be bound as text",
+                               i + 1);
+          return false;
+        }
         ok = add_parameter(query, AS_CSTRING(val), BIALETQUERYTYPE_STRING);
       } else {
         vm->fiber->error = wrenStringFormat(
@@ -2035,6 +2054,11 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 DEF_PRIMITIVE(query_fetch) {
   if(!is_query_text(args[1])) {
     vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(has_embedded_nul(args[1])) {
+    vm->fiber->error =
+        wrenStringFormat(vm, "Query text must not contain NUL bytes.");
     return false;
   }
   if(!IS_LIST(args[2])) {
@@ -2101,6 +2125,11 @@ DEF_PRIMITIVE(query_execute) {
     vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
     return false;
   }
+  if(has_embedded_nul(args[1])) {
+    vm->fiber->error =
+        wrenStringFormat(vm, "Query text must not contain NUL bytes.");
+    return false;
+  }
   if(!IS_LIST(args[2])) {
     vm->fiber->error = wrenStringFormat(vm, "Query parameters must be a list.");
     return false;
@@ -2143,6 +2172,11 @@ DEF_PRIMITIVE(query_new) {
     RETURN_VAL(wrenNewQuery(vm, ""));
   if(!is_query_text(args[1])) {
     vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(has_embedded_nul(args[1])) {
+    vm->fiber->error =
+        wrenStringFormat(vm, "Query text must not contain NUL bytes.");
     return false;
   }
   const char* queryString = AS_CSTRING(args[1]);

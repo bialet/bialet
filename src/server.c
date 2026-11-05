@@ -328,15 +328,15 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
   long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
   char      drain_buf[BUFFER_SIZE];
-  int       started = 0;
   while(bytes_remaining > 0) {
     long long remaining = deadline - monotonic_ms();
     if(remaining <= 0)
       break;
-    // Same rule as the body loop: a peer that has sent nothing does not get
-    // the long budget, so the 413 path cannot park the only worker either.
+    // Same rule as the body loop: bound each wait, not just the first one, so
+    // the 413 path cannot park the only worker behind a peer that sent one byte
+    // and stopped.
     long long wait_ms = remaining;
-    if(!started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+    if(wait_ms > BIALET_SOCKET_TIMEOUT_MS)
       wait_ms = BIALET_SOCKET_TIMEOUT_MS;
     if(!wait_readable(fd, (int)wait_ms))
       break;
@@ -345,7 +345,6 @@ static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
     ssize_t n = recv(fd, drain_buf, want, 0);
     if(n <= 0)
       break;
-    started = 1;
     bytes_remaining -= (size_t)n;
   }
 }
@@ -900,18 +899,17 @@ void handle_client(bialet_socket_t client_socket) {
       should_free_request = 1;
       memcpy(full_request, buffer, total_read);
 
-      // A peer that has not sent a single body byte does not get the 30 s body
-      // budget: a complete header block plus a declared Content-Length is a few
-      // dozen bytes, and the single accept loop must not be parked for 30 s by a
-      // body that never starts. Once the body has started, the full budget
-      // applies so a large upload still has time to finish.
-      int body_started = 0;
+      // The deadline above bounds the whole transfer, but a peer that sends one
+      // body byte and then goes silent would still hold the only accept loop for
+      // the remaining 30 s. Bound every individual wait as well, so a stalled
+      // peer is dropped after the socket timeout; a live upload keeps the socket
+      // readable and still gets the full budget.
       while(total_read < full_size) {
         long long remaining = deadline - monotonic_ms();
         if(remaining <= 0)
           break;
         int wait_ms = (int)remaining;
-        if(!body_started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+        if(wait_ms > BIALET_SOCKET_TIMEOUT_MS)
           wait_ms = BIALET_SOCKET_TIMEOUT_MS;
         if(!wait_readable(client_socket, wait_ms))
           break;
@@ -919,7 +917,6 @@ void handle_client(bialet_socket_t client_socket) {
                          full_size - total_read, 0);
         if(n <= 0)
           break;
-        body_started = 1;
         total_read += (size_t)n;
       }
 
@@ -1085,12 +1082,23 @@ void handle_client(bialet_socket_t client_socket) {
   // route prefix Request.route(n) reads from.
   size_t root_len = strlen(bialet_config.full_root_dir);
 
-  if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
+  // Only a path strictly below the root may be probed with a synthesized name.
+  // For the bare-root URI the strip above left path == full_root_dir, so
+  // "%s.wren" named "<root>.wren" - a sibling of the root - and "//" left
+  // "<root>/", naming "<root>/.wren", which the '_'/'.' rule blocks when it is
+  // requested directly. Re-apply containment and the private-component rule to
+  // the synthesized name before using it.
+  if(strlen(path) + 5 < PATH_SIZE && // 5 accounts for ".wren" and terminator
+     strlen(path) > root_len &&
+     strncmp(path, bialet_config.full_root_dir, root_len) == 0) {
     snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
     // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
     // accepted as a route file, which is exactly what a following stat() did
     // before the realpath() private-file check caught it further down.
-    if(is_regular_file_no_follow(wren_path, &file_stat)) {
+    if(strncmp(wren_path, bialet_config.full_root_dir, root_len) == 0 &&
+       wren_path[root_len] == '/' &&
+       !has_forbidden_uri_component(wren_path + root_len) &&
+       is_regular_file_no_follow(wren_path, &file_stat)) {
       // Set the route prefix to this file's URL path so Request.route(n)
       // reads the segments that follow it (null at the bare URL). Without
       // this, route() falls back to the full URI and /about would report
@@ -1145,7 +1153,13 @@ void handle_client(bialet_socket_t client_socket) {
       // file, otherwise it would be resolved to the database and served.
       snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.full_root_dir, url_copy,
                BIALET_EXTENSION);
-      if(is_regular_file_no_follow(path, &file_stat)) {
+      // The URL may still contain empty or private segments ("//" reaches here
+      // as "//.wren"); apply the same private-component rule the request URI
+      // passed, so the synthesized route name cannot address a dot-file.
+      if(strncmp(path, bialet_config.full_root_dir, root_len) != 0 ||
+         path[root_len] != '/' || has_forbidden_uri_component(path + root_len))
+        ; // fall through to the deeper-prefix probe below
+      else if(is_regular_file_no_follow(path, &file_stat)) {
         // parse_request() already allocated an empty placeholder here, which
         // this assignment used to drop on the floor.
         free(hm->routes.str);
