@@ -392,6 +392,24 @@ else
     "Expected ok/fail. Got token:'$mp_token' ok:'$mp_csrf_ok' bad:'$mp_csrf_bad'"
 fi
 
+# Reading an upload must not persist it: Request.file() used to call .save, so
+# a handler that inspected a file and rejected it still moved the row out of the
+# temporary pool and out of the one-day purge, letting a client grow the shared
+# database without bound.
+mp_persist_line=$LINENO
+_test_start_ms=$(now_ms)
+mp_persist_file="$(mktemp /tmp/bialet-persist.XXXXXX)"
+printf 'hello' > "$mp_persist_file"
+mp_persist=$(curl -s --max-time 20 -F "form_file_name=@$mp_persist_file" \
+  "http://$HOST:$PORT/upload-persist")
+rm -f "$mp_persist_file"
+if [[ "$mp_persist" == "isTemp:true|rowAfterRead:1|rowAfterSave:0" ]]; then
+  report_result "Reading upload keeps it temp  " "$mp_persist_line" 0
+else
+  report_result "Reading upload keeps it temp  " "$mp_persist_line" 1 \
+    "Expected the row to stay temporary until .save. Got '$mp_persist'"
+fi
+
 # A large upload (5 MB) next to a text field, on a server with the limits
 # raised: the field must survive and the upload must not fail on memory.
 if [[ "$TARGET_EXEC" != "-" ]]; then

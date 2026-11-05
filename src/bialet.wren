@@ -107,7 +107,11 @@ class Request {
       if (fileId == "") continue
       if (!Util.isDigits(fileId)) Fiber.abort("Invalid uploaded file id")
       var file = `SELECT * FROM BIALET_FILES WHERE name = ? AND id = ?`.first([name, fileId])
-      if (file) return File.new(file).save
+      // Reading an upload does not keep it: the row stays isTemp = 1 and inside
+      // the aggregate pool until the handler calls .save (or .destroy). The old
+      // getter called .save, so simply inspecting a file - including to reject
+      // it - moved it out of the ceiling and the purge forever.
+      if (file) return File.new(file)
     }
     return null
   }
@@ -1007,7 +1011,9 @@ class File {
     _type = f["type"]
     _size = Num.fromString("%(f["size"])")
     _createdAt = f["createdAt"]
-    _isTemp = f["isTemp"] == "0"
+    // isTemp is 1 for a temporary row; the old comparison reported the
+    // opposite of the row it described.
+    _isTemp = f["isTemp"] == "1"
   }
   id { _id }
   type { _type }
