@@ -33,6 +33,27 @@ if (mode == "setcookie") {
   return "set"
 }
 if (mode == "cookie") return Request.header("cookie") || "no-cookie"
+if (mode == "redirect") {
+  // 302 to an absolute URL in "to", or to a same-origin path by default.
+  var to = Request.get("to") || "/echo?mode=echo&msg=redirected"
+  Response.status(302)
+  Response.header("Location", to)
+  return
+}
+if (mode == "redirect-echo") {
+  // Fixed same-origin redirect used by the follow test (no percent-escapes:
+  // this dialect reads "%" inside a literal as an interpolation).
+  Response.status(302)
+  Response.header("Location", "/echo?mode=echo&msg=redirected")
+  return
+}
+if (mode == "redirect-set") {
+  // 302 to another host's cookie-setting endpoint: the Set-Cookie must stay
+  // with the host that emitted it.
+  Response.status(302)
+  Response.header("Location", "http://%(Request.get("to"))/echo?mode=setcookie")
+  return
+}
 if (mode == "form") return "%(Request.post("k") || "no-k")=%(Request.post("v") || "no-v")"
 if (mode == "echo") return Request.get("msg") || "empty"
 

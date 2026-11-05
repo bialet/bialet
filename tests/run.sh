@@ -640,6 +640,9 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"
   run_test "Http shortcuts never crash   " "http-error-handling?target=http://$HOST:$ECHO_PORT" 200 \
     "down:true|downError:true|downHasMessage:true|missing:true|missingStatus:404|missingError:false"
+  run_test "Http follows same-host redirect" "http-redirect?which=follow&target=http://$HOST:$ECHO_PORT" 200 "redirected"
+  run_test "Http redirect cookie scoped   " "http-redirect?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|no-cookie|session=abc123"
+  run_test "Http redirect cookie control  " "http-redirect?which=control&target=http://$HOST:$ECHO_PORT" 200 "set|session=abc123"
   run_test "Http cookie jar manual hdr  " "http-options?which=cookie-manual&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|manual=1"
   run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
   run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"

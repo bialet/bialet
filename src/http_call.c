@@ -477,10 +477,13 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   }
   /* For completeness */
   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
-  curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
-  /* Redirects are restricted to http/https above, not here. */
+  /* Do not follow redirects in the transport: it merges every hop's header
+   * block into one buffer, so a Set-Cookie from the redirect target would be
+   * attributed to the requested host. The Wren layer follows redirects one hop
+   * at a time and scopes each hop's cookies to the host that emitted them. */
+  curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 0L);
   curl_easy_setopt(handle, CURLOPT_AUTOREFERER, 1L);
-  curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 10L);
+  curl_easy_setopt(handle, CURLOPT_MAXREDIRS, 0L);
   /* each transfer needs to be done within this many milliseconds */
   curl_easy_setopt(handle, CURLOPT_TIMEOUT_MS, timeout);
   /* connect fast or fail */
