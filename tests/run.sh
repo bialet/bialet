@@ -440,9 +440,9 @@ fi
 # Aggregate temp-upload ceiling: a file part with a filename and no data is a
 # legal row of size 0, so a byte-only ceiling never engaged and 100-part
 # requests grew BIALET_FILES without bound. The retained set must be bounded in
-# rows too, the aggregate must come from the isTemp index rather than a full
-# scan, and a refused upload must be answered explicitly (507) instead of a 200
-# with the file silently missing.
+# rows too and the aggregate must come from the isTemp index rather than a full
+# scan. A full pool must evict the oldest rows instead of refusing every later
+# upload: otherwise 41 anonymous requests deny uploads app-wide for a day.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   cap_line=$LINENO
   _test_start_ms=$(now_ms)
@@ -476,13 +476,13 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
   pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
-  if [[ "$cap_first" == "200" && "$cap_last" == "507" \
+  if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:" \
-        && "$cap_legit" == "507" ]]; then
+        && "$cap_legit" == "200" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
     report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
-      "Expected 200 then 507, rows:4096 from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
   fi
 else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"

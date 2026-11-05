@@ -119,6 +119,53 @@ static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
   }
 }
 
+// Delete the oldest [count] retained uploads. A full pool must cost the request
+// that fills it, not deny every later upload app-wide: the bound protects the
+// disk, so the oldest unreferenced row is the right thing to drop, and only a
+// part that still cannot fit after eviction is refused.
+static void evict_oldest_temp_uploads(sqlite3_int64 count) {
+  if(db == NULL || count <= 0)
+    return;
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "DELETE FROM BIALET_FILES WHERE id IN (SELECT id FROM "
+                        "BIALET_FILES WHERE isTemp = 1 ORDER BY createdAt ASC, "
+                        "id ASC LIMIT ?)",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    sqlite3_bind_int64(stmt, 1, count);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
+// Make room for a part of [fileSize] bytes by evicting the oldest temporary
+// rows, then report the aggregates after eviction. A part larger than the whole
+// byte budget still cannot fit; the caller's second test refuses that one.
+static void make_room_for_temp_upload(sqlite3_int64 fileSize) {
+  for(int attempt = 0; attempt < 3; attempt++) {
+    sqlite3_int64 bytes = 0;
+    sqlite3_int64 rows = 0;
+    temp_upload_usage(&bytes, &rows);
+    if(rows < MAX_TEMP_UPLOAD_ROWS && bytes + fileSize <= MAX_TEMP_UPLOAD_BYTES)
+      return;
+    sqlite3_int64 evict = 0;
+    if(rows >= MAX_TEMP_UPLOAD_ROWS)
+      evict = rows - MAX_TEMP_UPLOAD_ROWS + 1;
+    sqlite3_int64 over = bytes + fileSize - MAX_TEMP_UPLOAD_BYTES;
+    if(over > 0 && rows > 0) {
+      sqlite3_int64 average = bytes / rows;
+      sqlite3_int64 by_bytes = average > 0 ? (over + average - 1) / average : rows;
+      if(by_bytes > evict)
+        evict = by_bytes;
+    }
+    if(evict > rows)
+      evict = rows;
+    if(evict <= 0)
+      evict = 1;
+    evict_oldest_temp_uploads(evict);
+  }
+}
+
 // Test-runner failure capture. bialet_wren_error() is the global Wren error
 // callback for every VM in the process (requests, migrations, cron, and
 // -T test files alike); while test_capturing is set, it records the abort
@@ -1252,6 +1299,14 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     // rows. A refusal is reported to the caller (507) rather than served as a
     // 200 with the file silently missing, so an app cannot answer as if the
     // upload succeeded.
+    if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
+       tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
+      // Reclaim the oldest retained rows before refusing: without this an
+      // anonymous client can fill the pool with zero-byte parts and deny every
+      // other upload for the whole one-day retention window.
+      make_room_for_temp_upload((sqlite3_int64)fileSize);
+      temp_upload_usage(&tempBytes, &tempRows);
+    }
     if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
        tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
       if(!mp->storage_full)
