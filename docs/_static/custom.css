@@ -546,6 +546,7 @@ div.highlight button.copybtn.success {
 
 .proof__shot figcaption {
   margin-top: 0.6rem;
+  text-align: left;
   font-size: 0.85rem;
   line-height: 1.5;
   color: var(--pst-color-text-muted);

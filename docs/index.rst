@@ -65,31 +65,26 @@ Web development became a spaceship. Bialet is a bicycle.
    <!-- One proof: the tutorial app, and the code that renders it. -->
    <div class="proof">
      <figure class="proof__shot">
-       <img src="_static/poll-vote.png" alt="A poll page titled &quot;Do you like Bialet?&quot; with Yes and No radio buttons and a Vote button." />
-       <figcaption>The tutorial's poll: one <code>.wren</code> file, one SQLite table.</figcaption>
+       <img src="_static/poll-vote.png" alt="A page titled Poll asking &quot;Has web development become overly complex?&quot; with Yes and No options and a Vote button." />
+       <figcaption>The tutorial's poll, and the handler behind its Vote button.</figcaption>
      </figure>
      <details class="proof__code" open data-collapse-on-phone>
-       <summary>The Wren behind it</summary>
+       <summary>The vote handler, verbatim</summary>
 
 .. code-block:: wren
 
-   // One page: query, render, save.
-   var poll = `SELECT * FROM poll`.first
+   import "_app" for Template, Poll
+
+   var poll = Poll.new()
 
    if (Request.isPost) {
-     `votes`.insert({
-       "choice": Request.post("choice")
-     })
+     var vote = Request.post("vote") || ""
+     poll.vote(vote)
+     System.log("Voted for %(vote)")
+     // Redirect to the results page and stop the script
+     Response.redirect("/results")
+     return
    }
-
-   return <main>
-     <h1>{{ poll["question"] }}</h1>
-     <form method="post">
-       <input type="radio"
-         name="choice" value="yes">
-       <button>Vote</button>
-     </form>
-   </main>
 
 .. raw:: html
 

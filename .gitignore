@@ -16,3 +16,6 @@ docs/_static/ai-prompt.js
 
 # Review artifacts
 /.c-review-results/
+
+# Local design-review artifacts
+/.impeccable/
