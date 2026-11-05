@@ -43,7 +43,12 @@ class Request {
         continue
       }
       tmp = line.split(":")
-      headerName = tmp.removeAt(0).trim().lower
+      var rawName = tmp.removeAt(0)
+      // RFC 7230 forbids whitespace before the colon. Skipping such a line
+      // keeps the app-visible map in step with the C multipart detector, which
+      // never matches a name followed by anything but ':'.
+      if (rawName != rawName.trim()) continue
+      headerName = rawName.trim().lower
       headerValue = tmp.join(":").trim()
       if (headerName == "cookie") {
         Cookie.parseHeader(headerValue)

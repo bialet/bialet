@@ -290,6 +290,57 @@ else
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
 fi
 
+# Header-block agreement: a whitespace-only line must end the header block for
+# both the C multipart detector and the app-visible map, and a field name with
+# whitespace before the colon must be invisible to both. Otherwise a request the
+# app classifies as text/plain still stores multipart files, and one it
+# classifies as multipart delivers no parts and the raw framing as the body.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  mpdetect_line=$LINENO
+  _test_start_ms=$(now_ms)
+  mpdetect_out=$(python3 - "$HOST" "$PORT" <<'PY'
+import socket, sys
+
+host, port = sys.argv[1], int(sys.argv[2])
+body = (b'--zz\r\nContent-Disposition: form-data; name="note"\r\n\r\n'
+        b'injected\r\n--zz\r\nContent-Disposition: form-data; name="doc"; '
+        b'filename="e.txt"\r\nContent-Type: text/plain\r\n\r\nPAY\r\n--zz--\r\n')
+
+def send(extra):
+    head = (b'POST /multipart-detect HTTP/1.1\r\nHost: x\r\nConnection: close\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n' + extra + b'\r\n')
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(20)
+    s.sendall(head + body)
+    data = b''
+    try:
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    except OSError:
+        pass
+    s.close()
+    return data.split(b'\r\n\r\n', 1)[1].decode('utf-8', 'replace').strip()
+
+ws = send(b'Content-Type: text/plain\r\n \r\n'
+          b'Content-Type: multipart/form-data; boundary=zz\r\n')
+colon = send(b'Content-Type : multipart/form-data; boundary=zz\r\n')
+control = send(b'Content-Type: multipart/form-data; boundary=zz\r\n')
+print('ws:%s|colon:%s|control:%s' % (ws, colon, control))
+PY
+)
+  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3" ]]; then
+    report_result "Multipart header agreement    " "$mpdetect_line" 0
+  else
+    report_result "Multipart header agreement    " "$mpdetect_line" 1 \
+      "Expected both parsers to agree on the header block. Got $mpdetect_out"
+  fi
+else
+  skip_test "Multipart header agreement    " "requires local binary access and python3"
+fi
+
 # App-supplied log text: System.log() writes the operator log, stdout and
 # BIALET_LOGS, so a request value logged by the app (the documented shape) must
 # be escaped exactly like the framework's own wire-derived log values.

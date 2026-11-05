@@ -952,6 +952,18 @@ static const char* find_last_header_value(const char* msg, size_t head_len,
     while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
       eol++;
     size_t line_len = (size_t)(eol - p);
+    // A line that is blank after trimming SP/HTAB ends the header block, the
+    // same rule Request.init applies. Without this the detector read a
+    // Content-Type the app-visible map had already treated as body bytes.
+    size_t visible = 0;
+    for(size_t i = 0; i < line_len; i++)
+      if(p[i] != ' ' && p[i] != '\t')
+        visible++;
+    if(visible == 0)
+      break;
+    // A field name may not contain whitespace before the colon; the app-visible
+    // map skips such a line too, so a request can never be multipart to one
+    // parser and not to the other.
     if(line_len > name_len && p[name_len] == ':' &&
        header_name_eq(p, name, name_len)) {
       const char* v = p + name_len + 1;
