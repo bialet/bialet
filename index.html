@@ -2,14 +2,14 @@
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="./" >
+<html lang="en" data-content_root="./" data-theme="auto">
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta content="A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light." name="description" />
 <meta content="Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered" name="keywords" />
-<meta property="og:title" content="Bialet" />
+<meta property="og:title" content="Web development became a spaceship. Bialet is a bicycle." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/index.html" />
 <meta property="og:site_name" content="Bialet" />
@@ -17,13 +17,13 @@
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
 
-    <title>Bialet &#8212; Bialet  documentation</title>
+    <title>Web development became a spaceship. Bialet is a bicycle. &#8212; Bialet</title>
   
   
   
   <script data-cfasync="false">
-    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
   </script>
   <!--
     this give us a css class that will be invisible only if js is disabled
@@ -43,7 +43,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5dea21a6" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -60,6 +60,7 @@
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <script src="_static/ai-prompt.js?v=43adc148"></script>
+    <script src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -70,126 +71,128 @@
   </head>
   
   
-  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
 
   
   
   <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
-    <div class="landing-page">
-      <div class="landing-nav">
-        <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only"
-                aria-label="Color mode">
-          <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-          <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-          <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-        </button>
-      </div>
+    <div class="landing-page"><div class="bd-header landing-header-sentinel" aria-hidden="true"></div>
+      <nav class="landing-nav" aria-label="Bialet">
+        <div class="landing-nav__links">
+          <a href="getting-started/index.html">Docs</a>
+          <a href="why-bialet.html">Why Bialet</a>
+          <a href="https://github.com/bialet/bialet">GitHub</a>
+        </div>
 
-      <main class="landing-main" role="main">
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+      </nav>
+
+      <main class="landing-main" role="main" id="main-content">
         <div class="landing-content">
+          <div class="hero__mark">
+            <img src="_static/logo.png" alt="" width="132" height="132" />
+          </div>
           
-  <section id="bialet">
-<h1>Bialet<a class="headerlink" href="#bialet" title="Link to this heading">#</a></h1>
-<div style="text-align: center; margin: 2em 0 1em 0">
-    <img src="_static/logo.png" alt="Bialet" style="width: 140px; margin-bottom: 0.5em" />
-    <h1 style="font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 700; margin: 0 0 0.25em 0">
-        Web development became a spaceship. Bialet is a bicycle.
-    </h1>
-    <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: var(--sd-color-secondary); max-width: 34em; margin: 0 auto 1.25em auto">
-        Build data-driven web apps from a single file. No NPM, no YAML,
-        no separate database servers. Just a <strong>tiny binary</strong> with
-        a built-in HTTP server, a lightweight scripting language, and SQLite.
-    </p>
-</div><div id="bialet-download" style="text-align: center; margin: 1.5em 0 2em 0">
+  <section id="web-development-became-a-spaceship-bialet-is-a-bicycle">
+<h1>Web development became a spaceship. Bialet is a bicycle.<a class="headerlink" href="#web-development-became-a-spaceship-bialet-is-a-bicycle" title="Link to this heading">#</a></h1>
+<p class="hero__lede">
+  Build data-driven web apps from a single file. No NPM, no YAML,
+  no separate database servers. Just a <strong>tiny binary</strong> with
+  a built-in HTTP server, a scripting language, and SQLite.
+</p><div id="bialet-download" class="install">
 
   <!-- Unix (Linux / macOS): curl command with copy button -->
-  <div id="download-unix" style="display: none">
-    <span id="download-os-label-unix" style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em"></span>
-    <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
-      <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
-      <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+  <div id="download-unix" class="install__platform">
+    <span id="download-os-label-unix" class="install__label"></span>
+    <div class="install__command">
+      <code class="install__text">curl -fsSL https://get.bialet.dev | sh</code>
+      <button type="button" class="install__copy" data-copy="curl -fsSL https://get.bialet.dev | sh" aria-label="Copy install command">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+        <span class="install__copy-text">Copy</span>
       </button>
     </div>
   </div>
 
   <!-- Windows: download button -->
-  <div id="download-win" style="display: none">
-    <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/download/v1.2.7/bialet-v1.2.7-windows-x86_64.zip" style="font-size: 1.05em; padding: 0.55em 1.5em">
-       Download for Windows (.zip)
+  <div id="download-win" class="install__platform">
+    <span class="install__label">Install for Windows</span>
+    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/download/v1.2.7/bialet-v1.2.7-windows-x86_64.zip">
+      Download for Windows (.zip)
     </a>
-    <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-      Zero installation required. Just extract and run.<br/>
-    </p>
+    <p class="install__note">Zero installation required. Just extract and run.</p>
   </div>
 
-  <!-- Fallback: curl + all platforms -->
-  <div id="download-other" style="display: block">
-    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
-      Download Binaries
+  <!-- Fallback: all platforms (also what visitors see without JS) -->
+  <div id="download-other" class="install__platform is-visible">
+    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/latest">
+      Download the binaries (all platforms)
     </a>
-    <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-      Zero installation required. Just extract and run.<br/>
-    </p>
+    <p class="install__note">Zero installation required. Just extract and run.</p>
   </div>
 
-  <div>
-    <p style="margin-top: 0.6em; font-size: 0.9em;">
-      <a href="installation.html">All platforms & install options</a>
-    </p>
-  </div>
+  <p class="install__more">
+    <a href="installation.html">All platforms &amp; install options</a>
+  </p>
 
 </div>
 
-<script>
-  (function() {
-    var unix = document.getElementById('download-unix');
-    var win = document.getElementById('download-win');
-    var other = document.getElementById('download-other');
-    var label = document.getElementById('download-os-label-unix');
-    if (!unix || !win || !other) return;
-    var ua = navigator.userAgent || '';
-    if (/windows/i.test(ua)) {
-      win.style.display = 'block';
-      other.style.display = 'none';
-    } else if (/linux|mac/i.test(ua)) {
-      var osName = /mac/i.test(ua) ? 'Install for macOS' : 'Install for Linux';
-      if (label) label.textContent = osName;
-      unix.style.display = 'block';
-      other.style.display = 'none';
-    }
-  })();
-</script>
-
-<div style="text-align: center; margin: 1.5em 0 1.5em 0">
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Get Started</a>
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet" style="margin: 0.35em">
+<div class="hero-actions">
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary" href="getting-started/index.html">Get Started</a>
+  <a class="hero-actions__link" href="https://github.com/bialet/bialet">
     <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
     View on GitHub
   </a>
+</div>
+
+<!-- One proof: the tutorial app, and the code that renders it. -->
+<div class="proof">
+  <figure class="proof__shot">
+    <img src="_static/poll-vote.png" alt="A page titled Poll asking &quot;Has web development become overly complex?&quot; with Yes and No options and a Vote button." />
+    <figcaption>The tutorial's poll, and the handler behind its Vote button.</figcaption>
+  </figure>
+  <details class="proof__code" open data-collapse-on-phone>
+    <summary>The vote handler, verbatim</summary><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"vote"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">// Redirect to the results page and stop the script</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/results"</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+  </details>
 </div><hr class="docutils" />
 <div class="community-banner">
-  <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Building with AI?</strong></p>
-  <p style="padding: 0.5em">
+  <p class="community-banner__title"><strong>Building with AI?</strong></p>
+  <p>
     Paste this into Claude, ChatGPT, or Cursor so it writes idiomatic
     <code>.wren</code> code from the first response.
   </p>
-  <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" data-tooltip="Copy" style="font-size: 1.05em; padding: 0.55em 1.5em; cursor: pointer" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText(window.BIALET_AI_PROMPT || '').then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy AI Prompt'},2000)}).catch(function(){})})(this)">
-    Copy AI Prompt
+  <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" data-copy-prompt>
+    <span data-copy-label>Copy AI Prompt</span>
   </button>
-  <p style="margin-top: 0.6em; font-size: 0.9em">
+  <p class="community-banner__action">
     <a href="ai-prompt.html">View the full prompt →</a>
   </p>
-</div></section>
-<hr class="docutils" />
+</div>
+
+<div class="copy-status" role="status" aria-live="polite"></div><hr class="docutils" />
 <section id="features">
-<h1>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h1>
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-4 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
+<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-package" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.876.64a1.75 1.75 0 00-1.75 0l-8.25 4.762a1.75 1.75 0 00-.875 1.515v9.525c0 .625.334 1.203.875 1.515l8.25 4.763a1.75 1.75 0 001.75 0l8.25-4.762a1.75 1.75 0 00.875-1.516V6.917a1.75 1.75 0 00-.875-1.515L12.876.639zm-1 1.298a.25.25 0 01.25 0l7.625 4.402-7.75 4.474-7.75-4.474 7.625-4.402zM3.501 7.64v8.803c0 .09.048.172.125.216l7.625 4.402v-8.947L3.501 7.64zm9.25 13.421l7.625-4.402a.25.25 0 00.125-.216V7.639l-7.75 4.474v8.947z"></path></svg></p>
 </div>
@@ -202,7 +205,7 @@ is deployed.</p>
 </div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-database" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 1.25c-2.487 0-4.774.402-6.466 1.079-.844.337-1.577.758-2.112 1.264C2.886 4.1 2.5 4.744 2.5 5.5v12.987l.026.013H2.5c0 .756.386 1.4.922 1.907.535.506 1.268.927 2.112 1.264 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079c.844-.337 1.577-.758 2.112-1.264.536-.507.922-1.151.922-1.907h-.026l.026-.013V5.5c0-.756-.386-1.4-.922-1.907-.535-.506-1.268-.927-2.112-1.264C16.773 1.652 14.487 1.25 12 1.25zM4 5.5c0-.21.104-.487.453-.817.35-.332.899-.666 1.638-.962C7.566 3.131 9.655 2.75 12 2.75c2.345 0 4.434.382 5.909.971.74.296 1.287.63 1.638.962.35.33.453.606.453.817 0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962C4.103 5.987 4 5.711 4 5.5zM20 12V7.871a7.842 7.842 0 01-1.534.8C16.773 9.348 14.487 9.75 12 9.75s-4.774-.402-6.466-1.079A7.843 7.843 0 014 7.871V12c0 .21.104.487.453.817.35.332.899.666 1.638.961 1.475.59 3.564.972 5.909.972 2.345 0 4.434-.382 5.909-.972.74-.295 1.287-.629 1.638-.96.35-.33.453-.607.453-.818zM4 14.371c.443.305.963.572 1.534.8 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079a7.842 7.842 0 001.534-.8v4.116l.013.013H20c0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962-.35-.33-.453-.606-.453-.817h-.013L4 18.487V14.37z"></path></svg></p>
 </div>
@@ -214,7 +217,7 @@ Real data persistence works completely out of the box.</p>
 </div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-zap" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M16.168 2.924L4.51 13.061a.25.25 0 00.164.439h5.45a.75.75 0 01.692 1.041l-2.559 6.066 11.215-9.668a.25.25 0 00-.164-.439H14a.75.75 0 01-.687-1.05l2.855-6.526zm-.452-1.595a1.341 1.341 0 012.109 1.55L15.147 9h4.161c1.623 0 2.372 2.016 1.143 3.075L8.102 22.721a1.149 1.149 0 01-1.81-1.317L8.996 15H4.674c-1.619 0-2.37-2.008-1.148-3.07l12.19-10.6z"></path></svg></p>
 </div>
@@ -226,7 +229,7 @@ No compilers, no bundlers, no watch processes.</p>
 </div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8.78 4.97a.75.75 0 010 1.06L2.81 12l5.97 5.97a.75.75 0 11-1.06 1.06l-6.5-6.5a.75.75 0 010-1.06l6.5-6.5a.75.75 0 011.06 0zm6.44 0a.75.75 0 000 1.06L21.19 12l-5.97 5.97a.75.75 0 101.06 1.06l6.5-6.5a.75.75 0 000-1.06l-6.5-6.5a.75.75 0 00-1.06 0z"></path></svg></p>
 </div>
@@ -242,8 +245,10 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 </section>
 <hr class="docutils" />
 <section id="a-script-that-stays-out-of-your-way">
-<h1>A script that stays out of your way:<a class="headerlink" href="#a-script-that-stays-out-of-your-way" title="Link to this heading">#</a></h1>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// 1. Create your database table automatically</span>
+<h2>A script that stays out of your way:<a class="headerlink" href="#a-script-that-stays-out-of-your-way" title="Link to this heading">#</a></h2>
+<details class="landing-sample" open data-collapse-on-phone>
+  <summary>The whole file</summary>
+  <div class="landing-sample__body"><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// 1. Create your database table automatically</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS messages (text TEXT)`</span><span class="o">.</span><span class="n">query</span>
 
 <span class="c1">// 2. Handle POST requests and save data</span>
@@ -270,7 +275,8 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>Bialet integrates the <a class="reference internal" href="wren.html"><span class="doc">Wren language</span></a> (based on
+  </div>
+</details><p>Bialet integrates the <a class="reference internal" href="wren.html"><span class="doc">Wren language</span></a> (based on
 <a class="reference external" href="https://wren.io/">wren.io</a>) with
 a HTTP server and a built-in SQLite database — <strong>in a single binary</strong>.
 No configuration files, no dependencies, no build step. Just write <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
@@ -279,7 +285,7 @@ files and run.</p>
 </section>
 <hr class="docutils" />
 <section id="the-bialet-manifesto-ride-light">
-<h1>The Bialet Manifesto — Ride Light 🚲<a class="headerlink" href="#the-bialet-manifesto-ride-light" title="Link to this heading">#</a></h1>
+<h2>The Bialet Manifesto — Ride Light 🚲<a class="headerlink" href="#the-bialet-manifesto-ride-light" title="Link to this heading">#</a></h2>
 <div class="tip admonition">
 <p class="admonition-title">Ride Light</p>
 <ol class="arabic simple">
@@ -298,11 +304,11 @@ further than you think.</p></li>
 </section>
 <hr class="docutils" />
 <section id="who-is-bialet-for">
-<h1>Who is Bialet for?<a class="headerlink" href="#who-is-bialet-for" title="Link to this heading">#</a></h1>
+<h2>Who is Bialet for?<a class="headerlink" href="#who-is-bialet-for" title="Link to this heading">#</a></h2>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
 <div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-3 sd-row-cols-lg-3 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-beaker" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8 8.807V3.5h-.563a.75.75 0 010-1.5h9.125a.75.75 0 010 1.5H16v5.307l5.125 9.301c.964 1.75-.302 3.892-2.299 3.892H5.174c-1.998 0-3.263-2.142-2.3-3.892L8 8.807zM14.5 3.5h-5V9a.75.75 0 01-.093.362L7.127 13.5h9.746l-2.28-4.138A.75.75 0 0114.5 9V3.5zM4.189 18.832L6.3 15h11.4l2.111 3.832a1.125 1.125 0 01-.985 1.668H5.174a1.125 1.125 0 01-.985-1.668z"></path></svg></p>
 </div>
@@ -314,7 +320,7 @@ infrastructure overhead.</p>
 </div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-mortar-board" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.292 2.06a.75.75 0 00-.584 0L.458 6.81a.75.75 0 000 1.38L4.25 9.793v3.803a2.901 2.901 0 00-1.327.757c-.579.58-.923 1.41-.923 2.43v4.5c0 .248.128.486.335.624.06.04.117.073.22.124.124.062.297.138.52.213.448.149 1.09.288 1.925.288s1.477-.14 1.925-.288c.223-.075.396-.15.52-.213a2.11 2.11 0 00.21-.117A.762.762 0 008 21.28v-4.5c0-1.018-.344-1.85-.923-2.428a2.9 2.9 0 00-1.327-.758v-3.17l5.958 2.516a.75.75 0 00.584 0l5.208-2.2v4.003a2.552 2.552 0 01-.079.085 4.057 4.057 0 01-.849.65c-.826.488-2.255 1.021-4.572 1.021-.612 0-1.162-.037-1.654-.1a.75.75 0 00-.192 1.487c.56.072 1.173.113 1.846.113 2.558 0 4.254-.592 5.334-1.23.538-.316.914-.64 1.163-.896a2.84 2.84 0 00.392-.482h.001A.75.75 0 0019 15v-4.892l4.542-1.917a.75.75 0 000-1.382l-11.25-4.75zM5 15c-.377 0-.745.141-1.017.413-.265.265-.483.7-.483 1.368v4.022c.299.105.797.228 1.5.228s1.201-.123 1.5-.228V16.78c0-.669-.218-1.103-.483-1.368A1.431 1.431 0 005 15zm7-3.564L2.678 7.5 12 3.564 21.322 7.5 12 11.436z"></path></svg></p>
 </div>
@@ -326,7 +332,7 @@ and ORM abstractions.</p>
 </div>
 </div>
 <div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-text-center docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
 <div class="sd-card-header docutils">
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-heart" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.736 4C4.657 4 2.5 5.88 2.5 8.514c0 3.107 2.324 5.96 4.861 8.12a29.66 29.66 0 004.566 3.175l.073.041.073-.04c.271-.153.661-.38 1.13-.674.94-.588 2.19-1.441 3.436-2.502 2.537-2.16 4.861-5.013 4.861-8.12C21.5 5.88 19.343 4 17.264 4c-2.106 0-3.801 1.389-4.553 3.643a.75.75 0 01-1.422 0C10.537 5.389 8.841 4 6.736 4zM12 20.703l.343.667a.75.75 0 01-.686 0l.343-.667zM1 8.513C1 5.053 3.829 2.5 6.736 2.5 9.03 2.5 10.881 3.726 12 5.605 13.12 3.726 14.97 2.5 17.264 2.5 20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262a31.146 31.146 0 01-5.233 3.576l-.025.013-.007.003-.002.001-.344-.666-.343.667-.003-.002-.007-.003-.025-.013A29.308 29.308 0 0110 20.408a31.147 31.147 0 01-3.611-2.632C3.8 15.573 1 12.332 1 8.514z"></path></svg></p>
 </div>
@@ -340,9 +346,9 @@ stack of micro-libraries, hop on.</p>
 </div>
 </div>
 <hr class="docutils" />
-<div style="text-align: center; margin: 1.5em 0">
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html" style="margin: 0.35em">Full Documentation</a>
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
+<div class="hero-actions">
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
+  <a class="hero-actions__link" href="installation.html">All install options</a>
 </div><div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -359,14 +365,15 @@ stack of micro-libraries, hop on.</p>
 </div>
 <hr class="docutils" />
 <div class="community-banner">
-  <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Let's build together</strong></p>
-  <p style="padding: 0.5em">
+  <p class="community-banner__title"><strong>Let's build together</strong></p>
+  <p>
     Bialet is maintained by a solo developer, but the community is open to everyone.
     Whether you're stuck on a query, have a feature idea, or want to show off your
     project, GitHub Discussions is the place. Search first, ask second, and be kind.
   </p>
-  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
+  <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
 </div></section>
+</section>
 
 
         </div>
@@ -378,7 +385,26 @@ stack of micro-libraries, hop on.</p>
             <a href="https://bialet.dev">bialet.dev</a>
           </p>
         </footer>
-      </main>
+      </main><div class="sbt-scroll-pixel-helper"></div>
+      <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+        <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+      <dialog id="pst-search-dialog">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+      </dialog>
     </div>
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
   <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>

@@ -24,6 +24,18 @@ html[data-theme="dark"] {
   --brand-code: #FA0;
 }
 
+/* Shared geometry: one radius for controls, cards and code, one for
+   full-width surfaces. */
+:root {
+  --radius-sm: 0.5rem;
+  --radius-lg: 0.75rem;
+  accent-color: var(--pst-color-link);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--pst-color-primary) 22%, var(--brand-bg));
+}
+
 /* Map the brand palette onto the Sphinx theme tokens. */
 html[data-theme="light"],
 html:not([data-theme]),
@@ -40,10 +52,20 @@ html[data-theme="dark"] {
   --pst-color-primary: var(--brand-link);
   --pst-color-primary-highlight: var(--brand-link-hover);
   --pst-color-secondary: var(--brand-link-hover);
+  --pst-color-accent: var(--brand-link);
+  --pst-color-accent-bg: color-mix(in srgb, var(--brand-link) 10%, var(--brand-bg));
   --pst-color-inline-code: var(--brand-code);
   --pst-color-inline-code-links: var(--brand-link);
   --pst-color-text-muted: color-mix(in srgb, var(--brand-text) 65%, var(--brand-bg));
   --pst-color-border: color-mix(in srgb, var(--brand-text) 25%, var(--brand-bg));
+  /* The theme paints quotes, table rules and focus rings from these. */
+  --pst-color-blockquote-notch: color-mix(in srgb, var(--brand-text) 25%, var(--brand-bg));
+  --pst-color-table-inner-border: var(--pst-color-border);
+  --pst-color-table-outer-border: var(--pst-color-border);
+  --pst-color-table-heading-bg: transparent;
+  --pst-color-table-row-zebra-low-bg: transparent;
+  --pst-color-table-row-zebra-high-bg: transparent;
+  --sd-color-card-border: var(--pst-color-border);
 }
 
 /* Sphinx Design buttons and cards follow the same tokens. */
@@ -57,12 +79,131 @@ html[data-theme="dark"] {
   --sd-color-secondary-text: var(--brand-bg);
 }
 
-/* ── Landing page ─────────────────────────────────────────── */
+/* ── Documentation surfaces ───────────────────────────────── */
 
-#bialet > h1 {
-  display: none;
+/* The sidebar mark is a mark, not a hero: keep it at header size and leave
+   the brand's artwork untinted in dark mode. */
+.bd-sidebar-primary .navbar-brand {
+  height: auto;
 }
 
+.bd-sidebar-primary .navbar-brand img,
+.bd-sidebar-primary .logo__image {
+  height: 2.5rem;
+  width: auto;
+}
+
+html[data-theme="dark"] .logo__image {
+  filter: none;
+}
+
+/* Callouts: a plain bordered aside. Type is carried by the label, so the
+   theme's green/amber/blue fills stay out of a two-color palette. */
+div.admonition[class] {
+  border: 1px solid var(--pst-color-border);
+  border-radius: var(--radius-sm);
+}
+
+div.admonition[class] > .admonition-title {
+  background-color: transparent;
+  color: var(--pst-color-text-base);
+  padding-left: 2rem;
+  border-bottom: 1px solid var(--pst-color-border);
+}
+
+div.admonition[class] > .admonition-title::after {
+  color: var(--pst-color-text-muted);
+}
+
+/* Pitfall and note asides read as one family: a quiet box, not a quote. */
+.bd-article blockquote {
+  border: 1px solid var(--pst-color-border);
+  border-radius: var(--radius-sm);
+  margin: 1.5rem 0;
+  padding: 0.85rem 1rem;
+}
+
+.bd-article blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Prose keeps a readable measure; code blocks and tables keep the full
+   column, so long lines stay on one line instead of scrolling. */
+.bd-article p,
+.bd-article li {
+  max-width: 42rem;
+}
+
+/* A heading has no spaces to break at, so an identifier such as
+   `parseHeader(headerValue)` runs past the column on a phone. */
+.bd-article :is(h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: break-word;
+}
+
+/* Long inline tokens wrap rather than push the page sideways, but never in
+   the middle of a short identifier. The inner span ships `white-space: pre`
+   from Sphinx's base stylesheet.
+
+   The theme also draws a border around inline code; once the code wraps,
+   browsers paint that border on every line fragment and it reads as a row
+   of underlines. A tinted run is continuous across the wrap. */
+.bd-article code.literal {
+  border: 0;
+  background: color-mix(in srgb, var(--pst-color-text-base) 6%, var(--pst-color-background));
+  overflow-wrap: break-word;
+}
+
+.bd-article code.literal .pre {
+  white-space: inherit;
+}
+
+/* Wide tables scroll sideways; the fade appears only on the cut-off edge. */
+.pst-scrollable-table-container {
+  background:
+    linear-gradient(to right, var(--pst-color-background) 30%, transparent) left / 1.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--pst-color-background) 30%, transparent) right / 1.5rem 100% no-repeat local,
+    linear-gradient(to right, color-mix(in srgb, var(--pst-color-text-base) 14%, transparent), transparent) left / 0.6rem 100% no-repeat scroll,
+    linear-gradient(to left, color-mix(in srgb, var(--pst-color-text-base) 14%, transparent), transparent) right / 0.6rem 100% no-repeat scroll;
+}
+
+/* Mobile pages start under a fixed header; give the title room to breathe. */
+@media (max-width: 767px) {
+  .bd-article {
+    padding-top: 1rem;
+  }
+}
+
+/* Tables: tighter on small screens so a two-line comparison fits. */
+@media (max-width: 640px) {
+  .pst-scrollable-table-container th,
+  .pst-scrollable-table-container td {
+    padding: 0.35rem 0.4rem;
+  }
+
+  .pst-scrollable-table-container table {
+    font-size: 0.85rem;
+  }
+}
+
+/* Heading anchors are absolutely positioned beside the heading, so a long
+   heading pushes them past the viewport edge and the whole page scrolls
+   sideways. There is no hover on a phone, so drop them there. */
+@media (max-width: 640px) {
+  .bd-article .headerlink {
+    display: none;
+  }
+}
+
+/* The theme's copied state is a GitHub green; use the one accent instead. */
+div.highlight button.copybtn.success {
+  border-color: var(--pst-color-link);
+  color: var(--pst-color-link);
+}
+
+/* ── Landing page ─────────────────────────────────────────── */
+
+/* The landing keeps a single column. Everything it shows is either prose,
+   a code sample, or a screenshot, and all three read best at one measure. */
 .landing-page {
   min-height: 100vh;
   display: flex;
@@ -72,20 +213,63 @@ html[data-theme="dark"] {
 
 .landing-nav {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto;
   padding: 0.75rem 1.5rem;
 }
 
+/* A zero-height stand-in for the theme header: its scripts measure the first
+   .bd-header, but the landing has no theme header to measure. */
+.landing-header-sentinel {
+  display: none;
+}
+
+.landing-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.landing-nav__links a {
+  color: var(--pst-color-text-muted);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.landing-nav__links a:hover {
+  color: var(--pst-color-link-hover);
+  text-decoration: underline;
+}
+
 .landing-nav .theme-switch-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
   border: 1px solid var(--pst-color-border);
-  border-radius: 0.5rem;
-  padding: 0.35rem 0.6rem;
-  background: var(--pst-color-surface);
+  border-radius: var(--radius-sm);
+  background: var(--pst-color-background);
+  color: var(--pst-color-text-base);
   cursor: pointer;
 }
 
-.landing-nav .theme-switch-button:hover {
-  background: var(--pst-color-on-surface);
+.landing-nav .theme-switch-button:hover,
+.landing-nav .theme-switch-button:focus {
+  border-color: var(--pst-color-link);
+  color: var(--pst-color-link-hover);
+  text-decoration: none;
+}
+
+/* The theme underlines nav links with a pseudo-element; this is an icon
+   button, not a link. */
+.landing-nav .theme-switch-button::before {
+  display: none;
 }
 
 .landing-main {
@@ -101,49 +285,64 @@ html[data-theme="dark"] {
   line-height: 1.75;
 }
 
-.landing-content h1 {
-  font-size: 2rem;
-  margin-top: 0;
-  font-weight: 700;
-}
-
 .landing-content h2 {
   font-size: 1.5rem;
   margin-top: 2.5rem;
   font-weight: 600;
 }
 
+/* Prose keeps its measure; code and screenshots use the whole column. */
+.landing-content > section > p,
+.landing-content > section > ul,
+.landing-content > section > ol,
+.landing-content > section > section > p,
+.landing-content > section > section > ul,
+.landing-content > section > section > ol {
+  max-width: 42rem;
+}
+
+/* Section rules were a whisper; they are the only separation between
+   blocks, so they carry a little more weight. */
 .landing-content hr {
   margin: 2.5rem 0;
-  opacity: 0.25;
+  border-top: 1px solid var(--pst-color-border);
+  opacity: 0.6;
 }
 
 .landing-content .highlight {
-  border-radius: 0.75rem;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--pst-color-border);
 }
 
 .landing-content .sd-card {
-  border-radius: 0.75rem;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--pst-color-border);
+  text-align: left;
   transition: border-color 0.15s;
 }
 
-.landing-content .sd-card:hover {
+/* Only cards that go somewhere react to the pointer. */
+.landing-content .sd-card:has(a):hover {
   border-color: var(--pst-color-link);
 }
 
-/* Plain over slick — no drop shadows on landing elements. */
-.landing-content .sd-shadow-sm,
-.landing-content .sd-shadow-md,
-.landing-content .sd-shadow-lg {
-  box-shadow: none;
+/* Card titles reserve two lines so the copy below starts on one baseline. */
+.landing-content .sd-card-body > p:first-child {
+  min-height: 2.7em;
+  margin-bottom: 0.25rem;
+  line-height: 1.35;
 }
 
 .landing-content .sd-btn {
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
   font-weight: 600;
   padding: 0.6em 1.4em;
+}
+
+.landing-content :focus-visible {
+  outline: 2px solid var(--pst-color-link);
+  outline-offset: 2px;
 }
 
 /* Code block line numbers */
@@ -167,14 +366,228 @@ html[data-theme="dark"] {
   display: none;
 }
 
+/* ── Hero ─────────────────────────────────────────────────── */
+
+/* The page title is the tagline, so it carries the brand type scale. */
+.landing-content > section > h1:first-child {
+  max-width: 19em;
+  margin: 0.5rem auto 0.75rem;
+  font-size: clamp(1.75rem, 4.6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  /* Not `balance`: the brand line breaks after "spaceship.", and only a
+     greedy wrap keeps that break at desktop widths. */
+  text-wrap: pretty;
+}
+
+.hero__mark {
+  text-align: center;
+  line-height: 0;
+}
+
+.hero__mark img {
+  width: 132px;
+  height: auto;
+}
+
+.hero__lede {
+  max-width: 34em;
+  margin: 0 auto 1.5em;
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  line-height: 1.6;
+  text-align: center;
+  color: var(--pst-color-text-muted);
+}
+
+/* ── Install ──────────────────────────────────────────────── */
+
+.install {
+  text-align: center;
+  margin: 1.5rem 0 2rem;
+}
+
+.install__platform {
+  display: none;
+}
+
+.install__platform.is-visible {
+  display: block;
+}
+
+.install__label {
+  display: block;
+  font-size: 0.85em;
+  color: var(--pst-color-text-muted);
+  margin-bottom: 0.5em;
+}
+
+.install__command {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  text-align: left;
+  border: 1px solid var(--pst-color-border);
+  border-radius: var(--radius-sm);
+  background: var(--pst-color-background);
+}
+
+.install__text {
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--pst-color-text-base);
+  background: none;
+  border: 0;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.install__text::-webkit-scrollbar {
+  display: none;
+}
+
+.install__copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-left: 1px solid var(--pst-color-border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: transparent;
+  color: var(--pst-color-text-muted);
+  cursor: pointer;
+}
+
+.install__copy:hover {
+  background: color-mix(in srgb, var(--pst-color-text-base) 6%, var(--pst-color-background));
+  color: var(--pst-color-text-base);
+}
+
+.install__copy:focus-visible {
+  outline: 2px solid var(--pst-color-link);
+  outline-offset: -2px;
+}
+
+.install__copy svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.install__copy-text {
+  display: none;
+}
+
+.install__copy[data-copied="true"] {
+  color: var(--pst-color-link);
+}
+
+.install__note {
+  margin-top: 0.6em;
+  font-size: 0.9em;
+  color: var(--pst-color-text-muted);
+}
+
+.install__more {
+  margin-top: 0.6em;
+  font-size: 0.9em;
+}
+
+/* ── Actions ──────────────────────────────────────────────── */
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+/* A quiet companion to the one filled button. */
+.hero-actions__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pst-color-text-muted);
+  text-decoration: none;
+}
+
+.hero-actions__link:hover {
+  color: var(--pst-color-link-hover);
+  text-decoration: underline;
+}
+
+/* ── Proof ────────────────────────────────────────────────── */
+
+.proof {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin: 2.5rem 0;
+}
+
+.proof__shot {
+  margin: 0;
+}
+
+.proof__shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--pst-color-border);
+  border-radius: var(--radius-sm);
+}
+
+.proof__shot figcaption {
+  margin-top: 0.6rem;
+  text-align: left;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--pst-color-text-muted);
+}
+
+[data-collapse-on-phone] > summary {
+  cursor: pointer;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--pst-color-text-muted);
+}
+
+[data-collapse-on-phone] > summary:hover {
+  color: var(--pst-color-text-base);
+}
+
+/* Above the phone breakpoint the samples are always open, so the toggle
+   would just be a stray line. */
+@media (min-width: 641px) {
+  [data-collapse-on-phone] > summary {
+    display: none;
+  }
+}
+
+.proof__code .highlight {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.landing-sample__body .highlight {
+  margin-bottom: 0;
+}
+
 /* ── Community banner ─────────────────────────────────────── */
 
 .community-banner {
   margin: 3rem 0 1rem;
   padding: 2rem 2.5rem;
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--pst-color-border);
-  background: var(--pst-color-on-background);
+  background: color-mix(in srgb, var(--pst-color-primary) 4%, var(--pst-color-background));
   text-align: center;
 }
 
@@ -182,8 +595,27 @@ html[data-theme="dark"] .community-banner {
   background: color-mix(in srgb, var(--pst-color-primary) 8%, var(--pst-color-background));
 }
 
-html[data-theme="light"] .community-banner {
-  background: color-mix(in srgb, var(--pst-color-primary) 4%, var(--pst-color-background));
+.community-banner__title {
+  font-size: 1.3em;
+  margin: 0 0 0.5em;
+}
+
+.community-banner__action {
+  margin-top: 0.6em;
+  font-size: 0.9em;
+}
+
+/* Inline status for the copy buttons; announced, never seen. */
+.copy-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ── Two-column poll images ────────────────────────────────── */
@@ -198,15 +630,66 @@ html[data-theme="light"] .community-banner {
 }
 
 /* Responsive */
-@media (max-width: 640px) {
-  .landing-content h1 {
-    font-size: 1.6rem;
+@media (max-width: 767px) {
+  .proof {
+    grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 640px) {
   .landing-content h2 {
     font-size: 1.25rem;
   }
+
   .landing-main {
     padding: 0.5rem 1rem 2rem;
+  }
+
+  .landing-nav {
+    padding: 0.75rem 1rem;
+  }
+
+  /* A zero-height stand-in for the theme header: its scripts measure the first
+   .bd-header, but the landing has no theme header to measure. */
+.landing-header-sentinel {
+  display: none;
+}
+
+.landing-nav__links {
+    gap: 1rem;
+  }
+
+  .install__command {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .install__text {
+    padding: 0.7rem 0.6rem;
+    font-size: 0.83rem;
+  }
+
+  .install__copy {
+    width: 100%;
+    height: 2.75rem;
+    gap: 0.4rem;
+    border-top: 1px solid var(--pst-color-border);
+    border-left: 0;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  }
+
+  .install__copy:hover {
+    background: none;
+  }
+
+  .install__copy-text {
+    display: inline;
+    font-size: 0.8rem;
+  }
+
+  .community-banner {
+    padding: 1.5rem 1.25rem;
   }
 
   #what-we-ll-build p:has(img) {
@@ -215,5 +698,12 @@ html[data-theme="light"] .community-banner {
 
   #what-we-ll-build p:has(img) img {
     width: 100%;
+  }
+}
+
+/* Narrow phones: the install command is the widest fixed string on the site. */
+@media (max-width: 340px) {
+  .install__text {
+    font-size: 0.72rem;
   }
 }

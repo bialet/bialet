@@ -4,7 +4,7 @@
 
 ## Docs
 
-- [Bialet](/_sources/index.rst)
+- [Web development became a spaceship. Bialet is a bicycle.](/_sources/index.rst)
 - [Why Bialet?](/_sources/why-bialet.md)
 - [HTML-First](/_sources/html-first.md)
 - [Installation](/_sources/installation.md)

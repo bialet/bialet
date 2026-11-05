@@ -1,5 +1,5 @@
-Bialet
-======
+Web development became a spaceship. Bialet is a bicycle.
+========================================================
 
 .. meta::
     :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
@@ -8,14 +8,12 @@ Bialet
 ----
 
 Features
-========
+--------
 
-.. grid:: 1 2 2 4
+.. grid:: 1 2 2 2
    :gutter: 2
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`package;2em`
       ^^^
@@ -26,8 +24,6 @@ Features
       is deployed.
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`database;2em`
       ^^^
@@ -37,8 +33,6 @@ Features
       Real data persistence works completely out of the box.
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`zap;2em`
       ^^^
@@ -48,8 +42,6 @@ Features
       No compilers, no bundlers, no watch processes.
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`code;2em`
       ^^^
@@ -61,7 +53,13 @@ Features
 ----
 
 A script that stays out of your way:
-====================================
+------------------------------------
+
+.. raw:: html
+
+   <details class="landing-sample" open data-collapse-on-phone>
+     <summary>The whole file</summary>
+     <div class="landing-sample__body">
 
 .. code-block:: wren
 
@@ -91,6 +89,11 @@ A script that stays out of your way:
      </ul>
    </main>
 
+.. raw:: html
+
+     </div>
+   </details>
+
 Bialet integrates the :doc:`Wren language <wren>` (based on
 `wren.io <https://wren.io/>`_) with
 a HTTP server and a built-in SQLite database — **in a single binary**.
@@ -102,7 +105,7 @@ Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1
 ----
 
 The Bialet Manifesto — Ride Light 🚲
-====================================
+------------------------------------
 
 .. admonition:: Ride Light
    :class: tip
@@ -125,14 +128,12 @@ The Bialet Manifesto — Ride Light 🚲
 ----
 
 Who is Bialet for?
-==================
+------------------
 
 .. grid:: 1 2 3 3
    :gutter: 2
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`beaker;2em`
       ^^^
@@ -142,8 +143,6 @@ Who is Bialet for?
       infrastructure overhead.
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`mortar-board;2em`
       ^^^
@@ -153,8 +152,6 @@ Who is Bialet for?
       and ORM abstractions.
 
    .. grid-item-card::
-      :text-align: center
-      :shadow: sm
 
       :octicon:`heart;2em`
       ^^^
@@ -242,13 +239,13 @@ Who is Bialet for?
 .. raw:: html
 
    <div class="community-banner">
-     <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Let's build together</strong></p>
-     <p style="padding: 0.5em">
+     <p class="community-banner__title"><strong>Let's build together</strong></p>
+     <p>
        Bialet is maintained by a solo developer, but the community is open to everyone.
        Whether you're stuck on a query, have a feature idea, or want to show off your
        project, GitHub Discussions is the place. Search first, ask second, and be kind.
      </p>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
    </div>
 
 
