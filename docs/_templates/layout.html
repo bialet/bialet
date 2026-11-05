@@ -8,17 +8,22 @@
 {% block content %}
   {% if pagename == master_doc %}
     <div class="landing-page">
-      <div class="landing-nav">
-        <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only"
-                aria-label="Color mode">
-          <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-          <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-          <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-        </button>
-      </div>
+      {#- bootstrap.js measures the first .bd-header to place "Back to top". -#}
+      <div class="bd-header landing-header-sentinel" aria-hidden="true"></div>
+      <nav class="landing-nav" aria-label="Bialet">
+        <div class="landing-nav__links">
+          <a href="{{ pathto('getting-started/index') }}">Docs</a>
+          <a href="{{ pathto('why-bialet') }}">Why Bialet</a>
+          <a href="https://github.com/bialet/bialet">GitHub</a>
+        </div>
+        {%- include "components/theme-switcher.html" %}
+      </nav>
 
-      <main class="landing-main" role="main">
+      <main class="landing-main" role="main" id="main-content">
         <div class="landing-content">
+          <div class="hero__mark">
+            <img src="{{ pathto('_static/logo.png', 1) }}" alt="" width="132" height="132" />
+          </div>
           {% block body %}{% endblock %}
         </div>
         <footer class="landing-footer">
@@ -30,6 +35,20 @@
           </p>
         </footer>
       </main>
+
+      {#- The theme's scripts expect these nodes on every page; without them
+          bootstrap.js, pydata-sphinx-theme.js and sphinx-book-theme.js each
+          throw on load. -#}
+      <div class="sbt-scroll-pixel-helper"></div>
+      {%- if theme_back_to_top_button %}
+      <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+        <i class="fa-solid fa-arrow-up"></i>
+        {{- _("Back to top") -}}
+      </button>
+      {%- endif %}
+      <dialog id="pst-search-dialog">
+        {%- include "components/search-field.html" %}
+      </dialog>
     </div>
 
     {#- Theme JS must load for the toggle to work -#}
