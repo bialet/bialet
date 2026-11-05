@@ -75,6 +75,10 @@ def setup(app):
 
 extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton', 'sphinx_llms_txt']
 
+# Let MyST register GitHub-style heading anchors (e.g. #postname for
+# "### post(name)") so intra-page links work without explicit labels.
+myst_heading_anchors = 3
+
 templates_path = ['_templates']
 exclude_patterns = ['requirements.txt', 'prompt-guide.md', 'examples/example.md']
 
