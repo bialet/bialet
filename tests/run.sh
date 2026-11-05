@@ -290,6 +290,50 @@ else
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
 fi
 
+# App-supplied log text: System.log() writes the operator log, stdout and
+# BIALET_LOGS, so a request value logged by the app (the documented shape) must
+# be escaped exactly like the framework's own wire-derived log values.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  applog_line=$LINENO
+  _test_start_ms=$(now_ms)
+  applog_out=$(python3 - "$HOST" "$PORT" /tmp/tests.log <<'PY'
+import http.client, sys, time
+
+host, port, logpath = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+try:
+    offset = len(open(logpath, 'rb').read())
+except OSError:
+    offset = 0
+
+conn = http.client.HTTPConnection(host, port, timeout=20)
+body = 'v=abc%0aFORGED%1b%5b31mEND'
+conn.request('POST', '/log-escape', body,
+             {'Content-Type': 'application/x-www-form-urlencoded'})
+resp = conn.getresponse()
+resp.read()
+conn.close()
+time.sleep(0.3)
+try:
+    log = open(logpath, 'rb').read()[offset:]
+except OSError:
+    log = b''
+print("status:%d|escaped:%s|rawEsc:%s|forged:%s" % (
+    resp.status,
+    b'Log probe abc\\x0aFORGED\\x1b[31mEND' in log,
+    b'\x1b' in log,
+    b'\nFORGED' in log))
+PY
+)
+  if [[ "$applog_out" == "status:200|escaped:True|rawEsc:False|forged:False" ]]; then
+    report_result "App log text escaped         " "$applog_line" 0
+  else
+    report_result "App log text escaped         " "$applog_line" 1 \
+      "Expected one escaped Log record and no raw ESC. Got $applog_out"
+  fi
+else
+  skip_test "App log text escaped         " "requires local binary access and python3"
+fi
+
 # A rejected upload logs the wire-supplied filename: it must be escaped, so a
 # control byte cannot inject terminal sequences or split the record. The
 # filename is sent raw over a socket (no form encoder) with an over-limit part.

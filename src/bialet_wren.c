@@ -198,16 +198,24 @@ void bialet_test_mark_skip(void) {
 
 static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
-  message(yellow("Log"), message);
+  // Wren text is not trusted at the log boundary: an app may log a request
+  // value (docs/reference.md shows System.log("Request from %(Request.uri)")),
+  // and this stream is the operator's log file, stdout and BIALET_LOGS. Escape
+  // control bytes exactly like every C-side wire-derived log value, so a value
+  // cannot forge a record or drive the terminal.
+  char*       safe = log_escape(message);
+  const char* text = safe ? safe : "(unprintable log line)";
+  message(yellow("Log"), text);
   // A failed prepare (e.g. SQLITE_BUSY on the shared connection) leaves stmt
   // NULL; binding/stepping it would NULL-deref the request thread.
   sqlite3_stmt* stmt = NULL;
   if(sqlite3_prepare_v2(db, "INSERT INTO BIALET_LOGS (message) VALUES (?)", -1,
                         &stmt, 0) == SQLITE_OK) {
-    sqlite3_bind_text(stmt, 1, message, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, text, -1, SQLITE_STATIC);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
   }
+  free(safe);
 }
 
 char* bialet_read_file(const char* path) {
@@ -559,20 +567,27 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
   char lineMessage[MAX_LINE_ERROR_LEN];
   snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
+  // Wren error text can embed request bytes (Fiber.abort of a request value, or
+  // the framework's JsonScanner quoting the token it rejected). Escape it for
+  // the log only; show_errors_capture() keeps the raw text for the error page,
+  // which HTML-escapes it before rendering.
+  char*       safeMsg = log_escape(msg);
+  const char* logMsg = safeMsg ? safeMsg : "(unprintable)";
   switch(errorType) {
     case WREN_ERROR_COMPILE: {
-      message(red("Compilation Error"), lineMessage, (char*)msg);
+      message(red("Compilation Error"), lineMessage, (char*)logMsg);
       show_errors_capture("Compilation Error", module, line, msg);
     } break;
     case WREN_ERROR_STACK_TRACE: {
-      message(red("Stack Error"), lineMessage, (char*)msg);
+      message(red("Stack Error"), lineMessage, (char*)logMsg);
       show_errors_capture("Stack Error", module, line, msg);
     } break;
     case WREN_ERROR_RUNTIME: {
-      message(red("Runtime Error"), (char*)msg);
+      message(red("Runtime Error"), (char*)logMsg);
       show_errors_capture("Runtime Error", module, line, msg);
     } break;
   }
+  free(safeMsg);
 }
 
 static char* sqlite_int_to_string(sqlite3_int64 value) {
