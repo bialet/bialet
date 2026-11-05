@@ -427,6 +427,63 @@ else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
 fi
 
+# A complete header block with a declared Content-Length, and no body byte
+# behind it, must not park the only worker for the full 30 s body budget; the
+# 413 drain path must not either. One stalled socket, then a probe from a second
+# connection: the probe has to be answered within the 5 s socket timeout, not
+# the 30 s body deadline.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" != 1 ]] && command -v python3 >/dev/null 2>&1; then
+  stall_line=$LINENO
+  _test_start_ms=$(now_ms)
+  stall_out=$(python3 - "$HOST" "$PORT" <<'PY'
+import socket, sys, time
+
+host, port = sys.argv[1], int(sys.argv[2])
+
+def probe():
+    start = time.time()
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(60)
+    s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\n\r\n")
+    data = b""
+    while b"\r\n\r\n" not in data:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        data += chunk
+    s.close()
+    return time.time() - start
+
+def stall(payload):
+    s = socket.create_connection((host, port), 10)
+    s.sendall(payload)
+    return s
+
+baseline = probe()
+stalled = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 1\r\n\r\n")
+time.sleep(0.3)
+body = probe()
+stalled.close()
+oversized = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 999999\r\n\r\n")
+time.sleep(0.3)
+drain = probe()
+oversized.close()
+print("baseline=%.2f body=%.2f drain=%.2f" % (baseline, body, drain))
+PY
+)
+  stall_body=$(printf '%s' "$stall_out" | sed -n 's/.*body=\([0-9.]*\).*/\1/p')
+  stall_drain=$(printf '%s' "$stall_out" | sed -n 's/.*drain=\([0-9.]*\).*/\1/p')
+  if awk -v b="$stall_body" -v d="$stall_drain" \
+      'BEGIN { exit !(b != "" && d != "" && b < 12 && d < 12) }'; then
+    report_result "Stalled body bounded          " "$stall_line" 0
+  else
+    report_result "Stalled body bounded          " "$stall_line" 1 \
+      "Expected both probes under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
+  fi
+else
+  skip_test "Stalled body bounded          " "requires local binary access and python3"
+fi
+
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"
