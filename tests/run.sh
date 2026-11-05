@@ -190,6 +190,32 @@ elif [[ "$FS_SHARED" == 1 ]]; then
 else
   skip_test "folder.wren symlink no bypass" "server filesystem is not shared with this script"
 fi
+# The ".wren" probe must only synthesize a name strictly below the root. The
+# bare-root URI used to strip to full_root_dir exactly and probe
+# "<root>.wren" - a sibling of the app directory - then open and interpret it;
+# "//" probed "<root>/.wren", a dot-file a direct request forbids.
+sibling_line=$LINENO
+_test_start_ms=$(now_ms)
+sibling_path="$(dirname "$0").wren"
+dot_path="$(dirname "$0")/.wren"
+printf 'return "SIBLING-OUTSIDE-ROOT"' > "$sibling_path"
+sibling_home=$(curl -s --max-time 10 "http://$HOST:$PORT/")
+sibling_query=$(curl -s --max-time 10 "http://$HOST:$PORT/?x")
+rm -f "$sibling_path"
+printf 'RAWDOTFILE' > "$dot_path"
+dot_direct_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://$HOST:$PORT/.wren")
+dot_slash=$(curl -s --max-time 10 "http://$HOST:$PORT//")
+rm -f "$dot_path"
+if [[ "$sibling_home" != *"SIBLING-OUTSIDE-ROOT"* \
+      && "$sibling_query" != *"SIBLING-OUTSIDE-ROOT"* \
+      && "$dot_direct_code" == "403" \
+      && "$dot_slash" != *"RAWDOTFILE"* ]]; then
+  report_result "Root probe stays in root      " "$sibling_line" 0
+else
+  report_result "Root probe stays in root      " "$sibling_line" 1 \
+    "Expected / and /?x to skip <root>.wren and // to skip <root>/.wren. Got home:'${sibling_home:0:80}' query:'${sibling_query:0:80}' dot:$dot_direct_code slash:'${dot_slash:0:40}'"
+fi
+
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"

@@ -1082,12 +1082,23 @@ void handle_client(bialet_socket_t client_socket) {
   // route prefix Request.route(n) reads from.
   size_t root_len = strlen(bialet_config.full_root_dir);
 
-  if(strlen(path) + 5 < PATH_SIZE) { // 5 accounts for ".wren" and null terminator
+  // Only a path strictly below the root may be probed with a synthesized name.
+  // For the bare-root URI the strip above left path == full_root_dir, so
+  // "%s.wren" named "<root>.wren" - a sibling of the root - and "//" left
+  // "<root>/", naming "<root>/.wren", which the '_'/'.' rule blocks when it is
+  // requested directly. Re-apply containment and the private-component rule to
+  // the synthesized name before using it.
+  if(strlen(path) + 5 < PATH_SIZE && // 5 accounts for ".wren" and terminator
+     strlen(path) > root_len &&
+     strncmp(path, bialet_config.full_root_dir, root_len) == 0) {
     snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
     // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
     // accepted as a route file, which is exactly what a following stat() did
     // before the realpath() private-file check caught it further down.
-    if(is_regular_file_no_follow(wren_path, &file_stat)) {
+    if(strncmp(wren_path, bialet_config.full_root_dir, root_len) == 0 &&
+       wren_path[root_len] == '/' &&
+       !has_forbidden_uri_component(wren_path + root_len) &&
+       is_regular_file_no_follow(wren_path, &file_stat)) {
       // Set the route prefix to this file's URL path so Request.route(n)
       // reads the segments that follow it (null at the bare URL). Without
       // this, route() falls back to the full URI and /about would report
@@ -1142,7 +1153,13 @@ void handle_client(bialet_socket_t client_socket) {
       // file, otherwise it would be resolved to the database and served.
       snprintf(path, PATH_SIZE, "%s%s%s", bialet_config.full_root_dir, url_copy,
                BIALET_EXTENSION);
-      if(is_regular_file_no_follow(path, &file_stat)) {
+      // The URL may still contain empty or private segments ("//" reaches here
+      // as "//.wren"); apply the same private-component rule the request URI
+      // passed, so the synthesized route name cannot address a dot-file.
+      if(strncmp(path, bialet_config.full_root_dir, root_len) != 0 ||
+         path[root_len] != '/' || has_forbidden_uri_component(path + root_len))
+        ; // fall through to the deeper-prefix probe below
+      else if(is_regular_file_no_follow(path, &file_stat)) {
         // parse_request() already allocated an empty placeholder here, which
         // this assignment used to drop on the floor.
         free(hm->routes.str);
