@@ -708,6 +708,10 @@ class Query {
   // placeholder left and corrupt the row.
   static bindParams_(params) {
     if (params == null) return []
+    // Iterating anything else (a JSON scalar, a missing request parameter, a
+    // Map) used to reach Object.iteratorValue with a non-instance receiver.
+    // Reject it as a Wren error instead.
+    if (!(params is List)) Fiber.abort("Query parameters must be a list.")
     var result = []
     for (param in params) {
       if (param == null || param is Bool || param is Num || param is String) {
@@ -817,6 +821,11 @@ class Query {
     return name
   }
   save(values) {
+    // Bool/Num/Null/String here mean the caller passed Request.get()/Request.json()
+    // straight through; reject it instead of iterating it.
+    if (values is Bool || values is Num || values is Null || values is String) {
+      Fiber.abort("save expects a map or an instance")
+    }
     var table = Query.identifier_(this, "table name")
     if (table.upper.startsWith("BIALET_")) return false
     var keys = []

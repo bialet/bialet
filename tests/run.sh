@@ -530,6 +530,7 @@ run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
 run_test "Db save delete migrate      " "db-more"         200 "inserted:"
 run_test "Db delete validates table     " "db-delete-guard" 200 "literal:1|aborted:true|intact:1|other:2|refused:false|session:1"
+run_test "For-in rejects non-instances   " "iterate-guard" 200 "bool:true|num:true|null:true|missing:true|fromString:true|fetchFromString:true|saveBool:true|saveMissing:true|control:9"
 run_test "NULL column maps to null     " "db-null"         200 "literal:true|bound:true"
 
 # Tests - HTTP & External

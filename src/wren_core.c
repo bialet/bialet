@@ -906,19 +906,36 @@ DEF_PRIMITIVE(object_type) {
 }
 
 DEF_PRIMITIVE(object_iterate) {
+  // Both Object primitives are bound on the root class, so every Wren value is
+  // offered to the for-in protocol. Reading the receiver as an Obj/ObjInstance
+  // without checking its object kind turns a Bool/Num/Null (a JSON scalar, a
+  // missing request parameter) into a wild pointer read instead of a catchable
+  // error, which killed the serving child.
+  if(!IS_INSTANCE(args[0])) {
+    vm->fiber->error = CONST_STRING(vm, "Value is not iterable.");
+    return false;
+  }
   if(IS_NULL(args[1]))
     RETURN_NUM(0);
+  if(!validateNum(vm, args[1], "Iterator"))
+    return false;
   double iterator = AS_NUM(args[1]);
   ++iterator;
-  if(iterator < AS_OBJ(args[0])->classObj->numFields)
+  if(iterator < AS_INSTANCE(args[0])->obj.classObj->numFields)
     RETURN_NUM(iterator);
   RETURN_FALSE;
 }
 
 DEF_PRIMITIVE(object_iteratorValue) {
+  if(!IS_INSTANCE(args[0])) {
+    vm->fiber->error = CONST_STRING(vm, "Value is not iterable.");
+    return false;
+  }
   ObjInstance* instance = AS_INSTANCE(args[0]);
   uint32_t     index =
       validateIndex(vm, args[1], instance->obj.classObj->numFields, "Field");
+  if(index == UINT32_MAX)
+    return false;
   RETURN_VAL(instance->fields[index]);
 }
 
