@@ -53,10 +53,14 @@
     if (!unix || !win || !other) return;
 
     var ua = navigator.userAgent || "";
-    if (/windows/i.test(ua)) {
+    // Phones and tablets contain the desktop names in their UA string: an
+    // iPhone reports "like Mac OS X" and Android reports "Linux". Neither can
+    // run a shell command, so they keep the download fallback.
+    var handheld = /iphone|ipad|ipod|android/i.test(ua);
+    if (/windows/i.test(ua) && !handheld) {
       win.classList.add("is-visible");
       other.classList.remove("is-visible");
-    } else if (/linux|mac/i.test(ua)) {
+    } else if (/linux|mac/i.test(ua) && !handheld) {
       var label = document.querySelector("#download-os-label-unix");
       if (label) label.textContent = /mac/i.test(ua) ? "Install for macOS" : "Install for Linux";
       unix.classList.add("is-visible");

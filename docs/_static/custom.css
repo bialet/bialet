@@ -134,10 +134,22 @@ div.admonition[class] > .admonition-title::after {
   max-width: 42rem;
 }
 
+/* A heading has no spaces to break at, so an identifier such as
+   `parseHeader(headerValue)` runs past the column on a phone. */
+.bd-article :is(h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: break-word;
+}
+
 /* Long inline tokens wrap rather than push the page sideways, but never in
    the middle of a short identifier. The inner span ships `white-space: pre`
-   from Sphinx's base stylesheet. */
+   from Sphinx's base stylesheet.
+
+   The theme also draws a border around inline code; once the code wraps,
+   browsers paint that border on every line fragment and it reads as a row
+   of underlines. A tinted run is continuous across the wrap. */
 .bd-article code.literal {
+  border: 0;
+  background: color-mix(in srgb, var(--pst-color-text-base) 6%, var(--pst-color-background));
   overflow-wrap: break-word;
 }
 
@@ -170,6 +182,15 @@ div.admonition[class] > .admonition-title::after {
 
   .pst-scrollable-table-container table {
     font-size: 0.85rem;
+  }
+}
+
+/* Heading anchors are absolutely positioned beside the heading, so a long
+   heading pushes them past the viewport edge and the whole page scrolls
+   sideways. There is no hover on a phone, so drop them there. */
+@media (max-width: 640px) {
+  .bd-article .headerlink {
+    display: none;
   }
 }
 
