@@ -9,12 +9,12 @@ Bialet
 
 .. raw:: html
 
-   <div style="text-align: center; margin: 2em 0 1em 0">
-       <img src="_static/logo.png" alt="Bialet" style="width: 140px; margin-bottom: 0.5em" />
-       <h1 style="font-size: clamp(1.75rem, 5vw, 2.5rem); font-weight: 700; margin: 0 0 0.25em 0">
-           Web development became a spaceship. Bialet is a bicycle.
+   <div class="hero">
+       <img class="hero__logo" src="_static/logo.png" alt="" width="140" height="140" />
+       <h1 class="hero__title">
+           Web development became a spaceship.<br class="hero__break" /> Bialet is a bicycle.
        </h1>
-       <p style="font-size: clamp(0.95rem, 2vw, 1.15rem); color: var(--sd-color-secondary); max-width: 34em; margin: 0 auto 1.25em auto">
+       <p class="hero__lede">
            Build data-driven web apps from a single file. No NPM, no YAML,
            no separate database servers. Just a <strong>tiny binary</strong> with
            a built-in HTTP server, a lightweight scripting language, and SQLite.
@@ -23,71 +23,46 @@ Bialet
 
 .. raw:: html
 
-   <div id="bialet-download" style="text-align: center; margin: 1.5em 0 2em 0">
+   <div id="bialet-download" class="install">
 
      <!-- Unix (Linux / macOS): curl command with copy button -->
-     <div id="download-unix" style="display: none">
-       <span id="download-os-label-unix" style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em"></span>
-       <div class="highlight" style="display: inline-block; max-width: 100%; border-radius: 0.75rem; overflow: hidden; background: var(--pst-color-on-background); border: 1px solid var(--pst-color-border)">
-         <pre style="margin: 0; padding: 1em 3em 1em 1.25em; background: none; border: none; font-size: 1.05em"><code>curl -fsSL https://get.bialet.dev | sh</code></pre>
-         <button class="copybtn o-tooltip--left" data-tooltip="Copy" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText('curl -fsSL https://get.bialet.dev | sh').then(function(){b.dataset.tooltip='Copied!';b.classList.add('success');setTimeout(function(){b.dataset.tooltip=t;b.classList.remove('success')},2000)}).catch(function(){})})(this)">
-           <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copy" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#000000" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+     <div id="download-unix" class="install__platform">
+       <span id="download-os-label-unix" class="install__label"></span>
+       <div class="install__command">
+         <code class="install__text">curl -fsSL https://get.bialet.dev | sh</code>
+         <button type="button" class="install__copy" data-copy="curl -fsSL https://get.bialet.dev | sh" aria-label="Copy install command">
+           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
+           <span class="install__copy-text">Copy</span>
          </button>
        </div>
      </div>
 
      <!-- Windows: download button -->
-     <div id="download-win" style="display: none">
-       <span style="display: block; font-size: 0.85em; color: var(--sd-color-secondary); margin-bottom: 0.5em">Install for Windows</span>
-        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="{{release_windows_url}}" style="font-size: 1.05em; padding: 0.55em 1.5em">
-          Download for Windows (.zip)
+     <div id="download-win" class="install__platform">
+       <span class="install__label">Install for Windows</span>
+       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="{{release_windows_url}}">
+         Download for Windows (.zip)
        </a>
-       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-         Zero installation required. Just extract and run.<br/>
-       </p>
+       <p class="install__note">Zero installation required. Just extract and run.</p>
      </div>
 
-     <!-- Fallback: curl + all platforms -->
-     <div id="download-other" style="display: block">
-       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest" style="font-size: 1.05em; padding: 0.55em 1.5em">
+     <!-- Fallback: all platforms (also what visitors see without JS) -->
+     <div id="download-other" class="install__platform is-visible">
+       <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="https://github.com/bialet/bialet/releases/latest">
          Download Binaries
        </a>
-       <p style="margin-top: 0.6em; font-size: 0.9em; color: var(--sd-color-secondary)">
-         Zero installation required. Just extract and run.<br/>
-       </p>
+       <p class="install__note">Zero installation required. Just extract and run.</p>
      </div>
 
-     <div>
-       <p style="margin-top: 0.6em; font-size: 0.9em;">
-         <a href="installation.html">All platforms & install options</a>
-       </p>
-     </div>
+     <p class="install__more">
+       <a href="installation.html">All platforms &amp; install options</a>
+     </p>
 
    </div>
 
-   <script>
-     (function() {
-       var unix = document.getElementById('download-unix');
-       var win = document.getElementById('download-win');
-       var other = document.getElementById('download-other');
-       var label = document.getElementById('download-os-label-unix');
-       if (!unix || !win || !other) return;
-       var ua = navigator.userAgent || '';
-       if (/windows/i.test(ua)) {
-         win.style.display = 'block';
-         other.style.display = 'none';
-       } else if (/linux|mac/i.test(ua)) {
-         var osName = /mac/i.test(ua) ? 'Install for macOS' : 'Install for Linux';
-         if (label) label.textContent = osName;
-         unix.style.display = 'block';
-         other.style.display = 'none';
-       }
-     })();
-   </script>
-
-   <div style="text-align: center; margin: 1.5em 0 1.5em 0">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html" style="margin: 0.35em">Get Started</a>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet" style="margin: 0.35em">
+   <div class="hero-actions">
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="getting-started/index.html">Get Started</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary sd-shadow-sm" href="https://github.com/bialet/bialet">
        <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
        View on GitHub
      </a>
@@ -98,25 +73,27 @@ Bialet
 .. raw:: html
 
    <div class="community-banner">
-     <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Building with AI?</strong></p>
-     <p style="padding: 0.5em">
+     <p class="community-banner__title"><strong>Building with AI?</strong></p>
+     <p>
        Paste this into Claude, ChatGPT, or Cursor so it writes idiomatic
        <code>.wren</code> code from the first response.
      </p>
-     <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" data-tooltip="Copy" style="font-size: 1.05em; padding: 0.55em 1.5em; cursor: pointer" onclick="(function(b){var t=b.dataset.tooltip;navigator.clipboard.writeText(window.BIALET_AI_PROMPT || '').then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy AI Prompt'},2000)}).catch(function(){})})(this)">
-       Copy AI Prompt
+     <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" data-copy-prompt>
+       <span data-copy-label>Copy AI Prompt</span>
      </button>
-     <p style="margin-top: 0.6em; font-size: 0.9em">
+     <p class="community-banner__action">
        <a href="ai-prompt.html">View the full prompt →</a>
      </p>
    </div>
+
+   <div class="copy-status" role="status" aria-live="polite"></div>
 
 .. llms-txt-ignore-end
 
 ----
 
 Features
-========
+--------
 
 .. grid:: 1 2 2 4
    :gutter: 2
@@ -169,7 +146,7 @@ Features
 ----
 
 A script that stays out of your way:
-====================================
+------------------------------------
 
 .. code-block:: wren
 
@@ -210,7 +187,7 @@ Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1
 ----
 
 The Bialet Manifesto — Ride Light 🚲
-====================================
+------------------------------------
 
 .. admonition:: Ride Light
    :class: tip
@@ -233,7 +210,7 @@ The Bialet Manifesto — Ride Light 🚲
 ----
 
 Who is Bialet for?
-==================
+------------------
 
 .. grid:: 1 2 3 3
    :gutter: 2
@@ -277,9 +254,9 @@ Who is Bialet for?
 
 .. raw:: html
 
-   <div style="text-align: center; margin: 1.5em 0">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html" style="margin: 0.35em">Full Documentation</a>
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html" style="margin: 0.35em">All Install Options</a>
+   <div class="hero-actions">
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary sd-shadow-sm" href="why-bialet.html">Full Documentation</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="installation.html">All Install Options</a>
    </div>
 
 .. llms-txt-ignore-end
@@ -361,8 +338,8 @@ Who is Bialet for?
 .. raw:: html
 
    <div class="community-banner">
-     <p style="font-size: 1.3em; margin: 0 0 0.5em 0"><strong>Let's build together</strong></p>
-     <p style="padding: 0.5em">
+     <p class="community-banner__title"><strong>Let's build together</strong></p>
+     <p>
        Bialet is maintained by a solo developer, but the community is open to everyone.
        Whether you're stuck on a query, have a feature idea, or want to show off your
        project, GitHub Discussions is the place. Search first, ask second, and be kind.

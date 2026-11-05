@@ -101,7 +101,7 @@ llms_txt_exclude = ['getting-started']
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
-html_js_files = ["ai-prompt.js"]
+html_js_files = ["ai-prompt.js", "copy.js"]
 html_favicon = '../src/favicon.ico'
 html_theme_options = {
     "logo": {
