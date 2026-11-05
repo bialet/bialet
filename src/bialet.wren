@@ -135,6 +135,7 @@ class Response {
     __status = 200
     __out = ""
     __useErrorFallback = false
+    __fileId = null
     Cookie.init
   }
 
@@ -153,12 +154,17 @@ class Response {
   static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
   static header(header, value) { __headers[Util.headerName(header)] = Util.headerValue(value) }
+  // Out of band: the id of the blob Response.file selected, or null. The id
+  // used to live in the body as a leading 0x1A marker, which client-influenced
+  // output could forge to read an arbitrary BIALET_FILES row.
+  static fileId { __fileId }
   static file(id) {
     var type = `SELECT type FROM BIALET_FILES WHERE id = ?`.val([id])
     if (!type) return false
-    // To output the file, you send the char BELL and the image id.
-    // This will be replaced by the file.
-    __out = String.fromByte(26) + "%(id)"
+    var numeric = id is Num ? id : Num.fromString("%(id)")
+    if (!numeric) return false
+    __fileId = numeric
+    __out = ""
     header("Content-Type", type)
     return true
   }
@@ -286,9 +292,35 @@ class Session {
     Cookie.delete(Session.name)
     `DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')`.query([id])
   }
+  // A session identifier must look like one: non-empty, at most 128 bytes, and
+  // URL-safe. The server only ever mints 40 random characters, so anything else
+  // is either a client-chosen value (fixation) or a truncated/oversized cookie.
+  static validId_(id) {
+    if (id == null) return false
+    if (id.count == 0 || id.count > 128) return false
+    for (char in id) {
+      var b = char.bytes[0]
+      var ok = (b >= 48 && b <= 57) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122) ||
+               b == 95 || b == 45
+      if (!ok) return false
+    }
+    return true
+  }
+  // Mint a fresh identifier and drop the old session's rows. Call this after a
+  // successful login so a session identifier planted before authentication is
+  // worthless afterwards; the framework has no login hook of its own.
+  static rotate() {
+    var old = Cookie.get(Session.name)
+    if (Session.validId_(old)) {
+      `DELETE FROM BIALET_SESSION WHERE id = ?`.query([old])
+    }
+    var id = Util.randomString(40)
+    Cookie.set(Session.name, id)
+    return id
+  }
   construct new() {
     _id = Cookie.get(Session.name)
-    if (!_id) {
+    if (!Session.validId_(_id)) {
       _id = Util.randomString(40)
       Cookie.set(Session.name, _id)
     }
@@ -705,15 +737,19 @@ class Util {
     return true
   }
 
+  // Constant-time byte comparison. String.count walks code points while
+  // String[i] indexes bytes, so the old loop stopped before the end of a
+  // multi-byte value and compared only each character's lead byte: "é"/"à",
+  // "aéX"/"aéY" and "contraseña"/"contraseñX" were all reported equal.
   static secureEquals(left, right) {
     if (left == null || right == null) return false
-    left = "%(left)"
-    right = "%(right)"
-    var diff = left.count == right.count ? 0 : 1
-    var limit = left.count > right.count ? left.count : right.count
+    var a = "%(left)".bytes.toList
+    var b = "%(right)".bytes.toList
+    var diff = a.count == b.count ? 0 : 1
+    var limit = a.count > b.count ? a.count : b.count
     for (i in 0...limit) {
-      var leftByte = i < left.count ? left[i].bytes[0] : 0
-      var rightByte = i < right.count ? right[i].bytes[0] : 0
+      var leftByte = i < a.count ? a[i] : 0
+      var rightByte = i < b.count ? b[i] : 0
       diff = diff | (leftByte ^ rightByte)
     }
     return diff == 0
@@ -922,7 +958,16 @@ class Util {
 class Config {
   static get(key) { `SELECT val FROM BIALET_CONFIG WHERE key = ?`.first([key])["val"] }
   static set(key, value) { `REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, ?)`.query(key, value) }
-  static bool(key) { get(key) != "0" }
+  // Allow-list, as documented: true only for "1"/"true" (case-insensitive),
+  // false for everything else including a missing key. The old denylist
+  // (`!= "0"`) made "false", "off", "" and an absent row all true, so a
+  // config-gated security decision failed open.
+  static bool(key) {
+    var v = get(key)
+    if (v == null) return false
+    var s = "%(v)".trim().lower
+    return s == "1" || s == "true"
+  }
   static num(key) { Num.fromString(get(key)) }
   static delete(key) { `DELETE FROM BIALET_CONFIG WHERE key = ?`.first(key) }
   static json(key) { Json.parse(get(key)) }
@@ -1002,9 +1047,15 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY KEY, val TEXT)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    // The upload path reads SUM(size) and COUNT(*) WHERE isTemp = 1 before the
+    // handler runs, so without this index every multipart request scans every
+    // file row, including the app's own saved files.
+    `CREATE INDEX IF NOT EXISTS BIALET_FILES_ISTEMP ON BIALET_FILES (isTemp)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     // Run again the initiliziation once we know the table exists
-    Date.init(Config.get("BIALET_TIMEZONE"))
+    // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the
+    // primitives reject a non-string with a catchable error).
+    Date.init(Config.get("BIALET_TIMEZONE") || "")
   }
 
   static clean {
@@ -1027,7 +1078,13 @@ class Db {
     Db.clean
   }
   static save(table, values) { Query.new(table).save(values) }
-  static delete(table, id) { Query.fromString("DELETE FROM `%(table)` WHERE id = ?", [id]) }
+  static delete(table, id) {
+    // Same contract as save(): the table is interpolated into SQL, so it must
+    // be a plain identifier and it must not name a framework table.
+    var name = Query.identifier_(table, "table name")
+    if (name.upper.startsWith("BIALET_")) return false
+    return Query.fromString("DELETE FROM `%(name)` WHERE id = ?", [id])
+  }
 }
 
 class Http {
@@ -1159,18 +1216,29 @@ class Http {
     var now = Date.tz != null ? Date.now.unix : 0
     var matched = []
     for (jarHost in __cookieJar) {
-      var hostMatches = jarHost.key == host || (jarHost.key.startsWith(".") && host.endsWith(jarHost.key))
-      if (!hostMatches) continue
+      // Host-only jar: every cookie is keyed on the host that set it, so the
+      // key matches its own host exactly and nothing else.
+      if (host != jarHost.key) continue
       for (entry in jarHost.value) {
         var c = entry.value
         if (c["s"] && !secure) continue
-        if (!path.startsWith(c["p"])) continue
+        var cp = c["p"]
+        // RFC 6265 path-match: exact, or a prefix ending on a '/' boundary.
+        var pathMatches = path == cp || (path.startsWith(cp) && (cp.endsWith("/") || path[cp.count] == "/"))
+        if (!pathMatches) continue
         if (c["e"] > 0 && now >= c["e"]) continue
         matched.add("%(entry.key)=%(c["v"])")
       }
     }
     return matched.join("; ")
   }
+  // Host-only jar: the Set-Cookie Domain attribute is ignored entirely. It
+  // cannot be honoured safely without an embedded public-suffix list -- a
+  // response from evil.co.uk carrying "Domain=co.uk" would scope the cookie to
+  // every co.uk registrant, including the victim.co.uk the app calls next.
+  // Keying every cookie on the responding host keeps the documented invariant
+  // ("a cookie set by one host is never sent to a different host") and removes
+  // the multi-label suffix path without shipping a suffix list.
   static storeCookies(rawHeaders, url) {
     if (rawHeaders == "") return
     var scope = urlScope_(url)
@@ -1187,15 +1255,14 @@ class Http {
       if (kv.count < 2) continue
       var cookieName = kv[0].trim()
       var cookie = {"v": kv[1].trim(), "p": "/", "s": false, "e": 0}
-      var host = reqHost
       for (i in 1...parts.count) {
         var attr = parts[i].trim()
         var eq = attr.indexOf("=")
         var attrName = (eq >= 0 ? attr[0...eq] : attr).trim().lower
         var attrValue = eq >= 0 ? attr[eq + 1...attr.count].trim() : ""
-        if (attrName == "domain" && attrValue != "") {
-          host = attrValue.lower
-          if (!host.startsWith(".")) host = "." + host
+        if (attrName == "domain") {
+          // Deliberately ignored: see the note above storeCookies. The cookie
+          // stays keyed on the responder instead of widening to a suffix.
         } else if (attrName == "path" && attrValue != "") {
           cookie["p"] = attrValue
         } else if (attrName == "secure") {
@@ -1205,8 +1272,8 @@ class Http {
           if (secs && Date.tz != null) cookie["e"] = Date.now.unix + secs
         }
       }
-      if (!__cookieJar.containsKey(host)) __cookieJar[host] = {}
-      __cookieJar[host][cookieName] = cookie
+      if (!__cookieJar.containsKey(reqHost)) __cookieJar[reqHost] = {}
+      __cookieJar[reqHost][cookieName] = cookie
     }
   }
   static urlScope_(url) {

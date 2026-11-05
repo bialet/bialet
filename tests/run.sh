@@ -290,6 +290,67 @@ else
     "Expected 400 over the cap. Got status:$upload_over_code body:'$upload_over_body'"
 fi
 
+# A rejected upload logs the wire-supplied filename: it must be escaped, so a
+# control byte cannot inject terminal sequences or split the record. The
+# filename is sent raw over a socket (no form encoder) with an over-limit part.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  loginj_line=$LINENO
+  _test_start_ms=$(now_ms)
+  loginj_out=$(python3 - "$HOST" "$PORT" /tmp/tests.log <<'PY'
+import socket, sys, time
+
+host, port, logpath = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+name = b'ev\x1b[2Jil.txt'
+payload = b'x' * 126976
+
+# The log is opened in append mode, so only bytes written from here on count:
+# a stale record from an earlier run must not decide this check.
+try:
+    offset = len(open(logpath, 'rb').read())
+except OSError:
+    offset = 0
+
+boundary = b'BOUND'
+body = (b'--' + boundary +
+        b'\r\nContent-Disposition: form-data; name="form_file_name"; filename="' +
+        name + b'"\r\n\r\n' + payload + b'\r\n--' + boundary + b'--\r\n')
+req = (b'POST /upload HTTP/1.1\r\nHost: x\r\n'
+       b'Content-Type: multipart/form-data; boundary=' + boundary +
+       b'\r\nContent-Length: ' + str(len(body)).encode() + b'\r\n\r\n' + body)
+s = socket.create_connection((host, port), 10)
+s.settimeout(20)
+s.sendall(req)
+resp = b''
+try:
+    while True:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        resp += chunk
+except OSError:
+    pass
+s.close()
+time.sleep(0.3)
+try:
+    log = open(logpath, 'rb').read()
+except OSError:
+    log = b''
+print("status:%d|escaped:%s|raw:%s" % (
+    int(resp.split(b' ')[1]) if resp.startswith(b'HTTP/') and len(resp.split(b' ')) > 1 else 0,
+    b'ev\\x1b[2Jil.txt' in log,
+    b'\x1b[2Jil.txt' in log))
+PY
+)
+  if [[ "$loginj_out" == "status:400|escaped:True|raw:False" ]]; then
+    report_result "Upload filename log escaped " "$loginj_line" 0
+  else
+    report_result "Upload filename log escaped " "$loginj_line" 1 \
+      "Expected 400 with the filename hex-escaped in the log and no raw ESC. Got $loginj_out"
+  fi
+else
+  skip_test "Upload filename log escaped " "requires local binary access and python3"
+fi
+
 # Multipart text fields: Request.post must read the text fields of a
 # multipart form next to Request.file, in any order around the file.
 multipart_line=$LINENO
@@ -376,6 +437,114 @@ else
   skip_test "Multipart 5 MB + many parts    " "requires local binary access"
 fi
 
+# Aggregate temp-upload ceiling: a file part with a filename and no data is a
+# legal row of size 0, so a byte-only ceiling never engaged and 100-part
+# requests grew BIALET_FILES without bound. The retained set must be bounded in
+# rows too, the aggregate must come from the isTemp index rather than a full
+# scan, and a refused upload must be answered explicitly (507) instead of a 200
+# with the file silently missing.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cap_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cap_db="$(mktemp /tmp/bialet-cap.XXXXXX)"
+  cap_body="$(mktemp /tmp/bialet-cap-body.XXXXXX)"
+  require_free_port "$HOST" "$MULTIPART_PORT" "upload ceiling server"
+  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l /tmp/tests-cap.log \
+    -d "$cap_db" "$(dirname "$0")" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  cap_first="skipped"
+  cap_last="skipped"
+  cap_usage="skipped"
+  cap_legit="skipped"
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c "
+part = '--zz\r\nContent-Disposition: form-data; name=\"g\"; filename=\"z\"\r\n\r\n\r\n'
+open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
+    cap_first=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -H "Content-Type: multipart/form-data; boundary=zz" \
+      --data-binary "@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    for _ in $(seq 1 44); do
+      cap_last=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+        -H "Content-Type: multipart/form-data; boundary=zz" \
+        --data-binary "@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    done
+    cap_usage=$(curl -s --max-time 5 "http://$HOST:$MULTIPART_PORT/upload-usage")
+    cap_legit=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -F "a=1" -F "excel=@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+  fi
+  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -f "$cap_body" "$cap_db" "$cap_db"-*
+  if [[ "$cap_first" == "200" && "$cap_last" == "507" \
+        && "$cap_usage" == "rows:4096|index:true|scan:" \
+        && "$cap_legit" == "507" ]]; then
+    report_result "Upload ceiling bounds rows     " "$cap_line" 0
+  else
+    report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
+      "Expected 200 then 507, rows:4096 from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+  fi
+else
+  skip_test "Upload ceiling bounds rows     " "requires local binary access"
+fi
+
+# A complete header block with a declared Content-Length, and no body byte
+# behind it, must not park the only worker for the full 30 s body budget; the
+# 413 drain path must not either. One stalled socket, then a probe from a second
+# connection: the probe has to be answered within the 5 s socket timeout, not
+# the 30 s body deadline.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  stall_line=$LINENO
+  _test_start_ms=$(now_ms)
+  stall_out=$(python3 - "$HOST" "$PORT" <<'PY'
+import socket, sys, time
+
+host, port = sys.argv[1], int(sys.argv[2])
+
+def probe():
+    start = time.time()
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(60)
+    s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\n\r\n")
+    data = b""
+    while b"\r\n\r\n" not in data:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        data += chunk
+    s.close()
+    return time.time() - start
+
+def stall(payload):
+    s = socket.create_connection((host, port), 10)
+    s.sendall(payload)
+    return s
+
+baseline = probe()
+stalled = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 1\r\n\r\n")
+time.sleep(0.3)
+body = probe()
+stalled.close()
+oversized = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 999999\r\n\r\n")
+time.sleep(0.3)
+drain = probe()
+oversized.close()
+print("baseline=%.2f body=%.2f drain=%.2f" % (baseline, body, drain))
+PY
+)
+  stall_body=$(printf '%s' "$stall_out" | sed -n 's/.*body=\([0-9.]*\).*/\1/p')
+  stall_drain=$(printf '%s' "$stall_out" | sed -n 's/.*drain=\([0-9.]*\).*/\1/p')
+  if awk -v b="$stall_body" -v d="$stall_drain" \
+      'BEGIN { exit !(b != "" && d != "" && b < 12 && d < 12) }'; then
+    report_result "Stalled body bounded          " "$stall_line" 0
+  else
+    report_result "Stalled body bounded          " "$stall_line" 1 \
+      "Expected both probes under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
+  fi
+else
+  skip_test "Stalled body bounded          " "requires local binary access and python3"
+fi
+
 run_test "Response page escapes title " "response-page" 200 "Page&lt;title&gt;"
 run_test "Response page escapes msg   " "response-page" 200 "Hello &amp; welcome"
 run_test "Response out buffer         " "response-out"  200 "out:[first"
@@ -384,6 +553,7 @@ run_test "Response headers getter     " "response-headers" 200 "custom:true|cook
 run_test "Response forbidden          " "response-errors?forbidden=1" 403
 run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom-404-page"
 run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallback:fallback-value|missing:null"
+run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|own:[a1=evil]|hosted:[]|parent:[]|sub:[]"
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
 run_test "Directory index resolution  " "blog"           200 "route-index"
 run_test "Directory index trailing /  " "blog/"          200 "route-index"
@@ -420,7 +590,10 @@ run_test "Query non-primitive params  " "query-param-stringify" 200 "node-name|t
 run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
 run_test "Db save delete migrate      " "db-more"         200 "inserted:"
+run_test "Db delete validates table     " "db-delete-guard" 200 "literal:1|aborted:true|intact:1|other:2|refused:false|session:1"
+run_test "For-in rejects non-instances   " "iterate-guard" 200 "bool:true|num:true|null:true|missing:true|fromString:true|fetchFromString:true|saveBool:true|saveMissing:true|control:9"
 run_test "NULL column maps to null     " "db-null"         200 "literal:true|bound:true"
+run_test "UTF-8 range slices stay intact" "utf8-range" "v=café" 200 "lit:true|litHex:63,61,66,c3,a9|emoji:true|emojiHex:61,f0,9f,98,80,62|reverseHex:c3,a9,66,61,63|reverse:true|tailHex:a9|midHex:f0,9f,98,80|split:true|splitHex:64,c3,b3,73|trim:true|trimHex:73,65,c3,b1,6f,72|replace:true|replaceHex:63,61,66,c3,a9,20,73,69,6e,20,6c,65,63,68,65|posted:true|postedHex:63,61,66,c3,a9"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"
@@ -433,7 +606,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar round-trip  " "http-options?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "session=abc123"
   run_test "Http cookie jar host scope  " "http-options?which=cookie-scope&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar path scope  " "http-options?which=cookie-path&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
-  run_test "Http cookie jar domain scope" "http-options?which=cookie-domain&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
+  run_test "Http cookie jar domain scope" "http-options?which=cookie-domain&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|session=abc123|no-cookie"
   run_test "Http cookie jar secure flag " "http-options?which=cookie-secure&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar expire      " "http-options?which=cookie-expire&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie"
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"

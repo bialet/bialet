@@ -660,6 +660,18 @@ Deletes data from a specified table based on its ID.
 - `table`: The name of the table to delete data from.
 - `id`: The ID of the data to delete.
 
+Like `save`, the table name is interpolated into the statement, so it must be a
+plain identifier (letters, digits and `_`, at most 64 characters) and it must
+not name a framework table: a name that fails either check aborts with
+`Invalid table name` or returns `false` instead of running. Never pass a
+request-derived value here; map it to a literal name first.
+
+```wren
+Db.delete("users", 42)              // ok
+Db.delete("users` WHERE 1=1; --", 1) // aborts: Invalid table name
+Db.delete("BIALET_SESSION", 1)      // false
+```
+
 ## Http
 
 A class for making outbound HTTP requests, with shortcuts for the common
@@ -829,9 +841,11 @@ string, or `""` when empty. `Set-Cookie` response headers are stored in the
 jar automatically and sent back on later calls unless a `Cookie` header is set
 explicitly.
 
-The jar is scoped per host and honors the `Domain`, `Path`, `Secure`, and
-`Max-Age` cookie attributes, so a cookie set by one host is never sent to a
-different host.
+The jar is scoped per host: cookies are keyed on the host that set them, so a
+cookie set by one host is never sent to a different host. `Path`, `Secure`, and
+`Max-Age` are honored; the `Domain` attribute is ignored (host-only jar), since
+a `Domain` covering a multi-label public suffix cannot be validated without an
+embedded suffix list.
 
 ### query(params)
 

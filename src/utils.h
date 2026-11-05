@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// Hex-escapes every control byte in a wire-derived value before it reaches the
+// log. Returns a heap string (caller frees) or NULL on OOM.
+char* log_escape(const char* s);
+
 char* safe_malloc(size_t size);
 char* string_safe_copy(const char* zSrc);
 char* string_append(char* zPrior, const char* zSep, const char* zSrc);

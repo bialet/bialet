@@ -199,10 +199,11 @@ Http.get("https://api.example.com/login", {"form": {"user": "ada"}})
 var profile = Http.get("https://api.example.com/me")
 ```
 
-The jar is scoped per host. `Domain`, `Path`, `Secure`, and `Max-Age` cookie
-attributes are honored, so a cookie set by one host is never sent to a
-different host. If you want to opt out, set an explicit `Cookie` header in
-`headers` — it takes precedence over the jar.
+The jar is scoped per host: every cookie is keyed on the host that set it, so a
+cookie set by one host is never sent to a different host. `Path`, `Secure`, and
+`Max-Age` are honored. The `Domain` attribute is **not** honored — see the
+pitfalls. If you want to opt out of the jar entirely, set an explicit `Cookie`
+header in `headers`; it takes precedence over the jar.
 
 (response-handling)=
 
@@ -353,9 +354,15 @@ if (!http.call("https://api.example.com/health",
 
 ## Pitfalls
 
-- **The cookie jar does not support `Expires`.** `Max-Age`, `Domain`, `Path`,
-  and `Secure` are honored, but a cookie that only carries an `Expires` date
-  does not auto-expire in the jar.
+- **The cookie jar does not support `Expires`.** `Max-Age`, `Path`, and
+  `Secure` are honored, but a cookie that only carries an `Expires` date does
+  not auto-expire in the jar.
+- **The cookie jar ignores the `Domain` attribute.** Cookies are host-only: a
+  `Domain` wide enough to cover subdomains cannot be validated without an
+  embedded public-suffix list, and honoring one would let a host under a
+  multi-label suffix (`co.uk`, `github.io`, ...) plant a cookie that the jar
+  then sends to a different registrant. Store and send cookies for the exact
+  host that set them instead.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
 - **Redirects are followed** automatically, up to 10 hops.

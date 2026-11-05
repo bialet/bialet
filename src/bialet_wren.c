@@ -52,7 +52,6 @@
 #define MAX_MODULE_LEN 256
 #define HTTP_OK 200
 #define HTTP_ERROR 500
-#define BIALET_FILE_CHAR 26
 #define BIALET_EXTERNAL_MODULE_LEN 3
 #define BIALET_MODULE_GITHUB_PREFIX "gh:"
 #define BIALET_REMOTE_MODULE_GITHUB_URL                                             \
@@ -71,6 +70,54 @@
 WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
+
+// Aggregate ceilings for unprocessed uploads stored in BIALET_FILES. The
+// per-request caps only bound one request; without an aggregate bound an
+// unauthenticated client could keep posting 100-part bodies and grow the shared
+// database until every write fails with SQLITE_FULL. A byte sum alone is not
+// enough: a file part with a filename and no data is a legal row of size 0, so
+// a row ceiling is needed too. Both aggregates are read through the index on
+// isTemp. When either is exhausted the request is refused with 507 instead of
+// being served with the file silently missing.
+#define MAX_TEMP_UPLOAD_BYTES ((sqlite3_int64)64 * 1024 * 1024)
+#define MAX_TEMP_UPLOAD_ROWS 4096
+
+// Deletes temp uploads older than a day. Called at startup and, throttled, from
+// the upload path: the old code only purged inside save_uploaded_files, so an
+// app that stopped receiving multipart requests never reclaimed anything.
+static void purge_temp_uploads(void) {
+  if(db == NULL)
+    return;
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "DELETE FROM BIALET_FILES WHERE isTemp = 1 AND "
+                        "createdAt < datetime('now', '-1 day')",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+  }
+}
+
+// Total bytes and row count currently held by temporary uploads. One statement
+// for both aggregates, over the index on isTemp: the pre-handler path must not
+// pay a full scan of every file row, including the app's own saved files.
+static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
+  *bytes = 0;
+  *rows = 0;
+  sqlite3_stmt* stmt = NULL;
+  if(db == NULL)
+    return;
+  if(sqlite3_prepare_v2(db,
+                        "SELECT IFNULL(SUM(size), 0), COUNT(*) FROM BIALET_FILES "
+                        "WHERE isTemp = 1",
+                        -1, &stmt, 0) == SQLITE_OK) {
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+      *bytes = sqlite3_column_int64(stmt, 0);
+      *rows = sqlite3_column_int64(stmt, 1);
+    }
+    sqlite3_finalize(stmt);
+  }
+}
 
 // Test-runner failure capture. bialet_wren_error() is the global Wren error
 // callback for every VM in the process (requests, migrations, cron, and
@@ -145,7 +192,10 @@ char* bialet_read_file(const char* path) {
   // serve. Only the root-relative portion is checked so an app hosted under a
   // "_"- or "."-named directory still works.
   if(has_forbidden_uri_component(resolved + root_len)) {
-    message(red("Error"), "Private file access blocked in bialetReadFile", path);
+    char* log_path = log_escape(path);
+    message(red("Error"), "Private file access blocked in bialetReadFile",
+            log_path ? log_path : "(unprintable)");
+    free(log_path);
     return NULL;
   }
 
@@ -718,6 +768,7 @@ struct MultipartInfo {
   size_t fields_len;
   size_t head_len;
   int    is_multipart;
+  int    storage_full;
 };
 
 struct FieldBuf {
@@ -805,6 +856,54 @@ static void field_buf_put_encoded(struct FieldBuf* fb, const char* src, size_t n
       fb->data[fb->len++] = hex[c & 15];
     }
   }
+}
+
+// Case-insensitive equality of two spans of [n] bytes.
+static int header_name_eq(const char* a, const char* b, size_t n) {
+  for(size_t i = 0; i < n; i++) {
+    if(tolower((unsigned char)a[i]) != tolower((unsigned char)b[i]))
+      return 0;
+  }
+  return 1;
+}
+
+// Returns the value of the LAST header line whose field name is [name],
+// anchored at the start of a line (so "X-Content-Type:" does not match) and
+// bounded to that line, matching the Wren header map's last-wins semantics.
+// On a hit, *value_end points at the CR/LF that ends the value line.
+static const char* find_last_header_value(const char* msg, size_t head_len,
+                                          const char* name, size_t name_len,
+                                          const char** value_end) {
+  const char* p = msg;
+  const char* end = msg + head_len;
+  const char* found = NULL;
+
+  // Skip the request line first: a header name must start a header line.
+  while(p + 1 < end && !(p[0] == '\r' && p[1] == '\n'))
+    p++;
+  if(p + 1 >= end)
+    return NULL;
+  p += 2;
+
+  while(p < end) {
+    const char* eol = p;
+    while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
+      eol++;
+    size_t line_len = (size_t)(eol - p);
+    if(line_len > name_len && p[name_len] == ':' &&
+       header_name_eq(p, name, name_len)) {
+      const char* v = p + name_len + 1;
+      while(v < eol && (*v == ' ' || *v == '\t'))
+        v++;
+      found = v;
+      if(value_end != NULL)
+        *value_end = eol;
+    }
+    if(eol + 1 >= end)
+      break;
+    p = eol + 2;
+  }
+  return found;
 }
 
 static int ascii_ieq(char a, char b) {
@@ -908,6 +1007,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
   mp->fields = NULL;
   mp->fields_len = 0;
   mp->is_multipart = 0;
+  mp->storage_full = 0;
 
   const char* msg = hm->message.str;
   size_t      msg_len = hm->message.len;
@@ -921,22 +1021,27 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     return 0;
   size_t head_len = (size_t)(headerEnd - msg);
 
-  static const char kContentType[] = "Content-Type:";
-  const char*       ctStart =
-      mem_find_ci(msg, head_len, kContentType, sizeof(kContentType) - 1);
-  if(!ctStart)
+  // The declaration must be the value of a real Content-Type field, not a
+  // substring of some other header (or of the request line): the old
+  // unanchored search let "X-Content-Type: multipart/form-data; boundary=zz"
+  // select the multipart parser while Request.header("content-type") was null.
+  static const char kContentType[] = "Content-Type";
+  const char*       ctEnd = NULL;
+  const char* ctStart = find_last_header_value(msg, head_len, kContentType,
+                                               sizeof(kContentType) - 1, &ctEnd);
+  if(!ctStart || ctEnd == NULL || ctEnd <= ctStart)
     return 0;
-  ctStart += sizeof(kContentType) - 1;
-  while(ctStart < headerEnd && (*ctStart == ' ' || *ctStart == '\t'))
-    ctStart++;
 
   static const char kMultipart[] = "multipart/form-data";
-  size_t            ct_avail = (size_t)(headerEnd - ctStart);
+  size_t            ct_avail = (size_t)(ctEnd - ctStart);
   if(ct_avail < sizeof(kMultipart) - 1 ||
      mem_find_ci(ctStart, sizeof(kMultipart) - 1, kMultipart,
                  sizeof(kMultipart) - 1) != ctStart)
     return 0;
 
+  // The boundary is a parameter of this field only, so the search ends at the
+  // header line's CRLF instead of running to the end of the header block (where
+  // a later "X-Boundary: boundary=zz" used to supply it).
   static const char kBoundary[] = "boundary=";
   const char*       boundaryStart =
       mem_find_ci(ctStart, ct_avail, kBoundary, sizeof(kBoundary) - 1);
@@ -948,13 +1053,12 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
   // contains characters such as ':' or ' ').
   char   boundary[256];
   size_t boundary_len;
-  if(boundaryStart < headerEnd && *boundaryStart == '"') {
-    boundary_len =
-        copy_until(boundaryStart + 1, (size_t)(headerEnd - boundaryStart) - 1,
-                   "\"\r\n", boundary, sizeof(boundary));
+  if(boundaryStart < ctEnd && *boundaryStart == '"') {
+    boundary_len = copy_until(boundaryStart + 1, (size_t)(ctEnd - boundaryStart) - 1,
+                              "\"", boundary, sizeof(boundary));
   } else {
-    boundary_len = copy_until(boundaryStart, (size_t)(headerEnd - boundaryStart),
-                              "\r\n; \t", boundary, sizeof(boundary));
+    boundary_len = copy_until(boundaryStart, (size_t)(ctEnd - boundaryStart), "; \t",
+                              boundary, sizeof(boundary));
   }
   // RFC 2046 caps a boundary at 70 characters. One that fills the buffer was
   // truncated, and matching on a truncated delimiter would split the body at the
@@ -982,6 +1086,20 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     return 0;
   size_t sb_len = (size_t)sb;
   size_t dl_len = (size_t)dl;
+
+  // Reclaim expired temp uploads before accepting more (at most once a minute
+  // per process; startup does an unconditional purge).
+  {
+    static time_t last_purge = 0;
+    time_t        now = time(NULL);
+    if(now - last_purge >= 60) {
+      last_purge = now;
+      purge_temp_uploads();
+    }
+  }
+  sqlite3_int64 tempBytes = 0;
+  sqlite3_int64 tempRows = 0;
+  temp_upload_usage(&tempBytes, &tempRows);
 
   const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
@@ -1085,11 +1203,12 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       continue;
     }
 
-    char        contentTypeStr[256] = "application/octet-stream";
-    const char* partCtStart = find_part_header(part, part_head_len, kContentType,
-                                               sizeof(kContentType) - 1);
+    char              contentTypeStr[256] = "application/octet-stream";
+    static const char kPartContentType[] = "Content-Type:";
+    const char* partCtStart = find_part_header(part, part_head_len, kPartContentType,
+                                               sizeof(kPartContentType) - 1);
     if(partCtStart != NULL) {
-      partCtStart += sizeof(kContentType) - 1;
+      partCtStart += sizeof(kPartContentType) - 1;
       while(partCtStart < partHeaderEnd &&
             (*partCtStart == ' ' || *partCtStart == '\t'))
         partCtStart++;
@@ -1101,11 +1220,17 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
     // Validate file size to prevent disk abuse
     if(fileSize > bialet_config.max_upload_size) {
-      char sizeMsg[512];
+      // The filename is wire-supplied: it comes from the part's
+      // Content-Disposition byte for byte and may carry ESC or CR. Escape it
+      // before it reaches the log, like every other attacker-controlled value.
+      char  sizeMsg[1200];
+      char* safeName = log_escape(filename);
       snprintf(
           sizeMsg, sizeof(sizeMsg),
           "File '%s' exceeds maximum upload size (%zu bytes > %zu bytes allowed)",
-          filename, fileSize, bialet_config.max_upload_size);
+          safeName ? safeName : "(unprintable)", fileSize,
+          bialet_config.max_upload_size);
+      free(safeName);
       message(red("Upload Error"), sizeMsg);
       cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
@@ -1119,6 +1244,20 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       if(!filesCapped)
         message(red("Upload Error"), "Too many files in request, skipping rest");
       filesCapped = 1;
+      cursor = next_part(resume, end, startBoundary, sb_len);
+      continue;
+    }
+
+    // Aggregate cap: per-request limits do not bound total stored bytes and
+    // rows. A refusal is reported to the caller (507) rather than served as a
+    // 200 with the file silently missing, so an app cannot answer as if the
+    // upload succeeded.
+    if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
+       tempBytes + (sqlite3_int64)fileSize > MAX_TEMP_UPLOAD_BYTES) {
+      if(!mp->storage_full)
+        message(red("Upload Error"),
+                "Temporary upload storage is full, refusing the remaining files");
+      mp->storage_full = 1;
       cursor = next_part(resume, end, startBoundary, sb_len);
       continue;
     }
@@ -1141,6 +1280,8 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
+        tempBytes += (sqlite3_int64)fileSize;
+        tempRows++;
 
         // Append file ID to filesIds string safely
         char idStr[32];
@@ -1181,26 +1322,6 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
     free(fb.data);
   }
 
-  // Steady-state recovery for BIALET_FILES: without a purge the temp blobs
-  // accumulate ~10 MB per upload request indefinitely. The Wren-side Db.clean
-  // only runs during migrations, so enforce the same purge here, throttled to
-  // at most once a minute to keep the per-request cost near zero.
-  {
-    static time_t last_purge = 0;
-    time_t        now = time(NULL);
-    if(now - last_purge >= 60) {
-      last_purge = now;
-      sqlite3_stmt* purge_stmt;
-      if(sqlite3_prepare_v2(db,
-                            "DELETE FROM BIALET_FILES WHERE isTemp = 1 AND "
-                            "createdAt < datetime('now', '-1 day')",
-                            -1, &purge_stmt, 0) == SQLITE_OK) {
-        sqlite3_step(purge_stmt);
-        sqlite3_finalize(purge_stmt);
-      }
-    }
-  }
-
   return 1;
 }
 
@@ -1232,6 +1353,19 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     // Save uploaded files with size validation (max_upload_size config) and
     // collect the text fields of a multipart body.
     save_uploaded_files(hm, filesIds, &mp);
+    if(mp.storage_full) {
+      // The aggregate temporary-upload ceiling is exhausted. Answer explicitly
+      // instead of running the handler with the file missing, so the client
+      // cannot mistake a refused upload for a successful one.
+      free(mp.fields);
+      wrenReleaseHandle(vm, requestClass);
+      wrenReleaseHandle(vm, initMethod);
+      wrenFreeVM(vm);
+      r.status = 507;
+      r.body = string_safe_copy("Temporary upload storage is full");
+      r.body_owned = 1;
+      return r;
+    }
     if(mp.is_multipart) {
       // Only the request line and headers: the body is file content and form
       // fields, which reach Wren already parsed (Request.post / Request.file).
@@ -1279,50 +1413,63 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenGetVariable(vm, module, "Response", 0);
     WrenHandle* responseClass = wrenGetSlotHandle(vm, 0);
     if(r.body == NULL || strlen(r.body) == 0) {
-      /* Get body from response */
-      WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
+      /* A blob selected by Response.file(id) replaces the body. The id is read
+       * from Response's own field, out of band: it used to be a 0x1A marker at
+       * the start of the body, which any client-influenced Response.out output
+       * could forge to read an arbitrary BIALET_FILES row. */
+      int         fileApplied = 0;
+      WrenHandle* fileIdMethod = wrenMakeCallHandle(vm, "fileId");
+      wrenEnsureSlots(vm, 1);
       wrenSetSlotHandle(vm, 0, responseClass);
-      if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
-        message(red("Runtime Error"), "Failed to get body");
-      } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
-        /* wrenGetSlotString only asserts the slot type, and asserts compile out
-         * with NDEBUG -- so a handler returning a non-string from Response.out
-         * reinterpreted whatever was in the slot as a char*. */
-        message(red("Runtime Error"), "Response body is not a string");
-        error = 1;
-      } else {
-        const char* body = wrenGetSlotString(vm, 0);
-        if(body[0] != BIALET_FILE_CHAR) {
-          r.body = string_safe_copy(body);
-          r.body_owned = 1;
-        } else {
-          /* Handle BIALET_FILE_CHAR response for file serving.
-           * This retrieves file content from the database when the response body
-           * starts with BIALET_FILE_CHAR. Consider moving this logic to the server
-           * layer in the future to better separate concerns between the Wren runtime
-           * and response preparation. */
-          sqlite3_stmt* stmt;
-          int           result = sqlite3_prepare_v2(
-              db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
-          if(!(error = result != SQLITE_OK)) {
-            sqlite3_bind_text(stmt, 1, body + 1, -1, SQLITE_STATIC);
-            if(sqlite3_step(stmt) == SQLITE_ROW) {
-              int len = 0;
-              len = sqlite3_column_bytes(stmt, 0);
-              r.body = safe_malloc(len + 1);
-              memcpy(r.body, sqlite3_column_blob(stmt, 0), len);
-              r.length = len;
-              r.body_owned = 1;
-            } else {
-              // If the id is not found, we will send an internal server error.
-              message(red("Error file not found"), sqlite3_errmsg(db));
-              error = 1;
-            }
-            sqlite3_finalize(stmt);
+      if(wrenCall(vm, fileIdMethod) == WREN_RESULT_SUCCESS &&
+         wrenGetSlotType(vm, 0) == WREN_TYPE_NUM) {
+        sqlite3_stmt* stmt;
+        int           result = sqlite3_prepare_v2(
+            db, "SELECT file FROM BIALET_FILES WHERE id = ?", -1, &stmt, 0);
+        if(!(error = result != SQLITE_OK)) {
+          sqlite3_bind_int64(stmt, 1, (sqlite3_int64)wrenGetSlotDouble(vm, 0));
+          if(sqlite3_step(stmt) == SQLITE_ROW) {
+            const void* blob = sqlite3_column_blob(stmt, 0);
+            size_t      len = (size_t)sqlite3_column_bytes(stmt, 0);
+            r.body = safe_malloc(len + 1);
+            /* A zero-length BLOB makes sqlite3_column_blob() return NULL, and an
+             * owned body must be NUL-terminated at r.length: write_response,
+             * handle_client, custom_error and livereload_inject_response all fall
+             * back to strlen() when length == 0. */
+            if(len > 0 && blob != NULL)
+              memcpy(r.body, blob, len);
+            r.body[len] = '\0';
+            r.length = len;
+            r.body_owned = 1;
+            fileApplied = 1;
+          } else {
+            // If the id is not found, we will send an internal server error.
+            message(red("Error file not found"), sqlite3_errmsg(db));
+            error = 1;
           }
+          sqlite3_finalize(stmt);
         }
       }
-      wrenReleaseHandle(vm, outMethod);
+      wrenReleaseHandle(vm, fileIdMethod);
+
+      if(!fileApplied && !error) {
+        /* Get body from response */
+        WrenHandle* outMethod = wrenMakeCallHandle(vm, "out");
+        wrenSetSlotHandle(vm, 0, responseClass);
+        if((error = wrenCall(vm, outMethod) != WREN_RESULT_SUCCESS)) {
+          message(red("Runtime Error"), "Failed to get body");
+        } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
+          /* wrenGetSlotString only asserts the slot type, and asserts compile out
+           * with NDEBUG -- so a handler returning a non-string from Response.out
+           * reinterpreted whatever was in the slot as a char*. */
+          message(red("Runtime Error"), "Response body is not a string");
+          error = 1;
+        } else {
+          r.body = string_safe_copy(wrenGetSlotString(vm, 0));
+          r.body_owned = 1;
+        }
+        wrenReleaseHandle(vm, outMethod);
+      }
     }
     /* Get status from response */
     wrenEnsureSlots(vm, 1);
@@ -1858,6 +2005,59 @@ void bialet_init(struct BialetConfig* config) {
       exit(BIALET_SQLITE_ERROR);
     }
   }
+  // A relative -d is joined onto root_dir, so the database can land inside the
+  // served tree, where the static handler's only name-based protection is the
+  // '_'/'.' rule. Resolve the real location and refuse to start when the
+  // database (or its -wal/-shm siblings, which share the base name) would be
+  // downloadable. The default _db.sqlite3 passes; -d data.sqlite3 does not.
+  {
+    char real_db[PATH_MAX];
+    int  have_real = realpath_n(db_path, real_db, sizeof(real_db)) != NULL;
+    if(!have_real) {
+      // The file does not exist yet: resolve the parent directory and re-join
+      // the base name, so a relative path is still checked at its real place.
+      char        dir[PATH_MAX];
+      char*       slash = strrchr(db_path, '/');
+      const char* base = slash ? slash + 1 : db_path;
+      int         ok = 0;
+      if(slash == NULL) {
+        ok = realpath_n(".", real_db, sizeof(real_db)) != NULL;
+      } else {
+        size_t dlen = (size_t)(slash - db_path);
+        if(dlen == 0)
+          dlen = 1; // "/name"
+        if(dlen < sizeof(dir)) {
+          memcpy(dir, db_path, dlen);
+          dir[dlen] = '\0';
+          ok = realpath_n(dir, real_db, sizeof(real_db)) != NULL;
+        }
+      }
+      if(ok) {
+        size_t rlen = strlen(real_db);
+        size_t blen = strlen(base);
+        if(rlen > 0 && real_db[rlen - 1] == '/')
+          rlen--;
+        if(rlen + 1 + blen < sizeof(real_db)) {
+          real_db[rlen] = '/';
+          memcpy(real_db + rlen + 1, base, blen + 1);
+          have_real = 1;
+        }
+      }
+    }
+    if(have_real) {
+      size_t root_len = strlen(bialet_config.full_root_dir);
+      if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
+         real_db[root_len] == '/' &&
+         !has_forbidden_uri_component(real_db + root_len)) {
+        message(red("Error"),
+                "Database inside the app root must start with '_' or '.' "
+                "(like _db.sqlite3), or live outside the app root:",
+                db_path);
+        exit(BIALET_SQLITE_ERROR);
+      }
+    }
+  }
+
   strncpy(resolved_db_path, db_path, sizeof(resolved_db_path) - 1);
   resolved_db_path[sizeof(resolved_db_path) - 1] = '\0';
   if(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
@@ -1866,6 +2066,7 @@ void bialet_init(struct BialetConfig* config) {
     exit(BIALET_SQLITE_ERROR);
   }
   apply_sqlite_pragmas();
+  purge_temp_uploads();
 
   wrenInitConfiguration(&wren_config);
   wren_config.writeFn = &bialet_wren_write;

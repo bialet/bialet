@@ -906,19 +906,36 @@ DEF_PRIMITIVE(object_type) {
 }
 
 DEF_PRIMITIVE(object_iterate) {
+  // Both Object primitives are bound on the root class, so every Wren value is
+  // offered to the for-in protocol. Reading the receiver as an Obj/ObjInstance
+  // without checking its object kind turns a Bool/Num/Null (a JSON scalar, a
+  // missing request parameter) into a wild pointer read instead of a catchable
+  // error, which killed the serving child.
+  if(!IS_INSTANCE(args[0])) {
+    vm->fiber->error = CONST_STRING(vm, "Value is not iterable.");
+    return false;
+  }
   if(IS_NULL(args[1]))
     RETURN_NUM(0);
+  if(!validateNum(vm, args[1], "Iterator"))
+    return false;
   double iterator = AS_NUM(args[1]);
   ++iterator;
-  if(iterator < AS_OBJ(args[0])->classObj->numFields)
+  if(iterator < AS_INSTANCE(args[0])->obj.classObj->numFields)
     RETURN_NUM(iterator);
   RETURN_FALSE;
 }
 
 DEF_PRIMITIVE(object_iteratorValue) {
+  if(!IS_INSTANCE(args[0])) {
+    vm->fiber->error = CONST_STRING(vm, "Value is not iterable.");
+    return false;
+  }
   ObjInstance* instance = AS_INSTANCE(args[0]);
   uint32_t     index =
       validateIndex(vm, args[1], instance->obj.classObj->numFields, "Field");
+  if(index == UINT32_MAX)
+    return false;
   RETURN_VAL(instance->fields[index]);
 }
 
@@ -1714,8 +1731,29 @@ void setTimezone(const char* tz) {
   tzset();
 }
 
+// Accepts the Wren-level timezone argument for the date primitives: a string,
+// or null/absent (which means "keep the current zone"). AS_CSTRING on a Wren
+// null yields the bogus pointer 0x21, not a C NULL, so the guard setTimezone()
+// already has was unreachable from Wren and a null Date.tz (Db.init installs
+// one when BIALET_TIMEZONE is unset) crashed the process.
+static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
+  if(IS_NULL(arg) || IS_UNDEFINED(arg)) {
+    *out = NULL;
+    return 1;
+  }
+  if(!IS_STRING(arg)) {
+    vm->fiber->error = wrenStringFormat(vm, "Timezone must be a string.");
+    return 0;
+  }
+  *out = AS_CSTRING(arg);
+  return 1;
+}
+
 DEF_PRIMITIVE(date_current) {
-  setTimezone(AS_CSTRING(args[1]));
+  const char* tz;
+  if(!date_timezone_arg(vm, args[1], &tz))
+    return false;
+  setTimezone(tz);
   char       fullDate[20];
   time_t     now = time(NULL);
   struct tm* local = localtime(&now);
@@ -1783,6 +1821,8 @@ static void date_format_append(char* out, size_t cap, size_t* pos,
 }
 
 DEF_PRIMITIVE(date_format) {
+  if(!validateString(vm, args[1], "Format"))
+    return false;
   const char* format = AS_CSTRING(args[1]);
   int         year = AS_NUM(args[2]);
   int         month = AS_NUM(args[3]);
@@ -1790,7 +1830,9 @@ DEF_PRIMITIVE(date_format) {
   int         hour = AS_NUM(args[5]);
   int         minute = AS_NUM(args[6]);
   int         second = AS_NUM(args[7]);
-  const char* tz = AS_CSTRING(args[8]);
+  const char* tz;
+  if(!date_timezone_arg(vm, args[8], &tz))
+    return false;
   setTimezone(tz);
   struct tm t = {0};
   t.tm_year = year - 1900;
@@ -1890,7 +1932,9 @@ DEF_PRIMITIVE(date_unix) {
   int         hour = AS_NUM(args[4]);
   int         minute = AS_NUM(args[5]);
   int         second = AS_NUM(args[6]);
-  const char* tz = AS_CSTRING(args[7]);
+  const char* tz;
+  if(!date_timezone_arg(vm, args[7], &tz))
+    return false;
   setTimezone(tz);
 
   struct tm t = {0};
@@ -1906,6 +1950,8 @@ DEF_PRIMITIVE(date_unix) {
 };
 
 DEF_PRIMITIVE(markdown_html) {
+  if(!validateString(vm, args[1], "Markdown"))
+    return false;
   char* html = markdown_to_html(AS_CSTRING(args[1]));
   if(html == NULL)
     RETURN_ERROR("Markdown output too large");
@@ -1915,6 +1961,8 @@ DEF_PRIMITIVE(markdown_html) {
 }
 
 DEF_PRIMITIVE(markdown_file) {
+  if(!validateString(vm, args[1], "Markdown file name"))
+    return false;
   char* content = bialet_read_file(AS_CSTRING(args[1]));
   if(content == NULL)
     RETURN_FALSE;
@@ -1926,6 +1974,15 @@ DEF_PRIMITIVE(markdown_file) {
   free(html);
   RETURN_VAL(result);
 };
+
+// A query argument is either a plain string (Query.fromString, Query.new) or a
+// backtick literal, which is an OBJ_QUERY instance -- an ObjString with a
+// different object kind, so IS_STRING/validateString rejects it.
+static bool is_query_text(Value v) {
+  if(IS_STRING(v))
+    return true;
+  return IS_OBJ(v) && AS_OBJ(v)->type == OBJ_QUERY;
+}
 
 // Binds each parameter in [params] to [query]. Returns false (and sets a
 // fiber error) when a parameter has a type the native layer cannot bind, so a
@@ -1976,6 +2033,14 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
 }
 
 DEF_PRIMITIVE(query_fetch) {
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(!IS_LIST(args[2])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query parameters must be a list.");
+    return false;
+  }
   BialetQuery* query = create_bialet_query();
   if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
@@ -2032,6 +2097,14 @@ DEF_PRIMITIVE(query_fetch) {
 }
 
 DEF_PRIMITIVE(query_execute) {
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(!IS_LIST(args[2])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query parameters must be a list.");
+    return false;
+  }
   BialetQuery* query = create_bialet_query();
   if(query == NULL)
     RETURN_ERROR("Out of memory allocating query");
@@ -2056,11 +2129,22 @@ DEF_PRIMITIVE(query_execute) {
 }
 
 DEF_PRIMITIVE(query_toString) {
+  if(!is_query_text(args[0])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
   const char* queryString = AS_CSTRING(args[0]);
   RETURN_VAL(wrenNewString(vm, queryString));
 }
 
 DEF_PRIMITIVE(query_new) {
+  // Query.new() (used by Query.fromString) supplies no text.
+  if(IS_NULL(args[1]))
+    RETURN_VAL(wrenNewQuery(vm, ""));
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
   const char* queryString = AS_CSTRING(args[1]);
   RETURN_VAL(wrenNewQuery(vm, queryString));
 }

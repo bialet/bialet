@@ -770,12 +770,73 @@ Value wrenNewQueryLength(WrenVM* vm, const char* text, size_t length) {
   return OBJ_VAL(query);
 }
 
+// True when byte index "index" is one of the "count" elements visited from
+// "start" with "step", independent of iteration direction.
+static int range_index_in_slice(int index, int start, uint32_t count, int step) {
+  if(step == 0)
+    return index == start && count > 0;
+  int64_t delta = (int64_t)index - (int64_t)start;
+  if(delta % step != 0)
+    return 0;
+  int64_t k = delta / step;
+  return k >= 0 && (uint64_t)k < count;
+}
+
+// True when the byte at "index" is a continuation byte of a sequence whose lead
+// byte is itself part of the slice, so the lead's decode already encodes this
+// byte. The lead can be at most three bytes earlier in the source; it does not
+// matter which of the two is visited first. A byte that belongs to no decodable
+// lead (bare continuation, truncated or over-long lead) is not owned and is
+// carried through raw.
+static int range_index_owned_by_lead(uint8_t* from, int length, int index, int start,
+                                     uint32_t count, int step) {
+  for(int back = 1; back <= 3 && index - back >= 0; back++) {
+    int lead = index - back;
+    if(!range_index_in_slice(lead, start, count, step))
+      continue;
+    int codePoint = wrenUtf8Decode(from + lead, (uint32_t)(length - lead));
+    if(codePoint == -1 || codePoint > 0x10ffff)
+      continue;
+    if(lead + wrenUtf8EncodeNumBytes(codePoint) - 1 >= index)
+      return 1;
+  }
+  return 0;
+}
+
 Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
                              uint32_t count, int step) {
   uint8_t* from = (uint8_t*)source->value;
-  int      length = 0;
+
+  // Size the result from what the copy loop below will actually write. Sizing
+  // from wrenUtf8DecodeNumBytes() over-counted every element whose sequence
+  // does not decode (a truncated lead byte reserves 2-4 bytes and then writes
+  // none), leaving never-written bytes inside a string whose length included
+  // them: such a value truncated every C-string consumer and inflated
+  // String.count. A byte that fails to decode is carried through raw, the same
+  // rule wrenStringCodePointAt uses; a decoded value above U+10FFFF (possible
+  // from a 0xF5-0xF7 lead byte) is treated the same way, because
+  // wrenUtf8Encode cannot encode it.
+  //
+  // A continuation byte fails to decode on its own, so it must not be carried
+  // through raw when the lead byte that encodes it is also part of the slice:
+  // the lead's decode already wrote it, and copying it again duplicated one
+  // byte per multi-byte character in every range slice. Ownership is decided
+  // from the source bytes and the slice geometry rather than from the previous
+  // iteration, because a reverse slice visits a continuation byte before its
+  // lead. Both passes apply the identical rule.
+  size_t length = 0;
   for(uint32_t i = 0; i < count; i++) {
-    length += wrenUtf8DecodeNumBytes(from[start + i * step]);
+    int     index = start + i * step;
+    uint8_t byte = from[index];
+    if((byte & 0xc0) == 0x80 &&
+       range_index_owned_by_lead(from, source->length, index, start, count, step))
+      continue;
+    int codePoint = wrenUtf8Decode(from + index, source->length - index);
+    if(codePoint == -1 || codePoint > 0x10ffff) {
+      length += 1;
+    } else {
+      length += (size_t)wrenUtf8EncodeNumBytes(codePoint);
+    }
   }
 
   ObjString* result = allocateString(vm, length);
@@ -783,10 +844,16 @@ Value wrenNewStringFromRange(WrenVM* vm, ObjString* source, int start,
 
   uint8_t* to = (uint8_t*)result->value;
   for(uint32_t i = 0; i < count; i++) {
-    int index = start + i * step;
+    int     index = start + i * step;
+    uint8_t byte = from[index];
+    if((byte & 0xc0) == 0x80 &&
+       range_index_owned_by_lead(from, source->length, index, start, count, step))
+      continue;
     int codePoint = wrenUtf8Decode(from + index, source->length - index);
 
-    if(codePoint != -1) {
+    if(codePoint == -1 || codePoint > 0x10ffff) {
+      *to++ = from[index];
+    } else {
       to += wrenUtf8Encode(codePoint, to);
     }
   }

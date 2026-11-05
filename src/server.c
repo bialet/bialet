@@ -328,17 +328,24 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
   long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
   char      drain_buf[BUFFER_SIZE];
+  int       started = 0;
   while(bytes_remaining > 0) {
     long long remaining = deadline - monotonic_ms();
     if(remaining <= 0)
       break;
-    if(!wait_readable(fd, (int)remaining))
+    // Same rule as the body loop: a peer that has sent nothing does not get
+    // the long budget, so the 413 path cannot park the only worker either.
+    long long wait_ms = remaining;
+    if(!started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+      wait_ms = BIALET_SOCKET_TIMEOUT_MS;
+    if(!wait_readable(fd, (int)wait_ms))
       break;
     size_t want =
         bytes_remaining < sizeof(drain_buf) ? bytes_remaining : sizeof(drain_buf);
     ssize_t n = recv(fd, drain_buf, want, 0);
     if(n <= 0)
       break;
+    started = 1;
     bytes_remaining -= (size_t)n;
   }
 }
@@ -512,6 +519,8 @@ const char* get_http_status_description(int status_code) {
       return "Gateway Timeout";
     case 505:
       return "HTTP Version Not Supported";
+    case 507:
+      return "Insufficient Storage";
     default:
       return "Unknown Status";
   }
@@ -676,8 +685,23 @@ static void free_response_owned(struct BialetResponse* response) {
 // between the check and the open. On Windows the shared helper opens with
 // FILE_FLAG_OPEN_REPARSE_POINT and rejects reparse points (junctions/symlinks)
 // instead of following them.
+static int resolve_within_root(const char* path, char* resolved);
+
 static FILE* open_file_within_root(const char* path) {
+#ifdef _WIN32
+  // FILE_FLAG_OPEN_REPARSE_POINT constrains only the final component, so an
+  // intermediate directory junction inside the app root would be traversed by
+  // CreateFileW and the opened target carries no reparse attribute. The
+  // per-request realpath check was removed from this path, so resolve first:
+  // realpath_n canonicalizes junctions on Windows and resolve_within_root
+  // enforces the root prefix.
+  char resolved[PATH_SIZE];
+  if(!resolve_within_root(path, resolved))
+    return NULL;
+  return open_file_no_follow(resolved);
+#else
   return open_file_no_follow(path);
+#endif
 }
 
 // Resolves [path] to an absolute path inside the application root, writing the
@@ -695,6 +719,73 @@ static int resolve_within_root(const char* path, char* resolved) {
   return 1;
 }
 
+// Case-insensitive glob match used only against a file basename, so there are
+// no '/' subtleties: '*' matches any run of characters, everything else is
+// literal. Returns 1 on a match.
+static int glob_match(const char* pattern, size_t plen, const char* name) {
+  size_t i = 0, j = 0;
+  size_t star = (size_t)-1, mark = 0;
+  while(name[j] != '\0') {
+    if(i < plen && (pattern[i] == '*' || tolower((unsigned char)pattern[i]) ==
+                                             tolower((unsigned char)name[j]))) {
+      if(pattern[i] == '*') {
+        star = i++;
+        mark = j;
+      } else {
+        i++;
+        j++;
+      }
+      continue;
+    }
+    if(star != (size_t)-1) {
+      i = star + 1;
+      j = ++mark;
+      continue;
+    }
+    return 0;
+  }
+  while(i < plen && pattern[i] == '*')
+    i++;
+  return i == plen;
+}
+
+// Returns 1 when [name] matches one of the comma-separated glob patterns in
+// bialet_config.ignored_files. That list is documented ("README*,AGENTS*,
+// LICENSE*,*.json,*.yml,*.yaml,*.exe") and settable with -i/--ignore, but was
+// parsed and then never consulted, so those files were served like any other
+// static file.
+static int is_ignored_file_name(const char* name) {
+  const char* list = bialet_config.ignored_files;
+  if(list == NULL || name == NULL)
+    return 0;
+  const char* p = list;
+  while(*p != '\0') {
+    while(*p == ' ' || *p == ',')
+      p++;
+    const char* start = p;
+    while(*p != '\0' && *p != ',')
+      p++;
+    size_t plen = (size_t)(p - start);
+    while(plen > 0 && (start[plen - 1] == ' ' || start[plen - 1] == '\t'))
+      plen--;
+    if(plen > 0 && glob_match(start, plen, name))
+      return 1;
+  }
+  return 0;
+}
+
+// True when the URI is inside the RFC 8615 .well-known namespace, which the
+// ignore list must not touch: jwks.json and assetlinks.json live there.
+static int uri_is_well_known(const char* uri) {
+  if(uri == NULL)
+    return 0;
+  const char* c = uri;
+  while(*c == '/' || *c == '\\')
+    c++;
+  return strncmp(c, ".well-known", 11) == 0 &&
+         (c[11] == '\0' || c[11] == '/' || c[11] == '\\');
+}
+
 void handle_client(bialet_socket_t client_socket) {
   char   buffer[BUFFER_SIZE];
   size_t total_read = 0;
@@ -702,12 +793,15 @@ void handle_client(bialet_socket_t client_socket) {
 
   // Read until the header block is complete. Taking whatever the first recv()
   // returned meant headers split across two TCP segments -- routine for any
-  // real client -- were parsed as a truncated request. Bounded by the same
-  // wall-clock deadline used for bodies so a slow-drip peer cannot park the
-  // accept loop.
-  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
+  // real client -- were parsed as a truncated request.
+  //
+  // The header phase gets the *short* socket timeout, not the body deadline: a
+  // peer that never sends CRLFCRLF parks the single accept loop for however
+  // long this budget is, and 30 s per 70-byte request was a cheap outage. The
+  // body phase keeps its own total budget below.
+  long long hdr_deadline = monotonic_ms() + BIALET_SOCKET_TIMEOUT_MS;
   for(;;) {
-    long long remaining = deadline - monotonic_ms();
+    long long remaining = hdr_deadline - monotonic_ms();
     if(remaining <= 0 || total_read >= sizeof(buffer) - 1)
       break;
     if(!wait_readable(client_socket, (int)remaining))
@@ -728,6 +822,23 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
   buffer[total_read] = '\0';
+
+  // No complete header block (deadline, buffer full, or a malformed request
+  // that never produces CRLFCRLF). Fail closed instead of parsing and serving a
+  // truncated request with no header accounting: that old fallthrough both
+  // answered an unterminated request as if it were complete and let one peer
+  // hold the only worker for the whole body deadline.
+  if(hdr_len == 0) {
+    struct BialetResponse bad = {0};
+    custom_error(400, &bad);
+    write_response(client_socket, &bad);
+    free_response_owned(&bad);
+    return;
+  }
+
+  // Total wall-clock budget for the body phase. A single recv() is bounded by
+  // the socket timeout; this bounds the whole body against a slow-drip peer.
+  long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
 
   char*  full_request = buffer;
   size_t content_length = 0;
@@ -789,16 +900,26 @@ void handle_client(bialet_socket_t client_socket) {
       should_free_request = 1;
       memcpy(full_request, buffer, total_read);
 
+      // A peer that has not sent a single body byte does not get the 30 s body
+      // budget: a complete header block plus a declared Content-Length is a few
+      // dozen bytes, and the single accept loop must not be parked for 30 s by a
+      // body that never starts. Once the body has started, the full budget
+      // applies so a large upload still has time to finish.
+      int body_started = 0;
       while(total_read < full_size) {
         long long remaining = deadline - monotonic_ms();
         if(remaining <= 0)
           break;
-        if(!wait_readable(client_socket, (int)remaining))
+        int wait_ms = (int)remaining;
+        if(!body_started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+          wait_ms = BIALET_SOCKET_TIMEOUT_MS;
+        if(!wait_readable(client_socket, wait_ms))
           break;
         ssize_t n = recv(client_socket, full_request + total_read,
                          full_size - total_read, 0);
         if(n <= 0)
           break;
+        body_started = 1;
         total_read += (size_t)n;
       }
 
@@ -813,6 +934,17 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
+  // The interpreter must see exactly the framed request: the header block plus
+  // the declared Content-Length. recv() may already have buffered bytes beyond
+  // that (they arrived with the headers), and a request with no Content-Length
+  // has no body at all. Passing the surplus to Wren let a client append form
+  // fields and a body that the -b cap and its 413 gate never saw.
+  {
+    size_t framed = hdr_len + content_length;
+    if(total_read > framed)
+      total_read = framed;
+  }
+
   struct HttpMessage* hm = parse_request(full_request, total_read);
   if(hm == NULL) {
     if(should_free_request)
@@ -820,8 +952,14 @@ void handle_client(bialet_socket_t client_socket) {
     socket_close(client_socket);
     return;
   }
-  if(!livereload_is_poll(hm->uri.str))
-    message(magenta("Request"), hm->method.str, hm->uri.str);
+  if(!livereload_is_poll(hm->uri.str)) {
+    char* log_method = log_escape(hm->method.str);
+    char* log_uri = log_escape(hm->uri.str);
+    message(magenta("Request"), log_method ? log_method : hm->method.str,
+            log_uri ? log_uri : hm->uri.str);
+    free(log_method);
+    free(log_uri);
+  }
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
@@ -862,6 +1000,22 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
+  // Origin-form only (RFC 9112 3.2.1): a client sends "/path". Any other shape
+  // means full_root_dir + uri does not name a child of the root -- "/srv/app"
+  // plus "-backup/db.sqlite3" is the sibling "/srv/app-backup/db.sqlite3" --
+  // and the O_NOFOLLOW walk in open_fd_no_follow() starts at "/", so it would
+  // open it. Containment here is structural, so the target must be a child path
+  // by construction.
+  if(hm->uri.str[0] != '/') {
+    clean_http_message(hm);
+    custom_error(400, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
+
   // Build the path from full_root_dir -- the realpath()-resolved root captured
   // at startup -- rather than the raw root_dir. Every directory in it is a real
   // directory, which is what lets open_file_within_root() walk it component by
@@ -872,6 +1026,32 @@ void handle_client(bialet_socket_t client_socket) {
   // resolved the same path twice, once with realpath() and again with the
   // no-follow walk, at roughly one syscall per path component each time.
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
+  // Defense in depth: whatever the probes below do to `path`, it must stay the
+  // root itself or a path below it. Cheap (no syscalls) and independent of the
+  // component walk, so a future route-probe change cannot escape the root the
+  // way a non-origin-form target did.
+  {
+    size_t root_prefix_len = strlen(bialet_config.full_root_dir);
+    while(root_prefix_len > 1 &&
+          bialet_config.full_root_dir[root_prefix_len - 1] == '/')
+      root_prefix_len--;
+    if(strncmp(path, bialet_config.full_root_dir, root_prefix_len) != 0 ||
+       (root_prefix_len > 1 && path[root_prefix_len] != '/' &&
+        path[root_prefix_len] != '\0')) {
+      char* log_path = log_escape(path);
+      message(red("Security Error"), "Path outside the app root blocked",
+              log_path ? log_path : "(unprintable)");
+      free(log_path);
+      clean_http_message(hm);
+      custom_error(403, &response);
+      write_response(client_socket, &response);
+      free_response_owned(&response);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+  }
+
   // Remove query parameters if present
   char* query_start = strchr(path, '?');
   if(query_start) {
@@ -880,7 +1060,12 @@ void handle_client(bialet_socket_t client_socket) {
 
   // Check for directory traversal patterns in the URI before processing
   if(strstr(hm->uri.str, "..") != NULL) {
-    message(red("Security Error"), "Path traversal attempt blocked", hm->uri.str);
+    {
+      char* log_uri = log_escape(hm->uri.str);
+      message(red("Security Error"), "Path traversal attempt blocked",
+              log_uri ? log_uri : hm->uri.str);
+      free(log_uri);
+    }
     clean_http_message(hm);
     custom_error(403, &response);
     write_response(client_socket, &response);
@@ -999,6 +1184,19 @@ void handle_client(bialet_socket_t client_socket) {
   // a symlink anywhere in the path. Containment is therefore a structural
   // property of the open, not a check that has to be repeated (and re-raced)
   // before it.
+  // Apply the documented ignore list at the single point where the served path
+  // is final: the .wren route probe and the directory index both rewrite `path`
+  // before this, so one check covers them all.
+  if(!uri_is_well_known(hm->uri.str) && is_ignored_file_name(path_basename(path))) {
+    clean_http_message(hm);
+    custom_error(404, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
+
   FILE* file = open_file_within_root(path);
   if(file == NULL) {
     // The path passed the component walk's parent check but could not be
