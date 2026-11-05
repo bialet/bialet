@@ -7,9 +7,11 @@ manage file storage. Below are the three main parts of file handling in Bialet.
 ## File Uploading
 
 When a file is uploaded through Bialet, it is automatically saved in the
-database. By default, files handled through `Request.file()` are marked as
-permanent. However, any file that is uploaded but not processed remains
-temporary, meaning it will be deleted within a day or less.
+database as a **temporary** row. Reading it with `Request.file()` does not
+change that: an upload that the handler never keeps is deleted within a day. Call
+`.save` on the file your handler accepts to make it permanent. (The alternative
+- a read accessor that silently persists - let any client grow the database
+without bound, because the shared size/row ceiling only covers temporary rows.)
 
 **File Size Limits**: Bialet enforces a maximum file size per upload. Files
 over the limit are skipped and the server logs the rejection with the maximum
@@ -54,11 +56,13 @@ grows the database and backups.
 **Aggregate temporary storage**: unprocessed uploads are held in a shared pool
 bounded at 64 MiB and 4096 rows, and rows older than a day are purged. The row
 bound matters because a file part with a filename and no data is a legal row of
-size 0: a byte-only ceiling never engaged for those. Once either bound is
-reached the request is answered with `507 Insufficient Storage` and your handler
-does not run, so a refused upload is never mistaken for a successful one. Free
-space by calling `save` on the files your handler accepted (which moves them out
-of the temporary pool) or by destroying them.
+size 0: a byte-only ceiling never engaged for those. A full pool evicts the
+oldest temporary rows to make room, so one client cannot deny uploads to
+everyone else; only a part that still cannot fit is answered with
+`507 Insufficient Storage`, before your handler runs, so a refused upload is
+never mistaken for a successful one. Free space by calling `save` on the files
+your handler accepted (which moves them out of the temporary pool) or by
+destroying them.
 
 ### Example 1: Permanent File Upload
 
@@ -70,6 +74,9 @@ if (Request.isPost) {
   if (!file) {
     return <p>No file was uploaded.</p>
   }
+
+  // Keep the file: without this it stays temporary and is purged within a day.
+  file.save
 
   // Return a message indicating the file was uploaded
   return <p>File uploaded and saved: {{ file.name }}</p>
@@ -89,19 +96,20 @@ return <!doctype html>
 
 ### Example 2: Temporary File Upload
 
-There are times that the file is used just to process it. For that, you can mark
-it as temporary and it will be deleted after a short period of time.
+There are times that the file is used just to process it. An upload is already
+temporary, so simply not calling `.save` is enough; it will be deleted after a
+short period of time.
 
 ```wren
-// Get the uploaded file and mark it as temporary
+// Get the uploaded file and process it without keeping it
 var file = Request.file("upload_file")
-file.temp
 System.print("Uploaded temporary file: %(file.name)")
 ```
 
-> **Note:** Each file processed with `Request.file()` is saved as permanent by
-> default. Files that are uploaded but not processed remain temporary and will
-> be deleted within a day or less.
+If a file was already saved and you want it collected again, call `.temp`.
+
+> **Note:** `Request.file()` returns a temporary row. Call `.save` on the files
+> your handler keeps; everything else is deleted within a day or less.
 
 ## File Creation
 
