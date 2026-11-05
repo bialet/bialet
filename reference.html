@@ -66,7 +66,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.5" />
+  <meta name="docsearch:version" content="1.2.6" />
   </head>
   
   
@@ -1389,6 +1389,16 @@ data manipulation.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">table</span></code>: The name of the table to delete data from.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: The ID of the data to delete.</p></li>
 </ul>
+<p>Like <code class="docutils literal notranslate"><span class="pre">save</span></code>, the table name is interpolated into the statement, so it must be a
+plain identifier (letters, digits and <code class="docutils literal notranslate"><span class="pre">_</span></code>, at most 64 characters) and it must
+not name a framework table: a name that fails either check aborts with
+<code class="docutils literal notranslate"><span class="pre">Invalid</span> <span class="pre">table</span> <span class="pre">name</span></code> or returns <code class="docutils literal notranslate"><span class="pre">false</span></code> instead of running. Never pass a
+request-derived value here; map it to a literal name first.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"users"</span><span class="p">,</span><span class="w"> </span><span class="mf">42</span><span class="p">)</span><span class="w">              </span><span class="c1">// ok</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"users` WHERE 1=1; --"</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="c1">// aborts: Invalid table name</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"BIALET_SESSION"</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w">      </span><span class="c1">// false</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="http">
@@ -1566,9 +1576,11 @@ string), or <code class="docutils literal notranslate"><span class="pre">&quot;&
 string, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when empty. <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> response headers are stored in the
 jar automatically and sent back on later calls unless a <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header is set
 explicitly.</p>
-<p>The jar is scoped per host and honors the <code class="docutils literal notranslate"><span class="pre">Domain</span></code>, <code class="docutils literal notranslate"><span class="pre">Path</span></code>, <code class="docutils literal notranslate"><span class="pre">Secure</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">Max-Age</span></code> cookie attributes, so a cookie set by one host is never sent to a
-different host.</p>
+<p>The jar is scoped per host: cookies are keyed on the host that set them, so a
+cookie set by one host is never sent to a different host. <code class="docutils literal notranslate"><span class="pre">Path</span></code>, <code class="docutils literal notranslate"><span class="pre">Secure</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">Max-Age</span></code> are honored; the <code class="docutils literal notranslate"><span class="pre">Domain</span></code> attribute is ignored (host-only jar), since
+a <code class="docutils literal notranslate"><span class="pre">Domain</span></code> covering a multi-label public suffix cannot be validated without an
+embedded suffix list.</p>
 </section>
 <section id="query-params">
 <h3>query(params)<a class="headerlink" href="#query-params" title="Link to this heading">#</a></h3>

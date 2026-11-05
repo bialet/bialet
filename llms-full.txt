@@ -2596,6 +2596,15 @@ the effective per-file limit is skipped and logged with the maximum it will
 accept. Every accepted upload is stored in SQLite, so raising the limit also
 grows the database and backups.
 
+**Aggregate temporary storage**: unprocessed uploads are held in a shared pool
+bounded at 64 MiB and 4096 rows, and rows older than a day are purged. The row
+bound matters because a file part with a filename and no data is a legal row of
+size 0: a byte-only ceiling never engaged for those. Once either bound is
+reached the request is answered with `507 Insufficient Storage` and your handler
+does not run, so a refused upload is never mistaken for a successful one. Free
+space by calling `save` on the files your handler accepted (which moves them out
+of the temporary pool) or by destroying them.
+
 ### Example 1: Permanent File Upload
 
 ```wren
@@ -6381,10 +6390,11 @@ Http.get("https://api.example.com/login", {"form": {"user": "ada"}})
 var profile = Http.get("https://api.example.com/me")
 ```
 
-The jar is scoped per host. `Domain`, `Path`, `Secure`, and `Max-Age` cookie
-attributes are honored, so a cookie set by one host is never sent to a
-different host. If you want to opt out, set an explicit `Cookie` header in
-`headers` — it takes precedence over the jar.
+The jar is scoped per host: every cookie is keyed on the host that set it, so a
+cookie set by one host is never sent to a different host. `Path`, `Secure`, and
+`Max-Age` are honored. The `Domain` attribute is **not** honored — see the
+pitfalls. If you want to opt out of the jar entirely, set an explicit `Cookie`
+header in `headers`; it takes precedence over the jar.
 
 (response-handling)=
 
@@ -6535,9 +6545,15 @@ if (!http.call("https://api.example.com/health",
 
 ## Pitfalls
 
-- **The cookie jar does not support `Expires`.** `Max-Age`, `Domain`, `Path`,
-  and `Secure` are honored, but a cookie that only carries an `Expires` date
-  does not auto-expire in the jar.
+- **The cookie jar does not support `Expires`.** `Max-Age`, `Path`, and
+  `Secure` are honored, but a cookie that only carries an `Expires` date does
+  not auto-expire in the jar.
+- **The cookie jar ignores the `Domain` attribute.** Cookies are host-only: a
+  `Domain` wide enough to cover subdomains cannot be validated without an
+  embedded public-suffix list, and honoring one would let a host under a
+  multi-label suffix (`co.uk`, `github.io`, ...) plant a cookie that the jar
+  then sends to a different registrant. Store and send cookies for the exact
+  host that set them instead.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
 - **Redirects are followed** automatically, up to 10 hops.
@@ -9294,6 +9310,18 @@ Deletes data from a specified table based on its ID.
 - `table`: The name of the table to delete data from.
 - `id`: The ID of the data to delete.
 
+Like `save`, the table name is interpolated into the statement, so it must be a
+plain identifier (letters, digits and `_`, at most 64 characters) and it must
+not name a framework table: a name that fails either check aborts with
+`Invalid table name` or returns `false` instead of running. Never pass a
+request-derived value here; map it to a literal name first.
+
+```wren
+Db.delete("users", 42)              // ok
+Db.delete("users` WHERE 1=1; --", 1) // aborts: Invalid table name
+Db.delete("BIALET_SESSION", 1)      // false
+```
+
 ## Http
 
 A class for making outbound HTTP requests, with shortcuts for the common
@@ -9463,9 +9491,11 @@ string, or `""` when empty. `Set-Cookie` response headers are stored in the
 jar automatically and sent back on later calls unless a `Cookie` header is set
 explicitly.
 
-The jar is scoped per host and honors the `Domain`, `Path`, `Secure`, and
-`Max-Age` cookie attributes, so a cookie set by one host is never sent to a
-different host.
+The jar is scoped per host: cookies are keyed on the host that set them, so a
+cookie set by one host is never sent to a different host. `Path`, `Secure`, and
+`Max-Age` are honored; the `Domain` attribute is ignored (host-only jar), since
+a `Domain` covering a multi-label public suffix cannot be validated without an
+embedded suffix list.
 
 ### query(params)
 
