@@ -124,9 +124,18 @@ $(OBJ_DIRS):
 installcheck: install
 	$(TEST_DIR)/run.sh $(INSTALL_DIR)/$(TARGET_EXEC)
 
+# The examples on the documentation landing page are checked with the same
+# validator users have: a snippet that stopped compiling should fail the build,
+# not ship. `literalinclude` pulls the real file, and this proves the slice it
+# shows is still a valid script.
+check-examples: $(BUILD_DIR)/$(TARGET_EXEC)
+	python3 tools/check_docs_examples.py \
+		--binary $(BUILD_DIR)/$(TARGET_EXEC) --docs $(DOCS_DIRS)
+
 check: $(BUILD_DIR)/$(TARGET_EXEC)
 	$(TEST_DIR)/run.sh
 	./$(BUILD_DIR)/$(TARGET_EXEC) -T $(TEST_DIR)
+	$(MAKE) check-examples
 
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
@@ -182,4 +191,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files install uninstall check html static install-hooks
+.PHONY: all clean wren_files install uninstall check check-examples html static install-hooks

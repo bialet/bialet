@@ -71,20 +71,9 @@ Web development became a spaceship. Bialet is a bicycle.
      <details class="proof__code" open data-collapse-on-phone>
        <summary>The vote handler, verbatim</summary>
 
-.. code-block:: wren
-
-   import "_app" for Template, Poll
-
-   var poll = Poll.new()
-
-   if (Request.isPost) {
-     var vote = Request.post("vote") || ""
-     poll.vote(vote)
-     System.log("Voted for %(vote)")
-     // Redirect to the results page and stop the script
-     Response.redirect("/results")
-     return
-   }
+.. literalinclude:: getting-started/3-final/index.wren
+   :language: wren
+   :lines: 1-12
 
 .. raw:: html
 

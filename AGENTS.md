@@ -19,8 +19,12 @@ make
 # Run tests
 ./tests/run.sh ./build/bialet 127.0.0.1 7111
 
-# Alternative: make check (calls tests/run.sh)
+# Alternative: make check (calls tests/run.sh, then validates the Wren
+# examples on the docs landing page with `bialet -t`)
 make check
+
+# Only the documentation examples
+make check-examples
 
 # Install (copies build/bialet to ~/.local/bin)
 make install
