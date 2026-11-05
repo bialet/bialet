@@ -23,6 +23,18 @@ if (which == "cookie") {
   return "%(followed)|%(sentToOrigin)|%(targetJar)|%(otherJar)"
 }
 
+if (which == "userinfo") {
+  // A URL whose userinfo text names another host: the jar key must be the host
+  // the transport actually contacted, not the text before the first ':'.
+  var userinfo = target.replace("http://", "")
+  var fetched = Http.get("http://" + userinfo + "@" + otherHost + "/echo?mode=setcookie")
+  var originJar = Http.jarFor(target + "/")
+  var realJar = Http.jarFor(other + "/")
+  if (originJar == "") originJar = "no-cookie"
+  if (realJar == "") realJar = "no-cookie"
+  return "%(fetched)|%(originJar)|%(realJar)"
+}
+
 if (which == "control") {
   // Without a redirect the cookie is emitted and replayed by its own host.
   var set = Http.get(target + "/echo?mode=setcookie")

@@ -1403,6 +1403,13 @@ class Http {
     }
     var queryStart = path.indexOf("?")
     if (queryStart >= 0) path = path[0...queryStart]
+    // A URL may carry userinfo; the transport connects to the host after the
+    // last '@', so the jar key must not include it (String has no lastIndexOf).
+    var at = authority.indexOf("@")
+    while (at >= 0) {
+      authority = authority[at + 1...authority.count]
+      at = authority.indexOf("@")
+    }
     authority = authority.lower
     var host = authority
     if (host.startsWith("[")) {
