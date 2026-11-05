@@ -493,7 +493,7 @@ fi
 # 413 drain path must not either. One stalled socket, then a probe from a second
 # connection: the probe has to be answered within the 5 s socket timeout, not
 # the 30 s body deadline.
-if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" != 1 ]] && command -v python3 >/dev/null 2>&1; then
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
   stall_line=$LINENO
   _test_start_ms=$(now_ms)
   stall_out=$(python3 - "$HOST" "$PORT" <<'PY'
