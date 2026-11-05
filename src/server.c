@@ -328,15 +328,15 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
   long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
   char      drain_buf[BUFFER_SIZE];
-  int       started = 0;
   while(bytes_remaining > 0) {
     long long remaining = deadline - monotonic_ms();
     if(remaining <= 0)
       break;
-    // Same rule as the body loop: a peer that has sent nothing does not get
-    // the long budget, so the 413 path cannot park the only worker either.
+    // Same rule as the body loop: bound each wait, not just the first one, so
+    // the 413 path cannot park the only worker behind a peer that sent one byte
+    // and stopped.
     long long wait_ms = remaining;
-    if(!started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+    if(wait_ms > BIALET_SOCKET_TIMEOUT_MS)
       wait_ms = BIALET_SOCKET_TIMEOUT_MS;
     if(!wait_readable(fd, (int)wait_ms))
       break;
@@ -345,7 +345,6 @@ static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
     ssize_t n = recv(fd, drain_buf, want, 0);
     if(n <= 0)
       break;
-    started = 1;
     bytes_remaining -= (size_t)n;
   }
 }
@@ -900,18 +899,17 @@ void handle_client(bialet_socket_t client_socket) {
       should_free_request = 1;
       memcpy(full_request, buffer, total_read);
 
-      // A peer that has not sent a single body byte does not get the 30 s body
-      // budget: a complete header block plus a declared Content-Length is a few
-      // dozen bytes, and the single accept loop must not be parked for 30 s by a
-      // body that never starts. Once the body has started, the full budget
-      // applies so a large upload still has time to finish.
-      int body_started = 0;
+      // The deadline above bounds the whole transfer, but a peer that sends one
+      // body byte and then goes silent would still hold the only accept loop for
+      // the remaining 30 s. Bound every individual wait as well, so a stalled
+      // peer is dropped after the socket timeout; a live upload keeps the socket
+      // readable and still gets the full budget.
       while(total_read < full_size) {
         long long remaining = deadline - monotonic_ms();
         if(remaining <= 0)
           break;
         int wait_ms = (int)remaining;
-        if(!body_started && wait_ms > BIALET_SOCKET_TIMEOUT_MS)
+        if(wait_ms > BIALET_SOCKET_TIMEOUT_MS)
           wait_ms = BIALET_SOCKET_TIMEOUT_MS;
         if(!wait_readable(client_socket, wait_ms))
           break;
@@ -919,7 +917,6 @@ void handle_client(bialet_socket_t client_socket) {
                          full_size - total_read, 0);
         if(n <= 0)
           break;
-        body_started = 1;
         total_read += (size_t)n;
       }
 

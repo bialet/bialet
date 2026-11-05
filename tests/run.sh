@@ -521,25 +521,34 @@ def stall(payload):
     return s
 
 baseline = probe()
+# Zero body bytes: the peer never sends anything after the header block.
 stalled = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 1\r\n\r\n")
 time.sleep(0.3)
 body = probe()
 stalled.close()
+# One body byte in a second segment: this used to buy the full 30 s budget.
+started = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 2\r\n\r\n")
+time.sleep(0.5)
+started.sendall(b"A")
+started_body = probe()
+started.close()
 oversized = stall(b"POST /echo HTTP/1.1\r\nHost: x\r\nContent-Length: 999999\r\n\r\n")
 time.sleep(0.3)
 drain = probe()
 oversized.close()
-print("baseline=%.2f body=%.2f drain=%.2f" % (baseline, body, drain))
+print("baseline=%.2f body=%.2f started=%.2f drain=%.2f" %
+      (baseline, body, started_body, drain))
 PY
 )
   stall_body=$(printf '%s' "$stall_out" | sed -n 's/.*body=\([0-9.]*\).*/\1/p')
   stall_drain=$(printf '%s' "$stall_out" | sed -n 's/.*drain=\([0-9.]*\).*/\1/p')
-  if awk -v b="$stall_body" -v d="$stall_drain" \
-      'BEGIN { exit !(b != "" && d != "" && b < 12 && d < 12) }'; then
+  stall_started=$(printf '%s' "$stall_out" | sed -n 's/.*started=\([0-9.]*\).*/\1/p')
+  if awk -v b="$stall_body" -v s="$stall_started" -v d="$stall_drain" \
+      'BEGIN { exit !(b != "" && s != "" && d != "" && b < 12 && s < 12 && d < 12) }'; then
     report_result "Stalled body bounded          " "$stall_line" 0
   else
     report_result "Stalled body bounded          " "$stall_line" 1 \
-      "Expected both probes under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
+      "Expected every probe under 12s (5s socket timeout, not the 30s body deadline). Got $stall_out"
   fi
 else
   skip_test "Stalled body bounded          " "requires local binary access and python3"
