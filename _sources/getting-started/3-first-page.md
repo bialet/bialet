@@ -43,6 +43,3 @@ return <ul>
 ```
 
 For more details, see [HTML Template](../template.md).
-
----
-**Previous:** [2. Setup](2-setup) &nbsp; | &nbsp; **Next:** [4. Templates](4-templates)

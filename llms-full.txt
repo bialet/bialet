@@ -1603,9 +1603,6 @@ yet.
 On Linux, Bialet watches `.wren` files and reloads automatically. On macOS,
 restart the server manually after changes (`Ctrl+C` then `bialet` again).
 
----
-**Previous:** [1. Introduction](1-introduction) &nbsp; | &nbsp; **Next:** [3. Your First Page](3-first-page)
-
 
 # 3. Your First Page
 
@@ -1652,9 +1649,6 @@ return <ul>
 ```
 
 For more details, see [HTML Template](../template.md).
-
----
-**Previous:** [2. Setup](2-setup) &nbsp; | &nbsp; **Next:** [4. Templates](4-templates)
 
 
 # 4. Templates
@@ -1733,9 +1727,6 @@ The starting files for this step:
 
 We've replicated the static HTML. Next, we'll make it dynamic with a
 database.
-
----
-**Previous:** [3. Your First Page](3-first-page) &nbsp; | &nbsp; **Next:** [5. Logic & Database](5-logic-database)
 
 
 # 5. Logic & Database
@@ -1851,9 +1842,6 @@ The pattern `{{ condition ? <true-branch> : <false-branch> }}` is a ternary
 
 For a deeper dive into queries, see [Database](../database.md).
 
----
-**Previous:** [4. Templates](4-templates) &nbsp; | &nbsp; **Next:** [6. Migrations](6-migrations)
-
 
 # 6. Migrations
 
@@ -1890,9 +1878,6 @@ anyone who runs it gets the same schema automatically.
 
 In the next chapter, we'll connect the migration-defined table to our form
 and voting logic.
-
----
-**Previous:** [5. Logic & Database](5-logic-database) &nbsp; | &nbsp; **Next:** [7. Forms & Voting](7-forms-voting)
 
 
 # 7. Forms & Voting
@@ -1978,9 +1963,6 @@ Key points:
 - `return` after redirect stops further script execution
 
 This is the standard Bialet form pattern: **check → process → redirect**.
-
----
-**Previous:** [6. Migrations](6-migrations) &nbsp; | &nbsp; **Next:** [8. Results](8-results)
 
 
 # 8. Results
@@ -2089,9 +2071,6 @@ Your poll app is complete. Here are the final files:
 - Check the [Examples](../examples.rst) page for more patterns
 - Read [Advanced Routing](../advanced-routing.md) for file-based routing and
   external imports
-
----
-**Previous:** [7. Forms & Voting](7-forms-voting)
 
 
 # Database

@@ -81,6 +81,3 @@ Key points:
 - `return` after redirect stops further script execution
 
 This is the standard Bialet form pattern: **check → process → redirect**.
-
----
-**Previous:** [6. Migrations](6-migrations) &nbsp; | &nbsp; **Next:** [8. Results](8-results)

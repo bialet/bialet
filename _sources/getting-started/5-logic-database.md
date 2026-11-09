@@ -110,6 +110,3 @@ The pattern `{{ condition ? <true-branch> : <false-branch> }}` is a ternary
 — the Wren equivalent of if/else inline.
 
 For a deeper dive into queries, see [Database](../database.md).
-
----
-**Previous:** [4. Templates](4-templates) &nbsp; | &nbsp; **Next:** [6. Migrations](6-migrations)
