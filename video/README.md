@@ -1,7 +1,7 @@
 # Guestbook demo video
 
-The 30-second vertical clip used on the landing page, plus the 1080×1920 master
-for social.
+The 52-second vertical clip used on the landing page, plus the 1080×1920
+master for social.
 
 **Outputs** (written to `docs/_static/`):
 
@@ -22,6 +22,11 @@ for social.
 - `build.py` — runs both apps with `bialet`, drives a real browser to post
   messages, screenshots before/after, highlights the sources with Pygments,
   steps the stage, and encodes with ffmpeg.
+
+The clip has its own palette — charcoal, amber, coral, green — rather than the
+site's navy and cyan, so it reads as an editor screen instead of competing with
+the page around it. `stage/stage.css` holds it; the demo app's stylesheet uses
+the same values.
 
 Nothing in the video is a mockup: the pages, the responses, and the terminal
 output come from running `bialet`. The typing is composited over real

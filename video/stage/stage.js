@@ -150,32 +150,32 @@
 
   function scene0(t) {
     showBrowser("solo");
-    setShot(t < 2720 ? "styledBefore" : t < 3080 ? "styledSaved" : "styledAfter");
+    setShot(t < 5180 ? "styledBefore" : t < 6080 ? "styledSaved" : "styledAfter");
     setURL(
-      t < 2720
+      t < 5180
         ? "127.0.0.1:7001/"
-        : t < 3080
+        : t < 6080
         ? "127.0.0.1:7001/message"
         : "127.0.0.1:7001/?new=1"
     );
-    ghostTyping("styled", t, 900, 2400, "shipped in an afternoon", 2690);
-    rippleAt("styled", t, 2620);
+    ghostTyping("styled", t, 1400, 4600, "shipped in an afternoon", 5120);
+    rippleAt("styled", t, 5000);
   }
 
   function scene1(t) {
     showCode();
     const tabs = ["mig1", "idx1", "msg1"];
-    if (t < 6100) renderCode(tabs, "mig1", t, 4620, 230);
-    else if (t < 9650) renderCode(tabs, "idx1", t, 6300, 210);
-    else renderCode(tabs, "msg1", t, 9800, 245);
+    if (t < 11200) renderCode(tabs, "mig1", t, 8500, 400);
+    else if (t < 16800) renderCode(tabs, "idx1", t, 11400, 330);
+    else renderCode(tabs, "msg1", t, 17000, 400);
   }
 
   function scene2(t) {
     showTerm();
     showBrowser("small");
 
-    const saved = 16420;
-    const after = 16900;
+    const saved = 29750;
+    const after = 30500;
 
     setShot(t < saved ? "plainBefore" : t < after ? "plainSaved" : "plainAfter");
     setURL(
@@ -186,13 +186,13 @@
         : "127.0.0.1:7001/"
     );
 
-    ghostTyping("plain", t, 15200, 16260, "does this even work?", 16380);
-    rippleAt("plain", t, 16320);
+    ghostTyping("plain", t, 26200, 29000, "does it work?", 29300);
+    rippleAt("plain", t, 29600);
 
     let html = "";
-    const cmdStart = 13700;
+    const cmdStart = 22300;
     if (t >= cmdStart) {
-      const typed = Math.round(clamp01((t - cmdStart) / 360) * 6);
+      const typed = Math.round(clamp01((t - cmdStart) / 420) * 6);
       html += `<span class="term__line"><span class="term__prompt">$ </span>${"bialet".slice(0, typed)}</span>`;
     }
     for (const line of D.terminal) {
@@ -206,46 +206,46 @@
   function scene3(t) {
     showCode();
     const tabs = ["css", "app"];
-    if (t < 20400) renderCode(tabs, "css", t, 17850, 80);
-    else renderCode(tabs, "app", t, 20500, 105);
+    if (t < 36500) renderCode(tabs, "css", t, 31300, 170);
+    else renderCode(tabs, "app", t, 36600, 195);
   }
 
   function scene4(t) {
     showCode();
     const tabs = ["app", "idx2", "msg2"];
-    if (t < 25000) renderCode(tabs, "idx2", t, 23100, 95);
-    else renderCode(tabs, "msg2", t, 25100, 110);
+    if (t < 44300) renderCode(tabs, "idx2", t, 40300, 190);
+    else renderCode(tabs, "msg2", t, 44400, 200);
   }
 
   function scene5(t) {
     showBrowser("solo");
     setShot("styledAfter");
     setURL("127.0.0.1:7001/?new=1");
-    el.endcard.style.opacity = fade(t, 28620, 460).toFixed(3);
+    el.endcard.style.opacity = fade(t, 50000, 600).toFixed(3);
   }
 
   const SCENES = [
     { t0: 0, draw: scene0 },
-    { t0: 4500, draw: scene1 },
-    { t0: 13500, draw: scene2 },
-    { t0: 17700, draw: scene3 },
-    { t0: 23000, draw: scene4 },
-    { t0: 27700, draw: scene5 },
+    { t0: 8000, draw: scene1 },
+    { t0: 22000, draw: scene2 },
+    { t0: 31000, draw: scene3 },
+    { t0: 40000, draw: scene4 },
+    { t0: 48000, draw: scene5 },
   ];
 
   const BOUNDARIES = SCENES.slice(1).map((s) => s.t0);
 
   const CAPTIONS = [
     [0, "this is the whole app", "one binary · no build step · SQLite inside"],
-    [3600, "and that is all of it", "no ORM, no bundler, no config"],
-    [4600, "every line of it", "_migration.wren · index.wren · message.wren"],
-    [9800, "every line of it", "there is nothing else in the project"],
-    [13600, "$ bialet", "starts the server, opens SQLite, runs the migration"],
-    [15350, "it already works", "it is just ugly"],
-    [17800, "one stylesheet", "css/style.css"],
-    [20450, "and one layout class", "_app.wren → Template.layout"],
-    [23150, "two imports", "index.wren · message.wren"],
-    [27800, "same app, styled", "one stylesheet · one layout class"],
+    [7000, "and that is all of it", "no ORM, no bundler, no config"],
+    [8200, "every line of it", "_migration.wren · index.wren · message.wren"],
+    [17400, "every line of it", "there is nothing else in the project"],
+    [22300, "$ bialet", "starts the server, opens SQLite, runs the migration"],
+    [27400, "it already works", "it is just ugly"],
+    [31200, "one stylesheet", "css/style.css"],
+    [36500, "and one layout class", "_app.wren → Template.layout"],
+    [40200, "two imports", "index.wren · message.wren"],
+    [48000, "same app, styled", "one stylesheet · one layout class"],
   ];
 
   function drawCaption(t) {
@@ -255,7 +255,7 @@
     el.title.textContent = title;
     el.sub.textContent = sub;
 
-    const p = fade(t, t0, 260);
+    const p = fade(t, t0, 340);
     const shift = (1 - p) * 16;
     for (const node of [el.title, el.sub]) {
       node.style.opacity = (0.15 + 0.85 * p).toFixed(3);

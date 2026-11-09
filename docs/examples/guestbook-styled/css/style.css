@@ -1,10 +1,10 @@
 :root {
   color-scheme: dark;
-  --bg: #024;
-  --line: #145;
-  --text: #fff;
-  --muted: color-mix(in srgb, #fff 62%, #024);
-  --accent: #0bf;
+  --bg: #0b0f14;
+  --line: #26313d;
+  --text: #f2f6fa;
+  --muted: color-mix(in srgb, #f2f6fa 62%, #0b0f14);
+  --accent: #ffb224;
 }
 
 body {
@@ -16,7 +16,7 @@ body {
   color: var(--text);
   font: 16px/1.55 system-ui, sans-serif;
   background:
-    radial-gradient(110% 70% at 50% -10%, #045, var(--bg));
+    radial-gradient(110% 70% at 50% -10%, #1e1507, var(--bg));
 }
 
 .card {
@@ -24,7 +24,7 @@ body {
   padding: 34px;
   border: 1px solid var(--line);
   border-radius: 28px;
-  background: linear-gradient(180deg, #023, #013);
+  background: linear-gradient(180deg, #161d25, #10161d);
   box-shadow: 0 40px 80px -40px #000;
 }
 
@@ -51,22 +51,22 @@ h1 {
   padding: 13px 16px;
   color: var(--text);
   font: inherit;
-  background: #012;
+  background: #0a0f14;
   border: 1px solid var(--line);
   border-radius: 14px;
   outline: none;
 }
 
-.composer input::placeholder { color: color-mix(in srgb, #fff 48%, #024); }
+.composer input::placeholder { color: color-mix(in srgb, #f2f6fa 45%, #0b0f14); }
 
 .composer input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, #0bf 18%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #ffb224 20%, transparent);
 }
 
 .btn {
   padding: 13px 20px;
-  color: #012;
+  color: #171004;
   font: inherit;
   font-weight: 650;
   text-decoration: none;
@@ -76,7 +76,7 @@ h1 {
   cursor: pointer;
 }
 
-.btn:hover { background: color-mix(in srgb, #0bf 82%, #fff); }
+.btn:hover { background: color-mix(in srgb, #ffb224 84%, #fff); }
 
 .messages {
   margin: 0;
@@ -90,7 +90,7 @@ h1 {
   padding: 16px 18px;
   border: 1px solid var(--line);
   border-radius: 22px;
-  background: #012;
+  background: #0a0f14;
 }
 
 .message p { margin: 0; }
@@ -104,7 +104,7 @@ h1 {
 
 .messages.is-new .message:first-child {
   border-color: var(--accent);
-  background: color-mix(in srgb, #0bf 10%, #012);
+  background: color-mix(in srgb, #ffb224 9%, #0a0f14);
 }
 
 .saved p { margin: 0 0 18px; font-size: 18px; }

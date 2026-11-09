@@ -31,7 +31,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 from pygments import lex
-from pygments.lexers import WrenLexer
+from pygments.lexers import CssLexer, WrenLexer
 from pygments.token import STANDARD_TYPES, Token
 
 ROOT = Path(__file__).resolve().parent
@@ -40,7 +40,7 @@ EXAMPLES = REPO / "docs" / "examples"
 OUT = REPO / "docs" / "_static"
 STILLS = ROOT / "out"
 
-DURATION = 30_000
+DURATION = 52_000
 FPS = 30
 FPS_FAST = 24
 VIEWPORT = {"width": 720, "height": 860}
@@ -50,7 +50,7 @@ MSG_1 = "hello from a .wren file"
 MSG_2 = "does it work?"
 MSG_3 = "shipped in an afternoon"
 
-TERMINAL_AT = [14_120, 14_450, 14_780, 15_080]
+TERMINAL_AT = [23_000, 23_600, 24_400, 29_850]
 
 CSS_EXCERPT = 29  # lines of style.css shown, plus an ellipsis line
 
@@ -99,11 +99,11 @@ def token_class(ttype) -> str:
     return ""
 
 
-def highlight_lines(path: Path) -> list[str]:
+def highlight_lines(path: Path, lexer=None) -> list[str]:
     source = path.read_text(encoding="utf-8").rstrip("\n")
     buckets: list[list[tuple[str, str]]] = [[]]
 
-    for ttype, value in lex(source, WrenLexer()):
+    for ttype, value in lex(source, lexer or WrenLexer()):
         cls = "" if ttype in Token.Text else token_class(ttype)
         for index, part in enumerate(value.split("\n")):
             if index:
@@ -378,8 +378,11 @@ def main() -> None:
             {"id": "msg1", "label": "message.wren",
              "lines": highlight_lines(EXAMPLES / "guestbook" / "message.wren")},
             {"id": "css", "label": "style.css",
-             "lines": highlight_lines(EXAMPLES / "guestbook-styled" / "css" / "style.css")[:CSS_EXCERPT]
+             "lines": highlight_lines(
+                 EXAMPLES / "guestbook-styled" / "css" / "style.css", CssLexer()
+             )[:CSS_EXCERPT]
              + ['<span class="c1">/* &hellip; */</span>']},
+
             {"id": "app", "label": "_app.wren",
              "lines": highlight_lines(EXAMPLES / "guestbook-styled" / "_app.wren")},
             {"id": "idx2", "label": "index.wren",

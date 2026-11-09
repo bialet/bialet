@@ -83,7 +83,7 @@ One executable: HTTP server, SQLite, and a scripting language.
        </figcaption>
      </figure>
      <div class="proof__notes">
-       <p class="proof__heading">Thirty seconds, start to styled</p>
+       <p class="proof__heading">Under a minute, start to styled</p>
        <ul class="proof__list">
          <li>A page, a form handler, a migration.</li>
          <li><code>bialet</code> serves the files. No build step.</li>

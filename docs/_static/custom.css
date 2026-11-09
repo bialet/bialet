@@ -556,8 +556,8 @@ div.highlight button.copybtn.success {
   height: auto;
   border: 1px solid var(--pst-color-border);
   border-radius: 24px;
-  background: #024;
-  box-shadow: 0 18px 40px -24px #00224480;
+  background: #0b0f14;
+  box-shadow: 0 18px 40px -24px #00000066;
 }
 
 .proof__demo figcaption {
