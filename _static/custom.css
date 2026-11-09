@@ -659,9 +659,9 @@ html[data-theme="dark"] .community-banner {
   margin: 0 0 0.5em;
 }
 
-.community-banner__action {
-  margin-top: 0.6em;
-  font-size: 0.9em;
+/* Copy button above the AI prompt block. */
+.ai-prompt-actions {
+  margin: 1.5rem 0 0.75rem;
 }
 
 /* Inline status for the copy buttons; announced, never seen. */

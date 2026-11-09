@@ -129,25 +129,6 @@ Small on purpose.
 
 .. raw:: html
 
-   <div class="community-banner">
-     <p class="community-banner__title"><strong>Building with AI?</strong></p>
-     <p>
-       Paste this into Claude, ChatGPT, or Cursor so it writes idiomatic
-       <code>.wren</code> code from the first response.
-     </p>
-     <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" data-copy-prompt>
-       <span data-copy-label>Copy AI Prompt</span>
-     </button>
-     <p class="community-banner__action">
-       <a href="ai-prompt.html">View the full prompt →</a>
-     </p>
-     <p class="community-banner__action">
-       Or feed the whole site to your tool:
-       <a href="llms.txt">llms.txt</a> (index) and
-       <a href="llms-full.txt">llms-full.txt</a> (every page, plain text).
-     </p>
-   </div>
-
    <div class="copy-status" role="status" aria-live="polite"></div>
 
 .. llms-txt-ignore-end

@@ -1593,6 +1593,8 @@ app.
 - [Forms](forms.md) — POST handling, files, CSRF.
 - [HTML Template](template.md) — inline HTML in depth.
 - [Advanced Routing](advanced-routing.md) — when a URL needs path segments.
+- [AI Coding Prompt](ai-prompt.md) — paste it into Claude, ChatGPT, or Cursor
+  before your next app, or install the `bialet-app-builder` skill.
 
 
 # Getting Started
@@ -1618,8 +1620,10 @@ guestbook](../quickstart.md) builds a complete app in five minutes, without the
 chapter-by-chapter tour.
 
 Building with an AI assistant instead? Paste the
-[AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor before you
-start — it teaches the assistant Bialet's conventions in one message.
+[AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor, or install
+the `bialet-app-builder` skill with
+`npx skills add bialet/skills --skill bialet-app-builder`. Either one teaches
+the assistant Bialet's conventions before you start.
 
 ## What we'll build
 
@@ -11749,6 +11753,18 @@ It teaches the same conventions in four gated phases — static design first,
 your confirmation, then the database and the logic. Use it *or* the prompt
 below, not both.
 ````
+
+<div class="ai-prompt-actions">
+  <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" data-copy-prompt>
+    <span data-copy-label>Copy Prompt</span>
+  </button>
+</div>
+
+<div class="copy-status" role="status" aria-live="polite"></div>
+
+<p>Or feed the whole site to your tool:
+<a href="llms.txt">llms.txt</a> (index) and
+<a href="llms-full.txt">llms-full.txt</a> (every page, plain text).</p>
 
 ---
 

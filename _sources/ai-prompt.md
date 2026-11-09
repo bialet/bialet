@@ -30,6 +30,18 @@ your confirmation, then the database and the logic. Use it *or* the prompt
 below, not both.
 ````
 
+<div class="ai-prompt-actions">
+  <button type="button" class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" data-copy-prompt>
+    <span data-copy-label>Copy Prompt</span>
+  </button>
+</div>
+
+<div class="copy-status" role="status" aria-live="polite"></div>
+
+<p>Or feed the whole site to your tool:
+<a href="llms.txt">llms.txt</a> (index) and
+<a href="llms-full.txt">llms-full.txt</a> (every page, plain text).</p>
+
 ---
 
 ```{literalinclude} prompt-guide.md

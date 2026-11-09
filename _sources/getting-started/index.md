@@ -21,8 +21,10 @@ guestbook](../quickstart.md) builds a complete app in five minutes, without the
 chapter-by-chapter tour.
 
 Building with an AI assistant instead? Paste the
-[AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor before you
-start — it teaches the assistant Bialet's conventions in one message.
+[AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor, or install
+the `bialet-app-builder` skill with
+`npx skills add bialet/skills --skill bialet-app-builder`. Either one teaches
+the assistant Bialet's conventions before you start.
 
 ## What we'll build
 
