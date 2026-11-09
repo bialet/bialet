@@ -75,7 +75,7 @@ Small on purpose.
               aria-label="A guestbook built in Bialet: three files are written, run unstyled, then styled with a stylesheet and a layout class.">
          <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
        </video>
-       <figcaption>The guestbook example: built, run, then styled.
+       <figcaption>The guestbook example.
          <button type="button" class="proof__toggle" data-demo-toggle>Pause</button>
        </figcaption>
      </figure>
@@ -86,9 +86,12 @@ Small on purpose.
          <li><code>bialet</code> serves the files. No build step.</li>
          <li>Then a stylesheet and a layout class.</li>
        </ul>
+       <p class="proof__note">Rather type it than watch it? The quick start has
+         the same files, in order, with the reasoning between them.</p>
        <p class="proof__cta">
          <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="quickstart.html">Build this guestbook</a>
        </p>
+       <p class="proof__run"><code>$ bialet dev</code> → 127.0.0.1:7001</p>
      </div>
    </div>
 
