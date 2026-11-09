@@ -99,9 +99,9 @@ suppress_warnings = ['misc.highlighting_failure']
 
 llms_txt_title = 'Bialet'
 llms_txt_summary = (
-    'A single-binary web framework. Built-in SQLite, a lightweight embedded '
-    'scripting language (Wren), a built-in HTTP server, and zero '
-    'dependencies. Ride light.'
+    'A single-binary web framework: an HTTP server, SQLite, and the Wren '
+    'scripting language in one executable. File-based routing, no build step. '
+    'Single-threaded; deploy behind a reverse proxy.'
 )
 llms_txt_exclude = ['getting-started']
 

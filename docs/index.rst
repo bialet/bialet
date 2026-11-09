@@ -1,8 +1,8 @@
-Web development became a spaceship. Bialet is a bicycle.
-========================================================
+An HTTP server, SQLite, and an embedded scripting language in one executable.
+=============================================================================
 
 .. meta::
-    :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
+    :description: Bialet is a single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step.
     :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 .. llms-txt-ignore-start
@@ -10,9 +10,10 @@ Web development became a spaceship. Bialet is a bicycle.
 .. raw:: html
 
    <p class="hero__lede">
-     Build data-driven web apps from a single file. No NPM, no YAML,
-     no separate database servers. Just a <strong>tiny binary</strong> with
-     a built-in HTTP server, a scripting language, and SQLite.
+     Build data-driven web apps from <code>.wren</code> files. No package
+     manager, no YAML, no separate database server, no build step: one
+     executable (3.7&nbsp;MB on Linux x86_64) runs the HTTP server, opens the
+     SQLite file, and returns the HTML.
    </p>
 
 .. raw:: html
@@ -29,6 +30,18 @@ Web development became a spaceship. Bialet is a bicycle.
            <span class="install__copy-text">Copy</span>
          </button>
        </div>
+       <p class="install__note">
+         macOS ARM, Ubuntu x86_64, and Ubuntu ARM64.
+       </p>
+       <details class="install__readfirst">
+         <summary>Read the script before running it</summary>
+         <div class="install__command">
+           <code class="install__text">curl -fsSL https://get.bialet.dev -o install.sh</code>
+         </div>
+         <p class="install__note">
+           Inspect it, then run <code>sh install.sh</code>.
+         </p>
+       </details>
      </div>
 
      <!-- Windows: download button -->
@@ -49,13 +62,14 @@ Web development became a spaceship. Bialet is a bicycle.
      </div>
 
      <p class="install__more">
-       <a href="installation.html">All platforms &amp; install options</a>
+       <a href="installation.html">Other platforms, Homebrew, and Docker</a>
+       &middot; MIT licensed &middot; v{{bialet_version}}
      </p>
 
    </div>
 
    <div class="hero-actions">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary" href="getting-started/index.html">Get Started</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
      <a class="hero-actions__link" href="https://github.com/bialet/bialet">
        <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
        View on GitHub
@@ -109,8 +123,8 @@ Web development became a spaceship. Bialet is a bicycle.
 
 ----
 
-Features
---------
+What you get
+------------
 
 .. grid:: 1 2 2 2
    :gutter: 2
@@ -119,43 +133,42 @@ Features
 
       :octicon:`package;2em`
       ^^^
-      **A Tiny Single Binary**
+      **One executable**
 
-      Drop the gigabytes of ``node_modules``. Bialet is a small,
-      self-contained executable. Copy it to your server, and your app
-      is deployed.
+      There is no runtime and no ``node_modules`` directory. Copy the binary
+      to a server and run it. The Linux x86_64 binary is 3.7 MB.
 
    .. grid-item-card::
 
       :octicon:`database;2em`
       ^^^
-      **SQLite is Built-in**
+      **SQLite is included**
 
-      Forget about provisioning databases or writing connection strings.
-      Real data persistence works completely out of the box.
+      The database is one file. No connection strings, no service to
+      provision, no separate process. WAL mode is one flag.
 
    .. grid-item-card::
 
       :octicon:`zap;2em`
       ^^^
-      **Zero Build Step**
+      **No build step**
 
-      Write a ``.wren`` file, save it, and refresh your browser.
-      No compilers, no bundlers, no watch processes.
+      Save a ``.wren`` file and refresh the browser. No compiler, no bundler,
+      no watch process.
 
    .. grid-item-card::
 
       :octicon:`code;2em`
       ^^^
-      **HTML is the Real Frontend**
+      **HTML, CSS, and SQL**
 
-      Use standard HTML and CSS. Bialet lets you build server-rendered
-      apps the classic, straightforward way. Add JS only if you want to.
+      Server-rendered pages, standard HTML and CSS, and SQL you write
+      yourself. Add JavaScript only if you want it.
 
 ----
 
-A script that stays out of your way:
-------------------------------------
+A whole app in one file:
+------------------------
 
 .. raw:: html
 
@@ -198,39 +211,80 @@ A script that stays out of your way:
 
 Bialet integrates the :doc:`Wren language <wren>` (based on
 `wren.io <https://wren.io/>`_) with
-a HTTP server and a built-in SQLite database — **in a single binary**.
-No configuration files, no dependencies, no build step. Just write ``.wren``
-files and run.
+an HTTP server and a built-in SQLite database — **in a single binary**.
+No configuration files, no runtime dependencies, no build step. Just write
+``.wren`` files and run.
 
 Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1:7001>`_.
 
 ----
 
-The Bialet Manifesto — Ride Light 🚲
-------------------------------------
+Tradeoffs, stated plainly
+-------------------------
 
-.. admonition:: Ride Light
-   :class: tip
+Bialet is small on purpose. These are the limits that come with that.
 
-   1. **Simplicity is a superpower.** Every line of tooling you don't write
-      is a line of your app that ships faster.
+.. grid:: 1 2 3 3
+   :gutter: 2
 
-   2. **Standards, not frameworks.** HTML, SQL, and HTTP have outlived every
-      framework. Master them and your knowledge stays relevant.
+   .. grid-item-card::
 
-   3. **One file to deploy.** No containers, no orchestration, no
-      ``docker-compose.yml``. Copy the binary — that's it.
+      :octicon:`cpu;2em`
+      ^^^
+      **One connection at a time**
 
-   4. **Batteries included.** Server, database, templating — all in one
-      small binary. No external services to provision.
+      The server is single-threaded and blocking. Run it behind a reverse
+      proxy, which is also where request caps and timeouts belong.
 
-   5. **Ride light.** Complexity is a choice. Choose less, and you'll go
-      further than you think.
+   .. grid-item-card::
+
+      :octicon:`shield;2em`
+      ^^^
+      **HTTP/1.0, no native TLS**
+
+      Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
+      HTTP/2, body limits, and timeouts. See :doc:`deployment`.
+
+   .. grid-item-card::
+
+      :octicon:`database;2em`
+      ^^^
+      **SQLite is the database**
+
+      The database is a SQLite file (``_db.sqlite3`` by default). There is no
+      external database server.
+
+   .. grid-item-card::
+
+      :octicon:`code;2em`
+      ^^^
+      **Wren, with basic tooling**
+
+      Apps are written in Wren. The VS Code and Vim plugins provide syntax
+      highlighting; autocomplete and an LSP are on the roadmap.
+
+   .. grid-item-card::
+
+      :octicon:`package;2em`
+      ^^^
+      **No package registry**
+
+      External modules are imported from GitHub paths. There is no package
+      format, manifest, or build step.
+
+   .. grid-item-card::
+
+      :octicon:`plug;2em`
+      ^^^
+      **No WebSockets**
+
+      Request/response HTTP only. Use polling or an external service for
+      realtime features.
 
 ----
 
-Who is Bialet for?
-------------------
+Where it fits
+-------------
 
 .. grid:: 1 2 3 3
    :gutter: 2
@@ -239,28 +293,30 @@ Who is Bialet for?
 
       :octicon:`beaker;2em`
       ^^^
-      **Internal Tools & Dashboards**
+      **Internal tools and admin panels**
 
-      Spin up a data-driven admin panel in minutes with zero
-      infrastructure overhead.
+      One process, one SQLite file, and a few users on one small server.
 
    .. grid-item-card::
 
       :octicon:`mortar-board;2em`
       ^^^
-      **Learning & Teaching**
+      **Prototypes and small sites**
 
-      Focus on HTML, SQL, and core logic. Skip the webpack configs
-      and ORM abstractions.
+      One directory to deploy. Add a reverse proxy when the site goes
+      public.
 
    .. grid-item-card::
 
       :octicon:`heart;2em`
       ^^^
-      **Lovers of Simplicity**
+      **Learning and teaching**
 
-      If you prefer one tool that does its job perfectly over a chaotic
-      stack of micro-libraries, hop on.
+      HTML, SQL, and one scripting language. Nothing else to install.
+
+Not a fit if you need horizontal scaling, in-process TLS, WebSockets, or a
+package ecosystem. Bialet does not provide them. See :doc:`why-bialet` for the
+longer version.
 
 ----
 
@@ -352,11 +408,12 @@ Who is Bialet for?
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Let's build together</strong></p>
+     <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
      <p>
-       Bialet is maintained by a solo developer, but the community is open to everyone.
-       Whether you're stuck on a query, have a feature idea, or want to show off your
-       project, GitHub Discussions is the place. Search first, ask second, and be kind.
+       Bialet is stable for personal use. There is no commercial support or
+       SLA. Bugs go to GitHub Issues; questions and project showcases go to
+       GitHub Discussions. Planned work is in the
+       <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
    </div>

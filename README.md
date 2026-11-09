@@ -6,12 +6,15 @@
   </a>
 </p>
 <p align="center">
-  <strong>Web development became a spaceship. Bialet is a bicycle.</strong>
+  <strong>An HTTP server, SQLite, and an embedded scripting language in one executable.</strong>
 </p>
 <p align="center">
-  Build data-driven web apps from a single file. No NPM, no YAML, no separate<br />
-  database servers. Just a <strong>tiny binary</strong> with a built-in HTTP server,<br />
-  a lightweight scripting language, and SQLite.
+  Build data-driven web apps from <code>.wren</code> files. No package manager,<br />
+  no YAML, no separate database server, no build step. One executable runs<br />
+  the HTTP server, opens the SQLite file, and returns the HTML.
+</p>
+<p align="center">
+  <em>Web development became a spaceship. Bialet is a bicycle.</em>
 </p>
 
 <p align="center">
@@ -26,7 +29,7 @@
   </a>
 </p>
 
-A script that stays out of your way:
+A whole app in one file:
 
 ```wren
 // 1. Create your database table automatically
@@ -57,21 +60,32 @@ return <main>
 ```
 
 Bialet integrates the object-oriented [Wren language](https://wren.io) with an
-HTTP server and a built-in SQLite database — **in a single small binary**, with
-zero configuration files, zero dependencies, and no build step. Requests are
-routed from the filesystem: each `.wren` file is a handler that returns a
-response body. It is written in C17 and runs on Linux and macOS and Windows.
+HTTP server and a built-in SQLite database — **in a single binary**, with
+no configuration files, no runtime dependencies, and no build step. Requests
+are routed from the filesystem: each `.wren` file is a handler that returns a
+response body. It is written in C17 and runs on Linux, macOS, and Windows.
 
 ## Install
 
-Install a prebuilt binary with a single command (macOS ARM, Ubuntu x86_64,
-Ubuntu ARM):
+Prebuilt binaries and an install script are available for macOS ARM,
+Ubuntu x86_64, and Ubuntu ARM64.
 
 ```bash
 curl -fsSL https://get.bialet.dev | sh
 ```
 
-Check for [other installation options](https://bialet.dev/installation.html).
+To read the script before running it:
+
+```bash
+curl -fsSL https://get.bialet.dev -o install.sh
+less install.sh
+sh install.sh
+```
+
+Other options: [Homebrew, Docker, and release
+archives](https://bialet.dev/installation.html). On Windows, download the
+`.zip` from the [latest
+release](https://github.com/bialet/bialet/releases/latest).
 
 ## Quickstart
 
@@ -93,22 +107,34 @@ Double-clicking `bialet.exe` in File Explorer starts it in dev mode: live
 reload, in-browser error display, and the browser opens automatically. Run it
 from a terminal to start without dev mode.
 
-## The Bialet Manifesto — Ride Light 🚲
+## Tradeoffs
 
-1. **Simplicity is a superpower.** Every line of tooling you don't write is a
-   line of your app that ships faster.
+Bialet is small on purpose. These are the limits that come with that:
 
-2. **Standards, not frameworks.** HTML, SQL, and HTTP have outlived every
-   framework. Master them and your knowledge stays relevant.
+- **Single-threaded.** The server accepts and serves one connection at a time
+  in a blocking loop. Run it behind a reverse proxy, which is also where
+  request body caps and read timeouts belong.
+- **HTTP/1.0, no native TLS.** Put nginx, Apache, or Caddy in front for HTTPS,
+  HTTP/2, body limits, and timeouts. See
+  [Deployment](https://bialet.dev/deployment.html).
+- **SQLite is the database.** One SQLite file (`_db.sqlite3` by default), no
+  external database server. WAL mode is available with `-w`.
+- **Wren only, basic tooling.** Apps are written in Wren. The [VS Code and Vim
+  plugins](https://bialet.dev/editor-support.html) provide syntax highlighting;
+  autocomplete and an LSP are on the roadmap.
+- **No package registry.** External modules are imported from GitHub paths;
+  there is no package format, manifest, or build step. See [External
+  Modules](https://bialet.dev/external-modules.html).
+- **No WebSockets.** Request/response HTTP only. Use polling or an external
+  service for realtime features.
 
-3. **One file to deploy.** No containers, no orchestration, no
-   `docker-compose.yml`. Copy the binary — that's it.
+## Status
 
-4. **Batteries included.** Server, database, templating — all in one small
-   binary. No external services to provision.
-
-5. **Ride light.** Complexity is a choice. Choose less, and you'll go further
-   than you think.
+Bialet is stable for personal use. It is maintained by one developer, with no
+commercial support or SLA. Bugs go to
+[GitHub Issues](https://github.com/bialet/bialet/issues); questions go to
+[GitHub Discussions](https://github.com/bialet/bialet/discussions). Planned
+work is in [ROADMAP.md](ROADMAP.md).
 
 ## Build from source
 
