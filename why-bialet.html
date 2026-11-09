@@ -438,10 +438,12 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-flask-express">Bialet vs. Flask / Express</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-rails-django">Bialet vs. Rails / Django</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-react-next-js">Bialet vs. React / Next.js</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-vue">Bialet vs. Vue</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-express-flask">Bialet vs. Express / Flask</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-django-rails">Bialet vs. Django / Rails</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trade-off">The Trade-off</a></li>
@@ -501,12 +503,143 @@ PostgreSQL, Redis, and a CI pipeline, Bialet’s simplicity isn’t buying you
 much.</p></li>
 <li><p><strong>Microservices</strong> — Bialet is designed for monolithic apps on a single
 server.</p></li>
+<li><p><strong>Heavily interactive UIs</strong> — Drag-and-drop editors, optimistic updates, and
+offline support need client-side state. Bialet re-renders the page instead.</p></li>
 <li><p><strong>Complex auth flows</strong> — Bialet supports basic auth and sessions, but not
 OAuth, SAML, or multi-factor authentication out of the box.</p></li>
 </ul>
 </section>
 <section id="comparisons">
 <h2>Comparisons<a class="headerlink" href="#comparisons" title="Link to this heading">#</a></h2>
+<section id="bialet-vs-react-next-js">
+<h3>Bialet vs. React / Next.js<a class="headerlink" href="#bialet-vs-react-next-js" title="Link to this heading">#</a></h3>
+<p>React is a client-side UI library; Next.js is the framework around it, adding
+routing, server rendering, and a build pipeline. Both are built to ship a
+JavaScript application to the browser and keep it running there. Bialet renders
+HTML on the server for every request and sends no component runtime at all.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>React / Next.js</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Rendering</p></td>
+<td><p>Server-rendered HTML per request</p></td>
+<td><p>Hydrated React tree; SSR/RSC via Next</p></td>
+</tr>
+<tr class="row-odd"><td><p>Client JS</p></td>
+<td><p>None required</p></td>
+<td><p>React runtime plus app bundle</p></td>
+</tr>
+<tr class="row-even"><td><p>Language</p></td>
+<td><p>Wren</p></td>
+<td><p>JavaScript / TypeScript</p></td>
+</tr>
+<tr class="row-odd"><td><p>Components</p></td>
+<td><p>Methods returning HTML strings</p></td>
+<td><p>Functions returning JSX</p></td>
+</tr>
+<tr class="row-even"><td><p>State</p></td>
+<td><p>URL and database; full reloads</p></td>
+<td><p>Hooks, context, stores; no reloads</p></td>
+</tr>
+<tr class="row-odd"><td><p>Data access</p></td>
+<td><p>SQL in the request handler</p></td>
+<td><p>Server components, route handlers, fetch</p></td>
+</tr>
+<tr class="row-even"><td><p>Build step</p></td>
+<td><p>None</p></td>
+<td><p>Bundler required</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deployment</p></td>
+<td><p>Single binary</p></td>
+<td><p>Node server, container, or static host</p></td>
+</tr>
+<tr class="row-even"><td><p>Ecosystem</p></td>
+<td><p>Minimal</p></td>
+<td><p>npm — the largest in web development</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>React wins wherever the page has to react without a round trip: rich forms,
+in-place editing, shared client state, offline behavior. It also wins on hiring
+and libraries. Next.js pulls rendering back to the server, which narrows the
+gap, but you still own the toolchain, the hydration model, and the bundle.
+Bialet’s inline HTML looks like JSX at a glance — <a class="reference internal" href="jsx-migration.html"><span class="std std-doc">JSX to
+Bialet</span></a> lists the differences that matter when porting.</p>
+</section>
+<section id="bialet-vs-vue">
+<h3>Bialet vs. Vue<a class="headerlink" href="#bialet-vs-vue" title="Link to this heading">#</a></h3>
+<p>Vue is the gentler of the two mainstream client frameworks: single-file
+components, a reactivity system, and Nuxt for server rendering. The difference
+from Bialet isn’t syntax — it’s where state lives. In Vue the page is a
+component tree kept up to date in the browser; in Bialet the page is
+regenerated on the server and the state is whatever is in the database and the
+URL.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>Vue / Nuxt</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Rendering</p></td>
+<td><p>Server-rendered HTML per request</p></td>
+<td><p>Client-rendered with reactivity; SSR</p></td>
+</tr>
+<tr class="row-odd"><td><p>Client JS</p></td>
+<td><p>None required</p></td>
+<td><p>Vue runtime plus app bundle</p></td>
+</tr>
+<tr class="row-even"><td><p>Language</p></td>
+<td><p>Wren</p></td>
+<td><p>JavaScript / TypeScript</p></td>
+</tr>
+<tr class="row-odd"><td><p>Components</p></td>
+<td><p>Methods returning HTML strings</p></td>
+<td><p>Single-file components (<code class="docutils literal notranslate"><span class="pre">.vue</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>State</p></td>
+<td><p>URL and database; full reloads</p></td>
+<td><p>Reactive refs, Pinia, Vuex</p></td>
+</tr>
+<tr class="row-odd"><td><p>Data access</p></td>
+<td><p>SQL in the request handler</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code>/axios, or server routes in Nuxt</p></td>
+</tr>
+<tr class="row-even"><td><p>Build step</p></td>
+<td><p>None</p></td>
+<td><p>Vite required</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deployment</p></td>
+<td><p>Single binary</p></td>
+<td><p>Static host, or Node server with Nuxt</p></td>
+</tr>
+<tr class="row-even"><td><p>Ecosystem</p></td>
+<td><p>Minimal</p></td>
+<td><p>npm, smaller than React’s</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For tables, forms, and links — most internal tools — Bialet does the same job
+with no build step and no hydration. When you need live filtering, in-place
+edits, or a genuinely app-like screen, Vue is the lighter of the two SPA
+frameworks, but it is still an SPA. A server-rendered Nuxt app sits closest to
+Bialet; the price is the toolchain you were trying to avoid.</p>
+</section>
+<section id="bialet-vs-static-site-generators">
+<h3>Bialet vs. Static Site Generators<a class="headerlink" href="#bialet-vs-static-site-generators" title="Link to this heading">#</a></h3>
+<p>Static site generators (Hugo, Jekyll, Eleventy) produce HTML files at build
+time. Bialet generates HTML at request time and includes a database.</p>
+<p>If your site has no dynamic data and no forms, use a static site generator.
+If you need a database, forms, or user-specific content, Bialet is the
+lighter alternative to a full backend framework.</p>
+</section>
 <section id="bialet-vs-php">
 <h3>Bialet vs. PHP<a class="headerlink" href="#bialet-vs-php" title="Link to this heading">#</a></h3>
 <p>PHP is the closest philosophical relative. Both let you drop files in a
@@ -548,15 +681,15 @@ directory and serve them immediately. Both embed logic in HTML.</p>
 </div>
 <p>Bialet wins on simplicity. PHP wins on ecosystem and scalability.</p>
 </section>
-<section id="bialet-vs-flask-express">
-<h3>Bialet vs. Flask / Express<a class="headerlink" href="#bialet-vs-flask-express" title="Link to this heading">#</a></h3>
-<p>Flask and Express are minimalist frameworks, but they still need a database
+<section id="bialet-vs-express-flask">
+<h3>Bialet vs. Express / Flask<a class="headerlink" href="#bialet-vs-express-flask" title="Link to this heading">#</a></h3>
+<p>Express and Flask are minimalist frameworks, but they still need a database
 driver, a template engine, and often an ORM — all configured separately.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p></p></th>
 <th class="head"><p>Bialet</p></th>
-<th class="head"><p>Flask / Express</p></th>
+<th class="head"><p>Express / Flask</p></th>
 </tr>
 </thead>
 <tbody>
@@ -574,32 +707,32 @@ driver, a template engine, and often an ORM — all configured separately.</p>
 </tr>
 <tr class="row-odd"><td><p>Templates</p></td>
 <td><p>Inline HTML + interpolation</p></td>
-<td><p>Jinja2 / EJS / Pug</p></td>
+<td><p>EJS / Jinja2 / Pug</p></td>
 </tr>
 <tr class="row-even"><td><p>Production</p></td>
 <td><p>Single binary</p></td>
-<td><p>gunicorn + nginx / pm2 + nginx</p></td>
+<td><p>pm2 + nginx / gunicorn + nginx</p></td>
 </tr>
 <tr class="row-odd"><td><p>Language</p></td>
 <td><p>Wren</p></td>
-<td><p>Python / JavaScript</p></td>
+<td><p>JavaScript / Python</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Bialet eliminates the “glue code” phase entirely. Flask/Express give you more
+<p>Bialet eliminates the “glue code” phase entirely. Express/Flask give you more
 control over the stack but require more decisions up front.</p>
 </section>
-<section id="bialet-vs-rails-django">
-<h3>Bialet vs. Rails / Django<a class="headerlink" href="#bialet-vs-rails-django" title="Link to this heading">#</a></h3>
-<p>Rails and Django are full-stack frameworks with ORMs, admin interfaces,
+<section id="bialet-vs-django-rails">
+<h3>Bialet vs. Django / Rails<a class="headerlink" href="#bialet-vs-django-rails" title="Link to this heading">#</a></h3>
+<p>Django and Rails are full-stack frameworks with ORMs, admin interfaces,
 migrations, and extensive ecosystems. Bialet is full-stack in a different way:
 it bundles the essentials, nothing more.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p></p></th>
 <th class="head"><p>Bialet</p></th>
-<th class="head"><p>Rails / Django</p></th>
+<th class="head"><p>Django / Rails</p></th>
 </tr>
 </thead>
 <tbody>
@@ -609,11 +742,11 @@ it bundles the essentials, nothing more.</p>
 </tr>
 <tr class="row-odd"><td><p>ORM</p></td>
 <td><p>Raw SQL with Query objects</p></td>
-<td><p>ActiveRecord / Django ORM</p></td>
+<td><p>Django ORM / ActiveRecord</p></td>
 </tr>
 <tr class="row-even"><td><p>Admin panel</p></td>
 <td><p>Build your own</p></td>
-<td><p>Built-in (Django admin) / gems</p></td>
+<td><p>Django admin built-in / gems</p></td>
 </tr>
 <tr class="row-odd"><td><p>Migrations</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> file</p></td>
@@ -625,22 +758,14 @@ it bundles the essentials, nothing more.</p>
 </tr>
 <tr class="row-odd"><td><p>Ecosystem</p></td>
 <td><p>Minimal</p></td>
-<td><p>Massive (gems / packages)</p></td>
+<td><p>Massive (packages / gems)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>If you’re building a complex, long-lived application with a team, Rails or
-Django are better choices. If you’re building something simple today, Bialet
+<p>If you’re building a complex, long-lived application with a team, Django or
+Rails are better choices. If you’re building something simple today, Bialet
 gets you there faster.</p>
-</section>
-<section id="bialet-vs-static-site-generators">
-<h3>Bialet vs. Static Site Generators<a class="headerlink" href="#bialet-vs-static-site-generators" title="Link to this heading">#</a></h3>
-<p>Static site generators (Hugo, Jekyll, Eleventy) produce HTML files at build
-time. Bialet generates HTML at request time and includes a database.</p>
-<p>If your site has no dynamic data and no forms, use a static site generator.
-If you need a database, forms, or user-specific content, Bialet is the
-lighter alternative to a full backend framework.</p>
 </section>
 </section>
 <section id="the-trade-off">
@@ -710,10 +835,12 @@ a single binary</strong>. For many projects, that’s exactly the right trade-of
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-flask-express">Bialet vs. Flask / Express</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-rails-django">Bialet vs. Rails / Django</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-react-next-js">Bialet vs. React / Next.js</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-vue">Bialet vs. Vue</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-express-flask">Bialet vs. Express / Flask</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-django-rails">Bialet vs. Django / Rails</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trade-off">The Trade-off</a></li>

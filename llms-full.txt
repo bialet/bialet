@@ -254,10 +254,74 @@ okay.
   much.
 - **Microservices** — Bialet is designed for monolithic apps on a single
   server.
+- **Heavily interactive UIs** — Drag-and-drop editors, optimistic updates, and
+  offline support need client-side state. Bialet re-renders the page instead.
 - **Complex auth flows** — Bialet supports basic auth and sessions, but not
   OAuth, SAML, or multi-factor authentication out of the box.
 
 ## Comparisons
+
+### Bialet vs. React / Next.js
+
+React is a client-side UI library; Next.js is the framework around it, adding
+routing, server rendering, and a build pipeline. Both are built to ship a
+JavaScript application to the browser and keep it running there. Bialet renders
+HTML on the server for every request and sends no component runtime at all.
+
+|             | Bialet                           | React / Next.js                          |
+| ----------- | -------------------------------- | ---------------------------------------- |
+| Rendering   | Server-rendered HTML per request | Hydrated React tree; SSR/RSC via Next    |
+| Client JS   | None required                    | React runtime plus app bundle            |
+| Language    | Wren                             | JavaScript / TypeScript                  |
+| Components  | Methods returning HTML strings   | Functions returning JSX                  |
+| State       | URL and database; full reloads   | Hooks, context, stores; no reloads       |
+| Data access | SQL in the request handler       | Server components, route handlers, fetch |
+| Build step  | None                             | Bundler required                         |
+| Deployment  | Single binary                    | Node server, container, or static host   |
+| Ecosystem   | Minimal                          | npm — the largest in web development     |
+
+React wins wherever the page has to react without a round trip: rich forms,
+in-place editing, shared client state, offline behavior. It also wins on hiring
+and libraries. Next.js pulls rendering back to the server, which narrows the
+gap, but you still own the toolchain, the hydration model, and the bundle.
+Bialet's inline HTML looks like JSX at a glance — [JSX to
+Bialet](jsx-migration.md) lists the differences that matter when porting.
+
+### Bialet vs. Vue
+
+Vue is the gentler of the two mainstream client frameworks: single-file
+components, a reactivity system, and Nuxt for server rendering. The difference
+from Bialet isn't syntax — it's where state lives. In Vue the page is a
+component tree kept up to date in the browser; in Bialet the page is
+regenerated on the server and the state is whatever is in the database and the
+URL.
+
+|             | Bialet                           | Vue / Nuxt                              |
+| ----------- | -------------------------------- | --------------------------------------- |
+| Rendering   | Server-rendered HTML per request | Client-rendered with reactivity; SSR    |
+| Client JS   | None required                    | Vue runtime plus app bundle             |
+| Language    | Wren                             | JavaScript / TypeScript                 |
+| Components  | Methods returning HTML strings   | Single-file components (`.vue`)         |
+| State       | URL and database; full reloads   | Reactive refs, Pinia, Vuex              |
+| Data access | SQL in the request handler       | `fetch`/axios, or server routes in Nuxt |
+| Build step  | None                             | Vite required                           |
+| Deployment  | Single binary                    | Static host, or Node server with Nuxt   |
+| Ecosystem   | Minimal                          | npm, smaller than React's               |
+
+For tables, forms, and links — most internal tools — Bialet does the same job
+with no build step and no hydration. When you need live filtering, in-place
+edits, or a genuinely app-like screen, Vue is the lighter of the two SPA
+frameworks, but it is still an SPA. A server-rendered Nuxt app sits closest to
+Bialet; the price is the toolchain you were trying to avoid.
+
+### Bialet vs. Static Site Generators
+
+Static site generators (Hugo, Jekyll, Eleventy) produce HTML files at build
+time. Bialet generates HTML at request time and includes a database.
+
+If your site has no dynamic data and no forms, use a static site generator.
+If you need a database, forms, or user-specific content, Bialet is the
+lighter alternative to a full backend framework.
 
 ### Bialet vs. PHP
 
@@ -275,50 +339,41 @@ directory and serve them immediately. Both embed logic in HTML.
 
 Bialet wins on simplicity. PHP wins on ecosystem and scalability.
 
-### Bialet vs. Flask / Express
+### Bialet vs. Express / Flask
 
-Flask and Express are minimalist frameworks, but they still need a database
+Express and Flask are minimalist frameworks, but they still need a database
 driver, a template engine, and often an ORM — all configured separately.
 
-|                 | Bialet                           | Flask / Express                   |
+|                 | Bialet                           | Express / Flask                   |
 | --------------- | -------------------------------- | --------------------------------- |
 | Setup           | One binary, zero config          | Install packages, configure DB    |
 | Database        | SQLite built-in                  | SQLAlchemy + driver (Flask)       |
 | Routing         | File-based                       | Decorators / router definitions   |
-| Templates       | Inline HTML + interpolation      | Jinja2 / EJS / Pug                |
-| Production      | Single binary                    | gunicorn + nginx / pm2 + nginx    |
-| Language        | Wren                             | Python / JavaScript               |
+| Templates       | Inline HTML + interpolation      | EJS / Jinja2 / Pug                |
+| Production      | Single binary                    | pm2 + nginx / gunicorn + nginx    |
+| Language        | Wren                             | JavaScript / Python               |
 
-Bialet eliminates the "glue code" phase entirely. Flask/Express give you more
+Bialet eliminates the "glue code" phase entirely. Express/Flask give you more
 control over the stack but require more decisions up front.
 
-### Bialet vs. Rails / Django
+### Bialet vs. Django / Rails
 
-Rails and Django are full-stack frameworks with ORMs, admin interfaces,
+Django and Rails are full-stack frameworks with ORMs, admin interfaces,
 migrations, and extensive ecosystems. Bialet is full-stack in a different way:
 it bundles the essentials, nothing more.
 
-|                 | Bialet                                       | Rails / Django                            |
-| --------------- | -------------------------------------------- | ----------------------------------------- |
-| Learning curve  | Hours                                        | Weeks to months                           |
-| ORM             | Raw SQL with Query objects                   | ActiveRecord / Django ORM                 |
-| Admin panel     | Build your own                               | Built-in (Django admin) / gems            |
-| Migrations      | `_migration.wren` file                       | Versioned migration files                 |
-| Scaling         | Multiple workers on one host (shared SQLite) | Horizontally via workers / load balancer  |
-| Ecosystem       | Minimal                                      | Massive (gems / packages)                 |
+|                | Bialet                                       | Django / Rails                            |
+| -------------- | -------------------------------------------- | ----------------------------------------- |
+| Learning curve | Hours                                        | Weeks to months                           |
+| ORM            | Raw SQL with Query objects                   | Django ORM / ActiveRecord                 |
+| Admin panel    | Build your own                               | Django admin built-in / gems              |
+| Migrations     | `_migration.wren` file                       | Versioned migration files                 |
+| Scaling        | Multiple workers on one host (shared SQLite) | Horizontally via workers / load balancer  |
+| Ecosystem      | Minimal                                      | Massive (packages / gems)                 |
 
-If you're building a complex, long-lived application with a team, Rails or
-Django are better choices. If you're building something simple today, Bialet
+If you're building a complex, long-lived application with a team, Django or
+Rails are better choices. If you're building something simple today, Bialet
 gets you there faster.
-
-### Bialet vs. Static Site Generators
-
-Static site generators (Hugo, Jekyll, Eleventy) produce HTML files at build
-time. Bialet generates HTML at request time and includes a database.
-
-If your site has no dynamic data and no forms, use a static site generator.
-If you need a database, forms, or user-specific content, Bialet is the
-lighter alternative to a full backend framework.
 
 ## The Trade-off
 
