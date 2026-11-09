@@ -220,12 +220,13 @@ What it costs
 
    Bialet is small on purpose. These are the limits that come with that.
 
-   - **One connection at a time.** The server is single-threaded and blocking.
-     Run it behind a reverse proxy, which is also where request caps and
-     timeouts belong.
-   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
-     Caddy in front for HTTPS, HTTP/2, body limits, and timeouts. See
+   - **One worker per process, with instant queueing.** Requests are served
+     sequentially per worker. For parallel concurrency on multi-core servers,
+     spin up multiple local instances behind Caddy or nginx. See
      :doc:`deployment`.
+   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
+     Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
+     static-asset caching. See :doc:`deployment`.
    - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
      Vim plugins provide syntax highlighting; autocomplete and an LSP are on
      the roadmap.
@@ -265,9 +266,9 @@ Where it fits
 
       HTML, SQL, and one scripting language. Nothing else to install.
 
-Not a fit if you need horizontal scaling, in-process TLS, WebSockets, or a
-package ecosystem. Bialet does not provide them. See :doc:`why-bialet` for the
-longer version.
+Not a fit if you need multi-server horizontal scaling, in-process TLS,
+WebSockets, or a package ecosystem. Bialet does not provide them. See
+:doc:`why-bialet` for the longer version.
 
 .. raw:: html
 

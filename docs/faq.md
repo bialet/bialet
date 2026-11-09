@@ -20,8 +20,11 @@ no-nonsense approach to solving problems.
 
 Bialet is stable and used in production for small to medium traffic sites.
 It's well-suited for CRUD apps, dashboards, internal tools, and prototypes.
-If you need horizontal scaling, WebSocket support, or high-throughput
-architectures, you may want to evaluate other frameworks.
+If you need horizontal scaling across machines, WebSocket support, or
+high-throughput architectures, you may want to evaluate other frameworks.
+Running several Bialet workers on one host behind a reverse proxy is supported
+(see [Deployment](deployment.md#scaling-multiple-workers-on-one-host)); a
+shared database across machines is not.
 
 ### How does Bialet compare to PHP / Flask / Rails / Django?
 
@@ -40,7 +43,8 @@ routing DSL. The trade-off is less flexibility for less complexity.
 
 ### When should I NOT use Bialet?
 
-- Applications requiring horizontal scaling or load balancing
+- Applications requiring multi-server horizontal scaling or load balancing
+  across machines
 - Real-time features (WebSockets, SSE) — not currently supported
 - Teams that need a mature ecosystem of plugins and libraries
 - Projects where you must use PostgreSQL, MySQL, or other databases

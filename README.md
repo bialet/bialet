@@ -115,11 +115,12 @@ from a terminal to start without dev mode.
 
 Bialet is small on purpose. These are the limits that come with that:
 
-- **Single-threaded.** The server accepts and serves one connection at a time
-  in a blocking loop. Run it behind a reverse proxy, which is also where
-  request body caps and read timeouts belong.
+- **One worker per process, with instant queueing.** Requests are served
+  sequentially per worker. For parallel concurrency on multi-core servers,
+  spin up multiple local instances behind Caddy or nginx — see
+  [Deployment](https://bialet.dev/deployment.html).
 - **HTTP/1.0, no native TLS.** Put nginx, Apache, or Caddy in front for HTTPS,
-  HTTP/2, body limits, and timeouts. See
+  HTTP/2, rate limiting, and request buffering. See
   [Deployment](https://bialet.dev/deployment.html).
 - **SQLite is the database.** One SQLite file (`_db.sqlite3` by default), no
   external database server. WAL mode is available with `-w`.

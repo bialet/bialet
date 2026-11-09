@@ -259,9 +259,12 @@ forward user-supplied ones unchanged.
 
 ### Reverse Proxy Hardening
 
-Bialet is **single-threaded**: it accepts and serves one connection at a time
-in a blocking loop. The reverse proxy is the layer that protects it from
-hostile clients. Configure the proxy to:
+Each Bialet worker serves one connection at a time in a blocking loop, so a
+single slow or hostile client delays every request behind it. The reverse
+proxy is the layer that protects it from hostile clients; run several workers
+behind it when you need more concurrency (see
+[Deployment](deployment.md#scaling-multiple-workers-on-one-host)).
+Configure the proxy to:
 
 - **Cap the request body.** Bialet rejects bodies over its own cap with `413`
   before parsing: the cap is the smaller of `-b` (default 128 KB) and a
@@ -273,11 +276,12 @@ hostile clients. Configure the proxy to:
   `LimitRequestBody` (Apache), or an equivalent to match your app's real
   upload limit — a cap *above* it just lets oversized bodies reach the
   framework's own check, and a cap *below* it breaks legitimate uploads.
-- **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
-  per `recv()` call, so a peer that dribbles bytes slowly can hold a
-  connection open indefinitely. Set a total read timeout at the proxy
+- **Enforce a total body-read deadline.** Bialet already bounds the header
+  block at 5 seconds and the body at 30 seconds, with each `recv()` capped at
+  5 seconds, then drops the connection. Set a proxy-side read timeout as well
+  so stalled uploads are rejected before they reach the worker
   (`client_body_timeout` in nginx, `RequestReadTimeout ... MinRate` in
-  Apache) so stalled uploads are cut off.
+  Apache).
 - **Buffer the full request before forwarding** (`proxy_request_buffering on`
   in nginx; the default in most proxies). This keeps a slow client from
   holding the upstream socket.
