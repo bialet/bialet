@@ -6,6 +6,7 @@
 import json
 import os
 import re
+import sys
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -67,6 +68,14 @@ def _generate_ai_prompt_js(app):
 
 
 def setup(app):
+    # The stock Pygments Wren lexer does not know Bialet's SQL backticks or
+    # inline HTML, so it paints both as errors. Use the project lexer for
+    # `wren` code blocks and literalinclude.
+    sys.path.insert(0, os.path.dirname(__file__))
+    from lexer import BialetLexer
+
+    app.add_lexer('wren', BialetLexer)
+
     app.connect('source-read', _replace_placeholders)
     app.connect('builder-inited', _generate_ai_prompt_js)
 
@@ -112,7 +121,10 @@ llms_txt_exclude = ['getting-started']
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
 html_css_files = ["custom.css"]
-html_js_files = ["ai-prompt.js", "copy.js"]
+html_js_files = [
+    ("ai-prompt.js", {"defer": "defer"}),
+    ("copy.js", {"defer": "defer"}),
+]
 html_favicon = '../src/favicon.ico'
 html_title = 'Bialet'
 html_theme_options = {

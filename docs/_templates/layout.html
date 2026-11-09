@@ -22,8 +22,14 @@
       <main class="landing-main" role="main" id="main-content">
         <div class="landing-content">
           <div class="hero__mark">
-            <img src="{{ pathto('_static/logo.png', 1) }}" alt="" width="132" height="132" />
+            <picture>
+              <source srcset="{{ pathto('_static/logo-264.webp', 1) }}" type="image/webp" />
+              <img src="{{ pathto('_static/logo.png', 1) }}" alt="" width="132" height="132" />
+            </picture>
           </div>
+          <p class="hero__kicker">
+            Web development became a spaceship. Bialet is a bicycle.
+          </p>
           {% block body %}{% endblock %}
         </div>
         <footer class="landing-footer">

@@ -6,7 +6,7 @@
   </a>
 </p>
 <p align="center">
-  <strong>An HTTP server, SQLite, and an embedded scripting language in one executable.</strong>
+  <strong>One executable: HTTP server, SQLite, and a scripting language.</strong>
 </p>
 <p align="center">
   Build data-driven web apps from <code>.wren</code> files. No package manager,<br />
@@ -15,6 +15,10 @@
 </p>
 <p align="center">
   <em>Web development became a spaceship. Bialet is a bicycle.</em>
+</p>
+<p align="center">
+  In development since 2023 &middot; running in production at
+  <a href="https://home.dev.ar/">home.dev.ar</a>
 </p>
 
 <p align="center">
@@ -130,8 +134,9 @@ Bialet is small on purpose. These are the limits that come with that:
 
 ## Status
 
-Bialet is stable for personal use. It is maintained by one developer, with no
-commercial support or SLA. Bugs go to
+Bialet has been in development since 2023 and runs in production at
+[home.dev.ar](https://home.dev.ar/). It is maintained by one developer, with
+no commercial support or SLA. Bugs go to
 [GitHub Issues](https://github.com/bialet/bialet/issues); questions go to
 [GitHub Discussions](https://github.com/bialet/bialet/discussions). Planned
 work is in [ROADMAP.md](ROADMAP.md).

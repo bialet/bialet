@@ -11,6 +11,10 @@ build/
 .venv/
 docs/_static/ai-prompt.js
 
+# Python bytecode (docs/conf.py imports docs/lexer.py)
+__pycache__/
+*.py[cod]
+
 # Editor files
 .vscode/
 
