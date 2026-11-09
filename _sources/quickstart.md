@@ -7,6 +7,16 @@ manager, and no configuration file.
 The app lives in [docs/examples/guestbook](https://github.com/bialet/bialet/tree/main/docs/examples/guestbook)
 if you would rather read it than type it.
 
+
+```{admonition} Building with an AI assistant instead?
+:class: tip
+
+Skip the typing: paste the [AI Coding Prompt](ai-prompt.md) into Claude,
+ChatGPT, or Cursor, or install the `bialet-app-builder` skill with
+`npx skills add bialet/skills --skill bialet-app-builder`, then describe the app
+you want.
+```
+
 ## Before you start
 
 You need `bialet` on your `PATH`. See [Installation](installation.md) for
@@ -152,5 +162,3 @@ app.
 - [Forms](forms.md) — POST handling, files, CSRF.
 - [HTML Template](template.md) — inline HTML in depth.
 - [Advanced Routing](advanced-routing.md) — when a URL needs path segments.
-- [AI Coding Prompt](ai-prompt.md) — paste it into Claude, ChatGPT, or Cursor
-  before your next app, or install the `bialet-app-builder` skill.

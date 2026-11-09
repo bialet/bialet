@@ -455,6 +455,14 @@
 <p>In this tutorial we’ll build a working poll application with Bialet. You’ll
 learn how to write <a class="reference internal" href="../wren.html"><span class="std std-doc">Wren</span></a> files, query a SQLite database, handle
 form submissions, and render dynamic HTML — all with zero configuration.</p>
+<div class="tip admonition">
+<p class="admonition-title">Building with an AI assistant instead?</p>
+<p>Paste the <a class="reference internal" href="../ai-prompt.html"><span class="std std-doc">AI Coding Prompt</span></a> into Claude, ChatGPT, or Cursor,
+or install the <code class="docutils literal notranslate"><span class="pre">bialet-app-builder</span></code> skill with
+<code class="docutils literal notranslate"><span class="pre">npx</span> <span class="pre">skills</span> <span class="pre">add</span> <span class="pre">bialet/skills</span> <span class="pre">--skill</span> <span class="pre">bialet-app-builder</span></code>. Either one teaches
+the assistant Bialet’s conventions, so you can skip the tutorial and describe
+what you want to build.</p>
+</div>
 <blockquote>
 <div><p>ℹ️ <strong>Bialet has no router to configure.</strong> Every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file is a URL at the
 same path, just like a static HTML file: <code class="docutils literal notranslate"><span class="pre">about.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/about</span></code>.</p>
@@ -469,11 +477,6 @@ shallow; Bialet discourages complex routing. See
 <p>Want the shortest path to something running? <a class="reference internal" href="../quickstart.html"><span class="std std-doc">Quick start: a
 guestbook</span></a> builds a complete app in five minutes, without the
 chapter-by-chapter tour.</p>
-<p>Building with an AI assistant instead? Paste the
-<a class="reference internal" href="../ai-prompt.html"><span class="std std-doc">AI Coding Prompt</span></a> into Claude, ChatGPT, or Cursor, or install
-the <code class="docutils literal notranslate"><span class="pre">bialet-app-builder</span></code> skill with
-<code class="docutils literal notranslate"><span class="pre">npx</span> <span class="pre">skills</span> <span class="pre">add</span> <span class="pre">bialet/skills</span> <span class="pre">--skill</span> <span class="pre">bialet-app-builder</span></code>. Either one teaches
-the assistant Bialet’s conventions before you start.</p>
 <section id="what-we-ll-build">
 <h2>What we’ll build<a class="headerlink" href="#what-we-ll-build" title="Link to this heading">#</a></h2>
 <p>A simple poll that lets users vote “Yes” or “No” and see live results with
