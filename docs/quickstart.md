@@ -152,3 +152,5 @@ app.
 - [Forms](forms.md) — POST handling, files, CSRF.
 - [HTML Template](template.md) — inline HTML in depth.
 - [Advanced Routing](advanced-routing.md) — when a URL needs path segments.
+- [AI Coding Prompt](ai-prompt.md) — paste it into Claude, ChatGPT, or Cursor
+  before your next app, or install the `bialet-app-builder` skill.

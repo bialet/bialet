@@ -54,8 +54,8 @@ def _replace_placeholders(app, docname, source):
 
 
 def _generate_ai_prompt_js(app):
-    """Build _static/ai-prompt.js from prompt-guide.md so the homepage's
-    "Copy AI Prompt" button can copy it without duplicating the text."""
+    """Build _static/ai-prompt.js from prompt-guide.md so the AI prompt page's
+    "Copy Prompt" button can copy it without duplicating the text."""
     src = os.path.join(os.path.dirname(__file__), 'prompt-guide.md')
     dest_dir = os.path.join(os.path.dirname(__file__), '_static')
     dest = os.path.join(dest_dir, 'ai-prompt.js')
