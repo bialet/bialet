@@ -77,10 +77,9 @@ One executable: HTTP server, SQLite, and a scripting language.
               preload="metadata" disablepictureinpicture
               aria-label="A guestbook built in Bialet: three files are written, run unstyled, then styled with a stylesheet and a layout class.">
          <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
-         <source src="_static/guestbook-demo.mp4" type="video/mp4">
        </video>
        <figcaption>The guestbook example: built, run, then styled.
-         <button type="button" class="proof__toggle" data-demo-toggle aria-pressed="false">Pause</button>
+         <button type="button" class="proof__toggle" data-demo-toggle>Pause</button>
        </figcaption>
      </figure>
      <div class="proof__notes">
@@ -104,9 +103,7 @@ One executable: HTTP server, SQLite, and a scripting language.
 
        function reflect() {
          if (!toggle) return;
-         var paused = video.paused;
-         toggle.textContent = paused ? "Play" : "Pause";
-         toggle.setAttribute("aria-pressed", paused ? "false" : "true");
+         toggle.textContent = video.paused ? "Play" : "Pause";
        }
 
        if (toggle) {
@@ -122,17 +119,6 @@ One executable: HTTP server, SQLite, and a scripting language.
          reflect();
          return;
        }
-       video.autoplay = true;
-       var started = video.play();
-       if (started && started.catch) started.catch(function () {});
-     })();
-   </script>
-
-   <script>
-     (function () {
-       var video = document.getElementById("guestbook-demo");
-       if (!video) return;
-       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
        video.autoplay = true;
        var started = video.play();
        if (started && started.catch) started.catch(function () {});
