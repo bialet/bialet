@@ -73,8 +73,8 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
   routing: deep nesting, many segments, elaborate URL schemes.
 - **Server-side rendering** with inline HTML strings, minimal JavaScript
 - **Direct SQL queries** with parameterized placeholders instead of an ORM
-- **Semantic HTML**, styled with a classless CSS framework such as **Beak CSS**
-  (loaded from the CDN at `@latest`, with a palette chosen to fit the project)
+- **Semantic HTML**, unstyled by default — add a stylesheet only when the page
+  needs it
 
 ## HTML-First: Reach for JS Last
 
@@ -472,13 +472,11 @@ class Layout {
   static render(content) { Layout.render(content, "My App") }
 
   static render(content, title) { <!doctype html>
-    <html lang="en" data-theme="light">
+    <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{{ title }}</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/indigo.css" />
       </head>
       <body>
         <header>
@@ -1102,70 +1100,27 @@ improves UX (inline delete, edit-in-place):
 ## Semantic HTML & Styling
 
 Use proper elements — `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`,
-`<aside>`, `<footer>` — and let a classless CSS framework style them with zero
-classes. The default is **Beak CSS**, a classless pure-CSS framework (a fork of
-Pico CSS): there are no utility classes to learn, plain semantic HTML comes
-pre-styled. Load it from the jsDelivr CDN — base first, then one palette,
-**always at `@latest`** (do not pin a version):
+`<aside>`, `<footer>` — so the page reads correctly with no stylesheet at all.
 
-```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/blue.css" />
-```
+**No CSS by default.** Do not add a framework, a reset, or a font CDN unless the
+user asks for styling or the page has to look finished. A correct page is
+semantic HTML and nothing else; the tutorial's styled version adds one small
+`style.css` at the end, and that is the shape to follow.
 
-Pick **one** base layout for the whole project:
+When the page does need presentation, write a small modern stylesheet yourself:
+a system font stack, CSS variables for color and spacing, a readable column with
+`max-width` and `margin-inline: auto`, and `@media (prefers-color-scheme)` for
+dark mode. Keep it one file and a few dozen lines. Simple *code* is the goal —
+not a plain-looking UI: the page should still be clean and pleasant to use.
 
-- `beak.min.css` — full-width/fluid, for apps and dashboards
-- `beak.contained.min.css` — centered readable column, for blogs, docs, landing
-
-**Choose the palette to match the project — don't default to blue out of
-habit.** Swap the second `<link>` href to one of: `amber`, `blue`, `cyan`,
-`fuchsia`, `green`, `grey`, `indigo`, `jade`, `lime`, `orange`, `pink`,
-`pumpkin`, `purple`, `red`, `sand`, `slate`, `violet`, `yellow`, `zinc`. Set the
-color scheme on `<html>` with `data-theme="light"` or `data-theme="dark"` (omit
-it to follow the OS preference).
-
-Never edit the framework files. Customize through CSS variables in your own
-stylesheet loaded last — everything in Beak lives in `@layer beak`, so
-unlayered app CSS always wins the cascade.
-
-**Color roles: a solid fill is not a surface.** `--beak-primary-background` is
-the **solid button fill**, not a light background. It is the same strong color
-as `--beak-primary`, and the text that goes on it is `--beak-primary-inverse`.
-Use it only behind a filled control (button, badge, progress bar) with inverse
-text. Never use it for cards, callouts, alerts, table rows, chips or hover
-states: it produces a loud, unreadable block. Do not lighten it with `opacity`
-or `filter` either.
-
-For a soft surface derived from the primary, define your own tokens by mixing
-the primary with the page background, and use them in your stylesheet:
-
-```css
-:root {
-  --beak-primary-soft: color-mix(in srgb, var(--beak-primary) 12%, var(--beak-background-color));
-  --beak-primary-soft-border: color-mix(in srgb, var(--beak-primary) 28%, var(--beak-background-color));
-}
-.callout {
-  background: var(--beak-primary-soft);
-  color: var(--beak-primary);
-  border: 1px solid var(--beak-primary-soft-border);
-}
-```
-
-Other useful variables: `--beak-primary`, `--beak-primary-hover`,
-`--beak-primary-focus`, `--beak-secondary*`, `--beak-contrast*`,
-`--beak-background-color`, `--beak-color`, `--beak-muted-color`,
-`--beak-muted-border-color`, `--beak-h1-color`…`--beak-h6-color`,
-`--beak-font-family`, `--beak-font-size`, `--beak-line-height`,
-`--beak-spacing`, `--beak-border-radius`, `--beak-border-width`,
-`--beak-transition`. Before inventing a `--beak-*`, check that it exists in the
-`:root` block of `beak.css`. If you override a color token, override its whole
-family (`--beak-primary`, `--beak-primary-background`, `--beak-primary-border`,
-`--beak-primary-hover*`), not just one.
-
-Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
-approach applies unchanged. Stylesheets go anywhere except behind a `_`/`.`
-prefix (those return 403).
+If the user prefers a framework, classless ones fit Bialet best — semantic
+elements come pre-styled with no classes. **µCSS** (<https://mucss.org/>) is a
+good default: one CSS file, with the theme in the filename (`mu.fuchsia.css`,
+`mu.blue.css`, ...). **Beak CSS** works the same way. **Bulma**
+(<https://bulma.io/>) is the class-based alternative when they want prebuilt
+components. Tailwind and vanilla CSS also work — Bialet just outputs plain
+HTML, so any CSS approach applies unchanged. Stylesheets go anywhere except
+behind a `_`/`.` prefix (those return 403).
 
 ## Complete Example: Todo List App
 
@@ -1228,12 +1183,10 @@ class Task {
 // _app/template.wren
 class Layout {
   static render(content) { <!doctype html>
-    <html lang="en" data-theme="dark">
+    <html lang="en">
       <head>
         <meta charset="utf-8" />
         <title>Todo</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.contained.min.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/green.css" />
       </head>
       <body>
         <main>{{ content }}</main>
@@ -1322,5 +1275,6 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
 10. **Git**: always add `_db.sqlite3*` to `.gitignore`
 11. **HTML-first**: reach for `<details>`, `popover`, the checkbox/radio CSS
     hack, and server-side query-param filtering before writing JS
-12. **Styling**: semantic HTML + **Beak CSS** (classless) from jsDelivr at
-    `@latest`; pick the base variant and a palette that fit the project
+12. **Styling**: semantic HTML, no stylesheet by default; add a small modern
+    CSS file (or a classless framework such as µCSS or Beak CSS) only when the
+    page needs presentation

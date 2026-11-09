@@ -85,7 +85,8 @@ libcurl is optional but recommended for production (see [Installation](installat
 Yes. Link any CSS file in your `_app.wren` template or include a `<link>` in
 your HTML. The Getting Started tutorial uses
 [Flowbite](https://flowbite.com/) + [Tailwind](https://tailwindcss.com/),
-but [Pico CSS](https://picocss.com), Bootstrap, or plain CSS work fine.
+but [µCSS](https://mucss.org/), [Bulma](https://bulma.io/), Bootstrap, or
+plain CSS work fine. Bialet itself ships no stylesheet.
 
 ### How does routing work?
 

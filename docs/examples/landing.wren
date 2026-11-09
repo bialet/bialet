@@ -63,7 +63,7 @@ var testimonials = [
 
 var faqs = [
   {"q": "Do I need to install a database separately?", "a": "No. SQLite is embedded in the Bialet binary. Your database is a single file — back it up by copying it. That's it."},
-  {"q": "Can I use my own CSS framework?", "a": "Absolutely. Bialet outputs plain HTML. Link any CSS file — Tailwind, PicoCSS, Bootstrap, or your own custom styles. No conflicts."},
+  {"q": "Can I use my own CSS framework?", "a": "Absolutely. Bialet outputs plain HTML. Link any CSS file — Tailwind, µCSS, Bulma, or your own custom styles. No conflicts."},
   {"q": "How does deployment work?", "a": "Copy the binary and your app folder to any Linux server. No containers, no runtime dependencies, no environment setup. Works on ARM too."},
   {"q": "Is Wren hard to learn?", "a": "If you know JavaScript or Python, Wren will feel familiar in under an hour. The syntax is minimal and designed for clarity over cleverness."},
   {"q": "What about real-time features?", "a": "Bialet focuses on server-rendered multi-page apps. For WebSocket needs, pair it with a lightweight proxy — the separation keeps both simple."},
