@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=ab4ff94c"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=da11c51e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -549,8 +549,8 @@ early PHP: files map directly to URLs, and the server renders full HTML pages.
   routing: deep nesting, many segments, elaborate URL schemes.
 <span class="k">-</span><span class="w"> </span><span class="gs">**Server-side rendering**</span> with inline HTML strings, minimal JavaScript
 <span class="k">-</span><span class="w"> </span><span class="gs">**Direct SQL queries**</span> with parameterized placeholders instead of an ORM
-<span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, styled with a classless CSS framework such as <span class="gs">**Beak CSS**</span>
-  (loaded from the CDN at <span class="sb">`@latest`</span>, with a palette chosen to fit the project)
+<span class="k">-</span><span class="w"> </span><span class="gs">**Semantic HTML**</span>, unstyled by default — add a stylesheet only when the page
+  needs it
 
 <span class="gu">## HTML-First: Reach for JS Last</span>
 
@@ -948,13 +948,11 @@ the folder; the deepest match wins.
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang="en" data-theme="light"&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css" /&gt;</span>
-<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/indigo.css" /&gt;</span>
 <span class="w">      </span><span class="x">&lt;/head&gt;</span>
 <span class="x">      &lt;body&gt;</span>
 <span class="w">        </span><span class="x">&lt;header&gt;</span>
@@ -1578,70 +1576,27 @@ improves UX (inline delete, edit-in-place):
 <span class="gu">## Semantic HTML &amp; Styling</span>
 
 Use proper elements — <span class="sb">`&lt;header&gt;`</span>, <span class="sb">`&lt;nav&gt;`</span>, <span class="sb">`&lt;main&gt;`</span>, <span class="sb">`&lt;article&gt;`</span>, <span class="sb">`&lt;section&gt;`</span>,
-<span class="sb">`&lt;aside&gt;`</span>, <span class="sb">`&lt;footer&gt;`</span> — and let a classless CSS framework style them with zero
-classes. The default is <span class="gs">**Beak CSS**</span>, a classless pure-CSS framework (a fork of
-Pico CSS): there are no utility classes to learn, plain semantic HTML comes
-pre-styled. Load it from the jsDelivr CDN — base first, then one palette,
-<span class="gs">**always at `@latest`**</span> (do not pin a version):
+<span class="sb">`&lt;aside&gt;`</span>, <span class="sb">`&lt;footer&gt;`</span> — so the page reads correctly with no stylesheet at all.
 
-<span class="sb">```html</span>
-<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.min.css"</span> <span class="p">/&gt;</span>
-<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">"stylesheet"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/blue.css"</span> <span class="p">/&gt;</span>
-<span class="sb">```</span>
+<span class="gs">**No CSS by default.**</span> Do not add a framework, a reset, or a font CDN unless the
+user asks for styling or the page has to look finished. A correct page is
+semantic HTML and nothing else; the tutorial's styled version adds one small
+<span class="sb">`style.css`</span> at the end, and that is the shape to follow.
 
-Pick <span class="gs">**one**</span> base layout for the whole project:
+When the page does need presentation, write a small modern stylesheet yourself:
+a system font stack, CSS variables for color and spacing, a readable column with
+<span class="sb">`max-width`</span> and <span class="sb">`margin-inline: auto`</span>, and <span class="sb">`@media (prefers-color-scheme)`</span> for
+dark mode. Keep it one file and a few dozen lines. Simple <span class="ge">*code*</span> is the goal —
+not a plain-looking UI: the page should still be clean and pleasant to use.
 
-<span class="k">-</span><span class="w"> </span><span class="sb">`beak.min.css`</span> — full-width/fluid, for apps and dashboards
-<span class="k">-</span><span class="w"> </span><span class="sb">`beak.contained.min.css`</span> — centered readable column, for blogs, docs, landing
-
-**Choose the palette to match the project — don't default to blue out of
-habit.** Swap the second <span class="sb">`&lt;link&gt;`</span> href to one of: <span class="sb">`amber`</span>, <span class="sb">`blue`</span>, <span class="sb">`cyan`</span>,
-<span class="sb">`fuchsia`</span>, <span class="sb">`green`</span>, <span class="sb">`grey`</span>, <span class="sb">`indigo`</span>, <span class="sb">`jade`</span>, <span class="sb">`lime`</span>, <span class="sb">`orange`</span>, <span class="sb">`pink`</span>,
-<span class="sb">`pumpkin`</span>, <span class="sb">`purple`</span>, <span class="sb">`red`</span>, <span class="sb">`sand`</span>, <span class="sb">`slate`</span>, <span class="sb">`violet`</span>, <span class="sb">`yellow`</span>, <span class="sb">`zinc`</span>. Set the
-color scheme on <span class="sb">`&lt;html&gt;`</span> with <span class="sb">`data-theme="light"`</span> or <span class="sb">`data-theme="dark"`</span> (omit
-it to follow the OS preference).
-
-Never edit the framework files. Customize through CSS variables in your own
-stylesheet loaded last — everything in Beak lives in <span class="sb">`@layer beak`</span>, so
-unlayered app CSS always wins the cascade.
-
-<span class="gs">**Color roles: a solid fill is not a surface.**</span> <span class="sb">`--beak-primary-background`</span> is
-the <span class="gs">**solid button fill**</span>, not a light background. It is the same strong color
-as <span class="sb">`--beak-primary`</span>, and the text that goes on it is <span class="sb">`--beak-primary-inverse`</span>.
-Use it only behind a filled control (button, badge, progress bar) with inverse
-text. Never use it for cards, callouts, alerts, table rows, chips or hover
-states: it produces a loud, unreadable block. Do not lighten it with <span class="sb">`opacity`</span>
-or <span class="sb">`filter`</span> either.
-
-For a soft surface derived from the primary, define your own tokens by mixing
-the primary with the page background, and use them in your stylesheet:
-
-<span class="sb">```css</span>
-<span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nv">--beak-primary-soft</span><span class="p">:</span><span class="w"> </span><span class="nf">color-mix</span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">srgb</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">)</span><span class="w"> </span><span class="mi">12</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-background-color</span><span class="p">));</span>
-<span class="w">  </span><span class="nv">--beak-primary-soft-border</span><span class="p">:</span><span class="w"> </span><span class="nf">color-mix</span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">srgb</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">)</span><span class="w"> </span><span class="mi">28</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-background-color</span><span class="p">));</span>
-<span class="p">}</span>
-<span class="p">.</span><span class="nc">callout</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary-soft</span><span class="p">);</span>
-<span class="w">  </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary</span><span class="p">);</span>
-<span class="w">  </span><span class="k">border</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--beak-primary-soft-border</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="sb">```</span>
-
-Other useful variables: <span class="sb">`--beak-primary`</span>, <span class="sb">`--beak-primary-hover`</span>,
-<span class="sb">`--beak-primary-focus`</span>, <span class="sb">`--beak-secondary*`</span>, <span class="sb">`--beak-contrast*`</span>,
-<span class="sb">`--beak-background-color`</span>, <span class="sb">`--beak-color`</span>, <span class="sb">`--beak-muted-color`</span>,
-<span class="sb">`--beak-muted-border-color`</span>, <span class="sb">`--beak-h1-color`</span>…<span class="sb">`--beak-h6-color`</span>,
-<span class="sb">`--beak-font-family`</span>, <span class="sb">`--beak-font-size`</span>, <span class="sb">`--beak-line-height`</span>,
-<span class="sb">`--beak-spacing`</span>, <span class="sb">`--beak-border-radius`</span>, <span class="sb">`--beak-border-width`</span>,
-<span class="sb">`--beak-transition`</span>. Before inventing a <span class="sb">`--beak-*`</span>, check that it exists in the
-<span class="sb">`:root`</span> block of <span class="sb">`beak.css`</span>. If you override a color token, override its whole
-family (<span class="sb">`--beak-primary`</span>, <span class="sb">`--beak-primary-background`</span>, <span class="sb">`--beak-primary-border`</span>,
-<span class="sb">`--beak-primary-hover*`</span>), not just one.
-
-Tailwind and vanilla CSS also work — Bialet just outputs plain HTML, so any CSS
-approach applies unchanged. Stylesheets go anywhere except behind a <span class="sb">`_`</span>/<span class="sb">`.`</span>
-prefix (those return 403).
+If the user prefers a framework, classless ones fit Bialet best — semantic
+elements come pre-styled with no classes. <span class="gs">**µCSS**</span> (&lt;https://mucss.org/&gt;) is a
+good default: one CSS file, with the theme in the filename (<span class="sb">`mu.fuchsia.css`</span>,
+<span class="sb">`mu.blue.css`</span>, ...). <span class="gs">**Beak CSS**</span> works the same way. <span class="gs">**Bulma**</span>
+(&lt;https://bulma.io/&gt;) is the class-based alternative when they want prebuilt
+components. Tailwind and vanilla CSS also work — Bialet just outputs plain
+HTML, so any CSS approach applies unchanged. Stylesheets go anywhere except
+behind a <span class="sb">`_`</span>/<span class="sb">`.`</span> prefix (those return 403).
 
 <span class="gu">## Complete Example: Todo List App</span>
 
@@ -1704,12 +1659,10 @@ prefix (those return 403).
 <span class="c1">// _app/template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="w">    </span><span class="x">&lt;html lang="en" data-theme="dark"&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;title&gt;</span><span class="nc">Todo</span><span class="x">&lt;/title&gt;</span>
-<span class="x">        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/beak.contained.min.css" /&gt;</span>
-<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beakcss@latest/dist/themes/green.css" /&gt;</span>
 <span class="x">      &lt;/head&gt;</span>
 <span class="w">      </span><span class="x">&lt;body&gt;</span>
 <span class="x">        &lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
@@ -1798,8 +1751,9 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
 <span class="k">10.</span> <span class="gs">**Git**</span>: always add <span class="sb">`_db.sqlite3*`</span> to <span class="sb">`.gitignore`</span>
 <span class="k">11.</span> <span class="gs">**HTML-first**</span>: reach for <span class="sb">`&lt;details&gt;`</span>, <span class="sb">`popover`</span>, the checkbox/radio CSS
     hack, and server-side query-param filtering before writing JS
-<span class="k">12.</span> <span class="gs">**Styling**</span>: semantic HTML + <span class="gs">**Beak CSS**</span> (classless) from jsDelivr at
-    <span class="sb">`@latest`</span>; pick the base variant and a palette that fit the project
+<span class="k">12.</span> <span class="gs">**Styling**</span>: semantic HTML, no stylesheet by default; add a small modern
+    CSS file (or a classless framework such as µCSS or Beak CSS) only when the
+    page needs presentation
 </pre></div>
 </div>
 </section>

@@ -814,25 +814,27 @@ nav.filters {
 }
 ```
 
-### PicoCSS
+### No CSS by default
 
-PicoCSS is a classless CSS framework that styles semantic HTML elements
-automatically. It pairs perfectly with Bialet's semantic HTML approach — you
-write `<nav>`, `<main>`, `<article>`, and PicoCSS handles the styling with zero
-classes.
+Bialet outputs plain HTML and ships no stylesheet. Keep it that way unless the
+page needs presentation: semantic elements are readable on their own, and a
+small hand-written `style.css` is easier to keep than a framework.
+
+When you do want one, classless CSS frameworks fit the semantic markup best —
+**µCSS** (<https://mucss.org/>) styles the elements with no classes:
 
 ```wren
 head { <head>
   <title>{{ _title }}</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@digicreon/mucss/dist/mu.fuchsia.css" />
 </head> }
 ```
 
-With PicoCSS loaded, your semantic HTML gets a clean, consistent look without
-writing any CSS. Add a custom stylesheet alongside it for app-specific
-overrides.
+Swap `mu.fuchsia.css` for another theme (`mu.blue.css`, `mu.amber.css`, ...).
+[Bulma](https://bulma.io/) is the class-based alternative when you want prebuilt
+components; Tailwind and plain CSS work too.
 
 ### Tailwind CSS
 
