@@ -79,16 +79,16 @@ One executable: HTTP server, SQLite, and a scripting language.
          <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
          <source src="_static/guestbook-demo.mp4" type="video/mp4">
        </video>
-       <figcaption>The guestbook from the tutorial: written, run, then styled.
+       <figcaption>The guestbook from the tutorial.
          <button type="button" class="proof__toggle" data-demo-toggle aria-pressed="false">Pause</button>
        </figcaption>
      </figure>
      <div class="proof__notes">
        <p class="proof__heading">Thirty seconds, start to styled</p>
        <ul class="proof__list">
-         <li>A page, a form handler, a migration. That is the app.</li>
-         <li><code>bialet</code> serves it immediately. No build step, no watcher.</li>
-         <li>A stylesheet and a layout class later, it looks like this.</li>
+         <li>A page, a form handler, a migration.</li>
+         <li><code>bialet</code> serves the files directly. No build step.</li>
+         <li>Then a stylesheet and a layout class.</li>
        </ul>
        <p class="proof__cta">
          <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Build it yourself</a>
