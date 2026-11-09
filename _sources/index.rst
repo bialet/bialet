@@ -1,19 +1,21 @@
-One executable: HTTP server, SQLite, and a scripting language.
-================================================================
+Small on purpose.
+=================
 
 .. meta::
-    :description: Bialet is a single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step.
+    :description: Bialet is a small web framework in one executable: an HTTP server, SQLite, and the Wren scripting language. No package manager, no YAML, no build step.
     :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 .. llms-txt-ignore-start
 
 .. raw:: html
 
+   <p class="hero__subline">It should have stayed this simple.</p>
+
    <p class="hero__lede">
+     One executable: an HTTP server, SQLite, and the Wren scripting language.
      Build data-driven web apps from <code>.wren</code> files. No package
-     manager, no YAML, no separate database server, no build step: one
-     executable (3.7&nbsp;MB on Linux x86_64) runs the HTTP server, opens the
-     SQLite file, and returns the HTML.
+     manager, no YAML, no separate database server, no build step. The Linux
+     x86_64 binary is 3.7&nbsp;MB.
    </p>
 
 .. raw:: html
@@ -152,6 +154,9 @@ One executable: HTTP server, SQLite, and a scripting language.
 What you get
 ------------
 
+One executable does the work: it serves HTTP, opens the SQLite file, and runs
+your Wren code. There is no stack to assemble around it.
+
 .. grid:: 1 2 2 2
    :gutter: 2
 
@@ -161,8 +166,8 @@ What you get
       ^^^
       **One executable**
 
-      There is no runtime and no ``node_modules`` directory. Copy the binary
-      to a server and run it. The Linux x86_64 binary is 3.7 MB.
+      Copy the binary to a server and run it. No runtime to install, no
+      ``node_modules``. 3.7 MB on Linux x86_64.
 
    .. grid-item-card::
 
@@ -199,7 +204,7 @@ What it costs
 .. admonition:: The tradeoffs
    :class: note
 
-   Bialet is small on purpose. These are the limits that come with that.
+   Small means bounded. These are the limits that come with it.
 
    - **One worker per process, with instant queueing.** Requests are served
      sequentially per worker. For parallel concurrency on multi-core servers,

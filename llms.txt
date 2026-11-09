@@ -4,7 +4,7 @@
 
 ## Docs
 
-- [One executable: HTTP server, SQLite, and a scripting language.](/_sources/index.rst)
+- [Small on purpose.](/_sources/index.rst)
 - [Why Bialet?](/_sources/why-bialet.md)
 - [HTML-First](/_sources/html-first.md)
 - [Installation](/_sources/installation.md)

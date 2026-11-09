@@ -7,17 +7,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="Bialet is a single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step." name="description" />
+<meta content="Bialet is a small web framework in one executable: an HTTP server, SQLite, and the Wren scripting language. No package manager, no YAML, no build step." name="description" />
 <meta content="Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered" name="keywords" />
-<meta property="og:title" content="One executable: HTTP server, SQLite, and a scripting language." />
+<meta property="og:title" content="Small on purpose." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/index.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="What you get: One executable There is no runtime and no node_modules directory. Copy the binary to a server and run it. The Linux x86_64 binary is 3.7 MB. SQLite is included The database is one fil..." />
+<meta property="og:description" content="What you get: One executable does the work: it serves HTTP, opens the SQLite file, and runs your Wren code. There is no stack to assemble around it. One executable Copy the binary to a server and r..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
 
-    <title>One executable: HTTP server, SQLite, and a scripting language. &#8212; Bialet</title>
+    <title>Small on purpose. &#8212; Bialet</title>
   
   
   
@@ -43,7 +43,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eb73bf95" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -101,13 +101,15 @@
             </picture>
           </div>
           
-  <section id="one-executable-http-server-sqlite-and-a-scripting-language">
-<h1>One executable: HTTP server, SQLite, and a scripting language.<a class="headerlink" href="#one-executable-http-server-sqlite-and-a-scripting-language" title="Link to this heading">#</a></h1>
+  <section id="small-on-purpose">
+<h1>Small on purpose.<a class="headerlink" href="#small-on-purpose" title="Link to this heading">#</a></h1>
+<p class="hero__subline">It should have stayed this simple.</p>
+
 <p class="hero__lede">
+  One executable: an HTTP server, SQLite, and the Wren scripting language.
   Build data-driven web apps from <code>.wren</code> files. No package
-  manager, no YAML, no separate database server, no build step: one
-  executable (3.7&nbsp;MB on Linux x86_64) runs the HTTP server, opens the
-  SQLite file, and returns the HTML.
+  manager, no YAML, no separate database server, no build step. The Linux
+  x86_64 binary is 3.7&nbsp;MB.
 </p><div id="bialet-download" class="install">
 
   <!-- Unix (Linux / macOS): curl command with copy button -->
@@ -231,6 +233,8 @@
 <div class="copy-status" role="status" aria-live="polite"></div><hr class="docutils" />
 <section id="what-you-get">
 <h2>What you get<a class="headerlink" href="#what-you-get" title="Link to this heading">#</a></h2>
+<p>One executable does the work: it serves HTTP, opens the SQLite file, and runs
+your Wren code. There is no stack to assemble around it.</p>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
 <div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
@@ -240,8 +244,8 @@
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>One executable</strong></p>
-<p class="sd-card-text">There is no runtime and no <code class="docutils literal notranslate"><span class="pre">node_modules</span></code> directory. Copy the binary
-to a server and run it. The Linux x86_64 binary is 3.7 MB.</p>
+<p class="sd-card-text">Copy the binary to a server and run it. No runtime to install, no
+<code class="docutils literal notranslate"><span class="pre">node_modules</span></code>. 3.7 MB on Linux x86_64.</p>
 </div>
 </div>
 </div>
@@ -289,7 +293,7 @@ yourself. Add JavaScript only if you want it.</p>
 <h2>What it costs<a class="headerlink" href="#what-it-costs" title="Link to this heading">#</a></h2>
 <div class="note admonition">
 <p class="admonition-title">The tradeoffs</p>
-<p>Bialet is small on purpose. These are the limits that come with that.</p>
+<p>Small means bounded. These are the limits that come with it.</p>
 <ul class="simple">
 <li><p><strong>One worker per process, with instant queueing.</strong> Requests are served
 sequentially per worker. For parallel concurrency on multi-core servers,
@@ -384,7 +388,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
         </div>
         <footer class="landing-footer">
           <p class="landing-footer__tagline">
-            Web development became a spaceship. Bialet is a bicycle.
+            It should have stayed this simple.
           </p>
           <p>
             &copy; 2026, Rodrigo Arce &nbsp;&middot;&nbsp;

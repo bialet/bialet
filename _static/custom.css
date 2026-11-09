@@ -396,6 +396,15 @@ div.highlight button.copybtn.success {
   height: auto;
 }
 
+.hero__subline {
+  max-width: 30em;
+  margin: 0 auto 0.75em;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--pst-color-text-base);
+}
+
 .hero__lede {
   max-width: 34em;
   margin: 0 auto 1.5em;
