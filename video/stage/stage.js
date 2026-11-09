@@ -190,10 +190,10 @@
     rippleAt("plain", t, 29600);
 
     let html = "";
-    const cmdStart = 22300;
+    const cmdStart = 22250;
     if (t >= cmdStart) {
-      const typed = Math.round(clamp01((t - cmdStart) / 420) * 6);
-      html += `<span class="term__line"><span class="term__prompt">$ </span>${"bialet".slice(0, typed)}</span>`;
+      const typed = Math.round(clamp01((t - cmdStart) / 480) * 10);
+      html += `<span class="term__line"><span class="term__prompt">$ </span>${"bialet dev".slice(0, typed)}</span>`;
     }
     for (const line of D.terminal) {
       if (t < line.at) continue;
@@ -240,7 +240,7 @@
     [7000, "and that is all of it", "no ORM, no bundler, no config"],
     [8200, "every line of it", "_migration.wren · index.wren · message.wren"],
     [17400, "every line of it", "there is nothing else in the project"],
-    [22300, "$ bialet", "starts the server, opens SQLite, runs the migration"],
+    [22300, "$ bialet dev", "live reload, errors in the browser, no build step"],
     [27400, "it already works", "it is just ugly"],
     [31200, "one stylesheet", "css/style.css"],
     [36500, "and one layout class", "_app.wren → Template.layout"],

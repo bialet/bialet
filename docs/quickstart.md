@@ -72,12 +72,17 @@ different job, not because it needs wiring: no router, no table of routes.
 ## Run it
 
 ```bash
-bialet
+bialet dev
 ```
 
-Open [127.0.0.1:7001](http://127.0.0.1:7001), post a message, and refresh. The
-message is in SQLite. Delete `_db.sqlite3` to start over; `bialet` recreates it
-and reruns the migrations.
+`bialet dev` serves the directory on 127.0.0.1:7001, opens it in your browser,
+applies the migration, and reloads the page when a file changes. Errors show up
+in the browser instead of only in the terminal. Drop `dev` for the same server
+without live reload, error display, or auto-open.
+
+Post a message and watch it appear. The message is in SQLite: delete
+`_db.sqlite3` to start over, and the next start recreates it and reruns the
+migrations.
 
 That is a working app. It also looks like 1995, which is the next problem.
 

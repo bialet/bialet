@@ -50,7 +50,7 @@ MSG_1 = "hello from a .wren file"
 MSG_2 = "does it work?"
 MSG_3 = "shipped in an afternoon"
 
-TERMINAL_AT = [23_000, 23_600, 24_400, 29_850]
+TERMINAL_AT = [23_000, 23_500, 24_000, 24_500, 25_200, 29_850]
 
 CSS_EXCERPT = 29  # lines of style.css shown, plus an ellipsis line
 
@@ -172,7 +172,7 @@ def capture_app(browser, app_dir, work_dir, assets, tag, seed, typed, clip_heigh
     log_path = work_dir.parent / f"{tag}.log"
     with open(log_path, "w", encoding="utf-8") as log_file:
         process = subprocess.Popen(
-            [bialet_binary(), "-p", str(port), str(work_dir)],
+            [bialet_binary(), "-q", "-p", str(port), "dev", str(work_dir)],
             cwd=work_dir,
             stdout=log_file,
             stderr=subprocess.STDOUT,
@@ -220,7 +220,13 @@ def terminal_lines(raw_log: str, port: int | None = None) -> list[dict]:
         text = text.strip()
         if not text or text.startswith("Path too long"):
             continue
-        if "riding" in text or "Migration applied" in text or text.startswith("Request "):
+        if (
+            "riding" in text
+            or "Migration applied" in text
+            or "Live reloading" in text
+            or "Showing errors" in text
+            or text.startswith("Request ")
+        ):
             if port:
                 text = text.replace(f":{port}", ":7001")
             if text not in picked:

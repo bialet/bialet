@@ -19,7 +19,7 @@ master for social.
   `Template` layout class) and `css/style.css`.
 - `stage/` — an HTML page at 1080×1920 with a deterministic timeline
   (`window.seek(ms)`), screenshotted frame by frame.
-- `build.py` — runs both apps with `bialet`, drives a real browser to post
+- `build.py` — runs both apps with `bialet dev`, drives a real browser to post
   messages, screenshots before/after, highlights the sources with Pygments,
   steps the stage, and encodes with ffmpeg.
 

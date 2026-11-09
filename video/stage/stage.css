@@ -189,7 +189,7 @@ html, body {
 .browser { width: 880px; height: 1110px; left: 40px; top: 25px; }
 
 .browser.is-small {
-  top: 330px;
+  top: 350px;
 }
 
 .browser__chrome {
@@ -274,7 +274,7 @@ html, body {
 
 /* ------------------------------------------------------------- terminal */
 
-.term { width: 960px; height: 290px; }
+.term { width: 960px; height: 330px; }
 
 .term__bar {
   display: flex;
