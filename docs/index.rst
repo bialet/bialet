@@ -160,34 +160,25 @@ What you get
 
 ----
 
-A whole app in one file:
-------------------------
+A whole app in three files:
+---------------------------
 
 .. raw:: html
 
    <details class="landing-sample" open data-collapse-on-phone>
-     <summary>The whole file</summary>
+     <summary>The three files</summary>
      <div class="landing-sample__body">
 
 .. code-block:: wren
 
-   // 1. Create your database table automatically
-   `CREATE TABLE IF NOT EXISTS messages (text TEXT)`.query
+   // _migration.wren
+   Db.migrate("init", `CREATE TABLE messages (text TEXT, created_at DATETIME)`)
 
-   // 2. Handle POST requests and save data
-   if (Request.isPost) {
-     var msg = Request.post("msg") || ""
-     `messages`.save({"text": msg})
-   }
-
-   // 3. Fetch data using pure SQL
-   var messages = `SELECT * FROM messages`.fetch
-
-   // 4. Return HTML directly
+   // index.wren
+   var messages = `SELECT * FROM messages ORDER BY created_at ASC`.fetch
    return <main>
      <h1>Bialet Guestbook</h1>
-
-     <form method="post">
+     <form method="post" action="/message">
        <input name="msg" placeholder="Write a message...">
        <button>Submit</button>
      </form>
@@ -197,10 +188,27 @@ A whole app in one file:
      </ul>
    </main>
 
+   // message.wren
+   if (Request.isPost) {
+     var msg = Request.post("msg")
+     if (msg) {
+       `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
+       return <main>
+         <p>Messaged <b>{{ msg }}</b> saved!</p>
+         <p><a href="/">Show messages</a></p>
+       </main>
+     }
+   }
+   return Response.redirect("/")
+
 .. raw:: html
 
      </div>
    </details>
+
+Three files, three roles: ``_migration.wren`` creates the table at startup,
+``index.wren`` renders ``/``, and ``message.wren`` handles the form POST at
+``/message``. The filename is the route.
 
 Bialet integrates the :doc:`Wren language <wren>` (based on
 `wren.io <https://wren.io/>`_) with
