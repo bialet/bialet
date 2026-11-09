@@ -7,17 +7,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light." name="description" />
+<meta content="Bialet is a single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step." name="description" />
 <meta content="Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered" name="keywords" />
-<meta property="og:title" content="Web development became a spaceship. Bialet is a bicycle." />
+<meta property="og:title" content="One executable: HTTP server, SQLite, and a scripting language." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/index.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Features: A Tiny Single Binary Drop the gigabytes of node_modules. Bialet is a small, self-contained executable. Copy it to your server, and your app is deployed. SQLite is Built-in Forget about pr..." />
+<meta property="og:description" content="What you get: One executable There is no runtime and no node_modules directory. Copy the binary to a server and run it. The Linux x86_64 binary is 3.7 MB. SQLite is included The database is one fil..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
 
-    <title>Web development became a spaceship. Bialet is a bicycle. &#8212; Bialet</title>
+    <title>One executable: HTTP server, SQLite, and a scripting language. &#8212; Bialet</title>
   
   
   
@@ -43,7 +43,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -59,8 +59,8 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
-    <script src="_static/ai-prompt.js?v=43adc148"></script>
-    <script src="_static/copy.js?v=98cf20f6"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -95,15 +95,19 @@
       <main class="landing-main" role="main" id="main-content">
         <div class="landing-content">
           <div class="hero__mark">
-            <img src="_static/logo.png" alt="" width="132" height="132" />
+            <picture>
+              <source srcset="_static/logo-264.webp" type="image/webp" />
+              <img src="_static/logo.png" alt="" width="132" height="132" />
+            </picture>
           </div>
           
-  <section id="web-development-became-a-spaceship-bialet-is-a-bicycle">
-<h1>Web development became a spaceship. Bialet is a bicycle.<a class="headerlink" href="#web-development-became-a-spaceship-bialet-is-a-bicycle" title="Link to this heading">#</a></h1>
+  <section id="one-executable-http-server-sqlite-and-a-scripting-language">
+<h1>One executable: HTTP server, SQLite, and a scripting language.<a class="headerlink" href="#one-executable-http-server-sqlite-and-a-scripting-language" title="Link to this heading">#</a></h1>
 <p class="hero__lede">
-  Build data-driven web apps from a single file. No NPM, no YAML,
-  no separate database servers. Just a <strong>tiny binary</strong> with
-  a built-in HTTP server, a scripting language, and SQLite.
+  Build data-driven web apps from <code>.wren</code> files. No package
+  manager, no YAML, no separate database server, no build step: one
+  executable (3.7&nbsp;MB on Linux x86_64) runs the HTTP server, opens the
+  SQLite file, and returns the HTML.
 </p><div id="bialet-download" class="install">
 
   <!-- Unix (Linux / macOS): curl command with copy button -->
@@ -136,7 +140,8 @@
   </div>
 
   <p class="install__more">
-    <a href="installation.html">All platforms &amp; install options</a>
+    <a href="installation.html">Other platforms, Homebrew, and Docker</a>
+    &middot; MIT licensed &middot; v1.2.7
   </p>
 
 </div>
@@ -149,29 +154,61 @@
   </a>
 </div>
 
-<!-- One proof: the tutorial app, and the code that renders it. -->
+<!-- One proof: a build from the files to the stylesheet. -->
 <div class="proof">
-  <figure class="proof__shot">
-    <img src="_static/poll-vote.png" alt="A page titled Poll asking &quot;Has web development become overly complex?&quot; with Yes and No options and a Vote button." />
-    <figcaption>The tutorial's poll, and the handler behind its Vote button.</figcaption>
+  <figure class="proof__demo">
+    <video id="guestbook-demo" class="proof__video" width="1080" height="1920"
+           poster="_static/guestbook-demo-poster.jpg" muted loop playsinline
+           preload="metadata" disablepictureinpicture
+           aria-label="A guestbook built in Bialet: three files are written, run unstyled, then styled with a stylesheet and a layout class.">
+      <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
+    </video>
+    <figcaption>The guestbook example: built, run, then styled.
+      <button type="button" class="proof__toggle" data-demo-toggle>Pause</button>
+    </figcaption>
   </figure>
-  <details class="proof__code" open data-collapse-on-phone>
-    <summary>The vote handler, verbatim</summary><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span><span class="p">,</span><span class="w"> </span><span class="nc">Poll</span>
-
-<span class="k">var</span><span class="w"> </span><span class="n">poll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Poll</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">vote</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"vote"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
-<span class="w">  </span><span class="n">poll</span><span class="o">.</span><span class="n">vote</span><span class="p">(</span><span class="n">vote</span><span class="p">)</span>
-<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Voted for </span><span class="si">%(</span><span class="n">vote</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
-<span class="w">  </span><span class="c1">// Redirect to the results page and stop the script</span>
-<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/results"</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span>
-<span class="p">}</span>
-</pre></div>
+  <div class="proof__notes">
+    <p class="proof__heading">Under a minute, start to styled</p>
+    <ul class="proof__list">
+      <li>A page, a form handler, a migration.</li>
+      <li><code>bialet</code> serves the files. No build step.</li>
+      <li>Then a stylesheet and a layout class.</li>
+    </ul>
+    <p class="proof__cta">
+      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="quickstart.html">Build this guestbook</a>
+    </p>
+  </div>
 </div>
-  </details>
-</div><hr class="docutils" />
+
+<script>
+  (function () {
+    var video = document.getElementById("guestbook-demo");
+    var toggle = document.querySelector("[data-demo-toggle]");
+    if (!video) return;
+
+    function reflect() {
+      if (!toggle) return;
+      toggle.textContent = video.paused ? "Play" : "Pause";
+    }
+
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        if (video.paused) video.play().catch(function () {});
+        else video.pause();
+      });
+      video.addEventListener("play", reflect);
+      video.addEventListener("pause", reflect);
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      reflect();
+      return;
+    }
+    video.autoplay = true;
+    var started = video.play();
+    if (started && started.catch) started.catch(function () {});
+  })();
+</script><hr class="docutils" />
 <div class="community-banner">
   <p class="community-banner__title"><strong>Building with AI?</strong></p>
   <p>
@@ -192,8 +229,8 @@
 </div>
 
 <div class="copy-status" role="status" aria-live="polite"></div><hr class="docutils" />
-<section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h2>
+<section id="what-you-get">
+<h2>What you get<a class="headerlink" href="#what-you-get" title="Link to this heading">#</a></h2>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
 <div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
@@ -202,10 +239,9 @@
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-package" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.876.64a1.75 1.75 0 00-1.75 0l-8.25 4.762a1.75 1.75 0 00-.875 1.515v9.525c0 .625.334 1.203.875 1.515l8.25 4.763a1.75 1.75 0 001.75 0l8.25-4.762a1.75 1.75 0 00.875-1.516V6.917a1.75 1.75 0 00-.875-1.515L12.876.639zm-1 1.298a.25.25 0 01.25 0l7.625 4.402-7.75 4.474-7.75-4.474 7.625-4.402zM3.501 7.64v8.803c0 .09.048.172.125.216l7.625 4.402v-8.947L3.501 7.64zm9.25 13.421l7.625-4.402a.25.25 0 00.125-.216V7.639l-7.75 4.474v8.947z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>A Tiny Single Binary</strong></p>
-<p class="sd-card-text">Drop the gigabytes of <code class="docutils literal notranslate"><span class="pre">node_modules</span></code>. Bialet is a small,
-self-contained executable. Copy it to your server, and your app
-is deployed.</p>
+<p class="sd-card-text"><strong>One executable</strong></p>
+<p class="sd-card-text">There is no runtime and no <code class="docutils literal notranslate"><span class="pre">node_modules</span></code> directory. Copy the binary
+to a server and run it. The Linux x86_64 binary is 3.7 MB.</p>
 </div>
 </div>
 </div>
@@ -215,9 +251,9 @@ is deployed.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-database" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 1.25c-2.487 0-4.774.402-6.466 1.079-.844.337-1.577.758-2.112 1.264C2.886 4.1 2.5 4.744 2.5 5.5v12.987l.026.013H2.5c0 .756.386 1.4.922 1.907.535.506 1.268.927 2.112 1.264 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079c.844-.337 1.577-.758 2.112-1.264.536-.507.922-1.151.922-1.907h-.026l.026-.013V5.5c0-.756-.386-1.4-.922-1.907-.535-.506-1.268-.927-2.112-1.264C16.773 1.652 14.487 1.25 12 1.25zM4 5.5c0-.21.104-.487.453-.817.35-.332.899-.666 1.638-.962C7.566 3.131 9.655 2.75 12 2.75c2.345 0 4.434.382 5.909.971.74.296 1.287.63 1.638.962.35.33.453.606.453.817 0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962C4.103 5.987 4 5.711 4 5.5zM20 12V7.871a7.842 7.842 0 01-1.534.8C16.773 9.348 14.487 9.75 12 9.75s-4.774-.402-6.466-1.079A7.843 7.843 0 014 7.871V12c0 .21.104.487.453.817.35.332.899.666 1.638.961 1.475.59 3.564.972 5.909.972 2.345 0 4.434-.382 5.909-.972.74-.295 1.287-.629 1.638-.96.35-.33.453-.607.453-.818zM4 14.371c.443.305.963.572 1.534.8 1.692.677 3.979 1.079 6.466 1.079s4.773-.402 6.466-1.079a7.842 7.842 0 001.534-.8v4.116l.013.013H20c0 .21-.104.487-.453.817-.35.332-.899.666-1.638.962-1.475.59-3.564.971-5.909.971-2.345 0-4.434-.382-5.909-.971-.74-.296-1.287-.63-1.638-.962-.35-.33-.453-.606-.453-.817h-.013L4 18.487V14.37z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>SQLite is Built-in</strong></p>
-<p class="sd-card-text">Forget about provisioning databases or writing connection strings.
-Real data persistence works completely out of the box.</p>
+<p class="sd-card-text"><strong>SQLite is included</strong></p>
+<p class="sd-card-text">The database is one file. No connection strings, no service to
+provision, no separate process. WAL mode is one flag.</p>
 </div>
 </div>
 </div>
@@ -227,9 +263,9 @@ Real data persistence works completely out of the box.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-zap" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M16.168 2.924L4.51 13.061a.25.25 0 00.164.439h5.45a.75.75 0 01.692 1.041l-2.559 6.066 11.215-9.668a.25.25 0 00-.164-.439H14a.75.75 0 01-.687-1.05l2.855-6.526zm-.452-1.595a1.341 1.341 0 012.109 1.55L15.147 9h4.161c1.623 0 2.372 2.016 1.143 3.075L8.102 22.721a1.149 1.149 0 01-1.81-1.317L8.996 15H4.674c-1.619 0-2.37-2.008-1.148-3.07l12.19-10.6z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Zero Build Step</strong></p>
-<p class="sd-card-text">Write a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, save it, and refresh your browser.
-No compilers, no bundlers, no watch processes.</p>
+<p class="sd-card-text"><strong>No build step</strong></p>
+<p class="sd-card-text">Save a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file and refresh the browser. No compiler, no bundler,
+no watch process.</p>
 </div>
 </div>
 </div>
@@ -239,9 +275,9 @@ No compilers, no bundlers, no watch processes.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8.78 4.97a.75.75 0 010 1.06L2.81 12l5.97 5.97a.75.75 0 11-1.06 1.06l-6.5-6.5a.75.75 0 010-1.06l6.5-6.5a.75.75 0 011.06 0zm6.44 0a.75.75 0 000 1.06L21.19 12l-5.97 5.97a.75.75 0 101.06 1.06l6.5-6.5a.75.75 0 000-1.06l-6.5-6.5a.75.75 0 00-1.06 0z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>HTML is the Real Frontend</strong></p>
-<p class="sd-card-text">Use standard HTML and CSS. Bialet lets you build server-rendered
-apps the classic, straightforward way. Add JS only if you want to.</p>
+<p class="sd-card-text"><strong>HTML, CSS, and SQL</strong></p>
+<p class="sd-card-text">Server-rendered pages, standard HTML and CSS, and SQL you write
+yourself. Add JavaScript only if you want it.</p>
 </div>
 </div>
 </div>
@@ -249,67 +285,30 @@ apps the classic, straightforward way. Add JS only if you want to.</p>
 </div>
 </section>
 <hr class="docutils" />
-<section id="a-script-that-stays-out-of-your-way">
-<h2>A script that stays out of your way:<a class="headerlink" href="#a-script-that-stays-out-of-your-way" title="Link to this heading">#</a></h2>
-<details class="landing-sample" open data-collapse-on-phone>
-  <summary>The whole file</summary>
-  <div class="landing-sample__body"><div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// 1. Create your database table automatically</span>
-<span class="sb">`CREATE TABLE IF NOT EXISTS messages (text TEXT)`</span><span class="o">.</span><span class="n">query</span>
-
-<span class="c1">// 2. Handle POST requests and save data</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
-<span class="w">  </span><span class="sb">`messages`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"text"</span><span class="o">:</span><span class="w"> </span><span class="n">msg</span><span class="p">})</span>
-<span class="p">}</span>
-
-<span class="c1">// 3. Fetch data using pure SQL</span>
-<span class="k">var</span><span class="w"> </span><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM messages`</span><span class="o">.</span><span class="n">fetch</span>
-
-<span class="c1">// 4. Return HTML directly</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="nc">Guestbook</span><span class="x">&lt;/h1&gt;</span>
-
-<span class="x">  &lt;form method="post"&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name="msg" placeholder="Write a message..."&gt;</span>
-<span class="x">    &lt;button&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
-<span class="x">  &lt;/form&gt;</span>
-<span class="w">  </span><span class="x">&lt;hr&gt;</span>
-<span class="x">  &lt;ul&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
-<span class="x">&lt;/main&gt;</span>
-</pre></div>
-</div>
-  </div>
-</details><p>Bialet integrates the <a class="reference internal" href="wren.html"><span class="doc">Wren language</span></a> (based on
-<a class="reference external" href="https://wren.io/">wren.io</a>) with
-a HTTP server and a built-in SQLite database — <strong>in a single binary</strong>.
-No configuration files, no dependencies, no build step. Just write <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
-files and run.</p>
-<p>Run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> in your project folder and open <a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a>.</p>
-</section>
-<hr class="docutils" />
-<section id="the-bialet-manifesto-ride-light">
-<h2>The Bialet Manifesto — Ride Light 🚲<a class="headerlink" href="#the-bialet-manifesto-ride-light" title="Link to this heading">#</a></h2>
-<div class="tip admonition">
-<p class="admonition-title">Ride Light</p>
-<ol class="arabic simple">
-<li><p><strong>Simplicity is a superpower.</strong> Every line of tooling you don’t write
-is a line of your app that ships faster.</p></li>
-<li><p><strong>Standards, not frameworks.</strong> HTML, SQL, and HTTP have outlived every
-framework. Master them and your knowledge stays relevant.</p></li>
-<li><p><strong>One file to deploy.</strong> No containers, no orchestration, no
-<code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>. Copy the binary — that’s it.</p></li>
-<li><p><strong>Batteries included.</strong> Server, database, templating — all in one
-small binary. No external services to provision.</p></li>
-<li><p><strong>Ride light.</strong> Complexity is a choice. Choose less, and you’ll go
-further than you think.</p></li>
-</ol>
+<section id="what-it-costs">
+<h2>What it costs<a class="headerlink" href="#what-it-costs" title="Link to this heading">#</a></h2>
+<div class="note admonition">
+<p class="admonition-title">The tradeoffs</p>
+<p>Bialet is small on purpose. These are the limits that come with that.</p>
+<ul class="simple">
+<li><p><strong>One worker per process, with instant queueing.</strong> Requests are served
+sequentially per worker. For parallel concurrency on multi-core servers,
+spin up multiple local instances behind Caddy or nginx. See
+<a class="reference internal" href="deployment.html"><span class="doc">Deployment</span></a>.</p></li>
+<li><p><strong>HTTP/1.0, no native TLS.</strong> Bialet serves HTTP. Put nginx, Apache, or
+Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
+static-asset caching. See <a class="reference internal" href="deployment.html"><span class="doc">Deployment</span></a>.</p></li>
+<li><p><strong>Wren, with basic tooling.</strong> Apps are written in Wren. The VS Code and
+Vim plugins provide syntax highlighting; autocomplete and an LSP are on
+the roadmap.</p></li>
+<li><p><strong>No WebSockets.</strong> Request/response HTTP only. Use polling or an external
+service for realtime features.</p></li>
+</ul>
 </div>
 </section>
 <hr class="docutils" />
-<section id="who-is-bialet-for">
-<h2>Who is Bialet for?<a class="headerlink" href="#who-is-bialet-for" title="Link to this heading">#</a></h2>
+<section id="where-it-fits">
+<h2>Where it fits<a class="headerlink" href="#where-it-fits" title="Link to this heading">#</a></h2>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
 <div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-2 sd-row-cols-md-3 sd-row-cols-lg-3 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
@@ -318,9 +317,8 @@ further than you think.</p></li>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-beaker" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8 8.807V3.5h-.563a.75.75 0 010-1.5h9.125a.75.75 0 010 1.5H16v5.307l5.125 9.301c.964 1.75-.302 3.892-2.299 3.892H5.174c-1.998 0-3.263-2.142-2.3-3.892L8 8.807zM14.5 3.5h-5V9a.75.75 0 01-.093.362L7.127 13.5h9.746l-2.28-4.138A.75.75 0 0114.5 9V3.5zM4.189 18.832L6.3 15h11.4l2.111 3.832a1.125 1.125 0 01-.985 1.668H5.174a1.125 1.125 0 01-.985-1.668z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Internal Tools &amp; Dashboards</strong></p>
-<p class="sd-card-text">Spin up a data-driven admin panel in minutes with zero
-infrastructure overhead.</p>
+<p class="sd-card-text"><strong>Internal tools and admin panels</strong></p>
+<p class="sd-card-text">One process, one SQLite file, and a few users on one small server.</p>
 </div>
 </div>
 </div>
@@ -330,9 +328,9 @@ infrastructure overhead.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-mortar-board" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.292 2.06a.75.75 0 00-.584 0L.458 6.81a.75.75 0 000 1.38L4.25 9.793v3.803a2.901 2.901 0 00-1.327.757c-.579.58-.923 1.41-.923 2.43v4.5c0 .248.128.486.335.624.06.04.117.073.22.124.124.062.297.138.52.213.448.149 1.09.288 1.925.288s1.477-.14 1.925-.288c.223-.075.396-.15.52-.213a2.11 2.11 0 00.21-.117A.762.762 0 008 21.28v-4.5c0-1.018-.344-1.85-.923-2.428a2.9 2.9 0 00-1.327-.758v-3.17l5.958 2.516a.75.75 0 00.584 0l5.208-2.2v4.003a2.552 2.552 0 01-.079.085 4.057 4.057 0 01-.849.65c-.826.488-2.255 1.021-4.572 1.021-.612 0-1.162-.037-1.654-.1a.75.75 0 00-.192 1.487c.56.072 1.173.113 1.846.113 2.558 0 4.254-.592 5.334-1.23.538-.316.914-.64 1.163-.896a2.84 2.84 0 00.392-.482h.001A.75.75 0 0019 15v-4.892l4.542-1.917a.75.75 0 000-1.382l-11.25-4.75zM5 15c-.377 0-.745.141-1.017.413-.265.265-.483.7-.483 1.368v4.022c.299.105.797.228 1.5.228s1.201-.123 1.5-.228V16.78c0-.669-.218-1.103-.483-1.368A1.431 1.431 0 005 15zm7-3.564L2.678 7.5 12 3.564 21.322 7.5 12 11.436z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Learning &amp; Teaching</strong></p>
-<p class="sd-card-text">Focus on HTML, SQL, and core logic. Skip the webpack configs
-and ORM abstractions.</p>
+<p class="sd-card-text"><strong>Prototypes and small sites</strong></p>
+<p class="sd-card-text">One directory to deploy. Add a reverse proxy when the site goes
+public.</p>
 </div>
 </div>
 </div>
@@ -342,15 +340,16 @@ and ORM abstractions.</p>
 <p class="sd-card-text"><svg version="1.1" width="2.0em" height="2.0em" class="sd-octicon sd-octicon-heart" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6.736 4C4.657 4 2.5 5.88 2.5 8.514c0 3.107 2.324 5.96 4.861 8.12a29.66 29.66 0 004.566 3.175l.073.041.073-.04c.271-.153.661-.38 1.13-.674.94-.588 2.19-1.441 3.436-2.502 2.537-2.16 4.861-5.013 4.861-8.12C21.5 5.88 19.343 4 17.264 4c-2.106 0-3.801 1.389-4.553 3.643a.75.75 0 01-1.422 0C10.537 5.389 8.841 4 6.736 4zM12 20.703l.343.667a.75.75 0 01-.686 0l.343-.667zM1 8.513C1 5.053 3.829 2.5 6.736 2.5 9.03 2.5 10.881 3.726 12 5.605 13.12 3.726 14.97 2.5 17.264 2.5 20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262a31.146 31.146 0 01-5.233 3.576l-.025.013-.007.003-.002.001-.344-.666-.343.667-.003-.002-.007-.003-.025-.013A29.308 29.308 0 0110 20.408a31.147 31.147 0 01-3.611-2.632C3.8 15.573 1 12.332 1 8.514z"></path></svg></p>
 </div>
 <div class="sd-card-body docutils">
-<p class="sd-card-text"><strong>Lovers of Simplicity</strong></p>
-<p class="sd-card-text">If you prefer one tool that does its job perfectly over a chaotic
-stack of micro-libraries, hop on.</p>
+<p class="sd-card-text"><strong>Learning and teaching</strong></p>
+<p class="sd-card-text">HTML, SQL, and one scripting language. Nothing else to install.</p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<hr class="docutils" />
+<p>Not a fit if you need multi-server horizontal scaling, in-process TLS,
+WebSockets, or a package ecosystem. Bialet does not provide them. See
+<a class="reference internal" href="why-bialet.html"><span class="doc">Why Bialet?</span></a> for the longer version.</p>
 <div class="hero-actions">
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
   <a class="hero-actions__link" href="installation.html">All install options</a>
@@ -370,11 +369,12 @@ stack of micro-libraries, hop on.</p>
 </div>
 <hr class="docutils" />
 <div class="community-banner">
-  <p class="community-banner__title"><strong>Let's build together</strong></p>
+  <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
   <p>
-    Bialet is maintained by a solo developer, but the community is open to everyone.
-    Whether you're stuck on a query, have a feature idea, or want to show off your
-    project, GitHub Discussions is the place. Search first, ask second, and be kind.
+    Bialet is stable for personal use. There is no commercial support or
+    SLA. Bugs go to GitHub Issues; questions and project showcases go to
+    GitHub Discussions. Planned work is in the
+    <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
   </p>
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
 </div></section>
@@ -383,6 +383,9 @@ stack of micro-libraries, hop on.</p>
 
         </div>
         <footer class="landing-footer">
+          <p class="landing-footer__tagline">
+            Web development became a spaceship. Bialet is a bicycle.
+          </p>
           <p>
             &copy; 2026, Rodrigo Arce &nbsp;&middot;&nbsp;
             <a href="https://github.com/bialet/bialet">GitHub</a>

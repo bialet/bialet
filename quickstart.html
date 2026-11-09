@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Quick start: a guestbook" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/quickstart.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Build and run a guestbook in about five minutes. Messages are stored in SQLite, rendered on the server, and returned as HTML — with no build step, no package manager, and no configuration file. The..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Build and run a guestbook in about five minutes. Messages are stored in SQLite, rendered on the server, and returned as HTML — with no build step, no package manager, and no configuration file. The..." />
+
+    <title>Quick start: a guestbook &#8212; Bialet</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'quickstart';</script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting-started/index.html" />
+    <link rel="prev" title="Wren Language Guide" href="wren.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.2.7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">One executable: HTTP server, SQLite, and a scripting language.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quick start: a guestbook</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data &amp; Storage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-modules.html">External Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/quickstart.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fquickstart.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/quickstart.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Quick start: a guestbook</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-table">1. The table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-page">2. The page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-handler">3. The form handler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-it">Run it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-stylesheet">4. A stylesheet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-layout-class">5. One layout class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-it">6. Use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-just-happened">What just happened</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-go-next">Where to go next</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="quick-start-a-guestbook">
+<h1>Quick start: a guestbook<a class="headerlink" href="#quick-start-a-guestbook" title="Link to this heading">#</a></h1>
+<p>Build and run a guestbook in about five minutes. Messages are stored in SQLite,
+rendered on the server, and returned as HTML — with no build step, no package
+manager, and no configuration file.</p>
+<p>The app lives in <a class="reference external" href="https://github.com/bialet/bialet/tree/main/docs/examples/guestbook">docs/examples/guestbook</a>
+if you would rather read it than type it.</p>
+<section id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Link to this heading">#</a></h2>
+<p>You need <code class="docutils literal notranslate"><span class="pre">bialet</span></code> on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. See <a class="reference internal" href="installation.html"><span class="std std-doc">Installation</span></a> for
+other platforms.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>guestbook<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>guestbook
+</pre></div>
+</div>
+</section>
+<section id="the-table">
+<h2>1. The table<a class="headerlink" href="#the-table" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> runs every time the app starts and applies only what it has
+not applied before. The name you give a migration is its key, so <code class="docutils literal notranslate"><span class="pre">init</span></code> runs
+once, on the first start.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"init"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE messages (</span>
+<span class="sb">    text TEXT,</span>
+<span class="sb">    created_at DATETIME</span>
+<span class="sb">  )</span>
+<span class="sb">`</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The database is a file next to your app (<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>), created on first run.
+There is no service to start and no connection string.</p>
+</section>
+<section id="the-page">
+<h2>2. The page<a class="headerlink" href="#the-page" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">index.wren</span></code> is the page at <code class="docutils literal notranslate"><span class="pre">/</span></code>. The file name is the route.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM messages ORDER BY created_at ASC</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="nc">Guestbook</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;form method="post" action="/message"&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="msg" placeholder="Write a message..."&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="w">  </span><span class="x">&lt;hr&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>Three things worth noticing:</p>
+<ul class="simple">
+<li><p>Backticks build a <strong>prepared statement</strong>, not a string. <code class="docutils literal notranslate"><span class="pre">.fetch</span></code> runs it and
+returns the rows as a list of maps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;main&gt;…&lt;/main&gt;</span></code> is an <strong>inline HTML string</strong>. Its value is the response body.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">messages.map</span> <span class="pre">{|m|</span> <span class="pre">…</span> <span class="pre">}</span> <span class="pre">}}</span></code> is a Wren expression. Plain values are escaped
+automatically, so text from the database cannot inject markup.</p></li>
+</ul>
+<blockquote>
+<div><p><strong>Pitfall:</strong> column values always come back as <strong>strings</strong>, including numbers.
+Convert before doing math — <code class="docutils literal notranslate"><span class="pre">Num.fromString(row[&quot;count&quot;])</span></code>, or <code class="docutils literal notranslate"><span class="pre">.toNum</span></code> when a
+query returns a single number.</p>
+</div></blockquote>
+</section>
+<section id="the-form-handler">
+<h2>3. The form handler<a class="headerlink" href="#the-form-handler" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">message.wren</span></code> is the URL <code class="docutils literal notranslate"><span class="pre">/message</span></code>. It is a separate file because it does a
+different job, not because it needs wiring: no router, no table of routes.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`INSERT INTO messages VALUES (?, CURRENT_TIME)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">Messaged</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/"&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">messages</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;/main&gt;</span>
+<span class="x">  }</span>
+<span class="x">}</span>
+<span class="x">return Response.redirect("/")</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.post(&quot;msg&quot;)</span></code> returns <strong><code class="docutils literal notranslate"><span class="pre">null</span></code></strong> when the field is missing. Check it
+before using it, or the next string operation crashes at runtime.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">?</span></code> is a placeholder. Values are passed to <code class="docutils literal notranslate"><span class="pre">.query()</span></code>, never concatenated into
+the SQL, so injection is not a thing you can do by accident.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Response.redirect</span></code> sends a 302. <code class="docutils literal notranslate"><span class="pre">return</span></code> stops the script so no body is
+attached to the redirect.</p></li>
+</ul>
+</section>
+<section id="run-it">
+<h2>Run it<a class="headerlink" href="#run-it" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>dev
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code> serves the directory on 127.0.0.1:7001, opens it in your browser,
+applies the migration, and reloads the page when a file changes. Errors show up
+in the browser instead of only in the terminal. Drop <code class="docutils literal notranslate"><span class="pre">dev</span></code> for the same server
+without live reload, error display, or auto-open.</p>
+<p>Post a message and watch it appear. The message is in SQLite: delete
+<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> to start over, and the next start recreates it and reruns the
+migrations.</p>
+<p>That is a working app. It also looks like 1995, which is the next problem.</p>
+</section>
+<section id="a-stylesheet">
+<h2>4. A stylesheet<a class="headerlink" href="#a-stylesheet" title="Link to this heading">#</a></h2>
+<p>Add a plain stylesheet. Bialet does not care where static files live, as long as
+the path does not start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>; this app uses <code class="docutils literal notranslate"><span class="pre">css/style.css</span></code>. The file
+is ordinary CSS — custom properties, a gradient, one card:</p>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="p">:</span><span class="nd">root</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">color-scheme</span><span class="p">:</span><span class="w"> </span><span class="n">dark</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--bg</span><span class="p">:</span><span class="w"> </span><span class="mh">#0b0f14</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--line</span><span class="p">:</span><span class="w"> </span><span class="mh">#26313d</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--text</span><span class="p">:</span><span class="w"> </span><span class="mh">#f2f6fa</span><span class="p">;</span>
+<span class="w">  </span><span class="nv">--muted</span><span class="p">:</span><span class="w"> </span><span class="nf">color-mix</span><span class="p">(</span><span class="n">in</span><span class="w"> </span><span class="n">srgb</span><span class="p">,</span><span class="w"> </span><span class="mh">#f2f6fa</span><span class="w"> </span><span class="mi">62</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="mh">#0b0f14</span><span class="p">);</span>
+<span class="w">  </span><span class="nv">--accent</span><span class="p">:</span><span class="w"> </span><span class="mh">#ffb224</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">body</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">min-height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">vh</span><span class="p">;</span>
+<span class="w">  </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">56</span><span class="kt">px</span><span class="w"> </span><span class="mi">20</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="k">grid</span><span class="p">;</span>
+<span class="w">  </span><span class="k">place-items</span><span class="p">:</span><span class="w"> </span><span class="kc">center</span><span class="p">;</span>
+<span class="w">  </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--text</span><span class="p">);</span>
+<span class="w">  </span><span class="k">font</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="kt">px</span><span class="o">/</span><span class="mf">1.55</span><span class="w"> </span><span class="n">system-ui</span><span class="p">,</span><span class="w"> </span><span class="kc">sans-serif</span><span class="p">;</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span>
+<span class="w">    </span><span class="nb">radial-gradient</span><span class="p">(</span><span class="mi">110</span><span class="kt">%</span><span class="w"> </span><span class="mi">70</span><span class="kt">%</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">50</span><span class="kt">%</span><span class="w"> </span><span class="mi">-10</span><span class="kt">%</span><span class="p">,</span><span class="w"> </span><span class="mh">#1e1507</span><span class="p">,</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--bg</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="p">.</span><span class="nc">card</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="nf">min</span><span class="p">(</span><span class="mi">600</span><span class="kt">px</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">);</span>
+<span class="w">  </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">34</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">  </span><span class="k">border</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="nv">--line</span><span class="p">);</span>
+<span class="w">  </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">28</span><span class="kt">px</span><span class="p">;</span>
+<span class="w">  </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nb">linear-gradient</span><span class="p">(</span><span class="mi">180</span><span class="kt">deg</span><span class="p">,</span><span class="w"> </span><span class="mh">#161d25</span><span class="p">,</span><span class="w"> </span><span class="mh">#10161d</span><span class="p">);</span>
+<span class="w">  </span><span class="k">box-shadow</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">40</span><span class="kt">px</span><span class="w"> </span><span class="mi">80</span><span class="kt">px</span><span class="w"> </span><span class="mi">-40</span><span class="kt">px</span><span class="w"> </span><span class="mh">#000</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The rest of the file styles the composer, the button, and the message list. The
+whole thing is <a class="reference external" href="https://github.com/bialet/bialet/blob/main/docs/examples/guestbook-styled/css/style.css">112 lines</a>.</p>
+</section>
+<section id="one-layout-class">
+<h2>5. One layout class<a class="headerlink" href="#one-layout-class" title="Link to this heading">#</a></h2>
+<p>Two pages now share a <code class="docutils literal notranslate"><span class="pre">&lt;head&gt;</span></code> and a card wrapper. That belongs in one place.
+Protected files start with <code class="docutils literal notranslate"><span class="pre">_</span></code>, so <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> is importable from any page and
+never served as a URL:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">layout</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
+<span class="x">      &lt;head&gt;</span>
+<span class="w">        </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
+<span class="x">        &lt;title&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="n">guestbook</span><span class="x">&lt;/title&gt;</span>
+<span class="x">        &lt;link rel="stylesheet" href="/css/style.css"&gt;</span>
+<span class="w">      </span><span class="x">&lt;/head&gt;</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="x">&lt;main class="card"&gt;</span>
+<span class="x">          &lt;h1&gt;</span><span class="nc">Say</span><span class="w"> </span><span class="n">something</span><span class="w"> </span><span class="n">nice</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">          &lt;p class="sub"&gt;</span><span class="nc">Server</span><span class="o">-</span><span class="n">rendered</span><span class="p">,</span><span class="w"> </span><span class="n">stored</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">SQLite</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;/main&gt;</span>
+<span class="x">      &lt;/body&gt;</span>
+<span class="w">    </span><span class="x">&lt;/html&gt; }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">content</span> <span class="pre">}}</span></code> is where each page’s markup lands. Naming the file <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>
+is a convention, not a requirement — <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;_app&quot;</span> <span class="pre">for</span> <span class="pre">Template</span></code> is the whole
+connection.</p>
+</section>
+<section id="use-it">
+<h2>6. Use it<a class="headerlink" href="#use-it" title="Link to this heading">#</a></h2>
+<p>Add the import and wrap the page in <code class="docutils literal notranslate"><span class="pre">Template.layout(...)</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM messages ORDER BY created_at DESC</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="w">  </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;form method="post" action="/message" class="composer"&gt;</span>
+<span class="w">      </span><span class="x">&lt;input name="msg" placeholder="Write a message..." required&gt;</span>
+<span class="x">      &lt;button class="btn"&gt;</span><span class="nc">Post</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;/form&gt;</span>
+<span class="w">    </span><span class="x">&lt;ul class="messages {{ Request.get("new") &amp;&amp; "is-new" }}"&gt;</span>
+<span class="x">      {{ messages.map {|m| &lt;li class="message"&gt;</span>
+<span class="w">        </span><span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="w">        </span><span class="x">&lt;time&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"created_at"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/time&gt;</span>
+<span class="w">      </span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">    &lt;/ul&gt;</span>
+<span class="w">  </span><span class="x">&lt;/section&gt;</span>
+<span class="x">)</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"_app"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Template</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`INSERT INTO messages VALUES (?, CURRENT_TIME)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span>
+<span class="w">      </span><span class="x">&lt;section class="saved"&gt;</span>
+<span class="x">        &lt;p&gt;</span><span class="nc">Saved</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;&lt;/p&gt;</span>
+<span class="x">        &lt;a class="btn" href="/"&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">guestbook</span><span class="x">&lt;/a&gt;</span>
+<span class="x">      &lt;/section&gt;</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/?new=1"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Reload. Same routes, same database, same SQL — now inside a layout that loads
+the stylesheet. For the record, the URL bar showing <code class="docutils literal notranslate"><span class="pre">?new=1</span></code> is what makes the
+newest message keep its highlight for one render; it is a normal query string,
+read with <code class="docutils literal notranslate"><span class="pre">Request.get(&quot;new&quot;)</span></code>.</p>
+</section>
+<section id="what-just-happened">
+<h2>What just happened<a class="headerlink" href="#what-just-happened" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>The file is the route.</strong> <code class="docutils literal notranslate"><span class="pre">index.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">message.wren</span></code> → <code class="docutils literal notranslate"><span class="pre">/message</span></code>.
+Nothing declares it.</p></li>
+<li><p><strong>SQL is SQL.</strong> Backticked statements are prepared; <code class="docutils literal notranslate"><span class="pre">?</span></code> binds parameters.</p></li>
+<li><p><strong>HTML is a value.</strong> Pages return inline HTML strings; <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> inserts
+expressions and escapes them.</p></li>
+<li><p><strong>One binary.</strong> <code class="docutils literal notranslate"><span class="pre">bialet</span></code> served the files, opened the database, and applied the
+migration. Nothing was compiled, installed, or bundled.</p></li>
+</ul>
+<p>The landing page <a class="reference internal" href="index.html"><span class="std std-doc">video</span></a> walks through the same two versions of this
+app.</p>
+</section>
+<section id="where-to-go-next">
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="getting-started/index.html"><span class="std std-doc">Tutorial: build a poll</span></a> — the longer tour, with
+templates, forms, and results pages.</p></li>
+<li><p><a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> — queries, <code class="docutils literal notranslate"><span class="pre">.order()</span></code>, pagination, migrations.</p></li>
+<li><p><a class="reference internal" href="forms.html"><span class="std std-doc">Forms</span></a> — POST handling, files, CSRF.</p></li>
+<li><p><a class="reference internal" href="template.html"><span class="std std-doc">HTML Template</span></a> — inline HTML in depth.</p></li>
+<li><p><a class="reference internal" href="advanced-routing.html"><span class="std std-doc">Advanced Routing</span></a> — when a URL needs path segments.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="wren.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Wren Language Guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="getting-started/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Getting Started</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-table">1. The table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-page">2. The page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-handler">3. The form handler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-it">Run it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-stylesheet">4. A stylesheet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-layout-class">5. One layout class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-it">6. Use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-just-happened">What just happened</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-go-next">Where to go next</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -88,14 +88,14 @@ Rails and Django are full-stack frameworks with ORMs, admin interfaces,
 migrations, and extensive ecosystems. Bialet is full-stack in a different way:
 it bundles the essentials, nothing more.
 
-|                 | Bialet                           | Rails / Django                    |
-| --------------- | -------------------------------- | --------------------------------- |
-| Learning curve  | Hours                            | Weeks to months                   |
-| ORM             | Raw SQL with Query objects       | ActiveRecord / Django ORM         |
-| Admin panel     | Build your own                   | Built-in (Django admin) / gems    |
-| Migrations      | `_migration.wren` file           | Versioned migration files         |
-| Scaling         | Single process                   | Horizontally via workers / load balancer |
-| Ecosystem       | Minimal                          | Massive (gems / packages)         |
+|                 | Bialet                                       | Rails / Django                            |
+| --------------- | -------------------------------------------- | ----------------------------------------- |
+| Learning curve  | Hours                                        | Weeks to months                           |
+| ORM             | Raw SQL with Query objects                   | ActiveRecord / Django ORM                 |
+| Admin panel     | Build your own                               | Built-in (Django admin) / gems            |
+| Migrations      | `_migration.wren` file                       | Versioned migration files                 |
+| Scaling         | Multiple workers on one host (shared SQLite) | Horizontally via workers / load balancer  |
+| Ecosystem       | Minimal                                      | Massive (gems / packages)                 |
 
 If you're building a complex, long-lived application with a team, Rails or
 Django are better choices. If you're building something simple today, Bialet
@@ -114,7 +114,7 @@ lighter alternative to a full backend framework.
 
 Bialet is intentionally limited. It doesn't have:
 
-- Horizontal scaling
+- Multi-server horizontal scaling
 - WebSockets
 - Background job queues (beyond Cron)
 - A plugin ecosystem

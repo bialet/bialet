@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,8 +58,8 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
-    <script src="_static/ai-prompt.js?v=43adc148"></script>
-    <script src="_static/copy.js?v=98cf20f6"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -166,7 +166,7 @@
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Web development became a spaceship. Bialet is a bicycle.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">One executable: HTTP server, SQLite, and a scripting language.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -175,6 +175,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -446,6 +447,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#guestbook">Guestbook</a></li>
 </ul>
             </nav>
         </div>
@@ -957,6 +959,52 @@
 </pre></div>
 </div>
 </section>
+<section id="guestbook">
+<h2>Guestbook<a class="headerlink" href="#guestbook" title="Link to this heading">#</a></h2>
+<p>The smallest complete app: a page, a form handler, and a migration. Run it
+with <code class="docutils literal notranslate"><span class="pre">bialet</span></code> inside <code class="docutils literal notranslate"><span class="pre">docs/examples/guestbook</span></code>.</p>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"init"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE messages (</span>
+<span class="sb">    text TEXT,</span>
+<span class="sb">    created_at DATETIME</span>
+<span class="sb">  )</span>
+<span class="sb">`</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">messages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  SELECT * FROM messages ORDER BY created_at ASC</span>
+<span class="sb">`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Bialet</span><span class="w"> </span><span class="nc">Guestbook</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">  &lt;form method="post" action="/message"&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="msg" placeholder="Write a message..."&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="w">  </span><span class="x">&lt;hr&gt;</span>
+<span class="x">  &lt;ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">messages</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">m</span><span class="p">[</span><span class="s2">"text"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/ul&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"msg"</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="sb">`INSERT INTO messages VALUES (?, CURRENT_TIME)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">Messaged</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/"&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">messages</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;/main&gt;</span>
+<span class="x">  }</span>
+<span class="x">}</span>
+<span class="x">return Response.redirect("/")</span>
+</pre></div>
+</div>
+<p>The styled version in <code class="docutils literal notranslate"><span class="pre">docs/examples/guestbook-styled</span></code> adds <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>
+(a <code class="docutils literal notranslate"><span class="pre">Template</span></code> layout class) and <code class="docutils literal notranslate"><span class="pre">css/style.css</span></code>. The landing page video
+walks through both.</p>
+</section>
 </section>
 
 
@@ -1018,6 +1066,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-site-request-forgery">Cross site request forgery</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#guestbook">Guestbook</a></li>
 </ul>
   </nav></div>
 

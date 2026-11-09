@@ -18,11 +18,94 @@ behind a reverse proxy (nginx, Apache, or Caddy) gives you:
 You *can* expose Bialet directly with `-h 0.0.0.0`, but this is not
 recommended for production.
 
-Bialet is **single-threaded**: it accepts and serves one connection at a time,
-in a blocking loop. The reverse proxy is therefore not just for TLS — it is
-the layer that absorbs slow clients, connection churn, and request buffering.
-Treat the proxy as part of your security posture, not a convenience (see
-[Security](security.md) and the hardening section below).
+Bialet is **single-threaded per worker**: each process accepts and serves one
+connection at a time, in a blocking loop. A request that arrives while the
+worker is busy waits in the kernel's listen queue, so its latency is the
+duration of the request in front of it. That is milliseconds for typical CRUD
+pages, and the built-in header/body deadlines stop a stalled client from
+holding the worker forever. For more concurrency, run several workers behind
+the proxy (see [Scaling](#scaling-multiple-workers-on-one-host)).
+
+The worker's listen backlog is 10, so a burst larger than that can be refused
+before the worker ever accepts it. The proxy holds the burst in its own event
+loop and feeds the worker only as it frees up — one more reason not to expose
+Bialet directly.
+
+The proxy is therefore not just for TLS — it is the layer that absorbs slow
+clients, connection churn, and request buffering, and, when you scale, the
+load balancer. Treat the proxy as part of your security posture, not a
+convenience (see [Security](security.md) and the hardening section below).
+
+## Scaling: Multiple Workers on One Host
+
+One worker serves one request at a time, but that is a queueing limit, not a
+hard ceiling. If 30 ms of requests are queued in front of yours, you wait
+30 ms. For a typical CRUD page that is invisible; for a page that runs a slow
+report query, every request behind it waits for the duration of that query.
+
+When that matters, run several Bialet processes against the same app directory,
+each on its own port, and let the proxy load-balance between them:
+
+```bash
+bialet -p 7001 -w /www/example.com
+bialet -p 7002 -w /www/example.com
+bialet -p 7003 -w /www/example.com
+```
+
+nginx:
+
+```nginx
+upstream bialet {
+    server 127.0.0.1:7001;
+    server 127.0.0.1:7002;
+    server 127.0.0.1:7003;
+}
+
+location @bialet {
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://bialet;
+}
+```
+
+Caddy:
+
+```
+example.com {
+    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003
+}
+```
+
+This is worker scaling on one machine, not a cluster. The workers share one
+SQLite file, so the constraints of a single database still apply:
+
+- **One writer at a time.** SQLite serializes writes. A worker waits up to
+  5 seconds for the lock (`sqlite3_busy_timeout`) and then returns an error.
+  Enable WAL mode (`-w`) so readers do not block on a writer, and keep the app
+  and database on a local disk — not NFS or another network filesystem.
+- **Sessions are shared.** They live in the `BIALET_SESSION` table, so any
+  worker can serve any request. Sticky sessions are not required.
+- **Migrations run in every process at startup.** Keep `_migration.wren`
+  idempotent (`CREATE TABLE IF NOT EXISTS`, ...), and start the workers one at
+  a time on the first deploy so two of them do not run the same migration
+  concurrently.
+- **Resource limits are per worker.** `-m` and `-c` apply to each process, so
+  three workers get three times the memory and CPU budget. Size them against
+  the host, not the app.
+- **Each worker needs its own port.** `-p` is per process; the supervisor and
+  HTTP child for one worker are independent of the others.
+
+> **Pitfall: cron runs once per worker.**
+> `_cron.wren` is evaluated once a minute by every process, so four workers
+> fire every job four times. Make jobs idempotent, or gate them with a
+> database flag so only one worker does the work. There is no `--no-cron`
+> flag yet.
+
+Scaling across machines is a different problem: it needs a shared database
+server, which Bialet does not support. That is the point at which a different
+stack fits better.
 
 ## No Restart Needed on Deploy
 
@@ -181,9 +264,11 @@ That's it. Caddy obtains and renews certificates automatically.
 
 ## Hardening the Proxy
 
-The proxy is your first line of defense. Because Bialet is single-threaded
-and blocking, a single slow or hostile client can stall every other request
-unless the proxy caps body size, sets read deadlines, and buffers requests.
+The proxy is your first line of defense. A Bialet worker handles one request
+at a time, so a slow or hostile client delays every request behind it.
+Bialet's own header and body deadlines bound how long that can last, but the
+proxy should still cap body size, enforce a shorter read deadline, and buffer
+requests before they reach the worker.
 
 Key directives, regardless of which proxy you run:
 
@@ -195,10 +280,12 @@ Key directives, regardless of which proxy you run:
   soft limit that ceiling is 256 KB, so the default `-b 128` is fully
   effective. Set the proxy's body limit to the smallest your
   app needs — 1 MB is a sane default for the proxy.
-- **Set a body-read deadline.** Bialet's 5-second socket timeout is per
-  `recv()` call, so a peer that dribbles bytes slowly can keep a connection
-  open indefinitely. Make the proxy enforce a *total* read timeout and reject
-  clients that stall mid-body.
+- **Set a body-read deadline.** Bialet already bounds this itself: 5 seconds
+  for the whole header block and 30 seconds for the body, with each `recv()`
+  capped at 5 seconds, after which the connection is dropped. A proxy-side
+  timeout still helps because it rejects a stalled client before it reaches
+  the worker: `client_body_timeout` in nginx, `RequestReadTimeout ... MinRate`
+  in Apache.
 - **Buffer the body at the proxy.** Read the full request before forwarding
   it, so the upstream socket is never held open by a slow client.
 - **Bind Bialet to `127.0.0.1`** and only expose the proxy to the internet.

@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,8 +58,8 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
-    <script src="_static/ai-prompt.js?v=43adc148"></script>
-    <script src="_static/copy.js?v=98cf20f6"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -166,7 +166,7 @@
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Web development became a spaceship. Bialet is a bicycle.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">One executable: HTTP server, SQLite, and a scripting language.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -175,6 +175,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -502,8 +503,11 @@ no-nonsense approach to solving problems.</p>
 <h3>Is Bialet production-ready?<a class="headerlink" href="#is-bialet-production-ready" title="Link to this heading">#</a></h3>
 <p>Bialet is stable and used in production for small to medium traffic sites.
 It’s well-suited for CRUD apps, dashboards, internal tools, and prototypes.
-If you need horizontal scaling, WebSocket support, or high-throughput
-architectures, you may want to evaluate other frameworks.</p>
+If you need horizontal scaling across machines, WebSocket support, or
+high-throughput architectures, you may want to evaluate other frameworks.
+Running several Bialet workers on one host behind a reverse proxy is supported
+(see <a class="reference internal" href="deployment.html#scaling-multiple-workers-on-one-host"><span class="std std-ref">Deployment</span></a>); a
+shared database across machines is not.</p>
 </section>
 <section id="how-does-bialet-compare-to-php-flask-rails-django">
 <h3>How does Bialet compare to PHP / Flask / Rails / Django?<a class="headerlink" href="#how-does-bialet-compare-to-php-flask-rails-django" title="Link to this heading">#</a></h3>
@@ -525,7 +529,8 @@ routing DSL. The trade-off is less flexibility for less complexity.</p>
 <section id="when-should-i-not-use-bialet">
 <h3>When should I NOT use Bialet?<a class="headerlink" href="#when-should-i-not-use-bialet" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p>Applications requiring horizontal scaling or load balancing</p></li>
+<li><p>Applications requiring multi-server horizontal scaling or load balancing
+across machines</p></li>
 <li><p>Real-time features (WebSockets, SSE) — not currently supported</p></li>
 <li><p>Teams that need a mature ecosystem of plugins and libraries</p></li>
 <li><p>Projects where you must use PostgreSQL, MySQL, or other databases</p></li>

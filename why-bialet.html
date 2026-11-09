@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,13 +58,13 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'why-bialet';</script>
-    <script src="_static/ai-prompt.js?v=43adc148"></script>
-    <script src="_static/copy.js?v=98cf20f6"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="HTML-First" href="html-first.html" />
-    <link rel="prev" title="Web development became a spaceship. Bialet is a bicycle." href="index.html" />
+    <link rel="prev" title="One executable: HTTP server, SQLite, and a scripting language." href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="1.2.7" />
@@ -166,7 +166,7 @@
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Web development became a spaceship. Bialet is a bicycle.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">One executable: HTTP server, SQLite, and a scripting language.</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Why Bialet?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -175,6 +175,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -619,7 +620,7 @@ it bundles the essentials, nothing more.</p>
 <td><p>Versioned migration files</p></td>
 </tr>
 <tr class="row-even"><td><p>Scaling</p></td>
-<td><p>Single process</p></td>
+<td><p>Multiple workers on one host (shared SQLite)</p></td>
 <td><p>Horizontally via workers / load balancer</p></td>
 </tr>
 <tr class="row-odd"><td><p>Ecosystem</p></td>
@@ -646,7 +647,7 @@ lighter alternative to a full backend framework.</p>
 <h2>The Trade-off<a class="headerlink" href="#the-trade-off" title="Link to this heading">#</a></h2>
 <p>Bialet is intentionally limited. It doesn’t have:</p>
 <ul class="simple">
-<li><p>Horizontal scaling</p></li>
+<li><p>Multi-server horizontal scaling</p></li>
 <li><p>WebSockets</p></li>
 <li><p>Background job queues (beyond Cron)</p></li>
 <li><p>A plugin ecosystem</p></li>
@@ -676,7 +677,7 @@ a single binary</strong>. For many projects, that’s exactly the right trade-of
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Web development became a spaceship. Bialet is a bicycle.</p>
+        <p class="prev-next-title">One executable: HTTP server, SQLite, and a scripting language.</p>
       </div>
     </a>
     <a class="right-next"

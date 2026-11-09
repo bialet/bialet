@@ -16,6 +16,10 @@ form submissions, and render dynamic HTML — all with zero configuration.
 Already familiar with Bialet? Jump to [Installation](../installation.md) or the
 [API Reference](../reference.md).
 
+Want the shortest path to something running? [Quick start: a
+guestbook](../quickstart.md) builds a complete app in five minutes, without the
+chapter-by-chapter tour.
+
 Building with an AI assistant instead? Paste the
 [AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor before you
 start — it teaches the assistant Bialet's conventions in one message.

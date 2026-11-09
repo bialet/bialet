@@ -1,15 +1,16 @@
 # Bialet
 
-> A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
+> A single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step. Single-threaded; deploy behind a reverse proxy.
 
 ## Docs
 
-- [Web development became a spaceship. Bialet is a bicycle.](/_sources/index.rst)
+- [One executable: HTTP server, SQLite, and a scripting language.](/_sources/index.rst)
 - [Why Bialet?](/_sources/why-bialet.md)
 - [HTML-First](/_sources/html-first.md)
 - [Installation](/_sources/installation.md)
 - [Editor Support](/_sources/editor-support.md)
 - [Wren Language Guide](/_sources/wren.md)
+- [Quick start: a guestbook](/_sources/quickstart.md)
 - [Getting Started](/_sources/getting-started/index.md)
 - [1. Introduction](/_sources/getting-started/1-introduction.md)
 - [2. Setup](/_sources/getting-started/2-setup.md)

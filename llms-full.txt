@@ -1,14 +1,14 @@
-Web development became a spaceship. Bialet is a bicycle.
-========================================================
+One executable: HTTP server, SQLite, and a scripting language.
+================================================================
 
 .. meta::
-    :description: A single-binary web framework. Built-in SQLite, a lightweight embedded scripting language (Wren), a built-in HTTP server, and zero dependencies. Ride light.
+    :description: Bialet is a single-binary web framework: an HTTP server, SQLite, and the Wren scripting language in one executable. File-based routing, no build step.
     :keywords: Bialet, web framework, Wren, SQLite, file-based routing, zero dependencies, server-rendered
 
 ----
 
-Features
---------
+What you get
+------------
 
 .. grid:: 1 2 2 2
    :gutter: 2
@@ -17,118 +17,65 @@ Features
 
       :octicon:`package;2em`
       ^^^
-      **A Tiny Single Binary**
+      **One executable**
 
-      Drop the gigabytes of ``node_modules``. Bialet is a small,
-      self-contained executable. Copy it to your server, and your app
-      is deployed.
+      There is no runtime and no ``node_modules`` directory. Copy the binary
+      to a server and run it. The Linux x86_64 binary is 3.7 MB.
 
    .. grid-item-card::
 
       :octicon:`database;2em`
       ^^^
-      **SQLite is Built-in**
+      **SQLite is included**
 
-      Forget about provisioning databases or writing connection strings.
-      Real data persistence works completely out of the box.
+      The database is one file. No connection strings, no service to
+      provision, no separate process. WAL mode is one flag.
 
    .. grid-item-card::
 
       :octicon:`zap;2em`
       ^^^
-      **Zero Build Step**
+      **No build step**
 
-      Write a ``.wren`` file, save it, and refresh your browser.
-      No compilers, no bundlers, no watch processes.
+      Save a ``.wren`` file and refresh the browser. No compiler, no bundler,
+      no watch process.
 
    .. grid-item-card::
 
       :octicon:`code;2em`
       ^^^
-      **HTML is the Real Frontend**
+      **HTML, CSS, and SQL**
 
-      Use standard HTML and CSS. Bialet lets you build server-rendered
-      apps the classic, straightforward way. Add JS only if you want to.
-
-----
-
-A script that stays out of your way:
-------------------------------------
-
-.. raw:: html
-
-   <details class="landing-sample" open data-collapse-on-phone>
-     <summary>The whole file</summary>
-     <div class="landing-sample__body">
-
-.. code-block:: wren
-
-   // 1. Create your database table automatically
-   `CREATE TABLE IF NOT EXISTS messages (text TEXT)`.query
-
-   // 2. Handle POST requests and save data
-   if (Request.isPost) {
-     var msg = Request.post("msg") || ""
-     `messages`.save({"text": msg})
-   }
-
-   // 3. Fetch data using pure SQL
-   var messages = `SELECT * FROM messages`.fetch
-
-   // 4. Return HTML directly
-   return <main>
-     <h1>Bialet Guestbook</h1>
-
-     <form method="post">
-       <input name="msg" placeholder="Write a message...">
-       <button>Submit</button>
-     </form>
-     <hr>
-     <ul>
-       {{ messages.map {|m| <li>{{ m["text"] }}</li> } }}
-     </ul>
-   </main>
-
-.. raw:: html
-
-     </div>
-   </details>
-
-Bialet integrates the :doc:`Wren language <wren>` (based on
-`wren.io <https://wren.io/>`_) with
-a HTTP server and a built-in SQLite database — **in a single binary**.
-No configuration files, no dependencies, no build step. Just write ``.wren``
-files and run.
-
-Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1:7001>`_.
+      Server-rendered pages, standard HTML and CSS, and SQL you write
+      yourself. Add JavaScript only if you want it.
 
 ----
 
-The Bialet Manifesto — Ride Light 🚲
-------------------------------------
+What it costs
+-------------
 
-.. admonition:: Ride Light
-   :class: tip
+.. admonition:: The tradeoffs
+   :class: note
 
-   1. **Simplicity is a superpower.** Every line of tooling you don't write
-      is a line of your app that ships faster.
+   Bialet is small on purpose. These are the limits that come with that.
 
-   2. **Standards, not frameworks.** HTML, SQL, and HTTP have outlived every
-      framework. Master them and your knowledge stays relevant.
-
-   3. **One file to deploy.** No containers, no orchestration, no
-      ``docker-compose.yml``. Copy the binary — that's it.
-
-   4. **Batteries included.** Server, database, templating — all in one
-      small binary. No external services to provision.
-
-   5. **Ride light.** Complexity is a choice. Choose less, and you'll go
-      further than you think.
+   - **One worker per process, with instant queueing.** Requests are served
+     sequentially per worker. For parallel concurrency on multi-core servers,
+     spin up multiple local instances behind Caddy or nginx. See
+     :doc:`deployment`.
+   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
+     Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
+     static-asset caching. See :doc:`deployment`.
+   - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
+     Vim plugins provide syntax highlighting; autocomplete and an LSP are on
+     the roadmap.
+   - **No WebSockets.** Request/response HTTP only. Use polling or an external
+     service for realtime features.
 
 ----
 
-Who is Bialet for?
-------------------
+Where it fits
+-------------
 
 .. grid:: 1 2 3 3
    :gutter: 2
@@ -137,30 +84,37 @@ Who is Bialet for?
 
       :octicon:`beaker;2em`
       ^^^
-      **Internal Tools & Dashboards**
+      **Internal tools and admin panels**
 
-      Spin up a data-driven admin panel in minutes with zero
-      infrastructure overhead.
+      One process, one SQLite file, and a few users on one small server.
 
    .. grid-item-card::
 
       :octicon:`mortar-board;2em`
       ^^^
-      **Learning & Teaching**
+      **Prototypes and small sites**
 
-      Focus on HTML, SQL, and core logic. Skip the webpack configs
-      and ORM abstractions.
+      One directory to deploy. Add a reverse proxy when the site goes
+      public.
 
    .. grid-item-card::
 
       :octicon:`heart;2em`
       ^^^
-      **Lovers of Simplicity**
+      **Learning and teaching**
 
-      If you prefer one tool that does its job perfectly over a chaotic
-      stack of micro-libraries, hop on.
+      HTML, SQL, and one scripting language. Nothing else to install.
 
-----
+Not a fit if you need multi-server horizontal scaling, in-process TLS,
+WebSockets, or a package ecosystem. Bialet does not provide them. See
+:doc:`why-bialet` for the longer version.
+
+.. raw:: html
+
+   <div class="hero-actions">
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
+     <a class="hero-actions__link" href="installation.html">All install options</a>
+   </div>
 
 .. toctree::
    :hidden:
@@ -179,6 +133,7 @@ Who is Bialet for?
    :maxdepth: 2
    :caption: First Steps
 
+   quickstart
    getting-started/index
 
 .. toctree::
@@ -239,11 +194,12 @@ Who is Bialet for?
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Let's build together</strong></p>
+     <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
      <p>
-       Bialet is maintained by a solo developer, but the community is open to everyone.
-       Whether you're stuck on a query, have a feature idea, or want to show off your
-       project, GitHub Discussions is the place. Search first, ask second, and be kind.
+       Bialet is stable for personal use. There is no commercial support or
+       SLA. Bugs go to GitHub Issues; questions and project showcases go to
+       GitHub Discussions. Planned work is in the
+       <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
    </div>
@@ -339,14 +295,14 @@ Rails and Django are full-stack frameworks with ORMs, admin interfaces,
 migrations, and extensive ecosystems. Bialet is full-stack in a different way:
 it bundles the essentials, nothing more.
 
-|                 | Bialet                           | Rails / Django                    |
-| --------------- | -------------------------------- | --------------------------------- |
-| Learning curve  | Hours                            | Weeks to months                   |
-| ORM             | Raw SQL with Query objects       | ActiveRecord / Django ORM         |
-| Admin panel     | Build your own                   | Built-in (Django admin) / gems    |
-| Migrations      | `_migration.wren` file           | Versioned migration files         |
-| Scaling         | Single process                   | Horizontally via workers / load balancer |
-| Ecosystem       | Minimal                          | Massive (gems / packages)         |
+|                 | Bialet                                       | Rails / Django                            |
+| --------------- | -------------------------------------------- | ----------------------------------------- |
+| Learning curve  | Hours                                        | Weeks to months                           |
+| ORM             | Raw SQL with Query objects                   | ActiveRecord / Django ORM                 |
+| Admin panel     | Build your own                               | Built-in (Django admin) / gems            |
+| Migrations      | `_migration.wren` file                       | Versioned migration files                 |
+| Scaling         | Multiple workers on one host (shared SQLite) | Horizontally via workers / load balancer  |
+| Ecosystem       | Minimal                                      | Massive (gems / packages)                 |
 
 If you're building a complex, long-lived application with a team, Rails or
 Django are better choices. If you're building something simple today, Bialet
@@ -365,7 +321,7 @@ lighter alternative to a full backend framework.
 
 Bialet is intentionally limited. It doesn't have:
 
-- Horizontal scaling
+- Multi-server horizontal scaling
 - WebSockets
 - Background job queues (beyond Cron)
 - A plugin ecosystem
@@ -1423,6 +1379,162 @@ The full API reference with method signatures and examples is on the
 [Reference](reference.md) page.
 
 
+# Quick start: a guestbook
+
+Build and run a guestbook in about five minutes. Messages are stored in SQLite,
+rendered on the server, and returned as HTML — with no build step, no package
+manager, and no configuration file.
+
+The app lives in [docs/examples/guestbook](https://github.com/bialet/bialet/tree/main/docs/examples/guestbook)
+if you would rather read it than type it.
+
+## Before you start
+
+You need `bialet` on your `PATH`. See [Installation](installation.md) for
+other platforms.
+
+```bash
+curl -fsSL https://get.bialet.dev | sh
+```
+
+```bash
+mkdir guestbook && cd guestbook
+```
+
+## 1. The table
+
+`_migration.wren` runs every time the app starts and applies only what it has
+not applied before. The name you give a migration is its key, so `init` runs
+once, on the first start.
+
+```{literalinclude} examples/guestbook/_migration.wren
+:language: wren
+```
+
+The database is a file next to your app (`_db.sqlite3`), created on first run.
+There is no service to start and no connection string.
+
+## 2. The page
+
+`index.wren` is the page at `/`. The file name is the route.
+
+```{literalinclude} examples/guestbook/index.wren
+:language: wren
+```
+
+Three things worth noticing:
+
+- Backticks build a **prepared statement**, not a string. `.fetch` runs it and
+  returns the rows as a list of maps.
+- `<main>…</main>` is an **inline HTML string**. Its value is the response body.
+- `{{ messages.map {|m| … } }}` is a Wren expression. Plain values are escaped
+  automatically, so text from the database cannot inject markup.
+
+> **Pitfall:** column values always come back as **strings**, including numbers.
+> Convert before doing math — `Num.fromString(row["count"])`, or `.toNum` when a
+> query returns a single number.
+
+## 3. The form handler
+
+`message.wren` is the URL `/message`. It is a separate file because it does a
+different job, not because it needs wiring: no router, no table of routes.
+
+```{literalinclude} examples/guestbook/message.wren
+:language: wren
+```
+
+- `Request.post("msg")` returns **`null`** when the field is missing. Check it
+  before using it, or the next string operation crashes at runtime.
+- `?` is a placeholder. Values are passed to `.query()`, never concatenated into
+  the SQL, so injection is not a thing you can do by accident.
+- `Response.redirect` sends a 302. `return` stops the script so no body is
+  attached to the redirect.
+
+## Run it
+
+```bash
+bialet dev
+```
+
+`bialet dev` serves the directory on 127.0.0.1:7001, opens it in your browser,
+applies the migration, and reloads the page when a file changes. Errors show up
+in the browser instead of only in the terminal. Drop `dev` for the same server
+without live reload, error display, or auto-open.
+
+Post a message and watch it appear. The message is in SQLite: delete
+`_db.sqlite3` to start over, and the next start recreates it and reruns the
+migrations.
+
+That is a working app. It also looks like 1995, which is the next problem.
+
+## 4. A stylesheet
+
+Add a plain stylesheet. Bialet does not care where static files live, as long as
+the path does not start with `_` or `.`; this app uses `css/style.css`. The file
+is ordinary CSS — custom properties, a gradient, one card:
+
+```{literalinclude} examples/guestbook-styled/css/style.css
+:language: css
+:lines: 1-30
+```
+
+The rest of the file styles the composer, the button, and the message list. The
+whole thing is [112 lines](https://github.com/bialet/bialet/blob/main/docs/examples/guestbook-styled/css/style.css).
+
+## 5. One layout class
+
+Two pages now share a `<head>` and a card wrapper. That belongs in one place.
+Protected files start with `_`, so `_app.wren` is importable from any page and
+never served as a URL:
+
+```{literalinclude} examples/guestbook-styled/_app.wren
+:language: wren
+```
+
+`{{ content }}` is where each page's markup lands. Naming the file `_app.wren`
+is a convention, not a requirement — `import "_app" for Template` is the whole
+connection.
+
+## 6. Use it
+
+Add the import and wrap the page in `Template.layout(...)`:
+
+```{literalinclude} examples/guestbook-styled/index.wren
+:language: wren
+```
+
+```{literalinclude} examples/guestbook-styled/message.wren
+:language: wren
+```
+
+Reload. Same routes, same database, same SQL — now inside a layout that loads
+the stylesheet. For the record, the URL bar showing `?new=1` is what makes the
+newest message keep its highlight for one render; it is a normal query string,
+read with `Request.get("new")`.
+
+## What just happened
+
+- **The file is the route.** `index.wren` → `/`, `message.wren` → `/message`.
+  Nothing declares it.
+- **SQL is SQL.** Backticked statements are prepared; `?` binds parameters.
+- **HTML is a value.** Pages return inline HTML strings; `{{ }}` inserts
+  expressions and escapes them.
+- **One binary.** `bialet` served the files, opened the database, and applied the
+  migration. Nothing was compiled, installed, or bundled.
+
+The landing page [video](index.rst) walks through the same two versions of this
+app.
+
+## Where to go next
+
+- [Tutorial: build a poll](getting-started/index.md) — the longer tour, with
+  templates, forms, and results pages.
+- [Database](database.md) — queries, `.order()`, pagination, migrations.
+- [Forms](forms.md) — POST handling, files, CSRF.
+- [HTML Template](template.md) — inline HTML in depth.
+- [Advanced Routing](advanced-routing.md) — when a URL needs path segments.
+
+
 # Getting Started
 
 In this tutorial we'll build a working poll application with Bialet. You'll
@@ -1440,6 +1552,10 @@ form submissions, and render dynamic HTML — all with zero configuration.
 
 Already familiar with Bialet? Jump to [Installation](../installation.md) or the
 [API Reference](../reference.md).
+
+Want the shortest path to something running? [Quick start: a
+guestbook](../quickstart.md) builds a complete app in five minutes, without the
+chapter-by-chapter tour.
 
 Building with an AI assistant instead? Paste the
 [AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor before you
@@ -7371,9 +7487,12 @@ forward user-supplied ones unchanged.
 
 ### Reverse Proxy Hardening
 
-Bialet is **single-threaded**: it accepts and serves one connection at a time
-in a blocking loop. The reverse proxy is the layer that protects it from
-hostile clients. Configure the proxy to:
+Each Bialet worker serves one connection at a time in a blocking loop, so a
+single slow or hostile client delays every request behind it. The reverse
+proxy is the layer that protects it from hostile clients; run several workers
+behind it when you need more concurrency (see
+[Deployment](deployment.md#scaling-multiple-workers-on-one-host)).
+Configure the proxy to:
 
 - **Cap the request body.** Bialet rejects bodies over its own cap with `413`
   before parsing: the cap is the smaller of `-b` (default 128 KB) and a
@@ -7385,11 +7504,12 @@ hostile clients. Configure the proxy to:
   `LimitRequestBody` (Apache), or an equivalent to match your app's real
   upload limit — a cap *above* it just lets oversized bodies reach the
   framework's own check, and a cap *below* it breaks legitimate uploads.
-- **Enforce a total body-read deadline.** Bialet's 5-second socket timeout is
-  per `recv()` call, so a peer that dribbles bytes slowly can hold a
-  connection open indefinitely. Set a total read timeout at the proxy
+- **Enforce a total body-read deadline.** Bialet already bounds the header
+  block at 5 seconds and the body at 30 seconds, with each `recv()` capped at
+  5 seconds, then drops the connection. Set a proxy-side read timeout as well
+  so stalled uploads are rejected before they reach the worker
   (`client_body_timeout` in nginx, `RequestReadTimeout ... MinRate` in
-  Apache) so stalled uploads are cut off.
+  Apache).
 - **Buffer the full request before forwarding** (`proxy_request_buffering on`
   in nginx; the default in most proxies). This keeps a slow client from
   holding the upstream socket.
@@ -8064,11 +8184,94 @@ behind a reverse proxy (nginx, Apache, or Caddy) gives you:
 You *can* expose Bialet directly with `-h 0.0.0.0`, but this is not
 recommended for production.
 
-Bialet is **single-threaded**: it accepts and serves one connection at a time,
-in a blocking loop. The reverse proxy is therefore not just for TLS — it is
-the layer that absorbs slow clients, connection churn, and request buffering.
-Treat the proxy as part of your security posture, not a convenience (see
-[Security](security.md) and the hardening section below).
+Bialet is **single-threaded per worker**: each process accepts and serves one
+connection at a time, in a blocking loop. A request that arrives while the
+worker is busy waits in the kernel's listen queue, so its latency is the
+duration of the request in front of it. That is milliseconds for typical CRUD
+pages, and the built-in header/body deadlines stop a stalled client from
+holding the worker forever. For more concurrency, run several workers behind
+the proxy (see [Scaling](#scaling-multiple-workers-on-one-host)).
+
+The worker's listen backlog is 10, so a burst larger than that can be refused
+before the worker ever accepts it. The proxy holds the burst in its own event
+loop and feeds the worker only as it frees up — one more reason not to expose
+Bialet directly.
+
+The proxy is therefore not just for TLS — it is the layer that absorbs slow
+clients, connection churn, and request buffering, and, when you scale, the
+load balancer. Treat the proxy as part of your security posture, not a
+convenience (see [Security](security.md) and the hardening section below).
+
+## Scaling: Multiple Workers on One Host
+
+One worker serves one request at a time, but that is a queueing limit, not a
+hard ceiling. If 30 ms of requests are queued in front of yours, you wait
+30 ms. For a typical CRUD page that is invisible; for a page that runs a slow
+report query, every request behind it waits for the duration of that query.
+
+When that matters, run several Bialet processes against the same app directory,
+each on its own port, and let the proxy load-balance between them:
+
+```bash
+bialet -p 7001 -w /www/example.com
+bialet -p 7002 -w /www/example.com
+bialet -p 7003 -w /www/example.com
+```
+
+nginx:
+
+```nginx
+upstream bialet {
+    server 127.0.0.1:7001;
+    server 127.0.0.1:7002;
+    server 127.0.0.1:7003;
+}
+
+location @bialet {
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_pass http://bialet;
+}
+```
+
+Caddy:
+
+```
+example.com {
+    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003
+}
+```
+
+This is worker scaling on one machine, not a cluster. The workers share one
+SQLite file, so the constraints of a single database still apply:
+
+- **One writer at a time.** SQLite serializes writes. A worker waits up to
+  5 seconds for the lock (`sqlite3_busy_timeout`) and then returns an error.
+  Enable WAL mode (`-w`) so readers do not block on a writer, and keep the app
+  and database on a local disk — not NFS or another network filesystem.
+- **Sessions are shared.** They live in the `BIALET_SESSION` table, so any
+  worker can serve any request. Sticky sessions are not required.
+- **Migrations run in every process at startup.** Keep `_migration.wren`
+  idempotent (`CREATE TABLE IF NOT EXISTS`, ...), and start the workers one at
+  a time on the first deploy so two of them do not run the same migration
+  concurrently.
+- **Resource limits are per worker.** `-m` and `-c` apply to each process, so
+  three workers get three times the memory and CPU budget. Size them against
+  the host, not the app.
+- **Each worker needs its own port.** `-p` is per process; the supervisor and
+  HTTP child for one worker are independent of the others.
+
+> **Pitfall: cron runs once per worker.**
+> `_cron.wren` is evaluated once a minute by every process, so four workers
+> fire every job four times. Make jobs idempotent, or gate them with a
+> database flag so only one worker does the work. There is no `--no-cron`
+> flag yet.
+
+Scaling across machines is a different problem: it needs a shared database
+server, which Bialet does not support. That is the point at which a different
+stack fits better.
 
 ## No Restart Needed on Deploy
 
@@ -8227,9 +8430,11 @@ That's it. Caddy obtains and renews certificates automatically.
 
 ## Hardening the Proxy
 
-The proxy is your first line of defense. Because Bialet is single-threaded
-and blocking, a single slow or hostile client can stall every other request
-unless the proxy caps body size, sets read deadlines, and buffers requests.
+The proxy is your first line of defense. A Bialet worker handles one request
+at a time, so a slow or hostile client delays every request behind it.
+Bialet's own header and body deadlines bound how long that can last, but the
+proxy should still cap body size, enforce a shorter read deadline, and buffer
+requests before they reach the worker.
 
 Key directives, regardless of which proxy you run:
 
@@ -8241,10 +8446,12 @@ Key directives, regardless of which proxy you run:
   soft limit that ceiling is 256 KB, so the default `-b 128` is fully
   effective. Set the proxy's body limit to the smallest your
   app needs — 1 MB is a sane default for the proxy.
-- **Set a body-read deadline.** Bialet's 5-second socket timeout is per
-  `recv()` call, so a peer that dribbles bytes slowly can keep a connection
-  open indefinitely. Make the proxy enforce a *total* read timeout and reject
-  clients that stall mid-body.
+- **Set a body-read deadline.** Bialet already bounds this itself: 5 seconds
+  for the whole header block and 30 seconds for the body, with each `recv()`
+  capped at 5 seconds, after which the connection is dropped. A proxy-side
+  timeout still helps because it rejects a stalled client before it reaches
+  the worker: `client_body_timeout` in nginx, `RequestReadTimeout ... MinRate`
+  in Apache.
 - **Buffer the body at the proxy.** Read the full request before forwarding
   it, so the upstream socket is never held open by a slow client.
 - **Bind Bialet to `127.0.0.1`** and only expose the proxy to the internet.
@@ -10496,6 +10703,56 @@ return <!doctype html>
 
    :code: wren
 
+Guestbook
+---------
+
+The smallest complete app: a page, a form handler, and a migration. Run it
+with ``bialet`` inside ``docs/examples/guestbook``.
+
+Db.migrate("init", `
+  CREATE TABLE messages (
+    text TEXT,
+    created_at DATETIME
+  )
+`)
+
+   :code: wren
+
+var messages = `
+  SELECT * FROM messages ORDER BY created_at ASC
+`.fetch
+
+return <main>
+  <h1>Bialet Guestbook</h1>
+  <form method="post" action="/message">
+    <input name="msg" placeholder="Write a message...">
+    <button>Submit</button>
+  </form>
+  <hr>
+  <ul>
+    {{ messages.map {|m| <li>{{ m["text"] }}</li> } }}
+  </ul>
+</main>
+
+   :code: wren
+
+if (Request.isPost) {
+  var msg = Request.post("msg")
+  if (msg) {
+    `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
+    return <main>
+      <p>Messaged <b>{{ msg }}</b> saved!</p>
+      <p><a href="/">Show messages</a></p>
+    </main>
+  }
+}
+return Response.redirect("/")
+
+   :code: wren
+
+The styled version in ``docs/examples/guestbook-styled`` adds ``_app.wren``
+(a ``Template`` layout class) and ``css/style.css``. The landing page video
+walks through both.
 
 
 # FAQ
@@ -10520,8 +10777,11 @@ no-nonsense approach to solving problems.
 
 Bialet is stable and used in production for small to medium traffic sites.
 It's well-suited for CRUD apps, dashboards, internal tools, and prototypes.
-If you need horizontal scaling, WebSocket support, or high-throughput
-architectures, you may want to evaluate other frameworks.
+If you need horizontal scaling across machines, WebSocket support, or
+high-throughput architectures, you may want to evaluate other frameworks.
+Running several Bialet workers on one host behind a reverse proxy is supported
+(see [Deployment](deployment.md#scaling-multiple-workers-on-one-host)); a
+shared database across machines is not.
 
 ### How does Bialet compare to PHP / Flask / Rails / Django?
 
@@ -10540,7 +10800,8 @@ routing DSL. The trade-off is less flexibility for less complexity.
 
 ### When should I NOT use Bialet?
 
-- Applications requiring horizontal scaling or load balancing
+- Applications requiring multi-server horizontal scaling or load balancing
+  across machines
 - Real-time features (WebSockets, SSE) — not currently supported
 - Teams that need a mature ecosystem of plugins and libraries
 - Projects where you must use PostgreSQL, MySQL, or other databases

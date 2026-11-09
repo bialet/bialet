@@ -361,6 +361,11 @@ div.highlight button.copybtn.success {
   font-size: 0.9rem;
 }
 
+.landing-footer__tagline {
+  margin-bottom: 0.5rem;
+  color: var(--pst-color-text-base);
+}
+
 /* Hide redundant heading anchors on landing */
 .landing-content .headerlink {
   display: none;
@@ -368,7 +373,7 @@ div.highlight button.copybtn.success {
 
 /* ── Hero ─────────────────────────────────────────────────── */
 
-/* The page title is the tagline, so it carries the brand type scale. */
+/* The page title carries the brand type scale. */
 .landing-content > section > h1:first-child {
   max-width: 19em;
   margin: 0.5rem auto 0.75rem;
@@ -526,58 +531,86 @@ div.highlight button.copybtn.success {
 
 .proof {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 2.5rem;
   align-items: start;
   margin: 2.5rem 0;
 }
 
-.proof__shot {
-  margin: 0;
+.proof__demo {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 360px;
 }
 
-.proof__shot img {
+.proof__video {
   display: block;
   width: 100%;
   height: auto;
   border: 1px solid var(--pst-color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 24px;
+  background: #0b0f14;
+  box-shadow: 0 18px 40px -24px #00000066;
 }
 
-.proof__shot figcaption {
-  margin-top: 0.6rem;
+.proof__demo figcaption {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
   text-align: left;
   font-size: 0.85rem;
   line-height: 1.5;
   color: var(--pst-color-text-muted);
 }
 
-[data-collapse-on-phone] > summary {
-  cursor: pointer;
-  padding: 0.5rem 0;
-  font-size: 0.85rem;
+.proof__toggle {
+  flex: none;
+  padding: 0.2em 0.65em;
+  font: inherit;
+  font-size: 0.8rem;
   color: var(--pst-color-text-muted);
+  background: none;
+  border: 1px solid var(--pst-color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
 }
 
-[data-collapse-on-phone] > summary:hover {
+.proof__toggle:hover {
   color: var(--pst-color-text-base);
+  border-color: var(--pst-color-text-muted);
 }
 
-/* Above the phone breakpoint the samples are always open, so the toggle
-   would just be a stray line. */
-@media (min-width: 641px) {
-  [data-collapse-on-phone] > summary {
-    display: none;
-  }
+.proof__toggle:focus-visible {
+  outline: 2px solid var(--pst-color-primary);
+  outline-offset: 2px;
 }
 
-.proof__code .highlight {
+.proof__notes {
+  max-width: 52ch;
+  padding-top: 0.35rem;
+}
+
+.proof__heading {
+  margin: 0 0 0.7em;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.proof__list {
+  margin: 0 0 1.4em;
+  padding-left: 1.1em;
+}
+
+.proof__list li {
+  margin-bottom: 0.55em;
+  line-height: 1.5;
+}
+
+.proof__cta {
   margin: 0;
-  font-size: 0.82rem;
-}
-
-.landing-sample__body .highlight {
-  margin-bottom: 0;
 }
 
 /* ── Community banner ─────────────────────────────────────── */
@@ -633,6 +666,15 @@ html[data-theme="dark"] .community-banner {
 @media (max-width: 767px) {
   .proof {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .proof__demo {
+    max-width: none;
+  }
+
+  .proof__notes {
+    max-width: none;
   }
 }
 

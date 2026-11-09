@@ -42,7 +42,7 @@
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2e55e4cb" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=24458b33" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -58,8 +58,8 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script src="_static/ai-prompt.js?v=43adc148"></script>
-    <script src="_static/copy.js?v=98cf20f6"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -166,7 +166,7 @@
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Web development became a spaceship. Bialet is a bicycle.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">One executable: HTTP server, SQLite, and a scripting language.</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -175,6 +175,7 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
@@ -434,6 +435,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-a-reverse-proxy">Why a Reverse Proxy?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-multiple-workers-on-one-host">Scaling: Multiple Workers on One Host</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-restart-needed-on-deploy">No Restart Needed on Deploy</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
 </ul>
@@ -500,11 +502,86 @@ internet</p></li>
 </ul>
 <p>You <em>can</em> expose Bialet directly with <code class="docutils literal notranslate"><span class="pre">-h</span> <span class="pre">0.0.0.0</span></code>, but this is not
 recommended for production.</p>
-<p>Bialet is <strong>single-threaded</strong>: it accepts and serves one connection at a time,
-in a blocking loop. The reverse proxy is therefore not just for TLS — it is
-the layer that absorbs slow clients, connection churn, and request buffering.
-Treat the proxy as part of your security posture, not a convenience (see
-<a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> and the hardening section below).</p>
+<p>Bialet is <strong>single-threaded per worker</strong>: each process accepts and serves one
+connection at a time, in a blocking loop. A request that arrives while the
+worker is busy waits in the kernel’s listen queue, so its latency is the
+duration of the request in front of it. That is milliseconds for typical CRUD
+pages, and the built-in header/body deadlines stop a stalled client from
+holding the worker forever. For more concurrency, run several workers behind
+the proxy (see <a class="reference internal" href="#scaling-multiple-workers-on-one-host">Scaling</a>).</p>
+<p>The worker’s listen backlog is 10, so a burst larger than that can be refused
+before the worker ever accepts it. The proxy holds the burst in its own event
+loop and feeds the worker only as it frees up — one more reason not to expose
+Bialet directly.</p>
+<p>The proxy is therefore not just for TLS — it is the layer that absorbs slow
+clients, connection churn, and request buffering, and, when you scale, the
+load balancer. Treat the proxy as part of your security posture, not a
+convenience (see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> and the hardening section below).</p>
+</section>
+<section id="scaling-multiple-workers-on-one-host">
+<h2>Scaling: Multiple Workers on One Host<a class="headerlink" href="#scaling-multiple-workers-on-one-host" title="Link to this heading">#</a></h2>
+<p>One worker serves one request at a time, but that is a queueing limit, not a
+hard ceiling. If 30 ms of requests are queued in front of yours, you wait
+30 ms. For a typical CRUD page that is invisible; for a page that runs a slow
+report query, every request behind it waits for the duration of that query.</p>
+<p>When that matters, run several Bialet processes against the same app directory,
+each on its own port, and let the proxy load-balance between them:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-w<span class="w"> </span>/www/example.com
+bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7002</span><span class="w"> </span>-w<span class="w"> </span>/www/example.com
+bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7003</span><span class="w"> </span>-w<span class="w"> </span>/www/example.com
+</pre></div>
+</div>
+<p>nginx:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">upstream</span><span class="w"> </span><span class="s">bialet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">7001</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">7002</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">7003</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://bialet</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Caddy:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7002</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7003</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is worker scaling on one machine, not a cluster. The workers share one
+SQLite file, so the constraints of a single database still apply:</p>
+<ul class="simple">
+<li><p><strong>One writer at a time.</strong> SQLite serializes writes. A worker waits up to
+5 seconds for the lock (<code class="docutils literal notranslate"><span class="pre">sqlite3_busy_timeout</span></code>) and then returns an error.
+Enable WAL mode (<code class="docutils literal notranslate"><span class="pre">-w</span></code>) so readers do not block on a writer, and keep the app
+and database on a local disk — not NFS or another network filesystem.</p></li>
+<li><p><strong>Sessions are shared.</strong> They live in the <code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code> table, so any
+worker can serve any request. Sticky sessions are not required.</p></li>
+<li><p><strong>Migrations run in every process at startup.</strong> Keep <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code>
+idempotent (<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span> <span class="pre">IF</span> <span class="pre">NOT</span> <span class="pre">EXISTS</span></code>, …), and start the workers one at
+a time on the first deploy so two of them do not run the same migration
+concurrently.</p></li>
+<li><p><strong>Resource limits are per worker.</strong> <code class="docutils literal notranslate"><span class="pre">-m</span></code> and <code class="docutils literal notranslate"><span class="pre">-c</span></code> apply to each process, so
+three workers get three times the memory and CPU budget. Size them against
+the host, not the app.</p></li>
+<li><p><strong>Each worker needs its own port.</strong> <code class="docutils literal notranslate"><span class="pre">-p</span></code> is per process; the supervisor and
+HTTP child for one worker are independent of the others.</p></li>
+</ul>
+<blockquote>
+<div><p><strong>Pitfall: cron runs once per worker.</strong>
+<code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code> is evaluated once a minute by every process, so four workers
+fire every job four times. Make jobs idempotent, or gate them with a
+database flag so only one worker does the work. There is no <code class="docutils literal notranslate"><span class="pre">--no-cron</span></code>
+flag yet.</p>
+</div></blockquote>
+<p>Scaling across machines is a different problem: it needs a shared database
+server, which Bialet does not support. That is the point at which a different
+stack fits better.</p>
 </section>
 <section id="no-restart-needed-on-deploy">
 <h2>No Restart Needed on Deploy<a class="headerlink" href="#no-restart-needed-on-deploy" title="Link to this heading">#</a></h2>
@@ -655,9 +732,11 @@ directory.</p>
 </section>
 <section id="hardening-the-proxy">
 <h2>Hardening the Proxy<a class="headerlink" href="#hardening-the-proxy" title="Link to this heading">#</a></h2>
-<p>The proxy is your first line of defense. Because Bialet is single-threaded
-and blocking, a single slow or hostile client can stall every other request
-unless the proxy caps body size, sets read deadlines, and buffers requests.</p>
+<p>The proxy is your first line of defense. A Bialet worker handles one request
+at a time, so a slow or hostile client delays every request behind it.
+Bialet’s own header and body deadlines bound how long that can last, but the
+proxy should still cap body size, enforce a shorter read deadline, and buffer
+requests before they reach the worker.</p>
 <p>Key directives, regardless of which proxy you run:</p>
 <ul class="simple">
 <li><p><strong>Cap the request body.</strong> Bialet rejects request bodies larger than the
@@ -668,10 +747,12 @@ push the fork()ed child past its <code class="docutils literal notranslate"><spa
 soft limit that ceiling is 256 KB, so the default <code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">128</span></code> is fully
 effective. Set the proxy’s body limit to the smallest your
 app needs — 1 MB is a sane default for the proxy.</p></li>
-<li><p><strong>Set a body-read deadline.</strong> Bialet’s 5-second socket timeout is per
-<code class="docutils literal notranslate"><span class="pre">recv()</span></code> call, so a peer that dribbles bytes slowly can keep a connection
-open indefinitely. Make the proxy enforce a <em>total</em> read timeout and reject
-clients that stall mid-body.</p></li>
+<li><p><strong>Set a body-read deadline.</strong> Bialet already bounds this itself: 5 seconds
+for the whole header block and 30 seconds for the body, with each <code class="docutils literal notranslate"><span class="pre">recv()</span></code>
+capped at 5 seconds, after which the connection is dropped. A proxy-side
+timeout still helps because it rejects a stalled client before it reaches
+the worker: <code class="docutils literal notranslate"><span class="pre">client_body_timeout</span></code> in nginx, <code class="docutils literal notranslate"><span class="pre">RequestReadTimeout</span> <span class="pre">...</span> <span class="pre">MinRate</span></code>
+in Apache.</p></li>
 <li><p><strong>Buffer the body at the proxy.</strong> Read the full request before forwarding
 it, so the upstream socket is never held open by a slow client.</p></li>
 <li><p><strong>Bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code></strong> and only expose the proxy to the internet.</p></li>
@@ -1134,6 +1215,7 @@ hardening section</p></li>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-a-reverse-proxy">Why a Reverse Proxy?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scaling-multiple-workers-on-one-host">Scaling: Multiple Workers on One Host</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-restart-needed-on-deploy">No Restart Needed on Deploy</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
 </ul>
