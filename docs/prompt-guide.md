@@ -8,6 +8,12 @@ Use this document as your complete reference for writing Bialet applications.
 Everything here reflects the actual framework behavior — don't invent syntax
 or conventions that aren't described below.
 
+For anything this guide only summarises, the full manual is at
+<https://bialet.dev>. Two pages are worth reading before a large build:
+[Common Pitfalls](https://bialet.dev/_sources/pitfalls.md) and
+[Recipes](https://bialet.dev/_sources/recipes.md). A machine-readable index of
+every page is at <https://bialet.dev/llms.txt>.
+
 > ⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**
 > It returns `null` when the requested key is not present in the POST payload.
 > **NEVER assume the field exists. ALWAYS provide a default with `|| ""` or
@@ -98,8 +104,9 @@ framework.
 
 Write JS only for what HTML/CSS genuinely can't do — live search-as-you-type,
 drag-and-drop, WebSocket-driven updates — and keep it a small inline
-`<script>`, not a framework. See [HTML-First](html-first.md) for the full
-pattern reference.
+`<script>`, not a framework. See
+[HTML-First](https://bialet.dev/_sources/html-first.md) for the full pattern
+reference.
 
 ## Wren Language Essentials
 
@@ -485,7 +492,7 @@ class Layout {
         </header>
         {{ content }}
         <footer>
-          <small>Built with <a href="https://bialet.dev">Bialet</a></small>
+          <small>&copy; My App</small>
         </footer>
       </body>
     </html> }
@@ -729,7 +736,8 @@ d1 < d2; d1 == d2; d1.diff(d2)                      // comparisons work; diff() 
 > `"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To
 > compare two instants, use `.diff`/`.unix` (both plain numbers); to add or
 > subtract calendar days, do the arithmetic on `year`/`month`/`day`
-> yourself (see [Date and Time](datetime.md) for a verified algorithm) —
+> yourself (see [Date and
+> Time](https://bialet.dev/_sources/datetime.md) for a verified algorithm) —
 > there is no shortcut for either.
 
 ## Controllers: Logic at the Top, View at the Bottom

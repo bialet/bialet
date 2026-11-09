@@ -627,7 +627,7 @@ class Template {
   </head> }
 
   footer { <footer class="app-footer">
-    <p>Built with <a href="https://bialet.dev">Bialet</a>.</p>
+    <p>&copy; My App</p>
   </footer> }
 }
 ```
@@ -708,10 +708,6 @@ return Template.new().layout(<main>
     <h2>Buy groceries</h2>
     <p>Added 10 minutes ago</p>
   </article>
-
-  <footer class="app-footer">
-    <p>Built with Bialet</p>
-  </footer>
 </main>)
 ```
 

@@ -28,7 +28,6 @@ class Template {
       </header> }
 
   static footer { <footer class="py-8 px-4 mx-auto max-w-screen-xl text-center lg:py-16 text-gray-500">
-          Made with <a href="https://bialet.dev" class="text-blue-600 hover:underline dark:text-blue-500">Bialet</a>.
           View <a href="https://github.com/bialet/bialet/tree/main/docs/getting-started" class="text-blue-600 hover:underline dark:text-blue-500">source code</a>.
       </footer> }
 

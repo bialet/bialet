@@ -47,6 +47,5 @@ return <!doctype html>
         <hr>
         {{ content }}
       </main>
-      <footer>Made with <a href="https://bialet.dev">Bialet</a></footer>
     </body>
   </html>

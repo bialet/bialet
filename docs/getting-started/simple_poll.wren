@@ -40,7 +40,6 @@ return  <!doctype html>
     }}
 
     <footer>
-      Made with <a href="https://bialet.dev">Bialet</a>.
       View <a href="https://github.com/bialet/bialet/tree/main/docs/getting-started">source code</a>.
     </footer>
   </body>

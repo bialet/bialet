@@ -335,6 +335,8 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    :caption: Help & Reference
 
    reference
+   recipes
+   pitfalls
    examples
    faq
    ai-prompt

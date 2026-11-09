@@ -28,7 +28,6 @@ class Template {
 
   footer { <footer class="app-footer">
     <p>
-      Example made with <a href="https://bialet.dev">Bialet</a>.
       View <a href="https://github.com/bialet/bialet/tree/main/docs/todo">source code</a>.
     </p>
   </footer> }

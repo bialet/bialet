@@ -810,7 +810,7 @@ main section, main article, main aside {
     </div>
     <div class="footer-bottom">
       <span>&copy; {{ Date.now.year }} Bialet. All rights reserved.</span>
-      <span>Built with <a href="https://bialet.dev">Bialet</a> &mdash; CSS showcase</span>
+      <span>CSS showcase</span>
     </div>
   </footer>
 </body>
