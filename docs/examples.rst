@@ -83,3 +83,21 @@ A single file serving both ``/users`` (list) and ``/users/:id`` (detail) via
    :code: wren
 
 
+Guestbook
+---------
+
+The smallest complete app: a page, a form handler, and a migration. Run it
+with ``bialet`` inside ``docs/examples/guestbook``.
+
+.. include:: examples/guestbook/_migration.wren
+   :code: wren
+
+.. include:: examples/guestbook/index.wren
+   :code: wren
+
+.. include:: examples/guestbook/message.wren
+   :code: wren
+
+The styled version in ``docs/examples/guestbook-styled`` adds ``_app.wren``
+(a ``Template`` layout class) and ``css/style.css``. The landing page video
+walks through both.

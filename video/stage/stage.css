@@ -136,7 +136,7 @@ html, body {
 
 /* ----------------------------------------------------------------- code */
 
-.code { width: 960px; height: auto; top: 120px; }
+.code { width: 960px; height: auto; min-height: 460px; top: 120px; }
 
 .code__tabs {
   display: flex;
@@ -317,7 +317,8 @@ html, body {
   justify-content: center;
   gap: 10px;
   opacity: 0;
-  background: radial-gradient(50% 34% at 50% 50%, color-mix(in srgb, #024 96%, transparent), #024f8 70%);
+  background: color-mix(in srgb, #024 94%, transparent);
+  backdrop-filter: blur(3px);
 }
 
 .endcard__mark {

@@ -79,7 +79,7 @@ One executable: HTTP server, SQLite, and a scripting language.
          <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
          <source src="_static/guestbook-demo.mp4" type="video/mp4">
        </video>
-       <figcaption>The guestbook from the tutorial.
+       <figcaption>The guestbook example: built, run, then styled.
          <button type="button" class="proof__toggle" data-demo-toggle aria-pressed="false">Pause</button>
        </figcaption>
      </figure>

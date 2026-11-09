@@ -409,7 +409,7 @@ def main() -> None:
     encode(frames_dir, fps, args.fast)
 
     log("done")
-    for item in sorted(OUT.iterdir()):
+    for item in (OUT / "guestbook-demo.mp4", OUT / "guestbook-demo-720.mp4", OUT / "guestbook-demo-poster.jpg"):
         log(f"{item.name}  {item.stat().st_size / 1024:.0f} KB")
 
 
