@@ -1,0 +1,808 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Recipes" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/recipes.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r or against a running app. Read Co..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r or against a running app. Read Co..." />
+
+    <title>Recipes &#8212; Bialet</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eb46afa6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'recipes';</script>
+    <script defer="defer" src="_static/ai-prompt.js?v=ab4ff94c"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Common Pitfalls" href="pitfalls.html" />
+    <link rel="prev" title="Reference" href="reference.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.2.7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Small on purpose.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data &amp; Storage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-modules.html">External Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pitfalls.html">Common Pitfalls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/recipes.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Frecipes.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/recipes.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Recipes</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dates-add-days-add-months-week-start-due-dates">Dates: add days, add months, week start, due dates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#money-store-cents-print-two-decimals">Money: store cents, print two decimals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csv-download">CSV download</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request"><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util-and-config">Util and Config</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#queries-with-more-than-three-parameters">Queries with more than three parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-one-database-no-noise">Tests: one database, no noise</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="recipes">
+<h1>Recipes<a class="headerlink" href="#recipes" title="Link to this heading">#</a></h1>
+<p>Short, runnable answers to the problems that come up in most apps: dates,
+money, CSV exports, and a few API helpers. Every snippet here was executed with
+<code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> or against a running app.</p>
+<p>Read <a class="reference internal" href="pitfalls.html"><span class="std std-doc">Common Pitfalls</span></a> as well: it covers the API traps these
+recipes work around (<code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter, a missing <code class="docutils literal notranslate"><span class="pre">return</span></code> returns null,
+iterating null crashes, a literal <code class="docutils literal notranslate"><span class="pre">%</span></code> is <code class="docutils literal notranslate"><span class="pre">\x25</span></code>, a Query takes at most three
+arguments).</p>
+<section id="dates-add-days-add-months-week-start-due-dates">
+<h2>Dates: add days, add months, week start, due dates<a class="headerlink" href="#dates-add-days-add-months-week-start-due-dates" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Date</span></code> has no <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> and cannot be built from a Unix timestamp. Keep the civil
+calendar arithmetic in one helper and call it everywhere:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dates</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">leap</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">4</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">400</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">daysInMonth</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">leap</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mf">29</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">28</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">6</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">11</span><span class="p">]</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mf">30</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">31</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Adds calendar months, clamping the day: 2024-01-31 + 1 -&gt; 2024-02-29.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">addMonths</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">12</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">total</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">12</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">12</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">day</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">daysInMonth</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">last</span><span class="p">)</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">last</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// Days -&gt; civil date (Howard Hinnant's civil_from_days, see datetime.md).</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">fromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">secs</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">719468</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">z</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">146096</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">146097</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">doe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">146097</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">doe</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1460</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">36524</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">146096</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">365</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">400</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doe</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="mf">365</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">yoe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">4</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">yoe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="mf">5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">153</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">((</span><span class="mf">153</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">5</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">9</span>
+<span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">y</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">ymd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">ymd</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="n">ymd</span><span class="p">[</span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="n">ymd</span><span class="p">[</span><span class="mf">2</span><span class="p">])</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// 0 = Sunday, so shift by six to make Monday the first day.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">startOfWeek</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">dow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#w"</span><span class="p">))</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">unix</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">((</span><span class="n">dow</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">6</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">7</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">addDays</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">unix</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Dates</span><span class="o">.</span><span class="n">addMonths</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">31</span><span class="p">),</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2024-02-29</span>
+<span class="nc">Dates</span><span class="o">.</span><span class="n">startOfWeek</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2026</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span><span class="w"> </span><span class="mf">18</span><span class="p">))</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2026-10-12</span>
+<span class="nc">Dates</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2026</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span><span class="w"> </span><span class="mf">18</span><span class="p">),</span><span class="w"> </span><span class="mf">60</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2026-12-17</span>
+</pre></div>
+</div>
+<p>Format tokens are strftime-style with <code class="docutils literal notranslate"><span class="pre">#</span></code> instead of <code class="docutils literal notranslate"><span class="pre">%</span></code>: <code class="docutils literal notranslate"><span class="pre">#Y</span> <span class="pre">#m</span> <span class="pre">#d</span> <span class="pre">#H</span> <span class="pre">#M</span> <span class="pre">#S</span></code>,
+<code class="docutils literal notranslate"><span class="pre">#w</span></code> (0 = Sunday), <code class="docutils literal notranslate"><span class="pre">#u</span></code> (1 = Monday), <code class="docutils literal notranslate"><span class="pre">#V</span></code> (ISO week), <code class="docutils literal notranslate"><span class="pre">#F</span></code> (ISO date). The
+full table is in <a class="reference internal" href="datetime.html"><span class="std std-doc">Date and Time Functions</span></a>.</p>
+<p>Comparing dates is safe with <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">==</span></code>. Comparing date <strong>strings</strong> is not:
+<code class="docutils literal notranslate"><span class="pre">&quot;2026-01-01&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;2026-02-01&quot;</span></code> raises <code class="docutils literal notranslate"><span class="pre">String</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'&lt;(_)'</span></code>. Parse
+to <code class="docutils literal notranslate"><span class="pre">Date.new(text)</span></code> first, and guard the null that <code class="docutils literal notranslate"><span class="pre">.first</span></code>/<code class="docutils literal notranslate"><span class="pre">.val</span></code> return when
+there is no row.</p>
+</section>
+<section id="money-store-cents-print-two-decimals">
+<h2>Money: store cents, print two decimals<a class="headerlink" href="#money-store-cents-print-two-decimals" title="Link to this heading">#</a></h2>
+<p>Wren has no <code class="docutils literal notranslate"><span class="pre">Num.format</span></code>. Store amounts as integer cents and format them with a
+helper; never do float arithmetic on pesos/dollars across many rows.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Money</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Accepts "1234.5", "1.234,50", "12,5", "19.99" and null.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">text</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="si">%(</span><span class="n">text</span><span class="si">)</span><span class="s2">"</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">","</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Spanish format: dots are thousands, comma is the decimal separator.</span>
+<span class="w">      </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span><span class="w"> </span><span class="s2">"."</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">var</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+<span class="w">      </span><span class="k">var</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="n">parts</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
+<span class="w">      </span><span class="c1">// "1.234" is thousands; "19.99" is decimal.</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">parts</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">last</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">3</span><span class="p">)</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">cents</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="nc">Money</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">fmt</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">negative</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cents</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">abs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">negative</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">-</span><span class="n">cents</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">cents</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">whole</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">abs</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">frac</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abs</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">whole</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">"</span><span class="si">%(</span><span class="n">negative</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"-"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">""</span><span class="si">)%(</span><span class="n">whole</span><span class="si">)</span><span class="s2">.</span><span class="si">%(</span><span class="n">frac</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"0"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">""</span><span class="si">)%(</span><span class="n">frac</span><span class="si">)</span><span class="s2">"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Money</span><span class="o">.</span><span class="n">fmt</span><span class="p">(</span><span class="nc">Money</span><span class="o">.</span><span class="n">cents</span><span class="p">(</span><span class="s2">"1234.567"</span><span class="p">))</span><span class="w"> </span><span class="c1">// 1234.57</span>
+<span class="nc">Money</span><span class="o">.</span><span class="n">fmt</span><span class="p">(</span><span class="nc">Money</span><span class="o">.</span><span class="n">cents</span><span class="p">(</span><span class="s2">"1.234,50"</span><span class="p">))</span><span class="w"> </span><span class="c1">// 1234.50</span>
+<span class="nc">Money</span><span class="o">.</span><span class="n">fmt</span><span class="p">(</span><span class="nc">Money</span><span class="o">.</span><span class="n">cents</span><span class="p">(</span><span class="s2">"12,5"</span><span class="p">))</span><span class="w">     </span><span class="c1">// 12.50</span>
+<span class="nc">Money</span><span class="o">.</span><span class="n">cents</span><span class="p">(</span><span class="s2">"19.99"</span><span class="p">)</span><span class="w">               </span><span class="c1">// 1999 (store this INTEGER)</span>
+<span class="nc">Money</span><span class="o">.</span><span class="n">cents</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span><span class="w">                  </span><span class="c1">// 0</span>
+</pre></div>
+</div>
+<p>In SQL, store <code class="docutils literal notranslate"><span class="pre">INTEGER</span></code> cents and sum with <code class="docutils literal notranslate"><span class="pre">SUM(cents)</span></code>; convert only when
+rendering. Keep the arithmetic in integers: summing <code class="docutils literal notranslate"><span class="pre">REAL</span></code> amounts across
+hundreds of rows accumulates rounding error.</p>
+</section>
+<section id="csv-download">
+<h2>CSV download<a class="headerlink" href="#csv-download" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Response.header(name,</span> <span class="pre">value)</span></code> sets the response header; there is no
+<code class="docutils literal notranslate"><span class="pre">Response.csv</span></code>/<code class="docutils literal notranslate"><span class="pre">download</span></code> helper. Build the body, set both headers, and
+<code class="docutils literal notranslate"><span class="pre">return</span></code> it:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT name, amount FROM expenses ORDER BY id`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">lines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"concepto,importe"</span><span class="p">]</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">row</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="si">%(</span><span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="si">)</span><span class="s2">"</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\"</span><span class="s2">"</span><span class="p">,</span><span class="w"> </span><span class="s2">"</span><span class="se">\"\"</span><span class="s2">"</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">// Quote every field, including numbers: "12.500,50" contains a comma and</span>
+<span class="w">  </span><span class="c1">// would shift the columns if it were left bare.</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="si">%(</span><span class="n">row</span><span class="p">[</span><span class="s2">"amount"</span><span class="p">]</span><span class="si">)</span><span class="s2">"</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\"</span><span class="s2">"</span><span class="p">,</span><span class="w"> </span><span class="s2">"</span><span class="se">\"\"</span><span class="s2">"</span><span class="p">)</span>
+<span class="w">  </span><span class="n">lines</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"</span><span class="se">\"</span><span class="si">%(</span><span class="n">name</span><span class="si">)</span><span class="se">\"</span><span class="s2">,</span><span class="se">\"</span><span class="si">%(</span><span class="n">amount</span><span class="si">)</span><span class="se">\"</span><span class="s2">"</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nc">Response</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span><span class="w"> </span><span class="s2">"text/csv; charset=utf-8"</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"Content-Disposition"</span><span class="p">,</span><span class="w"> </span><span class="s2">"attachment; filename=</span><span class="se">\"</span><span class="s2">gastos.csv</span><span class="se">\"</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="n">lines</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+</pre></div>
+</div>
+<p>Quote a field whenever it contains a comma, a quote or a newline; double every
+inner quote. Link to the route with a normal <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">href=&quot;/exportar&quot;&gt;Exportar</span> <span class="pre">CSV&lt;/a&gt;</span></code>.
+In tests, assert the header instead of the whole file:
+<code class="docutils literal notranslate"><span class="pre">Test.get(&quot;/exportar&quot;).status(200).header(&quot;Content-Type&quot;,</span> <span class="pre">&quot;text/csv;</span> <span class="pre">charset=utf-8&quot;)</span></code>.</p>
+</section>
+<section id="bialet-r-is-not-a-request">
+<h2><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request<a class="headerlink" href="#bialet-r-is-not-a-request" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> executes a bare Wren script. It does <strong>not</strong> create the <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code>
+tables or a request/session, so these fail there:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.new()</span></code> → <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">Error</span> <span class="pre">no</span> <span class="pre">such</span> <span class="pre">table:</span> <span class="pre">BIALET_SESSION</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Config.get(...)</span></code> → <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">Error</span> <span class="pre">no</span> <span class="pre">such</span> <span class="pre">table:</span> <span class="pre">BIALET_CONFIG</span></code></p></li>
+<li><p>App queries (<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FROM</span> <span class="pre">my_table</span></code>) → <code class="docutils literal notranslate"><span class="pre">no</span> <span class="pre">such</span> <span class="pre">table</span></code></p></li>
+</ul>
+<p>Use it only for pure language questions (<code class="docutils literal notranslate"><span class="pre">Date</span></code>, <code class="docutils literal notranslate"><span class="pre">Num</span></code>, <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">List</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Map</span></code>). For framework behaviour, write a test in <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> and run <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code>,
+or start the server and try the page.</p>
+</section>
+<section id="util-and-config">
+<h2>Util and Config<a class="headerlink" href="#util-and-config" title="Link to this heading">#</a></h2>
+<p>Stable <code class="docutils literal notranslate"><span class="pre">Util</span></code> helpers:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Call</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.randomString(n)</span></code></p></td>
+<td><p>random URL-safe string of length <code class="docutils literal notranslate"><span class="pre">n</span></code> (tokens, ids)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Util.hash(password)</span></code></p></td>
+<td><p>salted PBKDF2 hash (store this in the DB)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.verify(password,</span> <span class="pre">hash)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> when the password matches the hash</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Util.toNum(value)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code> for null/garbage, otherwise the number</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.htmlEscape(text)</span></code></p></td>
+<td><p>escaped HTML text</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Util.isDigits(text)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> when every character is <code class="docutils literal notranslate"><span class="pre">0</span></code>–<code class="docutils literal notranslate"><span class="pre">9</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.secureEquals(a,</span> <span class="pre">b)</span></code></p></td>
+<td><p>constant-time string comparison</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Config</span></code> is backed by <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">)</span><span class="w">            </span><span class="c1">// String or null</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Mi app"</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w">   </span><span class="c1">// true only for "1"/"true"</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">num</span><span class="p">(</span><span class="s2">"page_size"</span><span class="p">)</span><span class="w">        </span><span class="c1">// Num</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w"> </span><span class="c1">// same as Config.set("beta_features", "1")</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">"maintenance"</span><span class="p">)</span><span class="w">  </span><span class="c1">// same as Config.set("maintenance", "0")</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"theme"</span><span class="p">)</span><span class="w">           </span><span class="c1">// parsed JSON value</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Config.bool(key)</span></code> is an allow-list: <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code>
+(case-insensitive), <code class="docutils literal notranslate"><span class="pre">false</span></code> for everything else <strong>including a missing key</strong>. For
+an opt-in flag (a test mode, a feature gate) that is the behavior you want, but
+write <code class="docutils literal notranslate"><span class="pre">Config.get(key)</span> <span class="pre">==</span> <span class="pre">&quot;1&quot;</span></code> when the default should be obvious at the call
+site. See <a class="reference internal" href="configuration.html"><span class="std std-doc">Configuration</span></a>.</p>
+</section>
+<section id="queries-with-more-than-three-parameters">
+<h2>Queries with more than three parameters<a class="headerlink" href="#queries-with-more-than-three-parameters" title="Link to this heading">#</a></h2>
+<p>A Query method takes at most three positional parameters. With four or more it
+raises <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'fetch(_,_,_,_)'</span></code> (or <code class="docutils literal notranslate"><span class="pre">fetch(_,_,_,_,_)</span></code> with
+five). Pass one array instead:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM items WHERE a = ? AND b = ? AND c = ? AND d = ?`</span>
+<span class="w">  </span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="s2">"1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w"> </span><span class="s2">"4"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The same rule applies to <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code>, <code class="docutils literal notranslate"><span class="pre">.toNum</span></code>, <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.toBool</span></code> and
+<code class="docutils literal notranslate"><span class="pre">.order</span></code>: three arguments maximum, then an array. See <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a>.</p>
+</section>
+<section id="tests-one-database-no-noise">
+<h2>Tests: one database, no noise<a class="headerlink" href="#tests-one-database-no-noise" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Every file in <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> runs in the same process against <strong>one</strong> temporary
+database for that run. A row inserted by <code class="docutils literal notranslate"><span class="pre">a.wren</span></code> is visible to <code class="docutils literal notranslate"><span class="pre">b.wren</span></code>;
+do not assume each file starts clean.</p></li>
+<li><p>Seed shared rows in <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code>, which runs once before the files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">System.print</span></code> output becomes part of the test log. Never dump a whole
+table or a list of sessions; print one scalar when you need to debug, and
+delete the debug test afterwards. Hundreds of <code class="docutils literal notranslate"><span class="pre">debugN.wren</span></code> files make every
+later run slower and bury the real failure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> has no cookie jar. For session-scoped behaviour, test the domain
+class directly, or assert the redirect and the row it wrote. When the app
+accepts an explicit header, use
+<code class="docutils literal notranslate"><span class="pre">.setHeader(&quot;Cookie&quot;,</span> <span class="pre">&quot;session=...&quot;)</span></code> before the assertion.</p></li>
+<li><p>Never <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;bialet/test&quot;</span> <span class="pre">for</span> <span class="pre">Test</span></code>: the runner preloads <code class="docutils literal notranslate"><span class="pre">Test</span></code>, and the
+import fails with <code class="docutils literal notranslate"><span class="pre">Module</span> <span class="pre">variable</span> <span class="pre">is</span> <span class="pre">already</span> <span class="pre">defined</span></code>.</p></li>
+<li><p>Assertions are lazy: the request fires on the first <code class="docutils literal notranslate"><span class="pre">.status</span></code>/<code class="docutils literal notranslate"><span class="pre">.contains</span></code>.
+Chain them on the same <code class="docutils literal notranslate"><span class="pre">Test.get(...)</span></code> call.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.contains</span></code> matches the raw HTML. Interpolation HTML-escapes strings, so a
+title with accents/quotes may appear as entities; assert on text that is
+stable, or read the stored row instead.</p></li>
+</ul>
+<p>See <a class="reference internal" href="tests.html"><span class="std std-doc">Testing in Bialet</span></a> for the full runner reference.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pitfalls.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Common Pitfalls</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dates-add-days-add-months-week-start-due-dates">Dates: add days, add months, week start, due dates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#money-store-cents-print-two-decimals">Money: store cents, print two decimals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csv-download">CSV download</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request"><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util-and-config">Util and Config</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#queries-with-more-than-three-parameters">Queries with more than three parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-one-database-no-noise">Tests: one database, no noise</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

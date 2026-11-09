@@ -40,6 +40,8 @@
 - [Testing in Bialet](/_sources/tests.md)
 - [Deployment](/_sources/deployment.md)
 - [Reference](/_sources/reference.md)
+- [Recipes](/_sources/recipes.md)
+- [Common Pitfalls](/_sources/pitfalls.md)
 - [Examples](/_sources/examples.rst)
 - [FAQ](/_sources/faq.md)
 - [AI Coding Prompt](/_sources/ai-prompt.md)

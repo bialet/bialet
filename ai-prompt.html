@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=43adc148"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=ab4ff94c"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -221,6 +221,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipes.html">Recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pitfalls.html">Common Pitfalls</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">AI Coding Prompt</a></li>
@@ -462,6 +464,12 @@ Use this document as your complete reference for writing Bialet applications.
 Everything here reflects the actual framework behavior — don't invent syntax
 or conventions that aren't described below.
 
+For anything this guide only summarises, the full manual is at
+&lt;https://bialet.dev&gt;. Two pages are worth reading before a large build:
+[<span class="nt">Common Pitfalls</span>](<span class="na">https://bialet.dev/_sources/pitfalls.md</span>) and
+[<span class="nt">Recipes</span>](<span class="na">https://bialet.dev/_sources/recipes.md</span>). A machine-readable index of
+every page is at &lt;https://bialet.dev/llms.txt&gt;.
+
 <span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**</span>
 <span class="k">&gt; </span><span class="ge">It returns `null` when the requested key is not present in the POST payload.</span>
 <span class="k">&gt; </span><span class="ge">**NEVER assume the field exists. ALWAYS provide a default with `|| ""` or</span>
@@ -552,8 +560,9 @@ framework.
 
 Write JS only for what HTML/CSS genuinely can't do — live search-as-you-type,
 drag-and-drop, WebSocket-driven updates — and keep it a small inline
-<span class="sb">`&lt;script&gt;`</span>, not a framework. See [<span class="nt">HTML-First</span>](<span class="na">html-first.md</span>) for the full
-pattern reference.
+<span class="sb">`&lt;script&gt;`</span>, not a framework. See
+[<span class="nt">HTML-First</span>](<span class="na">https://bialet.dev/_sources/html-first.md</span>) for the full pattern
+reference.
 
 <span class="gu">## Wren Language Essentials</span>
 
@@ -939,7 +948,7 @@ the folder; the deepest match wins.
 <span class="x">        &lt;/header&gt;</span>
 <span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
 <span class="w">        </span><span class="x">&lt;footer&gt;</span>
-<span class="x">          &lt;small&gt;</span><span class="nc">Built</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="x">&lt;a href="https://bialet.dev"&gt;Bialet&lt;/a&gt;&lt;/small&gt;</span>
+<span class="x">          &lt;small&gt;</span><span class="o">&amp;</span><span class="n">copy</span><span class="err">;</span><span class="w"> </span><span class="nc">My</span><span class="w"> </span><span class="nc">App</span><span class="x">&lt;/small&gt;</span>
 <span class="x">        &lt;/footer&gt;</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
 <span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
@@ -1183,7 +1192,8 @@ to instances of a class whose <span class="sb">`construct new(data)`</span> acce
 <span class="k">&gt; </span><span class="ge">`"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To</span>
 <span class="k">&gt; </span><span class="ge">compare two instants, use `.diff`/`.unix` (both plain numbers); to add or</span>
 <span class="k">&gt; </span><span class="ge">subtract calendar days, do the arithmetic on `year`/`month`/`day`</span>
-<span class="k">&gt; </span><span class="ge">yourself (see [Date and Time](datetime.md) for a verified algorithm) —</span>
+<span class="k">&gt; </span><span class="ge">yourself (see [Date and</span>
+<span class="k">&gt; </span><span class="ge">Time](https://bialet.dev/_sources/datetime.md) for a verified algorithm) —</span>
 <span class="k">&gt; </span><span class="ge">there is no shortcut for either.</span>
 
 <span class="gu">## Controllers: Logic at the Top, View at the Bottom</span>
