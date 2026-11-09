@@ -11735,6 +11735,21 @@ templates, the database API, and project structure — so it writes idiomatic
    name and message field."
 ```
 
+````{admonition} Using a coding agent?
+:class: tip
+
+If your agent loads skills (Claude Code, Codex, Cursor, OpenCode), install the
+companion skill instead of pasting the prompt:
+
+```bash
+npx skills add bialet/skills --skill bialet-app-builder
+```
+
+It teaches the same conventions in four gated phases — static design first,
+your confirmation, then the database and the logic. Use it *or* the prompt
+below, not both.
+````
+
 ---
 
 ```{literalinclude} prompt-guide.md
