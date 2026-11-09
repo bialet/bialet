@@ -527,13 +527,6 @@ div.highlight button.copybtn.success {
   text-decoration: underline;
 }
 
-.hero__trust {
-  margin: -0.5rem auto 0;
-  text-align: center;
-  font-size: 0.85rem;
-  color: var(--pst-color-text-muted);
-}
-
 /* ── Proof ────────────────────────────────────────────────── */
 
 .proof {
@@ -618,29 +611,6 @@ div.highlight button.copybtn.success {
 
 .proof__cta {
   margin: 0;
-}
-
-[data-collapse-on-phone] > summary {
-  cursor: pointer;
-  padding: 0.5rem 0;
-  font-size: 0.85rem;
-  color: var(--pst-color-text-muted);
-}
-
-[data-collapse-on-phone] > summary:hover {
-  color: var(--pst-color-text-base);
-}
-
-/* Above the phone breakpoint the samples are always open, so the toggle
-   would just be a stray line. */
-@media (min-width: 641px) {
-  [data-collapse-on-phone] > summary {
-    display: none;
-  }
-}
-
-.landing-sample__body .highlight {
-  margin-bottom: 0;
 }
 
 /* ── Community banner ─────────────────────────────────────── */

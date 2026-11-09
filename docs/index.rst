@@ -64,12 +64,7 @@ One executable: HTTP server, SQLite, and a scripting language.
      </a>
    </div>
 
-   <p class="hero__trust">
-     In development since 2023 &middot; running in production at
-     <a href="https://home.dev.ar/">home.dev.ar</a>
-   </p>
-
-   <!-- One proof: a 30 second build, from the files to the stylesheet. -->
+   <!-- One proof: a build from the files to the stylesheet. -->
    <div class="proof">
      <figure class="proof__demo">
        <video id="guestbook-demo" class="proof__video" width="1080" height="1920"
@@ -195,67 +190,6 @@ What you get
 
       Server-rendered pages, standard HTML and CSS, and SQL you write
       yourself. Add JavaScript only if you want it.
-
-----
-
-A whole app in three files:
----------------------------
-
-.. raw:: html
-
-   <details class="landing-sample" open data-collapse-on-phone>
-     <summary>The three files</summary>
-     <div class="landing-sample__body">
-
-.. code-block:: wren
-
-   // _migration.wren
-   Db.migrate("init", `CREATE TABLE messages (text TEXT, created_at DATETIME)`)
-
-   // index.wren
-   var messages = `SELECT * FROM messages ORDER BY created_at ASC`.fetch
-   return <main>
-     <h1>Bialet Guestbook</h1>
-     <form method="post" action="/message">
-       <input name="msg" placeholder="Write a message...">
-       <button>Submit</button>
-     </form>
-     <hr>
-     <ul>
-       {{ messages.map {|m| <li>{{ m["text"] }}</li> } }}
-     </ul>
-   </main>
-
-   // message.wren
-   if (Request.isPost) {
-     var msg = Request.post("msg")
-     if (msg) {
-       `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
-       return <main>
-         <p>Messaged <b>{{ msg }}</b> saved!</p>
-         <p><a href="/">Show messages</a></p>
-       </main>
-     }
-   }
-   return Response.redirect("/")
-
-.. raw:: html
-
-     </div>
-   </details>
-
-Three files, three roles: ``_migration.wren`` creates the table at startup,
-``index.wren`` renders ``/``, and ``message.wren`` handles the form POST at
-``/message``. The filename is the route. :doc:`Build it step by step
-<quickstart>`.
-
-Bialet integrates the :doc:`Wren language <wren>` (based on
-`wren.io <https://wren.io/>`_) with
-an HTTP server and a built-in SQLite database — **in a single binary**.
-No configuration files, no runtime dependencies, no build step. Just write
-``.wren`` files and run.
-
-Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1:7001>`_.
 
 ----
 
