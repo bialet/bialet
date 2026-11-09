@@ -96,6 +96,11 @@ Web development became a spaceship. Bialet is a bicycle.
      <p class="community-banner__action">
        <a href="ai-prompt.html">View the full prompt →</a>
      </p>
+     <p class="community-banner__action">
+       Or feed the whole site to your tool:
+       <a href="llms.txt">llms.txt</a> (index) and
+       <a href="llms-full.txt">llms-full.txt</a> (every page, plain text).
+     </p>
    </div>
 
    <div class="copy-status" role="status" aria-live="polite"></div>
