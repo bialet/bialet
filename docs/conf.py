@@ -73,7 +73,14 @@ def setup(app):
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx_design', 'sphinxext.opengraph', 'sphinx_copybutton', 'sphinx_llms_txt']
+extensions = [
+    'myst_parser',
+    'sphinx_design',
+    'sphinxext.opengraph',
+    'sphinx_copybutton',
+    'sphinx_llms_txt',
+    'notfound.extension',
+]
 
 # Let MyST register GitHub-style heading anchors (e.g. #postname for
 # "### post(name)") so intra-page links work without explicit labels.
@@ -129,6 +136,11 @@ html_show_sphinx = False
 
 ogp_site_url = "https://bialet.dev/"
 ogp_image = "https://bialet.dev/_static/og-image.png"
+
+# The 404 page is served from any URL depth, so its asset links must be
+# absolute. notfound.extension generates 404.html; the prefix is the site root.
+notfound_urls_prefix = "/"
+notfound_page_title = "Page not found"
 
 source_suffix = {
     '.rst': 'restructuredtext',
