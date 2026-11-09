@@ -23,25 +23,13 @@ One executable: HTTP server, SQLite, and a scripting language.
      <!-- Unix (Linux / macOS): curl command with copy button -->
      <div id="download-unix" class="install__platform">
        <span id="download-os-label-unix" class="install__label"></span>
-       <div class="install__command install__command--primary">
+       <div class="install__command">
          <code class="install__text">curl -fsSL https://get.bialet.dev | sh</code>
          <button type="button" class="install__copy" data-copy="curl -fsSL https://get.bialet.dev | sh" aria-label="Copy install command">
            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2"/></svg>
            <span class="install__copy-text">Copy</span>
          </button>
        </div>
-       <p class="install__note">
-         macOS ARM, Ubuntu x86_64, and Ubuntu ARM64.
-       </p>
-       <details class="install__readfirst">
-         <summary>Read the script before running it</summary>
-         <div class="install__command">
-           <code class="install__text">curl -fsSL https://get.bialet.dev -o install.sh</code>
-         </div>
-         <p class="install__note">
-           Inspect it, then run <code>sh install.sh</code>.
-         </p>
-       </details>
      </div>
 
      <!-- Windows: download button -->
@@ -69,7 +57,7 @@ One executable: HTTP server, SQLite, and a scripting language.
    </div>
 
    <div class="hero-actions">
-     <a class="hero-actions__link" href="getting-started/index.html">Read the docs</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary" href="getting-started/index.html">Get Started</a>
      <a class="hero-actions__link" href="https://github.com/bialet/bialet">
        <svg version="1.1" width="1em" height="1em" class="sd-octicon sd-octicon-mark-github" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
        View on GitHub
@@ -224,6 +212,28 @@ Run ``bialet`` in your project folder and open `127.0.0.1:7001 <http://127.0.0.1
 
 ----
 
+What it costs
+-------------
+
+.. admonition:: The tradeoffs
+   :class: note
+
+   Bialet is small on purpose. These are the limits that come with that.
+
+   - **One connection at a time.** The server is single-threaded and blocking.
+     Run it behind a reverse proxy, which is also where request caps and
+     timeouts belong.
+   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
+     Caddy in front for HTTPS, HTTP/2, body limits, and timeouts. See
+     :doc:`deployment`.
+   - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
+     Vim plugins provide syntax highlighting; autocomplete and an LSP are on
+     the roadmap.
+   - **No WebSockets.** Request/response HTTP only. Use polling or an external
+     service for realtime features.
+
+----
+
 Where it fits
 -------------
 
@@ -262,53 +272,9 @@ longer version.
 .. raw:: html
 
    <div class="hero-actions">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary" href="getting-started/index.html">Get Started</a>
-     <a class="hero-actions__link" href="installation.html">Install options</a>
+     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
+     <a class="hero-actions__link" href="installation.html">All install options</a>
    </div>
-
-----
-
-What it costs
--------------
-
-Bialet is small on purpose. These are the limits that come with that.
-
-.. grid:: 1 2 2 2
-   :gutter: 2
-
-   .. grid-item::
-
-      **One connection at a time**
-
-      The server is single-threaded and blocking. Run it behind a reverse
-      proxy, which is also where request caps and timeouts belong.
-
-   .. grid-item::
-
-      **HTTP/1.0, no native TLS**
-
-      Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
-      HTTP/2, body limits, and timeouts. See :doc:`deployment`.
-
-   .. grid-item::
-
-      **Wren, with basic tooling**
-
-      Apps are written in Wren. The VS Code and Vim plugins provide syntax
-      highlighting; autocomplete and an LSP are on the roadmap.
-
-   .. grid-item::
-
-      **No WebSockets**
-
-      Request/response HTTP only. Use polling or an external service for
-      realtime features.
-
-----
-
-.. llms-txt-ignore-start
-
-.. llms-txt-ignore-end
 
 .. toctree::
    :hidden:
@@ -395,9 +361,4 @@ Bialet is small on purpose. These are the limits that come with that.
        <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
-   </div>
-
-   <div class="hero-actions hero-actions--final">
-     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-primary" href="getting-started/index.html">Get Started</a>
-     <a class="hero-actions__link" href="installation.html">Install options</a>
    </div>

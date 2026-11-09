@@ -396,14 +396,6 @@ div.highlight button.copybtn.success {
   height: auto;
 }
 
-.hero__kicker {
-  margin: 0.35rem auto 0;
-  text-align: center;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  color: var(--pst-color-text-muted);
-}
-
 .hero__lede {
   max-width: 34em;
   margin: 0 auto 1.5em;
@@ -510,31 +502,6 @@ div.highlight button.copybtn.success {
   font-size: 0.9em;
 }
 
-/* The install command is the conversion; give it the only accent border. */
-.install__command--primary {
-  border: 2px solid var(--pst-color-primary);
-  background: color-mix(in srgb, var(--pst-color-primary) 6%, var(--pst-color-background));
-}
-
-.install__command--primary .install__copy {
-  color: var(--pst-color-primary);
-}
-
-/* Secondary path for visitors who will not pipe a script into a shell. */
-.install__readfirst {
-  margin-top: 0.75rem;
-  font-size: 0.9em;
-}
-
-.install__readfirst summary {
-  cursor: pointer;
-  color: var(--pst-color-text-muted);
-}
-
-.install__readfirst[open] summary {
-  margin-bottom: 0.5rem;
-}
-
 /* ── Actions ──────────────────────────────────────────────── */
 
 .hero-actions {
@@ -546,7 +513,7 @@ div.highlight button.copybtn.success {
   margin: 1.5rem 0;
 }
 
-/* A quiet companion to the install command. */
+/* A quiet companion to the one filled button. */
 .hero-actions__link {
   display: inline-flex;
   align-items: center;
@@ -565,10 +532,6 @@ div.highlight button.copybtn.success {
   text-align: center;
   font-size: 0.85rem;
   color: var(--pst-color-text-muted);
-}
-
-.hero-actions--final {
-  margin-top: 2.5rem;
 }
 
 /* ── Proof ────────────────────────────────────────────────── */
