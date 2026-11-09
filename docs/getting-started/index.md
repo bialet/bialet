@@ -4,6 +4,17 @@ In this tutorial we'll build a working poll application with Bialet. You'll
 learn how to write [Wren](../wren.md) files, query a SQLite database, handle
 form submissions, and render dynamic HTML — all with zero configuration.
 
+
+```{admonition} Building with an AI assistant instead?
+:class: tip
+
+Paste the [AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor,
+or install the `bialet-app-builder` skill with
+`npx skills add bialet/skills --skill bialet-app-builder`. Either one teaches
+the assistant Bialet's conventions, so you can skip the tutorial and describe
+what you want to build.
+```
+
 > ℹ️ **Bialet has no router to configure.** Every `.wren` file is a URL at the
 > same path, just like a static HTML file: `about.wren` → `/about`.
 >
@@ -19,12 +30,6 @@ Already familiar with Bialet? Jump to [Installation](../installation.md) or the
 Want the shortest path to something running? [Quick start: a
 guestbook](../quickstart.md) builds a complete app in five minutes, without the
 chapter-by-chapter tour.
-
-Building with an AI assistant instead? Paste the
-[AI Coding Prompt](../ai-prompt.md) into Claude, ChatGPT, or Cursor, or install
-the `bialet-app-builder` skill with
-`npx skills add bialet/skills --skill bialet-app-builder`. Either one teaches
-the assistant Bialet's conventions before you start.
 
 ## What we'll build
 
