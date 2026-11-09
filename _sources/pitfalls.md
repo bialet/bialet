@@ -366,19 +366,22 @@ _amount = Num.fromString("%(data["amount"] || 0)") || 0
 `Num.fromString` only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.
 
-## 30. Do not build an HTML block inside `{{ }}`
+## 30. `{{ }}` must sit inside an HTML tag
+
+At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
+fails with `Expect '}' after map entries`:
 
 ```wren
-// wrong: parsed as a map/block -> "Expect ':' after map key"
-{{ count > 0 && <div class="box">...</div> }}
+// wrong: no enclosing tag
+return {{ count > 0 && <div class="box">...</div> }}
 
-// correct: build the string first
-var extra = count > 0 ? <div class="box">...</div> : ""
-{{ extra }}
+// correct: interpolate inside an element
+return <main>{{ count > 0 && <div class="box">...</div> }}</main>
 ```
 
-Bialet's `{{ }}` expects an expression, not an inline HTML tree. Assign the
-block to a variable (or a small helper) and interpolate that.
+Once the expression is inside a tag, an HTML block works as an operand. If it
+gets long, assign it to a variable above the template and interpolate that
+inside a tag.
 
 ## 31. Private apps need a first-run credential
 

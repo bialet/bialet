@@ -465,7 +465,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-failed-migration-can-still-be-marked-as-applied">27. A failed migration can still be marked as applied</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-call-date-new-inside-a-db-migrate-callback">28. Do not call <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code> inside a <code class="docutils literal notranslate"><span class="pre">Db.migrate</span></code> callback</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-null-raises-argument-must-be-a-string">29. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> raises “Argument must be a string”</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-build-an-html-block-inside">30. Do not build an HTML block inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">30. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#private-apps-need-a-first-run-credential">31. Private apps need a first-run credential</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">32. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-whitespace-makes-multi-word-contains-assertions-fragile">33. HTML whitespace makes multi-word <code class="docutils literal notranslate"><span class="pre">.contains</span></code> assertions fragile</a></li>
@@ -814,18 +814,20 @@ method after the app is up.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.</p>
 </section>
-<section id="do-not-build-an-html-block-inside">
-<h2>30. Do not build an HTML block inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code><a class="headerlink" href="#do-not-build-an-html-block-inside" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: parsed as a map/block -&gt; "Expect ':' after map key"</span>
-<span class="si">{{</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;div class="box"&gt;...&lt;/div&gt;</span><span class="w"> </span><span class="si">}}</span>
+<section id="must-sit-inside-an-html-tag">
+<h2>30. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag<a class="headerlink" href="#must-sit-inside-an-html-tag" title="Link to this heading">#</a></h2>
+<p>At the top level of a template, <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code> is parsed as a Wren map literal and
+fails with <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">'}'</span> <span class="pre">after</span> <span class="pre">map</span> <span class="pre">entries</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: no enclosing tag</span>
+<span class="k">return</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;div class="box"&gt;...&lt;/div&gt;</span><span class="w"> </span><span class="si">}}</span>
 
-<span class="c1">// correct: build the string first</span>
-<span class="k">var</span><span class="w"> </span><span class="n">extra</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="x">&lt;div class="box"&gt;...&lt;/div&gt;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">""</span>
-<span class="si">{{</span><span class="w"> </span><span class="n">extra</span><span class="w"> </span><span class="si">}}</span>
+<span class="c1">// correct: interpolate inside an element</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;div class="box"&gt;...&lt;/div&gt;</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>Bialet’s <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> expects an expression, not an inline HTML tree. Assign the
-block to a variable (or a small helper) and interpolate that.</p>
+<p>Once the expression is inside a tag, an HTML block works as an operand. If it
+gets long, assign it to a variable above the template and interpolate that
+inside a tag.</p>
 </section>
 <section id="private-apps-need-a-first-run-credential">
 <h2>31. Private apps need a first-run credential<a class="headerlink" href="#private-apps-need-a-first-run-credential" title="Link to this heading">#</a></h2>
@@ -949,7 +951,7 @@ or start the server and try the page.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-failed-migration-can-still-be-marked-as-applied">27. A failed migration can still be marked as applied</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-call-date-new-inside-a-db-migrate-callback">28. Do not call <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code> inside a <code class="docutils literal notranslate"><span class="pre">Db.migrate</span></code> callback</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-null-raises-argument-must-be-a-string">29. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> raises “Argument must be a string”</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-build-an-html-block-inside">30. Do not build an HTML block inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">30. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#private-apps-need-a-first-run-credential">31. Private apps need a first-run credential</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">32. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-whitespace-makes-multi-word-contains-assertions-fragile">33. HTML whitespace makes multi-word <code class="docutils literal notranslate"><span class="pre">.contains</span></code> assertions fragile</a></li>
