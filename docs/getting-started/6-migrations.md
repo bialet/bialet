@@ -33,6 +33,3 @@ anyone who runs it gets the same schema automatically.
 
 In the next chapter, we'll connect the migration-defined table to our form
 and voting logic.
-
----
-**Previous:** [5. Logic & Database](5-logic-database) &nbsp; | &nbsp; **Next:** [7. Forms & Voting](7-forms-voting)

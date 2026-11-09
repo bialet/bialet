@@ -104,6 +104,3 @@ Your poll app is complete. Here are the final files:
 - Check the [Examples](../examples.rst) page for more patterns
 - Read [Advanced Routing](../advanced-routing.md) for file-based routing and
   external imports
-
----
-**Previous:** [7. Forms & Voting](7-forms-voting)

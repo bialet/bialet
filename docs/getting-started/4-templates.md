@@ -74,6 +74,3 @@ The starting files for this step:
 
 We've replicated the static HTML. Next, we'll make it dynamic with a
 database.
-
----
-**Previous:** [3. Your First Page](3-first-page) &nbsp; | &nbsp; **Next:** [5. Logic & Database](5-logic-database)

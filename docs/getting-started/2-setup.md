@@ -49,6 +49,3 @@ yet.
 
 On Linux, Bialet watches `.wren` files and reloads automatically. On macOS,
 restart the server manually after changes (`Ctrl+C` then `bialet` again).
-
----
-**Previous:** [1. Introduction](1-introduction) &nbsp; | &nbsp; **Next:** [3. Your First Page](3-first-page)
