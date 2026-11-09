@@ -11,7 +11,7 @@ Bialet's identity follows the same rule as its code: **do less, on purpose.**
 
 - **Clarity over decoration.** Every color, icon, and word has a job.
 - **One symbol, not a mascot.** The bicycle is the whole idea — a small,
-  human-scale tool next to an industry that keeps building spaceships.
+  human-scale tool for building on the web.
 - **Plain over slick.** No gradients, mascots, or marketing gloss that a
   one-file, zero-dependency tool wouldn't actually need.
 - **Honest, not hyped.** Say what Bialet does and who it's for — including
@@ -19,7 +19,9 @@ Bialet's identity follows the same rule as its code: **do less, on purpose.**
 
 Reference tagline (use verbatim, don't paraphrase):
 
-> Web development became a spaceship. Bialet is a bicycle.
+> Small on purpose.
+>
+> It should have stayed this simple.
 
 ---
 
@@ -178,9 +180,9 @@ is honest about limitations instead of marketing around them.
   paragraph of adjectives.
 - **Second person, instructional.** "Run `bialet dev`," not "Users can
   run bialet in development mode."
-- **Confident, occasionally dry.** The spaceship/bicycle line is the
-  ceiling for how playful Bialet gets — a single sharp contrast, not a
-  running joke.
+- **Confident, quietly nostalgic.** "It should have stayed this simple"
+  is the register: an observation, not a complaint about how other
+  software is built.
 - **Say what it's not for.** Docs include "when not to use Bialet"
   sections; the brand voice does the same instead of implying it fits
   every use case.
@@ -208,7 +210,7 @@ with the bicycle symbol, and no concrete claim a reader could verify.
 |---|---|---|
 | Name | "Bialet embeds Wren and SQLite." | "BiaLet is powered by wren.js." |
 | Command | "Start the server with `bialet dev`." | "Run the Bialet server tool." |
-| Tagline | Quoted verbatim, unaltered. | "Bialet: the rocket-powered bicycle of web dev!" |
+| Tagline | "Small on purpose." | "Bialet: the rocket-powered bicycle of web dev!" |
 | Logo | Bicycle, navy/slate, plain background. | Bicycle recolored blue with a drop shadow. |
 | Accent color | `--link` blue for hyperlinks and CTAs. | A random new accent added "for variety." |
 | Tone | "SQLite is built-in — no connection strings." | "Say goodbye to database headaches forever!" |
@@ -221,10 +223,11 @@ with the bicycle symbol, and no concrete claim a reader could verify.
 **Hero copy pattern** (headline + one-sentence subhead + code):
 
 ```
-Web development became a spaceship. Bialet is a bicycle.
+Small on purpose.
+It should have stayed this simple.
 
-Build data-driven web apps from a single file. No NPM, no YAML,
-no separate database servers.
+One executable: an HTTP server, SQLite, and Wren. No package manager,
+no YAML, no separate database server, no build step.
 
 `CREATE TABLE IF NOT EXISTS messages (text TEXT)`.query
 ```

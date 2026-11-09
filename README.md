@@ -6,15 +6,14 @@
   </a>
 </p>
 <p align="center">
-  <strong>One executable: HTTP server, SQLite, and a scripting language.</strong>
+  <strong>Small on purpose.</strong><br />
+  It should have stayed this simple.
 </p>
 <p align="center">
+  One executable: an HTTP server, SQLite, and the Wren scripting language.<br />
   Build data-driven web apps from <code>.wren</code> files. No package manager,<br />
-  no YAML, no separate database server, no build step. One executable runs<br />
-  the HTTP server, opens the SQLite file, and returns the HTML.
-</p>
-<p align="center">
-  <em>Web development became a spaceship. Bialet is a bicycle.</em>
+  no YAML, no separate database server, no build step. The Linux x86_64<br />
+  binary is 3.7 MB.
 </p>
 <p align="center">
   In development since 2023 &middot; running in production at
@@ -65,9 +64,9 @@ return <main>
 
 Bialet integrates the object-oriented [Wren language](https://wren.io) with an
 HTTP server and a built-in SQLite database — **in a single binary**, with
-no configuration files, no runtime dependencies, and no build step. Requests
-are routed from the filesystem: each `.wren` file is a handler that returns a
-response body. It is written in C17 and runs on Linux, macOS, and Windows.
+no configuration files, no runtime dependencies, and no build step. Routes
+follow the filesystem: each `.wren` file is a handler that returns a response
+body. It is written in C17 and runs on Linux, macOS, and Windows.
 
 ## Install
 
@@ -113,7 +112,7 @@ from a terminal to start without dev mode.
 
 ## Tradeoffs
 
-Bialet is small on purpose. These are the limits that come with that:
+Small has limits. These are the ones that come with Bialet:
 
 - **One worker per process, with instant queueing.** Requests are served
   sequentially per worker. For parallel concurrency on multi-core servers,

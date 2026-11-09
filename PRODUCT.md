@@ -51,8 +51,8 @@ expressions interpolated into the markup. All of it runs inside one C17
 executable that embeds the Wren VM and SQLite — no runtime to install, no ORM,
 no template engine, no middleware stack, no dependency tree.
 
-Reference tagline, binding and verbatim: **"Web development became a spaceship.
-Bialet is a bicycle."**
+Reference tagline, binding and verbatim: **"Small on purpose. It should have
+stayed this simple."**
 
 ## Operating Context
 
@@ -123,8 +123,8 @@ previews, talks, and third-party material.
   `--text`. No filled/outline mixing, no utility colors, and never a rocket or
   spaceship icon — that is the thing Bialet is defined against.
 - **Voice:** plain, technical, no-nonsense; short declarative sentences, second
-  person, code-first, dry. The spaceship/bicycle contrast is the ceiling for
-  playfulness. Pitfall callouts instead of vague warnings.
+  person, code-first, understated. Wistful, not bitter. Pitfall callouts
+  instead of vague warnings.
 
 ## Evidence on Hand
 
