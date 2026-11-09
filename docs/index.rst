@@ -90,7 +90,7 @@ One executable: HTTP server, SQLite, and a scripting language.
          <li>Then a stylesheet and a layout class.</li>
        </ul>
        <p class="proof__cta">
-         <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Build it yourself</a>
+         <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="quickstart.html">Build this guestbook</a>
        </p>
      </div>
    </div>
@@ -246,7 +246,8 @@ A whole app in three files:
 
 Three files, three roles: ``_migration.wren`` creates the table at startup,
 ``index.wren`` renders ``/``, and ``message.wren`` handles the form POST at
-``/message``. The filename is the route.
+``/message``. The filename is the route. :doc:`Build it step by step
+<quickstart>`.
 
 Bialet integrates the :doc:`Wren language <wren>` (based on
 `wren.io <https://wren.io/>`_) with
@@ -340,6 +341,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    :maxdepth: 2
    :caption: First Steps
 
+   quickstart
    getting-started/index
 
 .. toctree::
