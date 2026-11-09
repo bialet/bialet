@@ -32,26 +32,29 @@
   </a>
 </p>
 
-A whole app in one file:
+A whole app in three files.
+
+`_migration.wren` creates the table on first start:
 
 ```wren
-// 1. Create your database table automatically
-`CREATE TABLE IF NOT EXISTS messages (text TEXT)`.query
+Db.migrate("init", `
+  CREATE TABLE messages (
+    text TEXT,
+    created_at DATETIME
+  )
+`)
+```
 
-// 2. Handle POST requests and save data
-if (Request.isPost) {
-  var msg = Request.post("msg") || ""
-  `messages`.save({"text": msg})
-}
+`index.wren` renders `/`:
 
-// 3. Fetch data using pure SQL
-var messages = `SELECT * FROM messages`.fetch
+```wren
+var messages = `
+  SELECT * FROM messages ORDER BY created_at ASC
+`.fetch
 
-// 4. Return HTML directly
 return <main>
   <h1>Bialet Guestbook</h1>
-
-  <form method="post">
+  <form method="post" action="/message">
     <input name="msg" placeholder="Write a message...">
     <button>Submit</button>
   </form>
@@ -61,6 +64,24 @@ return <main>
   </ul>
 </main>
 ```
+
+`message.wren` handles the POST at `/message`:
+
+```wren
+if (Request.isPost) {
+  var msg = Request.post("msg")
+  if (msg) {
+    `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
+    return <main>
+      <p>Messaged <b>{{ msg }}</b> saved!</p>
+      <p><a href="/">Show messages</a></p>
+    </main>
+  }
+}
+return Response.redirect("/")
+```
+
+The filename is the route. Three files, three jobs, no router.
 
 Bialet integrates the object-oriented [Wren language](https://wren.io) with an
 HTTP server and a built-in SQLite database — **in a single binary**, with
