@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bialet — guestbook demo</title>
+<link rel="stylesheet" href="stage.css">
+</head>
+<body>
+  <div id="stage">
+    <div class="aura"></div>
+
+    <header class="brand">
+      <span class="brand__mark">bialet</span>
+      <span class="brand__tag">one binary · no build step</span>
+    </header>
+
+    <div class="caption">
+      <h1 id="title"></h1>
+      <p class="caption__sub" id="sub"></p>
+    </div>
+
+    <div class="deck" id="deck">
+      <section class="panel code" id="code-panel">
+        <header class="code__tabs" id="tabs"></header>
+        <div class="code__body" id="code-body"></div>
+      </section>
+
+      <section class="panel browser" id="browser-panel">
+        <div class="browser__chrome">
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i>
+          <span class="browser__url" id="url">127.0.0.1:7001</span>
+        </div>
+        <div class="browser__screen" id="screen">
+          <div class="shots" id="shots"></div>
+          <div class="ghost" id="ghost">
+            <span id="ghost-text"></span><i class="caret" id="caret"></i>
+          </div>
+          <i class="ripple" id="ripple"></i>
+        </div>
+      </section>
+
+      <section class="panel term" id="term-panel">
+        <header class="term__bar">
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i>
+          <span class="term__title">bialet — zsh</span>
+        </header>
+        <pre id="term-body"></pre>
+      </section>
+    </div>
+
+    <div class="endcard" id="endcard">
+      <span class="endcard__mark">bialet</span>
+      <span class="endcard__url">bialet.dev</span>
+    </div>
+
+    <div class="progress"><i id="bar"></i></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="stage.js"></script>
+</body>
+</html>

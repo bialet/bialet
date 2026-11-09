@@ -1,0 +1,112 @@
+:root {
+  color-scheme: dark;
+  --bg: #024;
+  --line: #145;
+  --text: #fff;
+  --muted: color-mix(in srgb, #fff 62%, #024);
+  --accent: #0bf;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 56px 20px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  font: 16px/1.55 system-ui, sans-serif;
+  background:
+    radial-gradient(110% 70% at 50% -10%, #045, var(--bg));
+}
+
+.card {
+  width: min(600px, 100%);
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(180deg, #023, #013);
+  box-shadow: 0 40px 80px -40px #000;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 0 0 26px;
+  color: var(--muted);
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  color: var(--text);
+  font: inherit;
+  background: #012;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+}
+
+.composer input::placeholder { color: color-mix(in srgb, #fff 48%, #024); }
+
+.composer input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #0bf 18%, transparent);
+}
+
+.btn {
+  padding: 13px 20px;
+  color: #012;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: none;
+  background: var(--accent);
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.btn:hover { background: color-mix(in srgb, #0bf 82%, #fff); }
+
+.messages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.message {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #012;
+}
+
+.message p { margin: 0; }
+
+.message time {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.messages.is-new .message:first-child {
+  border-color: var(--accent);
+  background: color-mix(in srgb, #0bf 10%, #012);
+}
+
+.saved p { margin: 0 0 18px; font-size: 18px; }
+.saved b { color: var(--accent); }
+.saved .btn { display: inline-block; }

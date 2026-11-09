@@ -69,23 +69,75 @@ One executable: HTTP server, SQLite, and a scripting language.
      <a href="https://home.dev.ar/">home.dev.ar</a>
    </p>
 
-   <!-- One proof: the tutorial app, and the code that renders it. -->
+   <!-- One proof: a 30 second build, from the files to the stylesheet. -->
    <div class="proof">
-     <figure class="proof__shot">
-       <img src="_static/poll-vote.png" width="955" height="508" loading="lazy" decoding="async" alt="A page titled Poll asking &quot;Has web development become overly complex?&quot; with Yes and No options and a Vote button." />
-       <figcaption>The tutorial's poll, and the handler behind its Vote button.</figcaption>
+     <figure class="proof__demo">
+       <video id="guestbook-demo" class="proof__video" width="1080" height="1920"
+              poster="_static/guestbook-demo-poster.jpg" muted loop playsinline
+              preload="metadata" disablepictureinpicture
+              aria-label="A guestbook built in Bialet: three files are written, run unstyled, then styled with a stylesheet and a layout class.">
+         <source src="_static/guestbook-demo-720.mp4" type="video/mp4">
+         <source src="_static/guestbook-demo.mp4" type="video/mp4">
+       </video>
+       <figcaption>The guestbook from the tutorial: written, run, then styled.
+         <button type="button" class="proof__toggle" data-demo-toggle aria-pressed="false">Pause</button>
+       </figcaption>
      </figure>
-     <details class="proof__code" open data-collapse-on-phone>
-       <summary>The vote handler, verbatim</summary>
-
-.. literalinclude:: getting-started/3-final/index.wren
-   :language: wren
-   :lines: 1-12
-
-.. raw:: html
-
-     </details>
+     <div class="proof__notes">
+       <p class="proof__heading">Thirty seconds, start to styled</p>
+       <ul class="proof__list">
+         <li>A page, a form handler, a migration. That is the app.</li>
+         <li><code>bialet</code> serves it immediately. No build step, no watcher.</li>
+         <li>A stylesheet and a layout class later, it looks like this.</li>
+       </ul>
+       <p class="proof__cta">
+         <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Build it yourself</a>
+       </p>
+     </div>
    </div>
+
+   <script>
+     (function () {
+       var video = document.getElementById("guestbook-demo");
+       var toggle = document.querySelector("[data-demo-toggle]");
+       if (!video) return;
+
+       function reflect() {
+         if (!toggle) return;
+         var paused = video.paused;
+         toggle.textContent = paused ? "Play" : "Pause";
+         toggle.setAttribute("aria-pressed", paused ? "false" : "true");
+       }
+
+       if (toggle) {
+         toggle.addEventListener("click", function () {
+           if (video.paused) video.play().catch(function () {});
+           else video.pause();
+         });
+         video.addEventListener("play", reflect);
+         video.addEventListener("pause", reflect);
+       }
+
+       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+         reflect();
+         return;
+       }
+       video.autoplay = true;
+       var started = video.play();
+       if (started && started.catch) started.catch(function () {});
+     })();
+   </script>
+
+   <script>
+     (function () {
+       var video = document.getElementById("guestbook-demo");
+       if (!video) return;
+       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+       video.autoplay = true;
+       var started = video.play();
+       if (started && started.catch) started.catch(function () {});
+     })();
+   </script>
 
 ----
 
