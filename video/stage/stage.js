@@ -165,7 +165,7 @@
   function scene1(t) {
     showCode();
     const tabs = ["mig1", "idx1", "msg1"];
-    if (t < 6100) renderCode(tabs, "mig1", t, 4720, 230);
+    if (t < 6100) renderCode(tabs, "mig1", t, 4620, 230);
     else if (t < 9650) renderCode(tabs, "idx1", t, 6300, 210);
     else renderCode(tabs, "msg1", t, 9800, 245);
   }

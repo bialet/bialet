@@ -317,8 +317,8 @@ html, body {
   justify-content: center;
   gap: 10px;
   opacity: 0;
-  background: color-mix(in srgb, #024 94%, transparent);
-  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, #024 96%, transparent);
+  backdrop-filter: blur(6px);
 }
 
 .endcard__mark {

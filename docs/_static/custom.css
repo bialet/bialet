@@ -696,7 +696,7 @@ html[data-theme="dark"] .community-banner {
 @media (max-width: 767px) {
   .proof {
     grid-template-columns: 1fr;
-    gap: 1.75rem;
+    gap: 1.25rem;
   }
 
   .proof__demo {

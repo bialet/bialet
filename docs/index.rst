@@ -86,7 +86,7 @@ One executable: HTTP server, SQLite, and a scripting language.
        <p class="proof__heading">Thirty seconds, start to styled</p>
        <ul class="proof__list">
          <li>A page, a form handler, a migration.</li>
-         <li><code>bialet</code> serves the files directly. No build step.</li>
+         <li><code>bialet</code> serves the files. No build step.</li>
          <li>Then a stylesheet and a layout class.</li>
        </ul>
        <p class="proof__cta">
