@@ -59,6 +59,47 @@ ideas I may revisit if interest returns, but no promises.
       corrupting the row. Stringify non-primitive params (via `toString`) or
       error loudly instead of dropping them.
 
+## Security follow-ups
+
+Confirmed findings from the run-5/run-6 audits shipped in 1.2.9 and 1.2.10.
+These are the remaining leads and hardening gaps from those runs.
+
+- [ ] **Win32 TLS handshake deadline** — `SSL_connect` is bounded per socket
+      read, not as a whole: a peer that drips one byte per interval can hold the
+      single worker far past the hop budget. Needs a non-blocking handshake loop
+      (or an out-of-band cancellation channel).
+- [ ] **Uncancellable DNS on Windows** — `getaddrinfo` has no timeout and cannot
+      be interrupted; the hop budget now detects an overrun but cannot abort the
+      resolver. Move resolution off the request thread or bound it externally.
+- [ ] **Win32 URL parser parity** — `parse_url` ends the authority only at `/`
+      or `:`, so a query-only URL, IPv6 literal, uppercase scheme, trailing dot
+      or non-default port fails differently from `Http.urlScope_`/libcurl
+      (`Host:` omits the port). Align the splitter and strip the fragment from
+      the initial URL.
+- [ ] **Case-insensitive framework headers** — a caller spelling
+      `content-type`/`authorization` non-canonically gets duplicate header
+      lines, and the Win32 transport can emit two `Authorization` lines; use one
+      case-insensitive lookup and replace instead of append.
+- [ ] **Configurable credential strip list** — cross-origin redirects drop only
+      `Authorization` and `Cookie`; a caller-supplied `Proxy-Authorization` (or
+      custom auth header) still follows the hop. Offer an opt-in strip list.
+- [ ] **Document `Session.rotate()`** — the login example never calls it, and
+      the session id is client-adoptable, so an app that follows the docs stays
+      fixation-vulnerable. Call it in the example and state that it must precede
+      any authenticated write.
+- [ ] **Session read-side staleness** — after `rotate()`/`destroy()` an existing
+      `Session` still serves its constructor snapshot from `get()`/`id` until
+      the next `set()`. Reconcile with the live cookie or document the window.
+- [ ] **Length-bounded header map** — the non-multipart request is handed to
+      Wren with `wrenSetSlotString`, which truncates at an embedded NUL; use
+      `wrenSetSlotBytes` with the framed length on both paths.
+- [ ] **Index the upload pool for eviction** — eviction sorts up to 4096 rows
+      per deleted row (~1.7 ms each); an `(isTemp, createdAt, id)` index makes it
+      O(log n) and removes a per-request cost multiplier.
+- [ ] **Temporary upload ids are not durable** — a temp id is readable only
+      inside the request that uploaded it; document that persistence needs
+      `save()`.
+
 ## Someday maybe
 
 - [ ] **Official "hosted" deployment recipe** — a doc page showing the
