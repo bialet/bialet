@@ -346,6 +346,19 @@ class Session {
   id { _id }
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
+    // rotate() earlier in this request retired the identifier this instance was
+    // built with, and destroy() may have cleared the cookie: follow the live
+    // cookie instead of the stale copy, or a planted pre-login identifier keeps
+    // receiving authenticated state after rotate() deleted its row.
+    var current = Cookie.get(Session.name)
+    if (!Session.validId_(current)) {
+      current = Util.randomString(40)
+      Cookie.set(Session.name, current)
+    }
+    if (current != _id) {
+      _id = current
+      __values = {}
+    }
     __values[key] = value
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
@@ -1105,7 +1118,6 @@ class Db {
 class Http {
   construct new() {
     _method = false
-    _basicAuth = ""
     _status = 0
     _headers = {}
     _body = ""
@@ -1163,20 +1175,29 @@ class Http {
     if (!_method) {
       _method = "GET"
     }
-    if (!options.containsKey("headers")) {
-      options["headers"] = {}
+    // Build this call's header set in a local map: the caller's options are an
+    // input, and writing the token's Authorization (or the default Content-Type)
+    // into a map it reuses would send that credential to the next origin.
+    var headers = {}
+    var given = options["headers"]
+    if (given != null) {
+      for (h in given) headers[h.key] = h.value
     }
+    // Per-call options live in locals, not on the instance: an Http object
+    // reused for another destination must not inherit the previous call's
+    // credentials or body.
+    var postData = options.containsKey("form") ? Util.params(options["form"]) : _postData
+    var basicAuth = ""
     if (options.containsKey("form")) {
-      _postData = Util.params(options["form"])
-      options["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
-    } else if (!options["headers"].containsKey("Content-Type")) {
-      options["headers"]["Content-Type"] = "application/json"
+      headers["Content-Type"] = "application/x-www-form-urlencoded"
+    } else if (!headers.containsKey("Content-Type")) {
+      headers["Content-Type"] = "application/json"
     }
     if (options["token"] != null) {
-      options["headers"]["Authorization"] = "Bearer %(options["token"])"
+      headers["Authorization"] = "Bearer %(options["token"])"
     }
     if (options["basicAuth"] != null) {
-      _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+      basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
@@ -1186,7 +1207,6 @@ class Http {
     var budget = timeout > 0 ? timeout : 20000
     var deadline = Util.monotonicMs + budget
     var method = Http.safeMethod(_method)
-    var postData = _postData
     var current = Http.safeUrl(url)
 
     // Follow redirects here, one transfer per hop, instead of in the transport:
@@ -1207,8 +1227,11 @@ class Http {
         _body = ""
         break
       }
-      var hopHeaders = Http.headerBlock_(options["headers"], current, sendCredentials)
-      var response = call_(current, method, hopHeaders, postData, _basicAuth,
+      // The native layer truncates a double to whole milliseconds and reads 0 as
+      // "no timeout given"; never let a live remainder become that sentinel.
+      if (hopTimeout < 1) hopTimeout = 1
+      var hopHeaders = Http.headerBlock_(headers, current, sendCredentials)
+      var response = call_(current, method, hopHeaders, postData, basicAuth,
                            hopTimeout, connectTimeout)
       _error = response[3]
       _errorMessage = response[4]
@@ -1231,14 +1254,16 @@ class Http {
         // do not test exact spellings (header names are case-insensitive).
         sendCredentials = false
         // The native call expects a string here, not null.
-        _basicAuth = ""
+        basicAuth = ""
       }
       // curl's default: 303, and a POST answered by 301/302, continue as GET.
       if (status == 303 || ((status == 301 || status == 302) && method == "POST")) {
         method = "GET"
         postData = ""
       }
-      current = next
+      // Every hop is a URL the transport will dial, so it passes the same gate
+      // as the caller's URL: a Location is attacker-controlled text.
+      current = Http.safeUrl(next)
       hops = hops + 1
     }
 

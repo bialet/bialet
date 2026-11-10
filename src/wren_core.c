@@ -2069,10 +2069,13 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
             OBJ_VAL(wrenGetClass(vm, val)->name));
         return false;
       }
-      // On allocation failure, drop the parameter instead of dereferencing
-      // the un-grown array in the query runner.
-      if(ok != 0)
-        continue;
+      // A parameter that cannot be stored must fail the query: binding the
+      // remaining values would shift every later `?` left and corrupt the row.
+      if(ok != 0) {
+        vm->fiber->error =
+            wrenStringFormat(vm, "Out of memory binding query parameter %d", i + 1);
+        return false;
+      }
     }
     vm->config.queryFn(vm, query);
   }
