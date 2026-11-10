@@ -35,6 +35,7 @@ static const char* bialetModuleSource =
 "        continue\n"
 "      }\n"
 "      tmp = line.split(\":\")\n"
+"      if (tmp.count < 2) continue\n"
 "      var rawName = tmp.removeAt(0)\n"
 "      if (rawName != rawName.trim()) continue\n"
 "      headerName = rawName.trim().lower\n"

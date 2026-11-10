@@ -354,10 +354,36 @@ ws = send(b'Content-Type: text/plain\r\n \r\n'
           b'Content-Type: multipart/form-data; boundary=zz\r\n')
 colon = send(b'Content-Type : multipart/form-data; boundary=zz\r\n')
 control = send(b'Content-Type: multipart/form-data; boundary=zz\r\n')
-print('ws:%s|colon:%s|control:%s' % (ws, colon, control))
+
+def status(extra):
+    head = (b'POST /multipart-detect HTTP/1.1\r\nHost: x\r\nConnection: close\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n' + extra + b'\r\n')
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(20)
+    s.sendall(head + body)
+    data = b''
+    try:
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    except OSError:
+        pass
+    s.close()
+    return int(data.split(b' ')[1]) if data.startswith(b'HTTP/') else 0
+
+# A bare CR or a bare LF inside the header block splits it differently in the
+# C detector and the Wren map, so the block is refused outright.
+bare_cr = status(b'Content-Type: application/json\r\n\r\r\n'
+                 b'Content-Type: multipart/form-data; boundary=zz\r\n')
+bare_lf = status(b'Content-Type: multipart/form-data; boundary=zz\r\n'
+                 b'Content-Type\n\r\n')
+print('ws:%s|colon:%s|control:%s|barecr:%d|barelf:%d' %
+      (ws, colon, control, bare_cr, bare_lf))
 PY
 )
-  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3" ]]; then
+  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400" ]]; then
     report_result "Multipart header agreement    " "$mpdetect_line" 0
   else
     report_result "Multipart header agreement    " "$mpdetect_line" 1 \

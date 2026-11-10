@@ -43,6 +43,9 @@ class Request {
         continue
       }
       tmp = line.split(":")
+      // A line without ':' is not a header field; the C scanner never matches
+      // it, so it must not overwrite an earlier value with "".
+      if (tmp.count < 2) continue
       var rawName = tmp.removeAt(0)
       // RFC 7230 forbids whitespace before the colon. Skipping such a line
       // keeps the app-visible map in step with the C multipart detector, which
