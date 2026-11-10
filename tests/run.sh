@@ -737,6 +737,7 @@ run_test "Response notFound custom    " "response-errors?notfound=1" 404 "custom
 run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallback:fallback-value|missing:null"
 run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|own:[a1=evil]|hosted:[]|parent:[]|sub:[]"
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
+run_test "Session rotate rekeys writes" "session-rotate" 200 "planted:none|fresh:alice"
 run_test "Directory index resolution  " "blog"           200 "route-index"
 run_test "Directory index trailing /  " "blog/"          200 "route-index"
 run_test "Wren extension is optional  " "method-check.wren" 200 "GET"

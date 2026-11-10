@@ -346,6 +346,19 @@ class Session {
   id { _id }
   get(key) { __values[key] ? __values[key] : null }
   set(key, value) {
+    // rotate() earlier in this request retired the identifier this instance was
+    // built with, and destroy() may have cleared the cookie: follow the live
+    // cookie instead of the stale copy, or a planted pre-login identifier keeps
+    // receiving authenticated state after rotate() deleted its row.
+    var current = Cookie.get(Session.name)
+    if (!Session.validId_(current)) {
+      current = Util.randomString(40)
+      Cookie.set(Session.name, current)
+    }
+    if (current != _id) {
+      _id = current
+      __values = {}
+    }
     __values[key] = value
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
   }
