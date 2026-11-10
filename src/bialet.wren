@@ -1118,7 +1118,6 @@ class Db {
 class Http {
   construct new() {
     _method = false
-    _basicAuth = ""
     _status = 0
     _headers = {}
     _body = ""
@@ -1179,8 +1178,12 @@ class Http {
     if (!options.containsKey("headers")) {
       options["headers"] = {}
     }
+    // Per-call options live in locals, not on the instance: an Http object
+    // reused for another destination must not inherit the previous call's
+    // credentials or body.
+    var postData = options.containsKey("form") ? Util.params(options["form"]) : _postData
+    var basicAuth = ""
     if (options.containsKey("form")) {
-      _postData = Util.params(options["form"])
       options["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
     } else if (!options["headers"].containsKey("Content-Type")) {
       options["headers"]["Content-Type"] = "application/json"
@@ -1189,7 +1192,7 @@ class Http {
       options["headers"]["Authorization"] = "Bearer %(options["token"])"
     }
     if (options["basicAuth"] != null) {
-      _basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+      basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
@@ -1199,7 +1202,6 @@ class Http {
     var budget = timeout > 0 ? timeout : 20000
     var deadline = Util.monotonicMs + budget
     var method = Http.safeMethod(_method)
-    var postData = _postData
     var current = Http.safeUrl(url)
 
     // Follow redirects here, one transfer per hop, instead of in the transport:
@@ -1221,7 +1223,7 @@ class Http {
         break
       }
       var hopHeaders = Http.headerBlock_(options["headers"], current, sendCredentials)
-      var response = call_(current, method, hopHeaders, postData, _basicAuth,
+      var response = call_(current, method, hopHeaders, postData, basicAuth,
                            hopTimeout, connectTimeout)
       _error = response[3]
       _errorMessage = response[4]
@@ -1244,7 +1246,7 @@ class Http {
         // do not test exact spellings (header names are case-insensitive).
         sendCredentials = false
         // The native call expects a string here, not null.
-        _basicAuth = ""
+        basicAuth = ""
       }
       // curl's default: 303, and a POST answered by 301/302, continue as GET.
       if (status == 303 || ((status == 301 || status == 302) && method == "POST")) {

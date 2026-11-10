@@ -52,6 +52,23 @@ if (which == "noauth") {
   return Http.get(target + "/echo?mode=auth")
 }
 
+if (which == "reuse") {
+  // Per-call basicAuth and form body belong to the call that supplied them; a
+  // reused instance must not carry either to another origin.
+  var h = Http.new()
+  var one = h.call(target + "/echo?mode=auth",
+    {"basicAuth": {"username": "reuse", "password": "pw"}})
+  var onOrigin = one ? h.body : "fail"
+  var two = h.call(other + "/echo?mode=auth", {})
+  var onOther = two ? h.body : "fail"
+  h.method = "POST"
+  var three = h.call(target + "/echo?mode=form", {"form": {"k": "a", "v": "b"}})
+  var formHere = three ? h.body : "fail"
+  var four = h.call(other + "/echo?mode=form", {})
+  var formThere = four ? h.body : "fail"
+  return "here:%(onOrigin)|other:%(onOther)|form:%(formHere)|formother:%(formThere)"
+}
+
 if (which == "control") {
   // Without a redirect the cookie is emitted and replayed by its own host.
   var set = Http.get(target + "/echo?mode=setcookie")
