@@ -663,19 +663,37 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_protocol = IPPROTO_TCP;
 
+  long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
+  long timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
+
+  /* One overall budget for this hop, the Windows equivalent of
+   * CURLOPT_TIMEOUT_MS, started before resolution and connect: each address
+   * used to get the full connectTimeout outside the budget, so a hostile DNS
+   * answer cost addresses x connectTimeout however small the caller's timeout. */
+  ULONGLONG hop_deadline = GetTickCount64() + (ULONGLONG)timeout_ms;
+
   if(getaddrinfo(url.host, url.port, &hints, &result) != 0) {
     response->error = HTTP_ERR_RESOLVE;
     response->error_message = string_safe_copy("Could not resolve host");
     return;
   }
-
-  long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
-  long timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
+  /* getaddrinfo cannot be cancelled in-process: if it alone spent the budget,
+   * fail the hop instead of dialling. */
+  if(win32_remaining_ms(hop_deadline, 0) == 0) {
+    freeaddrinfo(result);
+    result = NULL;
+    response->error = HTTP_ERR_CONNECT;
+    response->error_message = string_safe_copy("Connection failed or timed out");
+    goto done;
+  }
 
   /* Try every address getaddrinfo returned, not just the first. With
    * AF_UNSPEC the first record is often IPv6, so a v4-only host failed
    * outright before. */
   for(ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+    DWORD connect_left = win32_remaining_ms(hop_deadline, connect_ms);
+    if(connect_left == 0)
+      break; /* hop budget spent: stop dialling */
     sockfd = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
     if(sockfd == INVALID_SOCKET)
       continue;
@@ -697,8 +715,8 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
       FD_SET(sockfd, &writefds);
       FD_SET(sockfd, &exceptfds);
       struct timeval tv;
-      tv.tv_sec = connect_ms / 1000;
-      tv.tv_usec = (connect_ms % 1000) * 1000;
+      tv.tv_sec = connect_left / 1000;
+      tv.tv_usec = (connect_left % 1000) * 1000;
       int sel = select(0, NULL, &writefds, &exceptfds, &tv);
       int so_error = 0;
       int err_len = (int)sizeof(so_error);
@@ -717,7 +735,7 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
      * SSL_connect()/SSL_read() from hanging on a stalled peer. */
     nonblocking = 0;
     ioctlsocket(sockfd, FIONBIO, &nonblocking);
-    DWORD tmo = (DWORD)timeout_ms;
+    DWORD tmo = win32_remaining_ms(hop_deadline, timeout_ms);
     setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tmo, sizeof(tmo));
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tmo, sizeof(tmo));
     break;
@@ -731,12 +749,8 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     goto done;
   }
 
-  /* One overall budget for this hop, the Windows equivalent of
-   * CURLOPT_TIMEOUT_MS. SO_SNDTIMEO/SO_RCVTIMEO only bound a single
-   * send()/recv(); re-arming them per call let a drip-feeding peer keep the
-   * read loop - and the sole worker - alive until the 50 MB cap. */
-  ULONGLONG hop_deadline = GetTickCount64() + (ULONGLONG)timeout_ms;
-
+  /* hop_deadline already exists; SO_SNDTIMEO/SO_RCVTIMEO are re-armed from it
+   * before every send and recv below. */
   if(url.is_https) {
     ctx = create_context(); /* verify mode set on the CTX before SSL_new */
     if(ctx == NULL) {
