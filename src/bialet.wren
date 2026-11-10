@@ -1272,16 +1272,32 @@ class Http {
     var loc = location.trim()
     if (loc == "") return base
     var lower = loc.lower
-    if (lower.startsWith("http://") || lower.startsWith("https://")) return loc
+    if (lower.startsWith("http://") || lower.startsWith("https://")) {
+      // A redirect never needs credentials in its authority; accepting one
+      // would let this parser and libcurl disagree about the host.
+      if (Http.requestAuthority_(loc).contains("@")) {
+        Fiber.abort("Invalid redirect: credentials in Location")
+      }
+      var hash = loc.indexOf("#")
+      return hash >= 0 ? loc[0...hash] : loc
+    }
     var scope = urlScope_(base)
     var origin = "%(scope["scheme"])://%(scope["authority"])"
-    if (loc.startsWith("//")) return "%(scope["scheme"]):%(loc)"
-    if (loc.startsWith("/")) return origin + loc
+    if (loc.startsWith("//")) {
+      if (Http.requestAuthority_(loc).contains("@")) {
+        Fiber.abort("Invalid redirect: credentials in Location")
+      }
+      var hash = loc.indexOf("#")
+      return "%(scope["scheme"]):" + (hash >= 0 ? loc[0...hash] : loc)
+    }
     var path = scope["path"]
     var dir = "/"
     for (i in 0...path.count) {
       if (path[i] == "/") dir = path[0...i + 1]
     }
+    var hash = loc.indexOf("#")
+    if (hash >= 0) loc = loc[0...hash]
+    if (loc.startsWith("/")) return origin + loc
     return origin + Http.normalizePath_(dir + loc)
   }
 
@@ -1308,7 +1324,8 @@ class Http {
   static sameOrigin_(a, b) {
     var sa = urlScope_(a)
     var sb = urlScope_(b)
-    return sa["scheme"] == sb["scheme"] && sa["authority"] == sb["authority"]
+    return sa["scheme"] == sb["scheme"] && sa["host"] == sb["host"] &&
+           sa["port"] == sb["port"]
   }
 
   static jar {
@@ -1399,17 +1416,28 @@ class Http {
       scheme = url[0...schemeEnd].lower
       rest = url[schemeEnd + 3...url.count]
     }
-    var path = "/"
-    var authority = rest
-    var pathStart = rest.indexOf("/")
-    if (pathStart >= 0) {
-      authority = rest[0...pathStart]
-      path = rest[pathStart...rest.count]
+    // RFC 3986: the fragment is not part of the authority, path or query, and
+    // the authority ends at the first '/', '?' or '#'. libcurl parses the URL
+    // the same way, so an origin comparison built on this scope agrees with the
+    // host the transport will actually contact.
+    var hash = rest.indexOf("#")
+    if (hash >= 0) rest = rest[0...hash]
+    var end = rest.count
+    for (i in 0...rest.count) {
+      var c = rest[i]
+      if (c == "/" || c == "?") {
+        end = i
+        break
+      }
     }
+    var authority = rest[0...end]
+    var path = end < rest.count ? rest[end...rest.count] : "/"
+    if (path[0] == "?") path = "/" + path
     var queryStart = path.indexOf("?")
     if (queryStart >= 0) path = path[0...queryStart]
     // A URL may carry userinfo; the transport connects to the host after the
-    // last '@', so the jar key must not include it (String has no lastIndexOf).
+    // last '@', so the jar key and the origin must not include it (String has no
+    // lastIndexOf, so walk forward).
     var at = authority.indexOf("@")
     while (at >= 0) {
       authority = authority[at + 1...authority.count]
@@ -1417,14 +1445,44 @@ class Http {
     }
     authority = authority.lower
     var host = authority
+    var port = ""
     if (host.startsWith("[")) {
       var close = host.indexOf("]")
-      if (close >= 0) host = host[0...close + 1]
+      if (close >= 0) {
+        if (close + 1 < authority.count && authority[close + 1] == ":") {
+          port = authority[close + 2...authority.count]
+        }
+        host = authority[0...close + 1]
+      }
     } else {
       var colon = host.indexOf(":")
-      if (colon >= 0) host = host[0...colon]
+      if (colon >= 0) {
+        port = host[colon + 1...host.count]
+        host = host[0...colon]
+      }
     }
-    return {"scheme": scheme, "host": host, "authority": authority, "path": path}
+    if (port == "") port = scheme == "https" ? "443" : "80"
+    return {"scheme": scheme, "host": host, "port": port,
+            "authority": "%(host):%(port)", "path": path}
+  }
+
+  // Authority text of an absolute or scheme-relative URL, used to reject a
+  // redirect whose credentials would make this parser and libcurl disagree
+  // about the host.
+  static requestAuthority_(absolute) {
+    var rest = absolute
+    var schemeEnd = absolute.indexOf("://")
+    if (schemeEnd > 0) rest = absolute[schemeEnd + 3...absolute.count]
+    if (rest.startsWith("//")) rest = rest[2...rest.count]
+    var end = rest.count
+    for (i in 0...rest.count) {
+      var c = rest[i]
+      if (c == "/" || c == "?" || c == "#") {
+        end = i
+        break
+      }
+    }
+    return rest[0...end]
   }
   static query(params) { Util.params(params) }
   static url(base, params) {

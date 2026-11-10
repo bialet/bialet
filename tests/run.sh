@@ -761,6 +761,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"
   run_test "Http shortcuts never crash   " "http-error-handling?target=http://$HOST:$ECHO_PORT" 200 \
     "down:true|downError:true|downHasMessage:true|missing:true|missingStatus:404|missingError:false"
+  run_test "Http origin parse matches transport" "url-scope" 200 "weird:attacker.example:80|plain:127.0.0.1:18081|query:a.example:80|case:example.com:80|crossPort:false|sameHost:true|httpsDefault:443|userinfoAborted:true|fragmentStripped:http://a.example:80/x"
   run_test "Http follows same-host redirect" "http-redirect?which=follow&target=http://$HOST:$ECHO_PORT" 200 "redirected"
   run_test "Http redirect cookie scoped   " "http-redirect?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|no-cookie|session=abc123"
   # The Win32 transport's URL parser rejects "host:port@host" (the port field
