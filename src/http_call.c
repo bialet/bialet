@@ -453,6 +453,68 @@ static DWORD win32_remaining_ms(ULONGLONG deadline, long timeout_ms) {
     left = 1;
   return (DWORD)left;
 }
+/* True when [line] starts with [name] (ASCII case-insensitive) followed by
+ * ':' or the end of the line. */
+static int header_name_is(const char* line, size_t len, const char* name) {
+  size_t n = strlen(name);
+  if(len < n)
+    return 0;
+  for(size_t i = 0; i < n; i++) {
+    char a = line[i];
+    char b = name[i];
+    if(a >= 'A' && a <= 'Z')
+      a = (char)(a - 'A' + 'a');
+    if(b >= 'A' && b <= 'Z')
+      b = (char)(b - 'A' + 'a');
+    if(a != b)
+      return 0;
+  }
+  return len == n || line[n] == ':';
+}
+
+/* 1 when [raw] is a complete response: the CRLFCRLF terminator was seen and the
+ * body is either Content-Length-sized or ended by the peer's clean close. A
+ * truncated transfer must never be handed to parse_http_response as success. */
+static int response_complete(const char* raw, size_t len, int closed) {
+  size_t head_end = 0;
+  for(size_t i = 0; i + 3 < len; i++) {
+    if(raw[i] == '\r' && raw[i + 1] == '\n' && raw[i + 2] == '\r' &&
+       raw[i + 3] == '\n') {
+      head_end = i + 4;
+      break;
+    }
+  }
+  if(head_end == 0)
+    return 0;
+  long long declared = -1;
+  size_t    line = 0;
+  while(line < head_end) {
+    size_t eol = line;
+    while(eol + 1 < head_end && !(raw[eol] == '\r' && raw[eol + 1] == '\n'))
+      eol++;
+    if(header_name_is(raw + line, eol - line, "content-length")) {
+      size_t v = line + 15; /* strlen("content-length:") */
+      while(v < eol && (raw[v] == ' ' || raw[v] == '\t'))
+        v++;
+      declared = 0;
+      int any = 0;
+      while(v < eol && raw[v] >= '0' && raw[v] <= '9') {
+        declared = declared * 10 + (raw[v] - '0');
+        v++;
+        any = 1;
+        if(declared > (long long)MAX_HTTP_RESPONSE_SIZE)
+          return 0;
+      }
+      if(!any)
+        declared = -1;
+      break;
+    }
+    line = eol + 2;
+  }
+  if(declared >= 0)
+    return (long long)(len - head_end) >= declared;
+  return closed;
+}
 #endif
 
 void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
@@ -766,10 +828,14 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     response->error_message = string_safe_copy("Out of memory reading response");
     goto done;
   }
+  int closed = 0;
+  int failed = 0;
   for(;;) {
     DWORD recv_ms = win32_remaining_ms(hop_deadline, timeout_ms);
-    if(recv_ms == 0)
-      break; /* hop budget exhausted, even with a body still arriving */
+    if(recv_ms == 0) {
+      failed = 1; /* hop budget exhausted, even with a body still arriving */
+      break;
+    }
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&recv_ms,
                sizeof(recv_ms));
     if(len + 4096 + 1 > cap) {
@@ -786,11 +852,24 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     }
     int n = url.is_https ? SSL_read(ssl, raw + len, (int)(cap - len - 1))
                          : recv(sockfd, raw + len, (int)(cap - len - 1), 0);
-    if(n <= 0)
-      break; /* clean EOF, timeout or error */
+    if(n < 0) {
+      failed = 1; /* socket error or timeout */
+      break;
+    }
+    if(n == 0) {
+      closed = 1; /* clean EOF */
+      break;
+    }
     len += (size_t)n;
+    if(response_complete(raw, len, 0))
+      break;
   }
   raw[len] = '\0';
+  if(failed || !response_complete(raw, len, closed)) {
+    response->error = HTTP_ERR_RECV;
+    response->error_message = string_safe_copy("Response timed out or incomplete");
+    goto done;
+  }
   parse_http_response(response, raw, len);
 
 done:
