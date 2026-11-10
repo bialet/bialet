@@ -467,7 +467,9 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   free(header_string);
   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-  if(basicAuth) {
+  // An empty value would still make curl emit "Authorization: Basic Og==", a
+  // credential header on a request that configured none.
+  if(basicAuth != NULL && basicAuth[0] != '\0') {
     curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
   }

@@ -47,6 +47,13 @@ if (mode == "redirect-echo") {
   Response.header("Location", "/echo?mode=echo&msg=redirected")
   return
 }
+if (mode == "redirect-auth") {
+  // 302 to another host's auth-echo endpoint: a credential header must not
+  // follow the redirect across the origin.
+  Response.status(302)
+  Response.header("Location", "http://%(Request.get("to"))/echo?mode=auth")
+  return
+}
 if (mode == "redirect-set") {
   // 302 to another host's cookie-setting endpoint: the Set-Cookie must stay
   // with the host that emitted it.

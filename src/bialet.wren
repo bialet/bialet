@@ -1186,8 +1186,9 @@ class Http {
     // original URL. One transfer per hop keeps each cookie with the host that
     // emitted it, and lets credentials stop at the origin that issued them.
     var hops = 0
+    var sendCredentials = true
     while (true) {
-      var hopHeaders = Http.headerBlock_(options["headers"], current)
+      var hopHeaders = Http.headerBlock_(options["headers"], current, sendCredentials)
       var response = call_(current, method, hopHeaders, postData, _basicAuth,
                            timeout, connectTimeout)
       _error = response[3]
@@ -1207,10 +1208,9 @@ class Http {
       var next = Http.resolveUrl_(current, location)
       if (!Http.sameOrigin_(current, next)) {
         // Credentials, explicit cookies and basic auth belong to one origin.
-        options["headers"].remove("Authorization")
-        options["headers"].remove("Cookie")
-        options["headers"].remove("authorization")
-        options["headers"].remove("cookie")
+        // Stop emitting them from here on; do not mutate the caller's map, and
+        // do not test exact spellings (header names are case-insensitive).
+        sendCredentials = false
         // The native call expects a string here, not null.
         _basicAuth = ""
       }
@@ -1240,19 +1240,30 @@ class Http {
   }
 
   // Header block for one transfer: caller headers plus the cookies the jar holds
-  // for exactly this host.
-  static headerBlock_(headers, url) {
+  // for exactly this host. When sendCredentials is false (the redirect crossed
+  // an origin), Authorization and Cookie are dropped by name, not by exact map
+  // key, so every spelling stops at the origin that issued it.
+  static headerBlock_(headers, url, sendCredentials) {
     var lines = []
+    var hasCookie = false
     for (h in headers) {
-      lines.add("%(Util.headerName(h.key)): %(Util.headerValue(h.value))")
+      var name = Util.headerName(h.key)
+      if (name.lower == "cookie") hasCookie = true
+      if (!sendCredentials && Http.isCredentialHeader_(name)) continue
+      lines.add("%(name): %(Util.headerValue(h.value))")
     }
-    if (!headers.containsKey("Cookie") && !headers.containsKey("cookie")) {
+    if (!hasCookie) {
       var jar = Http.jarFor(url)
       if (jar != "") {
         lines.add("Cookie: %(Util.headerValue(jar))")
       }
     }
     return lines.join("\n")
+  }
+
+  static isCredentialHeader_(name) {
+    var n = "%(name)".trim().lower
+    return n == "authorization" || n == "cookie"
   }
 
   // Last Location header of a response block, or null when there is none.
