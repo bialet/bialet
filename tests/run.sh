@@ -611,17 +611,25 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
     cap_usage=$(curl -s --max-time 5 "http://$HOST:$MULTIPART_PORT/upload-usage")
     cap_legit=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
       -F "a=1" -F "excel=@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    # A large part must still be admitted while retained rows are evictable:
+    # the eviction measures the bytes it frees instead of estimating them from
+    # the pool mean, which used to refuse this while megabytes were reclaimable.
+    cap_big_file="$(mktemp /tmp/bialet-cap-big.XXXXXX)"
+    head -c 120000 /dev/zero > "$cap_big_file" 2>/dev/null
+    cap_big=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -F "form_file_name=@$cap_big_file" "http://$HOST:$MULTIPART_PORT/upload")
+    rm -f "$cap_big_file"
   fi
   pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
   if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:" \
-        && "$cap_legit" == "200" ]]; then
+        && "$cap_legit" == "200" && "$cap_big" == "200" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
     report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
-      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit big:$cap_big"
   fi
 else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
