@@ -1175,8 +1175,13 @@ class Http {
     if (!_method) {
       _method = "GET"
     }
-    if (!options.containsKey("headers")) {
-      options["headers"] = {}
+    // Build this call's header set in a local map: the caller's options are an
+    // input, and writing the token's Authorization (or the default Content-Type)
+    // into a map it reuses would send that credential to the next origin.
+    var headers = {}
+    var given = options["headers"]
+    if (given != null) {
+      for (h in given) headers[h.key] = h.value
     }
     // Per-call options live in locals, not on the instance: an Http object
     // reused for another destination must not inherit the previous call's
@@ -1184,12 +1189,12 @@ class Http {
     var postData = options.containsKey("form") ? Util.params(options["form"]) : _postData
     var basicAuth = ""
     if (options.containsKey("form")) {
-      options["headers"]["Content-Type"] = "application/x-www-form-urlencoded"
-    } else if (!options["headers"].containsKey("Content-Type")) {
-      options["headers"]["Content-Type"] = "application/json"
+      headers["Content-Type"] = "application/x-www-form-urlencoded"
+    } else if (!headers.containsKey("Content-Type")) {
+      headers["Content-Type"] = "application/json"
     }
     if (options["token"] != null) {
-      options["headers"]["Authorization"] = "Bearer %(options["token"])"
+      headers["Authorization"] = "Bearer %(options["token"])"
     }
     if (options["basicAuth"] != null) {
       basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
@@ -1222,7 +1227,7 @@ class Http {
         _body = ""
         break
       }
-      var hopHeaders = Http.headerBlock_(options["headers"], current, sendCredentials)
+      var hopHeaders = Http.headerBlock_(headers, current, sendCredentials)
       var response = call_(current, method, hopHeaders, postData, basicAuth,
                            hopTimeout, connectTimeout)
       _error = response[3]

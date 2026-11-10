@@ -69,6 +69,18 @@ if (which == "reuse") {
   return "here:%(onOrigin)|other:%(onOther)|form:%(formHere)|formother:%(formThere)"
 }
 
+if (which == "shared") {
+  // The framework may add Content-Type and Authorization to the request it
+  // sends, but not to the caller's map: a shared map reused for another origin
+  // must not carry the first call's bearer token.
+  var shared = {"Accept": "application/json"}
+  var first = Http.get(target + "/echo?mode=auth",
+    {"headers": shared, "token": "bearer-shared"})
+  var second = Http.get(other + "/echo?mode=auth", {"headers": shared})
+  var kept = shared.containsKey("Authorization") ? "mutated" : "intact"
+  return "%(first)|%(second)|%(kept)"
+}
+
 if (which == "control") {
   // Without a redirect the cookie is emitted and replayed by its own host.
   var set = Http.get(target + "/echo?mode=setcookie")

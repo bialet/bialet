@@ -810,6 +810,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http credential strip by name " "http-redirect?which=case&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "no-auth|no-auth|no-auth"
   run_test "Http no credential when unset " "http-redirect?which=noauth&target=http://$HOST:$ECHO_PORT" 200 "no-auth"
   run_test "Http reuse keeps per-call auth" "http-redirect?which=reuse&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "here:Basic cmV1c2U6cHc=|other:no-auth|form:a=b|formother:no-k=no-v"
+  run_test "Http token not written to map" "http-redirect?which=shared&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "Bearer bearer-shared|no-auth|intact"
   run_test "Http redirect cookie control  " "http-redirect?which=control&target=http://$HOST:$ECHO_PORT" 200 "set|session=abc123"
   run_test "Http cookie jar manual hdr  " "http-options?which=cookie-manual&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|manual=1"
   run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
