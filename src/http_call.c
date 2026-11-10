@@ -11,6 +11,8 @@
 #ifdef _WIN32
 #include <winsock2.h>
 
+#include <windows.h>
+
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -432,6 +434,22 @@ void http_call_cleanup(void) {
 #endif
 }
 
+#ifdef _WIN32
+/* Milliseconds left in this hop's budget, clamped to the per-syscall timeout
+ * so one blocking send/recv cannot run past the deadline. 0 means expired. */
+static DWORD win32_remaining_ms(ULONGLONG deadline, long timeout_ms) {
+  ULONGLONG now = GetTickCount64();
+  if(now >= deadline)
+    return 0;
+  ULONGLONG left = deadline - now;
+  if(timeout_ms > 0 && left > (ULONGLONG)timeout_ms)
+    left = (ULONGLONG)timeout_ms;
+  if(left == 0)
+    left = 1;
+  return (DWORD)left;
+}
+#endif
+
 void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
 #ifndef _WIN32
   struct memory      chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
@@ -646,6 +664,12 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     goto done;
   }
 
+  /* One overall budget for this hop, the Windows equivalent of
+   * CURLOPT_TIMEOUT_MS. SO_SNDTIMEO/SO_RCVTIMEO only bound a single
+   * send()/recv(); re-arming them per call let a drip-feeding peer keep the
+   * read loop - and the sole worker - alive until the 50 MB cap. */
+  ULONGLONG hop_deadline = GetTickCount64() + (ULONGLONG)timeout_ms;
+
   if(url.is_https) {
     ctx = create_context(); /* verify mode set on the CTX before SSL_new */
     if(ctx == NULL) {
@@ -675,6 +699,16 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
       goto done;
     }
 
+    DWORD handshake_ms = win32_remaining_ms(hop_deadline, timeout_ms);
+    if(handshake_ms == 0) {
+      response->error = HTTP_ERR_TLS;
+      response->error_message = string_safe_copy("TLS handshake timed out");
+      goto done;
+    }
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&handshake_ms,
+               sizeof(handshake_ms));
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&handshake_ms,
+               sizeof(handshake_ms));
     if(SSL_connect(ssl) != 1) {
       ERR_print_errors_fp(stderr); /* surface *why* the handshake failed */
       response->error = HTTP_ERR_TLS;
@@ -696,6 +730,14 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
    * of it, which silently truncated large post bodies. */
   size_t sent = 0;
   while(sent < req_len) {
+    DWORD send_ms = win32_remaining_ms(hop_deadline, timeout_ms);
+    if(send_ms == 0) {
+      response->error = HTTP_ERR_SEND;
+      response->error_message = string_safe_copy("Request send timed out");
+      goto done;
+    }
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&send_ms,
+               sizeof(send_ms));
     int n = url.is_https ? SSL_write(ssl, req + sent, (int)(req_len - sent))
                          : send(sockfd, req + sent, (int)(req_len - sent), 0);
     if(n <= 0) {
@@ -720,6 +762,11 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     goto done;
   }
   for(;;) {
+    DWORD recv_ms = win32_remaining_ms(hop_deadline, timeout_ms);
+    if(recv_ms == 0)
+      break; /* hop budget exhausted, even with a body still arriving */
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&recv_ms,
+               sizeof(recv_ms));
     if(len + 4096 + 1 > cap) {
       if(cap >= MAX_HTTP_RESPONSE_SIZE)
         break; /* hard ceiling reached; keep what we have */
