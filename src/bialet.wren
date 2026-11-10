@@ -1227,6 +1227,9 @@ class Http {
         _body = ""
         break
       }
+      // The native layer truncates a double to whole milliseconds and reads 0 as
+      // "no timeout given"; never let a live remainder become that sentinel.
+      if (hopTimeout < 1) hopTimeout = 1
       var hopHeaders = Http.headerBlock_(headers, current, sendCredentials)
       var response = call_(current, method, hopHeaders, postData, basicAuth,
                            hopTimeout, connectTimeout)
@@ -1258,7 +1261,9 @@ class Http {
         method = "GET"
         postData = ""
       }
-      current = next
+      // Every hop is a URL the transport will dial, so it passes the same gate
+      // as the caller's URL: a Location is attacker-controlled text.
+      current = Http.safeUrl(next)
       hops = hops + 1
     }
 
