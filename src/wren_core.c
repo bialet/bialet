@@ -21,6 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 DEF_PRIMITIVE(bool_not) {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -1249,6 +1255,28 @@ DEF_PRIMITIVE(system_writeString) {
   RETURN_VAL(args[1]);
 }
 
+// Monotonic wall-clock milliseconds for call-level deadlines. System.clock is
+// CPU time and does not advance while a socket waits, so a redirect chain could
+// not be bounded by it.
+static double monotonic_milliseconds(void) {
+#ifdef _WIN32
+  return (double)GetTickCount64();
+#elif defined(__APPLE__)
+  static mach_timebase_info_data_t timebase;
+  if(timebase.denom == 0)
+    mach_timebase_info(&timebase);
+  return (double)mach_absolute_time() * timebase.numer / timebase.denom / 1000000.0;
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
+#endif
+}
+
+DEF_PRIMITIVE(util_monotonicMs) {
+  RETURN_NUM(monotonic_milliseconds());
+};
+
 DEF_PRIMITIVE(util_hash) {
   char* password = AS_CSTRING(args[1]);
   char  hash[HASH_AND_SALT_LENGTH] = {0};
@@ -2473,6 +2501,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
+  PRIMITIVE(utilClass->obj.classObj, "monotonicMs_()", util_monotonicMs);
   PRIMITIVE(utilClass->obj.classObj, "sha256_(_)", util_sha256);
   PRIMITIVE(utilClass->obj.classObj, "sha256Base64Url_(_)", util_sha256Base64Url);
   PRIMITIVE(utilClass->obj.classObj, "base64UrlEncode_(_)", util_base64UrlEncode);

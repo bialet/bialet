@@ -354,10 +354,36 @@ ws = send(b'Content-Type: text/plain\r\n \r\n'
           b'Content-Type: multipart/form-data; boundary=zz\r\n')
 colon = send(b'Content-Type : multipart/form-data; boundary=zz\r\n')
 control = send(b'Content-Type: multipart/form-data; boundary=zz\r\n')
-print('ws:%s|colon:%s|control:%s' % (ws, colon, control))
+
+def status(extra):
+    head = (b'POST /multipart-detect HTTP/1.1\r\nHost: x\r\nConnection: close\r\n'
+            b'Content-Length: ' + str(len(body)).encode() + b'\r\n' + extra + b'\r\n')
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(20)
+    s.sendall(head + body)
+    data = b''
+    try:
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    except OSError:
+        pass
+    s.close()
+    return int(data.split(b' ')[1]) if data.startswith(b'HTTP/') else 0
+
+# A bare CR or a bare LF inside the header block splits it differently in the
+# C detector and the Wren map, so the block is refused outright.
+bare_cr = status(b'Content-Type: application/json\r\n\r\r\n'
+                 b'Content-Type: multipart/form-data; boundary=zz\r\n')
+bare_lf = status(b'Content-Type: multipart/form-data; boundary=zz\r\n'
+                 b'Content-Type\n\r\n')
+print('ws:%s|colon:%s|control:%s|barecr:%d|barelf:%d' %
+      (ws, colon, control, bare_cr, bare_lf))
 PY
 )
-  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3" ]]; then
+  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400" ]]; then
     report_result "Multipart header agreement    " "$mpdetect_line" 0
   else
     report_result "Multipart header agreement    " "$mpdetect_line" 1 \
@@ -611,17 +637,25 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
     cap_usage=$(curl -s --max-time 5 "http://$HOST:$MULTIPART_PORT/upload-usage")
     cap_legit=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
       -F "a=1" -F "excel=@$cap_body" "http://$HOST:$MULTIPART_PORT/multipart")
+    # A large part must still be admitted while retained rows are evictable:
+    # the eviction measures the bytes it frees instead of estimating them from
+    # the pool mean, which used to refuse this while megabytes were reclaimable.
+    cap_big_file="$(mktemp /tmp/bialet-cap-big.XXXXXX)"
+    head -c 120000 /dev/zero > "$cap_big_file" 2>/dev/null
+    cap_big=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -F "form_file_name=@$cap_big_file" "http://$HOST:$MULTIPART_PORT/upload")
+    rm -f "$cap_big_file"
   fi
   pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
   if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:" \
-        && "$cap_legit" == "200" ]]; then
+        && "$cap_legit" == "200" && "$cap_big" == "200" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
     report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
-      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit"
+      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit big:$cap_big"
   fi
 else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
@@ -761,6 +795,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http cookie jar override    " "http-options?which=cookie-override&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|set|session=second"
   run_test "Http shortcuts never crash   " "http-error-handling?target=http://$HOST:$ECHO_PORT" 200 \
     "down:true|downError:true|downHasMessage:true|missing:true|missingStatus:404|missingError:false"
+  run_test "Http origin parse matches transport" "url-scope" 200 "weird:attacker.example:80|plain:127.0.0.1:18081|query:a.example:80|case:example.com:80|crossPort:false|sameHost:true|httpsDefault:443|userinfoAborted:true|fragmentStripped:http://a.example:80/x|monotonic:true"
   run_test "Http follows same-host redirect" "http-redirect?which=follow&target=http://$HOST:$ECHO_PORT" 200 "redirected"
   run_test "Http redirect cookie scoped   " "http-redirect?which=cookie&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|no-cookie|session=abc123"
   # The Win32 transport's URL parser rejects "host:port@host" (the port field
@@ -771,6 +806,8 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   else
     run_test "Http userinfo key is real host" "http-redirect?which=userinfo&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|session=abc123"
   fi
+  run_test "Http credential strip by name " "http-redirect?which=case&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "no-auth|no-auth|no-auth"
+  run_test "Http no credential when unset " "http-redirect?which=noauth&target=http://$HOST:$ECHO_PORT" 200 "no-auth"
   run_test "Http redirect cookie control  " "http-redirect?which=control&target=http://$HOST:$ECHO_PORT" 200 "set|session=abc123"
   run_test "Http cookie jar manual hdr  " "http-options?which=cookie-manual&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|manual=1"
   run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"

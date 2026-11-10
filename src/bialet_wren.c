@@ -119,50 +119,64 @@ static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
   }
 }
 
-// Delete the oldest [count] retained uploads. A full pool must cost the request
-// that fills it, not deny every later upload app-wide: the bound protects the
-// disk, so the oldest unreferenced row is the right thing to drop, and only a
-// part that still cannot fit after eviction is refused.
-static void evict_oldest_temp_uploads(sqlite3_int64 count) {
-  if(db == NULL || count <= 0)
-    return;
-  sqlite3_stmt* stmt = NULL;
+// Delete the oldest retained temporary upload and report the bytes it actually
+// freed, or -1 when nothing is evictable. Measuring the removed row is what
+// keeps the ceiling honest: predicting the freed bytes from the pool mean
+// under-frees whenever the oldest rows are smaller than average, and the caller
+// then refused a part that would have fit.
+static sqlite3_int64 evict_oldest_temp_upload(sqlite3_int64 keep_from_id) {
+  if(db == NULL)
+    return -1;
+  sqlite3_stmt* sel = NULL;
+  sqlite3_int64 id = -1;
+  sqlite3_int64 size = 0;
   if(sqlite3_prepare_v2(db,
-                        "DELETE FROM BIALET_FILES WHERE id IN (SELECT id FROM "
-                        "BIALET_FILES WHERE isTemp = 1 ORDER BY createdAt ASC, "
-                        "id ASC LIMIT ?)",
-                        -1, &stmt, 0) == SQLITE_OK) {
-    sqlite3_bind_int64(stmt, 1, count);
-    sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
+                        "SELECT id, IFNULL(size, 0) FROM BIALET_FILES "
+                        "WHERE isTemp = 1 AND id < ? "
+                        "ORDER BY createdAt ASC, id ASC LIMIT 1",
+                        -1, &sel, 0) != SQLITE_OK)
+    return -1;
+  sqlite3_bind_int64(sel, 1, keep_from_id);
+  if(sqlite3_step(sel) == SQLITE_ROW) {
+    id = sqlite3_column_int64(sel, 0);
+    size = sqlite3_column_int64(sel, 1);
   }
+  sqlite3_finalize(sel);
+  if(id < 0)
+    return -1;
+  sqlite3_stmt* del = NULL;
+  if(sqlite3_prepare_v2(db, "DELETE FROM BIALET_FILES WHERE id = ?", -1, &del, 0) ==
+     SQLITE_OK) {
+    sqlite3_bind_int64(del, 1, id);
+    sqlite3_step(del);
+    sqlite3_finalize(del);
+  }
+  return size;
 }
 
 // Make room for a part of [fileSize] bytes by evicting the oldest temporary
-// rows, then report the aggregates after eviction. A part larger than the whole
-// byte budget still cannot fit; the caller's second test refuses that one.
-static void make_room_for_temp_upload(sqlite3_int64 fileSize) {
-  for(int attempt = 0; attempt < 3; attempt++) {
-    sqlite3_int64 bytes = 0;
-    sqlite3_int64 rows = 0;
-    temp_upload_usage(&bytes, &rows);
+// rows one at a time and subtracting the bytes each deletion really freed, so a
+// byte deficit is always closed by real space. A part that cannot fit an empty
+// pool is refused before anything is evicted; a part that still cannot fit after
+// every evictable row is gone is refused by the caller's second test.
+static void make_room_for_temp_upload(sqlite3_int64 fileSize,
+                                      sqlite3_int64 keep_from_id) {
+  if(fileSize > MAX_TEMP_UPLOAD_BYTES)
+    return;
+  sqlite3_int64 bytes = 0;
+  sqlite3_int64 rows = 0;
+  temp_upload_usage(&bytes, &rows);
+  for(int guard = 0; guard < 2 * MAX_TEMP_UPLOAD_ROWS; guard++) {
     if(rows < MAX_TEMP_UPLOAD_ROWS && bytes + fileSize <= MAX_TEMP_UPLOAD_BYTES)
       return;
-    sqlite3_int64 evict = 0;
-    if(rows >= MAX_TEMP_UPLOAD_ROWS)
-      evict = rows - MAX_TEMP_UPLOAD_ROWS + 1;
-    sqlite3_int64 over = bytes + fileSize - MAX_TEMP_UPLOAD_BYTES;
-    if(over > 0 && rows > 0) {
-      sqlite3_int64 average = bytes / rows;
-      sqlite3_int64 by_bytes = average > 0 ? (over + average - 1) / average : rows;
-      if(by_bytes > evict)
-        evict = by_bytes;
-    }
-    if(evict > rows)
-      evict = rows;
-    if(evict <= 0)
-      evict = 1;
-    evict_oldest_temp_uploads(evict);
+    sqlite3_int64 freed = evict_oldest_temp_upload(keep_from_id);
+    if(freed < 0)
+      return; // nothing evictable left: the caller's second test refuses
+    bytes -= freed;
+    if(bytes < 0)
+      bytes = 0;
+    if(rows > 0)
+      rows--;
   }
 }
 
@@ -1177,10 +1191,13 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
   const char* cursor = mem_find(body, (size_t)(end - body), startBoundary, sb_len);
   int         firstFile = 1;
-  int         uploadedFiles = 0;
-  int         filesCapped = 0;
-  int         fieldsCapped = 0;
-  size_t      fieldBytes = 0;
+  // First row id this request inserted. Every id at or above it is already in
+  // filesIds and about to be read by the handler, so eviction must not touch it.
+  sqlite3_int64 firstFileId = -1;
+  int           uploadedFiles = 0;
+  int           filesCapped = 0;
+  int           fieldsCapped = 0;
+  size_t        fieldBytes = 0;
 
   struct FieldBuf fb = {0};
 
@@ -1331,7 +1348,9 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       // Reclaim the oldest retained rows before refusing: without this an
       // anonymous client can fill the pool with zero-byte parts and deny every
       // other upload for the whole one-day retention window.
-      make_room_for_temp_upload((sqlite3_int64)fileSize);
+      make_room_for_temp_upload((sqlite3_int64)fileSize,
+                                firstFileId < 0 ? (sqlite3_int64)0x7fffffffffffffffLL
+                                                : firstFileId);
       temp_upload_usage(&tempBytes, &tempRows);
     }
     if(tempRows >= MAX_TEMP_UPLOAD_ROWS ||
@@ -1362,6 +1381,8 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 
       if(sqlite3_step(stmt) == SQLITE_DONE) {
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
+        if(firstFileId < 0)
+          firstFileId = fileId;
         tempBytes += (sqlite3_int64)fileSize;
         tempRows++;
 

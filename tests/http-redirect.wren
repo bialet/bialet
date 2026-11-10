@@ -35,6 +35,23 @@ if (which == "userinfo") {
   return "%(fetched)|%(originJar)|%(realJar)"
 }
 
+if (which == "case") {
+  // Credential headers stop at the origin that issued them, whatever the
+  // caller's spelling of the header name.
+  var upper = Http.get(target + "/echo?mode=redirect-auth&to=" + otherHost,
+    {"headers": {"AUTHORIZATION": "Bearer CASE"}})
+  var mixed = Http.get(target + "/echo?mode=redirect-auth&to=" + otherHost,
+    {"headers": {"AuthoriZation": "Bearer MIXED"}})
+  var canonical = Http.get(target + "/echo?mode=redirect-auth&to=" + otherHost,
+    {"headers": {"Authorization": "Bearer CANON"}})
+  return "%(upper)|%(mixed)|%(canonical)"
+}
+
+if (which == "noauth") {
+  // No basic auth configured means no Authorization header on the wire at all.
+  return Http.get(target + "/echo?mode=auth")
+}
+
 if (which == "control") {
   // Without a redirect the cookie is emitted and replayed by its own host.
   var set = Http.get(target + "/echo?mode=setcookie")

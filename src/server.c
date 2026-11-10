@@ -106,6 +106,21 @@ static size_t header_block_len(const char* buf, size_t len) {
 // the full body deadline for bytes that were never coming. Leading whitespace
 // before the field name is not accepted either, which is what stops request
 // smuggling via " Content-Length:".
+// True when every header line in the block is CRLF-terminated. The C multipart
+// detector splits header lines on CRLF while the Wren Request map splits on LF,
+// so a bare CR or a bare LF let one parser treat the rest of the header block as
+// body while the other still scanned it: a request the app saw as
+// text/plain/application/json could still have its multipart parts stored.
+static int header_block_well_formed(const char* buf, size_t hdr_len) {
+  for(size_t i = 0; i < hdr_len; i++) {
+    if(buf[i] == '\n' && (i == 0 || buf[i - 1] != '\r'))
+      return 0;
+    if(buf[i] == '\r' && (i + 1 >= hdr_len || buf[i + 1] != '\n'))
+      return 0;
+  }
+  return 1;
+}
+
 static const char* find_header(const char* buf, size_t hdr_len, const char* name,
                                size_t name_len) {
   const char* p = buf;
@@ -828,6 +843,15 @@ void handle_client(bialet_socket_t client_socket) {
   // answered an unterminated request as if it were complete and let one peer
   // hold the only worker for the whole body deadline.
   if(hdr_len == 0) {
+    struct BialetResponse bad = {0};
+    custom_error(400, &bad);
+    write_response(client_socket, &bad);
+    free_response_owned(&bad);
+    return;
+  }
+  // Refuse a header block whose lines are not CRLF-terminated, so the C
+  // multipart detector and the Wren header map cannot split it differently.
+  if(!header_block_well_formed(buffer, hdr_len)) {
     struct BialetResponse bad = {0};
     custom_error(400, &bad);
     write_response(client_socket, &bad);

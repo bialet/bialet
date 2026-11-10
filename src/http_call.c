@@ -315,6 +315,32 @@ static char* base64_encode(const unsigned char* data, size_t len) {
  * char[1024] and failed the call outright for anything larger, and with an
  * empty raw_headers it emitted "...Host: h\r\n" + "" + "\r\n", terminating the
  * headers early so that "Content-Length: 0" landed in the body. */
+/* The Wren layer joins header lines with '\n' and the request line above is
+ * built with CRLF, so each caller header must be CRLF-terminated too: a bare LF
+ * is not a valid header line and the server now refuses such a block (both
+ * parsers must see one header block). */
+static char* headers_crlf(const char* raw) {
+  size_t len = strlen(raw);
+  char*  out = (char*)malloc(len * 2 + 3);
+  if(out == NULL)
+    return NULL;
+  size_t o = 0;
+  for(size_t i = 0; i < len; i++) {
+    if(raw[i] == '\n' && (i == 0 || raw[i - 1] != '\r')) {
+      out[o++] = '\r';
+      out[o++] = '\n';
+    } else {
+      out[o++] = raw[i];
+    }
+  }
+  if(o == 0 || out[o - 1] != '\n') {
+    out[o++] = '\r';
+    out[o++] = '\n';
+  }
+  out[o] = '\0';
+  return out;
+}
+
 static char* build_request(const struct ParsedUrl*   url,
                            const struct HttpRequest* request, size_t* out_len) {
   const char* method = request->method ? request->method : "GET";
@@ -322,11 +348,11 @@ static char* build_request(const struct ParsedUrl*   url,
   const char* postData = request->postData ? request->postData : "";
   size_t      post_len = strlen(postData);
 
-  /* Ensure the caller's header block is CRLF-terminated before ours. */
-  size_t hdr_len = strlen(raw_headers);
-  int    needs_crlf =
-      hdr_len > 0 && !(hdr_len >= 2 && raw_headers[hdr_len - 2] == '\r' &&
-                       raw_headers[hdr_len - 1] == '\n');
+  /* Normalize the caller's header block to CRLF; it always ends with one. */
+  char* normalized = headers_crlf(raw_headers);
+  if(normalized == NULL)
+    return NULL;
+  raw_headers = normalized;
 
   /* Basic auth is sent as "Authorization: Basic <base64(user:pass)>"; the
    * libcurl path handles this via CURLOPT_USERPWD, so it must be spelled out
@@ -352,14 +378,16 @@ static char* build_request(const struct ParsedUrl*   url,
                "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
                "Length: %zu\r\n\r\n",
                method, url->path, url->host, auth_header ? auth_header : "",
-               raw_headers, needs_crlf ? "\r\n" : "", post_len);
+               raw_headers, "", post_len);
   if(head_len < 0) {
+    free(normalized);
     free(auth_header);
     return NULL;
   }
 
   char* req = (char*)malloc((size_t)head_len + post_len + 1);
   if(req == NULL) {
+    free(normalized);
     free(auth_header);
     return NULL;
   }
@@ -367,7 +395,8 @@ static char* build_request(const struct ParsedUrl*   url,
            "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
            "Length: %zu\r\n\r\n",
            method, url->path, url->host, auth_header ? auth_header : "", raw_headers,
-           needs_crlf ? "\r\n" : "", post_len);
+           "", post_len);
+  free(normalized);
   free(auth_header);
   /* memcpy rather than a %s in the format: the body may contain NUL bytes. */
   memcpy(req + head_len, postData, post_len);
@@ -467,7 +496,9 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   free(header_string);
   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-  if(basicAuth) {
+  // An empty value would still make curl emit "Authorization: Basic Og==", a
+  // credential header on a request that configured none.
+  if(basicAuth != NULL && basicAuth[0] != '\0') {
     curl_easy_setopt(handle, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     curl_easy_setopt(handle, CURLOPT_USERPWD, basicAuth);
   }
