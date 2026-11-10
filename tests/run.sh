@@ -738,6 +738,7 @@ run_test "Cookie delete and defaults  " "cookie-delete" 200 "present:empty|fallb
 run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|own:[a1=evil]|hosted:[]|parent:[]|sub:[]"
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
 run_test "Session rotate rekeys writes" "session-rotate" 200 "planted:none|fresh:alice"
+run_test "Session rows stay bounded " "session-sweep" 200 "live:bounded"
 run_test "Directory index resolution  " "blog"           200 "route-index"
 run_test "Directory index trailing /  " "blog/"          200 "route-index"
 run_test "Wren extension is optional  " "method-check.wren" 200 "GET"

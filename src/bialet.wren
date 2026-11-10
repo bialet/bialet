@@ -299,6 +299,25 @@ class Cookie {
 class Session {
   static name { __name ? __name : "BIALETSESSID" }
   static name=(n) { __name = n }
+  // BIALET_SESSION is written by unauthenticated requests: a client that drops
+  // its cookie (or presents a fresh valid id) adds a row per request. Bound the
+  // table the way the temp-upload pool is bounded, and expire on the write path
+  // instead of only from Db.migrate at startup.
+  static maxSessions { __maxSessions ? __maxSessions : 32768 }
+  static maxSessions=(n) { __maxSessions = n }
+  static sweepWrites_ { __sweepWrites ? __sweepWrites : 0 }
+  static sweepWrites_=(v) { __sweepWrites = v }
+  static sweep_() {
+    `DELETE FROM BIALET_SESSION WHERE updatedAt < datetime('now', '-30 days')`.query()
+    var row = `SELECT COUNT(*) AS c FROM (SELECT id FROM BIALET_SESSION GROUP BY id)`.first()
+    if (!row) return
+    var live = Num.fromString("%(row["c"])")
+    if (!live) return
+    var excess = live - Session.maxSessions
+    if (excess > 0) {
+      `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
+    }
+  }
   static destroy() {
     var id = Cookie.get(Session.name)
     Cookie.delete(Session.name)
@@ -361,6 +380,13 @@ class Session {
     }
     __values[key] = value
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
+    // Amortize the sweep: an unauthenticated flood can add one row per request,
+    // and a count+evict on every write would itself be work for that flood.
+    Session.sweepWrites_ = Session.sweepWrites_ + 1
+    if (Session.sweepWrites_ >= 128) {
+      Session.sweepWrites_ = 0
+      Session.sweep_()
+    }
   }
   csrf {
     var token = get("_bialet_csrf")
@@ -1079,6 +1105,9 @@ class Db {
     // handler runs, so without this index every multipart request scans every
     // file row, including the app's own saved files.
     `CREATE INDEX IF NOT EXISTS BIALET_FILES_ISTEMP ON BIALET_FILES (isTemp)`.query()
+    // Session.set's write-path sweep filters on updatedAt; without this index
+    // both the sweep and Session.destroy scan every row.
+    `CREATE INDEX IF NOT EXISTS BIALET_SESSION_UPDATED ON BIALET_SESSION (updatedAt)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     // Run again the initiliziation once we know the table exists
     // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the
