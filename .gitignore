@@ -23,3 +23,10 @@ __pycache__/
 
 # Local design-review artifacts
 /.impeccable/
+
+# Debian packaging artifacts
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/bialet/

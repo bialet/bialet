@@ -1,0 +1,129 @@
+name: PPA
+
+# Builds a signed Debian source package for the published tag and uploads it
+# to ppa:bialet/bialet. Launchpad builds the binaries for each series and
+# architecture; this job only produces the _source.changes.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   PPA_GPG_KEY     base64 of the ASCII-armored private upload key
+#   PPA_GPG_KEY_ID  key id or fingerprint used to sign
+#
+# The key's email must be a verified address on the Launchpad account, and the
+# public key must be added to that account. Until PPA_GPG_KEY exists the job
+# builds and lints an unsigned source package, then skips the upload, so the
+# workflow is safe to merge before the key is created.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish (for example v1.2.7)
+        required: true
+      dry_run:
+        description: Build and lint the source package without uploading
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ppa-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    # Prereleases never go to the PPA.
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # Ubuntu releases in standard support: the LTS releases plus the
+        # current interim release. Keys must be Launchpad series names, and
+        # every one of them must be enabled for the PPA (with arm64 enabled
+        # too, which is not on by default). Drop a series when it goes EOL and
+        # add the new one after each release.
+        series:
+          - jammy
+          - noble
+          - resolute
+          - stonking
+    env:
+      DEBEMAIL: "Rodrigo Arce <rsarce@gmail.com>"
+      DEBFULLNAME: "Rodrigo Arce"
+      PPA_GPG_KEY: ${{ secrets.PPA_GPG_KEY }}
+      PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y devscripts dput-ng lintian gnupg
+
+      - name: Check the signing key is configured
+        id: key
+        run: |
+          if [ -z "${PPA_GPG_KEY}" ]; then
+            echo "::warning::PPA_GPG_KEY is not set; building an unsigned package and skipping the upload."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ -z "${PPA_GPG_KEY_ID}" ]; then
+            echo "::error::PPA_GPG_KEY_ID is empty but PPA_GPG_KEY is set."
+            exit 1
+          fi
+
+      - name: Check the tag and derive the version
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          case "${TAG}" in
+            v[0-9]*) ;;
+            *) echo "::error::expected a v-prefixed version tag, got '${TAG}'"; exit 1 ;;
+          esac
+          V="${TAG#v}"
+          echo "V=${V}" >> "$GITHUB_ENV"
+          echo "VERSION=${V}-1~${{ matrix.series }}1" >> "$GITHUB_ENV"
+
+          # The binary and the package must report the same version.
+          grep -q "BIALET_VERSION \"${V}\"" src/bialet.h \
+            || { echo "::error::src/bialet.h is not at ${V}"; exit 1; }
+
+      - name: Build the upstream tarball without debian/
+        run: |
+          mkdir -p "/tmp/orig/bialet-${V}"
+          git archive HEAD | tar -x -C "/tmp/orig/bialet-${V}"
+          # dpkg-source rejects an .orig tarball that contains debian/.
+          rm -rf "/tmp/orig/bialet-${V}/debian"
+          tar -C /tmp/orig -czf "../bialet_${V}.orig.tar.gz" "bialet-${V}"
+
+      - name: Add the changelog entry
+        run: |
+          dch --newversion "${VERSION}" \
+              --distribution ${{ matrix.series }} \
+              "New upstream release ${V}."
+
+      - name: Build the source package
+        run: |
+          if [ -z "${PPA_GPG_KEY}" ]; then
+            dpkg-buildpackage -S -sa -d -us -uc
+          else
+            export GNUPGHOME=/tmp/gnupg
+            mkdir -m 700 "$GNUPGHOME"
+            printf '%s' "${PPA_GPG_KEY}" | base64 -d | gpg --batch --import
+            # A key with a passphrase needs gpg-agent to have it cached; use a
+            # dedicated key without one for unattended uploads.
+            dpkg-buildpackage -S -sa -d -k"${PPA_GPG_KEY_ID}"
+          fi
+
+      - name: Lintian
+        run: |
+          lintian --fail-on error "../bialet_${VERSION}_source.changes"
+
+      - name: Upload to Launchpad
+        if: steps.key.outputs.skip != 'true' && inputs.dry_run != true
+        run: |
+          dput ppa:bialet/bialet "../bialet_${VERSION}_source.changes"

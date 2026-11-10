@@ -91,6 +91,14 @@ body. It is written in C17 and runs on Linux, macOS, and Windows.
 
 ## Install
 
+On Debian and Ubuntu, install it from the PPA:
+
+```bash
+sudo add-apt-repository ppa:bialet/bialet
+sudo apt update
+sudo apt install bialet
+```
+
 Prebuilt binaries and an install script are available for macOS ARM,
 Ubuntu x86_64, and Ubuntu ARM64.
 

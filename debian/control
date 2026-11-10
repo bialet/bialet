@@ -1,0 +1,26 @@
+Source: bialet
+Section: web
+Priority: optional
+Maintainer: Rodrigo Arce <rsarce@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               libcurl4-openssl-dev,
+               libsqlite3-dev,
+               libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://bialet.dev
+Vcs-Git: https://github.com/bialet/bialet.git
+Vcs-Browser: https://github.com/bialet/bialet
+Rules-Requires-Root: no
+
+Package: bialet
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: full-stack web framework with embedded Wren and SQLite
+ Bialet combines the Wren scripting language, an HTTP server, and a
+ SQLite database in a single binary. Routes follow the filesystem, with
+ each .wren file acting as a handler that returns a response body. There
+ is no separate runtime, package manifest, or build step.
+ .
+ This package links dynamically against the distribution's SQLite,
+ libcurl, and OpenSSL. The self-contained static binary is published in
+ the GitHub release archives instead.

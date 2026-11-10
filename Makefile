@@ -33,9 +33,18 @@ WREN_FILES := $(shell find $(SRC_DIRS) -name '*.wren')
 #
 # -O2: there was no optimization flag at all, so releases shipped unoptimized.
 # -Wvla catches VLAs (optional in C11/C17, absent on MSVC).
+#
+# EXTRA_CFLAGS/EXTRA_LDFLAGS exist for packagers. `debian/rules` passes the
+# output of `dpkg-buildflags` plus -Wno-error through them: a distro build
+# must not fail on a warning a newer compiler introduces, and the flags have
+# to be appended here rather than passed as CFLAGS= on the make command line.
+# A command-line CFLAGS would replace this assignment outright and silently
+# drop the hardening and OpenSSL flags added below.
+EXTRA_CFLAGS ?=
+EXTRA_LDFLAGS ?=
 CFLAGS := -std=gnu17 -Wall -Wextra -Werror -g -O2 -Wvla -Wpointer-arith \
-          -fstack-protector-strong
-LDFLAGS := -lm -lpthread -lsqlite3 -lcurl
+          -fstack-protector-strong $(EXTRA_CFLAGS)
+LDFLAGS := -lm -lpthread -lsqlite3 -lcurl $(EXTRA_LDFLAGS)
 
 # Hardening for the network daemon. Gated on the *target*, not on uname: the
 # Windows cross-compile runs inside a Linux container, so `uname -s` says Linux
