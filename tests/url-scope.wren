@@ -28,4 +28,10 @@ fiber.try()
 results.add("userinfoAborted:" + (fiber.error != null).toString)
 results.add("fragmentStripped:%(Http.resolveUrl_("http://a.example/dir/page", "/x#frag"))")
 
+// The per-call transfer budget needs a monotonic millisecond clock: System.clock
+// is CPU time and does not advance while a transfer waits on a socket.
+var t1 = Util.monotonicMs
+var t2 = Util.monotonicMs
+results.add("monotonic:" + (t2 >= t1).toString)
+
 return results.join("|")

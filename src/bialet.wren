@@ -856,6 +856,7 @@ class Util {
   }
 
   static urlDecode(str) { urlDecode_("%(str)") }
+  static monotonicMs { monotonicMs_() }
 
   static urlEncode(str) {
     var parts = []
@@ -1176,6 +1177,11 @@ class Http {
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0
+    // The option is documented as the whole call's transfer timeout. A redirect
+    // chain is one call, so it gets one deadline; re-arming the timeout on every
+    // hop let one call hold the only worker for eleven times the budget.
+    var budget = timeout > 0 ? timeout : 20000
+    var deadline = Util.monotonicMs + budget
     var method = Http.safeMethod(_method)
     var postData = _postData
     var current = Http.safeUrl(url)
@@ -1188,9 +1194,19 @@ class Http {
     var hops = 0
     var sendCredentials = true
     while (true) {
+      var hopTimeout = deadline - Util.monotonicMs
+      if (hopTimeout <= 0) {
+        // The call, not a hop, expired.
+        _error = 28
+        _errorMessage = "Operation timed out"
+        _status = 0
+        _fullHeaders = ""
+        _body = ""
+        break
+      }
       var hopHeaders = Http.headerBlock_(options["headers"], current, sendCredentials)
       var response = call_(current, method, hopHeaders, postData, _basicAuth,
-                           timeout, connectTimeout)
+                           hopTimeout, connectTimeout)
       _error = response[3]
       _errorMessage = response[4]
       var rawHeaders = response[1] ? response[1].trim() : ""
