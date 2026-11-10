@@ -323,7 +323,9 @@ static char* base64_encode(const unsigned char* data, size_t len) {
  * parsers must see one header block). */
 static char* headers_crlf(const char* raw) {
   size_t len = strlen(raw);
-  char*  out = (char*)malloc(len * 2 + 3);
+  if(len > (((size_t)-1) - 3) / 2)
+    return NULL; /* size arithmetic would wrap; fail closed */
+  char* out = (char*)malloc(len * 2 + 3);
   if(out == NULL)
     return NULL;
   size_t o = 0;
@@ -335,7 +337,10 @@ static char* headers_crlf(const char* raw) {
       out[o++] = raw[i];
     }
   }
-  if(o == 0 || out[o - 1] != '\n') {
+  /* Terminate the last real line only. An empty caller block contributes
+   * nothing: emitting CRLF here would end the request head before
+   * build_request's own Content-Length line, which then became body bytes. */
+  if(len > 0 && out[o - 1] != '\n') {
     out[o++] = '\r';
     out[o++] = '\n';
   }
