@@ -1,8 +1,29 @@
 # Changelog
 
-Releases 1.2.6–1.2.12 were tagged and published on the
+Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
-1.2.13.
+1.2.14.
+
+## 1.2.14 — 2026-11-11
+
+### Fixed
+
+- `bialet -r` now runs `Db.init` before the script, so `Config.get()`,
+  `Config.set()` and `Session.new()` work instead of failing with
+  "no such table". There is still no request and the app's migration is still
+  not run.
+- `Query.toNum` returns `0` when the result is NULL or not numeric. `MAX()` /
+  `SUM()` over an empty table no longer produce a `null` that crashes on the
+  next `+ 1`.
+- `Date.==` and `Date.!=` are null-safe: `date == null` is `false` instead of
+  raising `Null does not implement 'unix'`. Comparing a Date to a non-Date is
+  likewise `false` / `true`.
+
+### Added
+
+- `value.toString()` is accepted as an alias for the `toString` getter on
+  every type, including user classes. `count()`, `keys()` and `values()` are
+  still getters, and `trim` still needs its parentheses.
 
 ## 1.2.13 — 2026-11-11
 
