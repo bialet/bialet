@@ -4,10 +4,19 @@ Releases 1.2.6–1.2.12 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.13.
 
-## 1.2.13 — 2026-11-10
+## 1.2.13 — 2026-11-11
 
 ### Fixed
 
+- A SQL statement that fails now raises a catchable Wren error instead of
+  being logged and ignored. In particular, `Db.migrate` no longer records a
+  version whose SQL never ran, so a broken migration can be fixed and retried
+  on the next boot.
+- The test client keeps a cookie jar, so a session (and its CSRF token) minted
+  by one `Test.get` is the session the following `Test.post` presents. Tests
+  no longer need a `test_mode` flag to exercise a CSRF-protected form.
+  `Session.csrf` / `Session.csrfOk` are also available as statics, and
+  `Test.csrf()` reads the token a form rendered.
 - `Request.route()` no longer includes the query string. `/notes?page=2` used
   to resolve as the detail route `?page=2`, so a `.wren` route file that reads
   `Request.route(0)` answered 404 as soon as a query parameter was present.
