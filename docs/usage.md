@@ -69,6 +69,7 @@ bialet --port=8080 /path/to/app
 | `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
+| `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
 
 Long options that require a value reject an empty one (`--port` alone is an

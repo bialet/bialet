@@ -795,6 +795,28 @@ class Util {
   static hash(password) { hash_("%( password )") }
   static verify(password, hash) { verify_("%( password )", "%( hash )") }
 
+  // AES-256-GCM. The result is a self-describing envelope you can store as
+  // text; decrypt returns null when the value was modified or the secret is
+  // wrong.
+  //
+  // [secret] is either a passphrase (stretched with PBKDF2 and a fresh random
+  // salt) or exactly 64 hex characters, which are used as a raw 256-bit key.
+  static encrypt(value, secret) {
+    if (value == null) Fiber.abort("Util.encrypt: value cannot be null")
+    var s = (secret == null) ? "" : "%(secret)"
+    if (s == "") Fiber.abort("Util.encrypt: secret cannot be empty")
+    return encrypt_("%(value)", s)
+  }
+
+  // Returns null for a wrong secret, a tampered value, or a value that is not
+  // an envelope at all -- the three are deliberately indistinguishable.
+  static decrypt(value, secret) {
+    if (value == null || secret == null) return null
+    var s = "%(secret)"
+    if (s == "") return null
+    return decrypt_("%(value)", s)
+  }
+
   static toNum(val) {
     if (!val) return 0
     if (val is Num) return val
@@ -1082,6 +1104,37 @@ class Config {
   static json(key, val) { set(key, Json.stringify(val)) }
   static enable(key) { set(key, "1") }
   static disable(key) { set(key, "0") }
+
+  // Encrypted rows. The ciphertext is bound to [key]: copying it to another
+  // config name makes it fail to decrypt instead of silently taking effect
+  // somewhere else.
+  //
+  // Without a secret argument these use the deployment key loaded with
+  // --secret-key-file. The key never reaches Wren, so it cannot be printed,
+  // rendered, or read back with Config.get.
+  static encrypt(key, value) { set(key, configEncrypt_(key, "%(value)")) }
+  static encrypt(key, value, secret) { set(key, configEncrypt_(key, "%(value)", "%(secret)")) }
+
+  // Returns null when the row is absent, or when the ciphertext does not
+  // authenticate (wrong key, edited value, or a value that was never
+  // encrypted).
+  static decrypt(key) {
+    var stored = get(key)
+    if (stored == null) return null
+    return configDecrypt_(key, "%(stored)")
+  }
+  static decrypt(key, secret) {
+    var stored = get(key)
+    if (stored == null) return null
+    return configDecrypt_(key, "%(stored)", "%(secret)")
+  }
+}
+
+// The deployment key lives outside the database, in the file named by
+// --secret-key-file, and is only readable here as a yes/no. Exposing the key
+// itself to Wren would put it one "%(...)" away from a log line or a response.
+class Secret {
+  static available { available_() }
 }
 
 class File {

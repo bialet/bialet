@@ -8,6 +8,7 @@
 #include "http_call.h"
 #include "json.h"
 #include "markdown.h"
+#include "secret.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
@@ -1486,6 +1487,52 @@ DEF_PRIMITIVE(util_verify) {
   RETURN_BOOL(result);
 }
 
+// AES-256-GCM with an explicit secret (Util.encrypt). The secret is either a
+// 64-hex-character raw key or a passphrase, which goes through PBKDF2 with a
+// per-message salt. See crypto_encrypt() in hash.c for the envelope.
+DEF_PRIMITIVE(util_encrypt) {
+  if(!validateString(vm, args[1], "Value") || !validateString(vm, args[2], "Secret"))
+    return false;
+
+  ObjString* value = AS_STRING(args[1]);
+  ObjString* secret = AS_STRING(args[2]);
+  if(secret->length == 0)
+    RETURN_ERROR("Secret cannot be empty.");
+  if(!crypto_available())
+    RETURN_ERROR("Encryption requires a build with OpenSSL 3 or newer.");
+
+  char* sealed = crypto_encrypt(secret->value, (size_t)secret->length, NULL, 0,
+                                value->value, (size_t)value->length);
+  if(sealed == NULL)
+    RETURN_ERROR("Encryption failed.");
+  Value result = wrenNewString(vm, sealed);
+  free(sealed);
+  RETURN_VAL(result);
+}
+
+// Returns null for a wrong secret, a modified value, and a malformed envelope
+// alike: the caller must not be able to use the failure as an oracle.
+DEF_PRIMITIVE(util_decrypt) {
+  if(!validateString(vm, args[1], "Value") || !validateString(vm, args[2], "Secret"))
+    return false;
+  if(!crypto_available())
+    RETURN_ERROR("Decryption requires a build with OpenSSL 3 or newer.");
+
+  ObjString*     value = AS_STRING(args[1]);
+  ObjString*     secret = AS_STRING(args[2]);
+  size_t         len = 0;
+  unsigned char* plain =
+      crypto_decrypt(secret->value, (size_t)secret->length, NULL, 0, value->value,
+                     (size_t)value->length, &len);
+  if(plain == NULL)
+    RETURN_NULL;
+  Value result = wrenNewStringLength(vm, (const char*)plain, len);
+  // The plaintext is now in a GC-managed Wren string; this copy is done.
+  secure_zero(plain, len);
+  free(plain);
+  RETURN_VAL(result);
+}
+
 // Constant-time byte comparison for tokens and passwords. Lengths are folded
 // into the result instead of returning early, so two equal-length values take
 // the same path regardless of where they differ.
@@ -1549,6 +1596,82 @@ DEF_PRIMITIVE(util_randomString) {
   Value result = wrenNewString(vm, random_str);
   free(random_str);
   RETURN_VAL(result);
+}
+
+// Config.encrypt / Config.decrypt. The deployment key from --secret-key-file is
+// used directly in C and never becomes a Wren string, so it cannot be reached
+// through a template, a log line, or "%(value)" interpolation. The config key
+// name is passed as AAD: a ciphertext copied from one key to another stops
+// authenticating, which turns "swap the admin key into a field rendered on the
+// public page" from a silent win into a decryption failure.
+static bool config_crypt(WrenVM* vm, Value* args, int encrypt, int has_secret) {
+  if(!validateString(vm, args[1], "Key") || !validateString(vm, args[2], "Value"))
+    return false;
+
+  ObjString* key_name = AS_STRING(args[1]);
+  ObjString* value = AS_STRING(args[2]);
+
+  const char* secret = NULL;
+  size_t      secret_len = 0;
+  if(has_secret) {
+    if(!validateString(vm, args[3], "Secret"))
+      return false;
+    ObjString* explicit_secret = AS_STRING(args[3]);
+    secret = explicit_secret->value;
+    secret_len = (size_t)explicit_secret->length;
+    if(secret_len == 0)
+      RETURN_ERROR("Secret cannot be empty.");
+  } else {
+    secret = secret_key_bytes(&secret_len);
+    if(secret == NULL)
+      RETURN_ERROR("No deployment key loaded: start bialet with "
+                   "--secret-key-file FILE.");
+  }
+
+  if(!crypto_available())
+    RETURN_ERROR("Encryption requires a build with OpenSSL 3 or newer.");
+
+  if(encrypt) {
+    char* sealed =
+        crypto_encrypt(secret, secret_len, key_name->value, (size_t)key_name->length,
+                       value->value, (size_t)value->length);
+    if(sealed == NULL)
+      RETURN_ERROR("Encryption failed.");
+    Value result = wrenNewString(vm, sealed);
+    free(sealed);
+    RETURN_VAL(result);
+  }
+
+  size_t         len = 0;
+  unsigned char* plain =
+      crypto_decrypt(secret, secret_len, key_name->value, (size_t)key_name->length,
+                     value->value, (size_t)value->length, &len);
+  if(plain == NULL)
+    RETURN_NULL;
+  Value result = wrenNewStringLength(vm, (const char*)plain, len);
+  secure_zero(plain, len);
+  free(plain);
+  RETURN_VAL(result);
+}
+
+DEF_PRIMITIVE(config_encrypt) {
+  return config_crypt(vm, args, 1, 0);
+}
+
+DEF_PRIMITIVE(config_encrypt_secret) {
+  return config_crypt(vm, args, 1, 1);
+}
+
+DEF_PRIMITIVE(config_decrypt) {
+  return config_crypt(vm, args, 0, 0);
+}
+
+DEF_PRIMITIVE(config_decrypt_secret) {
+  return config_crypt(vm, args, 0, 1);
+}
+
+DEF_PRIMITIVE(secret_available) {
+  RETURN_BOOL(secret_key_available());
 }
 
 // Returns the hex value of [c], or -1 if it is not a hex digit.
@@ -2752,6 +2875,8 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* utilClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Util"));
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
+  PRIMITIVE(utilClass->obj.classObj, "encrypt_(_,_)", util_encrypt);
+  PRIMITIVE(utilClass->obj.classObj, "decrypt_(_,_)", util_decrypt);
   PRIMITIVE(utilClass->obj.classObj, "secureEquals_(_,_)", util_secureEquals);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
@@ -2763,6 +2888,17 @@ void wrenInitializeCore(WrenVM* vm) {
 
   ObjClass* responseClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Response"));
   PRIMITIVE(responseClass->obj.classObj, "defaultPage_(_,_)", response_default_page);
+
+  ObjClass* configClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Config"));
+  PRIMITIVE(configClass->obj.classObj, "configEncrypt_(_,_)", config_encrypt);
+  PRIMITIVE(configClass->obj.classObj, "configEncrypt_(_,_,_)",
+            config_encrypt_secret);
+  PRIMITIVE(configClass->obj.classObj, "configDecrypt_(_,_)", config_decrypt);
+  PRIMITIVE(configClass->obj.classObj, "configDecrypt_(_,_,_)",
+            config_decrypt_secret);
+
+  ObjClass* secretClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Secret"));
+  PRIMITIVE(secretClass->obj.classObj, "available_()", secret_available);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);

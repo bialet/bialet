@@ -250,6 +250,91 @@ implemented at the app or proxy layer.
 
 ## Secure Configuration & Deployment
 
+### Encrypted Values at Rest
+
+`_db.sqlite3` is one file. It gets copied to backups, restored on staging
+machines, and pulled onto laptops. Secrets stored there in plain text travel with
+it. `Config.encrypt` and `Util.encrypt` store AES-256-GCM ciphertext instead:
+
+```wren
+Config.encrypt("stripe_key", "sk_live_...")   // row holds bgcm1$...
+Config.decrypt("stripe_key")                  // sk_live_...
+```
+
+**The key must not live in the database.** A key in `BIALET_CONFIG`, in a
+migration, or seeded with `bialet -r` protects nothing: whoever takes the
+database gets the ciphertext and the key that opens it. Bialet therefore reads
+the key from a file outside the app root:
+
+```bash
+openssl rand -hex 32 > /etc/myapp/secret.key
+chmod 600 /etc/myapp/secret.key
+bialet -k /etc/myapp/secret.key /www/myapp
+```
+
+The file holds either 64 hex characters — used directly as the AES-256 key — or
+a passphrase, which is stretched with PBKDF2-HMAC-SHA256 (600,000 iterations)
+and a per-message random salt. Prefer the raw key: `openssl rand -hex 32`, a
+systemd `LoadCredential=`, a Docker secret, or a Kubernetes Secret all produce
+one, and the passphrase path costs a few hundred milliseconds per call.
+
+`-k` is refused at startup when the file is missing, is not a regular file, is
+empty, is larger than 4 KB, contains a NUL byte, or resolves inside the app root
+— the tree that gets copied along with the database. A key file readable by
+group or others still starts the server, but prints a warning to stderr.
+Leading and trailing whitespace is trimmed, so a passphrase cannot begin or end
+with one; use the hex form if that matters.
+
+The same file works for values you keep in your own tables:
+
+```wren
+var sealed = Util.encrypt(row["api_token"], "passphrase")
+var token = Util.decrypt(row["api_token"], "passphrase")
+```
+
+Be precise about what this buys:
+
+| An attacker has | Result |
+| --- | --- |
+| a copy of `_db.sqlite3` (backup, snapshot, stray download) | ciphertext only |
+| write access to `_db.sqlite3` | cannot forge a value — the GCM tag fails — but can delete rows, roll a value back to an earlier ciphertext, or swap ciphertext between columns that share a key |
+| a shell as the Bialet user, while it runs | plaintext: it can read the key file, inspect the process, or just call `Config.decrypt` |
+| the key file | plaintext for every copy of the database built with it |
+
+So encryption at rest protects the *file*, not the running service. It is the
+right control for backups, snapshots, and environments that copy production
+data; it does nothing against a compromised host. Isolate the key by ownership
+and mount it read-only where you can.
+
+`Config.encrypt` also binds the config key name into the GCM tag. Copying an
+encrypted row to a different key — for example, moving the admin credential into
+a field rendered on a public page — makes `Config.decrypt` return `null` rather
+than hand back a value in the wrong place.
+
+There is no automatic key rotation. Envelopes record their own parameters
+(`bgcm1$<iterations>$<salt>$<iv>$<ciphertext+tag>`), so rotating means
+decrypting with the old key, encrypting with the new one, updating the row, and
+only then replacing the key file. Re-encrypt rather than reusing an envelope.
+
+Decryption runs whatever KDF cost the envelope asks for (up to ten million
+iterations), so never pass `Util.decrypt` a value an attacker controls together
+with a server-side secret: each attempt costs a fraction of a second of the
+single worker. Decrypt values you wrote, and check where they came from.
+
+`Config.decrypt` and `Util.decrypt` return `null` for a wrong key, a modified
+value, a truncated value, and a value that was never encrypted. They do not
+distinguish those cases, so a caller cannot use the failure as an oracle.
+
+> ⚠️ Pitfall: `Config.encrypt` writes the ciphertext, then you read it back with
+> `Config.decrypt`. `Config.get` returns the envelope, not the plaintext. Code
+> that logs `Config.get` for debugging is logging ciphertext — harmless — but
+> code that starts with `Config.get` where it needs a secret is a bug.
+
+> ⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+> `Util.encrypt` and `Config.encrypt` raise a runtime error instead of falling
+> back to something weaker. Check `Secret.available` and your startup logs if a
+> value unexpectedly fails to encrypt.
+
 ### TLS
 
 Bialet speaks **HTTP/1.1** (one request per connection, `Connection: close`)

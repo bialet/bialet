@@ -42,6 +42,7 @@ typedef enum {
   CLI_OPT_MAX_UPLOAD,
   CLI_OPT_FOREIGN_KEYS,
   CLI_OPT_SYNCHRONOUS,
+  CLI_OPT_SECRET_KEY,
   CLI_OPT_QUIET,
   CLI_OPT_COUNT
 } CliOptId;
@@ -72,6 +73,7 @@ static const CliOptSpec cli_opts[] = {
     {"max-upload-size", 'u', 1},
     {"foreign-keys", 'f', 1},
     {"synchronous", 's', 1},
+    {"secret-key-file", 'k', 1},
     {"quiet", 'q', 0},
 };
 
@@ -284,6 +286,9 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
                   value);
         return;
       }
+      break;
+    case CLI_OPT_SECRET_KEY:
+      config->secret_key_file = (char*)value;
       break;
     case CLI_OPT_QUIET:
       config->quiet = 1;

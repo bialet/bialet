@@ -182,6 +182,8 @@ Stable `Util` helpers:
 | `Util.htmlEscape(text)` | escaped HTML text |
 | `Util.isDigits(text)` | `true` when every character is `0`–`9` |
 | `Util.secureEquals(a, b)` | constant-time string comparison |
+| `Util.encrypt(value, secret)` | AES-256-GCM envelope (text, storable) |
+| `Util.decrypt(envelope, secret)` | plaintext, or `null` if it does not authenticate |
 
 `Config` is backed by `BIALET_CONFIG`:
 
@@ -193,6 +195,8 @@ Config.num("page_size")        // Num
 Config.enable("beta_features") // same as Config.set("beta_features", "1")
 Config.disable("maintenance")  // same as Config.set("maintenance", "0")
 Config.json("theme")           // parsed JSON value
+Config.encrypt("smtp_password", "...")  // AES-256-GCM under --secret-key-file
+Config.decrypt("smtp_password")         // plaintext, or null
 ```
 
 `Config.bool(key)` is an allow-list: `true` for `"1"` and `"true"`

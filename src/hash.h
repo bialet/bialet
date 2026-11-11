@@ -49,6 +49,41 @@ int  verify_password(const char* password, size_t password_len,
                      const char* hash_and_salt);
 void hash_password(const char* password, size_t password_len, char* output);
 
+// Zeroes [len] bytes at [ptr] in a way the optimizer cannot elide. Used for
+// derived keys and for plaintext that turned out to be forged.
+void secure_zero(void* ptr, size_t len);
+
+// PBKDF2-HMAC-SHA256 over an arbitrary salt, for callers that need the raw
+// derived bytes (encryption) rather than the self-describing password format.
+// Returns 1 on success. No fallback: a build without OpenSSL returns 0, so
+// encryption is unavailable rather than quietly weaker.
+int pbkdf2_sha256(const char* password, size_t password_len,
+                  const unsigned char* salt, size_t salt_len,
+                  unsigned int iterations, unsigned char* out, size_t out_len);
+
+// 1 when this build can encrypt at all (OpenSSL 3 or newer).
+int crypto_available(void);
+
+// AES-256-GCM with a random nonce and a per-message salt. Returns a malloc'd,
+// NUL-terminated envelope:
+//
+//   bgcm1$<iterations>$<salt hex|->$<iv hex>$<ciphertext||tag hex>
+//
+// [secret] is either a 64-hex-character raw AES-256 key (iterations 0, no KDF)
+// or a passphrase (PBKDF2, iterations recorded in the envelope). [aad] is
+// authenticated but not stored; pass NULL/0 for none. Returns NULL on failure.
+char* crypto_encrypt(const char* secret, size_t secret_len, const char* aad,
+                     size_t aad_len, const char* plaintext, size_t plaintext_len);
+
+// Verifies and decrypts an envelope from crypto_encrypt under the same [aad].
+// Returns a malloc'd buffer with its length in [*out_len] (and a trailing NUL
+// for convenience; the plaintext itself may contain NUL bytes). Returns NULL
+// for a malformed envelope, a wrong secret, or a tag mismatch -- and gives the
+// caller no way to tell which, so a failure is not an oracle.
+unsigned char* crypto_decrypt(const char* secret, size_t secret_len, const char* aad,
+                              size_t aad_len, const char* envelope,
+                              size_t envelope_len, size_t* out_len);
+
 // DJB2 hex digest of exactly [len] bytes, for callers that already know the
 // length (a Wren string can hold NUL). unsafe_hash() is the strlen wrapper kept
 // for the existing call sites.

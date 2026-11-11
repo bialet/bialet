@@ -20,6 +20,7 @@
 
 #include "hash.h"
 
+#include <ctype.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -135,6 +136,21 @@ void random_bytes_fill(unsigned char* buf, size_t len) {
     }
     buf[filled++] = (unsigned char)(r & 0xFF);
   }
+#endif
+}
+
+// Zeroes [len] bytes at [ptr] so a derived key or a forged plaintext does not
+// linger in freed heap. A plain memset() can be optimized away when the buffer
+// is about to be freed, so the call has to be opaque to the compiler.
+void secure_zero(void* ptr, size_t len) {
+  if(ptr == NULL || len == 0)
+    return;
+#ifdef OPENSSL_OK
+  OPENSSL_cleanse(ptr, len);
+#else
+  volatile unsigned char* p = (volatile unsigned char*)ptr;
+  while(len-- > 0)
+    *p++ = 0;
 #endif
 }
 
@@ -310,6 +326,23 @@ static int hex_decode(const char* hex, unsigned char* out, size_t out_len) {
 #define PBKDF2_SALT_LEN 16
 #define PBKDF2_HASH_LEN 32
 
+// Shared with the encryption envelope: same KDF, caller-chosen salt and output
+// length. PKCS5_PBKDF2_HMAC takes int lengths and an int iteration count, so
+// anything outside int range has to be refused rather than truncated into a
+// different derivation.
+int pbkdf2_sha256(const char* password, size_t password_len,
+                  const unsigned char* salt, size_t salt_len,
+                  unsigned int iterations, unsigned char* out, size_t out_len) {
+  if(password == NULL || salt == NULL || out == NULL)
+    return 0;
+  if(password_len > (size_t)INT_MAX || salt_len > (size_t)INT_MAX ||
+     out_len > (size_t)INT_MAX || salt_len == 0 || out_len == 0 || iterations == 0 ||
+     iterations > (unsigned int)INT_MAX)
+    return 0;
+  return PKCS5_PBKDF2_HMAC(password, (int)password_len, salt, (int)salt_len,
+                           (int)iterations, EVP_sha256(), (int)out_len, out) == 1;
+}
+
 static int pbkdf2_derive(const char* password, size_t password_len,
                          const unsigned char* salt, unsigned int iterations,
                          unsigned char* out) {
@@ -317,8 +350,8 @@ static int pbkdf2_derive(const char* password, size_t password_len,
   // cannot be hashed correctly, so fail instead of truncating.
   if(password_len > (size_t)INT_MAX)
     return 0;
-  return PKCS5_PBKDF2_HMAC(password, (int)password_len, salt, PBKDF2_SALT_LEN,
-                           (int)iterations, EVP_sha256(), PBKDF2_HASH_LEN, out) == 1;
+  return pbkdf2_sha256(password, password_len, salt, PBKDF2_SALT_LEN, iterations,
+                       out, PBKDF2_HASH_LEN);
 }
 
 // One-shot SHA-256 of password||salt: only used to verify hashes written by
@@ -336,6 +369,22 @@ static int legacy_sha256(const char* password, size_t password_len,
                     EVP_DigestFinal_ex(ctx, out, &len) == 1 && len == 32;
   EVP_MD_CTX_free(ctx);
   return ok;
+}
+#else
+// No OpenSSL: no PBKDF2 for encryption either. Returning 0 makes crypto_encrypt
+// fail, which is the intended outcome -- a build without OpenSSL must not
+// silently encrypt with something weaker.
+int pbkdf2_sha256(const char* password, size_t password_len,
+                  const unsigned char* salt, size_t salt_len,
+                  unsigned int iterations, unsigned char* out, size_t out_len) {
+  (void)password;
+  (void)password_len;
+  (void)salt;
+  (void)salt_len;
+  (void)iterations;
+  (void)out;
+  (void)out_len;
+  return 0;
 }
 #endif
 
@@ -460,3 +509,364 @@ int verify_password(const char* password, size_t password_len,
     return ct_equal(computedHash, hash_and_salt, UNSAFE_HASH_HEX_LEN);
   }
 }
+
+// ── AES-256-GCM ────────────────────────────────────────────────────────────
+//
+// Envelope:
+//
+//   bgcm1$<iterations>$<salt hex|->$<iv hex>$<ciphertext||tag hex>
+//
+// Self-describing for the same reason the password format is: the iteration
+// count travels with the value, so it can be raised later without invalidating
+// stored ciphertext.
+//
+// Choices worth stating:
+//
+//   * GCM, not CBC/CTR: the tag is what turns a tampered value into a decryption
+//     failure instead of a plausible-looking forgery.
+//   * A fresh random 96-bit nonce per message, from the OS CSPRNG. Reusing a
+//     nonce under one key breaks GCM catastrophically (XOR of plaintexts, plus
+//     the authentication key), so it is never a counter held in memory.
+//   * A 64-hex-character secret is a raw AES-256 key and skips the KDF -- the
+//     path a deployment key file should take (`openssl rand -hex 32`). Only a
+//     passphrase goes through PBKDF2. Nothing is ever stretched with a bare
+//     SHA-256, and there is no unauthenticated mode.
+//   * No OpenSSL means no encryption. Returning NULL is deliberate: a weaker
+//     fallback that still round-trips would be worse than an obvious failure.
+
+#ifdef OPENSSL_OK
+#define ENC_PREFIX "bgcm1$"
+#define ENC_PREFIX_LEN (sizeof(ENC_PREFIX) - 1)
+#define ENC_KEY_LEN 32
+#define ENC_SALT_LEN 16
+#define ENC_IV_LEN 12
+#define ENC_TAG_LEN 16
+// OWASP's 2023 floor for PBKDF2-HMAC-SHA256. It only runs for passphrases.
+#define ENC_ITERATIONS 600000u
+// A tampered envelope must not be able to burn minutes of CPU. Anything above
+// this is rejected before the KDF runs.
+#define ENC_MAX_ITERATIONS 10000000L
+#define ENC_MAX_PAYLOAD (64u * 1024u * 1024u)
+#define ENC_MAX_ENVELOPE ((size_t)ENC_MAX_PAYLOAD * 2 + 256)
+
+int crypto_available(void) {
+  return 1;
+}
+
+// A raw key is exactly 32 bytes written as hex. Anything else -- including a
+// 64-character passphrase -- is treated as a passphrase.
+static int enc_is_raw_key(const char* secret, size_t len) {
+  if(len != (size_t)ENC_KEY_LEN * 2)
+    return 0;
+  for(size_t i = 0; i < len; i++) {
+    if(!isxdigit((unsigned char)secret[i]))
+      return 0;
+  }
+  return 1;
+}
+
+// Derives the 32-byte key for one message. Returns 1 on success.
+static int enc_derive_key(const char* secret, size_t secret_len,
+                          const unsigned char* salt, unsigned int iterations,
+                          unsigned char key[ENC_KEY_LEN]) {
+  if(iterations == 0)
+    return hex_decode(secret, key, ENC_KEY_LEN);
+  return pbkdf2_sha256(secret, secret_len, salt, ENC_SALT_LEN, iterations, key,
+                       ENC_KEY_LEN);
+}
+
+static int enc_gcm_encrypt(const unsigned char key[ENC_KEY_LEN],
+                           const unsigned char iv[ENC_IV_LEN], const char* aad,
+                           size_t aad_len, const unsigned char* plaintext,
+                           size_t plaintext_len, unsigned char* ciphertext,
+                           unsigned char tag[ENC_TAG_LEN]) {
+  // EVP takes int lengths: refuse rather than truncate a huge value into a
+  // different message.
+  if(plaintext_len > (size_t)INT_MAX || aad_len > (size_t)INT_MAX)
+    return 0;
+
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+  if(ctx == NULL)
+    return 0;
+
+  int ok = 0, len = 0, total = 0;
+  if(EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL) != 1)
+    goto done;
+  if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ENC_IV_LEN, NULL) != 1)
+    goto done;
+  if(EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv) != 1)
+    goto done;
+  // AAD is authenticated but not stored; the caller supplies it again to
+  // decrypt. Empty AAD is skipped (NULL would be fine too, but this keeps the
+  // call sequence identical for both cases).
+  if(aad_len > 0 && EVP_EncryptUpdate(ctx, NULL, &len, (const unsigned char*)aad,
+                                      (int)aad_len) != 1)
+    goto done;
+  if(plaintext_len > 0) {
+    if(EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, (int)plaintext_len) != 1)
+      goto done;
+    total = len;
+  }
+  if(EVP_EncryptFinal_ex(ctx, ciphertext + total, &len) != 1)
+    goto done;
+  total += len;
+  if((size_t)total != plaintext_len) // GCM keeps the length; a mismatch is a bug
+    goto done;
+  if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, ENC_TAG_LEN, tag) != 1)
+    goto done;
+  ok = 1;
+done:
+  EVP_CIPHER_CTX_free(ctx);
+  return ok;
+}
+
+static int enc_gcm_decrypt(const unsigned char key[ENC_KEY_LEN],
+                           const unsigned char iv[ENC_IV_LEN], const char* aad,
+                           size_t aad_len, const unsigned char* ciphertext,
+                           size_t              ciphertext_len,
+                           const unsigned char tag[ENC_TAG_LEN],
+                           unsigned char*      plaintext) {
+  if(ciphertext_len > (size_t)INT_MAX || aad_len > (size_t)INT_MAX)
+    return 0;
+
+  EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+  if(ctx == NULL)
+    return 0;
+
+  int ok = 0, len = 0, total = 0;
+  if(EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL) != 1)
+    goto done;
+  if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, ENC_IV_LEN, NULL) != 1)
+    goto done;
+  if(EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv) != 1)
+    goto done;
+  if(aad_len > 0 && EVP_DecryptUpdate(ctx, NULL, &len, (const unsigned char*)aad,
+                                      (int)aad_len) != 1)
+    goto done;
+  if(ciphertext_len > 0) {
+    // GCM releases plaintext here, before the tag is checked. The caller wipes
+    // the buffer when the final call fails.
+    if(EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, (int)ciphertext_len) != 1)
+      goto done;
+    total = len;
+  }
+  // ctrl() takes the tag as void*; it is only read.
+  if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, ENC_TAG_LEN, (void*)tag) != 1)
+    goto done;
+  // The only call that verifies the tag: 1 means authentic, anything else is a
+  // wrong key or a modified value.
+  if(EVP_DecryptFinal_ex(ctx, plaintext + total, &len) != 1)
+    goto done;
+  total += len;
+  if((size_t)total != ciphertext_len)
+    goto done;
+  ok = 1;
+done:
+  EVP_CIPHER_CTX_free(ctx);
+  return ok;
+}
+
+char* crypto_encrypt(const char* secret, size_t secret_len, const char* aad,
+                     size_t aad_len, const char* plaintext, size_t plaintext_len) {
+  if(secret == NULL || secret_len == 0 || plaintext == NULL)
+    return NULL;
+  if(plaintext_len > ENC_MAX_PAYLOAD || aad_len > ENC_MAX_PAYLOAD)
+    return NULL;
+
+  unsigned char  key[ENC_KEY_LEN];
+  unsigned char  salt[ENC_SALT_LEN];
+  unsigned char  iv[ENC_IV_LEN];
+  char           salt_hex[ENC_SALT_LEN * 2 + 1];
+  char           iv_hex[ENC_IV_LEN * 2 + 1];
+  unsigned int   iterations = ENC_ITERATIONS;
+  unsigned char* sealed = NULL;
+  char*          out = NULL;
+
+  if(enc_is_raw_key(secret, secret_len)) {
+    // Nothing is being stretched, so a salt would add nothing but bytes.
+    iterations = 0;
+    salt_hex[0] = '-';
+    salt_hex[1] = '\0';
+  } else {
+    random_bytes_fill(salt, sizeof(salt));
+    hex_encode(salt, sizeof(salt), salt_hex);
+  }
+
+  if(!enc_derive_key(secret, secret_len, salt, iterations, key))
+    goto done;
+
+  random_bytes_fill(iv, sizeof(iv));
+  hex_encode(iv, sizeof(iv), iv_hex);
+
+  size_t sealed_len = plaintext_len + ENC_TAG_LEN; // ciphertext || tag
+  sealed = (unsigned char*)malloc(sealed_len);
+  if(sealed == NULL)
+    goto done;
+  if(!enc_gcm_encrypt(key, iv, aad, aad_len, (const unsigned char*)plaintext,
+                      plaintext_len, sealed, sealed + plaintext_len))
+    goto done;
+
+  // Small fixed header: prefix, at most 8 digits, a 32- or 1-char salt, a
+  // 24-char IV, and the separators. snprintf is measured, then the envelope is
+  // allocated to fit exactly (no fixed buffer with dynamic content).
+  char head[128];
+  int  head_len = snprintf(head, sizeof(head), ENC_PREFIX "%u$%s$%s$", iterations,
+                           salt_hex, iv_hex);
+  if(head_len < 0 || (size_t)head_len >= sizeof(head))
+    goto done;
+
+  size_t hex_len = sealed_len * 2;
+  out = (char*)malloc((size_t)head_len + hex_len + 1);
+  if(out == NULL)
+    goto done;
+  memcpy(out, head, (size_t)head_len);
+  hex_encode(sealed, sealed_len, out + head_len);
+
+done:
+  if(sealed != NULL) {
+    secure_zero(sealed, plaintext_len + ENC_TAG_LEN);
+    free(sealed);
+  }
+  secure_zero(key, sizeof(key));
+  secure_zero(salt, sizeof(salt));
+  return out;
+}
+
+unsigned char* crypto_decrypt(const char* secret, size_t secret_len, const char* aad,
+                              size_t aad_len, const char* envelope,
+                              size_t envelope_len, size_t* out_len) {
+  if(out_len != NULL)
+    *out_len = 0;
+  if(secret == NULL || secret_len == 0 || envelope == NULL)
+    return NULL;
+  if(envelope_len < ENC_PREFIX_LEN + 4 || envelope_len > ENC_MAX_ENVELOPE)
+    return NULL;
+  if(memcmp(envelope, ENC_PREFIX, ENC_PREFIX_LEN) != 0)
+    return NULL;
+  // The parser walks the value with strtol/strchr, so an embedded NUL has to be
+  // refused here instead of silently truncating the envelope.
+  if(strlen(envelope) != envelope_len)
+    return NULL;
+
+  const char* p = envelope + ENC_PREFIX_LEN;
+  char*       end = NULL;
+  long        iterations = strtol(p, &end, 10);
+  // A negative or absurd count is a tampered envelope, not a slow one: reject
+  // before running the KDF. (strtol saturates at LONG_MAX on overflow, which
+  // this bound rejects too.)
+  if(end == p || *end != '$' || iterations < 0 || iterations > ENC_MAX_ITERATIONS)
+    return NULL;
+  // iteration 0 means "raw key", so the secret must actually be one: otherwise
+  // hex_decode would read past the end of a shorter string.
+  if(iterations == 0 && !enc_is_raw_key(secret, secret_len))
+    return NULL;
+
+  const char* salt_hex = end + 1;
+  const char* sep = strchr(salt_hex, '$');
+  if(sep == NULL)
+    return NULL;
+  size_t salt_hex_len = (size_t)(sep - salt_hex);
+
+  const char* iv_hex = sep + 1;
+  sep = strchr(iv_hex, '$');
+  if(sep == NULL)
+    return NULL;
+  if((size_t)(sep - iv_hex) != (size_t)ENC_IV_LEN * 2)
+    return NULL;
+
+  const char* ct_hex = sep + 1;
+  size_t      ct_hex_len = envelope_len - (size_t)(ct_hex - envelope);
+  if(ct_hex_len % 2 != 0 || ct_hex_len < (size_t)ENC_TAG_LEN * 2)
+    return NULL;
+  size_t ct_len = ct_hex_len / 2; // ciphertext || tag
+  size_t pt_len = ct_len - ENC_TAG_LEN;
+  if(pt_len > ENC_MAX_PAYLOAD)
+    return NULL;
+
+  unsigned char  key[ENC_KEY_LEN];
+  unsigned char  salt[ENC_SALT_LEN];
+  unsigned char  iv[ENC_IV_LEN];
+  unsigned char* ct = NULL;
+  unsigned char* pt = NULL;
+  unsigned char* result = NULL;
+
+  if(iterations == 0) {
+    if(salt_hex_len != 1 || salt_hex[0] != '-')
+      goto done;
+  } else if(salt_hex_len != (size_t)ENC_SALT_LEN * 2) {
+    goto done;
+  } else if(!hex_decode(salt_hex, salt, ENC_SALT_LEN)) {
+    goto done;
+  }
+  if(!hex_decode(iv_hex, iv, ENC_IV_LEN))
+    goto done;
+
+  ct = (unsigned char*)malloc(ct_len);
+  if(ct == NULL)
+    goto done;
+  if(!hex_decode(ct_hex, ct, ct_len))
+    goto done;
+  if(!enc_derive_key(secret, secret_len, salt, (unsigned int)iterations, key))
+    goto done;
+
+  // +1 so the result can also be handed to Wren as a C string; the real length
+  // is returned separately because the plaintext may contain NUL bytes.
+  pt = (unsigned char*)malloc(pt_len + 1);
+  if(pt == NULL)
+    goto done;
+  if(!enc_gcm_decrypt(key, iv, aad, aad_len, ct, pt_len,
+                      ct + pt_len, // the tag is appended to the ciphertext
+                      pt))
+    goto done;
+
+  pt[pt_len] = '\0';
+  if(out_len != NULL)
+    *out_len = pt_len;
+  result = pt;
+  pt = NULL; // ownership moves to the caller
+
+done:
+  if(pt != NULL) {
+    // GCM writes plaintext before it verifies the tag, so a forged envelope
+    // leaves unauthenticated bytes in this buffer. Wipe before freeing.
+    secure_zero(pt, pt_len);
+    free(pt);
+  }
+  free(ct);
+  secure_zero(key, sizeof(key));
+  secure_zero(salt, sizeof(salt));
+  return result;
+}
+
+#else /* !OPENSSL_OK */
+
+int crypto_available(void) {
+  return 0;
+}
+
+char* crypto_encrypt(const char* secret, size_t secret_len, const char* aad,
+                     size_t aad_len, const char* plaintext, size_t plaintext_len) {
+  (void)secret;
+  (void)secret_len;
+  (void)aad;
+  (void)aad_len;
+  (void)plaintext;
+  (void)plaintext_len;
+  return NULL;
+}
+
+unsigned char* crypto_decrypt(const char* secret, size_t secret_len, const char* aad,
+                              size_t aad_len, const char* envelope,
+                              size_t envelope_len, size_t* out_len) {
+  (void)secret;
+  (void)secret_len;
+  (void)aad;
+  (void)aad_len;
+  (void)envelope;
+  (void)envelope_len;
+  if(out_len != NULL)
+    *out_len = 0;
+  return NULL;
+}
+
+#endif /* OPENSSL_OK */

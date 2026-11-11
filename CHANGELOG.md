@@ -4,6 +4,36 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.16 — unreleased
+
+### Added
+
+- `Util.encrypt(value, secret)` / `Util.decrypt(value, secret)`: AES-256-GCM
+  with a fresh random nonce per message and a self-describing text envelope
+  (`bgcm1$<iterations>$<salt>$<iv>$<ciphertext+tag>`). The secret is either a
+  passphrase (PBKDF2-HMAC-SHA256, 600,000 iterations, per-message salt) or 64
+  hex characters used directly as a 256-bit key. Decryption returns `null` for a
+  wrong secret, a modified value, and a malformed envelope alike, and a build
+  without OpenSSL 3 raises instead of falling back to something weaker.
+- `Config.encrypt` / `Config.decrypt` store encrypted values in
+  `BIALET_CONFIG` under a deployment key that never enters the database or the
+  Wren heap. The config key name is authenticated as AAD, so a ciphertext moved
+  to another key fails to decrypt instead of taking effect in the wrong place.
+- `-k` / `--secret-key-file` loads that deployment key from a file outside the
+  app root: 64 hex characters or a passphrase. Refused when the file is missing,
+  is not a regular file, is empty, exceeds 4 KB, contains a NUL byte, or
+  resolves inside the app root.
+- `Secret.available` reports whether a deployment key was loaded. The key
+  material itself is never exposed to Wren, so it cannot reach a template, a
+  log line, or a `%(...)` interpolation.
+
+### Tests
+
+- `tests/crypto.wren` and `tests/crypto-config.wren` cover encryption round
+  trips, per-message nonces, tamper and truncation detection, forged envelopes
+  (raw-key marker with a short secret, absurd iteration counts, non-hex fields,
+  embedded NUL), payloads containing NUL bytes, and the config-key AAD binding.
+
 ## 1.2.15 — 2026-11-11
 
 ### Security

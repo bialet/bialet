@@ -14,6 +14,7 @@
 #include "http_call.h"
 #include "livereload.h"
 #include "messages.h"
+#include "secret.h"
 #include "server.h"
 #include "show_errors.h"
 #include "utils.h"
@@ -415,6 +416,7 @@ int main(int argc, char* argv[]) {
   bialet_config.output_color = 1;
   bialet_config.db_path = DB_FILE;
   bialet_config.wal_mode = 0;
+  bialet_config.secret_key_file = NULL;
   bialet_config.ignored_files = IGNORED_FILES;
   bialet_config.max_upload_size = DEFAULT_MAX_UPLOAD_SIZE; // Default 4MB
   bialet_config.max_post_size = 128 * 1024;                // Default 128KB
@@ -572,6 +574,26 @@ int main(int argc, char* argv[]) {
       }
     }
   }
+  /* The deployment key is loaded before bialet_init(), so it is available to
+   * migrations, to -r provisioning, and to every request. It is deliberately
+   * not stored in BIALET_CONFIG: a copy of the database would otherwise contain
+   * both the ciphertext and the key. */
+  atexit(secret_key_clear);
+  if(bialet_config.secret_key_file != NULL) {
+    char secret_err[512];
+    if(secret_key_load(bialet_config.secret_key_file, bialet_config.full_root_dir,
+                       secret_err, sizeof(secret_err)) != 0) {
+      fprintf(stderr, "Error: %s\n", secret_err);
+      exit(EXIT_FAILURE);
+    }
+    if(secret_key_was_group_readable()) {
+      /* stderr, for the same reason as the log-path check below: message()
+       * writes to log_file, which the operator may not be watching. */
+      fprintf(stderr, "Warning: %s is readable by group or others; chmod 600 it\n",
+              bialet_config.secret_key_file);
+    }
+  }
+
   /* Quiet syntax validation buffers message() output (migration notes, compile
    * diagnostics) so `bialet -t -q FILE` prints nothing on success and only the
    * diagnostics on failure. */

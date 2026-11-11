@@ -1066,6 +1066,15 @@ fi
 run_test "Config operations           " "config"          200 "test_value,42,true,false,true"
 run_test "Config json and delete      " "config-json"     200 "a:1|b:2|raw:{\"b\":2}|gone:true"
 
+# Tests - Encryption (AES-256-GCM)
+run_test "Util encrypt/decrypt        " "crypto"          200 "true"
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  # Needs the deployment key, which util.sh passes to the server it starts.
+  run_test "Config encrypt/decrypt      " "crypto-config"   200 "true"
+else
+  skip_test "Config encrypt/decrypt      " "server was not started with --secret-key-file"
+fi
+
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"

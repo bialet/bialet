@@ -405,8 +405,13 @@ fi
 # Start server
 if [[ "$TARGET_EXEC" != "-" ]]; then
   require_free_port "$HOST" "$PORT" "test server"
+  # Deployment key for the Config.encrypt/decrypt tests: a known raw AES-256 key
+  # in a 0600 file outside the app root. mktemp avoids the predictable-path
+  # problem a fixed /tmp name would have.
+  SECRET_KEY_FILE="$(mktemp /tmp/bialet-test-secret.XXXXXX)"
+  printf '%s\n' "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" > "$SECRET_KEY_FILE"
   [[ "${QUIET:-0}" != 1 ]] && echo -e -n "${BLUE}Start server process...\t"
-  $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log $(dirname "$0") > /dev/null 2>&1 &
+  $TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log -k "$SECRET_KEY_FILE" $(dirname "$0") > /dev/null 2>&1 &
   SERVER_PID=$!
   disown
 
@@ -450,6 +455,7 @@ finish() {
     [[ "${QUIET:-0}" != 1 ]] && echo -e -n "\n${BLUE}Stop server process...\t"
     # kill all
     pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    [[ -n "${SECRET_KEY_FILE:-}" ]] && rm -f "$SECRET_KEY_FILE"
     [[ "${QUIET:-0}" != 1 ]] && echo -e " ${GREEN}OK${NC}"
   fi
 }
