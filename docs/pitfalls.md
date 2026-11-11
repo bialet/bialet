@@ -287,8 +287,10 @@ Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
 ```
 
-HTML collapses or inserts whitespace between words. Assert a single stable
-token (a heading, a name, a badge) instead of a multi-word sentence.
+HTML collapses or inserts whitespace between words, and `.contains` matches the
+raw markup. Use `.textContains("1 paciente para")` instead: `text()` strips tags
+and collapses whitespace runs to a single space, so the assertion does not
+depend on how the template wraps the line.
 
 ## 25. Enforce rules in the domain, not only in the UI
 

@@ -7,11 +7,12 @@ class TestResponse {
   code { _code }
   body { _body }
   headers { _headers }
-  // The body with HTML tags removed, so an assertion cannot match an
-  // attribute or a script body instead of the text a person sees.
+  // The body with HTML tags removed and whitespace collapsed, so an assertion
+  // cannot match an attribute or depend on how the template wraps a sentence.
   text {
     var out = []
     var inTag = false
+    var lastSpace = false
     for (char in _body) {
       if (char == "<") {
         inTag = true
@@ -21,9 +22,17 @@ class TestResponse {
         inTag = false
         continue
       }
-      if (!inTag) out.add(char)
+      if (inTag) continue
+      var isSpace = char == " " || char == "\n" || char == "\r" || char == "\t"
+      if (isSpace) {
+        if (!lastSpace && out.count > 0) out.add(" ")
+        lastSpace = true
+      } else {
+        out.add(char)
+        lastSpace = false
+      }
     }
-    return out.join("")
+    return out.join("").trim()
   }
   // The hidden field rendered by Session.csrf, so a test can GET a form and
   // post its token back instead of hard-coding one.
