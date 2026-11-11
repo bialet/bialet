@@ -138,6 +138,10 @@ Chain these after the request method:
 
 **Note:** Assertions are lazy - the request is executed when the first assertion is called.
 
+`.contains()` matches raw markup; attributes and script bodies can satisfy it. Use
+`.textContains()` for visible text: it strips tags and collapses whitespace, so a
+multi-word assertion does not depend on how the template wraps the line.
+
 ### Body Assertions
 
 ```wren

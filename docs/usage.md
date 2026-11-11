@@ -118,6 +118,11 @@ bialet -r 'return "No log, plain response"'
 
 You have to respect newlines in the code.
 
+The script runs without a request: `Request.method`, `Request.get(...)` and
+`Request.post(...)` return null. It does initialize the framework tables, so
+`Config` and `Session` work. Your app's own tables exist only if the database
+was already migrated (for example by starting the server or running `bialet -T`).
+
 ## Running Tests
 
 Bialet includes a built-in testing framework. See [Testing Guide](tests.md)
