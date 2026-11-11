@@ -18,12 +18,35 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 - `Date.==` and `Date.!=` are null-safe: `date == null` is `false` instead of
   raising `Null does not implement 'unix'`. Comparing a Date to a non-Date is
   likewise `false` / `true`.
+- `value == null` and `value != null` no longer dispatch to a user class's
+  `==` with a null operand; null equality is decided by the VM, so a class
+  that reads a field from the other operand cannot crash on null.
+- `Num.fromString(null)` returns `null`, the same as an unparseable string,
+  instead of raising "Argument must be a string".
 
 ### Added
 
 - `value.toString()` is accepted as an alias for the `toString` getter on
   every type, including user classes. `count()`, `keys()` and `values()` are
   still getters, and `trim` still needs its parentheses.
+- `Map.get(key)` / `Map.get(key, default)` and a non-mutating `List.reverse`.
+- `Date.fromUnix(seconds)` builds a Date from epoch seconds in `Date.tz`.
+- `Test.textContains()` and `Test.text()` assert on visible text (tags
+  stripped, whitespace collapsed) instead of raw markup.
+- A bare `%` in a Wren string is a literal; only `%(` starts interpolation.
+
+### Performance
+
+- Identifier tokens are lexed from the source slice instead of through a
+  temporary buffer. Per-request VM creation compiles the core sources, so this
+  is the largest win: about 20% lower latency on the interpreter endpoints in
+  the benchmark harness.
+- `String.safe`, `String.trim`/`trimStart`/`trimEnd` (no arguments) and
+  `String.split` are native, and `Util.secureEquals` compares bytes directly.
+  Template escaping is about 35% faster, rendering about 17%, and query-heavy
+  requests about 19%.
+- `Query.fetch` builds column names once per result set instead of once per
+  row.
 
 ## 1.2.13 — 2026-11-11
 
