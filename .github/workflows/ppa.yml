@@ -34,6 +34,11 @@ on:
         required: false
         type: string
         default: '["jammy","noble","resolute","stonking"]'
+      include_orig:
+        description: Include the .orig.tar.gz (only for the first series of a release)
+        required: false
+        type: boolean
+        default: true
     secrets:
       PPA_GPG_KEY:
         required: false
@@ -54,6 +59,11 @@ on:
         required: false
         type: string
         default: '["jammy","noble","resolute","stonking"]'
+      include_orig:
+        description: Include the .orig.tar.gz (only for the first series of a release)
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -132,8 +142,13 @@ jobs:
 
       - name: Build the source package
         run: |
+          if [ "${{ inputs.include_orig }}" = "true" ]; then
+            ORIG_FLAG=-sa
+          else
+            ORIG_FLAG=-sd
+          fi
           if [ -z "${PPA_GPG_KEY}" ]; then
-            dpkg-buildpackage -S -sa -d -us -uc
+            dpkg-buildpackage -S "${ORIG_FLAG}" -d -us -uc
           else
             export GNUPGHOME=/tmp/gnupg
             mkdir -m 700 "$GNUPGHOME"
@@ -143,7 +158,7 @@ jobs:
             printf '%s' "${PPA_GPG_KEY}" | base64 -d | gpg --batch --import
             # A key with a passphrase needs gpg-agent to have it cached; use a
             # dedicated key without one for unattended uploads.
-            dpkg-buildpackage -S -sa -d -k"${PPA_GPG_KEY_ID}"
+            dpkg-buildpackage -S "${ORIG_FLAG}" -d -k"${PPA_GPG_KEY_ID}"
           fi
 
       - name: Lintian
