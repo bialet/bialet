@@ -67,7 +67,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.13" />
+  <meta name="docsearch:version" content="1.2.14" />
   </head>
   
   
@@ -639,6 +639,12 @@ values set during a <code class="docutils literal notranslate"><span class="pre"
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.notContains(str)</span></code></p></td>
 <td><p>Assert body doesn’t contain string</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.textContains(str)</span></code></p></td>
+<td><p>Assert visible text (tags stripped, whitespace collapsed) contains string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.text()</span></code></p></td>
+<td><p>Return visible text (tags stripped, whitespace collapsed)</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.header(name)</span></code></p></td>
 <td><p>Assert header exists</p></td>
 </tr>
@@ -664,6 +670,9 @@ values set during a <code class="docutils literal notranslate"><span class="pre"
 </table>
 </div>
 <p><strong>Note:</strong> Assertions are lazy - the request is executed when the first assertion is called.</p>
+<p><code class="docutils literal notranslate"><span class="pre">.contains()</span></code> matches raw markup; attributes and script bodies can satisfy it. Use
+<code class="docutils literal notranslate"><span class="pre">.textContains()</span></code> for visible text: it strips tags and collapses whitespace, so a
+multi-word assertion does not depend on how the template wraps the line.</p>
 </section>
 <section id="body-assertions">
 <h3>Body Assertions<a class="headerlink" href="#body-assertions" title="Link to this heading">#</a></h3>

@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.13" />
+  <meta name="docsearch:version" content="1.2.14" />
   </head>
   
   
@@ -615,7 +615,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.13</span>
+<span class="c1"># bialet 1.2.14</span>
 </pre></div>
 </div>
 </section>
@@ -639,6 +639,10 @@ Useful in scripts, containers, and CI:</p>
 </pre></div>
 </div>
 <p>You have to respect newlines in the code.</p>
+<p>The script runs without a request: <code class="docutils literal notranslate"><span class="pre">Request.method</span></code>, <code class="docutils literal notranslate"><span class="pre">Request.get(...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Request.post(...)</span></code> return null. It does initialize the framework tables, so
+<code class="docutils literal notranslate"><span class="pre">Config</span></code> and <code class="docutils literal notranslate"><span class="pre">Session</span></code> work. Your app’s own tables exist only if the database
+was already migrated (for example by starting the server or running <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code>).</p>
 </section>
 <section id="running-tests">
 <h2>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h2>

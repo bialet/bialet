@@ -67,7 +67,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.13" />
+  <meta name="docsearch:version" content="1.2.14" />
   </head>
   
   
@@ -469,6 +469,7 @@ and specific dates:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="k">var</span><span class="w"> </span><span class="n">specificDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">,</span><span class="w"> </span><span class="mf">15</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">)</span>
 <span class="k">var</span><span class="w"> </span><span class="n">justDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fromEpoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="mf">1700000000</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -478,6 +479,9 @@ and specific dates:</p>
 specific date and time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Date.new(year,</span> <span class="pre">month,</span> <span class="pre">day)</span></code> creates a date object with the specified year,
 month, and day at midnight.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.fromUnix(seconds)</span></code> creates a date from a Unix timestamp (epoch
+seconds), formatted in <code class="docutils literal notranslate"><span class="pre">Date.tz</span></code>. <code class="docutils literal notranslate"><span class="pre">Date.new(1700000000)</span></code> is a year, not a
+timestamp.</p></li>
 </ul>
 </section>
 <section id="per-instance-timezone-handling">
@@ -518,11 +522,10 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 <section id="adding-and-subtracting-time">
 <h2>Adding and Subtracting Time<a class="headerlink" href="#adding-and-subtracting-time" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Date</span></code> does <strong>not</strong> implement <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> — <code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">+</span> <span class="pre">86400</span></code> raises
-<code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'+(_)'.</span></code>. There is also no way to build a <code class="docutils literal notranslate"><span class="pre">Date</span></code>
-directly from a Unix timestamp number — <code class="docutils literal notranslate"><span class="pre">Date.new(1700000000)</span></code> raises
-<code class="docutils literal notranslate"><span class="pre">Num</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'split(_)'.</span></code> (the constructor always expects a
-string in <code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD</span> <span class="pre">HH:MM:SS&quot;</span></code> format, or another
-<code class="docutils literal notranslate"><span class="pre">Date</span></code>).</p>
+<code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'+(_)'</span></code>. Build a date from epoch seconds with
+<code class="docutils literal notranslate"><span class="pre">Date.fromUnix(1700000000)</span></code>; <code class="docutils literal notranslate"><span class="pre">Date.new(1700000000)</span></code> is a year, not a
+timestamp (the constructor expects a string in <code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD</span> <span class="pre">HH:MM:SS&quot;</span></code> format, or another <code class="docutils literal notranslate"><span class="pre">Date</span></code>).</p>
 <p>For two <strong>instants</strong> (comparing “how many seconds apart”), use <code class="docutils literal notranslate"><span class="pre">.unix</span></code> and
 <code class="docutils literal notranslate"><span class="pre">.diff</span></code> directly — both already return plain numbers:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"2024-09-13 10:00:00"</span><span class="p">)</span>

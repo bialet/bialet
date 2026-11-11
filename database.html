@@ -67,7 +67,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.13" />
+  <meta name="docsearch:version" content="1.2.14" />
   </head>
   
   
@@ -652,7 +652,7 @@ up in pieces.</p>
 </pre></div>
 </div>
 <blockquote>
-<div><p><strong>Note:</strong> column values from queries come back as <strong>strings</strong>. Use <code class="docutils literal notranslate"><span class="pre">.toNum</span></code> to get a numeric value directly (as with <code class="docutils literal notranslate"><span class="pre">COUNT</span></code> above), or <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> to convert individual columns. See the Data Types section below for details.</p>
+<div><p><strong>Note:</strong> column values from queries come back as <strong>strings</strong>. Use <code class="docutils literal notranslate"><span class="pre">.toNum</span></code> to get a numeric value directly (as with <code class="docutils literal notranslate"><span class="pre">COUNT</span></code> above), or <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> to convert individual columns. See the Data Types section below for details. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> and an unparseable string both return null, so coalesce with <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">0</span></code> before arithmetic.</p>
 </div></blockquote>
 <p>For a quick “top N” query without counting, use <code class="docutils literal notranslate"><span class="pre">.order()</span></code> with its optional limit parameter instead of manual <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">OFFSET</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">topUsers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users`</span>
@@ -797,7 +797,10 @@ NULL.</p>
 for numeric access:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">.toNum()</span></code> — returns the first column value as a number. Most common for
-<code class="docutils literal notranslate"><span class="pre">COUNT(*)</span></code>, <code class="docutils literal notranslate"><span class="pre">SUM()</span></code>, and other aggregate queries.</p></li>
+<code class="docutils literal notranslate"><span class="pre">COUNT(*)</span></code>, <code class="docutils literal notranslate"><span class="pre">SUM()</span></code>, and other aggregate queries. A NULL result (for example
+<code class="docutils literal notranslate"><span class="pre">MAX()</span></code> over an empty table) and a non-numeric value become <code class="docutils literal notranslate"><span class="pre">0</span></code>, so it is
+safe to do arithmetic on the result. A raw column from <code class="docutils literal notranslate"><span class="pre">.first()</span></code> is still
+<code class="docutils literal notranslate"><span class="pre">null</span></code>; use <code class="docutils literal notranslate"><span class="pre">COALESCE(...)</span></code> in SQL if you add to it directly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.val()</span></code> + <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code> — manually convert a string column to a number</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.toBool()</span></code> — returns the first column value as a boolean</p></li>
 </ul>

@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.13" />
+  <meta name="docsearch:version" content="1.2.14" />
   </head>
   
   
@@ -439,36 +439,26 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring-is-a-getter-trim-is-a-method">1. <code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter; <code class="docutils literal notranslate"><span class="pre">trim</span></code> is a method</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#never-compare-a-date-or-a-user-class-to-null-with-date-null">2. Never compare a Date (or a user class) to <code class="docutils literal notranslate"><span class="pre">null</span></code> with <code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">==</span> <span class="pre">null</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-method-that-produces-a-value-needs-an-explicit-return">3. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-literal-in-a-wren-string-is-x25">4. A literal <code class="docutils literal notranslate"><span class="pre">%</span></code> in a Wren string is <code class="docutils literal notranslate"><span class="pre">\x25</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-config-stores-key-val-not-key-value">5. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-methods-take-at-most-three-positional-arguments">6. Query methods take at most three positional arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">7. Every file imports what it uses</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">8. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">9. Tests use a temporary database; manual HTTP does not</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist">10. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">11. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions-match-raw-markup">12. Assertions match raw markup</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">13. Do not nest the same outermost HTML tag</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">14. Assigning a property needs an explicit setter</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">15. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aggregates-return-null-on-an-empty-table">16. Aggregates return null on an empty table</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-has-no-reverse">17. <code class="docutils literal notranslate"><span class="pre">List</span></code> has no <code class="docutils literal notranslate"><span class="pre">reverse</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">18. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-has-no-get-key">19. <code class="docutils literal notranslate"><span class="pre">Map</span></code> has no <code class="docutils literal notranslate"><span class="pre">get(key)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">20. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">21. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">22. Name the columns in every INSERT</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-name-must-match-request-post-exactly">23. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#strings-do-not-implement-or">24. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-null-raises-argument-must-be-a-string">25. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> raises “Argument must be a string”</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">26. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#private-apps-need-a-first-run-credential">27. Private apps need a first-run credential</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">28. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-whitespace-makes-multi-word-contains-assertions-fragile">29. HTML whitespace makes multi-word <code class="docutils literal notranslate"><span class="pre">.contains</span></code> assertions fragile</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">30. Enforce rules in the domain, not only in the UI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request">31. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-method-that-produces-a-value-needs-an-explicit-return">2. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-config-stores-key-val-not-key-value">3. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-methods-take-at-most-three-positional-arguments">4. Query methods take at most three positional arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">5. Every file imports what it uses</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">6. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">10. Do not nest the same outermost HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">15. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">16. Name the columns in every INSERT</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-name-must-match-request-post-exactly">17. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#strings-do-not-implement-or">18. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
 </ul>
             </nav>
         </div>
@@ -490,28 +480,17 @@ a page that worked on an empty database meets its first row.</p>
 <section id="tostring-is-a-getter-trim-is-a-method">
 <h2>1. <code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter; <code class="docutils literal notranslate"><span class="pre">trim</span></code> is a method<a class="headerlink" href="#tostring-is-a-getter-trim-is-a-method" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="c1">// correct</span>
-<span class="c1">// name=(val) { _name = val.toString().trim() } // String does not implement 'toString()'</span>
 <span class="c1">// name=(val) { _name = val.toString.trim }     // String does not implement 'trim'</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">toString</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code> and <code class="docutils literal notranslate"><span class="pre">values</span></code> are getters: no parentheses. <code class="docutils literal notranslate"><span class="pre">trim</span></code> is
-a <strong>method</strong>: it needs <code class="docutils literal notranslate"><span class="pre">()</span></code>. Mixing the two forms is the most common source of
-500s in setters.</p>
-</section>
-<section id="never-compare-a-date-or-a-user-class-to-null-with-date-null">
-<h2>2. Never compare a Date (or a user class) to <code class="docutils literal notranslate"><span class="pre">null</span></code> with <code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">==</span> <span class="pre">null</span></code><a class="headerlink" href="#never-compare-a-date-or-a-user-class-to-null-with-date-null" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// safe</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kc">null</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// safe</span>
-<span class="c1">// if (date == null) ...    // Runtime Error: Null does not implement 'unix'.</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">==</span> <span class="pre">null</span></code> calls <code class="docutils literal notranslate"><span class="pre">Date.==</span></code>, which reads <code class="docutils literal notranslate"><span class="pre">other.unix</span></code>; <code class="docutils literal notranslate"><span class="pre">null</span></code> has no <code class="docutils literal notranslate"><span class="pre">unix</span></code>.
-<code class="docutils literal notranslate"><span class="pre">!date</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code> only when the value is null (a Date makes <code class="docutils literal notranslate"><span class="pre">!date</span></code> return null,
-which is falsy), so it is the idiomatic guard. The same rule applies to your own
-classes: put the null check on the left, or test <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!value)</span></code>.</p>
+a <strong>method</strong>: it needs <code class="docutils literal notranslate"><span class="pre">()</span></code>. <code class="docutils literal notranslate"><span class="pre">toString()</span></code> is accepted as an alias for the getter
+(the compiler treats the zero-argument call as the getter), so both spellings
+work; <code class="docutils literal notranslate"><span class="pre">count()</span></code>, <code class="docutils literal notranslate"><span class="pre">keys()</span></code> and <code class="docutils literal notranslate"><span class="pre">values()</span></code> still fail. Forgetting the <code class="docutils literal notranslate"><span class="pre">()</span></code> on
+<code class="docutils literal notranslate"><span class="pre">trim</span></code> is the usual source of 500s in setters.</p>
 </section>
 <section id="every-method-that-produces-a-value-needs-an-explicit-return">
-<h2>3. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code><a class="headerlink" href="#every-method-that-produces-a-value-needs-an-explicit-return" title="Link to this heading">#</a></h2>
+<h2>2. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code><a class="headerlink" href="#every-method-that-produces-a-value-needs-an-explicit-return" title="Link to this heading">#</a></h2>
 <p>Wren is not expression-oriented: a method returns the value of <code class="docutils literal notranslate"><span class="pre">return</span></code>, not the
 last expression.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">forDay</span><span class="p">(</span><span class="n">day</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -524,19 +503,8 @@ raises a catchable <code class="docutils literal notranslate"><span class="pre">
 500. Checking the result first (<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!rows)</span> <span class="pre">rows</span> <span class="pre">=</span> <span class="pre">[]</span></code>) avoids the failed
 request.</p>
 </section>
-<section id="a-literal-in-a-wren-string-is-x25">
-<h2>4. A literal <code class="docutils literal notranslate"><span class="pre">%</span></code> in a Wren string is <code class="docutils literal notranslate"><span class="pre">\x25</span></code><a class="headerlink" href="#a-literal-in-a-wren-string-is-x25" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"100</span><span class="se">\x25</span><span class="s2">"</span><span class="p">)</span><span class="w">   </span><span class="c1">// 100%</span>
-<span class="c1">// System.print("100%")   // Compilation Error: Expect '(' after '%'.</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">%(</span></code> starts interpolation, so a bare <code class="docutils literal notranslate"><span class="pre">%</span></code> is a syntax error. In an <strong>HTML
-template</strong> <code class="docutils literal notranslate"><span class="pre">%</span></code> is plain text: write <code class="docutils literal notranslate"><span class="pre">100%</span></code> there (if the template parser
-complains, use the entity <code class="docutils literal notranslate"><span class="pre">&amp;#37;</span></code>). Do not write <code class="docutils literal notranslate"><span class="pre">\x25</span></code> in HTML: it renders
-literally as <code class="docutils literal notranslate"><span class="pre">\x25</span></code>.</p>
-</section>
 <section id="bialet-config-stores-key-val-not-key-value">
-<h2>5. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code><a class="headerlink" href="#bialet-config-stores-key-val-not-key-value" title="Link to this heading">#</a></h2>
+<h2>3. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code><a class="headerlink" href="#bialet-config-stores-key-val-not-key-value" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"fee_amount"</span><span class="p">,</span><span class="w"> </span><span class="s2">"20000"</span><span class="p">)</span><span class="w">   </span><span class="c1">// correct</span>
 <span class="c1">// INSERT INTO BIALET_CONFIG (key, value) ...</span>
 <span class="c1">// Query Error: table BIALET_CONFIG has no column named value</span>
@@ -546,7 +514,7 @@ literally as <code class="docutils literal notranslate"><span class="pre">\x25</
 <a class="reference internal" href="configuration.html"><span class="std std-doc">Configuration</span></a>); never hand-write the table.</p>
 </section>
 <section id="query-methods-take-at-most-three-positional-arguments">
-<h2>6. Query methods take at most three positional arguments<a class="headerlink" href="#query-methods-take-at-most-three-positional-arguments" title="Link to this heading">#</a></h2>
+<h2>4. Query methods take at most three positional arguments<a class="headerlink" href="#query-methods-take-at-most-three-positional-arguments" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="sb">`SELECT * FROM x WHERE a=? AND b=? AND c=? AND d=?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">])</span>
 <span class="c1">// .fetch(a, b, c, d) -&gt; Query does not implement 'fetch(_,_,_,_)'</span>
 </pre></div>
@@ -555,7 +523,7 @@ literally as <code class="docutils literal notranslate"><span class="pre">\x25</
 <code class="docutils literal notranslate"><span class="pre">.order</span></code>. Four or more values go in one List.</p>
 </section>
 <section id="every-file-imports-what-it-uses">
-<h2>7. Every file imports what it uses<a class="headerlink" href="#every-file-imports-what-it-uses" title="Link to this heading">#</a></h2>
+<h2>5. Every file imports what it uses<a class="headerlink" href="#every-file-imports-what-it-uses" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// route file</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">"/_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">"/_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Item</span><span class="p">,</span><span class="w"> </span><span class="nc">Member</span>
@@ -568,7 +536,7 @@ literally as <code class="docutils literal notranslate"><span class="pre">\x25</
 is why <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">Periods.label(...)</span> <span class="pre">}}</span></code> can fail with <code class="docutils literal notranslate"><span class="pre">Variable</span> <span class="pre">is</span> <span class="pre">used</span> <span class="pre">but</span> <span class="pre">not</span> <span class="pre">defined</span></code> even though <code class="docutils literal notranslate"><span class="pre">Periods</span></code> exists in <code class="docutils literal notranslate"><span class="pre">_app/domain.wren</span></code>.</p>
 </section>
 <section id="tests-init-wren-variables-are-global-to-every-test-file">
-<h2>8. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file<a class="headerlink" href="#tests-init-wren-variables-are-global-to-every-test-file" title="Link to this heading">#</a></h2>
+<h2>6. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file<a class="headerlink" href="#tests-init-wren-variables-are-global-to-every-test-file" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/_init.wren</span>
 <span class="k">var</span><span class="w"> </span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"2026-05-04"</span>
 
@@ -581,31 +549,26 @@ shared data in a function. <code class="docutils literal notranslate"><span clas
 <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;bialet/test&quot;</span> <span class="pre">for</span> <span class="pre">Test</span></code>.</p>
 </section>
 <section id="tests-use-a-temporary-database-manual-http-does-not">
-<h2>9. Tests use a temporary database; manual HTTP does not<a class="headerlink" href="#tests-use-a-temporary-database-manual-http-does-not" title="Link to this heading">#</a></h2>
+<h2>7. Tests use a temporary database; manual HTTP does not<a class="headerlink" href="#tests-use-a-temporary-database-manual-http-does-not" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code> runs against a temporary database, so test rows do not pollute
 <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>. Manual <code class="docutils literal notranslate"><span class="pre">curl</span></code> POSTs against a running server <strong>do</strong> write to
 <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).</p>
 </section>
-<section id="date-new-unixseconds-does-not-exist">
-<h2>10. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist<a class="headerlink" href="#date-new-unixseconds-does-not-exist" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Date.new(1792292400)</span></code> is a year-1792292400 date, not a timestamp. For date
-arithmetic use the helpers in <a class="reference internal" href="recipes.html"><span class="std std-doc">Recipes</span></a>; for “now” use <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
+<section id="date-new-unixseconds-does-not-exist-use-date-fromunix">
+<h2>8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code><a class="headerlink" href="#date-new-unixseconds-does-not-exist-use-date-fromunix" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Date.new(1792292400)</span></code> is a year-1792292400 date, not a timestamp. Build a date
+from epoch seconds with <code class="docutils literal notranslate"><span class="pre">Date.fromUnix(seconds)</span></code> (formatted in <code class="docutils literal notranslate"><span class="pre">Date.tz</span></code>), and
+go the other way with <code class="docutils literal notranslate"><span class="pre">.unix</span></code>. For “now” use <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
 </section>
 <section id="num-fromstring-does-not-understand-1-234-50">
-<h2>11. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code><a class="headerlink" href="#num-fromstring-does-not-understand-1-234-50" title="Link to this heading">#</a></h2>
+<h2>9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code><a class="headerlink" href="#num-fromstring-does-not-understand-1-234-50" title="Link to this heading">#</a></h2>
 <p>It returns null for thousands separators and decimal commas. Normalize first
 (see <code class="docutils literal notranslate"><span class="pre">Money.parse</span></code> in <a class="reference internal" href="recipes.html"><span class="std std-doc">Recipes</span></a>), or store integer cents and parse
 the form value with the helper.</p>
 </section>
-<section id="assertions-match-raw-markup">
-<h2>12. Assertions match raw markup<a class="headerlink" href="#assertions-match-raw-markup" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Test.get(&quot;/&quot;).contains(&quot;device&quot;)</span></code> also matches <code class="docutils literal notranslate"><span class="pre">width=device-width</span></code> in the
-viewport meta tag. Assert on visible, unique text (a heading, a row label), not
-on a substring that appears in the HTML boilerplate.</p>
-</section>
 <section id="do-not-nest-the-same-outermost-html-tag">
-<h2>13. Do not nest the same outermost HTML tag<a class="headerlink" href="#do-not-nest-the-same-outermost-html-tag" title="Link to this heading">#</a></h2>
+<h2>10. Do not nest the same outermost HTML tag<a class="headerlink" href="#do-not-nest-the-same-outermost-html-tag" title="Link to this heading">#</a></h2>
 <p>Bialet’s inline-HTML parser rejects an outermost tag that also appears as a
 direct child at any level:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
@@ -617,7 +580,7 @@ find. Wrap with a different tag (<code class="docutils literal notranslate"><spa
 partials. See <a class="reference internal" href="template.html"><span class="std std-doc">Template</span></a> for the nesting rules.</p>
 </section>
 <section id="assigning-a-property-needs-an-explicit-setter">
-<h2>14. Assigning a property needs an explicit setter<a class="headerlink" href="#assigning-a-property-needs-an-explicit-setter" title="Link to this heading">#</a></h2>
+<h2>11. Assigning a property needs an explicit setter<a class="headerlink" href="#assigning-a-property-needs-an-explicit-setter" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Wine</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="p">}</span>
 <span class="w">  </span><span class="n">id</span><span class="o">=</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// without this line `wine.id = x` fails</span>
@@ -629,7 +592,7 @@ getter exists but the setter does not. The constructor writing <code class="docu
 public setter.</p>
 </section>
 <section id="do-not-put-a-query-inside-or">
-<h2>15. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code><a class="headerlink" href="#do-not-put-a-query-inside-or" title="Link to this heading">#</a></h2>
+<h2>12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code><a class="headerlink" href="#do-not-put-a-query-inside-or" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: Query is not allowed inside handlebars or interpolated expressions</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"rows: </span><span class="si">%(</span><span class="sb">`SELECT COUNT(*) FROM loans`</span><span class="o">.</span><span class="n">toNum</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 
@@ -641,25 +604,8 @@ public setter.</p>
 <p>This bites hardest in <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code>, where the whole suite then fails
 before the app is exercised.</p>
 </section>
-<section id="aggregates-return-null-on-an-empty-table">
-<h2>16. Aggregates return null on an empty table<a class="headerlink" href="#aggregates-return-null-on-an-empty-table" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">MAX(id)</span></code>, <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">SUM(x)</span></code> and friends return null when there are no
-rows. <code class="docutils literal notranslate"><span class="pre">null</span> <span class="pre">+</span> <span class="pre">1</span></code> crashes. Use a default:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT COALESCE(MAX(CAST(number AS INTEGER)), 0) FROM members`</span><span class="o">.</span><span class="n">toNum</span>
-</pre></div>
-</div>
-<p>This is the classic 500 on a brand-new database.</p>
-</section>
-<section id="list-has-no-reverse">
-<h2>17. <code class="docutils literal notranslate"><span class="pre">List</span></code> has no <code class="docutils literal notranslate"><span class="pre">reverse</span></code><a class="headerlink" href="#list-has-no-reverse" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">[1,2,3].reverse</span></code> raises <code class="docutils literal notranslate"><span class="pre">List</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'reverse'</span></code>. Build a new list:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0</span><span class="o">...</span><span class="n">xs</span><span class="o">.</span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">xs</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="p">])</span>
-</pre></div>
-</div>
-</section>
 <section id="zero-argument-methods-still-need">
-<h2>18. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code><a class="headerlink" href="#zero-argument-methods-still-need" title="Link to this heading">#</a></h2>
+<h2>13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code><a class="headerlink" href="#zero-argument-methods-still-need" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Klass</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">total</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">42</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
@@ -670,23 +616,13 @@ rows. <code class="docutils literal notranslate"><span class="pre">null</span> <
 <p>Getters (<code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">toString</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>) are defined without parentheses and
 called without them. If you wrote <code class="docutils literal notranslate"><span class="pre">total()</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>, call it with <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
 </section>
-<section id="map-has-no-get-key">
-<h2>19. <code class="docutils literal notranslate"><span class="pre">Map</span></code> has no <code class="docutils literal notranslate"><span class="pre">get(key)</span></code><a class="headerlink" href="#map-has-no-get-key" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">"a"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">}</span>
-<span class="n">m</span><span class="p">[</span><span class="s2">"a"</span><span class="p">]</span><span class="w">              </span><span class="c1">// 1</span>
-<span class="n">m</span><span class="p">[</span><span class="s2">"missing"</span><span class="p">]</span><span class="w">        </span><span class="c1">// null</span>
-<span class="c1">// m.get("a")       // Map does not implement 'get(_)'</span>
-<span class="n">m</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span><span class="w">  </span><span class="c1">// true</span>
-</pre></div>
-</div>
-</section>
 <section id="init-wren-runs-once-do-not-collide-with-unique-keys">
-<h2>20. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys<a class="headerlink" href="#init-wren-runs-once-do-not-collide-with-unique-keys" title="Link to this heading">#</a></h2>
+<h2>14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys<a class="headerlink" href="#init-wren-runs-once-do-not-collide-with-unique-keys" title="Link to this heading">#</a></h2>
 <p>A test that inserts the same unique value as <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> fails before it
 exercises anything. Use <code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">OR</span> <span class="pre">IGNORE</span></code>, or seed distinct values per file.</p>
 </section>
 <section id="html-templates-use-not">
-<h2>21. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code><a class="headerlink" href="#html-templates-use-not" title="Link to this heading">#</a></h2>
+<h2>15. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code><a class="headerlink" href="#html-templates-use-not" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// correct in a route/template HTML block</span>
 <span class="x">&lt;p&gt;Total: $ {{ Money.fmt(total) }}&lt;/p&gt;</span>
 
@@ -698,7 +634,7 @@ exercises anything. Use <code class="docutils literal notranslate"><span class="
 <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">expression</span> <span class="pre">}}</span></code>. See <a class="reference internal" href="template.html"><span class="std std-doc">Template</span></a>.</p>
 </section>
 <section id="name-the-columns-in-every-insert">
-<h2>22. Name the columns in every INSERT<a class="headerlink" href="#name-the-columns-in-every-insert" title="Link to this heading">#</a></h2>
+<h2>16. Name the columns in every INSERT<a class="headerlink" href="#name-the-columns-in-every-insert" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// breaks as soon as the table has an id/createdAt column:</span>
 <span class="sb">`INSERT INTO expenses VALUES (?, ?, ?)`</span>
 <span class="c1">// correct:</span>
@@ -709,7 +645,7 @@ exercises anything. Use <code class="docutils literal notranslate"><span class="
 columns also keeps the insert valid when a later migration adds a column.</p>
 </section>
 <section id="the-form-name-must-match-request-post-exactly">
-<h2>23. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly<a class="headerlink" href="#the-form-name-must-match-request-post-exactly" title="Link to this heading">#</a></h2>
+<h2>17. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly<a class="headerlink" href="#the-form-name-must-match-request-post-exactly" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;input name="dia" type="date"&gt;</span>
 <span class="x">var day = Request.post("day")   // null: the key is "dia"</span>
 </pre></div>
@@ -719,7 +655,7 @@ the handler crashes formatting null. Keep the HTML <code class="docutils literal
 <code class="docutils literal notranslate"><span class="pre">Request.post</span></code>/<code class="docutils literal notranslate"><span class="pre">Request.get</span></code> key identical (or use the same constant).</p>
 </section>
 <section id="strings-do-not-implement-or">
-<h2>24. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code><a class="headerlink" href="#strings-do-not-implement-or" title="Link to this heading">#</a></h2>
+<h2>18. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code><a class="headerlink" href="#strings-do-not-implement-or" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="s2">"2026-01-01"</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="s2">"2026-02-01"</span>
 <span class="c1">// Runtime Error: String does not implement '&lt;(_)'.</span>
 </pre></div>
@@ -731,20 +667,8 @@ the handler crashes formatting null. Keep the HTML <code class="docutils literal
 </div>
 <p>This is the classic “the list works until the first row exists” 500.</p>
 </section>
-<section id="num-fromstring-null-raises-argument-must-be-a-string">
-<h2>25. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> raises “Argument must be a string”<a class="headerlink" href="#num-fromstring-null-raises-argument-must-be-a-string" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: a missing form field is null</span>
-<span class="vi">_amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"amount"</span><span class="p">])</span>
-
-<span class="c1">// correct: stringify with a default, then fall back</span>
-<span class="vi">_amount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="s2">"</span><span class="si">%(</span><span class="n">data</span><span class="p">[</span><span class="s2">"amount"</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">0</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="mf">0</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> only accepts a String. A null (or an absent key) crashes the
-constructor, so every POST 500s even though the GETs work.</p>
-</section>
 <section id="must-sit-inside-an-html-tag">
-<h2>26. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag<a class="headerlink" href="#must-sit-inside-an-html-tag" title="Link to this heading">#</a></h2>
+<h2>19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag<a class="headerlink" href="#must-sit-inside-an-html-tag" title="Link to this heading">#</a></h2>
 <p>At the top level of a template, <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code> is parsed as a Wren map literal and
 fails with <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">'}'</span> <span class="pre">after</span> <span class="pre">map</span> <span class="pre">entries</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: no enclosing tag</span>
@@ -758,15 +682,8 @@ fails with <code class="docutils literal notranslate"><span class="pre">Expect</
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.</p>
 </section>
-<section id="private-apps-need-a-first-run-credential">
-<h2>27. Private apps need a first-run credential<a class="headerlink" href="#private-apps-need-a-first-run-credential" title="Link to this heading">#</a></h2>
-<p>An empty admin key/password either locks everyone out or opens everything. Seed
-one in the migration (<code class="docutils literal notranslate"><span class="pre">INSERT</span> <span class="pre">OR</span> <span class="pre">IGNORE</span> <span class="pre">...</span></code>) or add a first-run page that
-creates the first user and shows the recovery key. Then verify login end to end;
-a redirect loop on the login page usually means there is no user to log in with.</p>
-</section>
 <section id="is-truthy-in-wren">
-<h2>28. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is truthy in Wren<a class="headerlink" href="#is-truthy-in-wren" title="Link to this heading">#</a></h2>
+<h2>20. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is truthy in Wren<a class="headerlink" href="#is-truthy-in-wren" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// never true for ""</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// correct empty check</span>
@@ -775,33 +692,12 @@ a redirect loop on the login page usually means there is no user to log in with.
 <p>Only <code class="docutils literal notranslate"><span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">false</span></code> are falsy. Validate empty text with <code class="docutils literal notranslate"><span class="pre">trim().count</span> <span class="pre">==</span> <span class="pre">0</span></code>
 (or <code class="docutils literal notranslate"><span class="pre">trim()</span> <span class="pre">==</span> <span class="pre">&quot;&quot;</span></code>), not <code class="docutils literal notranslate"><span class="pre">!text</span></code>.</p>
 </section>
-<section id="html-whitespace-makes-multi-word-contains-assertions-fragile">
-<h2>29. HTML whitespace makes multi-word <code class="docutils literal notranslate"><span class="pre">.contains</span></code> assertions fragile<a class="headerlink" href="#html-whitespace-makes-multi-word-contains-assertions-fragile" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"1 paciente para"</span><span class="p">)</span><span class="w">  </span><span class="c1">// fails if the template wraps the line</span>
-</pre></div>
-</div>
-<p>HTML collapses or inserts whitespace between words. Assert a single stable
-token (a heading, a name, a badge) instead of a multi-word sentence.</p>
-</section>
 <section id="enforce-rules-in-the-domain-not-only-in-the-ui">
-<h2>30. Enforce rules in the domain, not only in the UI<a class="headerlink" href="#enforce-rules-in-the-domain-not-only-in-the-ui" title="Link to this heading">#</a></h2>
+<h2>21. Enforce rules in the domain, not only in the UI<a class="headerlink" href="#enforce-rules-in-the-domain-not-only-in-the-ui" title="Link to this heading">#</a></h2>
 <p>Disabling a button is not validation: a direct <code class="docutils literal notranslate"><span class="pre">POST</span></code> bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: “one open loan per book” must be checked in <code class="docutils literal notranslate"><span class="pre">Loan.create</span></code>, not only by
 rendering the button as disabled.</p>
-</section>
-<section id="bialet-r-is-not-a-request">
-<h2>31. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request<a class="headerlink" href="#bialet-r-is-not-a-request" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> executes a bare Wren script. It does <strong>not</strong> create the <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code>
-tables or a request/session, so these fail there:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Session.new()</span></code> → <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">Error</span> <span class="pre">no</span> <span class="pre">such</span> <span class="pre">table:</span> <span class="pre">BIALET_SESSION</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Config.get(...)</span></code> → <code class="docutils literal notranslate"><span class="pre">Query</span> <span class="pre">Error</span> <span class="pre">no</span> <span class="pre">such</span> <span class="pre">table:</span> <span class="pre">BIALET_CONFIG</span></code></p></li>
-<li><p>App queries (<code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FROM</span> <span class="pre">my_table</span></code>) → <code class="docutils literal notranslate"><span class="pre">no</span> <span class="pre">such</span> <span class="pre">table</span></code></p></li>
-</ul>
-<p>Use it only for pure language questions (<code class="docutils literal notranslate"><span class="pre">Date</span></code>, <code class="docutils literal notranslate"><span class="pre">Num</span></code>, <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">List</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Map</span></code>). For framework behaviour, write a test in <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> and run <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code>,
-or start the server and try the page.</p>
 </section>
 </section>
 
@@ -852,36 +748,26 @@ or start the server and try the page.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tostring-is-a-getter-trim-is-a-method">1. <code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter; <code class="docutils literal notranslate"><span class="pre">trim</span></code> is a method</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#never-compare-a-date-or-a-user-class-to-null-with-date-null">2. Never compare a Date (or a user class) to <code class="docutils literal notranslate"><span class="pre">null</span></code> with <code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">==</span> <span class="pre">null</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-method-that-produces-a-value-needs-an-explicit-return">3. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-literal-in-a-wren-string-is-x25">4. A literal <code class="docutils literal notranslate"><span class="pre">%</span></code> in a Wren string is <code class="docutils literal notranslate"><span class="pre">\x25</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-config-stores-key-val-not-key-value">5. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-methods-take-at-most-three-positional-arguments">6. Query methods take at most three positional arguments</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">7. Every file imports what it uses</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">8. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">9. Tests use a temporary database; manual HTTP does not</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist">10. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">11. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions-match-raw-markup">12. Assertions match raw markup</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">13. Do not nest the same outermost HTML tag</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">14. Assigning a property needs an explicit setter</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">15. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aggregates-return-null-on-an-empty-table">16. Aggregates return null on an empty table</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-has-no-reverse">17. <code class="docutils literal notranslate"><span class="pre">List</span></code> has no <code class="docutils literal notranslate"><span class="pre">reverse</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">18. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-has-no-get-key">19. <code class="docutils literal notranslate"><span class="pre">Map</span></code> has no <code class="docutils literal notranslate"><span class="pre">get(key)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">20. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">21. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">22. Name the columns in every INSERT</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-name-must-match-request-post-exactly">23. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#strings-do-not-implement-or">24. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-null-raises-argument-must-be-a-string">25. <code class="docutils literal notranslate"><span class="pre">Num.fromString(null)</span></code> raises “Argument must be a string”</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">26. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#private-apps-need-a-first-run-credential">27. Private apps need a first-run credential</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">28. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-whitespace-makes-multi-word-contains-assertions-fragile">29. HTML whitespace makes multi-word <code class="docutils literal notranslate"><span class="pre">.contains</span></code> assertions fragile</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">30. Enforce rules in the domain, not only in the UI</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request">31. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-method-that-produces-a-value-needs-an-explicit-return">2. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-config-stores-key-val-not-key-value">3. <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code> stores <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">val)</span></code>, not <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#query-methods-take-at-most-three-positional-arguments">4. Query methods take at most three positional arguments</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">5. Every file imports what it uses</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">6. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">10. Do not nest the same outermost HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">15. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">16. Name the columns in every INSERT</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-form-name-must-match-request-post-exactly">17. The form <code class="docutils literal notranslate"><span class="pre">name</span></code> must match <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> exactly</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#strings-do-not-implement-or">18. Strings do not implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
 </ul>
   </nav></div>
 

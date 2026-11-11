@@ -217,7 +217,7 @@ Response.json({
 })
 ```
 
-> **Note:** column values from queries come back as **strings**. Use `.toNum` to get a numeric value directly (as with `COUNT` above), or `Num.fromString()` to convert individual columns. See the Data Types section below for details.
+> **Note:** column values from queries come back as **strings**. Use `.toNum` to get a numeric value directly (as with `COUNT` above), or `Num.fromString()` to convert individual columns. See the Data Types section below for details. `Num.fromString(null)` and an unparseable string both return null, so coalesce with `|| 0` before arithmetic.
 
 For a quick "top N" query without counting, use `.order()` with its optional limit parameter instead of manual `LIMIT`/`OFFSET`:
 
@@ -382,7 +382,10 @@ NULL.
 for numeric access:
 
 - `.toNum()` — returns the first column value as a number. Most common for
-  `COUNT(*)`, `SUM()`, and other aggregate queries.
+  `COUNT(*)`, `SUM()`, and other aggregate queries. A NULL result (for example
+  `MAX()` over an empty table) and a non-numeric value become `0`, so it is
+  safe to do arithmetic on the result. A raw column from `.first()` is still
+  `null`; use `COALESCE(...)` in SQL if you add to it directly.
 - `.val()` + `Num.fromString()` — manually convert a string column to a number
 - `.toBool()` — returns the first column value as a boolean
 

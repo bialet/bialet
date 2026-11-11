@@ -126,6 +126,8 @@ Chain these after the request method:
 | `.contains(str)` | Assert body contains string |
 | `.equals(str)` | Assert body exactly equals string |
 | `.notContains(str)` | Assert body doesn't contain string |
+| `.textContains(str)` | Assert visible text (tags stripped, whitespace collapsed) contains string |
+| `.text()` | Return visible text (tags stripped, whitespace collapsed) |
 | `.header(name)` | Assert header exists |
 | `.header(name, value)` | Assert header equals value |
 | `.json()` | Return parsed JSON body (Map or List) |
@@ -135,6 +137,10 @@ Chain these after the request method:
 | `.assert(condition, message)` | Custom assertion with message |
 
 **Note:** Assertions are lazy - the request is executed when the first assertion is called.
+
+`.contains()` matches raw markup; attributes and script bodies can satisfy it. Use
+`.textContains()` for visible text: it strips tags and collapses whitespace, so a
+multi-word assertion does not depend on how the template wraps the line.
 
 ### Body Assertions
 

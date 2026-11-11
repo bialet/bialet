@@ -11,28 +11,16 @@ a page that worked on an empty database meets its first row.
 
 ```wren
 name=(val) { _name = val.toString.trim() }    // correct
-// name=(val) { _name = val.toString().trim() } // String does not implement 'toString()'
 // name=(val) { _name = val.toString.trim }     // String does not implement 'trim'
 ```
 
 `toString`, `count`, `keys` and `values` are getters: no parentheses. `trim` is
-a **method**: it needs `()`. Mixing the two forms is the most common source of
-500s in setters.
+a **method**: it needs `()`. `toString()` is accepted as an alias for the getter
+(the compiler treats the zero-argument call as the getter), so both spellings
+work; `count()`, `keys()` and `values()` still fail. Forgetting the `()` on
+`trim` is the usual source of 500s in setters.
 
-## 2. Never compare a Date (or a user class) to `null` with `date == null`
-
-```wren
-if (!date) { ... }          // safe
-if (null == date) { ... }   // safe
-// if (date == null) ...    // Runtime Error: Null does not implement 'unix'.
-```
-
-`date == null` calls `Date.==`, which reads `other.unix`; `null` has no `unix`.
-`!date` is `true` only when the value is null (a Date makes `!date` return null,
-which is falsy), so it is the idiomatic guard. The same rule applies to your own
-classes: put the null check on the left, or test `if (!value)`.
-
-## 3. Every method that produces a value needs an explicit `return`
+## 2. Every method that produces a value needs an explicit `return`
 
 Wren is not expression-oriented: a method returns the value of `return`, not the
 last expression.
@@ -48,19 +36,7 @@ raises a catchable `Value is not iterable.` error and turns the request into a
 500. Checking the result first (`if (!rows) rows = []`) avoids the failed
 request.
 
-## 4. A literal `%` in a Wren string is `\x25`
-
-```wren
-System.print("100\x25")   // 100%
-// System.print("100%")   // Compilation Error: Expect '(' after '%'.
-```
-
-`%(` starts interpolation, so a bare `%` is a syntax error. In an **HTML
-template** `%` is plain text: write `100%` there (if the template parser
-complains, use the entity `&#37;`). Do not write `\x25` in HTML: it renders
-literally as `\x25`.
-
-## 5. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
+## 3. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
 
 ```wren
 Config.set("fee_amount", "20000")   // correct
@@ -71,7 +47,7 @@ Config.set("fee_amount", "20000")   // correct
 Use `Config.set/get/bool/num/enable/disable/json` (see
 [Configuration](configuration.md)); never hand-write the table.
 
-## 6. Query methods take at most three positional arguments
+## 4. Query methods take at most three positional arguments
 
 ```wren
 `SELECT * FROM x WHERE a=? AND b=? AND c=? AND d=?`.fetch([a, b, c, d])
@@ -81,7 +57,7 @@ Use `Config.set/get/bool/num/enable/disable/json` (see
 The same limit applies to `.first`, `.val`, `.toNum`, `.toBool`, `.query` and
 `.order`. Four or more values go in one List.
 
-## 7. Every file imports what it uses
+## 5. Every file imports what it uses
 
 ```wren
 // route file
@@ -96,7 +72,7 @@ A template is a separate module: it does not inherit the route's imports. This
 is why `{{ Periods.label(...) }}` can fail with `Variable is used but not
 defined` even though `Periods` exists in `_app/domain.wren`.
 
-## 8. `_tests/_init.wren` variables are global to every test file
+## 6. `_tests/_init.wren` variables are global to every test file
 
 ```wren
 // _tests/_init.wren
@@ -110,31 +86,26 @@ Use the variable from `_init.wren`, give the local one another name, or wrap the
 shared data in a function. `Test` is also preloaded: never
 `import "bialet/test" for Test`.
 
-## 9. Tests use a temporary database; manual HTTP does not
+## 7. Tests use a temporary database; manual HTTP does not
 
 `bialet -T` runs against a temporary database, so test rows do not pollute
 `_db.sqlite3`. Manual `curl` POSTs against a running server **do** write to
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 10. `Date.new(unixSeconds)` does not exist
+## 8. `Date.new(unixSeconds)` does not exist; use `Date.fromUnix`
 
-`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. For date
-arithmetic use the helpers in [Recipes](recipes.md); for "now" use `Date.new()`.
+`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. Build a date
+from epoch seconds with `Date.fromUnix(seconds)` (formatted in `Date.tz`), and
+go the other way with `.unix`. For "now" use `Date.new()`.
 
-## 11. `Num.fromString` does not understand `1.234,50`
+## 9. `Num.fromString` does not understand `1.234,50`
 
 It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 12. Assertions match raw markup
-
-`Test.get("/").contains("device")` also matches `width=device-width` in the
-viewport meta tag. Assert on visible, unique text (a heading, a row label), not
-on a substring that appears in the HTML boilerplate.
-
-## 13. Do not nest the same outermost HTML tag
+## 10. Do not nest the same outermost HTML tag
 
 Bialet's inline-HTML parser rejects an outermost tag that also appears as a
 direct child at any level:
@@ -148,7 +119,7 @@ The error points at the closing tag, not the opening one, which makes it hard to
 find. Wrap with a different tag (`<div><section>...`) or split the view into
 partials. See [Template](template.md) for the nesting rules.
 
-## 14. Assigning a property needs an explicit setter
+## 11. Assigning a property needs an explicit setter
 
 ```wren
 class Wine {
@@ -161,7 +132,7 @@ Wren does not synthesize setters. `Wine does not implement 'id=(_)'` means the
 getter exists but the setter does not. The constructor writing `_id` is not a
 public setter.
 
-## 15. Do not put a Query inside `%(...)` or `{{ }}`
+## 12. Do not put a Query inside `%(...)` or `{{ }}`
 
 ```wren
 // wrong: Query is not allowed inside handlebars or interpolated expressions
@@ -175,27 +146,7 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 16. Aggregates return null on an empty table
-
-`SELECT MAX(id)`, `SELECT SUM(x)` and friends return null when there are no
-rows. `null + 1` crashes. Use a default:
-
-```wren
-var max = `SELECT COALESCE(MAX(CAST(number AS INTEGER)), 0) FROM members`.toNum
-```
-
-This is the classic 500 on a brand-new database.
-
-## 17. `List` has no `reverse`
-
-`[1,2,3].reverse` raises `List does not implement 'reverse'`. Build a new list:
-
-```wren
-var out = []
-for (i in 0...xs.count) out.add(xs[xs.count - 1 - i])
-```
-
-## 18. Zero-argument methods still need `()`
+## 13. Zero-argument methods still need `()`
 
 ```wren
 class Klass {
@@ -208,22 +159,12 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 19. `Map` has no `get(key)`
-
-```wren
-var m = {"a": 1}
-m["a"]              // 1
-m["missing"]        // null
-// m.get("a")       // Map does not implement 'get(_)'
-m.containsKey("a")  // true
-```
-
-## 20. `_init.wren` runs once; do not collide with UNIQUE keys
+## 14. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 21. HTML templates use `{{ }}`, not `%(...)`
+## 15. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -236,7 +177,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 22. Name the columns in every INSERT
+## 16. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -248,7 +189,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 23. The form `name` must match `Request.post` exactly
+## 17. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -259,7 +200,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 24. Strings do not implement `<` or `>`
+## 18. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -275,20 +216,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 25. `Num.fromString(null)` raises "Argument must be a string"
-
-```wren
-// wrong: a missing form field is null
-_amount = Num.fromString(data["amount"])
-
-// correct: stringify with a default, then fall back
-_amount = Num.fromString("%(data["amount"] || 0)") || 0
-```
-
-`Num.fromString` only accepts a String. A null (or an absent key) crashes the
-constructor, so every POST 500s even though the GETs work.
-
-## 26. `{{ }}` must sit inside an HTML tag
+## 19. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -305,14 +233,7 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 27. Private apps need a first-run credential
-
-An empty admin key/password either locks everyone out or opens everything. Seed
-one in the migration (`INSERT OR IGNORE ...`) or add a first-run page that
-creates the first user and shows the recovery key. Then verify login end to end;
-a redirect loop on the login page usually means there is no user to log in with.
-
-## 28. `""` is truthy in Wren
+## 20. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -323,31 +244,10 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 29. HTML whitespace makes multi-word `.contains` assertions fragile
-
-```wren
-Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
-```
-
-HTML collapses or inserts whitespace between words. Assert a single stable
-token (a heading, a name, a badge) instead of a multi-word sentence.
-
-## 30. Enforce rules in the domain, not only in the UI
+## 21. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 31. `bialet -r` is not a request
-
-`bialet -r` executes a bare Wren script. It does **not** create the `BIALET_*`
-tables or a request/session, so these fail there:
-
-- `Session.new()` → `Query Error no such table: BIALET_SESSION`
-- `Config.get(...)` → `Query Error no such table: BIALET_CONFIG`
-- App queries (`SELECT ... FROM my_table`) → `no such table`
-
-Use it only for pure language questions (`Date`, `Num`, `String`, `List`,
-`Map`). For framework behaviour, write a test in `_tests/` and run `bialet -T`,
-or start the server and try the page.
