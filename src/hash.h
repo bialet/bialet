@@ -45,7 +45,14 @@ void sha256_raw(const char* data, size_t len, unsigned char* out);
 // leading zeros are preserved (unlike Util.toHex).
 void sha256_hex(const char* data, size_t len, char* out);
 
-int  verify_password(char* password, char* hash_and_salt);
-void hash_password(char* password, char* output);
+int  verify_password(const char* password, size_t password_len,
+                     const char* hash_and_salt);
+void hash_password(const char* password, size_t password_len, char* output);
+
+// DJB2 hex digest of exactly [len] bytes, for callers that already know the
+// length (a Wren string can hold NUL). unsafe_hash() is the strlen wrapper kept
+// for the existing call sites.
+void unsafe_hash(const char* input, char* output);
+void unsafe_hash_len(const char* input, size_t len, char* output);
 
 #endif

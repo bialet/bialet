@@ -20,6 +20,7 @@
 
 #include "hash.h"
 
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,13 +37,27 @@
 // Number of characters unsafe_hash() actually writes: four %08x values.
 #define UNSAFE_HASH_HEX_LEN 32
 
-void unsafe_hash(const char* input, char* output) {
-  unsigned int hash = 5381;
-  int          c;
-  while((c = *input++))
-    hash = ((hash << 5) + hash) + c; // hash * 33 + c
+// DJB2 over exactly [len] bytes, so a credential containing 0x00 is hashed in
+// full instead of ending at the NUL. The byte keeps the promoted-char
+// arithmetic of the original loop: an unsigned cast would change every digest
+// for bytes >= 0x80 and break stored hashes.
+static unsigned int djb2_update(unsigned int hash, const char* input, size_t len) {
+  for(size_t i = 0; i < len; i++)
+    hash = ((hash << 5) + hash) + input[i]; // hash * 33 + c
+  return hash;
+}
+
+static void format_unsafe_hash(unsigned int hash, char* output) {
   snprintf(output, HASH_LENGTH + 1, "%08x%08x%08x%08x", hash, hash * 3, hash * 5,
            hash * 7);
+}
+
+void unsafe_hash_len(const char* input, size_t len, char* output) {
+  format_unsafe_hash(djb2_update(5381, input, len), output);
+}
+
+void unsafe_hash(const char* input, char* output) {
+  unsafe_hash_len(input, strlen(input), output);
 }
 
 void generate_salt(char* salt, size_t length) {
@@ -295,22 +310,28 @@ static int hex_decode(const char* hex, unsigned char* out, size_t out_len) {
 #define PBKDF2_SALT_LEN 16
 #define PBKDF2_HASH_LEN 32
 
-static int pbkdf2_derive(const char* password, const unsigned char* salt,
-                         unsigned int iterations, unsigned char* out) {
-  return PKCS5_PBKDF2_HMAC(password, (int)strlen(password), salt, PBKDF2_SALT_LEN,
+static int pbkdf2_derive(const char* password, size_t password_len,
+                         const unsigned char* salt, unsigned int iterations,
+                         unsigned char* out) {
+  // PKCS5_PBKDF2_HMAC takes an int length; a credential longer than INT_MAX
+  // cannot be hashed correctly, so fail instead of truncating.
+  if(password_len > (size_t)INT_MAX)
+    return 0;
+  return PKCS5_PBKDF2_HMAC(password, (int)password_len, salt, PBKDF2_SALT_LEN,
                            (int)iterations, EVP_sha256(), PBKDF2_HASH_LEN, out) == 1;
 }
 
 // One-shot SHA-256 of password||salt: only used to verify hashes written by
 // older versions, never to create new ones.
-static int legacy_sha256(const char* password, const unsigned char* salt,
-                         size_t salt_len, unsigned char* out) {
+static int legacy_sha256(const char* password, size_t password_len,
+                         const unsigned char* salt, size_t salt_len,
+                         unsigned char* out) {
   EVP_MD_CTX* ctx = EVP_MD_CTX_new();
   if(ctx == NULL) // was unchecked: a NULL here was dereferenced immediately
     return 0;
   unsigned int len = 0;
   int          ok = EVP_DigestInit_ex(ctx, EVP_sha256(), NULL) == 1 &&
-                    EVP_DigestUpdate(ctx, password, strlen(password)) == 1 &&
+                    EVP_DigestUpdate(ctx, password, password_len) == 1 &&
                     EVP_DigestUpdate(ctx, salt, salt_len) == 1 &&
                     EVP_DigestFinal_ex(ctx, out, &len) == 1 && len == 32;
   EVP_MD_CTX_free(ctx);
@@ -318,7 +339,17 @@ static int legacy_sha256(const char* password, const unsigned char* salt,
 }
 #endif
 
-void hash_password(char* password, char* output) {
+// password||salt for the DJB2 format over explicit lengths. For a credential
+// with no NUL byte this is byte-identical to the old "%s%s" buffer up to its
+// terminator, so existing stored hashes keep verifying unchanged; the only
+// difference is that bytes after an embedded NUL now take part too.
+static void hash_salted_djb2(const char* password, size_t password_len,
+                             const char* salt, size_t salt_len, char* output) {
+  unsigned int hash = djb2_update(5381, password, password_len);
+  format_unsafe_hash(djb2_update(hash, salt, salt_len), output);
+}
+
+void hash_password(const char* password, size_t password_len, char* output) {
   output[0] = '\0';
   if(password == NULL)
     return;
@@ -335,7 +366,7 @@ void hash_password(char* password, char* output) {
     perror("Failed to generate salt");
     return;
   }
-  if(!pbkdf2_derive(password, salt, PBKDF2_ITERATIONS, hash)) {
+  if(!pbkdf2_derive(password, password_len, salt, PBKDF2_ITERATIONS, hash)) {
     perror("PBKDF2 derivation failed");
     return;
   }
@@ -347,22 +378,15 @@ void hash_password(char* password, char* output) {
   // No OpenSSL: keep the legacy salted-DJB2 format so existing deployments
   // still work. This is not a password KDF; build with OpenSSL for PBKDF2.
   char salt[SALT_LENGTH + 1];
-  generate_salt(salt, SALT_LENGTH);
-  size_t salted_len = strlen(password) + SALT_LENGTH + 1;
-  char*  saltedPassword = (char*)malloc(salted_len);
-  if(saltedPassword == NULL) {
-    perror("Failed to allocate salted password buffer");
-    return;
-  }
-  snprintf(saltedPassword, salted_len, "%s%s", password, salt);
   char hash[HASH_LENGTH + 1];
-  unsafe_hash(saltedPassword, hash);
-  free(saltedPassword);
+  generate_salt(salt, SALT_LENGTH);
+  hash_salted_djb2(password, password_len, salt, SALT_LENGTH, hash);
   snprintf(output, HASH_AND_SALT_LENGTH, "%s$%s", hash, salt);
 #endif
 }
 
-int verify_password(char* password, char* hash_and_salt) {
+int verify_password(const char* password, size_t password_len,
+                    const char* hash_and_salt) {
   if(password == NULL || hash_and_salt == NULL)
     return 0;
 
@@ -391,7 +415,8 @@ int verify_password(char* password, char* hash_and_salt) {
     if(!hex_decode(salt_hex, salt, sizeof(salt)) ||
        !hex_decode(hash_hex, stored, sizeof(stored)))
       return 0;
-    if(!pbkdf2_derive(password, salt, (unsigned int)iterations, computed))
+    if(!pbkdf2_derive(password, password_len, salt, (unsigned int)iterations,
+                      computed))
       return 0;
     return ct_equal(computed, stored, sizeof(computed));
   }
@@ -406,7 +431,7 @@ int verify_password(char* password, char* hash_and_salt) {
     if(!hex_decode(hash_and_salt + 65, salt, sizeof(salt)) ||
        !hex_decode(hash_and_salt, stored, sizeof(stored)))
       return 0;
-    if(!legacy_sha256(password, salt, sizeof(salt), computed))
+    if(!legacy_sha256(password, password_len, salt, sizeof(salt), computed))
       return 0;
     return ct_equal(computed, stored, sizeof(computed));
   }
@@ -430,16 +455,8 @@ int verify_password(char* password, char* hash_and_salt) {
     if(strlen(storedSalt) != SALT_LENGTH)
       return 0;
 
-    size_t salted_len = strlen(password) + SALT_LENGTH + 1;
-    char*  saltedPassword = (char*)malloc(salted_len);
-    if(saltedPassword == NULL) {
-      perror("Failed to allocate salted password buffer");
-      return 0;
-    }
-    snprintf(saltedPassword, salted_len, "%s%s", password, storedSalt);
     char computedHash[HASH_LENGTH + 1];
-    unsafe_hash(saltedPassword, computedHash);
-    free(saltedPassword);
+    hash_salted_djb2(password, password_len, storedSalt, SALT_LENGTH, computedHash);
     return ct_equal(computedHash, hash_and_salt, UNSAFE_HASH_HEX_LEN);
   }
 }

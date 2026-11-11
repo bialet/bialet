@@ -15,3 +15,12 @@ Test.assert(Util.toNum(7) == 7, "toNum number")
 var pos = Util.getPositionForIndex("line1\nline2", 7)
 Test.assert(pos["line"] == 1, "getPositionForIndex line")
 Test.assert(pos["column"] == 2, "getPositionForIndex column")
+
+// A credential is a byte string, not a C string: every stored byte, including
+// NUL, must reach the KDF. Otherwise a credential is interchangeable with its
+// own prefix, and one starting with NUL collapses to the empty string.
+var nulHash = Util.hash("ab\0cd")
+Test.assert(Util.verify("ab\0cd", nulHash), "hash covers bytes after NUL")
+Test.assert(!Util.verify("ab", nulHash), "hash does not accept the NUL prefix")
+Test.assert(!Util.verify("ab\0cd", Util.hash("ab")), "verify rejects a longer credential")
+Test.assert(!Util.verify("", Util.hash("\0abc")), "NUL-leading credential is not empty")

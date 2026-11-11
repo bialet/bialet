@@ -1465,16 +1465,24 @@ DEF_PRIMITIVE(util_monotonicMs) {
 };
 
 DEF_PRIMITIVE(util_hash) {
-  char* password = AS_CSTRING(args[1]);
-  char  hash[HASH_AND_SALT_LENGTH] = {0};
-  hash_password(password, hash);
+  if(!validateString(vm, args[1], "Password"))
+    return false;
+  // Length-delimited like Util.sha256: a Wren string can hold NUL, and every
+  // stored byte must reach the KDF.
+  ObjString* input = AS_STRING(args[1]);
+  char       hash[HASH_AND_SALT_LENGTH] = {0};
+  hash_password(input->value, (size_t)input->length, hash);
   RETURN_VAL(wrenNewString(vm, hash));
 }
 
 DEF_PRIMITIVE(util_verify) {
-  char* password = AS_CSTRING(args[1]);
-  char* hash_and_salt = AS_CSTRING(args[2]);
-  int   result = verify_password(password, hash_and_salt);
+  if(!validateString(vm, args[1], "Password") ||
+     !validateString(vm, args[2], "Hash"))
+    return false;
+  ObjString* input = AS_STRING(args[1]);
+  ObjString* hash_and_salt = AS_STRING(args[2]);
+  int        result =
+      verify_password(input->value, (size_t)input->length, hash_and_salt->value);
   RETURN_BOOL(result);
 }
 
