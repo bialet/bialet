@@ -16,6 +16,7 @@
 #include "messages.h"
 #include "server.h"
 #include "show_errors.h"
+#include "utils.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdint.h>
@@ -52,6 +53,10 @@
 #endif
 
 #define MEGABYTE (1024 * 1024)
+/* The -d containment refusal in bialet_wren.c exits with this code; the -l
+ * check below uses it too so a supervisor sees one "operator wrote a file into
+ * the served tree" failure, not two. */
+#define BIALET_LOG_PATH_ERROR 11
 /* Default per-file upload cap. The reachable limit at startup is smaller:
  * a file part must fit inside the request body (see the clamp after
  * message_init()). */
@@ -518,6 +523,30 @@ int main(int argc, char* argv[]) {
   bialet_config.full_root_dir = resolved_root;
 
   message_init(&bialet_config);
+  /* Every non-livereload request is logged with its URI (query strings carry
+   * tokens) and all System.log output goes to the same stream. The static
+   * handler protects only names starting with '_' or '.', so an operator's
+   * -l app.log inside the served tree is downloadable by any client. Apply
+   * the rule the -d check already enforces: inside the app root only a
+   * private name is allowed. cli.c opened the file during parsing, so it
+   * exists and realpath_n() resolves it. */
+  if(bialet_config.log_path != NULL) {
+    char real_log[PATH_MAX];
+    if(realpath_n(bialet_config.log_path, real_log, sizeof(real_log)) != NULL) {
+      size_t root_len = strlen(bialet_config.full_root_dir);
+      if(strncmp(real_log, bialet_config.full_root_dir, root_len) == 0 &&
+         real_log[root_len] == '/' &&
+         !has_forbidden_uri_component(real_log + root_len)) {
+        /* stderr, not message(): message() writes to log_file, which is this
+         * very file, so the operator would see a silent exit. */
+        fprintf(stderr,
+                "Error: log file inside the app root must start with '_' or "
+                "'.' (like _bialet.log), or live outside the app root: %s\n",
+                bialet_config.log_path);
+        exit(BIALET_LOG_PATH_ERROR);
+      }
+    }
+  }
   /* The per-file upload cap is bounded by the request-body cap: a file part
    * travels inside a multipart body whose Content-Length must be under
    * max_post_size. Reserve MAX_UPLOAD_FRAMING for the multipart framing and

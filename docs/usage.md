@@ -75,6 +75,11 @@ Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
 
+> ⚠️ Pitfall: `-d` and `-l` may point inside the app root only under a private
+> name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
+> root is served, so a database or a log file with a public name there is
+> downloadable by any client. Bialet refuses to start and exits with status 11.
+
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
 

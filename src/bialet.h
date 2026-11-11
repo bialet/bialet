@@ -76,6 +76,10 @@ struct BialetConfig {
   int   port;
 
   FILE* log_file;
+  /* The -l path text, kept so main.c can refuse a log destination that the
+   * static handler would serve (it receives every request URI and all
+   * System.log output). NULL when logging to stdout/stderr. */
+  char* log_path;
   int   debug;
   int   quiet;
   int   output_color;

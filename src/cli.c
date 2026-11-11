@@ -200,6 +200,9 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
         fclose(config->log_file);
       }
       config->log_file = opened;
+      /* Keep the path: main.c checks it against the resolved app root once
+       * full_root_dir is known, the same way the -d path is checked. */
+      config->log_path = (char*)value;
       config->output_color = 0;
     } break;
     case CLI_OPT_DB:

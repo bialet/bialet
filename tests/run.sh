@@ -783,6 +783,45 @@ else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
 fi
 
+# Regression: the -l file receives every request URI (query strings carry
+# tokens) and all System.log output, but only the -d path was checked against
+# the served tree. A public name inside the app root was downloadable by any
+# client; startup now refuses it, exactly like -d.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  log_guard_line=$LINENO
+  _test_start_ms=$(now_ms)
+  log_guard_file="$(dirname "$0")/inside-root.log"
+  log_guard_db="$(mktemp /tmp/bialet-logguard.XXXXXX)"
+  rm -f "$log_guard_file"
+  require_free_port "$HOST" "$MULTIPART_PORT" "log path guard server"
+  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l "$log_guard_file" \
+    -d "$log_guard_db" "$(dirname "$0")" > /tmp/tests-logguard.out 2>&1 &
+  log_guard_pid=$!
+  for _ in $(seq 1 20); do
+    kill -0 "$log_guard_pid" 2>/dev/null || break
+    sleep 0.1
+  done
+  if kill -0 "$log_guard_pid" 2>/dev/null; then
+    log_guard_state="started"
+    kill -9 "$log_guard_pid" 2>/dev/null
+  else
+    wait "$log_guard_pid" 2>/dev/null
+    log_guard_state="exit:$?"
+  fi
+  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -f "$log_guard_file" "$log_guard_db" "$log_guard_db"-*
+  if [[ "$log_guard_state" == "exit:11" ]] &&
+     grep -q "log file inside the app root" /tmp/tests-logguard.out; then
+    report_result "Log path inside app root      " "$log_guard_line" 0
+  else
+    report_result "Log path inside app root      " "$log_guard_line" 1 \
+      "Expected exit 11 and a refusal on stderr, got $log_guard_state: $(head -c 120 /tmp/tests-logguard.out)"
+  fi
+else
+  skip_test "Log path inside app root      " "requires local binary access"
+fi
+
 # A complete header block with a declared Content-Length, and no body byte
 # behind it, must not park the only worker for the full 30 s body budget; the
 # 413 drain path must not either. One stalled socket, then a probe from a second
