@@ -26,7 +26,28 @@ def _get_bialet_version():
     return '0.0.0'
 
 
+def _get_release_date():
+    """Date of the newest CHANGELOG entry, rendered as `10 Nov 2026`.
+
+    The changelog heading is where a release date is written down, so reading
+    it here keeps the landing-page stamp from drifting away from the file."""
+    months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+    path = os.path.join(os.path.dirname(__file__), '..', 'CHANGELOG.md')
+    try:
+        with open(path, encoding='utf-8') as f:
+            for line in f:
+                m = re.match(r'##\s+\S+\s+[-\u2014]\s+(\d{4})-(\d{2})-(\d{2})', line)
+                if m:
+                    year, month, day = m.groups()
+                    return f'{int(day)} {months[int(month) - 1]} {year}'
+    except OSError:
+        pass
+    return ''
+
+
 _bialet_version = _get_bialet_version()
+_release_date = _get_release_date()
 version = _bialet_version
 _release_tag = f'v{_bialet_version}'
 _release_base = f'https://github.com/bialet/bialet/releases/download/{_release_tag}'
@@ -37,8 +58,13 @@ _release_urls = {
     'windows': f'{_release_base}/bialet-{_release_tag}-windows-x86_64.zip',
 }
 
+_release_stamp = f'v{_bialet_version}'
+if _release_date:
+    _release_stamp += f' &middot; {_release_date}'
+
 _substitutions = {
     'bialet_version': _bialet_version,
+    'release_stamp': _release_stamp,
     'release_tag': _release_tag,
     'release_base_url': _release_base,
     'release_linux_arm64_url': _release_urls['linux_arm64'],

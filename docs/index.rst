@@ -54,7 +54,8 @@ Small on purpose.
 
      <p class="install__more">
        <a href="installation.html">Other platforms, Homebrew, and Docker</a>
-       &middot; MIT licensed &middot; v{{bialet_version}}
+       &middot; MIT licensed &middot; {{release_stamp}} &middot;
+       <a href="https://github.com/bialet/bialet/releases">releases</a>
      </p>
 
    </div>
