@@ -1282,13 +1282,17 @@ void handle_client(bialet_socket_t client_socket) {
   // Only a genuine ".wren" suffix on the final component selects the
   // interpreter. strstr(path, ".wren") matched the substring anywhere, so
   // "/notes.wren.txt" and "/dir.wren/style.css" were both handed to the VM as
-  // source code.
+  // source code. The test is case-insensitive on purpose: on a case-insensitive
+  // filesystem (APFS, NTFS) "/blog.WREN" opens blog.wren, and a case-sensitive
+  // compare would classify that route module as a static asset and hand its
+  // source to the client.
   unsigned char is_wren_file = 0;
   {
     const char* base = path_basename(path);
     size_t      base_len = strlen(base);
     if(base_len > BIALET_EXTENSION_LEN &&
-       strcmp(base + base_len - BIALET_EXTENSION_LEN, BIALET_EXTENSION) == 0) {
+       ci_ncmp(base + base_len - BIALET_EXTENSION_LEN, BIALET_EXTENSION,
+               BIALET_EXTENSION_LEN) == 0) {
       is_wren_file = 1;
     }
   }

@@ -257,6 +257,31 @@ else
     "Expected / and /?x to skip <root>.wren and // to skip <root>/.wren. Got home:'${sibling_home:0:80}' query:'${sibling_query:0:80}' dot:$dot_direct_code slash:'${dot_slash:0:40}'"
 fi
 
+# Regression: the execute-vs-serve decision compared the requested suffix with
+# a case-sensitive strcmp, but the file probe resolves case-insensitively on
+# APFS/NTFS. "/get.WREN" therefore opened get.wren and returned its source text
+# instead of running it. Whatever the filesystem does, the source must never
+# come back; on a case-insensitive one the route runs as usual.
+wren_case_line=$LINENO
+_test_start_ms=$(now_ms)
+wren_case_code=$(curl -s -o /dev/null -w "%{http_code}" \
+  --max-time 10 "http://$HOST:$PORT/get.WREN?foo=bar")
+wren_case_body=$(curl -s --max-time 10 "http://$HOST:$PORT/get.WREN?foo=bar")
+wren_case_mixed=$(curl -s --max-time 10 "http://$HOST:$PORT/Get.Wren?foo=bar")
+wren_case_ok=1
+[[ "$wren_case_body" != *"Request.get"* ]] || wren_case_ok=0
+[[ "$wren_case_mixed" != *"Request.get"* ]] || wren_case_ok=0
+# A 200 may only come from the executed route, never from the file bytes.
+if [[ "$wren_case_code" == "200" && "$wren_case_body" != "bar" ]]; then
+  wren_case_ok=0
+fi
+if [[ "$wren_case_ok" == 1 ]]; then
+  report_result "Wren suffix case-insensitive " "$wren_case_line" 0
+else
+  report_result "Wren suffix case-insensitive " "$wren_case_line" 1 \
+    "Expected /get.WREN to execute or 404, never the module source. Got code:$wren_case_code body:'${wren_case_body:0:60}'"
+fi
+
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
