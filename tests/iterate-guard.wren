@@ -32,6 +32,20 @@ fiber.try()
 results.add("missing:" + (fiber.error != null).toString)
 
 fiber = Fiber.new {
+  var row = null
+  for (x in row.values) { sink = x }
+}
+fiber.try()
+results.add("rowValues:" + (fiber.error != null).toString)
+
+fiber = Fiber.new {
+  var row = null
+  for (x in row.keys) { sink = x }
+}
+fiber.try()
+results.add("rowKeys:" + (fiber.error != null).toString)
+
+fiber = Fiber.new {
   Query.fromString("SELECT 1", true)
 }
 fiber.try()
