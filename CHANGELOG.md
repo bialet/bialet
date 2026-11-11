@@ -1,10 +1,10 @@
 # Changelog
 
-Releases 1.2.6–1.2.11 were tagged and published on the
+Releases 1.2.6–1.2.12 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
-1.2.12.
+1.2.13.
 
-## 1.2.12 — 2026-11-10
+## 1.2.13 — 2026-11-10
 
 ### Fixed
 
