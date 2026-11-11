@@ -11,7 +11,7 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#define BIALET_VERSION "1.2.10"
+#define BIALET_VERSION "1.2.11"
 
 #include <stddef.h>
 #include <stdio.h>
