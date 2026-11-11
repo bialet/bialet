@@ -247,10 +247,11 @@ implemented at the app or proxy layer.
 
 ### TLS
 
-Bialet speaks **HTTP/1.0** and has no native HTTPS. Run it behind a reverse
-proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
-setup, and it also lets you bind Bialet to `127.0.0.1` so only the proxy
-talks to it. See [Deployment](deployment.md) for configs.
+Bialet speaks **HTTP/1.1** (one request per connection, `Connection: close`)
+and has no native HTTPS. Run it behind a reverse proxy (nginx, Apache, or
+Caddy) for TLS. This is the recommended production setup, and it also lets
+you bind Bialet to `127.0.0.1` so only the proxy talks to it. See
+[Deployment](deployment.md) for configs.
 
 When requests arrive through a proxy, Bialet detects HTTPS from the
 `X-Forwarded-Proto` / `Forwarded` headers. That is how the `Secure` cookie

@@ -6,8 +6,10 @@ environment with a reverse proxy, systemd, and Docker.
 
 ## Why a Reverse Proxy?
 
-Bialet speaks **HTTP/1.0** and does not support HTTPS natively. Running it
-behind a reverse proxy (nginx, Apache, or Caddy) gives you:
+Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every
+response carries `Connection: close`: one request per connection, no
+keep-alive, no pipelining, no chunked bodies. Running it behind a reverse
+proxy (nginx, Apache, or Caddy) gives you:
 
 - **TLS termination** — HTTPS for your users
 - **HTTP/1.1 or HTTP/2** between the client and the proxy

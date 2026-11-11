@@ -119,6 +119,18 @@ run_test "Route ignores query string  " "notes?page=2"   200 "notes-list"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
 
+# Framing: the server answers HTTP/1.1 and closes after every response, so the
+# head must say `Connection: close` instead of leaving the client to infer
+# persistence (HTTP/1.1 defaults to keep-alive).
+_test_start_ms=$(now_ms)
+framing_headers=$(curl -s -D - -o /dev/null --max-time 5 "http://$HOST:$PORT/")
+if [[ "$framing_headers" == HTTP/1.1* && "$framing_headers" == *"Connection: close"* ]]; then
+  report_result "HTTP/1.1 + Connection close    " "$LINENO" 0
+else
+  report_result "HTTP/1.1 + Connection close    " "$LINENO" 1 \
+    "got: $(printf '%s' "$framing_headers" | head -1)"
+fi
+
 # RFC 8615: ".well-known" is the one exempt dot-segment. Everything below it
 # is served -- static files and .wren routes alike -- while every other
 # dot/underscore path keeps the 403 above. Fixtures live under

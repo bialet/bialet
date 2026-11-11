@@ -632,10 +632,15 @@ void write_response(int client_socket, struct BialetResponse* response) {
   // cases, so it is formatted once into a stack buffer and sent together with
   // the body. Only a response with unusually long headers falls back to a heap
   // copy, and only that path formats it twice.
+  //
+  // `Connection: close` is explicit: Bialet serves one request per connection
+  // (no keep-alive, no pipelining, no chunked bodies). Without the header an
+  // HTTP/1.1 client is entitled to assume the connection stays open.
   char head[512];
   int  head_len = snprintf(head, sizeof(head),
                            "HTTP/1.1 %d %s\r\n"
                            "%s"
+                           "Connection: close\r\n"
                            "Content-Length: %zu\r\n\r\n",
                            response->status, desc, hdr, body_len);
   if(head_len < 0) {
@@ -663,6 +668,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
   snprintf(message, (size_t)head_len + 1,
            "HTTP/1.1 %d %s\r\n"
            "%s"
+           "Connection: close\r\n"
            "Content-Length: %zu\r\n\r\n",
            response->status, desc, hdr, body_len);
 

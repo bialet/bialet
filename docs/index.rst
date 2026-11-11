@@ -194,9 +194,10 @@ What it costs
      sequentially per worker. For parallel concurrency on multi-core servers,
      spin up multiple local instances behind Caddy or nginx. See
      :doc:`deployment`.
-   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
-     Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
-     static-asset caching. See :doc:`deployment`.
+   - **HTTP/1.1, one request per connection.** No keep-alive, no native TLS.
+     Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
+     HTTP/2, rate limiting, request buffering, and static-asset caching. See
+     :doc:`deployment`.
    - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
      Vim plugins provide syntax highlighting; autocomplete and an LSP are on
      the roadmap.
