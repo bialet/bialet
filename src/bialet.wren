@@ -350,7 +350,14 @@ class Session {
   static destroy() {
     var id = Cookie.get(Session.name)
     Cookie.delete(Session.name)
-    `DELETE FROM BIALET_SESSION WHERE id = ? OR updatedAt < date('now', '-1 month')`.query([id])
+    // Only the caller's own id. Cross-id expiry is sweep_()'s job and has to
+    // use the per-id MAX(updatedAt) rule: this statement used to carry
+    // "OR updatedAt < date('now','-1 month')", so any principal's logout
+    // deleted every session's login-time rows (the user id and the
+    // _bialet_authenticated marker), which ended other users' live sessions
+    // and stripped the marker the cap exemption depends on.
+    if (id == null) return
+    `DELETE FROM BIALET_SESSION WHERE id = ?`.query([id])
   }
   // A session identifier must look like one: non-empty, at most 128 bytes, and
   // URL-safe. The server only ever mints 40 random characters, so anything else

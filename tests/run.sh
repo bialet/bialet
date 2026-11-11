@@ -902,6 +902,7 @@ run_test "Session rotate rekeys writes" "session-rotate" 200 "planted:none|fresh
 run_test "Session rows stay bounded " "session-sweep" 200 "live:bounded"
 run_test "Session cap spares authed  " "session-evict" 200 "authed:yes|evicted:yes"
 run_test "Session idle expiry       " "session-expiry" 200 "active:yes|idle:yes"
+run_test "Session destroy scope      " "session-destroy-scope" 200 "victim:kept|marker:kept|self:gone"
 
 # Regression: the sweep counter lived in a Wren class variable, but bialet_run()
 # builds and frees a VM per request, so the counter restarted at 0 and never
