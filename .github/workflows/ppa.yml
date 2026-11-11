@@ -132,6 +132,9 @@ jobs:
           else
             export GNUPGHOME=/tmp/gnupg
             mkdir -m 700 "$GNUPGHOME"
+            # The upload step's dput re-verifies the .changes signature, so the
+            # agent home has to survive to the next step.
+            echo "GNUPGHOME=${GNUPGHOME}" >> "$GITHUB_ENV"
             printf '%s' "${PPA_GPG_KEY}" | base64 -d | gpg --batch --import
             # A key with a passphrase needs gpg-agent to have it cached; use a
             # dedicated key without one for unattended uploads.
