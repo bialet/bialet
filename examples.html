@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/examples.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Simple query list: Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON Response: Form Upload: File Creation: HTTP API Call: Password utilities: Cross site reque..." />
+<meta property="og:description" content="Simple query list: Hello World: Count the visitors of your website: Form submission: JSON Response: Form Upload: File Creation: HTTP API Call: Password utilities: Cross site request forgery: Markdo..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Simple query list: Hello World: Count the visitors of your website: Count the clicks: Form submission: JSON Response: Form Upload: File Creation: HTTP API Call: Password utilities: Cross site reque..." />
+<meta name="description" content="Simple query list: Hello World: Count the visitors of your website: Form submission: JSON Response: Form Upload: File Creation: HTTP API Call: Password utilities: Cross site request forgery: Markdo..." />
 
     <title>Examples &#8212; Bialet</title>
   
@@ -67,7 +67,7 @@
     <link rel="prev" title="Common Pitfalls" href="pitfalls.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="current nav bd-sidenav">
@@ -439,7 +441,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-query-list">Simple query list</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hello-world">Hello World</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-visitors-of-your-website">Count the visitors of your website</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-clicks">Count the clicks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-submission">Form submission</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-upload">Form Upload</a></li>
@@ -450,6 +451,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#guestbook">Guestbook</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-small-authenticated-app">A small authenticated app</a></li>
 </ul>
             </nav>
         </div>
@@ -466,25 +468,22 @@
 <section id="simple-query-list">
 <h2>Simple query list<a class="headerlink" href="#simple-query-list" title="Link to this heading">#</a></h2>
 <div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users`</span><span class="o">.</span><span class="n">fetch</span>
-<span class="k">var</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"🗂️ Users list"</span>
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
-<span class="x">  &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">  &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
-<span class="w">    </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">      </span><span class="x">&lt;ul style="list-style-type:none"&gt;</span>
-<span class="x">        {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">          </span><span class="x">&lt;a href="/hello?id={{ user["id"] }}"&gt;</span>
-<span class="x">            👋 {{ user["name"] }}</span>
-<span class="x">          &lt;/a&gt;</span>
-<span class="w">        </span><span class="x">&lt;/li&gt; } }}</span>
-<span class="x">      &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">      </span><span class="cm">/* Users table is empty */</span>
-<span class="w">      </span><span class="x">&lt;p&gt;No users, go to &lt;a href="/hello"&gt;</span><span class="n">hello</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
-<span class="w">    </span><span class="si">}}</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">  &lt;head&gt;</span>
+<span class="w">    </span><span class="x">&lt;title&gt;Users&lt;/title&gt;</span>
+<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
+<span class="x">  &lt;/head&gt;</span>
+<span class="w">  </span><span class="x">&lt;body&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Users</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    {{ users.count &gt; 0 ?</span>
+<span class="x">      &lt;ul&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">user</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href="/hello?id={{ user["id"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="x">&lt;/ul&gt; :</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">yet</span><span class="o">.</span><span class="w"> </span><span class="nc">Try</span><span class="w"> </span><span class="x">&lt;a href="/hello"&gt;hello&lt;/a&gt;</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="p">}}</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -492,66 +491,49 @@
 </section>
 <section id="hello-world">
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We create a class that that contains the logic and template.</span>
-<span class="c1">// This is not required by Bialet, but it is a good practice.</span>
-<span class="c1">// Once the logic and template become too big, you should split it</span>
-<span class="c1">// in multiple classes.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// A class keeps the query and the template together. Not required, but a good</span>
+<span class="c1">// habit once a page outgrows a few lines.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// The name of the constructor could be anything.</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"🚲 Welcome to Bialet"</span>
+<span class="w">    </span><span class="vi">_title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Welcome to Bialet"</span>
 <span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Fetch the user's name from the database using plain SQL</span>
-<span class="w">  </span><span class="c1">// or return "World" if the user doesn't exist.</span>
-<span class="w">  </span><span class="c1">// Single line methods return the value of the expression.</span>
+
+<span class="w">  </span><span class="c1">// One line, one query. The last expression is the return value.</span>
 <span class="w">  </span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`SELECT name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">val</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"World"</span><span class="w"> </span><span class="p">}</span>
-<span class="w">  </span><span class="c1">// Build the HTML</span>
+
 <span class="w">  </span><span class="n">html</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">    </span><span class="x">&lt;html&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
-<span class="w">      </span><span class="x">&lt;/head&gt;</span>
-<span class="x">      &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
-<span class="w">        </span><span class="x">&lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href="simple"&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="nc">List</span><span class="w"> </span><span class="err">👥</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
-<span class="w">        </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="n">to</span><span class="w"> </span><span class="nc">Home</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
-<span class="w">      </span><span class="x">&lt;/body&gt;</span>
-<span class="x">    &lt;/html&gt;</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
+<span class="x">      &lt;/head&gt;</span>
+<span class="w">      </span><span class="x">&lt;body&gt;</span>
+<span class="x">        &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="vi">_title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">        {{ content }}</span>
+<span class="x">        &lt;p&gt;&lt;a href="simple"&gt;Back to the list&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">        &lt;p&gt;&lt;a href="."&gt;Home&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">      &lt;/body&gt;</span>
+<span class="w">    </span><span class="x">&lt;/html&gt;</span>
+<span class="x">  }</span>
+<span class="x">}</span>
 
-<span class="c1">// We use the `get()` method to get the `id` parameter from the URL.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
-<span class="c1">// Create an instance of the `App` class.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">App</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-<span class="c1">// Generate the HTML, with the name of the user.</span>
-<span class="k">return</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="x">&lt;p&gt;👋 Hello &lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;&lt;/p&gt;</span><span class="p">)</span>
+<span class="x">var id = Request.get("id")</span>
+<span class="x">var app = App.new()</span>
+<span class="x">return app.html(&lt;p&gt;</span><span class="nc">Hello</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">app</span><span class="o">.</span><span class="n">name</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;&lt;/p&gt;)</span>
 </pre></div>
 </div>
 </section>
 <section id="count-the-visitors-of-your-website">
 <h2>Count the visitors of your website<a class="headerlink" href="#count-the-visitors-of-your-website" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `query()` method to execute SQL statements.</span>
-<span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
-<span class="c1">// Then we insert a row with the name `visits` and a value of 0, if there is no row</span>
-<span class="c1">// with the name `visits`.</span>
-<span class="c1">// This should be done with migrations; it's included here so the example is self-contained.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// A counter kept in SQLite. In a real app the table belongs in a migration;</span>
+<span class="c1">// it is created here so the example runs on its own.</span>
 <span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
 <span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES ("visits", 0)`</span><span class="o">.</span><span class="n">query</span>
 
-<span class="c1">// This is the proper start of the script...</span>
-
-<span class="c1">// We increment the value of the row with the name `visits` by 1.</span>
 <span class="sb">`UPDATE counter SET value = value + 1 WHERE name = "visits"`</span><span class="o">.</span><span class="n">query</span>
-
-<span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
 <span class="k">var</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = "visits"`</span><span class="o">.</span><span class="n">val</span>
 
-<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
-<span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `visits` variable.</span>
-<span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="x">&lt;html&gt;</span>
 <span class="x">  &lt;head&gt;</span>
@@ -561,59 +543,9 @@
 <span class="x">  &lt;/head&gt;</span>
 <span class="w">  </span><span class="x">&lt;body&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="n">visited</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">visits</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/h1&gt;</span>
-<span class="x">    &lt;p&gt;</span>
-<span class="w">      </span><span class="err">ℹ️</span><span class="w"> </span><span class="nc">Reload</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">browser</span><span class="w"> </span><span class="n">or</span>
-<span class="w">      </span><span class="x">&lt;a href=""&gt;click here&lt;/a&gt;</span>
-<span class="w">      </span><span class="n">to</span><span class="w"> </span><span class="n">see</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">value</span><span class="o">.&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Reload</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">browser</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="x">&lt;a href=""&gt;click here&lt;/a&gt;</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">see</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">value</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
-<span class="x">&lt;/html&gt;</span>
-</pre></div>
-</div>
-</section>
-<section id="count-the-clicks">
-<h2>Count the clicks<a class="headerlink" href="#count-the-clicks" title="Link to this heading">#</a></h2>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// We use the `query` method to execute SQL statements.</span>
-<span class="c1">// In this case we create a table named `counter` with two columns: `name` and `value`.</span>
-<span class="c1">// Then we insert a row with the name `clicks` and a value of 0, if there is no row</span>
-<span class="c1">// with the name `clicks`.</span>
-<span class="c1">// This should be done with migrations; it's included here so the example is self-contained.</span>
-<span class="sb">`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`</span><span class="o">.</span><span class="n">query</span>
-<span class="sb">`INSERT OR IGNORE INTO counter (name, value) VALUES ("clicks", 0)`</span><span class="o">.</span><span class="n">query</span>
-
-<span class="c1">// We use the `get()` method to get a parameter from the URL.</span>
-<span class="c1">// When the parameter is `count`, we increment the value of the `clicks` row by 1.</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"count"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="sb">`UPDATE counter SET value = value + 1 WHERE name = "clicks"`</span><span class="o">.</span><span class="n">query</span>
-<span class="p">}</span>
-
-<span class="c1">// When the parameter is `reset`, we reset the value of the `clicks` row to 0.</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reset"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="sb">`UPDATE counter SET value = 0 WHERE name = "clicks"`</span><span class="o">.</span><span class="n">query</span>
-<span class="p">}</span>
-
-<span class="c1">// We use the `val()` method to get the value of the first row in the query result.</span>
-<span class="k">var</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT value FROM counter WHERE name = "clicks"`</span><span class="o">.</span><span class="n">val</span>
-
-<span class="c1">// We use the `return` to finish the script and send the response to the client.</span>
-<span class="c1">// The `{{ ... }}` syntax is used to interpolate the value of the `clicks` variable.</span>
-<span class="c1">// Apart from the interpolation, the string is regular HTML.</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
-<span class="x">&lt;html&gt;</span>
-<span class="x">  &lt;head&gt;</span>
-<span class="w">    </span><span class="x">&lt;meta charset="utf-8"&gt;</span>
-<span class="x">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span>
-<span class="w">    </span><span class="x">&lt;link rel="stylesheet" href="style.css"&gt;</span>
-<span class="x">  &lt;/head&gt;</span>
-<span class="w">  </span><span class="x">&lt;body&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="nc">Total</span><span class="w"> </span><span class="n">times</span><span class="w"> </span><span class="n">clicked</span><span class="o">:</span><span class="w"> </span><span class="x">&lt;strong&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">clicks</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/strong&gt;&lt;/h1&gt;</span>
-<span class="x">    &lt;p&gt;</span>
-<span class="w">      </span><span class="x">&lt;a href="clicks?count"&gt;Click me! 🔺&lt;/a&gt;</span>
-<span class="w">      </span><span class="err">•</span>
-<span class="w">      </span><span class="x">&lt;a href="clicks?reset"&gt;Reset 🧹&lt;/a&gt;</span>
-<span class="w">    </span><span class="x">&lt;/p&gt;</span>
-<span class="x">    &lt;p&gt;&lt;a href="."&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
-<span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
@@ -664,7 +596,7 @@
 <span class="w">      </span><span class="x">&lt;input type="text" name="value" value="{{ value }}"&gt;</span>
 <span class="x">      &lt;button type="submit"&gt;</span><span class="nc">Submit</span><span class="x">&lt;/button&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -725,7 +657,7 @@
 <span class="x">      &lt;input type="file" name="form_file_name"&gt;</span>
 <span class="w">      </span><span class="x">&lt;input type="submit" value="{{ title }}"&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -780,7 +712,7 @@
 <span class="x">        /* If there are no users */</span>
 <span class="x">        &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="n">found</span><span class="x">&lt;/p&gt;</span>
 <span class="x">      }}</span>
-<span class="x">    &lt;p&gt;&lt;a href="."&gt;Back ↩️&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;&lt;a href="."&gt;Home&lt;/a&gt;&lt;/p&gt;</span>
 <span class="x">  &lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -842,7 +774,7 @@
 <span class="w">        </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -878,7 +810,7 @@
 <span class="w">        </span><span class="x">&lt;button&gt;Submit&lt;/button&gt;</span>
 <span class="w">      </span><span class="x">&lt;/p&gt;</span>
 <span class="x">    &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Back</span><span class="w"> </span><span class="err">↩️</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
+<span class="w">    </span><span class="x">&lt;p&gt;&lt;a href="."&gt;</span><span class="nc">Home</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">  </span><span class="x">&lt;/body&gt;</span>
 <span class="x">&lt;/html&gt;</span>
 </pre></div>
@@ -891,7 +823,7 @@
 
 <span class="s">This is written in Markdown.</span>
 
-<span class="s">[Back ↩️](.)</span>
+<span class="s">[Home](.)</span>
 
 <span class="s">This is the example.md file:</span>
 <span class="s">"""</span>
@@ -920,10 +852,9 @@
 <h2>Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)<a class="headerlink" href="#path-based-route-users-wren" title="Link to this heading">#</a></h2>
 <p>A single file serving both <code class="docutils literal notranslate"><span class="pre">/users</span></code> (list) and <code class="docutils literal notranslate"><span class="pre">/users/:id</span></code> (detail) via
 <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code>. See <a class="reference external" href="advanced-routing.html">Advanced Routing</a>.</p>
-<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// --- Path-Based Route (folder.wren) ---</span>
-<span class="c1">// Demonstrates: a single file serving both the bare URL and every deeper</span>
-<span class="c1">// path. users.wren handles /users (list) and /users/:id (detail) by reading</span>
-<span class="c1">// Request.route(0). See advanced-routing.md for details.</span>
+<div class="code wren highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// One file serves /users (the list) and /users/:id (the detail page):</span>
+<span class="c1">// Request.route(0) is the first path segment after the file name. This is the</span>
+<span class="c1">// SEO-friendly alternative to /users?id=…, covered in Advanced Routing.</span>
 
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
 
@@ -931,17 +862,18 @@
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users ORDER BY name`</span><span class="o">.</span><span class="n">fetch</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">    </span><span class="x">&lt;html&gt;</span>
-<span class="x">      &lt;head&gt;&lt;title&gt;Users&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">      &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
-<span class="w">        </span><span class="x">&lt;h1&gt;Users&lt;/h1&gt;</span>
-<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
-<span class="w">          </span><span class="x">&lt;ul style="list-style-type:none"&gt;</span>
-<span class="x">            {{ users.map{|user| &lt;li&gt;</span>
-<span class="w">              </span><span class="x">&lt;a href="/users/{{ user["id"] }}"&gt;👤 {{ user["name"] }}&lt;/a&gt;</span>
-<span class="w">            </span><span class="x">&lt;/li&gt; } }}</span>
-<span class="x">          &lt;/ul&gt;</span><span class="w"> </span><span class="o">:</span>
-<span class="w">          </span><span class="x">&lt;p&gt;No users yet.&lt;/p&gt;</span>
-<span class="w">        </span><span class="si">}}</span>
+<span class="x">      &lt;head&gt;</span>
+<span class="w">        </span><span class="x">&lt;title&gt;Users&lt;/title&gt;</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="../style.css"&gt;</span>
+<span class="x">      &lt;/head&gt;</span>
+<span class="w">      </span><span class="x">&lt;body&gt;</span>
+<span class="x">        &lt;h1&gt;</span><span class="nc">Users</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">        {{ users.count &gt; 0 ?</span>
+<span class="x">          &lt;ul&gt;</span>
+<span class="w">            </span><span class="si">{{</span><span class="w"> </span><span class="n">users</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">user</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;&lt;a href="/users/{{ user["id"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">          </span><span class="x">&lt;/ul&gt; :</span>
+<span class="x">          &lt;p&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">yet</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="w">        </span><span class="p">}}</span>
 <span class="w">      </span><span class="x">&lt;/body&gt;</span>
 <span class="x">    &lt;/html&gt;</span>
 <span class="p">}</span>
@@ -951,13 +883,16 @@
 
 <span class="k">return</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">  </span><span class="x">&lt;html&gt;</span>
-<span class="x">    &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
-<span class="x">    &lt;body style="font: 1.5em/2.5 system-ui; text-align:center"&gt;</span>
-<span class="w">      </span><span class="x">&lt;h1&gt;👤 {{ user["name"] }}&lt;/h1&gt;</span>
-<span class="w">      </span><span class="x">&lt;p&gt;User id: {{ user["id"] }}&lt;/p&gt;</span>
-<span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/users"&gt;</span><span class="err">←</span><span class="w"> </span><span class="nc">Back</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">users</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
-<span class="w">    </span><span class="x">&lt;/body&gt;</span>
-<span class="x">  &lt;/html&gt;</span>
+<span class="x">    &lt;head&gt;</span>
+<span class="w">      </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="w">      </span><span class="x">&lt;link rel="stylesheet" href="../style.css"&gt;</span>
+<span class="x">    &lt;/head&gt;</span>
+<span class="w">    </span><span class="x">&lt;body&gt;</span>
+<span class="x">      &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">User</span><span class="w"> </span><span class="n">id</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">      &lt;p&gt;&lt;a href="/users"&gt;Back to users&lt;/a&gt;&lt;/p&gt;</span>
+<span class="x">    &lt;/body&gt;</span>
+<span class="w">  </span><span class="x">&lt;/html&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -995,7 +930,7 @@ with <code class="docutils literal notranslate"><span class="pre">bialet</span><
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="sb">`INSERT INTO messages VALUES (?, CURRENT_TIME)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">      &lt;p&gt;</span><span class="nc">Messaged</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">Message</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/"&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">messages</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">    </span><span class="x">&lt;/main&gt;</span>
 <span class="x">  }</span>
@@ -1006,6 +941,26 @@ with <code class="docutils literal notranslate"><span class="pre">bialet</span><
 <p>The styled version in <code class="docutils literal notranslate"><span class="pre">docs/examples/guestbook-styled</span></code> adds <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code>
 (a <code class="docutils literal notranslate"><span class="pre">Template</span></code> layout class) and <code class="docutils literal notranslate"><span class="pre">css/style.css</span></code>. The landing page video
 walks through both.</p>
+</section>
+<section id="a-small-authenticated-app">
+<h2>A small authenticated app<a class="headerlink" href="#a-small-authenticated-app" title="Link to this heading">#</a></h2>
+<p>The inventory app in <code class="docutils literal notranslate"><span class="pre">docs/examples/inventory</span></code> is a complete internal tool:
+session login with CSRF and password hashing, a filtered and paginated list,
+create/edit/delete, a file upload, and migrations.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>docs/examples/inventory
+</pre></div>
+</div>
+<p>Sign in with <code class="docutils literal notranslate"><span class="pre">admin&#64;example.com</span></code> / <code class="docutils literal notranslate"><span class="pre">changeme</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> — the tables and the demo account</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> — the layout and the session lookup</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">login.wren</span></code> — CSRF check, <code class="docutils literal notranslate"><span class="pre">Util.verify</span></code>, <code class="docutils literal notranslate"><span class="pre">Session.rotate</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">items.wren</span></code> — list, search, pagination, and the detail page in one file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">item.wren</span></code> — create/edit with validation and the upload</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">photo.wren</span></code> — serves only photos attached to an item</p></li>
+</ul>
+<p>It is under 300 lines of Wren plus one small stylesheet, which is the honest
+size of an authenticated CRUD app in Bialet.</p>
 </section>
 </section>
 
@@ -1058,7 +1013,6 @@ walks through both.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-query-list">Simple query list</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hello-world">Hello World</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-visitors-of-your-website">Count the visitors of your website</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#count-the-clicks">Count the clicks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-submission">Form submission</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response">JSON Response</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#form-upload">Form Upload</a></li>
@@ -1069,6 +1023,7 @@ walks through both.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#path-based-route-users-wren">Path-based route (<code class="docutils literal notranslate"><span class="pre">users.wren</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#guestbook">Guestbook</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-small-authenticated-app">A small authenticated app</a></li>
 </ul>
   </nav></div>
 
@@ -1083,7 +1038,7 @@ walks through both.</p>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

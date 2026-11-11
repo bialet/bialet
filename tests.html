@@ -67,7 +67,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -447,6 +449,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies-and-sessions">Cookies and Sessions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>
@@ -595,6 +598,24 @@ still executes – put it first if the rest of the file should not run.</p>
 <span class="w">    </span><span class="o">.</span><span class="n">postData</span><span class="p">({</span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">})</span><span class="w">                       </span><span class="c1">// Set POST data</span>
 </pre></div>
 </div>
+</section>
+<section id="cookies-and-sessions">
+<h3>Cookies and Sessions<a class="headerlink" href="#cookies-and-sessions" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Test</span></code> client keeps a cookie jar shared by every request in a test file, so
+a session minted by one call is the session the next call presents:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">page</span><span class="o">.</span><span class="n">csrf</span><span class="p">()</span><span class="w">      </span><span class="c1">// hidden _bialet_csrf value from the form</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="s2">"user@example.com"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"secret"</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"_bialet_csrf"</span><span class="o">:</span><span class="w"> </span><span class="n">token</span>
+<span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Test.cookie(name)</span></code> reads a stored cookie and <code class="docutils literal notranslate"><span class="pre">Test.clearCookies()</span></code> empties the
+jar. <code class="docutils literal notranslate"><span class="pre">.csrf()</span></code> aborts the test when the response rendered no token. Session
+values set during a <code class="docutils literal notranslate"><span class="pre">Test.get</span></code> are therefore visible to the following
+<code class="docutils literal notranslate"><span class="pre">Test.post</span></code>, and a CSRF-protected form validates without a <code class="docutils literal notranslate"><span class="pre">test_mode</span></code> flag.</p>
 </section>
 <section id="assertions">
 <h3>Assertions<a class="headerlink" href="#assertions" title="Link to this heading">#</a></h3>
@@ -1037,6 +1058,7 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-api-reference">Test API Reference</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies-and-sessions">Cookies and Sessions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>
@@ -1079,7 +1101,7 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

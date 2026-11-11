@@ -67,7 +67,7 @@
     <link rel="next" title="Why Bialet?" href="why-bialet.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -106,10 +106,7 @@
 <p class="hero__subline">It should have stayed this simple.</p>
 
 <p class="hero__lede">
-  One executable: an HTTP server, SQLite, and the Wren scripting language.
-  Build data-driven web apps from <code>.wren</code> files. No package
-  manager, no YAML, no separate database server, no build step. The Linux
-  x86_64 binary is 3.7&nbsp;MB.
+  Bialet is a small web framework with everything you need and nothing you don't. Write a little Wren, store your data in SQLite, and serve your application.
 </p><div id="bialet-download" class="install">
 
   <!-- Unix (Linux / macOS): curl command with copy button -->
@@ -127,10 +124,10 @@
   <!-- Windows: download button -->
   <div id="download-win" class="install__platform">
     <span class="install__label">Install for Windows</span>
-    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-windows-x86_64.zip">
+    <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-windows-x86_64.zip">
       Download for Windows (.zip)
     </a>
-    <p class="install__note">Zero installation required. Just extract and run.</p>
+    <p class="install__note">No installation: extract and run.</p>
   </div>
 
   <!-- Fallback: all platforms (also what visitors see without JS) -->
@@ -138,12 +135,12 @@
     <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/latest">
       Download the binaries (all platforms)
     </a>
-    <p class="install__note">Zero installation required. Just extract and run.</p>
+    <p class="install__note">No installation: extract and run.</p>
   </div>
 
   <p class="install__more">
-    <a href="installation.html">Other platforms, Homebrew, and Docker</a>
-    &middot; MIT licensed &middot; v1.2.12
+    <a href="installation.html">Other platforms, package managers and Docker</a>
+    &middot; v1.2.13
   </p>
 
 </div>
@@ -170,7 +167,7 @@
     </figcaption>
   </figure>
   <div class="proof__notes">
-    <p class="proof__heading">Under a minute, start to styled</p>
+    <p class="proof__heading">From zero to styled in under a minute</p>
     <ul class="proof__list">
       <li>A page, a form handler, a migration.</li>
       <li><code>bialet</code> serves the files. No build step.</li>
@@ -214,7 +211,6 @@
     if (started && started.catch) started.catch(function () {});
   })();
 </script><hr class="docutils" />
-<div class="copy-status" role="status" aria-live="polite"></div><hr class="docutils" />
 <section id="what-you-get">
 <h2>What you get<a class="headerlink" href="#what-you-get" title="Link to this heading">#</a></h2>
 <p>One executable does the work: it serves HTTP, opens the SQLite file, and runs
@@ -229,7 +225,7 @@ your Wren code. There is no stack to assemble around it.</p>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>One executable</strong></p>
 <p class="sd-card-text">Copy the binary to a server and run it. No runtime to install, no
-<code class="docutils literal notranslate"><span class="pre">node_modules</span></code>. 3.7 MB on Linux x86_64.</p>
+<code class="docutils literal notranslate"><span class="pre">node_modules</span></code>, no bundler. 3.7 MB on Linux.</p>
 </div>
 </div>
 </div>
@@ -252,8 +248,7 @@ provision, no separate process. WAL mode is one flag.</p>
 </div>
 <div class="sd-card-body docutils">
 <p class="sd-card-text"><strong>No build step</strong></p>
-<p class="sd-card-text">Save a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file and refresh the browser. No compiler, no bundler,
-no watch process.</p>
+<p class="sd-card-text">Save a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file and refresh the browser. <strong>Wren</strong> is a small, class-based, object-oriented language.</p>
 </div>
 </div>
 </div>
@@ -282,13 +277,15 @@ yourself. Add JavaScript only if you want it.</p>
 <li><p><strong>One worker per process, with instant queueing.</strong> Requests are served
 sequentially per worker. For parallel concurrency on multi-core servers,
 spin up multiple local instances behind Caddy or nginx. See
+<a class="reference internal" href="deployment.html"><span class="doc">Deployment</span></a> and the measured numbers in <a class="reference internal" href="performance.html"><span class="doc">Performance</span></a>.</p></li>
+<li><p><strong>HTTP/1.1, one request per connection.</strong> No keep-alive, no native TLS.
+Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
+HTTP/2, rate limiting, request buffering, and static-asset caching. See
 <a class="reference internal" href="deployment.html"><span class="doc">Deployment</span></a>.</p></li>
-<li><p><strong>HTTP/1.0, no native TLS.</strong> Bialet serves HTTP. Put nginx, Apache, or
-Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
-static-asset caching. See <a class="reference internal" href="deployment.html"><span class="doc">Deployment</span></a>.</p></li>
 <li><p><strong>Wren, with basic tooling.</strong> Apps are written in Wren. The VS Code and
 Vim plugins provide syntax highlighting; autocomplete and an LSP are on
-the roadmap.</p></li>
+the roadmap. See <a class="reference internal" href="wren.html"><span class="doc">Wren Language Guide</span></a> for what the language does and does not give
+you.</p></li>
 <li><p><strong>No WebSockets.</strong> Request/response HTTP only. Use polling or an external
 service for realtime features.</p></li>
 </ul>
@@ -338,6 +335,15 @@ public.</p>
 <p>Not a fit if you need multi-server horizontal scaling, in-process TLS,
 WebSockets, or a package ecosystem. Bialet does not provide them. See
 <a class="reference internal" href="why-bialet.html"><span class="doc">Why Bialet?</span></a> for the longer version.</p>
+</section>
+<hr class="docutils" />
+<section id="built-with-bialet">
+<h2>Built with Bialet<a class="headerlink" href="#built-with-bialet" title="Link to this heading">#</a></h2>
+<p><a class="reference external" href="https://home.dev.ar/">dev.ar</a> is a free <code class="docutils literal notranslate"><span class="pre">.dev.ar</span></code> subdomain service
+running on Bialet: server-rendered pages, a session login, and a redirect
+dashboard. Over 22 days it served about 160,000 requests — two-thirds of them
+scanner traffic answered with a 403 or 404 — with fewer than 0.1% 5xx
+responses. <a class="reference internal" href="showcase.html"><span class="doc">Built with Bialet</span></a></p>
 <div class="hero-actions">
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="getting-started/index.html">Read the docs</a>
   <a class="hero-actions__link" href="installation.html">All install options</a>
@@ -357,11 +363,11 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
 </div>
 <hr class="docutils" />
 <div class="community-banner">
-  <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
+  <p class="community-banner__title"><strong>Built and maintained by a solo developer</strong></p>
   <p>
-    Bialet is stable for personal use. There is no commercial support or
-    SLA. Bugs go to GitHub Issues; questions and project showcases go to
-    GitHub Discussions. Planned work is in the
+    Bialet is MIT licensed and runs in production. There is no commercial
+    support or SLA. Bugs go to GitHub Issues; questions and project
+    showcases go to GitHub Discussions. Planned work is in the
     <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
   </p>
   <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
@@ -375,7 +381,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
             It should have stayed this simple.
           </p>
           <p>
-            &copy; 2026, Rodrigo Arce &nbsp;&middot;&nbsp;
+            &copy; 2026, Rodrigo "Albo" Arce &nbsp;&middot;&nbsp;
             <a href="https://github.com/bialet/bialet">GitHub</a>
             &nbsp;&middot;&nbsp;
             <a href="https://bialet.dev">bialet.dev</a>

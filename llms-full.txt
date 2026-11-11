@@ -23,7 +23,7 @@ your Wren code. There is no stack to assemble around it.
       **One executable**
 
       Copy the binary to a server and run it. No runtime to install, no
-      ``node_modules``. 3.7 MB on Linux x86_64.
+      ``node_modules``, no bundler. 3.7 MB on Linux.
 
    .. grid-item-card::
 
@@ -40,8 +40,7 @@ your Wren code. There is no stack to assemble around it.
       ^^^
       **No build step**
 
-      Save a ``.wren`` file and refresh the browser. No compiler, no bundler,
-      no watch process.
+      Save a ``.wren`` file and refresh the browser. **Wren** is a small, class-based, object-oriented language.
 
    .. grid-item-card::
 
@@ -65,13 +64,15 @@ What it costs
    - **One worker per process, with instant queueing.** Requests are served
      sequentially per worker. For parallel concurrency on multi-core servers,
      spin up multiple local instances behind Caddy or nginx. See
+     :doc:`deployment` and the measured numbers in :doc:`performance`.
+   - **HTTP/1.1, one request per connection.** No keep-alive, no native TLS.
+     Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
+     HTTP/2, rate limiting, request buffering, and static-asset caching. See
      :doc:`deployment`.
-   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
-     Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
-     static-asset caching. See :doc:`deployment`.
    - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
      Vim plugins provide syntax highlighting; autocomplete and an LSP are on
-     the roadmap.
+     the roadmap. See :doc:`wren` for what the language does and does not give
+     you.
    - **No WebSockets.** Request/response HTTP only. Use polling or an external
      service for realtime features.
 
@@ -112,6 +113,17 @@ Not a fit if you need multi-server horizontal scaling, in-process TLS,
 WebSockets, or a package ecosystem. Bialet does not provide them. See
 :doc:`why-bialet` for the longer version.
 
+----
+
+Built with Bialet
+-----------------
+
+`dev.ar <https://home.dev.ar/>`_ is a free ``.dev.ar`` subdomain service
+running on Bialet: server-rendered pages, a session login, and a redirect
+dashboard. Over 22 days it served about 160,000 requests — two-thirds of them
+scanner traffic answered with a 403 or 404 — with fewer than 0.1% 5xx
+responses. :doc:`showcase`
+
 .. raw:: html
 
    <div class="hero-actions">
@@ -130,6 +142,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    installation
    editor-support
    wren
+   showcase
 
 .. toctree::
    :hidden:
@@ -181,6 +194,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    cron
    tests
    deployment
+   performance
 
 .. toctree::
    :hidden:
@@ -199,11 +213,11 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
+     <p class="community-banner__title"><strong>Built and maintained by a solo developer</strong></p>
      <p>
-       Bialet is stable for personal use. There is no commercial support or
-       SLA. Bugs go to GitHub Issues; questions and project showcases go to
-       GitHub Discussions. Planned work is in the
+       Bialet is MIT licensed and runs in production. There is no commercial
+       support or SLA. Bugs go to GitHub Issues; questions and project
+       showcases go to GitHub Discussions. Planned work is in the
        <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
@@ -226,9 +240,9 @@ Bialet optimizes for **getting things done on a single server**. It bundles the
 HTTP server, the database, and the language runtime into one binary. Your app
 is a directory of `.wren` files and a SQLite database. That's it.
 
-If your needs fit within Bialet's scope, you get an experience no other
-framework can match: zero-config development, single-command deployment, and
-no dependency management.
+If your needs fit within Bialet's scope, you get an experience that is hard to
+assemble elsewhere: zero-config development, single-command deployment, and no
+dependency management.
 
 If your needs grow beyond that scope, you'll want a different tool — and that's
 okay.
@@ -260,6 +274,20 @@ okay.
   offline support need client-side state. Bialet re-renders the page instead.
 - **Complex auth flows** — Bialet supports basic auth and sessions, but not
   OAuth, SAML, or multi-factor authentication out of the box.
+
+## The Language Bet
+
+Embedding Wren is the decision that makes Bialet Bialet. The VM is small,
+dependency-free C, so it links into the same binary as the server and SQLite;
+the language is class-based and object-oriented, so HTML, SQL, and application
+logic live in one file without a build step.
+
+It is also the biggest thing Bialet asks of you. There is no package registry,
+no LSP or autocomplete yet, and most developers have never written Wren. The
+[Wren guide](wren.md#what-wren-costs-you) states those costs plainly, and
+[Wren for JavaScript and Python
+developers](wren.md#wren-for-javascript-and-python-developers) is most of the
+mapping you need to start.
 
 ## Comparisons
 
@@ -330,33 +358,104 @@ lighter alternative to a full backend framework.
 PHP is the closest philosophical relative. Both let you drop files in a
 directory and serve them immediately. Both embed logic in HTML.
 
-|                 | Bialet                           | PHP                               |
-| --------------- | -------------------------------- | --------------------------------- |
-| Language        | Wren (object-oriented)           | PHP                               |
-| Database        | SQLite built-in, always present  | Must install and configure        |
-| Deployment      | Single binary + app directory    | PHP runtime + web server + DB     |
-| Package manager | None (import from GitHub URLs)   | Composer                          |
-| Template engine | Inline HTML strings (JSX-like)   | Plain PHP or Twig/Blade           |
-| Configuration   | None                             | php.ini, .env, server config      |
+|                 | Bialet                          | PHP                                |
+| --------------- | ------------------------------- | ---------------------------------- |
+| Language        | Wren (object-oriented)          | PHP                                |
+| Database        | SQLite built in, always present | SQLite via `pdo_sqlite`, no server |
+| Deployment      | Single binary + app directory   | PHP-FPM or Apache + app directory  |
+| Package manager | None (import from GitHub URLs)  | Composer (optional)                |
+| Template engine | Inline HTML strings             | Plain PHP, or Twig/Blade           |
+| Configuration   | None                            | php.ini, .env, server config       |
+| Shared hosting  | No                              | Yes                                |
 
-Bialet wins on simplicity. PHP wins on ecosystem and scalability.
+`pdo_sqlite` is compiled into most PHP builds, so "PHP with SQLite" is a real
+one-file setup that needs no database server. What Bialet adds is the
+executable: no web server to configure, no php.ini, no FPM worker pool, and no
+Composer step. What PHP adds is a hosting industry, a large ecosystem, and
+plenty of people who already know it.
+
+PHP wins on ecosystem, hiring, and hosting. Bialet wins on one artifact that
+runs the same way on every machine.
+
+### Bialet vs. Go
+
+Go is the closest match on deployment: one static binary, an HTTP server in the
+standard library, `database/sql`, and `html/template`. If a single binary is
+the whole argument, Go already wins.
+
+|            | Bialet                  | Go                              |
+| ---------- | ----------------------- | ------------------------------- |
+| Deployment | Single binary + app dir | Single binary                   |
+| Concurrency| One request per worker  | Goroutines across all cores     |
+| Database   | SQLite bundled          | A driver (CGO or pure Go)       |
+| Templates  | Inline HTML + `{{ }}`   | `html/template` files           |
+| Build step | None                    | `go build`                      |
+| Types      | Dynamic                 | Static                          |
+| Ecosystem  | Minimal                 | Large                           |
+
+Go is the better tool when you need real parallelism, a typed codebase, or a
+library for everything. Bialet is the better tool when you want to edit a
+`.wren` file and refresh, keep one small binary, and not think about
+compilation or dependencies at all.
+
+### Bialet vs. PocketBase
+
+PocketBase is also a single executable with SQLite behind it, but it is a
+backend-as-a-service, not a template engine. It ships an admin UI, a collection
+editor, auth, file storage, REST and realtime APIs, and a JavaScript SDK.
+Bialet ships a language and expects you to write the HTML.
+
+|            | Bialet                     | PocketBase                           |
+| ---------- | -------------------------- | ------------------------------------ |
+| What it is | Code-first, server-rendered| Backend with admin UI and APIs       |
+| Data model | SQL schema you write       | Collections in the admin             |
+| UI         | Your HTML                  | Built-in admin; you bring a frontend |
+| Auth       | Sessions, CSRF, basic auth | Built-in auth, OAuth2 providers      |
+| Realtime   | No (polling)               | SSE subscriptions                    |
+| Extend     | `.wren` files              | Go or JavaScript hooks               |
+| Database   | SQLite                     | SQLite                               |
+
+Choose PocketBase when you want a ready-made backend and a JavaScript
+frontend. Choose Bialet when the app is server-rendered pages and you want to
+write the HTML and SQL yourself.
 
 ### Bialet vs. Express / Flask
 
-Express and Flask are minimalist frameworks, but they still need a database
-driver, a template engine, and often an ORM — all configured separately.
+Express and Flask are deliberately minimal: you add only what the app needs. A
+minimal Express app can return HTML strings and talk to SQLite through a
+driver; Flask ships Jinja2, and Python's standard library already has
+`sqlite3`. Neither requires an ORM or a database server.
 
-|                 | Bialet                           | Express / Flask                   |
-| --------------- | -------------------------------- | --------------------------------- |
-| Setup           | One binary, zero config          | Install packages, configure DB    |
-| Database        | SQLite built-in                  | SQLAlchemy + driver (Flask)       |
-| Routing         | File-based                       | Decorators / router definitions   |
-| Templates       | Inline HTML + interpolation      | EJS / Jinja2 / Pug                |
-| Production      | Single binary                    | pm2 + nginx / gunicorn + nginx    |
-| Language        | Wren                             | JavaScript / Python               |
+What neither includes is the wiring: sessions with CSRF protection, database
+migrations, a request/response API, and a deployment story. Bialet's difference
+is that all of it is in the binary and already connected.
 
-Bialet eliminates the "glue code" phase entirely. Express/Flask give you more
-control over the stack but require more decisions up front.
+|                 | Bialet                      | Minimal Express / Flask        |
+| --------------- | --------------------------- | ------------------------------ |
+| Setup           | One binary, zero config     | Runtime plus npm/pip install   |
+| Database        | SQLite bundled              | SQLite via driver/stdlib       |
+| Routing         | File-based                  | Decorators/router              |
+| Templates       | Inline HTML + interpolation | Strings, or add EJS/Jinja2     |
+| Sessions + CSRF | Built in                    | Sessions via middleware, CSRF via extension |
+| Migrations      | `_migration.wren`           | Add a migration tool           |
+| Production      | Single binary               | pm2 + nginx / gunicorn + nginx |
+| Language        | Wren                        | JavaScript / Python            |
+
+Express and Flask give you more control over the stack and a language people
+already know. Bialet gives you fewer decisions and fewer moving parts.
+
+### Bialet vs. HTMX plus a backend
+
+If SPA complexity is the problem but a new language is not worth it, HTMX in
+front of Flask, Express, or Go gives you partial updates without a JavaScript
+build. That is a legitimate answer, and Bialet does not beat it on flexibility:
+you keep a language and ecosystem you already know.
+
+Bialet differs in what is already assembled — server, database, sessions, CSRF,
+migrations — and in rendering whole pages by default instead of fragments. If
+you already have a backend you like, adding HTMX is less work than adopting
+Bialet. If you are starting from nothing on one server, Bialet removes more
+pieces.
 
 ### Bialet vs. Django / Rails
 
@@ -608,35 +707,7 @@ already gives it to you for free.
 For how to run and configure the `bialet` binary, see
 [Command Line Usage](usage.md).
 
-## Debian and Ubuntu
-
-Bialet is available as a Debian package from the
-[`ppa:bialet/bialet`](https://launchpad.net/~bialet/+archive/ubuntu/bialet)
-Personal Package Archive. It is built for every Ubuntu release still in
-standard support, on `amd64` and `arm64`:
-
-```bash
-sudo add-apt-repository ppa:bialet/bialet
-sudo apt update
-sudo apt install bialet
-```
-
-Upgrades arrive with the rest of your system packages:
-
-```bash
-sudo apt update && sudo apt upgrade
-```
-
-The package installs the binary as `/usr/bin/bialet` and links against the
-distribution's SQLite, libcurl, and OpenSSL. It is not installed as a service:
-run `bialet` from your app directory, or point a reverse proxy at it as
-described in [Deployment](deployment.md).
-
-> If you previously installed Bialet with the install script, remove
-> `~/.local/bin/bialet` first. That path usually comes before `/usr/bin` in
-> `PATH`, so the old binary would keep running after the package is installed.
-
-## With the Install Script
+## Install Script
 
 The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
 x86_64, Ubuntu ARM) is with the install script:
@@ -645,55 +716,10 @@ x86_64, Ubuntu ARM) is with the install script:
 curl -fsSL https://get.bialet.dev | sh
 ```
 
-## For Windows
+## Docker
 
-Download the latest `bialet.exe` (inside the zip) directly:
-
-- **[bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})**
-
-Extract and run — no installation required:
-
-```bash
-bialet.exe
-```
-
-Double-clicking `bialet.exe` in File Explorer starts it in dev mode (live
-reload, in-browser error display, and the browser opens automatically). Run it
-from a terminal to start without dev mode.
-
-## Releases
-
-Pre-built binaries for all supported platforms are available on the [releases
-page](https://github.com/bialet/bialet/releases):
-
-| Platform        | Download                                                                       |
-| --------------- | ------------------------------------------------------------------------------ |
-| macOS ARM64     | [bialet-{{release_tag}}-macos-arm64.tar.gz]({{release_macos_arm64_url}})       |
-| Linux x86\_64   | [bialet-{{release_tag}}-linux-x86_64.tar.gz]({{release_linux_x64_url}})        |
-| Linux ARM64     | [bialet-{{release_tag}}-linux-arm64.tar.gz]({{release_linux_arm64_url}})       |
-| Windows x86\_64 | [bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})           |
-
-Download the archive for your platform, extract it, and place the binary
-(`bialet` on macOS/Linux, `bialet.exe` on Windows) in your `PATH`:
-
-```bash
-# macOS / Linux
-tar xzf bialet-{{release_tag}}-linux-x86_64.tar.gz
-sudo mv bialet /usr/local/bin/
-```
-
-## With Brew
-
-Use [Homebrew](https://brew.sh/) to install Bialet on macOS or Linux:
-
-```bash
-brew install bialet/bialet/bialet
-```
-
-## With Docker
-
-Run the published [`bialet/bialet`](https://hub.docker.com/r/bialet/bialet) image
-directly with [Docker](https://docs.docker.com/):
+Run the published [`bialet/bialet`](https://hub.docker.com/r/bialet/bialet)
+image directly with [Docker](https://docs.docker.com/):
 
 ```bash
 docker run -t -p 7001:7001 -v "$PWD":/var/www bialet/bialet
@@ -721,6 +747,90 @@ different host port, use `-p`:
 docker run -t -p 8080:7001 -v "$PWD":/var/www bialet/bialet
 ```
 
+## Debian and Ubuntu
+
+Bialet is available as a Debian package from the
+[`ppa:bialet/bialet`](https://launchpad.net/~bialet/+archive/ubuntu/bialet)
+Personal Package Archive. It is built for every Ubuntu release still in standard
+support, on `amd64` and `arm64`:
+
+```bash
+sudo add-apt-repository ppa:bialet/bialet
+sudo apt update
+sudo apt install bialet
+```
+
+Upgrades arrive with the rest of your system packages:
+
+```bash
+sudo apt update && sudo apt upgrade
+```
+
+The package installs the binary as `/usr/bin/bialet` and links against the
+distribution's SQLite, libcurl, and OpenSSL. It is not installed as a service:
+run `bialet` from your app directory, or point a reverse proxy at it as
+described in [Deployment](deployment.md).
+
+> If you previously installed Bialet with the install script, remove
+> `~/.local/bin/bialet` first. That path usually comes before `/usr/bin` in
+> `PATH`, so the old binary would keep running after the package is installed.
+
+## Brew
+
+Use [Homebrew](https://brew.sh/) to install Bialet on macOS or Linux:
+
+```bash
+brew install bialet/bialet/bialet
+```
+
+## Windows
+
+Download the latest `bialet.exe` (inside the zip) directly:
+
+- **[bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})**
+
+Extract it, open PowerShell or Windows Terminal in that folder, and run:
+
+```powershell
+.\bialet.exe
+```
+
+Double-clicking `bialet.exe` in File Explorer also works: it starts in dev mode
+(live reload, in-browser error display, and the browser opens automatically).
+The terminal is the better default — it shows the logs and leaves dev mode off.
+
+## Releases
+
+Pre-built binaries for all supported platforms are available on the
+[releases page](https://github.com/bialet/bialet/releases):
+
+| Platform       | Download                                                                 |
+| -------------- | ------------------------------------------------------------------------ |
+| macOS ARM64    | [bialet-{{release_tag}}-macos-arm64.tar.gz]({{release_macos_arm64_url}}) |
+| Linux x86_64   | [bialet-{{release_tag}}-linux-x86_64.tar.gz]({{release_linux_x64_url}})  |
+| Linux ARM64    | [bialet-{{release_tag}}-linux-arm64.tar.gz]({{release_linux_arm64_url}}) |
+| Windows x86_64 | [bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})     |
+
+Download the archive for your platform, extract it, and place the binary
+(`bialet` on macOS/Linux, `bialet.exe` on Windows) in your `PATH`:
+
+```bash
+# macOS / Linux
+tar xzf bialet-{{release_tag}}-linux-x86_64.tar.gz
+sudo mv bialet /usr/local/bin/
+```
+
+Each release publishes a `SHA256SUMS` file next to the archives. To check a
+download by hand:
+
+```bash
+curl -fsSLO https://github.com/bialet/bialet/releases/download/{{release_tag}}/SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS   # shasum -a 256 -c on macOS
+```
+
+The install script does this automatically: it refuses an archive whose checksum
+does not match, and warns when a release predates `SHA256SUMS`.
+
 ## Building from Source
 
 ```bash
@@ -730,10 +840,10 @@ make
 make install
 ```
 
-For per-OS dependencies, cross-compiling (including Windows), the full list
-of `make` targets, and the development workflow, see
-[CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md)
-on GitHub.
+For per-OS dependencies, cross-compiling (including Windows), the full list of
+`make` targets, and the development workflow, see
+[CONTRIBUTING.md](https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md) on
+GitHub.
 
 
 # Editor Support
@@ -833,19 +943,76 @@ var names = users.map { |u| u.name }.join(", ")
 
 ## Why Wren?
 
-**Familiar syntax.** If you've used C, Java, JavaScript, or Python, Wren reads
-naturally. Classes, methods, `if`/`while`/`for` — it's all there without
-surprises.
+Bialet could have embedded Lua, JavaScript, or Ruby. Wren was chosen for three
+reasons.
 
-**Truly object-oriented.** Wren doesn’t split the world into primitives and
-objects. Everything is an object — classes, instances, booleans, null, even the
-number -3.5. You can ask anything for its type: both `Num.name` and
-`(-3.5).type.name` output Num. No primitives, no wrappers; it’s objects all the
-way down, which keeps the language small, consistent, and predictable.
+**It is small and embeddable.** The VM is dependency-free C and links into the
+same binary as the HTTP server and SQLite. There is no JavaScript engine to
+ship, no runtime to install, and no second process to supervise.
 
-**Designed for embedding.** The Wren VM is clean, well-documented C with no
-dependencies. Bialet creates and destroys a fresh VM for every request — no
-state leaks between users, no garbage-collection surprises under load.
+**It is object-oriented all the way down.** Classes, methods, and closures are
+the whole language. There are no primitives and no wrapper types: everything is
+an object, `3` is a `Num`, and `(-3.5).type.name` is `Num`. One kind of thing
+is what keeps the language small and predictable.
+
+**It reads like the languages you already know.** Classes, `if`/`while`/`for`,
+blocks, and string interpolation, with no type annotations and no build step.
+If you have written JavaScript or Python, the [mapping table
+below](#wren-for-javascript-and-python-developers) is most of what you need.
+
+Bialet extends the syntax in two places: backtick strings run SQL, and `<...>`
+blocks are HTML with `{{ }}` interpolation. Both are described below.
+
+### What Wren costs you
+
+The language is the biggest trade-off in Bialet, so it is worth stating plainly:
+
+- **No package ecosystem.** Modules come from GitHub URLs, not a registry. See
+  [External Modules](external-modules.md).
+- **No LSP or autocomplete today.** The VS Code and Vim plugins provide syntax
+  highlighting; an LSP is on the
+  [roadmap](https://github.com/bialet/bialet/blob/main/ROADMAP.md). The language
+  is small enough that this is livable, but it is not TypeScript.
+- **A smaller talent pool.** Most developers have never written Wren. Budget a
+  day to learn it, and expect to explain it to whoever maintains the app next.
+- **The dialect is not stock Wren.** Code written for `wren.io` does not run
+  unchanged; see [Bialet vs. Standard Wren](#bialet-vs-standard-wren).
+
+If any of those is a dealbreaker, Bialet is the wrong tool. If they are
+acceptable for a small app on one server, the language is pleasant and its
+whole surface fits on this page.
+
+### Why not Lua, JavaScript, or PHP?
+
+Lua embeds just as easily and has a larger ecosystem, but its tables make
+classes and HTML templating a build-your-own exercise. A JavaScript engine
+brings a parser, a JIT, and a garbage collector that application code can
+reach — a large attack surface for a server that is supposed to be one 3.7 MB
+binary. PHP would mean deploying a runtime and a web server again, which is the
+stack Bialet exists to remove. Wren was the smallest language with real class
+syntax and a clean C embedding API.
+
+### Wren for JavaScript and Python developers
+
+| Concept        | JavaScript / Python        | Wren                                        |
+| -------------- | -------------------------- | ------------------------------------------- |
+| Variable       | `let x = 1` / `x = 1`      | `var x = 1`                                 |
+| Function       | `(a) => a * 2` / `lambda`  | `Fn.new { \|a\| a * 2 }`                    |
+| Class          | `class A {}`               | `class A { construct new() {} }`            |
+| Method         | `foo(a) { }`               | `foo(a) { a * 2 }`                          |
+| Field access   | `this.name` / `self.name`  | `_name` (implicit receiver)                 |
+| Interpolation  | `` `${x}` `` / `f"{x}"`    | `"%(x)"`                                    |
+| List           | `[1, 2, 3]`                | `[1, 2, 3]`                                 |
+| Map            | `{}` / `dict`              | `{"key": "value"}`                          |
+| Loop           | `for (x of xs)`            | `for (x in xs)`                             |
+| Ternary        | `a ? b : c`                | `a ? b : c`                                 |
+| Missing value  | `undefined` / `None`       | `null` (there is no `undefined`)            |
+| Equality       | `===`                      | `==` (value equality; no `===`)             |
+
+Two Wren differences surprise people most. Only `false` and `null` are false —
+`0` and `""` are true. And a method returns its last expression, so `return` is
+only needed for an early exit. Both are covered in the [Quick
+Guide](#quick-guide) above.
 
 ## Try Wren Online
 
@@ -1467,6 +1634,77 @@ The full API reference with method signatures and examples is on the
 [Reference](reference.md) page.
 
 
+# Built with Bialet
+
+Bialet is small on purpose, so the useful question is not "how does it scale to
+a million users" but "does a real app survive on it". This page answers that
+with one app and its actual numbers.
+
+## dev.ar
+
+[dev.ar](https://home.dev.ar/) is a free `.dev.ar` subdomain service. You
+search for a name, sign in, and point the subdomain at whatever you want to run
+— a redirect, a server, a project. It is server-rendered HTML with a session
+login and a dashboard, built and maintained by one developer, and it has been
+running on Bialet since 2023.
+
+It is not a showcase app written for this page. It is the site that pays for the
+framework's existence.
+
+### Traffic, 20 October – 11 November 2026
+
+> ℹ️ This is a small production app, not a benchmark. For latency, throughput,
+> and memory, see [Performance](performance.md).
+
+| Metric                         | Value                          |
+| ------------------------------ | ------------------------------ |
+| Requests                       | ~160,000 (about 7,300 per day) |
+| Bytes served                   | 620 MB                         |
+| 5xx responses                  | under 0.1%                     |
+| 200 / 302 / 403 / 404          | 24% / 10.5% / 27% / 38%        |
+| Logins (`/iniciar-sesion`)     | 545                            |
+| Dashboard views (`/dashboard`) | 508                            |
+
+Top paths over the same window:
+
+| Path              | Requests |
+| ----------------- | -------- |
+| `/`               | 25,400   |
+| `/redirect`       | 17,500   |
+| `/robots.txt`     | 1,400    |
+| `/js/scripts.js`  | 812      |
+| `/.env`           | 648      |
+| `/css/styles.css` | 592      |
+| `/iniciar-sesion` | 545      |
+| `/dashboard`      | 508      |
+
+### What the numbers say
+
+- **Most of the traffic is not users.** Two-thirds of requests are 403s and
+  404s: scanners asking for `/.env`, `/.git/config`, and API paths that do not
+  exist. Bialet answers them and keeps serving.
+- **The 5xx rate is the number that matters.** Under 0.1% while roughly a
+  hundred thousand hostile requests arrived is the useful result. A single
+  worker with no keep-alive did not fall over.
+- **Real usage is small.** 545 logins and 508 dashboard views in 22 days is a
+  handful of people per day. That is exactly the size of app Bialet is for, and
+  saying so is more useful than a synthetic load test.
+
+### What runs it
+
+nginx terminates TLS and proxies to Bialet; the app is server-rendered pages and
+a SQLite file. There is no frontend build, no API gateway, and no JavaScript
+framework. The one operational number worth repeating is the 5xx rate:
+everything else is a scanner.
+
+## Add yours
+
+If you run something on Bialet and want it listed, open a thread in
+[GitHub Discussions](https://github.com/bialet/bialet/discussions). Small
+internal tools are as interesting as public sites — the point is the shape of
+the app, not the visitor count.
+
+
 # Quick start: a guestbook
 
 Build and run a guestbook in about five minutes. Messages are stored in SQLite,
@@ -1626,6 +1864,8 @@ app.
 
 - [Tutorial: build a poll](getting-started/index.md) — the longer tour, with
   templates, forms, and results pages.
+- [Examples](examples.rst) — including a complete authenticated inventory app
+  with search, pagination, and uploads.
 - [Database](database.md) — queries, `.order()`, pagination, migrations.
 - [Forms](forms.md) — POST handling, files, CSRF.
 - [HTML Template](template.md) — inline HTML in depth.
@@ -4620,7 +4860,8 @@ if (Request.isPost) {
     var user = `SELECT * FROM users WHERE email = ?`.first(email)
 
     if (user && Util.verify(password, user["password"])) {
-      session.login(user["id"])
+      Session.rotate()
+      session.set("user_id", user["id"])
       return Response.redirect("/dashboard")
     }
     error = "Invalid email or password."
@@ -4648,7 +4889,9 @@ Key points:
 - `var error` with `{{ error && <p class="error">{{ error }}</p> }}` shows
   the message inline on a single form, no duplication
 - `value="{{ email }}"` preserves the email on failed login
-- `session.login(id)` persists the session on success
+- `Session.rotate()` mints a new session id on login, so an identifier planted
+  before authentication is worthless afterwards; then `session.set("user_id",
+  ...)` stores the user
 - `return Response.redirect(...)` on success, no redirect on failure
 
 > ⚠️ Pitfall: never store plaintext passwords. Use `Util.hash(password)` to
@@ -7316,9 +7559,9 @@ independent of live reload and happens regardless of the config setting.
 - **Polling, not push.** There's a 1-second delay between saving a file and
   the browser reloading. For CSS-only changes, consider a tool that injects
   stylesheets directly.
-- **No WebSocket.** Bialet speaks HTTP/1.0 and runs in a single process.
-  Polling is the simplest approach that works everywhere without adding
-  dependencies.
+- **No WebSocket.** Bialet speaks HTTP/1.1 with `Connection: close` and runs
+  in a single process. Polling is the simplest approach that works everywhere
+  without adding dependencies.
 - **Full page reload only.** The script calls `location.reload()`. State
   in JavaScript variables or form inputs is lost.
 
@@ -7537,6 +7780,11 @@ Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
 
+Call `Session.rotate()` when a user signs in, before storing their id: it
+issues a new identifier and deletes the old one, so a session id an attacker
+planted before login does not become authenticated. The [inventory
+example](examples/inventory/login.wren) shows the full login handler.
+
 The table is keyed on `(id, key)`: `Session.set` replaces the row for a key
 instead of appending, and `Session.get` always returns the latest value
 written. Older databases that lack the primary key are rebuilt in place on
@@ -7576,10 +7824,11 @@ implemented at the app or proxy layer.
 
 ### TLS
 
-Bialet speaks **HTTP/1.0** and has no native HTTPS. Run it behind a reverse
-proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
-setup, and it also lets you bind Bialet to `127.0.0.1` so only the proxy
-talks to it. See [Deployment](deployment.md) for configs.
+Bialet speaks **HTTP/1.1** (one request per connection, `Connection: close`)
+and has no native HTTPS. Run it behind a reverse proxy (nginx, Apache, or
+Caddy) for TLS. This is the recommended production setup, and it also lets
+you bind Bialet to `127.0.0.1` so only the proxy talks to it. See
+[Deployment](deployment.md) for configs.
 
 When requests arrive through a proxy, Bialet detects HTTPS from the
 `X-Forwarded-Proto` / `Forwarded` headers. That is how the `Secure` cookie
@@ -7902,6 +8151,26 @@ Test.get("/api/user")
     .method("GET")                                     // Explicitly set method
     .postData({"key": "value"})                       // Set POST data
 ```
+
+### Cookies and Sessions
+
+The `Test` client keeps a cookie jar shared by every request in a test file, so
+a session minted by one call is the session the next call presents:
+
+```wren
+var page = Test.get("/login").status(200)
+var token = page.csrf()      // hidden _bialet_csrf value from the form
+Test.post("/login", {
+  "email": "user@example.com",
+  "password": "secret",
+  "_bialet_csrf": token
+}).status(302)
+```
+
+`Test.cookie(name)` reads a stored cookie and `Test.clearCookies()` empties the
+jar. `.csrf()` aborts the test when the response rendered no token. Session
+values set during a `Test.get` are therefore visible to the following
+`Test.post`, and a CSRF-protected form validates without a `test_mode` flag.
 
 ### Assertions
 
@@ -8273,8 +8542,10 @@ environment with a reverse proxy, systemd, and Docker.
 
 ## Why a Reverse Proxy?
 
-Bialet speaks **HTTP/1.0** and does not support HTTPS natively. Running it
-behind a reverse proxy (nginx, Apache, or Caddy) gives you:
+Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every
+response carries `Connection: close`: one request per connection, no
+keep-alive, no pipelining, no chunked bodies. Running it behind a reverse
+proxy (nginx, Apache, or Caddy) gives you:
 
 - **TLS termination** — HTTPS for your users
 - **HTTP/1.1 or HTTP/2** between the client and the proxy
@@ -8297,6 +8568,9 @@ The worker's listen backlog is 10, so a burst larger than that can be refused
 before the worker ever accepts it. The proxy holds the burst in its own event
 loop and feeds the worker only as it frees up — one more reason not to expose
 Bialet directly.
+
+Measured latency and throughput for one worker are in
+[Performance](performance.md); they are what makes the trade-off concrete.
 
 The proxy is therefore not just for TLS — it is the layer that absorbs slow
 clients, connection churn, and request buffering, and, when you scale, the
@@ -8928,6 +9202,55 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
 Raises the default body cap so the app accepts uploads up to ~1 MB; drop
 `-b`/`-u` if it does not handle uploads at all.
 
+## Backups
+
+The database is one file, which makes backup a solved problem as long as you
+copy it consistently. Uploads live in the database too (see
+[Files](file.md)), so one backup captures everything the app owns.
+
+**While the server is running**, use SQLite's online backup, which takes a
+consistent snapshot without blocking requests:
+
+```bash
+sqlite3 /www/myapp/_db.sqlite3 ".backup '/var/backups/myapp-$(date +%F).sqlite3'"
+```
+
+Run it from cron once a night, keep a week of files, and copy them off the
+server. A backup you have never restored is a guess: restore one into a scratch
+directory and run `sqlite3 backup.sqlite3 '.tables'` and a `SELECT COUNT(*)`
+on a table you care about.
+
+**With the service stopped**, copying the file is safe. If you copy by hand
+while it runs, you must take `_db.sqlite3`, `_db.sqlite3-wal`, and
+`_db.sqlite3-shm` together; a lone `_db.sqlite3` can be missing the writes
+still in the WAL. Deleting the `-wal`/`-shm` files without checkpointing
+loses them.
+
+To restore, stop Bialet, replace `_db.sqlite3` with the backup, remove any
+stale `-wal`/`-shm` files, start Bialet, and load a page that reads the
+restored tables. Migrations do not run backwards, so restoring the database
+is the rollback for a bad migration.
+
+## Upgrades and Rollback
+
+Application code needs no restart (see [No Restart Needed on
+Deploy](#no-restart-needed-on-deploy)). The binary does: stop the service,
+replace it, start it.
+
+1. **Back up first** — the database as above. A binary rollback cannot undo a
+   migration that already ran.
+2. **Keep the previous binary** — `cp bialet bialet.prev` before replacing it,
+   or keep one directory per version and point `ExecStart=` at a symlink.
+3. **Replace atomically** — write the new binary next to the old one and
+   `mv` it into place. Overwriting a running executable in place corrupts it
+   on some platforms and leaves the service unable to restart.
+4. **Restart** — `systemctl restart bialet`, then check the logs and one real
+   page, not just `/`.
+
+To roll back, restore `bialet.prev`, start it, and restore the database backup
+taken before the upgrade if the new version migrated the schema. Reverting the
+app directory alone is not enough when a migration has run.
+
 ## Quick Deploy Checklist
 
 1. **Copy the binary** — `scp bialet user@host:/usr/local/bin/`
@@ -8938,6 +9261,129 @@ Raises the default body cap so the app accepts uploads up to ~1 MB; drop
 4. **Create the systemd unit** — so it starts on boot and restarts on crash
 5. **Point your DNS** — A/AAAA record to your server's IP
 6. **Add TLS** — Let's Encrypt via certbot (nginx/Apache) or Caddy's auto-TLS
+7. **Schedule a backup** — the `.backup` command above, nightly, off the box
+8. **Restore one backup** — before you need it, into a scratch directory
+
+
+# Performance
+
+Bialet is a single worker serving one request per connection. That design makes
+performance easy to reason about and easy to measure: there is no thread pool,
+no connection reuse, and no cache between requests. This page publishes what
+the benchmark harness measures, on named hardware, so you can decide whether
+one worker is enough for your app.
+
+These are capacity-planning numbers, not a leaderboard. Bialet is not trying to
+beat Go or nginx on throughput; it is trying to be fast enough for an internal
+tool on a small server, and to say so with measurements instead of adjectives.
+
+## What was measured
+
+[`scripts/perf_bench.py`](https://github.com/bialet/bialet/blob/main/scripts/perf_bench.py)
+boots a throwaway app and measures both latency (one request at a time) and
+throughput (four clients in parallel, which is more than one worker can serve —
+the extra connections queue in the kernel).
+
+| Endpoint  | What the request does                                             |
+| --------- | ----------------------------------------------------------------- |
+| `static`  | A 3 KB static HTML file, no interpreter                           |
+| `hello`   | A `.wren` handler that returns `"ok"` (VM creation and compile)   |
+| `markdown`| Render a 60-section Markdown document                              |
+| `json`    | Parse and stringify a ~20 KB JSON document                         |
+| `rows`    | `SELECT *` over 2,000 rows                                         |
+| `render`  | An HTML template interpolating a 500-element list                  |
+| `escape`  | HTML-escape a 200-line document                                    |
+| `post`    | A form POST with an 8 KB body                                      |
+| `upload`  | A 64 KB multipart file upload                                      |
+
+Each request opens a new TCP connection and the server closes it after the
+response, exactly as a client sees it in production.
+
+## Test setup
+
+|                  | macOS run                          | Linux run                          |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| Machine          | MacBook Air, Apple M3, 16 GB       | Same machine, Ubuntu 24.04 (arm64) |
+| OS               | macOS 15.8                         | Docker Desktop 29.9.2 VM           |
+| Build            | `make` (`-O2`, clang), arm64       | `make` (`-O2`, gcc), arm64         |
+| Requests         | 100 per endpoint, 4 concurrent      | 100 per endpoint, 4 concurrent     |
+| Rounds           | 5, best median                     | 3, best median                     |
+
+Both runs used the same source tree. The Linux run is a container on the same
+laptop, not a VPS: expect a small machine to be slower and a modern VPS to be
+in the same range.
+
+## Results: macOS arm64
+
+| Endpoint   | Median  | p95     | Requests/s (4 clients) |
+| ---------- | ------- | ------- | ---------------------- |
+| `static`   | 0.27 ms | 0.36 ms | 7,109                  |
+| `hello`    | 3.99 ms | 4.58 ms | 266                    |
+| `markdown` | 4.15 ms | 4.62 ms | 254                    |
+| `json`     | 5.19 ms | 5.97 ms | 199                    |
+| `rows`     | 7.56 ms | 8.88 ms | 137                    |
+| `render`   | 6.83 ms | 8.39 ms | 150                    |
+| `escape`   | 6.22 ms | 7.17 ms | 164                    |
+| `post`     | 4.33 ms | 5.03 ms | 237                    |
+| `upload`   | 4.06 ms | 4.64 ms | 246                    |
+
+## Results: Linux arm64 (Ubuntu 24.04 container)
+
+| Endpoint   | Median  | p95     | Requests/s (4 clients) |
+| ---------- | ------- | ------- | ---------------------- |
+| `static`   | 0.14 ms | 0.16 ms | 4,588                  |
+| `hello`    | 2.83 ms | 3.13 ms | 350                    |
+| `markdown` | 2.91 ms | 3.24 ms | 340                    |
+| `json`     | 3.84 ms | 5.44 ms | 286                    |
+| `rows`     | 5.40 ms | 6.76 ms | 187                    |
+| `render`   | 4.85 ms | 5.00 ms | 209                    |
+| `escape`   | 4.71 ms | 5.08 ms | 205                    |
+| `post`     | 3.37 ms | 8.30 ms | 294                    |
+| `upload`   | 3.03 ms | 3.47 ms | 346                    |
+
+## Startup and memory
+
+Measured on the same builds, five runs each, with an empty app that returns
+`"ok"`:
+
+| Metric                        | macOS      | Linux      |
+| ----------------------------- | ---------- | ---------- |
+| Start to first response       | ~27 ms     | ~26 ms     |
+| Peak RSS after first request  | ~6.4 MB    | ~13 MB     |
+
+The Linux build links OpenSSL and libcurl dynamically and its C library keeps
+more per-process state, which is most of the difference. Both are small enough
+that memory is not the constraint; the single worker is.
+
+## How to read these numbers
+
+- **A dynamic page costs 3–7 ms.** Most of that is not your SQL: every request
+  creates a fresh Wren VM and compiles the handler script. That is the price of
+  request isolation, and it is why an opcode cache is on the roadmap.
+- **Throughput is roughly `1000 / median`** once the queue is saturated, and
+  it scales with workers. Four workers on a four-core box serve about four
+  times the requests per second, sharing one SQLite file.
+- **Latency is queueing.** At 4 clients, the fourth request waits for the
+  three in front of it. That is why p95 grows when clients are added: the
+  server is honest about being sequential.
+- **Static files are the fast path.** If a page can be prerendered, let the
+  reverse proxy serve or cache it.
+
+Two limits are documented in [Deployment](deployment.md) and show up in
+practice: the listen backlog is 10, so a burst larger than that can be refused
+before the worker accepts it, and there is no keep-alive, so every request pays
+a TCP handshake. A reverse proxy absorbs both.
+
+## Reproduce it
+
+```bash
+make
+python3 scripts/perf_bench.py --rounds 5 --requests 100 --concurrency 4
+```
+
+Add `--json out.json` to keep the raw timings, and `--baseline out.json` to
+compare two builds (for example, before and after a change to the request
+path). The machine will not match this one; the ratios will.
 
 
 # Reference
@@ -10576,23 +11022,12 @@ static forDay(day) {
 }
 ```
 
-A missing `return` yields `null`; the caller then does `for (row in null)` and
-**the whole Bialet process crashes with SIGSEGV (exit 139)**. The browser sees
-`000` / an empty reply, not a friendly error.
+A missing `return` yields `null`; the caller then does `for (row in null)`, which
+raises a catchable `Value is not iterable.` error and turns the request into a
+500. Checking the result first (`if (!rows) rows = []`) avoids the failed
+request.
 
-## 4. Never iterate a value that may be null
-
-```wren
-var rows = `SELECT ...`.fetch
-if (!rows) rows = []
-for (row in rows) { ... }
-```
-
-`for (x in null)` is a hard crash, not an exception. Guard every Query result
-and every helper that can return null. The same applies to a Map row:
-`row.values` / `row.keys` on a null row crash; check `if (!row)` first.
-
-## 5. A literal `%` in a Wren string is `\x25`
+## 4. A literal `%` in a Wren string is `\x25`
 
 ```wren
 System.print("100\x25")   // 100%
@@ -10604,7 +11039,7 @@ template** `%` is plain text: write `100%` there (if the template parser
 complains, use the entity `&#37;`). Do not write `\x25` in HTML: it renders
 literally as `\x25`.
 
-## 6. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
+## 5. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
 
 ```wren
 Config.set("fee_amount", "20000")   // correct
@@ -10615,7 +11050,7 @@ Config.set("fee_amount", "20000")   // correct
 Use `Config.set/get/bool/num/enable/disable/json` (see
 [Configuration](configuration.md)); never hand-write the table.
 
-## 7. Query methods take at most three positional arguments
+## 6. Query methods take at most three positional arguments
 
 ```wren
 `SELECT * FROM x WHERE a=? AND b=? AND c=? AND d=?`.fetch([a, b, c, d])
@@ -10625,7 +11060,7 @@ Use `Config.set/get/bool/num/enable/disable/json` (see
 The same limit applies to `.first`, `.val`, `.toNum`, `.toBool`, `.query` and
 `.order`. Four or more values go in one List.
 
-## 8. Every file imports what it uses
+## 7. Every file imports what it uses
 
 ```wren
 // route file
@@ -10640,7 +11075,7 @@ A template is a separate module: it does not inherit the route's imports. This
 is why `{{ Periods.label(...) }}` can fail with `Variable is used but not
 defined` even though `Periods` exists in `_app/domain.wren`.
 
-## 9. `_tests/_init.wren` variables are global to every test file
+## 8. `_tests/_init.wren` variables are global to every test file
 
 ```wren
 // _tests/_init.wren
@@ -10654,31 +11089,31 @@ Use the variable from `_init.wren`, give the local one another name, or wrap the
 shared data in a function. `Test` is also preloaded: never
 `import "bialet/test" for Test`.
 
-## 10. Tests use a temporary database; manual HTTP does not
+## 9. Tests use a temporary database; manual HTTP does not
 
 `bialet -T` runs against a temporary database, so test rows do not pollute
 `_db.sqlite3`. Manual `curl` POSTs against a running server **do** write to
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 11. `Date.new(unixSeconds)` does not exist
+## 10. `Date.new(unixSeconds)` does not exist
 
 `Date.new(1792292400)` is a year-1792292400 date, not a timestamp. For date
 arithmetic use the helpers in [Recipes](recipes.md); for "now" use `Date.new()`.
 
-## 12. `Num.fromString` does not understand `1.234,50`
+## 11. `Num.fromString` does not understand `1.234,50`
 
 It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 13. Assertions match raw markup
+## 12. Assertions match raw markup
 
 `Test.get("/").contains("device")` also matches `width=device-width` in the
 viewport meta tag. Assert on visible, unique text (a heading, a row label), not
 on a substring that appears in the HTML boilerplate.
 
-## 14. Do not nest the same outermost HTML tag
+## 13. Do not nest the same outermost HTML tag
 
 Bialet's inline-HTML parser rejects an outermost tag that also appears as a
 direct child at any level:
@@ -10692,7 +11127,7 @@ The error points at the closing tag, not the opening one, which makes it hard to
 find. Wrap with a different tag (`<div><section>...`) or split the view into
 partials. See [Template](template.md) for the nesting rules.
 
-## 15. Assigning a property needs an explicit setter
+## 14. Assigning a property needs an explicit setter
 
 ```wren
 class Wine {
@@ -10705,7 +11140,7 @@ Wren does not synthesize setters. `Wine does not implement 'id=(_)'` means the
 getter exists but the setter does not. The constructor writing `_id` is not a
 public setter.
 
-## 16. Do not put a Query inside `%(...)` or `{{ }}`
+## 15. Do not put a Query inside `%(...)` or `{{ }}`
 
 ```wren
 // wrong: Query is not allowed inside handlebars or interpolated expressions
@@ -10719,7 +11154,7 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 17. Aggregates return null on an empty table
+## 16. Aggregates return null on an empty table
 
 `SELECT MAX(id)`, `SELECT SUM(x)` and friends return null when there are no
 rows. `null + 1` crashes. Use a default:
@@ -10730,7 +11165,7 @@ var max = `SELECT COALESCE(MAX(CAST(number AS INTEGER)), 0) FROM members`.toNum
 
 This is the classic 500 on a brand-new database.
 
-## 18. `List` has no `reverse`
+## 17. `List` has no `reverse`
 
 `[1,2,3].reverse` raises `List does not implement 'reverse'`. Build a new list:
 
@@ -10739,39 +11174,7 @@ var out = []
 for (i in 0...xs.count) out.add(xs[xs.count - 1 - i])
 ```
 
-## 19. CSRF is on the `session` instance, and tests have no cookie jar
-
-```wren
-var session = Session.new()
-if (Request.isPost) {
-  if (!session.csrfOk && Config.get("test_mode") != "1") return Response.status(403)
-  ...
-}
-{{ session.csrf }}
-```
-
-`Session.csrf` / `Session.csrfOk` are **not** static: they are members of
-`session = Session.new()`. In tests, `Test.post` cannot reuse the token from a
-previous `Test.get` (there is no cookie jar), so a CSRF-protected form returns
-200 instead of 302. The same applies to any session value: a name set by one
-`Test.get` is not visible to the next `Test.post`. Pass the value in the body
-(or test the domain method directly) instead of relying on session state. Make
-the check test-aware with a config flag and set it once in `_tests/_init.wren`:
-
-```wren
-// _tests/_init.wren
-Config.set("test_mode", "1")
-```
-
-Read that flag with `Config.get("test_mode") == "1"`: it is explicit about the
-"off unless set" default. (`Config.bool` works too — it returns `true` only for
-`"1"`/`"true"`, and `false` for a missing key — but `get` makes the intent
-obvious at the call site.) Never disable CSRF outside the test flag.
-
-Tests also share one `BIALET_CONFIG`: a test that sets a config value leaks it
-into every other test file. Reset the key or use a unique one.
-
-## 20. Zero-argument methods still need `()`
+## 18. Zero-argument methods still need `()`
 
 ```wren
 class Klass {
@@ -10784,7 +11187,7 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 21. `Map` has no `get(key)`
+## 19. `Map` has no `get(key)`
 
 ```wren
 var m = {"a": 1}
@@ -10794,12 +11197,12 @@ m["missing"]        // null
 m.containsKey("a")  // true
 ```
 
-## 22. `_init.wren` runs once; do not collide with UNIQUE keys
+## 20. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 23. HTML templates use `{{ }}`, not `%(...)`
+## 21. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -10812,7 +11215,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 24. Name the columns in every INSERT
+## 22. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -10824,7 +11227,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 25. The form `name` must match `Request.post` exactly
+## 23. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -10835,7 +11238,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 26. Strings do not implement `<` or `>`
+## 24. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -10851,42 +11254,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 27. A failed migration can still be marked as applied
-
-If the SQL in `Db.migrate` fails (`incomplete input`, a missing column, ...),
-Bialet can still record the version in `BIALET_MIGRATIONS`. Fixing the `.wren`
-then does nothing because the migration is considered done. Either bump the
-version string (`"Create coverage table v2"`) or delete the row:
-
-```sql
-DELETE FROM BIALET_MIGRATIONS WHERE version = 'Create coverage table';
-```
-
-Check this before assuming a schema change took effect.
-
-## 28. Do not call `Date.new()` inside a `Db.migrate` callback
-
-`Db.migrate` callbacks run before `Date.init`, so any date construction or date
-arithmetic there crashes the whole process with SIGSEGV (exit 139) and the app
-never boots:
-
-```wren
-// wrong: Date is not initialized yet
-Db.migrate("Seed", Fn.new {
-  var today = Date.new()
-  ...
-})
-
-// correct: let SQL produce the date
-Db.migrate("Seed", `
-  INSERT INTO entries (day) VALUES (date('now'))
-`)
-```
-
-Seed dates with SQL (`date('now')`, `strftime`) or lazily from a route/domain
-method after the app is up.
-
-## 29. `Num.fromString(null)` raises "Argument must be a string"
+## 25. `Num.fromString(null)` raises "Argument must be a string"
 
 ```wren
 // wrong: a missing form field is null
@@ -10899,7 +11267,7 @@ _amount = Num.fromString("%(data["amount"] || 0)") || 0
 `Num.fromString` only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.
 
-## 30. `{{ }}` must sit inside an HTML tag
+## 26. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -10916,14 +11284,14 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 31. Private apps need a first-run credential
+## 27. Private apps need a first-run credential
 
 An empty admin key/password either locks everyone out or opens everything. Seed
 one in the migration (`INSERT OR IGNORE ...`) or add a first-run page that
 creates the first user and shows the recovery key. Then verify login end to end;
 a redirect loop on the login page usually means there is no user to log in with.
 
-## 32. `""` is truthy in Wren
+## 28. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -10934,7 +11302,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 33. HTML whitespace makes multi-word `.contains` assertions fragile
+## 29. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -10943,14 +11311,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 34. Enforce rules in the domain, not only in the UI
+## 30. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 35. `bialet -r` is not a request
+## 31. `bialet -r` is not a request
 
 `bialet -r` executes a bare Wren script. It does **not** create the `BIALET_*`
 tables or a request/session, so these fail there:
@@ -10971,25 +11339,22 @@ Simple query list
 -----------------
 
 var users = `SELECT id, name FROM users`.fetch
-var title = "🗂️ Users list"
 
 return <!doctype html>
 <html>
-  <head><title>{{ title }}</title></head>
-  <body style="font: 1.5em/2.5 system-ui; text-align:center">
-    <h1>{{ title }}</h1>
+  <head>
+    <title>Users</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <h1>Users</h1>
     {{ users.count > 0 ?
-      <ul style="list-style-type:none">
-        {{ users.map{|user| <li>
-          <a href="/hello?id={{ user["id"] }}">
-            👋 {{ user["name"] }}
-          </a>
-        </li> } }}
+      <ul>
+        {{ users.map{|user| <li><a href="/hello?id={{ user["id"] }}">{{ user["name"] }}</a></li> } }}
       </ul> :
-      /* Users table is empty */
-      <p>No users, go to <a href="/hello">hello</a>.</p>
+      <p>No users yet. Try <a href="/hello">hello</a>.</p>
     }}
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -10998,67 +11363,50 @@ return <!doctype html>
 Hello World
 -----------
 
-// We create a class that that contains the logic and template.
-// This is not required by Bialet, but it is a good practice.
-// Once the logic and template become too big, you should split it
-// in multiple classes.
+// A class keeps the query and the template together. Not required, but a good
+// habit once a page outgrows a few lines.
 class App {
-  // The name of the constructor could be anything.
   construct new() {
-    _title = "🚲 Welcome to Bialet"
+    _title = "Welcome to Bialet"
   }
-  // Fetch the user's name from the database using plain SQL
-  // or return "World" if the user doesn't exist.
-  // Single line methods return the value of the expression.
+
+  // One line, one query. The last expression is the return value.
   name(id) { `SELECT name FROM users WHERE id = ?`.val(id) || "World" }
-  // Build the HTML
+
   html(content) {
     return <!doctype html>
     <html>
       <head>
         <title>{{ _title }}</title>
+        <link rel="stylesheet" href="style.css">
       </head>
-      <body style="font: 1.5em/2.5 system-ui; text-align:center">
+      <body>
         <h1>{{ _title }}</h1>
         {{ content }}
-        <p><a href="simple">Back to List 👥</a></p>
-        <p><a href=".">to Home ↩️</a></p>
+        <p><a href="simple">Back to the list</a></p>
+        <p><a href=".">Home</a></p>
       </body>
     </html>
   }
 }
 
-// We use the `get()` method to get the `id` parameter from the URL.
 var id = Request.get("id")
-// Create an instance of the `App` class.
 var app = App.new()
-// Generate the HTML, with the name of the user.
-return app.html(<p>👋 Hello <b>{{ app.name(id) }}</b></p>)
+return app.html(<p>Hello <b>{{ app.name(id) }}</b></p>)
 
   :code: wren
 
 Count the visitors of your website
 ----------------------------------
 
-// We use the `query()` method to execute SQL statements.
-// In this case we create a table named `counter` with two columns: `name` and `value`.
-// Then we insert a row with the name `visits` and a value of 0, if there is no row
-// with the name `visits`.
-// This should be done with migrations; it's included here so the example is self-contained.
+// A counter kept in SQLite. In a real app the table belongs in a migration;
+// it is created here so the example runs on its own.
 `CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query
 `INSERT OR IGNORE INTO counter (name, value) VALUES ("visits", 0)`.query
 
-// This is the proper start of the script...
-
-// We increment the value of the row with the name `visits` by 1.
 `UPDATE counter SET value = value + 1 WHERE name = "visits"`.query
-
-// We use the `val()` method to get the value of the first row in the query result.
 var visits = `SELECT value FROM counter WHERE name = "visits"`.val
 
-// We use the `return` to finish the script and send the response to the client.
-// The `{{ ... }}` syntax is used to interpolate the value of the `visits` variable.
-// Apart from the interpolation, the string is regular HTML.
 return <!doctype html>
 <html>
   <head>
@@ -11068,59 +11416,8 @@ return <!doctype html>
   </head>
   <body>
     <h1>Total times visited: <strong>{{ visits }}</strong></h1>
-    <p>
-      ℹ️ Reload the browser or 
-      <a href="">click here</a>
-      to see the new value.<p>
-    <p><a href=".">Back ↩️</a></p>
-  </body>
-</html>
-
-   :code: wren
-
-Count the clicks
-----------------
-
-// We use the `query` method to execute SQL statements.
-// In this case we create a table named `counter` with two columns: `name` and `value`.
-// Then we insert a row with the name `clicks` and a value of 0, if there is no row
-// with the name `clicks`.
-// This should be done with migrations; it's included here so the example is self-contained.
-`CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER)`.query
-`INSERT OR IGNORE INTO counter (name, value) VALUES ("clicks", 0)`.query
-
-// We use the `get()` method to get a parameter from the URL.
-// When the parameter is `count`, we increment the value of the `clicks` row by 1.
-if (Request.get("count")) {
-  `UPDATE counter SET value = value + 1 WHERE name = "clicks"`.query
-}
-
-// When the parameter is `reset`, we reset the value of the `clicks` row to 0.
-if (Request.get("reset")) {
-  `UPDATE counter SET value = 0 WHERE name = "clicks"`.query
-}
-
-// We use the `val()` method to get the value of the first row in the query result.
-var clicks = `SELECT value FROM counter WHERE name = "clicks"`.val
-
-// We use the `return` to finish the script and send the response to the client.
-// The `{{ ... }}` syntax is used to interpolate the value of the `clicks` variable.
-// Apart from the interpolation, the string is regular HTML.
-return <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <h1>Total times clicked: <strong>{{ clicks }}</strong></h1>
-    <p>
-      <a href="clicks?count">Click me! 🔺</a>
-      •
-      <a href="clicks?reset">Reset 🧹</a>
-    </p>
-    <p><a href=".">Back ↩️</a></p>
+    <p>Reload the browser or <a href="">click here</a> to see the new value.</p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11173,7 +11470,7 @@ return <!doctype html>
       <input type="text" name="value" value="{{ value }}">
       <button type="submit">Submit</button>
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11236,7 +11533,7 @@ return <!doctype html>
       <input type="file" name="form_file_name">
       <input type="submit" value="{{ title }}">
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11293,7 +11590,7 @@ return <!doctype html>
         /* If there are no users */
         <p>No user found</p>
       }}
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11356,7 +11653,7 @@ return <!doctype html>
         <button>Submit</button>
       </p>
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11393,7 +11690,7 @@ return <!doctype html>
         <button>Submit</button>
       </p>
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>
 
@@ -11407,7 +11704,7 @@ var markdown = """
 
 This is written in Markdown.
 
-[Back ↩️](.)
+[Home](.)
 
 This is the example.md file:
 """
@@ -11438,10 +11735,9 @@ Path-based route (``users.wren``)
 A single file serving both ``/users`` (list) and ``/users/:id`` (detail) via
 ``Request.route(0)``. See `Advanced Routing <advanced-routing.html>`_.
 
-// --- Path-Based Route (folder.wren) ---
-// Demonstrates: a single file serving both the bare URL and every deeper
-// path. users.wren handles /users (list) and /users/:id (detail) by reading
-// Request.route(0). See advanced-routing.md for details.
+// One file serves /users (the list) and /users/:id (the detail page):
+// Request.route(0) is the first path segment after the file name. This is the
+// SEO-friendly alternative to /users?id=…, covered in Advanced Routing.
 
 var id = Request.route(0)
 
@@ -11449,14 +11745,15 @@ if (id == null) {
   var users = `SELECT id, name FROM users ORDER BY name`.fetch
   return <!doctype html>
     <html>
-      <head><title>Users</title></head>
-      <body style="font: 1.5em/2.5 system-ui; text-align:center">
+      <head>
+        <title>Users</title>
+        <link rel="stylesheet" href="../style.css">
+      </head>
+      <body>
         <h1>Users</h1>
         {{ users.count > 0 ?
-          <ul style="list-style-type:none">
-            {{ users.map{|user| <li>
-              <a href="/users/{{ user["id"] }}">👤 {{ user["name"] }}</a>
-            </li> } }}
+          <ul>
+            {{ users.map{|user| <li><a href="/users/{{ user["id"] }}">{{ user["name"] }}</a></li> } }}
           </ul> :
           <p>No users yet.</p>
         }}
@@ -11469,11 +11766,14 @@ if (!user) return Response.notFound()
 
 return <!doctype html>
   <html>
-    <head><title>{{ user["name"] }}</title></head>
-    <body style="font: 1.5em/2.5 system-ui; text-align:center">
-      <h1>👤 {{ user["name"] }}</h1>
+    <head>
+      <title>{{ user["name"] }}</title>
+      <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+      <h1>{{ user["name"] }}</h1>
       <p>User id: {{ user["id"] }}</p>
-      <p><a href="/users">← Back to users</a></p>
+      <p><a href="/users">Back to users</a></p>
     </body>
   </html>
 
@@ -11517,7 +11817,7 @@ if (Request.isPost) {
   if (msg) {
     `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
     return <main>
-      <p>Messaged <b>{{ msg }}</b> saved!</p>
+      <p>Message <b>{{ msg }}</b> saved!</p>
       <p><a href="/">Show messages</a></p>
     </main>
   }
@@ -11529,6 +11829,29 @@ return Response.redirect("/")
 The styled version in ``docs/examples/guestbook-styled`` adds ``_app.wren``
 (a ``Template`` layout class) and ``css/style.css``. The landing page video
 walks through both.
+
+A small authenticated app
+-------------------------
+
+The inventory app in ``docs/examples/inventory`` is a complete internal tool:
+session login with CSRF and password hashing, a filtered and paginated list,
+create/edit/delete, a file upload, and migrations.
+
+.. code-block:: bash
+
+   bialet docs/examples/inventory
+
+Sign in with ``admin@example.com`` / ``changeme``.
+
+- ``_migration.wren`` — the tables and the demo account
+- ``_app.wren`` — the layout and the session lookup
+- ``login.wren`` — CSRF check, ``Util.verify``, ``Session.rotate``
+- ``items.wren`` — list, search, pagination, and the detail page in one file
+- ``item.wren`` — create/edit with validation and the upload
+- ``photo.wren`` — serves only photos attached to an item
+
+It is under 300 lines of Wren plus one small stylesheet, which is the honest
+size of an authenticated CRUD app in Bialet.
 
 
 # FAQ
@@ -11542,6 +11865,18 @@ Bialet is a full-stack web framework that integrates the
 database in a single binary. You write HTML with embedded queries and logic
 in `.wren` files — no build steps, no configuration files, no separate
 database server.
+
+### Why does Bialet use Wren instead of JavaScript or Python?
+
+Because the language has to live inside a 3.7 MB binary. Wren is a small
+class-based, object-oriented language with a dependency-free C VM, so it links
+into the executable alongside the HTTP server and SQLite — there is no runtime
+to install and no second process to supervise. Bialet extends the syntax with
+backtick SQL and `<...>` HTML blocks.
+
+The trade-off is real: no package registry, no LSP yet, and a small talent
+pool. The [Wren guide](wren.md#why-wren) covers the reasoning and the
+[costs](wren.md#what-wren-costs-you) in full.
 
 ### Why the name "Bialet"?
 

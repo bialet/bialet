@@ -63,11 +63,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="next" title="Performance" href="performance.html" />
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -474,6 +476,8 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-resource-limits">Server Resource Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backups">Backups</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upgrades-and-rollback">Upgrades and Rollback</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-deploy-checklist">Quick Deploy Checklist</a></li>
 </ul>
             </nav>
@@ -493,8 +497,10 @@ files and you’re deployed. This guide covers setting up a production-ready
 environment with a reverse proxy, systemd, and Docker.</p>
 <section id="why-a-reverse-proxy">
 <h2>Why a Reverse Proxy?<a class="headerlink" href="#why-a-reverse-proxy" title="Link to this heading">#</a></h2>
-<p>Bialet speaks <strong>HTTP/1.0</strong> and does not support HTTPS natively. Running it
-behind a reverse proxy (nginx, Apache, or Caddy) gives you:</p>
+<p>Bialet speaks <strong>HTTP/1.1</strong> and does not support HTTPS natively. Every
+response carries <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">close</span></code>: one request per connection, no
+keep-alive, no pipelining, no chunked bodies. Running it behind a reverse
+proxy (nginx, Apache, or Caddy) gives you:</p>
 <ul class="simple">
 <li><p><strong>TLS termination</strong> — HTTPS for your users</p></li>
 <li><p><strong>HTTP/1.1 or HTTP/2</strong> between the client and the proxy</p></li>
@@ -515,6 +521,8 @@ the proxy (see <a class="reference internal" href="#scaling-multiple-workers-on-
 before the worker ever accepts it. The proxy holds the burst in its own event
 loop and feeds the worker only as it frees up — one more reason not to expose
 Bialet directly.</p>
+<p>Measured latency and throughput for one worker are in
+<a class="reference internal" href="performance.html"><span class="std std-doc">Performance</span></a>; they are what makes the trade-off concrete.</p>
 <p>The proxy is therefore not just for TLS — it is the layer that absorbs slow
 clients, connection churn, and request buffering, and, when you scale, the
 load balancer. Treat the proxy as part of your security posture, not a
@@ -1155,6 +1163,50 @@ binds) together with <code class="docutils literal notranslate"><span class="pre
 <p>Raises the default body cap so the app accepts uploads up to ~1 MB; drop
 <code class="docutils literal notranslate"><span class="pre">-b</span></code>/<code class="docutils literal notranslate"><span class="pre">-u</span></code> if it does not handle uploads at all.</p>
 </section>
+<section id="backups">
+<h2>Backups<a class="headerlink" href="#backups" title="Link to this heading">#</a></h2>
+<p>The database is one file, which makes backup a solved problem as long as you
+copy it consistently. Uploads live in the database too (see
+<a class="reference internal" href="file.html"><span class="std std-doc">Files</span></a>), so one backup captures everything the app owns.</p>
+<p><strong>While the server is running</strong>, use SQLite’s online backup, which takes a
+consistent snapshot without blocking requests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sqlite3<span class="w"> </span>/www/myapp/_db.sqlite3<span class="w"> </span><span class="s2">".backup '/var/backups/myapp-</span><span class="k">$(</span>date<span class="w"> </span>+%F<span class="k">)</span><span class="s2">.sqlite3'"</span>
+</pre></div>
+</div>
+<p>Run it from cron once a night, keep a week of files, and copy them off the
+server. A backup you have never restored is a guess: restore one into a scratch
+directory and run <code class="docutils literal notranslate"><span class="pre">sqlite3</span> <span class="pre">backup.sqlite3</span> <span class="pre">'.tables'</span></code> and a <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">COUNT(*)</span></code>
+on a table you care about.</p>
+<p><strong>With the service stopped</strong>, copying the file is safe. If you copy by hand
+while it runs, you must take <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3-wal</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">_db.sqlite3-shm</span></code> together; a lone <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> can be missing the writes
+still in the WAL. Deleting the <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> files without checkpointing
+loses them.</p>
+<p>To restore, stop Bialet, replace <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> with the backup, remove any
+stale <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> files, start Bialet, and load a page that reads the
+restored tables. Migrations do not run backwards, so restoring the database
+is the rollback for a bad migration.</p>
+</section>
+<section id="upgrades-and-rollback">
+<h2>Upgrades and Rollback<a class="headerlink" href="#upgrades-and-rollback" title="Link to this heading">#</a></h2>
+<p>Application code needs no restart (see <a class="reference internal" href="#no-restart-needed-on-deploy">No Restart Needed on
+Deploy</a>). The binary does: stop the service,
+replace it, start it.</p>
+<ol class="arabic simple">
+<li><p><strong>Back up first</strong> — the database as above. A binary rollback cannot undo a
+migration that already ran.</p></li>
+<li><p><strong>Keep the previous binary</strong> — <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">bialet</span> <span class="pre">bialet.prev</span></code> before replacing it,
+or keep one directory per version and point <code class="docutils literal notranslate"><span class="pre">ExecStart=</span></code> at a symlink.</p></li>
+<li><p><strong>Replace atomically</strong> — write the new binary next to the old one and
+<code class="docutils literal notranslate"><span class="pre">mv</span></code> it into place. Overwriting a running executable in place corrupts it
+on some platforms and leaves the service unable to restart.</p></li>
+<li><p><strong>Restart</strong> — <code class="docutils literal notranslate"><span class="pre">systemctl</span> <span class="pre">restart</span> <span class="pre">bialet</span></code>, then check the logs and one real
+page, not just <code class="docutils literal notranslate"><span class="pre">/</span></code>.</p></li>
+</ol>
+<p>To roll back, restore <code class="docutils literal notranslate"><span class="pre">bialet.prev</span></code>, start it, and restore the database backup
+taken before the upgrade if the new version migrated the schema. Reverting the
+app directory alone is not enough when a migration has run.</p>
+</section>
 <section id="quick-deploy-checklist">
 <h2>Quick Deploy Checklist<a class="headerlink" href="#quick-deploy-checklist" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
@@ -1166,6 +1218,8 @@ hardening section</p></li>
 <li><p><strong>Create the systemd unit</strong> — so it starts on boot and restarts on crash</p></li>
 <li><p><strong>Point your DNS</strong> — A/AAAA record to your server’s IP</p></li>
 <li><p><strong>Add TLS</strong> — Let’s Encrypt via certbot (nginx/Apache) or Caddy’s auto-TLS</p></li>
+<li><p><strong>Schedule a backup</strong> — the <code class="docutils literal notranslate"><span class="pre">.backup</span></code> command above, nightly, off the box</p></li>
+<li><p><strong>Restore one backup</strong> — before you need it, into a scratch directory</p></li>
 </ol>
 </section>
 </section>
@@ -1191,11 +1245,11 @@ hardening section</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="reference.html"
+       href="performance.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Reference</p>
+        <p class="prev-next-title">Performance</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1254,6 +1308,8 @@ hardening section</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-resource-limits">Server Resource Limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backups">Backups</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upgrades-and-rollback">Upgrades and Rollback</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-deploy-checklist">Quick Deploy Checklist</a></li>
 </ul>
   </nav></div>
@@ -1269,7 +1325,7 @@ hardening section</p></li>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

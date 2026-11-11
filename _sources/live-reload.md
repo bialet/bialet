@@ -84,9 +84,9 @@ independent of live reload and happens regardless of the config setting.
 - **Polling, not push.** There's a 1-second delay between saving a file and
   the browser reloading. For CSS-only changes, consider a tool that injects
   stylesheets directly.
-- **No WebSocket.** Bialet speaks HTTP/1.0 and runs in a single process.
-  Polling is the simplest approach that works everywhere without adding
-  dependencies.
+- **No WebSocket.** Bialet speaks HTTP/1.1 with `Connection: close` and runs
+  in a single process. Polling is the simplest approach that works everywhere
+  without adding dependencies.
 - **Full page reload only.** The script calls `location.reload()`. State
   in JavaScript variables or form inputs is lost.
 

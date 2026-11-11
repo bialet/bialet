@@ -132,7 +132,8 @@ if (Request.isPost) {
     var user = `SELECT * FROM users WHERE email = ?`.first(email)
 
     if (user && Util.verify(password, user["password"])) {
-      session.login(user["id"])
+      Session.rotate()
+      session.set("user_id", user["id"])
       return Response.redirect("/dashboard")
     }
     error = "Invalid email or password."
@@ -160,7 +161,9 @@ Key points:
 - `var error` with `{{ error && <p class="error">{{ error }}</p> }}` shows
   the message inline on a single form, no duplication
 - `value="{{ email }}"` preserves the email on failed login
-- `session.login(id)` persists the session on success
+- `Session.rotate()` mints a new session id on login, so an identifier planted
+  before authentication is worthless afterwards; then `session.set("user_id",
+  ...)` stores the user
 - `return Response.redirect(...)` on success, no redirect on failure
 
 > ⚠️ Pitfall: never store plaintext passwords. Use `Util.hash(password)` to

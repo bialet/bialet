@@ -67,7 +67,7 @@
     <link rel="prev" title="Command Line Usage" href="usage.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -530,9 +532,9 @@ independent of live reload and happens regardless of the config setting.</p>
 <li><p><strong>Polling, not push.</strong> There’s a 1-second delay between saving a file and
 the browser reloading. For CSS-only changes, consider a tool that injects
 stylesheets directly.</p></li>
-<li><p><strong>No WebSocket.</strong> Bialet speaks HTTP/1.0 and runs in a single process.
-Polling is the simplest approach that works everywhere without adding
-dependencies.</p></li>
+<li><p><strong>No WebSocket.</strong> Bialet speaks HTTP/1.1 with <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">close</span></code> and runs
+in a single process. Polling is the simplest approach that works everywhere
+without adding dependencies.</p></li>
 <li><p><strong>Full page reload only.</strong> The script calls <code class="docutils literal notranslate"><span class="pre">location.reload()</span></code>. State
 in JavaScript variables or form inputs is lost.</p></li>
 </ul>
@@ -612,7 +614,7 @@ becomes publicly accessible. Only enable it in development.</p>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

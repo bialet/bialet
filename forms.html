@@ -67,7 +67,7 @@
     <link rel="prev" title="JSX to Bialet Migration" href="jsx-migration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -586,7 +588,8 @@ Wren, so <code class="docutils literal notranslate"><span class="pre">if</span> 
 <span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM users WHERE email = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
 
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">password</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"password"</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="n">session</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="w">      </span><span class="nc">Session</span><span class="o">.</span><span class="n">rotate</span><span class="p">()</span>
+<span class="w">      </span><span class="n">session</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"user_id"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
 <span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/dashboard"</span><span class="p">)</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Invalid email or password."</span>
@@ -615,7 +618,8 @@ state-changing form</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">error</span></code> with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">error</span> <span class="pre">&amp;&amp;</span> <span class="pre">&lt;p</span> <span class="pre">class=&quot;error&quot;&gt;{{</span> <span class="pre">error</span> <span class="pre">}}&lt;/p&gt;</span> <span class="pre">}}</span></code> shows
 the message inline on a single form, no duplication</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email</span> <span class="pre">}}&quot;</span></code> preserves the email on failed login</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">session.login(id)</span></code> persists the session on success</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Session.rotate()</span></code> mints a new session id on login, so an identifier planted
+before authentication is worthless afterwards; then <code class="docutils literal notranslate"><span class="pre">session.set(&quot;user_id&quot;,</span> <span class="pre">...)</span></code> stores the user</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> on success, no redirect on failure</p></li>
 </ul>
 <blockquote>
@@ -752,7 +756,7 @@ path-based routes (<code class="docutils literal notranslate"><span class="pre">
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

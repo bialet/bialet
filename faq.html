@@ -67,7 +67,7 @@
     <link rel="prev" title="Examples" href="examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="current nav bd-sidenav">
@@ -438,6 +440,7 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general">General</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-bialet">What is Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-does-bialet-use-wren-instead-of-javascript-or-python">Why does Bialet use Wren instead of JavaScript or Python?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-name-bialet">Why the name “Bialet”?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-bialet-production-ready">Is Bialet production-ready?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-bialet-compare-to-php-flask-rails-django">How does Bialet compare to PHP / Flask / Rails / Django?</a></li>
@@ -494,6 +497,17 @@
 database in a single binary. You write HTML with embedded queries and logic
 in <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files — no build steps, no configuration files, no separate
 database server.</p>
+</section>
+<section id="why-does-bialet-use-wren-instead-of-javascript-or-python">
+<h3>Why does Bialet use Wren instead of JavaScript or Python?<a class="headerlink" href="#why-does-bialet-use-wren-instead-of-javascript-or-python" title="Link to this heading">#</a></h3>
+<p>Because the language has to live inside a 3.7 MB binary. Wren is a small
+class-based, object-oriented language with a dependency-free C VM, so it links
+into the executable alongside the HTTP server and SQLite — there is no runtime
+to install and no second process to supervise. Bialet extends the syntax with
+backtick SQL and <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;</span></code> HTML blocks.</p>
+<p>The trade-off is real: no package registry, no LSP yet, and a small talent
+pool. The <a class="reference internal" href="wren.html#why-wren"><span class="std std-ref">Wren guide</span></a> covers the reasoning and the
+<a class="reference internal" href="wren.html#what-wren-costs-you"><span class="std std-ref">costs</span></a> in full.</p>
 </section>
 <section id="why-the-name-bialet">
 <h3>Why the name “Bialet”?<a class="headerlink" href="#why-the-name-bialet" title="Link to this heading">#</a></h3>
@@ -764,6 +778,7 @@ bialet<span class="w"> </span>dev
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#general">General</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-bialet">What is Bialet?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-does-bialet-use-wren-instead-of-javascript-or-python">Why does Bialet use Wren instead of JavaScript or Python?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-name-bialet">Why the name “Bialet”?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-bialet-production-ready">Is Bialet production-ready?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-bialet-compare-to-php-flask-rails-django">How does Bialet compare to PHP / Flask / Rails / Django?</a></li>
@@ -812,7 +827,7 @@ bialet<span class="w"> </span>dev
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

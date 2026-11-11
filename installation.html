@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="For how to run and configure the bialet binary, see Command Line Usage. Debian and Ubuntu: Bialet is available as a Debian package from the ppa:bialet/bialet Personal Package Archive. It is built f..." />
+<meta property="og:description" content="For how to run and configure the bialet binary, see Command Line Usage. Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the i..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="For how to run and configure the bialet binary, see Command Line Usage. Debian and Ubuntu: Bialet is available as a Debian package from the ppa:bialet/bialet Personal Package Archive. It is built f..." />
+<meta name="description" content="For how to run and configure the bialet binary, see Command Line Usage. Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is with the i..." />
 
     <title>Installation &#8212; Bialet</title>
   
@@ -67,7 +67,7 @@
     <link rel="prev" title="HTML-First" href="html-first.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -436,16 +438,16 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker">With Docker</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-script">Install Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#brew">Brew</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a></li>
 </ul>
             </nav>
@@ -462,98 +464,18 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <p>For how to run and configure the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary, see
 <a class="reference internal" href="usage.html"><span class="std std-doc">Command Line Usage</span></a>.</p>
-<section id="debian-and-ubuntu">
-<h2>Debian and Ubuntu<a class="headerlink" href="#debian-and-ubuntu" title="Link to this heading">#</a></h2>
-<p>Bialet is available as a Debian package from the
-<a class="reference external" href="https://launchpad.net/~bialet/+archive/ubuntu/bialet"><code class="docutils literal notranslate"><span class="pre">ppa:bialet/bialet</span></code></a>
-Personal Package Archive. It is built for every Ubuntu release still in
-standard support, on <code class="docutils literal notranslate"><span class="pre">amd64</span></code> and <code class="docutils literal notranslate"><span class="pre">arm64</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>add-apt-repository<span class="w"> </span>ppa:bialet/bialet
-sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>bialet
-</pre></div>
-</div>
-<p>Upgrades arrive with the rest of your system packages:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>upgrade
-</pre></div>
-</div>
-<p>The package installs the binary as <code class="docutils literal notranslate"><span class="pre">/usr/bin/bialet</span></code> and links against the
-distribution’s SQLite, libcurl, and OpenSSL. It is not installed as a service:
-run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> from your app directory, or point a reverse proxy at it as
-described in <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a>.</p>
-<blockquote>
-<div><p>If you previously installed Bialet with the install script, remove
-<code class="docutils literal notranslate"><span class="pre">~/.local/bin/bialet</span></code> first. That path usually comes before <code class="docutils literal notranslate"><span class="pre">/usr/bin</span></code> in
-<code class="docutils literal notranslate"><span class="pre">PATH</span></code>, so the old binary would keep running after the package is installed.</p>
-</div></blockquote>
-</section>
-<section id="with-the-install-script">
-<h2>With the Install Script<a class="headerlink" href="#with-the-install-script" title="Link to this heading">#</a></h2>
+<section id="install-script">
+<h2>Install Script<a class="headerlink" href="#install-script" title="Link to this heading">#</a></h2>
 <p>The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
 x86_64, Ubuntu ARM) is with the install script:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://get.bialet.dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </pre></div>
 </div>
 </section>
-<section id="for-windows">
-<h2>For Windows<a class="headerlink" href="#for-windows" title="Link to this heading">#</a></h2>
-<p>Download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> (inside the zip) directly:</p>
-<ul class="simple">
-<li><p><strong><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-windows-x86_64.zip">bialet-v1.2.12-windows-x86_64.zip</a></strong></p></li>
-</ul>
-<p>Extract and run — no installation required:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet.exe
-</pre></div>
-</div>
-<p>Double-clicking <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> in File Explorer starts it in dev mode (live
-reload, in-browser error display, and the browser opens automatically). Run it
-from a terminal to start without dev mode.</p>
-</section>
-<section id="releases">
-<h2>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h2>
-<p>Pre-built binaries for all supported platforms are available on the <a class="reference external" href="https://github.com/bialet/bialet/releases">releases
-page</a>:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Platform</p></th>
-<th class="head"><p>Download</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>macOS ARM64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-macos-arm64.tar.gz">bialet-v1.2.12-macos-arm64.tar.gz</a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Linux x86_64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-linux-x86_64.tar.gz">bialet-v1.2.12-linux-x86_64.tar.gz</a></p></td>
-</tr>
-<tr class="row-even"><td><p>Linux ARM64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-linux-arm64.tar.gz">bialet-v1.2.12-linux-arm64.tar.gz</a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Windows x86_64</p></td>
-<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.12/bialet-v1.2.12-windows-x86_64.zip">bialet-v1.2.12-windows-x86_64.zip</a></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Download the archive for your platform, extract it, and place the binary
-(<code class="docutils literal notranslate"><span class="pre">bialet</span></code> on macOS/Linux, <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> on Windows) in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS / Linux</span>
-tar<span class="w"> </span>xzf<span class="w"> </span>bialet-v1.2.12-linux-x86_64.tar.gz
-sudo<span class="w"> </span>mv<span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/
-</pre></div>
-</div>
-</section>
-<section id="with-brew">
-<h2>With Brew<a class="headerlink" href="#with-brew" title="Link to this heading">#</a></h2>
-<p>Use <a class="reference external" href="https://brew.sh/">Homebrew</a> to install Bialet on macOS or Linux:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>bialet/bialet/bialet
-</pre></div>
-</div>
-</section>
-<section id="with-docker">
-<h2>With Docker<a class="headerlink" href="#with-docker" title="Link to this heading">#</a></h2>
-<p>Run the published <a class="reference external" href="https://hub.docker.com/r/bialet/bialet"><code class="docutils literal notranslate"><span class="pre">bialet/bialet</span></code></a> image
-directly with <a class="reference external" href="https://docs.docker.com/">Docker</a>:</p>
+<section id="docker">
+<h2>Docker<a class="headerlink" href="#docker" title="Link to this heading">#</a></h2>
+<p>Run the published <a class="reference external" href="https://hub.docker.com/r/bialet/bialet"><code class="docutils literal notranslate"><span class="pre">bialet/bialet</span></code></a>
+image directly with <a class="reference external" href="https://docs.docker.com/">Docker</a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-t<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span>:7001<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/var/www<span class="w"> </span>bialet/bialet
 </pre></div>
 </div>
@@ -576,6 +498,94 @@ different host port, use <code class="docutils literal notranslate"><span class=
 </div>
 </section>
 </section>
+<section id="debian-and-ubuntu">
+<h2>Debian and Ubuntu<a class="headerlink" href="#debian-and-ubuntu" title="Link to this heading">#</a></h2>
+<p>Bialet is available as a Debian package from the
+<a class="reference external" href="https://launchpad.net/~bialet/+archive/ubuntu/bialet"><code class="docutils literal notranslate"><span class="pre">ppa:bialet/bialet</span></code></a>
+Personal Package Archive. It is built for every Ubuntu release still in standard
+support, on <code class="docutils literal notranslate"><span class="pre">amd64</span></code> and <code class="docutils literal notranslate"><span class="pre">arm64</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>add-apt-repository<span class="w"> </span>ppa:bialet/bialet
+sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>bialet
+</pre></div>
+</div>
+<p>Upgrades arrive with the rest of your system packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>upgrade
+</pre></div>
+</div>
+<p>The package installs the binary as <code class="docutils literal notranslate"><span class="pre">/usr/bin/bialet</span></code> and links against the
+distribution’s SQLite, libcurl, and OpenSSL. It is not installed as a service:
+run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> from your app directory, or point a reverse proxy at it as
+described in <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a>.</p>
+<blockquote>
+<div><p>If you previously installed Bialet with the install script, remove
+<code class="docutils literal notranslate"><span class="pre">~/.local/bin/bialet</span></code> first. That path usually comes before <code class="docutils literal notranslate"><span class="pre">/usr/bin</span></code> in
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code>, so the old binary would keep running after the package is installed.</p>
+</div></blockquote>
+</section>
+<section id="brew">
+<h2>Brew<a class="headerlink" href="#brew" title="Link to this heading">#</a></h2>
+<p>Use <a class="reference external" href="https://brew.sh/">Homebrew</a> to install Bialet on macOS or Linux:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>bialet/bialet/bialet
+</pre></div>
+</div>
+</section>
+<section id="windows">
+<h2>Windows<a class="headerlink" href="#windows" title="Link to this heading">#</a></h2>
+<p>Download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> (inside the zip) directly:</p>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-windows-x86_64.zip">bialet-v1.2.13-windows-x86_64.zip</a></strong></p></li>
+</ul>
+<p>Extract it, open PowerShell or Windows Terminal in that folder, and run:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="p">.\</span><span class="n">bialet</span><span class="p">.</span><span class="n">exe</span>
+</pre></div>
+</div>
+<p>Double-clicking <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> in File Explorer also works: it starts in dev mode
+(live reload, in-browser error display, and the browser opens automatically).
+The terminal is the better default — it shows the logs and leaves dev mode off.</p>
+</section>
+<section id="releases">
+<h2>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h2>
+<p>Pre-built binaries for all supported platforms are available on the
+<a class="reference external" href="https://github.com/bialet/bialet/releases">releases page</a>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Platform</p></th>
+<th class="head"><p>Download</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>macOS ARM64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-macos-arm64.tar.gz">bialet-v1.2.13-macos-arm64.tar.gz</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux x86_64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-linux-x86_64.tar.gz">bialet-v1.2.13-linux-x86_64.tar.gz</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Linux ARM64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-linux-arm64.tar.gz">bialet-v1.2.13-linux-arm64.tar.gz</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Windows x86_64</p></td>
+<td><p><a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.13/bialet-v1.2.13-windows-x86_64.zip">bialet-v1.2.13-windows-x86_64.zip</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Download the archive for your platform, extract it, and place the binary
+(<code class="docutils literal notranslate"><span class="pre">bialet</span></code> on macOS/Linux, <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> on Windows) in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS / Linux</span>
+tar<span class="w"> </span>xzf<span class="w"> </span>bialet-v1.2.13-linux-x86_64.tar.gz
+sudo<span class="w"> </span>mv<span class="w"> </span>bialet<span class="w"> </span>/usr/local/bin/
+</pre></div>
+</div>
+<p>Each release publishes a <code class="docutils literal notranslate"><span class="pre">SHA256SUMS</span></code> file next to the archives. To check a
+download by hand:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsSLO<span class="w"> </span>https://github.com/bialet/bialet/releases/download/v1.2.13/SHA256SUMS
+sha256sum<span class="w"> </span>--check<span class="w"> </span>--ignore-missing<span class="w"> </span>SHA256SUMS<span class="w">   </span><span class="c1"># shasum -a 256 -c on macOS</span>
+</pre></div>
+</div>
+<p>The install script does this automatically: it refuses an archive whose checksum
+does not match, and warns when a release predates <code class="docutils literal notranslate"><span class="pre">SHA256SUMS</span></code>.</p>
+</section>
 <section id="building-from-source">
 <h2>Building from Source<a class="headerlink" href="#building-from-source" title="Link to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bialet/bialet.git
@@ -584,10 +594,10 @@ make
 make<span class="w"> </span>install
 </pre></div>
 </div>
-<p>For per-OS dependencies, cross-compiling (including Windows), the full list
-of <code class="docutils literal notranslate"><span class="pre">make</span></code> targets, and the development workflow, see
-<a class="reference external" href="https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
-on GitHub.</p>
+<p>For per-OS dependencies, cross-compiling (including Windows), the full list of
+<code class="docutils literal notranslate"><span class="pre">make</span></code> targets, and the development workflow, see
+<a class="reference external" href="https://github.com/bialet/bialet/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> on
+GitHub.</p>
 </section>
 </section>
 
@@ -637,16 +647,16 @@ on GitHub.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-brew">With Brew</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-docker">With Docker</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-script">Install Script</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#docker">Docker</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#customizing-the-application-directory">Customizing the Application Directory</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-the-default-port">Changing the Default Port</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#brew">Brew</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windows">Windows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from Source</a></li>
 </ul>
   </nav></div>
@@ -662,7 +672,7 @@ on GitHub.</p>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

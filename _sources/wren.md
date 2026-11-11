@@ -66,19 +66,76 @@ var names = users.map { |u| u.name }.join(", ")
 
 ## Why Wren?
 
-**Familiar syntax.** If you've used C, Java, JavaScript, or Python, Wren reads
-naturally. Classes, methods, `if`/`while`/`for` — it's all there without
-surprises.
+Bialet could have embedded Lua, JavaScript, or Ruby. Wren was chosen for three
+reasons.
 
-**Truly object-oriented.** Wren doesn’t split the world into primitives and
-objects. Everything is an object — classes, instances, booleans, null, even the
-number -3.5. You can ask anything for its type: both `Num.name` and
-`(-3.5).type.name` output Num. No primitives, no wrappers; it’s objects all the
-way down, which keeps the language small, consistent, and predictable.
+**It is small and embeddable.** The VM is dependency-free C and links into the
+same binary as the HTTP server and SQLite. There is no JavaScript engine to
+ship, no runtime to install, and no second process to supervise.
 
-**Designed for embedding.** The Wren VM is clean, well-documented C with no
-dependencies. Bialet creates and destroys a fresh VM for every request — no
-state leaks between users, no garbage-collection surprises under load.
+**It is object-oriented all the way down.** Classes, methods, and closures are
+the whole language. There are no primitives and no wrapper types: everything is
+an object, `3` is a `Num`, and `(-3.5).type.name` is `Num`. One kind of thing
+is what keeps the language small and predictable.
+
+**It reads like the languages you already know.** Classes, `if`/`while`/`for`,
+blocks, and string interpolation, with no type annotations and no build step.
+If you have written JavaScript or Python, the [mapping table
+below](#wren-for-javascript-and-python-developers) is most of what you need.
+
+Bialet extends the syntax in two places: backtick strings run SQL, and `<...>`
+blocks are HTML with `{{ }}` interpolation. Both are described below.
+
+### What Wren costs you
+
+The language is the biggest trade-off in Bialet, so it is worth stating plainly:
+
+- **No package ecosystem.** Modules come from GitHub URLs, not a registry. See
+  [External Modules](external-modules.md).
+- **No LSP or autocomplete today.** The VS Code and Vim plugins provide syntax
+  highlighting; an LSP is on the
+  [roadmap](https://github.com/bialet/bialet/blob/main/ROADMAP.md). The language
+  is small enough that this is livable, but it is not TypeScript.
+- **A smaller talent pool.** Most developers have never written Wren. Budget a
+  day to learn it, and expect to explain it to whoever maintains the app next.
+- **The dialect is not stock Wren.** Code written for `wren.io` does not run
+  unchanged; see [Bialet vs. Standard Wren](#bialet-vs-standard-wren).
+
+If any of those is a dealbreaker, Bialet is the wrong tool. If they are
+acceptable for a small app on one server, the language is pleasant and its
+whole surface fits on this page.
+
+### Why not Lua, JavaScript, or PHP?
+
+Lua embeds just as easily and has a larger ecosystem, but its tables make
+classes and HTML templating a build-your-own exercise. A JavaScript engine
+brings a parser, a JIT, and a garbage collector that application code can
+reach — a large attack surface for a server that is supposed to be one 3.7 MB
+binary. PHP would mean deploying a runtime and a web server again, which is the
+stack Bialet exists to remove. Wren was the smallest language with real class
+syntax and a clean C embedding API.
+
+### Wren for JavaScript and Python developers
+
+| Concept        | JavaScript / Python        | Wren                                        |
+| -------------- | -------------------------- | ------------------------------------------- |
+| Variable       | `let x = 1` / `x = 1`      | `var x = 1`                                 |
+| Function       | `(a) => a * 2` / `lambda`  | `Fn.new { \|a\| a * 2 }`                    |
+| Class          | `class A {}`               | `class A { construct new() {} }`            |
+| Method         | `foo(a) { }`               | `foo(a) { a * 2 }`                          |
+| Field access   | `this.name` / `self.name`  | `_name` (implicit receiver)                 |
+| Interpolation  | `` `${x}` `` / `f"{x}"`    | `"%(x)"`                                    |
+| List           | `[1, 2, 3]`                | `[1, 2, 3]`                                 |
+| Map            | `{}` / `dict`              | `{"key": "value"}`                          |
+| Loop           | `for (x of xs)`            | `for (x in xs)`                             |
+| Ternary        | `a ? b : c`                | `a ? b : c`                                 |
+| Missing value  | `undefined` / `None`       | `null` (there is no `undefined`)            |
+| Equality       | `===`                      | `==` (value equality; no `===`)             |
+
+Two Wren differences surprise people most. Only `false` and `null` are false —
+`0` and `""` are true. And a method returns its last expression, so `return` is
+only needed for an early exit. Both are covered in the [Quick
+Guide](#quick-guide) above.
 
 ## Try Wren Online
 

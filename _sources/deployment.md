@@ -6,8 +6,10 @@ environment with a reverse proxy, systemd, and Docker.
 
 ## Why a Reverse Proxy?
 
-Bialet speaks **HTTP/1.0** and does not support HTTPS natively. Running it
-behind a reverse proxy (nginx, Apache, or Caddy) gives you:
+Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every
+response carries `Connection: close`: one request per connection, no
+keep-alive, no pipelining, no chunked bodies. Running it behind a reverse
+proxy (nginx, Apache, or Caddy) gives you:
 
 - **TLS termination** — HTTPS for your users
 - **HTTP/1.1 or HTTP/2** between the client and the proxy
@@ -30,6 +32,9 @@ The worker's listen backlog is 10, so a burst larger than that can be refused
 before the worker ever accepts it. The proxy holds the burst in its own event
 loop and feeds the worker only as it frees up — one more reason not to expose
 Bialet directly.
+
+Measured latency and throughput for one worker are in
+[Performance](performance.md); they are what makes the trade-off concrete.
 
 The proxy is therefore not just for TLS — it is the layer that absorbs slow
 clients, connection churn, and request buffering, and, when you scale, the
@@ -661,6 +666,55 @@ bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
 Raises the default body cap so the app accepts uploads up to ~1 MB; drop
 `-b`/`-u` if it does not handle uploads at all.
 
+## Backups
+
+The database is one file, which makes backup a solved problem as long as you
+copy it consistently. Uploads live in the database too (see
+[Files](file.md)), so one backup captures everything the app owns.
+
+**While the server is running**, use SQLite's online backup, which takes a
+consistent snapshot without blocking requests:
+
+```bash
+sqlite3 /www/myapp/_db.sqlite3 ".backup '/var/backups/myapp-$(date +%F).sqlite3'"
+```
+
+Run it from cron once a night, keep a week of files, and copy them off the
+server. A backup you have never restored is a guess: restore one into a scratch
+directory and run `sqlite3 backup.sqlite3 '.tables'` and a `SELECT COUNT(*)`
+on a table you care about.
+
+**With the service stopped**, copying the file is safe. If you copy by hand
+while it runs, you must take `_db.sqlite3`, `_db.sqlite3-wal`, and
+`_db.sqlite3-shm` together; a lone `_db.sqlite3` can be missing the writes
+still in the WAL. Deleting the `-wal`/`-shm` files without checkpointing
+loses them.
+
+To restore, stop Bialet, replace `_db.sqlite3` with the backup, remove any
+stale `-wal`/`-shm` files, start Bialet, and load a page that reads the
+restored tables. Migrations do not run backwards, so restoring the database
+is the rollback for a bad migration.
+
+## Upgrades and Rollback
+
+Application code needs no restart (see [No Restart Needed on
+Deploy](#no-restart-needed-on-deploy)). The binary does: stop the service,
+replace it, start it.
+
+1. **Back up first** — the database as above. A binary rollback cannot undo a
+   migration that already ran.
+2. **Keep the previous binary** — `cp bialet bialet.prev` before replacing it,
+   or keep one directory per version and point `ExecStart=` at a symlink.
+3. **Replace atomically** — write the new binary next to the old one and
+   `mv` it into place. Overwriting a running executable in place corrupts it
+   on some platforms and leaves the service unable to restart.
+4. **Restart** — `systemctl restart bialet`, then check the logs and one real
+   page, not just `/`.
+
+To roll back, restore `bialet.prev`, start it, and restore the database backup
+taken before the upgrade if the new version migrated the schema. Reverting the
+app directory alone is not enough when a migration has run.
+
 ## Quick Deploy Checklist
 
 1. **Copy the binary** — `scp bialet user@host:/usr/local/bin/`
@@ -671,3 +725,5 @@ Raises the default body cap so the app accepts uploads up to ~1 MB; drop
 4. **Create the systemd unit** — so it starts on boot and restarts on crash
 5. **Point your DNS** — A/AAAA record to your server's IP
 6. **Add TLS** — Let's Encrypt via certbot (nginx/Apache) or Caddy's auto-TLS
+7. **Schedule a backup** — the `.backup` command above, nightly, off the box
+8. **Restore one backup** — before you need it, into a scratch directory

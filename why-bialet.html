@@ -67,7 +67,7 @@
     <link rel="prev" title="Small on purpose." href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -439,12 +441,16 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-philosophy">The Philosophy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-language-bet">The Language Bet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-react-next-js">Bialet vs. React / Next.js</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-vue">Bialet vs. Vue</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-go">Bialet vs. Go</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-pocketbase">Bialet vs. PocketBase</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-express-flask">Bialet vs. Express / Flask</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-htmx-plus-a-backend">Bialet vs. HTMX plus a backend</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-django-rails">Bialet vs. Django / Rails</a></li>
 </ul>
 </li>
@@ -473,9 +479,9 @@ designed to handle any scenario you might encounter.</p>
 <p>Bialet optimizes for <strong>getting things done on a single server</strong>. It bundles the
 HTTP server, the database, and the language runtime into one binary. Your app
 is a directory of <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files and a SQLite database. That’s it.</p>
-<p>If your needs fit within Bialet’s scope, you get an experience no other
-framework can match: zero-config development, single-command deployment, and
-no dependency management.</p>
+<p>If your needs fit within Bialet’s scope, you get an experience that is hard to
+assemble elsewhere: zero-config development, single-command deployment, and no
+dependency management.</p>
 <p>If your needs grow beyond that scope, you’ll want a different tool — and that’s
 okay.</p>
 </section>
@@ -510,6 +516,19 @@ offline support need client-side state. Bialet re-renders the page instead.</p><
 <li><p><strong>Complex auth flows</strong> — Bialet supports basic auth and sessions, but not
 OAuth, SAML, or multi-factor authentication out of the box.</p></li>
 </ul>
+</section>
+<section id="the-language-bet">
+<h2>The Language Bet<a class="headerlink" href="#the-language-bet" title="Link to this heading">#</a></h2>
+<p>Embedding Wren is the decision that makes Bialet Bialet. The VM is small,
+dependency-free C, so it links into the same binary as the server and SQLite;
+the language is class-based and object-oriented, so HTML, SQL, and application
+logic live in one file without a build step.</p>
+<p>It is also the biggest thing Bialet asks of you. There is no package registry,
+no LSP or autocomplete yet, and most developers have never written Wren. The
+<a class="reference internal" href="wren.html#what-wren-costs-you"><span class="std std-ref">Wren guide</span></a> states those costs plainly, and
+<a class="reference internal" href="wren.html#wren-for-javascript-and-python-developers"><span class="std std-ref">Wren for JavaScript and Python
+developers</span></a> is most of the
+mapping you need to start.</p>
 </section>
 <section id="comparisons">
 <h2>Comparisons<a class="headerlink" href="#comparisons" title="Link to this heading">#</a></h2>
@@ -659,57 +678,178 @@ directory and serve them immediately. Both embed logic in HTML.</p>
 <td><p>PHP</p></td>
 </tr>
 <tr class="row-odd"><td><p>Database</p></td>
-<td><p>SQLite built-in, always present</p></td>
-<td><p>Must install and configure</p></td>
+<td><p>SQLite built in, always present</p></td>
+<td><p>SQLite via <code class="docutils literal notranslate"><span class="pre">pdo_sqlite</span></code>, no server</p></td>
 </tr>
 <tr class="row-even"><td><p>Deployment</p></td>
 <td><p>Single binary + app directory</p></td>
-<td><p>PHP runtime + web server + DB</p></td>
+<td><p>PHP-FPM or Apache + app directory</p></td>
 </tr>
 <tr class="row-odd"><td><p>Package manager</p></td>
 <td><p>None (import from GitHub URLs)</p></td>
-<td><p>Composer</p></td>
+<td><p>Composer (optional)</p></td>
 </tr>
 <tr class="row-even"><td><p>Template engine</p></td>
-<td><p>Inline HTML strings (JSX-like)</p></td>
-<td><p>Plain PHP or Twig/Blade</p></td>
+<td><p>Inline HTML strings</p></td>
+<td><p>Plain PHP, or Twig/Blade</p></td>
 </tr>
 <tr class="row-odd"><td><p>Configuration</p></td>
 <td><p>None</p></td>
 <td><p>php.ini, .env, server config</p></td>
 </tr>
+<tr class="row-even"><td><p>Shared hosting</p></td>
+<td><p>No</p></td>
+<td><p>Yes</p></td>
+</tr>
 </tbody>
 </table>
 </div>
-<p>Bialet wins on simplicity. PHP wins on ecosystem and scalability.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pdo_sqlite</span></code> is compiled into most PHP builds, so “PHP with SQLite” is a real
+one-file setup that needs no database server. What Bialet adds is the
+executable: no web server to configure, no php.ini, no FPM worker pool, and no
+Composer step. What PHP adds is a hosting industry, a large ecosystem, and
+plenty of people who already know it.</p>
+<p>PHP wins on ecosystem, hiring, and hosting. Bialet wins on one artifact that
+runs the same way on every machine.</p>
 </section>
-<section id="bialet-vs-express-flask">
-<h3>Bialet vs. Express / Flask<a class="headerlink" href="#bialet-vs-express-flask" title="Link to this heading">#</a></h3>
-<p>Express and Flask are minimalist frameworks, but they still need a database
-driver, a template engine, and often an ORM — all configured separately.</p>
+<section id="bialet-vs-go">
+<h3>Bialet vs. Go<a class="headerlink" href="#bialet-vs-go" title="Link to this heading">#</a></h3>
+<p>Go is the closest match on deployment: one static binary, an HTTP server in the
+standard library, <code class="docutils literal notranslate"><span class="pre">database/sql</span></code>, and <code class="docutils literal notranslate"><span class="pre">html/template</span></code>. If a single binary is
+the whole argument, Go already wins.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p></p></th>
 <th class="head"><p>Bialet</p></th>
-<th class="head"><p>Express / Flask</p></th>
+<th class="head"><p>Go</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Deployment</p></td>
+<td><p>Single binary + app dir</p></td>
+<td><p>Single binary</p></td>
+</tr>
+<tr class="row-odd"><td><p>Concurrency</p></td>
+<td><p>One request per worker</p></td>
+<td><p>Goroutines across all cores</p></td>
+</tr>
+<tr class="row-even"><td><p>Database</p></td>
+<td><p>SQLite bundled</p></td>
+<td><p>A driver (CGO or pure Go)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Templates</p></td>
+<td><p>Inline HTML + <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">html/template</span></code> files</p></td>
+</tr>
+<tr class="row-even"><td><p>Build step</p></td>
+<td><p>None</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">build</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Types</p></td>
+<td><p>Dynamic</p></td>
+<td><p>Static</p></td>
+</tr>
+<tr class="row-even"><td><p>Ecosystem</p></td>
+<td><p>Minimal</p></td>
+<td><p>Large</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Go is the better tool when you need real parallelism, a typed codebase, or a
+library for everything. Bialet is the better tool when you want to edit a
+<code class="docutils literal notranslate"><span class="pre">.wren</span></code> file and refresh, keep one small binary, and not think about
+compilation or dependencies at all.</p>
+</section>
+<section id="bialet-vs-pocketbase">
+<h3>Bialet vs. PocketBase<a class="headerlink" href="#bialet-vs-pocketbase" title="Link to this heading">#</a></h3>
+<p>PocketBase is also a single executable with SQLite behind it, but it is a
+backend-as-a-service, not a template engine. It ships an admin UI, a collection
+editor, auth, file storage, REST and realtime APIs, and a JavaScript SDK.
+Bialet ships a language and expects you to write the HTML.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>PocketBase</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>What it is</p></td>
+<td><p>Code-first, server-rendered</p></td>
+<td><p>Backend with admin UI and APIs</p></td>
+</tr>
+<tr class="row-odd"><td><p>Data model</p></td>
+<td><p>SQL schema you write</p></td>
+<td><p>Collections in the admin</p></td>
+</tr>
+<tr class="row-even"><td><p>UI</p></td>
+<td><p>Your HTML</p></td>
+<td><p>Built-in admin; you bring a frontend</p></td>
+</tr>
+<tr class="row-odd"><td><p>Auth</p></td>
+<td><p>Sessions, CSRF, basic auth</p></td>
+<td><p>Built-in auth, OAuth2 providers</p></td>
+</tr>
+<tr class="row-even"><td><p>Realtime</p></td>
+<td><p>No (polling)</p></td>
+<td><p>SSE subscriptions</p></td>
+</tr>
+<tr class="row-odd"><td><p>Extend</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.wren</span></code> files</p></td>
+<td><p>Go or JavaScript hooks</p></td>
+</tr>
+<tr class="row-even"><td><p>Database</p></td>
+<td><p>SQLite</p></td>
+<td><p>SQLite</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Choose PocketBase when you want a ready-made backend and a JavaScript
+frontend. Choose Bialet when the app is server-rendered pages and you want to
+write the HTML and SQL yourself.</p>
+</section>
+<section id="bialet-vs-express-flask">
+<h3>Bialet vs. Express / Flask<a class="headerlink" href="#bialet-vs-express-flask" title="Link to this heading">#</a></h3>
+<p>Express and Flask are deliberately minimal: you add only what the app needs. A
+minimal Express app can return HTML strings and talk to SQLite through a
+driver; Flask ships Jinja2, and Python’s standard library already has
+<code class="docutils literal notranslate"><span class="pre">sqlite3</span></code>. Neither requires an ORM or a database server.</p>
+<p>What neither includes is the wiring: sessions with CSRF protection, database
+migrations, a request/response API, and a deployment story. Bialet’s difference
+is that all of it is in the binary and already connected.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Bialet</p></th>
+<th class="head"><p>Minimal Express / Flask</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Setup</p></td>
 <td><p>One binary, zero config</p></td>
-<td><p>Install packages, configure DB</p></td>
+<td><p>Runtime plus npm/pip install</p></td>
 </tr>
 <tr class="row-odd"><td><p>Database</p></td>
-<td><p>SQLite built-in</p></td>
-<td><p>SQLAlchemy + driver (Flask)</p></td>
+<td><p>SQLite bundled</p></td>
+<td><p>SQLite via driver/stdlib</p></td>
 </tr>
 <tr class="row-even"><td><p>Routing</p></td>
 <td><p>File-based</p></td>
-<td><p>Decorators / router definitions</p></td>
+<td><p>Decorators/router</p></td>
 </tr>
 <tr class="row-odd"><td><p>Templates</p></td>
 <td><p>Inline HTML + interpolation</p></td>
-<td><p>EJS / Jinja2 / Pug</p></td>
+<td><p>Strings, or add EJS/Jinja2</p></td>
+</tr>
+<tr class="row-even"><td><p>Sessions + CSRF</p></td>
+<td><p>Built in</p></td>
+<td><p>Sessions via middleware, CSRF via extension</p></td>
+</tr>
+<tr class="row-odd"><td><p>Migrations</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code></p></td>
+<td><p>Add a migration tool</p></td>
 </tr>
 <tr class="row-even"><td><p>Production</p></td>
 <td><p>Single binary</p></td>
@@ -722,8 +862,20 @@ driver, a template engine, and often an ORM — all configured separately.</p>
 </tbody>
 </table>
 </div>
-<p>Bialet eliminates the “glue code” phase entirely. Express/Flask give you more
-control over the stack but require more decisions up front.</p>
+<p>Express and Flask give you more control over the stack and a language people
+already know. Bialet gives you fewer decisions and fewer moving parts.</p>
+</section>
+<section id="bialet-vs-htmx-plus-a-backend">
+<h3>Bialet vs. HTMX plus a backend<a class="headerlink" href="#bialet-vs-htmx-plus-a-backend" title="Link to this heading">#</a></h3>
+<p>If SPA complexity is the problem but a new language is not worth it, HTMX in
+front of Flask, Express, or Go gives you partial updates without a JavaScript
+build. That is a legitimate answer, and Bialet does not beat it on flexibility:
+you keep a language and ecosystem you already know.</p>
+<p>Bialet differs in what is already assembled — server, database, sessions, CSRF,
+migrations — and in rendering whole pages by default instead of fragments. If
+you already have a backend you like, adding HTMX is less work than adopting
+Bialet. If you are starting from nothing on one server, Bialet removes more
+pieces.</p>
 </section>
 <section id="bialet-vs-django-rails">
 <h3>Bialet vs. Django / Rails<a class="headerlink" href="#bialet-vs-django-rails" title="Link to this heading">#</a></h3>
@@ -836,12 +988,16 @@ a single binary</strong>. For many projects, that’s exactly the right trade-of
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-philosophy">The Philosophy</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-bialet">When to Use Bialet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-not-to-use-bialet">When NOT to Use Bialet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-language-bet">The Language Bet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparisons">Comparisons</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-react-next-js">Bialet vs. React / Next.js</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-vue">Bialet vs. Vue</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-static-site-generators">Bialet vs. Static Site Generators</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-php">Bialet vs. PHP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-go">Bialet vs. Go</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-pocketbase">Bialet vs. PocketBase</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-express-flask">Bialet vs. Express / Flask</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-htmx-plus-a-backend">Bialet vs. HTMX plus a backend</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-django-rails">Bialet vs. Django / Rails</a></li>
 </ul>
 </li>
@@ -860,7 +1016,7 @@ a single binary</strong>. For many projects, that’s exactly the right trade-of
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

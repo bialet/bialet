@@ -12,10 +12,7 @@ Small on purpose.
    <p class="hero__subline">It should have stayed this simple.</p>
 
    <p class="hero__lede">
-     One executable: an HTTP server, SQLite, and the Wren scripting language.
-     Build data-driven web apps from <code>.wren</code> files. No package
-     manager, no YAML, no separate database server, no build step. The Linux
-     x86_64 binary is 3.7&nbsp;MB.
+     Bialet is a small web framework with everything you need and nothing you don't. Write a little Wren, store your data in SQLite, and serve your application.
    </p>
 
 .. raw:: html
@@ -40,7 +37,7 @@ Small on purpose.
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="{{release_windows_url}}">
          Download for Windows (.zip)
        </a>
-       <p class="install__note">Zero installation required. Just extract and run.</p>
+       <p class="install__note">No installation: extract and run.</p>
      </div>
 
      <!-- Fallback: all platforms (also what visitors see without JS) -->
@@ -48,12 +45,12 @@ Small on purpose.
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/latest">
          Download the binaries (all platforms)
        </a>
-       <p class="install__note">Zero installation required. Just extract and run.</p>
+       <p class="install__note">No installation: extract and run.</p>
      </div>
 
      <p class="install__more">
-       <a href="installation.html">Other platforms, Homebrew, and Docker</a>
-       &middot; MIT licensed &middot; v{{bialet_version}}
+       <a href="installation.html">Other platforms, package managers and Docker</a>
+       &middot; {{release_stamp}}
      </p>
 
    </div>
@@ -80,7 +77,7 @@ Small on purpose.
        </figcaption>
      </figure>
      <div class="proof__notes">
-       <p class="proof__heading">Under a minute, start to styled</p>
+       <p class="proof__heading">From zero to styled in under a minute</p>
        <ul class="proof__list">
          <li>A page, a form handler, a migration.</li>
          <li><code>bialet</code> serves the files. No build step.</li>
@@ -125,12 +122,6 @@ Small on purpose.
      })();
    </script>
 
-----
-
-.. raw:: html
-
-   <div class="copy-status" role="status" aria-live="polite"></div>
-
 .. llms-txt-ignore-end
 
 ----
@@ -151,7 +142,7 @@ your Wren code. There is no stack to assemble around it.
       **One executable**
 
       Copy the binary to a server and run it. No runtime to install, no
-      ``node_modules``. 3.7 MB on Linux x86_64.
+      ``node_modules``, no bundler. 3.7 MB on Linux.
 
    .. grid-item-card::
 
@@ -168,8 +159,7 @@ your Wren code. There is no stack to assemble around it.
       ^^^
       **No build step**
 
-      Save a ``.wren`` file and refresh the browser. No compiler, no bundler,
-      no watch process.
+      Save a ``.wren`` file and refresh the browser. **Wren** is a small, class-based, object-oriented language.
 
    .. grid-item-card::
 
@@ -193,13 +183,15 @@ What it costs
    - **One worker per process, with instant queueing.** Requests are served
      sequentially per worker. For parallel concurrency on multi-core servers,
      spin up multiple local instances behind Caddy or nginx. See
+     :doc:`deployment` and the measured numbers in :doc:`performance`.
+   - **HTTP/1.1, one request per connection.** No keep-alive, no native TLS.
+     Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
+     HTTP/2, rate limiting, request buffering, and static-asset caching. See
      :doc:`deployment`.
-   - **HTTP/1.0, no native TLS.** Bialet serves HTTP. Put nginx, Apache, or
-     Caddy in front for HTTPS, HTTP/2, rate limiting, request buffering, and
-     static-asset caching. See :doc:`deployment`.
    - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
      Vim plugins provide syntax highlighting; autocomplete and an LSP are on
-     the roadmap.
+     the roadmap. See :doc:`wren` for what the language does and does not give
+     you.
    - **No WebSockets.** Request/response HTTP only. Use polling or an external
      service for realtime features.
 
@@ -240,6 +232,17 @@ Not a fit if you need multi-server horizontal scaling, in-process TLS,
 WebSockets, or a package ecosystem. Bialet does not provide them. See
 :doc:`why-bialet` for the longer version.
 
+----
+
+Built with Bialet
+-----------------
+
+`dev.ar <https://home.dev.ar/>`_ is a free ``.dev.ar`` subdomain service
+running on Bialet: server-rendered pages, a session login, and a redirect
+dashboard. Over 22 days it served about 160,000 requests — two-thirds of them
+scanner traffic answered with a 403 or 404 — with fewer than 0.1% 5xx
+responses. :doc:`showcase`
+
 .. raw:: html
 
    <div class="hero-actions">
@@ -258,6 +261,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    installation
    editor-support
    wren
+   showcase
 
 .. toctree::
    :hidden:
@@ -309,6 +313,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    cron
    tests
    deployment
+   performance
 
 .. toctree::
    :hidden:
@@ -327,11 +332,11 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
+     <p class="community-banner__title"><strong>Built and maintained by a solo developer</strong></p>
      <p>
-       Bialet is stable for personal use. There is no commercial support or
-       SLA. Bugs go to GitHub Issues; questions and project showcases go to
-       GitHub Discussions. Planned work is in the
+       Bialet is MIT licensed and runs in production. There is no commercial
+       support or SLA. Bugs go to GitHub Issues; questions and project
+       showcases go to GitHub Discussions. Planned work is in the
        <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>

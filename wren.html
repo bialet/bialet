@@ -63,11 +63,11 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Quick start: a guestbook" href="quickstart.html" />
+    <link rel="next" title="Built with Bialet" href="showcase.html" />
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -437,7 +439,12 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-guide">Quick Guide</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-wren">Why Wren?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-wren">Why Wren?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-wren-costs-you">What Wren costs you</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-not-lua-javascript-or-php">Why not Lua, JavaScript, or PHP?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-for-javascript-and-python-developers">Wren for JavaScript and Python developers</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#try-wren-online">Try Wren Online</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#values-and-types">Values and Types</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#booleans">Booleans</a></li>
@@ -574,17 +581,116 @@ Bialet dialect as its own thing.</p>
 </section>
 <section id="why-wren">
 <h2>Why Wren?<a class="headerlink" href="#why-wren" title="Link to this heading">#</a></h2>
-<p><strong>Familiar syntax.</strong> If you’ve used C, Java, JavaScript, or Python, Wren reads
-naturally. Classes, methods, <code class="docutils literal notranslate"><span class="pre">if</span></code>/<code class="docutils literal notranslate"><span class="pre">while</span></code>/<code class="docutils literal notranslate"><span class="pre">for</span></code> — it’s all there without
-surprises.</p>
-<p><strong>Truly object-oriented.</strong> Wren doesn’t split the world into primitives and
-objects. Everything is an object — classes, instances, booleans, null, even the
-number -3.5. You can ask anything for its type: both <code class="docutils literal notranslate"><span class="pre">Num.name</span></code> and
-<code class="docutils literal notranslate"><span class="pre">(-3.5).type.name</span></code> output Num. No primitives, no wrappers; it’s objects all the
-way down, which keeps the language small, consistent, and predictable.</p>
-<p><strong>Designed for embedding.</strong> The Wren VM is clean, well-documented C with no
-dependencies. Bialet creates and destroys a fresh VM for every request — no
-state leaks between users, no garbage-collection surprises under load.</p>
+<p>Bialet could have embedded Lua, JavaScript, or Ruby. Wren was chosen for three
+reasons.</p>
+<p><strong>It is small and embeddable.</strong> The VM is dependency-free C and links into the
+same binary as the HTTP server and SQLite. There is no JavaScript engine to
+ship, no runtime to install, and no second process to supervise.</p>
+<p><strong>It is object-oriented all the way down.</strong> Classes, methods, and closures are
+the whole language. There are no primitives and no wrapper types: everything is
+an object, <code class="docutils literal notranslate"><span class="pre">3</span></code> is a <code class="docutils literal notranslate"><span class="pre">Num</span></code>, and <code class="docutils literal notranslate"><span class="pre">(-3.5).type.name</span></code> is <code class="docutils literal notranslate"><span class="pre">Num</span></code>. One kind of thing
+is what keeps the language small and predictable.</p>
+<p><strong>It reads like the languages you already know.</strong> Classes, <code class="docutils literal notranslate"><span class="pre">if</span></code>/<code class="docutils literal notranslate"><span class="pre">while</span></code>/<code class="docutils literal notranslate"><span class="pre">for</span></code>,
+blocks, and string interpolation, with no type annotations and no build step.
+If you have written JavaScript or Python, the <a class="reference internal" href="#wren-for-javascript-and-python-developers">mapping table
+below</a> is most of what you need.</p>
+<p>Bialet extends the syntax in two places: backtick strings run SQL, and <code class="docutils literal notranslate"><span class="pre">&lt;...&gt;</span></code>
+blocks are HTML with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> interpolation. Both are described below.</p>
+<section id="what-wren-costs-you">
+<h3>What Wren costs you<a class="headerlink" href="#what-wren-costs-you" title="Link to this heading">#</a></h3>
+<p>The language is the biggest trade-off in Bialet, so it is worth stating plainly:</p>
+<ul class="simple">
+<li><p><strong>No package ecosystem.</strong> Modules come from GitHub URLs, not a registry. See
+<a class="reference internal" href="external-modules.html"><span class="std std-doc">External Modules</span></a>.</p></li>
+<li><p><strong>No LSP or autocomplete today.</strong> The VS Code and Vim plugins provide syntax
+highlighting; an LSP is on the
+<a class="reference external" href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>. The language
+is small enough that this is livable, but it is not TypeScript.</p></li>
+<li><p><strong>A smaller talent pool.</strong> Most developers have never written Wren. Budget a
+day to learn it, and expect to explain it to whoever maintains the app next.</p></li>
+<li><p><strong>The dialect is not stock Wren.</strong> Code written for <code class="docutils literal notranslate"><span class="pre">wren.io</span></code> does not run
+unchanged; see <a class="reference internal" href="#bialet-vs-standard-wren">Bialet vs. Standard Wren</a>.</p></li>
+</ul>
+<p>If any of those is a dealbreaker, Bialet is the wrong tool. If they are
+acceptable for a small app on one server, the language is pleasant and its
+whole surface fits on this page.</p>
+</section>
+<section id="why-not-lua-javascript-or-php">
+<h3>Why not Lua, JavaScript, or PHP?<a class="headerlink" href="#why-not-lua-javascript-or-php" title="Link to this heading">#</a></h3>
+<p>Lua embeds just as easily and has a larger ecosystem, but its tables make
+classes and HTML templating a build-your-own exercise. A JavaScript engine
+brings a parser, a JIT, and a garbage collector that application code can
+reach — a large attack surface for a server that is supposed to be one 3.7 MB
+binary. PHP would mean deploying a runtime and a web server again, which is the
+stack Bialet exists to remove. Wren was the smallest language with real class
+syntax and a clean C embedding API.</p>
+</section>
+<section id="wren-for-javascript-and-python-developers">
+<h3>Wren for JavaScript and Python developers<a class="headerlink" href="#wren-for-javascript-and-python-developers" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head"><p>JavaScript / Python</p></th>
+<th class="head"><p>Wren</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Variable</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">let</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">1</span></code> / <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Function</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(a)</span> <span class="pre">=&gt;</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">2</span></code> / <code class="docutils literal notranslate"><span class="pre">lambda</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Fn.new</span> <span class="pre">{</span> <span class="pre">|a|</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">2</span> <span class="pre">}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Class</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">A</span> <span class="pre">{}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">A</span> <span class="pre">{</span> <span class="pre">construct</span> <span class="pre">new()</span> <span class="pre">{}</span> <span class="pre">}</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Method</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">foo(a)</span> <span class="pre">{</span> <span class="pre">}</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">foo(a)</span> <span class="pre">{</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">2</span> <span class="pre">}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Field access</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">this.name</span></code> / <code class="docutils literal notranslate"><span class="pre">self.name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_name</span></code> (implicit receiver)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Interpolation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">`${x}`</span></code> / <code class="docutils literal notranslate"><span class="pre">f&quot;{x}&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;%(x)&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>List</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Map</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> / <code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;key&quot;:</span> <span class="pre">&quot;value&quot;}</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Loop</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">(x</span> <span class="pre">of</span> <span class="pre">xs)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">(x</span> <span class="pre">in</span> <span class="pre">xs)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Ternary</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">?</span> <span class="pre">b</span> <span class="pre">:</span> <span class="pre">c</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">?</span> <span class="pre">b</span> <span class="pre">:</span> <span class="pre">c</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Missing value</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">undefined</span></code> / <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code> (there is no <code class="docutils literal notranslate"><span class="pre">undefined</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Equality</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">===</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">==</span></code> (value equality; no <code class="docutils literal notranslate"><span class="pre">===</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Two Wren differences surprise people most. Only <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">null</span></code> are false —
+<code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> are true. And a method returns its last expression, so <code class="docutils literal notranslate"><span class="pre">return</span></code> is
+only needed for an early exit. Both are covered in the <a class="reference internal" href="#quick-guide">Quick
+Guide</a> above.</p>
+</section>
 </section>
 <section id="try-wren-online">
 <h2>Try Wren Online<a class="headerlink" href="#try-wren-online" title="Link to this heading">#</a></h2>
@@ -1220,11 +1326,11 @@ untrusted input, or your own domain logic.</p>
       </div>
     </a>
     <a class="right-next"
-       href="quickstart.html"
+       href="showcase.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Quick start: a guestbook</p>
+        <p class="prev-next-title">Built with Bialet</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1246,7 +1352,12 @@ untrusted input, or your own domain logic.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-guide">Quick Guide</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-wren">Why Wren?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-wren">Why Wren?</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-wren-costs-you">What Wren costs you</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-not-lua-javascript-or-php">Why not Lua, JavaScript, or PHP?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-for-javascript-and-python-developers">Wren for JavaScript and Python developers</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#try-wren-online">Try Wren Online</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#values-and-types">Values and Types</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#booleans">Booleans</a></li>
@@ -1320,7 +1431,7 @@ untrusted input, or your own domain logic.</p>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

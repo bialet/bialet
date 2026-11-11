@@ -67,7 +67,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -716,6 +718,10 @@ attacks. Keep the explicit token check on any form that writes data.</p>
 <p>Sessions are stored in SQLite in the <code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code> table. The session
 cookie (<code class="docutils literal notranslate"><span class="pre">BIALETSESSID</span></code> by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with <code class="docutils literal notranslate"><span class="pre">Session.destroy()</span></code>.</p>
+<p>Call <code class="docutils literal notranslate"><span class="pre">Session.rotate()</span></code> when a user signs in, before storing their id: it
+issues a new identifier and deletes the old one, so a session id an attacker
+planted before login does not become authenticated. The <a class="reference download internal" download="" href="_downloads/011e56d8720c699af6cbf0ab474bccd6/login.wren"><span class="xref download myst">inventory
+example</span></a> shows the full login handler.</p>
 <p>The table is keyed on <code class="docutils literal notranslate"><span class="pre">(id,</span> <span class="pre">key)</span></code>: <code class="docutils literal notranslate"><span class="pre">Session.set</span></code> replaces the row for a key
 instead of appending, and <code class="docutils literal notranslate"><span class="pre">Session.get</span></code> always returns the latest value
 written. Older databases that lack the primary key are rebuilt in place on
@@ -753,10 +759,11 @@ implemented at the app or proxy layer.</p>
 <h2>Secure Configuration &amp; Deployment<a class="headerlink" href="#secure-configuration-deployment" title="Link to this heading">#</a></h2>
 <section id="tls">
 <h3>TLS<a class="headerlink" href="#tls" title="Link to this heading">#</a></h3>
-<p>Bialet speaks <strong>HTTP/1.0</strong> and has no native HTTPS. Run it behind a reverse
-proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
-setup, and it also lets you bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> so only the proxy
-talks to it. See <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for configs.</p>
+<p>Bialet speaks <strong>HTTP/1.1</strong> (one request per connection, <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">close</span></code>)
+and has no native HTTPS. Run it behind a reverse proxy (nginx, Apache, or
+Caddy) for TLS. This is the recommended production setup, and it also lets
+you bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> so only the proxy talks to it. See
+<a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> for configs.</p>
 <p>When requests arrive through a proxy, Bialet detects HTTPS from the
 <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> / <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code> headers. That is how the <code class="docutils literal notranslate"><span class="pre">Secure</span></code> cookie
 attribute is decided. Only set those headers from a proxy you trust — never
@@ -987,7 +994,7 @@ the full body before forwarding.</p></li>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>

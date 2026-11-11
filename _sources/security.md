@@ -208,6 +208,11 @@ Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
 
+Call `Session.rotate()` when a user signs in, before storing their id: it
+issues a new identifier and deletes the old one, so a session id an attacker
+planted before login does not become authenticated. The [inventory
+example](examples/inventory/login.wren) shows the full login handler.
+
 The table is keyed on `(id, key)`: `Session.set` replaces the row for a key
 instead of appending, and `Session.get` always returns the latest value
 written. Older databases that lack the primary key are rebuilt in place on
@@ -247,10 +252,11 @@ implemented at the app or proxy layer.
 
 ### TLS
 
-Bialet speaks **HTTP/1.0** and has no native HTTPS. Run it behind a reverse
-proxy (nginx, Apache, or Caddy) for TLS. This is the recommended production
-setup, and it also lets you bind Bialet to `127.0.0.1` so only the proxy
-talks to it. See [Deployment](deployment.md) for configs.
+Bialet speaks **HTTP/1.1** (one request per connection, `Connection: close`)
+and has no native HTTPS. Run it behind a reverse proxy (nginx, Apache, or
+Caddy) for TLS. This is the recommended production setup, and it also lets
+you bind Bialet to `127.0.0.1` so only the proxy talks to it. See
+[Deployment](deployment.md) for configs.
 
 When requests arrive through a proxy, Bialet detects HTTPS from the
 `X-Forwarded-Proto` / `Forwarded` headers. That is how the `Secure` cookie

@@ -158,6 +158,8 @@ app.
 
 - [Tutorial: build a poll](getting-started/index.md) — the longer tour, with
   templates, forms, and results pages.
+- [Examples](examples.rst) — including a complete authenticated inventory app
+  with search, pagination, and uploads.
 - [Database](database.md) — queries, `.order()`, pagination, migrations.
 - [Forms](forms.md) — POST handling, files, CSRF.
 - [HTML Template](template.md) — inline HTML in depth.

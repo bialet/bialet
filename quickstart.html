@@ -64,10 +64,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Getting Started" href="getting-started/index.html" />
-    <link rel="prev" title="Wren Language Guide" href="wren.html" />
+    <link rel="prev" title="Built with Bialet" href="showcase.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.12" />
+  <meta name="docsearch:version" content="1.2.13" />
   </head>
   
   
@@ -172,6 +172,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
 <ul class="current nav bd-sidenav">
@@ -218,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -541,7 +543,7 @@ different job, not because it needs wiring: no router, no table of routes.</p>
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="sb">`INSERT INTO messages VALUES (?, CURRENT_TIME)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
-<span class="x">      &lt;p&gt;</span><span class="nc">Messaged</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="x">      &lt;p&gt;</span><span class="nc">Message</span><span class="w"> </span><span class="x">&lt;b&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/b&gt;</span><span class="w"> </span><span class="n">saved</span><span class="o">!&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="w">      </span><span class="x">&lt;p&gt;&lt;a href="/"&gt;</span><span class="nc">Show</span><span class="w"> </span><span class="n">messages</span><span class="x">&lt;/a&gt;&lt;/p&gt;</span>
 <span class="w">    </span><span class="x">&lt;/main&gt;</span>
 <span class="x">  }</span>
@@ -705,6 +707,8 @@ app.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="getting-started/index.html"><span class="std std-doc">Tutorial: build a poll</span></a> — the longer tour, with
 templates, forms, and results pages.</p></li>
+<li><p><a class="reference internal" href="examples.html"><span class="std std-doc">Examples</span></a> — including a complete authenticated inventory app
+with search, pagination, and uploads.</p></li>
 <li><p><a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a> — queries, <code class="docutils literal notranslate"><span class="pre">.order()</span></code>, pagination, migrations.</p></li>
 <li><p><a class="reference internal" href="forms.html"><span class="std std-doc">Forms</span></a> — POST handling, files, CSRF.</p></li>
 <li><p><a class="reference internal" href="template.html"><span class="std std-doc">HTML Template</span></a> — inline HTML in depth.</p></li>
@@ -725,12 +729,12 @@ templates, forms, and results pages.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="wren.html"
+       href="showcase.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Wren Language Guide</p>
+        <p class="prev-next-title">Built with Bialet</p>
       </div>
     </a>
     <a class="right-next"
@@ -783,7 +787,7 @@ templates, forms, and results pages.</p></li>
   <div class="footer-item">
     
 <p class="component-author">
-By Rodrigo Arce
+By Rodrigo "Albo" Arce
 </p>
 
   </div>
