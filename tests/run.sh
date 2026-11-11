@@ -861,6 +861,30 @@ run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|o
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
 run_test "Session rotate rekeys writes" "session-rotate" 200 "planted:none|fresh:alice"
 run_test "Session rows stay bounded " "session-sweep" 200 "live:bounded"
+
+# Regression: the sweep counter lived in a Wren class variable, but bialet_run()
+# builds and frees a VM per request, so the counter restarted at 0 and never
+# reached its threshold. One write per request (Session.csrf) therefore grew
+# BIALET_SESSION by a row per request forever. With maxSessions = 1 spread over
+# many requests, the live id count must stay far below the request count, which
+# is only possible if the sweep now runs across requests.
+session_bound_line=$LINENO
+_test_start_ms=$(now_ms)
+session_bound_requests=800
+session_bound_urls=()
+for _ in $(seq 1 "$session_bound_requests"); do
+  session_bound_urls+=("http://$HOST:$PORT/session-bound")
+done
+curl -s --max-time 120 "${session_bound_urls[@]}" >/dev/null 2>&1
+session_bound_live=$(curl -s --max-time 10 \
+  "http://$HOST:$PORT/session-bound?report=1")
+if [[ "$session_bound_live" =~ ^[0-9]+$ ]] &&
+   (( session_bound_live < session_bound_requests )); then
+  report_result "Session bound across requests" "$session_bound_line" 0
+else
+  report_result "Session bound across requests" "$session_bound_line" 1 \
+    "Expected fewer than $session_bound_requests live session ids, got '$session_bound_live'"
+fi
 run_test "Directory index resolution  " "blog"           200 "route-index"
 run_test "Directory index trailing /  " "blog/"          200 "route-index"
 run_test "Wren extension is optional  " "method-check.wren" 200 "GET"

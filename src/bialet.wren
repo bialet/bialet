@@ -312,16 +312,25 @@ class Session {
   // instead of only from Db.migrate at startup.
   static maxSessions { __maxSessions ? __maxSessions : 32768 }
   static maxSessions=(n) { __maxSessions = n }
-  static sweepWrites_ { __sweepWrites ? __sweepWrites : 0 }
-  static sweepWrites_=(v) { __sweepWrites = v }
+  // bialet_run() builds and frees a Wren VM for every request, so the old
+  // amortization counter here restarted at 0 each time and could never reach
+  // its threshold: for one-write-per-request traffic (what Session.csrf
+  // produces) the sweep never ran at all. Draw per write instead - about one
+  // write in 62, the same shape PHP uses for session GC - so the trigger does
+  // not depend on the VM or request lifetime.
+  static sweepDue_ { Util.randomString(1).bytes[0] == 97 }
   static sweep_() {
-    `DELETE FROM BIALET_SESSION WHERE updatedAt < datetime('now', '-30 days')`.query()
+    // Cap each statement: a backlog built up while the trigger was broken must
+    // not block the single worker in one pass. Later sweeps make progress.
+    var batch = 1000
+    `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION WHERE updatedAt < datetime('now', '-30 days') LIMIT ?)`.query(batch)
     var row = `SELECT COUNT(*) AS c FROM (SELECT id FROM BIALET_SESSION GROUP BY id)`.first()
     if (!row) return
     var live = Num.fromString("%(row["c"])")
     if (!live) return
     var excess = live - Session.maxSessions
     if (excess > 0) {
+      if (excess > batch) excess = batch
       `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
     }
   }
@@ -389,9 +398,9 @@ class Session {
     `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`.query(_id, key, "%(value)")
     // Amortize the sweep: an unauthenticated flood can add one row per request,
     // and a count+evict on every write would itself be work for that flood.
-    Session.sweepWrites_ = Session.sweepWrites_ + 1
-    if (Session.sweepWrites_ >= 128) {
-      Session.sweepWrites_ = 0
+    // The trigger cannot live in a class variable here - that state is per-VM
+    // and this code runs in a fresh VM per request.
+    if (Session.sweepDue_) {
       Session.sweep_()
     }
   }
