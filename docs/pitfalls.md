@@ -11,13 +11,14 @@ a page that worked on an empty database meets its first row.
 
 ```wren
 name=(val) { _name = val.toString.trim() }    // correct
-// name=(val) { _name = val.toString().trim() } // String does not implement 'toString()'
 // name=(val) { _name = val.toString.trim }     // String does not implement 'trim'
 ```
 
 `toString`, `count`, `keys` and `values` are getters: no parentheses. `trim` is
-a **method**: it needs `()`. Mixing the two forms is the most common source of
-500s in setters.
+a **method**: it needs `()`. `toString()` is accepted as an alias for the getter
+(the compiler treats the zero-argument call as the getter), so both spellings
+work; `count()`, `keys()` and `values()` still fail. Forgetting the `()` on
+`trim` is the usual source of 500s in setters.
 
 ## 2. A user class's `==` must not dereference a null operand
 

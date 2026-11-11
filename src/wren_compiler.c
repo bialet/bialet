@@ -2304,6 +2304,14 @@ static void methodCall(Compiler* compiler, Code instruction, Signature* signatur
 
   // TODO: Allow Grace-style mixfix methods?
 
+  // `toString` is a getter on Object and on every core type. Accept the
+  // parenthesized zero-argument form as the same getter call, so
+  // `value.toString()` stops raising "does not implement 'toString()'".
+  if(called.type == SIG_METHOD && called.arity == 0 && called.length == 8 &&
+     memcmp(called.name, "toString", 8) == 0) {
+    called.type = SIG_GETTER;
+  }
+
   // If this is a super() call for an initializer, make sure we got an actual
   // argument list.
   if(signature->type == SIG_INITIALIZER) {
