@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.14" />
+  <meta name="docsearch:version" content="1.2.16" />
   </head>
   
   
@@ -519,6 +519,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#randomstring-length">randomString(length)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hash-password">hash(password)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-password-hash">verify(password, hash)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-value-secret">encrypt(value, secret)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-value-secret">decrypt(value, secret)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tonum-val">toNum(val)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hextodec-hexstr">hexToDec(hexStr)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tohex-byte">toHex(byte)</a></li>
@@ -546,6 +548,14 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-key-value">encrypt(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-key-value-secret">encrypt(key, value, secret)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-key">decrypt(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-key-secret">decrypt(key, secret)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secret">Secret</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#available">available</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
@@ -1163,6 +1173,37 @@ Returns <code class="docutils literal notranslate"><span class="pre">true</span>
 <li><p><code class="docutils literal notranslate"><span class="pre">hash</span></code>: The hash to compare against the password.</p></li>
 </ul>
 </section>
+<section id="encrypt-value-secret">
+<h3>encrypt(value, secret)<a class="headerlink" href="#encrypt-value-secret" title="Link to this heading">#</a></h3>
+<p>Encrypts <code class="docutils literal notranslate"><span class="pre">value</span></code> with AES-256-GCM and returns a text envelope you can store in a
+<code class="docutils literal notranslate"><span class="pre">TEXT</span></code> column, a cookie, or a config row:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">sealed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="s2">"honey"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password"</span><span class="p">)</span>
+<span class="c1">// bgcm1$600000$&lt;salt&gt;$&lt;iv&gt;$&lt;ciphertext+tag&gt;</span>
+
+<span class="nc">Util</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">sealed</span><span class="p">,</span><span class="w"> </span><span class="s2">"password"</span><span class="p">)</span><span class="w">   </span><span class="c1">// "honey"</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The string to encrypt. Its bytes are preserved exactly, including NUL
+bytes and non-ASCII.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">secret</span></code>: Either a passphrase (stretched with PBKDF2-HMAC-SHA256, 600,000
+iterations, with a fresh random salt per message) or exactly <strong>64 hex
+characters</strong>, which are used directly as a 256-bit key.</p></li>
+</ul>
+<p>Every call uses a fresh random salt and nonce, so encrypting the same value
+twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+without one it raises a runtime error rather than using a weaker scheme.</p>
+</section>
+<section id="decrypt-value-secret">
+<h3>decrypt(value, secret)<a class="headerlink" href="#decrypt-value-secret" title="Link to this heading">#</a></h3>
+<p>Decrypts an envelope produced by <code class="docutils literal notranslate"><span class="pre">encrypt</span></code>. Returns the plaintext, or <code class="docutils literal notranslate"><span class="pre">null</span></code>
+when the secret is wrong, the value was modified, or the value is not an
+envelope at all. Those cases are deliberately indistinguishable.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code>: The envelope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">secret</span></code>: The same secret used to encrypt.</p></li>
+</ul>
+</section>
 <section id="tonum-val">
 <h3>toNum(val)<a class="headerlink" href="#tonum-val" title="Link to this heading">#</a></h3>
 <p>Converts a given value to a numeric type.</p>
@@ -1248,7 +1289,9 @@ padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
 </section>
 <section id="decodebase64-input">
 <h3>decodeBase64(input)<a class="headerlink" href="#decodebase64-input" title="Link to this heading">#</a></h3>
-<p>Decodes a Base64 encoded string.</p>
+<p>Decodes a Base64 encoded string. Returns <code class="docutils literal notranslate"><span class="pre">null</span></code> when the input is not valid
+Base64, so a malformed credential produces a 401 rather than a runtime error.
+The final group may omit its <code class="docutils literal notranslate"><span class="pre">=</span></code> padding.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The Base64 encoded string to decode.</p></li>
 </ul>
@@ -1358,6 +1401,47 @@ feature flag — equivalent to <code class="docutils literal notranslate"><span 
 <li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: The JSON value to set.</p></li>
 </ul>
+</section>
+<section id="encrypt-key-value">
+<h3>encrypt(key, value)<a class="headerlink" href="#encrypt-key-value" title="Link to this heading">#</a></h3>
+<p>Encrypts <code class="docutils literal notranslate"><span class="pre">value</span></code> with AES-256-GCM under the deployment key from
+<code class="docutils literal notranslate"><span class="pre">--secret-key-file</span></code> and stores the envelope as the value of <code class="docutils literal notranslate"><span class="pre">key</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="s2">"stripe_key"</span><span class="p">,</span><span class="w"> </span><span class="s2">"sk_live_..."</span><span class="p">)</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="s2">"stripe_key"</span><span class="p">)</span><span class="w">            </span><span class="c1">// "sk_live_..."</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stripe_key"</span><span class="p">)</span><span class="w">                </span><span class="c1">// "bgcm1$0$-..." — never the plaintext</span>
+</pre></div>
+</div>
+<p>The config key name is authenticated with the ciphertext, so copying an
+encrypted row to a different key makes it fail to decrypt instead of silently
+taking effect somewhere else.</p>
+</section>
+<section id="encrypt-key-value-secret">
+<h3>encrypt(key, value, secret)<a class="headerlink" href="#encrypt-key-value-secret" title="Link to this heading">#</a></h3>
+<p>Same, with an explicit passphrase or 64-hex-character key instead of the
+deployment key.</p>
+</section>
+<section id="decrypt-key">
+<h3>decrypt(key)<a class="headerlink" href="#decrypt-key" title="Link to this heading">#</a></h3>
+<p>Returns the decrypted value of an encrypted row, or <code class="docutils literal notranslate"><span class="pre">null</span></code> when the row is
+missing, the key does not match, or the value was never encrypted.</p>
+</section>
+<section id="decrypt-key-secret">
+<h3>decrypt(key, secret)<a class="headerlink" href="#decrypt-key-secret" title="Link to this heading">#</a></h3>
+<p>Same, with the explicit secret used to encrypt it.</p>
+</section>
+</section>
+<section id="secret">
+<h2>Secret<a class="headerlink" href="#secret" title="Link to this heading">#</a></h2>
+<p>Read-only view of the deployment key passed with <code class="docutils literal notranslate"><span class="pre">--secret-key-file</span></code>. The key
+material itself is never exposed to Wren: a value that Wren can see can end up
+in a template, a log line, or a <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> interpolation.</p>
+<section id="available">
+<h3>available<a class="headerlink" href="#available" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">true</span></code> when the server was started with a secret key file. Check it at startup
+if your app cannot run without one:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Secret</span><span class="o">.</span><span class="n">available</span><span class="p">)</span><span class="w"> </span><span class="nc">Fiber</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">"Start bialet with --secret-key-file"</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="db">
@@ -2221,6 +2305,8 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#randomstring-length">randomString(length)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hash-password">hash(password)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-password-hash">verify(password, hash)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-value-secret">encrypt(value, secret)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-value-secret">decrypt(value, secret)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tonum-val">toNum(val)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hextodec-hexstr">hexToDec(hexStr)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tohex-byte">toHex(byte)</a></li>
@@ -2248,6 +2334,14 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-key">delete(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key">json(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-key-val">json(key, val)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-key-value">encrypt(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypt-key-value-secret">encrypt(key, value, secret)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-key">decrypt(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decrypt-key-secret">decrypt(key, secret)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secret">Secret</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#available">available</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">

@@ -67,7 +67,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.14" />
+  <meta name="docsearch:version" content="1.2.16" />
   </head>
   
   
@@ -449,6 +449,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypted-values-at-rest">Encrypted Values at Rest</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-hardening">Reverse Proxy Hardening</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>
@@ -757,6 +758,95 @@ implemented at the app or proxy layer.</p>
 </section>
 <section id="secure-configuration-deployment">
 <h2>Secure Configuration &amp; Deployment<a class="headerlink" href="#secure-configuration-deployment" title="Link to this heading">#</a></h2>
+<section id="encrypted-values-at-rest">
+<h3>Encrypted Values at Rest<a class="headerlink" href="#encrypted-values-at-rest" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> is one file. It gets copied to backups, restored on staging
+machines, and pulled onto laptops. Secrets stored there in plain text travel with
+it. <code class="docutils literal notranslate"><span class="pre">Config.encrypt</span></code> and <code class="docutils literal notranslate"><span class="pre">Util.encrypt</span></code> store AES-256-GCM ciphertext instead:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="s2">"stripe_key"</span><span class="p">,</span><span class="w"> </span><span class="s2">"sk_live_..."</span><span class="p">)</span><span class="w">   </span><span class="c1">// row holds bgcm1$...</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="s2">"stripe_key"</span><span class="p">)</span><span class="w">                  </span><span class="c1">// sk_live_...</span>
+</pre></div>
+</div>
+<p><strong>The key must not live in the database.</strong> A key in <code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>, in a
+migration, or seeded with <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> protects nothing: whoever takes the
+database gets the ciphertext and the key that opens it. Bialet therefore reads
+the key from a file outside the app root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/myapp/secret.key
+chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>/etc/myapp/secret.key
+bialet<span class="w"> </span>-k<span class="w"> </span>/etc/myapp/secret.key<span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<p>The file holds either 64 hex characters — used directly as the AES-256 key — or
+a passphrase, which is stretched with PBKDF2-HMAC-SHA256 (600,000 iterations)
+and a per-message random salt. Prefer the raw key: <code class="docutils literal notranslate"><span class="pre">openssl</span> <span class="pre">rand</span> <span class="pre">-hex</span> <span class="pre">32</span></code>, a
+systemd <code class="docutils literal notranslate"><span class="pre">LoadCredential=</span></code>, a Docker secret, or a Kubernetes Secret all produce
+one, and the passphrase path costs a few hundred milliseconds per call.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-k</span></code> is refused at startup when the file is missing, is not a regular file, is
+empty, is larger than 4 KB, contains a NUL byte, or resolves inside the app root
+— the tree that gets copied along with the database. A key file readable by
+group or others still starts the server, but prints a warning to stderr.
+Leading and trailing whitespace is trimmed, so a passphrase cannot begin or end
+with one; use the hex form if that matters.</p>
+<p>The same file works for values you keep in your own tables:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">sealed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"api_token"</span><span class="p">],</span><span class="w"> </span><span class="s2">"passphrase"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"api_token"</span><span class="p">],</span><span class="w"> </span><span class="s2">"passphrase"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Be precise about what this buys:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>An attacker has</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>a copy of <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> (backup, snapshot, stray download)</p></td>
+<td><p>ciphertext only</p></td>
+</tr>
+<tr class="row-odd"><td><p>write access to <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code></p></td>
+<td><p>cannot forge a value — the GCM tag fails — but can delete rows, roll a value back to an earlier ciphertext, or swap ciphertext between columns that share a key</p></td>
+</tr>
+<tr class="row-even"><td><p>a shell as the Bialet user, while it runs</p></td>
+<td><p>plaintext: it can read the key file, inspect the process, or just call <code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>the key file</p></td>
+<td><p>plaintext for every copy of the database built with it</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>So encryption at rest protects the <em>file</em>, not the running service. It is the
+right control for backups, snapshots, and environments that copy production
+data; it does nothing against a compromised host. Isolate the key by ownership
+and mount it read-only where you can.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Config.encrypt</span></code> also binds the config key name into the GCM tag. Copying an
+encrypted row to a different key — for example, moving the admin credential into
+a field rendered on a public page — makes <code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code> return <code class="docutils literal notranslate"><span class="pre">null</span></code> rather
+than hand back a value in the wrong place.</p>
+<p>There is no automatic key rotation. Envelopes record their own parameters
+(<code class="docutils literal notranslate"><span class="pre">bgcm1$&lt;iterations&gt;$&lt;salt&gt;$&lt;iv&gt;$&lt;ciphertext+tag&gt;</span></code>), so rotating means
+decrypting with the old key, encrypting with the new one, updating the row, and
+only then replacing the key file. Re-encrypt rather than reusing an envelope.</p>
+<p>Decryption runs whatever KDF cost the envelope asks for (up to ten million
+iterations), so never pass <code class="docutils literal notranslate"><span class="pre">Util.decrypt</span></code> a value an attacker controls together
+with a server-side secret: each attempt costs a fraction of a second of the
+single worker. Decrypt values you wrote, and check where they came from.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code> and <code class="docutils literal notranslate"><span class="pre">Util.decrypt</span></code> return <code class="docutils literal notranslate"><span class="pre">null</span></code> for a wrong key, a modified
+value, a truncated value, and a value that was never encrypted. They do not
+distinguish those cases, so a caller cannot use the failure as an oracle.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Config.encrypt</span></code> writes the ciphertext, then you read it back with
+<code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code>. <code class="docutils literal notranslate"><span class="pre">Config.get</span></code> returns the envelope, not the plaintext. Code
+that logs <code class="docutils literal notranslate"><span class="pre">Config.get</span></code> for debugging is logging ciphertext — harmless — but
+code that starts with <code class="docutils literal notranslate"><span class="pre">Config.get</span></code> where it needs a secret is a bug.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+<code class="docutils literal notranslate"><span class="pre">Util.encrypt</span></code> and <code class="docutils literal notranslate"><span class="pre">Config.encrypt</span></code> raise a runtime error instead of falling
+back to something weaker. Check <code class="docutils literal notranslate"><span class="pre">Secret.available</span></code> and your startup logs if a
+value unexpectedly fails to encrypt.</p>
+</div></blockquote>
+</section>
 <section id="tls">
 <h3>TLS<a class="headerlink" href="#tls" title="Link to this heading">#</a></h3>
 <p>Bialet speaks <strong>HTTP/1.1</strong> (one request per connection, <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">close</span></code>)
@@ -971,6 +1061,7 @@ the full body before forwarding.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sessions-cookies">Sessions &amp; Cookies</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#password-storage">Password Storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#secure-configuration-deployment">Secure Configuration &amp; Deployment</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypted-values-at-rest">Encrypted Values at Rest</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tls">TLS</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-hardening">Reverse Proxy Hardening</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#private-files">Private Files</a></li>

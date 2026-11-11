@@ -67,7 +67,7 @@
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.14" />
+  <meta name="docsearch:version" content="1.2.16" />
   </head>
   
   
@@ -647,6 +647,12 @@ or start the server and try the page.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.secureEquals(a,</span> <span class="pre">b)</span></code></p></td>
 <td><p>constant-time string comparison</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Util.encrypt(value,</span> <span class="pre">secret)</span></code></p></td>
+<td><p>AES-256-GCM envelope (text, storable)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Util.decrypt(envelope,</span> <span class="pre">secret)</span></code></p></td>
+<td><p>plaintext, or <code class="docutils literal notranslate"><span class="pre">null</span></code> if it does not authenticate</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -658,6 +664,8 @@ or start the server and try the page.</p>
 <span class="nc">Config</span><span class="o">.</span><span class="n">enable</span><span class="p">(</span><span class="s2">"beta_features"</span><span class="p">)</span><span class="w"> </span><span class="c1">// same as Config.set("beta_features", "1")</span>
 <span class="nc">Config</span><span class="o">.</span><span class="n">disable</span><span class="p">(</span><span class="s2">"maintenance"</span><span class="p">)</span><span class="w">  </span><span class="c1">// same as Config.set("maintenance", "0")</span>
 <span class="nc">Config</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"theme"</span><span class="p">)</span><span class="w">           </span><span class="c1">// parsed JSON value</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="s2">"smtp_password"</span><span class="p">,</span><span class="w"> </span><span class="s2">"..."</span><span class="p">)</span><span class="w">  </span><span class="c1">// AES-256-GCM under --secret-key-file</span>
+<span class="nc">Config</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="s2">"smtp_password"</span><span class="p">)</span><span class="w">         </span><span class="c1">// plaintext, or null</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Config.bool(key)</span></code> is an allow-list: <code class="docutils literal notranslate"><span class="pre">true</span></code> for <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code>

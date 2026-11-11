@@ -238,6 +238,45 @@ var offset = (page - 1) * limit
 var title = Config.get("site_title") || "My Site"
 ```
 
+### Encrypted Values
+
+API keys, SMTP passwords, and payment credentials do not belong in plain text in
+`BIALET_CONFIG`: the database file is what gets copied to backups and staging
+machines. Encrypt them:
+
+```bash
+# Once, outside the app root. 64 hex characters = a raw AES-256 key.
+openssl rand -hex 32 > /etc/myapp/secret.key
+chmod 600 /etc/myapp/secret.key
+```
+
+```bash
+bialet -k /etc/myapp/secret.key /www/myapp
+```
+
+```wren
+// Provision, once:
+//   bialet -k /etc/myapp/secret.key -r 'Config.encrypt("smtp_password", "...")' /www/myapp
+
+var smtp = Config.decrypt("smtp_password")   // plaintext, or null
+```
+
+`Config.get("smtp_password")` returns the `bgcm1$...` envelope, which is what is
+stored. `Config.decrypt` returns `null` if the row is missing, was never
+encrypted, or no longer authenticates (wrong key, edited value, or a ciphertext
+moved to a different key). See
+[Security § Encrypted Values at Rest](security.md#encrypted-values-at-rest) for
+what this protects and what it does not.
+
+> ⚠️ Pitfall: `-r` code is visible in `ps` while it runs and, typed directly,
+> stays in your shell history. Provision from a `0600` script instead —
+> `bialet -k … -r "$(cat /root/setup.wren)" /www/myapp` — and remove the script
+> afterwards.
+
+> ⚠️ Pitfall: the key must live **outside** the app root — `-k` refuses a path
+> inside it. A key stored next to the database protects nothing, because
+> whatever copies the database copies the key too.
+
 ## Pitfalls
 
 - **`Config.get()` returns `null` for missing keys** — always provide a
@@ -245,7 +284,9 @@ var title = Config.get("site_title") || "My Site"
 - **Config values are strings** — use `Config.num()` and `Config.bool()`
   for typed access. `Config.get("port")` returns `"7001"`, not `7001`.
 - **No `.env` files or environment variables** — everything lives in
-  `BIALET_CONFIG`. If you need inject values from outside, use `-r`.
+  `BIALET_CONFIG`. If you need inject values from outside, use `-r`. The one
+  exception is the encryption key, which must *not* live in the database: pass
+  it with `-k` / `--secret-key-file`.
 - **`-r` runs once and exits** — it's for provisioning, not for setting
   values that the server reads on every request. Those belong in migrations
   or are set once via `-r` and then read via `Config.get()` at runtime.

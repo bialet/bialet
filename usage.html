@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.14" />
+  <meta name="docsearch:version" content="1.2.16" />
   </head>
   
   
@@ -592,7 +592,11 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>SQLite synchronous: <code class="docutils literal notranslate"><span class="pre">off</span></code>, <code class="docutils literal notranslate"><span class="pre">normal</span></code>, <code class="docutils literal notranslate"><span class="pre">full</span></code>, or <code class="docutils literal notranslate"><span class="pre">extra</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">normal</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-k</span></code>, <code class="docutils literal notranslate"><span class="pre">--secret-key-file</span></code></p></td>
+<td><p>AES-256 key for <code class="docutils literal notranslate"><span class="pre">Config.encrypt</span></code> / <code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code>: 64 hex chars or a passphrase, outside the app root</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
 <td><p>Quiet: suppress the browser auto-open and colored output</p></td>
 <td><p>Disabled</p></td>
 </tr>
@@ -602,6 +606,12 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <p>Long options that require a value reject an empty one (<code class="docutils literal notranslate"><span class="pre">--port</span></code> alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">-d</span></code> and <code class="docutils literal notranslate"><span class="pre">-l</span></code> may point inside the app root only under a private
+name (starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, like <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>). Everything else below the
+root is served, so a database or a log file with a public name there is
+downloadable by any client. Bialet refuses to start and exits with status 11.</p>
+</div></blockquote>
 <p>Size values for <code class="docutils literal notranslate"><span class="pre">-u</span></code> are bytes; a <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code>, or <code class="docutils literal notranslate"><span class="pre">G</span></code> suffix (KiB/MiB/GiB) scales
 them. <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4MB</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4096KB</span></code>, and <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4194304</span></code> are the same limit.</p>
 <blockquote>
@@ -615,7 +625,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.14</span>
+<span class="c1"># bialet 1.2.16</span>
 </pre></div>
 </div>
 </section>

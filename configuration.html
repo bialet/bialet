@@ -67,7 +67,7 @@
     <link rel="prev" title="Making HTTP Calls" href="http-calls.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.14" />
+  <meta name="docsearch:version" content="1.2.16" />
   </head>
   
   
@@ -458,6 +458,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-mode">Maintenance Mode</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination-settings">Pagination Settings</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#site-wide-title">Site-Wide Title</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypted-values">Encrypted Values</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
@@ -732,6 +733,43 @@ for every setting in the system.</p>
 </pre></div>
 </div>
 </section>
+<section id="encrypted-values">
+<h3>Encrypted Values<a class="headerlink" href="#encrypted-values" title="Link to this heading">#</a></h3>
+<p>API keys, SMTP passwords, and payment credentials do not belong in plain text in
+<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>: the database file is what gets copied to backups and staging
+machines. Encrypt them:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Once, outside the app root. 64 hex characters = a raw AES-256 key.</span>
+openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/myapp/secret.key
+chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>/etc/myapp/secret.key
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-k<span class="w"> </span>/etc/myapp/secret.key<span class="w"> </span>/www/myapp
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Provision, once:</span>
+<span class="c1">//   bialet -k /etc/myapp/secret.key -r 'Config.encrypt("smtp_password", "...")' /www/myapp</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">smtp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Config</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="s2">"smtp_password"</span><span class="p">)</span><span class="w">   </span><span class="c1">// plaintext, or null</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Config.get(&quot;smtp_password&quot;)</span></code> returns the <code class="docutils literal notranslate"><span class="pre">bgcm1$...</span></code> envelope, which is what is
+stored. <code class="docutils literal notranslate"><span class="pre">Config.decrypt</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> if the row is missing, was never
+encrypted, or no longer authenticates (wrong key, edited value, or a ciphertext
+moved to a different key). See
+<a class="reference internal" href="security.html#encrypted-values-at-rest"><span class="std std-ref">Security § Encrypted Values at Rest</span></a> for
+what this protects and what it does not.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">-r</span></code> code is visible in <code class="docutils literal notranslate"><span class="pre">ps</span></code> while it runs and, typed directly,
+stays in your shell history. Provision from a <code class="docutils literal notranslate"><span class="pre">0600</span></code> script instead —
+<code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-k</span> <span class="pre">…</span> <span class="pre">-r</span> <span class="pre">&quot;$(cat</span> <span class="pre">/root/setup.wren)&quot;</span> <span class="pre">/www/myapp</span></code> — and remove the script
+afterwards.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: the key must live <strong>outside</strong> the app root — <code class="docutils literal notranslate"><span class="pre">-k</span></code> refuses a path
+inside it. A key stored next to the database protects nothing, because
+whatever copies the database copies the key too.</p>
+</div></blockquote>
+</section>
 </section>
 <section id="pitfalls">
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
@@ -741,7 +779,9 @@ fallback: <code class="docutils literal notranslate"><span class="pre">Config.ge
 <li><p><strong>Config values are strings</strong> — use <code class="docutils literal notranslate"><span class="pre">Config.num()</span></code> and <code class="docutils literal notranslate"><span class="pre">Config.bool()</span></code>
 for typed access. <code class="docutils literal notranslate"><span class="pre">Config.get(&quot;port&quot;)</span></code> returns <code class="docutils literal notranslate"><span class="pre">&quot;7001&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">7001</span></code>.</p></li>
 <li><p><strong>No <code class="docutils literal notranslate"><span class="pre">.env</span></code> files or environment variables</strong> — everything lives in
-<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>. If you need inject values from outside, use <code class="docutils literal notranslate"><span class="pre">-r</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">BIALET_CONFIG</span></code>. If you need inject values from outside, use <code class="docutils literal notranslate"><span class="pre">-r</span></code>. The one
+exception is the encryption key, which must <em>not</em> live in the database: pass
+it with <code class="docutils literal notranslate"><span class="pre">-k</span></code> / <code class="docutils literal notranslate"><span class="pre">--secret-key-file</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">-r</span></code> runs once and exits</strong> — it’s for provisioning, not for setting
 values that the server reads on every request. Those belong in migrations
 or are set once via <code class="docutils literal notranslate"><span class="pre">-r</span></code> and then read via <code class="docutils literal notranslate"><span class="pre">Config.get()</span></code> at runtime.</p></li>
@@ -828,6 +868,7 @@ configuration</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintenance-mode">Maintenance Mode</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pagination-settings">Pagination Settings</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#site-wide-title">Site-Wide Title</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encrypted-values">Encrypted Values</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>

@@ -7257,6 +7257,45 @@ var offset = (page - 1) * limit
 var title = Config.get("site_title") || "My Site"
 ```
 
+### Encrypted Values
+
+API keys, SMTP passwords, and payment credentials do not belong in plain text in
+`BIALET_CONFIG`: the database file is what gets copied to backups and staging
+machines. Encrypt them:
+
+```bash
+# Once, outside the app root. 64 hex characters = a raw AES-256 key.
+openssl rand -hex 32 > /etc/myapp/secret.key
+chmod 600 /etc/myapp/secret.key
+```
+
+```bash
+bialet -k /etc/myapp/secret.key /www/myapp
+```
+
+```wren
+// Provision, once:
+//   bialet -k /etc/myapp/secret.key -r 'Config.encrypt("smtp_password", "...")' /www/myapp
+
+var smtp = Config.decrypt("smtp_password")   // plaintext, or null
+```
+
+`Config.get("smtp_password")` returns the `bgcm1$...` envelope, which is what is
+stored. `Config.decrypt` returns `null` if the row is missing, was never
+encrypted, or no longer authenticates (wrong key, edited value, or a ciphertext
+moved to a different key). See
+[Security § Encrypted Values at Rest](security.md#encrypted-values-at-rest) for
+what this protects and what it does not.
+
+> ⚠️ Pitfall: `-r` code is visible in `ps` while it runs and, typed directly,
+> stays in your shell history. Provision from a `0600` script instead —
+> `bialet -k … -r "$(cat /root/setup.wren)" /www/myapp` — and remove the script
+> afterwards.
+
+> ⚠️ Pitfall: the key must live **outside** the app root — `-k` refuses a path
+> inside it. A key stored next to the database protects nothing, because
+> whatever copies the database copies the key too.
+
 ## Pitfalls
 
 - **`Config.get()` returns `null` for missing keys** — always provide a
@@ -7264,7 +7303,9 @@ var title = Config.get("site_title") || "My Site"
 - **Config values are strings** — use `Config.num()` and `Config.bool()`
   for typed access. `Config.get("port")` returns `"7001"`, not `7001`.
 - **No `.env` files or environment variables** — everything lives in
-  `BIALET_CONFIG`. If you need inject values from outside, use `-r`.
+  `BIALET_CONFIG`. If you need inject values from outside, use `-r`. The one
+  exception is the encryption key, which must *not* live in the database: pass
+  it with `-k` / `--secret-key-file`.
 - **`-r` runs once and exits** — it's for provisioning, not for setting
   values that the server reads on every request. Those belong in migrations
   or are set once via `-r` and then read via `Config.get()` at runtime.
@@ -7352,11 +7393,17 @@ bialet --port=8080 /path/to/app
 | `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
+| `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
+
+> ⚠️ Pitfall: `-d` and `-l` may point inside the app root only under a private
+> name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
+> root is served, so a database or a log file with a public name there is
+> downloadable by any client. Bialet refuses to start and exits with status 11.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
@@ -7836,6 +7883,91 @@ real attackers, consider a deliberately slow KDF (bcrypt, scrypt, argon2)
 implemented at the app or proxy layer.
 
 ## Secure Configuration & Deployment
+
+### Encrypted Values at Rest
+
+`_db.sqlite3` is one file. It gets copied to backups, restored on staging
+machines, and pulled onto laptops. Secrets stored there in plain text travel with
+it. `Config.encrypt` and `Util.encrypt` store AES-256-GCM ciphertext instead:
+
+```wren
+Config.encrypt("stripe_key", "sk_live_...")   // row holds bgcm1$...
+Config.decrypt("stripe_key")                  // sk_live_...
+```
+
+**The key must not live in the database.** A key in `BIALET_CONFIG`, in a
+migration, or seeded with `bialet -r` protects nothing: whoever takes the
+database gets the ciphertext and the key that opens it. Bialet therefore reads
+the key from a file outside the app root:
+
+```bash
+openssl rand -hex 32 > /etc/myapp/secret.key
+chmod 600 /etc/myapp/secret.key
+bialet -k /etc/myapp/secret.key /www/myapp
+```
+
+The file holds either 64 hex characters — used directly as the AES-256 key — or
+a passphrase, which is stretched with PBKDF2-HMAC-SHA256 (600,000 iterations)
+and a per-message random salt. Prefer the raw key: `openssl rand -hex 32`, a
+systemd `LoadCredential=`, a Docker secret, or a Kubernetes Secret all produce
+one, and the passphrase path costs a few hundred milliseconds per call.
+
+`-k` is refused at startup when the file is missing, is not a regular file, is
+empty, is larger than 4 KB, contains a NUL byte, or resolves inside the app root
+— the tree that gets copied along with the database. A key file readable by
+group or others still starts the server, but prints a warning to stderr.
+Leading and trailing whitespace is trimmed, so a passphrase cannot begin or end
+with one; use the hex form if that matters.
+
+The same file works for values you keep in your own tables:
+
+```wren
+var sealed = Util.encrypt(row["api_token"], "passphrase")
+var token = Util.decrypt(row["api_token"], "passphrase")
+```
+
+Be precise about what this buys:
+
+| An attacker has | Result |
+| --- | --- |
+| a copy of `_db.sqlite3` (backup, snapshot, stray download) | ciphertext only |
+| write access to `_db.sqlite3` | cannot forge a value — the GCM tag fails — but can delete rows, roll a value back to an earlier ciphertext, or swap ciphertext between columns that share a key |
+| a shell as the Bialet user, while it runs | plaintext: it can read the key file, inspect the process, or just call `Config.decrypt` |
+| the key file | plaintext for every copy of the database built with it |
+
+So encryption at rest protects the *file*, not the running service. It is the
+right control for backups, snapshots, and environments that copy production
+data; it does nothing against a compromised host. Isolate the key by ownership
+and mount it read-only where you can.
+
+`Config.encrypt` also binds the config key name into the GCM tag. Copying an
+encrypted row to a different key — for example, moving the admin credential into
+a field rendered on a public page — makes `Config.decrypt` return `null` rather
+than hand back a value in the wrong place.
+
+There is no automatic key rotation. Envelopes record their own parameters
+(`bgcm1$<iterations>$<salt>$<iv>$<ciphertext+tag>`), so rotating means
+decrypting with the old key, encrypting with the new one, updating the row, and
+only then replacing the key file. Re-encrypt rather than reusing an envelope.
+
+Decryption runs whatever KDF cost the envelope asks for (up to ten million
+iterations), so never pass `Util.decrypt` a value an attacker controls together
+with a server-side secret: each attempt costs a fraction of a second of the
+single worker. Decrypt values you wrote, and check where they came from.
+
+`Config.decrypt` and `Util.decrypt` return `null` for a wrong key, a modified
+value, a truncated value, and a value that was never encrypted. They do not
+distinguish those cases, so a caller cannot use the failure as an oracle.
+
+> ⚠️ Pitfall: `Config.encrypt` writes the ciphertext, then you read it back with
+> `Config.decrypt`. `Config.get` returns the envelope, not the plaintext. Code
+> that logs `Config.get` for debugging is logging ciphertext — harmless — but
+> code that starts with `Config.get` where it needs a secret is a bug.
+
+> ⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+> `Util.encrypt` and `Config.encrypt` raise a runtime error instead of falling
+> back to something weaker. Check `Secret.available` and your startup logs if a
+> value unexpectedly fails to encrypt.
 
 ### TLS
 
@@ -9861,6 +9993,37 @@ Verifies if a given password matches a hash.
 - `password`: The password to verify.
 - `hash`: The hash to compare against the password.
 
+### encrypt(value, secret)
+
+Encrypts `value` with AES-256-GCM and returns a text envelope you can store in a
+`TEXT` column, a cookie, or a config row:
+
+```wren
+var sealed = Util.encrypt("honey", "password")
+// bgcm1$600000$<salt>$<iv>$<ciphertext+tag>
+
+Util.decrypt(sealed, "password")   // "honey"
+```
+
+- `value`: The string to encrypt. Its bytes are preserved exactly, including NUL
+  bytes and non-ASCII.
+- `secret`: Either a passphrase (stretched with PBKDF2-HMAC-SHA256, 600,000
+  iterations, with a fresh random salt per message) or exactly **64 hex
+  characters**, which are used directly as a 256-bit key.
+
+Every call uses a fresh random salt and nonce, so encrypting the same value
+twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+without one it raises a runtime error rather than using a weaker scheme.
+
+### decrypt(value, secret)
+
+Decrypts an envelope produced by `encrypt`. Returns the plaintext, or `null`
+when the secret is wrong, the value was modified, or the value is not an
+envelope at all. Those cases are deliberately indistinguishable.
+
+- `value`: The envelope.
+- `secret`: The same secret used to encrypt.
+
 ### toNum(val)
 
 Converts a given value to a numeric type.
@@ -9935,7 +10098,9 @@ padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
 
 ### decodeBase64(input)
 
-Decodes a Base64 encoded string.
+Decodes a Base64 encoded string. Returns `null` when the input is not valid
+Base64, so a malformed credential produces a 401 rather than a runtime error.
+The final group may omit its `=` padding.
 
 - `input`: The Base64 encoded string to decode.
 
@@ -10034,6 +10199,50 @@ Sets a configuration option to a JSON value.
 
 - `key`: The key of the configuration option.
 - `val`: The JSON value to set.
+
+### encrypt(key, value)
+
+Encrypts `value` with AES-256-GCM under the deployment key from
+`--secret-key-file` and stores the envelope as the value of `key`:
+
+```wren
+Config.encrypt("stripe_key", "sk_live_...")
+Config.decrypt("stripe_key")            // "sk_live_..."
+Config.get("stripe_key")                // "bgcm1$0$-..." — never the plaintext
+```
+
+The config key name is authenticated with the ciphertext, so copying an
+encrypted row to a different key makes it fail to decrypt instead of silently
+taking effect somewhere else.
+
+### encrypt(key, value, secret)
+
+Same, with an explicit passphrase or 64-hex-character key instead of the
+deployment key.
+
+### decrypt(key)
+
+Returns the decrypted value of an encrypted row, or `null` when the row is
+missing, the key does not match, or the value was never encrypted.
+
+### decrypt(key, secret)
+
+Same, with the explicit secret used to encrypt it.
+
+## Secret
+
+Read-only view of the deployment key passed with `--secret-key-file`. The key
+material itself is never exposed to Wren: a value that Wren can see can end up
+in a template, a log line, or a `%(...)` interpolation.
+
+### available
+
+`true` when the server was started with a secret key file. Check it at startup
+if your app cannot run without one:
+
+```wren
+if (!Secret.available) Fiber.abort("Start bialet with --secret-key-file")
+```
 
 ## Db
 
@@ -10940,6 +11149,8 @@ Stable `Util` helpers:
 | `Util.htmlEscape(text)` | escaped HTML text |
 | `Util.isDigits(text)` | `true` when every character is `0`–`9` |
 | `Util.secureEquals(a, b)` | constant-time string comparison |
+| `Util.encrypt(value, secret)` | AES-256-GCM envelope (text, storable) |
+| `Util.decrypt(envelope, secret)` | plaintext, or `null` if it does not authenticate |
 
 `Config` is backed by `BIALET_CONFIG`:
 
@@ -10951,6 +11162,8 @@ Config.num("page_size")        // Num
 Config.enable("beta_features") // same as Config.set("beta_features", "1")
 Config.disable("maintenance")  // same as Config.set("maintenance", "0")
 Config.json("theme")           // parsed JSON value
+Config.encrypt("smtp_password", "...")  // AES-256-GCM under --secret-key-file
+Config.decrypt("smtp_password")         // plaintext, or null
 ```
 
 `Config.bool(key)` is an allow-list: `true` for `"1"` and `"true"`
