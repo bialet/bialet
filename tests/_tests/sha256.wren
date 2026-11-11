@@ -43,6 +43,18 @@ Test.assert(Util.encodeBase64("ab") == "YWI=", "encodeBase64 two bytes")
 Test.assert(Util.encodeBase64("") == "", "encodeBase64 empty")
 Test.assert(Util.decodeBase64("YWJj") == "abc", "decodeBase64 abc")
 
+// Malformed values return null instead of indexing past the end (which aborted
+// the request with a runtime error).
+Test.assert(Util.decodeBase64("Y") == null, "decodeBase64 single leftover char")
+Test.assert(Util.decodeBase64("!!!!") == null, "decodeBase64 invalid chars")
+Test.assert(Util.decodeBase64("YQ==YWJj") == null, "decodeBase64 interior padding")
+Test.assert(Util.decodeBase64("YW Jj") == null, "decodeBase64 space is not in alphabet")
+
+// The final group may omit its '=' padding.
+Test.assert(Util.decodeBase64("YQ") == "a", "decodeBase64 unpadded one byte")
+Test.assert(Util.decodeBase64("YWI") == "ab", "decodeBase64 unpadded two bytes")
+Test.assert(Util.decodeBase64("YWJjZA") == "abcd", "decodeBase64 unpadded tail")
+
 // Round-trip, including multi-byte UTF-8.
 for(sample in ["", "a", "ab", "abc", "héllo wörld ✓"]) {
   Test.assert(Util.decodeBase64(Util.encodeBase64(sample)) == sample,

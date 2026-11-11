@@ -526,7 +526,9 @@ padding. Byte-oriented: it encodes the raw UTF-8 bytes, and round-trips with
 
 ### decodeBase64(input)
 
-Decodes a Base64 encoded string.
+Decodes a Base64 encoded string. Returns `null` when the input is not valid
+Base64, so a malformed credential produces a 401 rather than a runtime error.
+The final group may omit its `=` padding.
 
 - `input`: The Base64 encoded string to decode.
 

@@ -130,7 +130,12 @@ class Request {
     if (!authHeader) return Response.login()
     var parts = authHeader.split(" ")
     if (parts.count != 2 || parts[0].lower != "basic") return Response.login()
+    // A real Basic credential is a few dozen characters. Refuse an
+    // attacker-chosen length before spending any decoding work on it; the
+    // header block is the only other bound on this value.
+    if (parts[1].count > 4096) return Response.login()
     var decoded = Util.decodeBase64(parts[1])
+    if (!decoded) return Response.login()
     var separator = decoded.indexOf(":")
     if (separator < 0) return Response.login()
     var loginUser = decoded[0...separator]
@@ -979,30 +984,49 @@ class Util {
   // Standard alphabet with '=' padding; round-trips with decodeBase64.
   static encodeBase64(input) { encodeBase64_("%( input )") }
 
+  // Decodes standard Base64 (RFC 4648 §4). Returns null when the value is not
+  // valid Base64: the old loop read four characters per group without checking
+  // the length, so a truncated value (a garbled Authorization header) indexed
+  // past the end and aborted the request with a 500 instead of letting the
+  // caller answer 401. The final group may omit its '=' padding.
   static decodeBase64(input) {
-    var decoded = ""
+    var count = input.count
+    // One leftover character cannot encode a byte.
+    if (count % 4 == 1) return null
+
+    // Collect into a list and join once: appending with `+` per decoded byte
+    // copied the whole accumulated prefix, so one long value cost Theta(n^2)
+    // and could stall the single HTTP worker before any credential check.
+    var out = []
     var i = 0
 
-    while (i < input.count) {
+    while (i < count) {
       var b1 = BASE64_CHARS.indexOf(input[i])
-      i = i + 1
-      var b2 = BASE64_CHARS.indexOf(input[i])
-      i = i + 1
-      var b3 = BASE64_CHARS.indexOf(input[i])
-      i = i + 1
-      var b4 = BASE64_CHARS.indexOf(input[i])
-      i = i + 1
+      var b2 = (i + 1 < count) ? BASE64_CHARS.indexOf(input[i + 1]) : -1
+      var c3 = (i + 2 < count) ? input[i + 2] : "="
+      var c4 = (i + 3 < count) ? input[i + 3] : "="
+      var b3 = c3 == "=" ? -1 : BASE64_CHARS.indexOf(c3)
+      var b4 = c4 == "=" ? -1 : BASE64_CHARS.indexOf(c4)
+      var last = i + 4 >= count
+      i = i + 4
 
-      decoded = decoded + String.fromByte((b1 << 2) | (b2 >> 4))
-      if (b3 != -1) {
-        decoded = decoded + String.fromByte(((b2 & 0xF) << 4) | (b3 >> 2))
-        if (b4 != -1) {
-          decoded = decoded + String.fromByte(((b3 & 0x3) << 6) | b4)
+      if (b1 < 0 || b2 < 0) return null
+      out.add(String.fromByte((b1 << 2) | (b2 >> 4)))
+
+      // Padding may only appear in the final group, as "xx==" or "xxx=".
+      if (b3 < 0) {
+        if (b4 != -1 || !last) return null
+      } else {
+        out.add(String.fromByte(((b2 & 0xF) << 4) | (b3 >> 2)))
+        if (b4 < 0) {
+          if (!last) return null
+        } else {
+          out.add(String.fromByte(((b3 & 0x3) << 6) | b4))
         }
       }
     }
 
-    return decoded
+    return out.join("")
   }
 }
 
