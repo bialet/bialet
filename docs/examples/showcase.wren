@@ -1,6 +1,6 @@
 // Bialet is a single-binary web framework: Wren scripting + SQLite, file-based routing.
 // Drop `.wren` files in a folder, run `bialet`, and you have a server-rendered app.
-var title = "🚲 Welcome to Bialet showcase"
+var title = "Welcome to Bialet showcase"
 
 // Normally, table creation goes in `_migration.wren` (run once at startup).
 // Placed here so this showcase file is fully self-contained.

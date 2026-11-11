@@ -39,6 +39,6 @@ return <!doctype html>
       </table> :
       <p>No counters found</p>
     }}
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

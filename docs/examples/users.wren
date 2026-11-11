@@ -1,7 +1,6 @@
-// --- Path-Based Route (folder.wren) ---
-// Demonstrates: a single file serving both the bare URL and every deeper
-// path. users.wren handles /users (list) and /users/:id (detail) by reading
-// Request.route(0). See advanced-routing.md for details.
+// One file serves /users (the list) and /users/:id (the detail page):
+// Request.route(0) is the first path segment after the file name. This is the
+// SEO-friendly alternative to /users?id=…, covered in Advanced Routing.
 
 var id = Request.route(0)
 
@@ -9,14 +8,15 @@ if (id == null) {
   var users = `SELECT id, name FROM users ORDER BY name`.fetch
   return <!doctype html>
     <html>
-      <head><title>Users</title></head>
-      <body style="font: 1.5em/2.5 system-ui; text-align:center">
+      <head>
+        <title>Users</title>
+        <link rel="stylesheet" href="../style.css">
+      </head>
+      <body>
         <h1>Users</h1>
         {{ users.count > 0 ?
-          <ul style="list-style-type:none">
-            {{ users.map{|user| <li>
-              <a href="/users/{{ user["id"] }}">👤 {{ user["name"] }}</a>
-            </li> } }}
+          <ul>
+            {{ users.map{|user| <li><a href="/users/{{ user["id"] }}">{{ user["name"] }}</a></li> } }}
           </ul> :
           <p>No users yet.</p>
         }}
@@ -29,10 +29,13 @@ if (!user) return Response.notFound()
 
 return <!doctype html>
   <html>
-    <head><title>{{ user["name"] }}</title></head>
-    <body style="font: 1.5em/2.5 system-ui; text-align:center">
-      <h1>👤 {{ user["name"] }}</h1>
+    <head>
+      <title>{{ user["name"] }}</title>
+      <link rel="stylesheet" href="../style.css">
+    </head>
+    <body>
+      <h1>{{ user["name"] }}</h1>
       <p>User id: {{ user["id"] }}</p>
-      <p><a href="/users">← Back to users</a></p>
+      <p><a href="/users">Back to users</a></p>
     </body>
   </html>

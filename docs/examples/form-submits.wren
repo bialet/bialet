@@ -42,6 +42,6 @@ return <!doctype html>
       <input type="text" name="value" value="{{ value }}">
       <button type="submit">Submit</button>
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

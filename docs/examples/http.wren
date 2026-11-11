@@ -28,6 +28,6 @@ return <!doctype html>
         /* If there are no users */
         <p>No user found</p>
       }}
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

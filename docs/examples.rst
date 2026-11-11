@@ -19,12 +19,6 @@ Count the visitors of your website
 .. include:: examples/visits.wren
    :code: wren
 
-Count the clicks
-----------------
-
-.. include:: examples/clicks.wren
-   :code: wren
-
 Form submission
 ----------------
 

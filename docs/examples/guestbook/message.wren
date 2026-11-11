@@ -3,7 +3,7 @@ if (Request.isPost) {
   if (msg) {
     `INSERT INTO messages VALUES (?, CURRENT_TIME)`.query(msg)
     return <main>
-      <p>Messaged <b>{{ msg }}</b> saved!</p>
+      <p>Message <b>{{ msg }}</b> saved!</p>
       <p><a href="/">Show messages</a></p>
     </main>
   }

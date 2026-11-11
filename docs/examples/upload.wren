@@ -27,6 +27,6 @@ return <!doctype html>
       <input type="file" name="form_file_name">
       <input type="submit" value="{{ title }}">
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

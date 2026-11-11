@@ -129,6 +129,6 @@ return <!doctype html>
       <p><strong>Allowed columns:</strong> {{ allowedSorts.join(", ") }}</p>
     </div>
     
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

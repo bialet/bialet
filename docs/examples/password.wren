@@ -52,6 +52,6 @@ return <!doctype html>
         <button>Submit</button>
       </p>
     </form>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

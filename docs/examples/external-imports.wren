@@ -15,6 +15,6 @@ return <!doctype html>
   </head>
   <body>
     <h1>{{ Emoji.heart }}</h1>
-    <p><a href=".">Back ↩️</a></p>
+    <p><a href=".">Home</a></p>
   </body>
 </html>

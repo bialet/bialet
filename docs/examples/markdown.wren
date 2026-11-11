@@ -3,7 +3,7 @@ var markdown = """
 
 This is written in Markdown.
 
-[Back ↩️](.)
+[Home](.)
 
 This is the example.md file:
 """
