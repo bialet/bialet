@@ -299,29 +299,7 @@ DELETE FROM BIALET_MIGRATIONS WHERE version = 'Create coverage table';
 
 Check this before assuming a schema change took effect.
 
-## 27. Do not call `Date.new()` inside a `Db.migrate` callback
-
-`Db.migrate` callbacks run before `Date.init`, so any date construction or date
-arithmetic there crashes the whole process with SIGSEGV (exit 139) and the app
-never boots:
-
-```wren
-// wrong: Date is not initialized yet
-Db.migrate("Seed", Fn.new {
-  var today = Date.new()
-  ...
-})
-
-// correct: let SQL produce the date
-Db.migrate("Seed", `
-  INSERT INTO entries (day) VALUES (date('now'))
-`)
-```
-
-Seed dates with SQL (`date('now')`, `strftime`) or lazily from a route/domain
-method after the app is up.
-
-## 28. `Num.fromString(null)` raises "Argument must be a string"
+## 27. `Num.fromString(null)` raises "Argument must be a string"
 
 ```wren
 // wrong: a missing form field is null
@@ -334,7 +312,7 @@ _amount = Num.fromString("%(data["amount"] || 0)") || 0
 `Num.fromString` only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.
 
-## 29. `{{ }}` must sit inside an HTML tag
+## 28. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -351,14 +329,14 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 30. Private apps need a first-run credential
+## 29. Private apps need a first-run credential
 
 An empty admin key/password either locks everyone out or opens everything. Seed
 one in the migration (`INSERT OR IGNORE ...`) or add a first-run page that
 creates the first user and shows the recovery key. Then verify login end to end;
 a redirect loop on the login page usually means there is no user to log in with.
 
-## 31. `""` is truthy in Wren
+## 30. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -369,7 +347,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 32. HTML whitespace makes multi-word `.contains` assertions fragile
+## 31. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -378,14 +356,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 33. Enforce rules in the domain, not only in the UI
+## 32. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 34. `bialet -r` is not a request
+## 33. `bialet -r` is not a request
 
 `bialet -r` executes a bare Wren script. It does **not** create the `BIALET_*`
 tables or a request/session, so these fail there:

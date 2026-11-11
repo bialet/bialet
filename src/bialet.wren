@@ -1129,6 +1129,9 @@ class Db {
   }
 
   static migrate(version, schemaOrCallback) {
+    // Db.init runs Date.init before this point, so a callback may call
+    // Date.new() and do date arithmetic. Migrations never run before the
+    // date subsystem is initialized.
     Db.init
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
       if (schemaOrCallback is Fn) {
