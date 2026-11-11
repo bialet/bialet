@@ -323,7 +323,11 @@ class Session {
     // Cap each statement: a backlog built up while the trigger was broken must
     // not block the single worker in one pass. Later sweeps make progress.
     var batch = 1000
-    `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION WHERE updatedAt < datetime('now', '-30 days') LIMIT ?)`.query(batch)
+    // An id expires when it has been idle for 30 days: the age test has to be
+    // on MAX(updatedAt) per id, not on individual rows. rotate() writes the
+    // _bialet_authenticated marker once and nothing refreshes it, so testing
+    // rows deleted an actively used session on day 31 by its marker row.
+    `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION GROUP BY id HAVING MAX(updatedAt) < datetime('now', '-30 days') LIMIT ?)`.query(batch)
     var row = `SELECT COUNT(*) AS c FROM (SELECT id FROM BIALET_SESSION GROUP BY id)`.first()
     if (!row) return
     var live = Num.fromString("%(row["c"])")
@@ -336,8 +340,11 @@ class Session {
       // logged-in users' login-time rows, and deleting those logs them out
       // globally. rotate() marks the id it mints, so the candidates here are
       // the ids without that marker; a session that was authenticated stays
-      // until the 30-day expiry above removes it.
-      `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION WHERE id NOT IN (SELECT id FROM BIALET_SESSION WHERE key = '_bialet_authenticated') GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
+      // until the idle expiry above removes it. The inner NOT IN is guarded
+      // against a NULL id: SQLite allows one in a composite text key, and a
+      // single NULL would make NOT IN unknown for every row and silently
+      // disable the cap.
+      `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION WHERE id NOT IN (SELECT id FROM BIALET_SESSION WHERE key = '_bialet_authenticated' AND id IS NOT NULL) GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
     }
   }
   static destroy() {
