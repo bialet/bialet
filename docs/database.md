@@ -382,7 +382,10 @@ NULL.
 for numeric access:
 
 - `.toNum()` — returns the first column value as a number. Most common for
-  `COUNT(*)`, `SUM()`, and other aggregate queries.
+  `COUNT(*)`, `SUM()`, and other aggregate queries. A NULL result (for example
+  `MAX()` over an empty table) and a non-numeric value become `0`, so it is
+  safe to do arithmetic on the result. A raw column from `.first()` is still
+  `null`; use `COALESCE(...)` in SQL if you add to it directly.
 - `.val()` + `Num.fromString()` — manually convert a string column to a number
 - `.toBool()` — returns the first column value as a boolean
 

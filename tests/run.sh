@@ -808,7 +808,7 @@ run_test "Markdown file rendering     " "md-file"        200 "<h1>Test Heading</
 run_test "Database save and fetch     " "db"              200 "John Doe"
 run_test "Query order by              " "query-order"     200 "item2,item3,item1"
 run_test "Query val method            " "query-val"       200 "testvalue"
-run_test "Query toNum method          " "query-tonum"     200 "50"
+run_test "Query toNum method          " "query-tonum"     200 "empty:0|0|missing:0|50"
 run_test "Query save method           " "save"            200 "hello updated 2024-09-13 10:30:00"
 run_test "Query toBool method         " "db-tobool"       200 "true,false,true,true,true"
 run_test "Query non-primitive params  " "query-param-stringify" 200 "node-name|tail|node-name"

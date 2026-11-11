@@ -764,10 +764,14 @@ class Query {
   }
   val(p1, p2) { first_([p1, p2]).values.join() }
   val(p1, p2, p3) { first_([p1, p2, p3]).values.join() }
-  toNum { Num.fromString(val) }
-  toNum(param) { Num.fromString(val(param)) }
-  toNum(p1, p2) { Num.fromString(val(p1, p2)) }
-  toNum(p1, p2, p3) { Num.fromString(val(p1, p2, p3)) }
+  // Aggregates (MAX, SUM, ...) are NULL over an empty table, and
+  // Num.fromString(null) raises. Treat a missing or non-numeric value as 0 so
+  // arithmetic on `SELECT MAX(id) FROM empty`.toNum does not crash.
+  static num_(value) { Num.fromString("%(value)") || 0 }
+  toNum { Query.num_(val) }
+  toNum(param) { Query.num_(val(param)) }
+  toNum(p1, p2) { Query.num_(val(p1, p2)) }
+  toNum(p1, p2, p3) { Query.num_(val(p1, p2, p3)) }
   toBool { toNum != 0 }
   toBool(param) { toNum(param) != 0 }
   toBool(p1, p2) { toNum(p1, p2) != 0 }

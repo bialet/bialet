@@ -175,18 +175,7 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 16. Aggregates return null on an empty table
-
-`SELECT MAX(id)`, `SELECT SUM(x)` and friends return null when there are no
-rows. `null + 1` crashes. Use a default:
-
-```wren
-var max = `SELECT COALESCE(MAX(CAST(number AS INTEGER)), 0) FROM members`.toNum
-```
-
-This is the classic 500 on a brand-new database.
-
-## 17. `List` has no `reverse`
+## 16. `List` has no `reverse`
 
 `[1,2,3].reverse` raises `List does not implement 'reverse'`. Build a new list:
 
@@ -195,7 +184,7 @@ var out = []
 for (i in 0...xs.count) out.add(xs[xs.count - 1 - i])
 ```
 
-## 18. Zero-argument methods still need `()`
+## 17. Zero-argument methods still need `()`
 
 ```wren
 class Klass {
@@ -208,7 +197,7 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 19. `Map` has no `get(key)`
+## 18. `Map` has no `get(key)`
 
 ```wren
 var m = {"a": 1}
@@ -218,12 +207,12 @@ m["missing"]        // null
 m.containsKey("a")  // true
 ```
 
-## 20. `_init.wren` runs once; do not collide with UNIQUE keys
+## 19. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 21. HTML templates use `{{ }}`, not `%(...)`
+## 20. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -236,7 +225,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 22. Name the columns in every INSERT
+## 21. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -248,7 +237,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 23. The form `name` must match `Request.post` exactly
+## 22. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -259,7 +248,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 24. Strings do not implement `<` or `>`
+## 23. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -275,7 +264,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 25. `Num.fromString(null)` raises "Argument must be a string"
+## 24. `Num.fromString(null)` raises "Argument must be a string"
 
 ```wren
 // wrong: a missing form field is null
@@ -288,7 +277,7 @@ _amount = Num.fromString("%(data["amount"] || 0)") || 0
 `Num.fromString` only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.
 
-## 26. `{{ }}` must sit inside an HTML tag
+## 25. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -305,7 +294,7 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 27. `""` is truthy in Wren
+## 26. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -316,7 +305,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 28. HTML whitespace makes multi-word `.contains` assertions fragile
+## 27. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -325,14 +314,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 29. Enforce rules in the domain, not only in the UI
+## 28. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 30. `bialet -r` has no request, but it does initialize the framework
+## 29. `bialet -r` has no request, but it does initialize the framework
 
 `bialet -r` executes a bare Wren script. It runs `Db.init` first, so the
 `BIALET_*` tables exist and the framework helpers work:
