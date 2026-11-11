@@ -206,22 +206,12 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 18. `Map` has no `get(key)`
-
-```wren
-var m = {"a": 1}
-m["a"]              // 1
-m["missing"]        // null
-// m.get("a")       // Map does not implement 'get(_)'
-m.containsKey("a")  // true
-```
-
-## 19. `_init.wren` runs once; do not collide with UNIQUE keys
+## 18. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 20. HTML templates use `{{ }}`, not `%(...)`
+## 19. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -234,7 +224,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 21. Name the columns in every INSERT
+## 20. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -246,7 +236,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 22. The form `name` must match `Request.post` exactly
+## 21. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -257,7 +247,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 23. Strings do not implement `<` or `>`
+## 22. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -273,7 +263,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 24. `Num.fromString` returns null for null and unparseable input
+## 23. `Num.fromString` returns null for null and unparseable input
 
 ```wren
 var amount = Num.fromString(data["amount"])   // null, not a crash
@@ -284,7 +274,7 @@ var total = (amount || 0) + shipping
 column and an unparseable string all return null, so coalesce before doing
 arithmetic. `Num.fromString(false)` and other non-string values still raise.
 
-## 25. `{{ }}` must sit inside an HTML tag
+## 24. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -301,7 +291,7 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 26. `""` is truthy in Wren
+## 25. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -312,7 +302,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 27. HTML whitespace makes multi-word `.contains` assertions fragile
+## 26. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -321,14 +311,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 28. Enforce rules in the domain, not only in the UI
+## 27. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 29. `bialet -r` has no request, but it does initialize the framework
+## 28. `bialet -r` has no request, but it does initialize the framework
 
 `bialet -r` executes a bare Wren script. It runs `Db.init` first, so the
 `BIALET_*` tables exist and the framework helpers work:

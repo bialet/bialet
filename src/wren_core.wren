@@ -529,6 +529,10 @@ class Map is Sequence {
   keys { MapKeySequence.new(this) }
   values { MapValueSequence.new(this) }
   to(Class) { Class.new(this) }
+  // `m.get(key)` was a common mistake (`Map does not implement 'get(_)'`);
+  // mirror Config/Request with an optional default.
+  get(key) { this[key] }
+  get(key, default) { containsKey(key) ? this[key] : default }
 
   toString {
     var first = true

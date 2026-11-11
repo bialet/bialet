@@ -421,6 +421,8 @@ static const char* coreModuleSource =
 "  keys { MapKeySequence.new(this) }\n"
 "  values { MapValueSequence.new(this) }\n"
 "  to(Class) { Class.new(this) }\n"
+"  get(key) { this[key] }\n"
+"  get(key, default) { containsKey(key) ? this[key] : default }\n"
 "  toString {\n"
 "    var first = true\n"
 "    var result = \"{\"\n"
