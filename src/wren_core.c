@@ -638,6 +638,12 @@ DEF_PRIMITIVE(null_toString) {
 }
 
 DEF_PRIMITIVE(num_fromString) {
+  // A missing form field or a NULL column arrives as null. Treat it like an
+  // unparseable string (null) instead of raising "Argument must be a string"
+  // and turning every POST into a 500.
+  if(IS_NULL(args[1]))
+    RETURN_NULL;
+
   if(!validateString(vm, args[1], "Argument"))
     return false;
 

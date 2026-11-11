@@ -272,18 +272,16 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 24. `Num.fromString(null)` raises "Argument must be a string"
+## 24. `Num.fromString` returns null for null and unparseable input
 
 ```wren
-// wrong: a missing form field is null
-_amount = Num.fromString(data["amount"])
-
-// correct: stringify with a default, then fall back
-_amount = Num.fromString("%(data["amount"] || 0)") || 0
+var amount = Num.fromString(data["amount"])   // null, not a crash
+var total = (amount || 0) + shipping
 ```
 
-`Num.fromString` only accepts a String. A null (or an absent key) crashes the
-constructor, so every POST 500s even though the GETs work.
+`Num.fromString` accepts a String or null. A missing form field, a NULL
+column and an unparseable string all return null, so coalesce before doing
+arithmetic. `Num.fromString(false)` and other non-string values still raise.
 
 ## 25. `{{ }}` must sit inside an HTML tag
 

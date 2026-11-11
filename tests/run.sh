@@ -923,6 +923,7 @@ run_test "List extensions             " "list-ext"        200 "1,null"
 run_test "String trim edge cases      " "string-trim"     200 "hello,trim,no-whitespace,,123,trimleft,trimright,hello"
 run_test "toString accepts parentheses" "tostring"       200 "abc|42|true||custom|true"
 run_test "More extensions             " "extensions-more" 200 "toNum:42,null|map:Alice|list:2,A,B|take:1,2"
+run_test "Num.fromString null         " "num-fromstring"  200 "null:null|bad:null|good:42"
 
 # Tests - File handling
 run_test "File create get destroy     " "file-more"       200 "tempBlocksGet:true|saveRestores:true|destroy:true"
