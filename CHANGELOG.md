@@ -4,6 +4,59 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.15 — 2026-11-11
+
+### Security
+
+- A route module is no longer returned as source text when its extension is
+  requested in a different case. The interpreter-vs-static decision tested the
+  *requested* basename with a case-sensitive compare while the file was opened
+  through a case-insensitive filesystem, so `GET /blog.WREN` on macOS or Windows
+  returned `blog.wren` to the client.
+- `Request.login` decodes the Basic credential in linear time and rejects a
+  malformed value with 401. It built its result by appending one byte at a time,
+  so a 4 KB `Authorization` header cost about half a second of the single
+  worker before the credential was even compared; a truncated value raised a
+  runtime error instead of answering 401.
+- The session table is bounded again. The write-path sweep was paced by a Wren
+  class variable, which a new VM resets on every request, so neither the
+  30-day expiry nor the `maxSessions` cap ever ran. The sweep now fires from a
+  per-write draw (about one write in 62), `Session.rotate()` marks the id it
+  mints, and the cap evicts only ids without that marker, so an anonymous flood
+  can no longer log out real users. Both sweeps delete at most 1000 rows per
+  pass.
+- A session expires when the whole id has been idle for 30 days. The expiry
+  tested individual rows, so a login-time row older than a month ended an
+  actively used session, and one principal's logout deleted other sessions'
+  login rows outright. `Session.destroy()` now deletes only the caller's id.
+- An operator `-l` log file that resolves inside the app root at a public name
+  is refused at startup, the same way `-d` already was. Every request line,
+  query string included, was downloadable.
+- The Markdown inline pass no longer rescans the rest of the line for every
+  unmatched `[`, so a 128 KiB body cannot burn quarter-second chunks of the
+  single worker.
+- `Util.hash` / `Util.verify` hash and compare the whole credential. The C KDF
+  re-derived the length with `strlen`, so a password containing a NUL byte was
+  stored as its prefix and a credential starting with NUL became the empty
+  password.
+
+### Fixed
+
+- Indexing a string at a byte sequence that decodes above U+10FFFF (for example
+  `0xF4 0x90 0x80 0x80`) returns the raw byte, as range slicing already did,
+  instead of an empty string that raised on `char.bytes[0]`. `wrenUtf8Decode`
+  also rejects a zero-length span instead of reading past it.
+- The `.wren.inc` generator embeds every source line verbatim. It dropped blank
+  and `//`-prefixed lines without tracking string state, so a line inside a
+  multi-line literal was deleted from the shipped program; removing the filter
+  also makes the embedded text match the reviewed file line for line.
+
+### Tests
+
+- New coverage for each item above: case-variant routing, Basic-auth decoding,
+  session cap and idle expiry, logout scope, Markdown linearity, the
+  length-aware KDF, string indexing above U+10FFFF and the credential decoder.
+
 ## 1.2.14 — 2026-11-11
 
 ### Fixed
