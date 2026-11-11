@@ -113,6 +113,9 @@ run_test "Route param w/ dir overlap   " "reservar/reunion-30min" 200 "reunion-3
 # segments) -- the classic list + detail resource pattern.
 run_test "Route file base URL         " "notes"          200 "notes-list"
 run_test "Route file with segment     " "notes/42"       200 "note:42"
+# Regression: the query string used to leak into Request.route(), so /notes?page=2
+# looked like the detail route "?page=2" and the handler answered 404.
+run_test "Route ignores query string  " "notes?page=2"   200 "notes-list"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
 

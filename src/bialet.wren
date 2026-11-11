@@ -20,8 +20,8 @@ class Request {
     __method = tmp[0].upper
     __fullUri = tmp[1]
     __body = ""
-    var routeRest = (route.count > 0 && __fullUri.startsWith(route)) ? __fullUri[route.count..-1] : __fullUri
-    __segments = routeRest.trimStart("/").split("/")
+    // Split the query off before the path is segmented: /notes?page=2 is the
+    // route /notes with a parameter, not a segment called "?page=2".
     var uriSeparator = __fullUri.indexOf("?")
     if (uriSeparator > 0) {
       __uri = __fullUri[0...uriSeparator]
@@ -29,6 +29,8 @@ class Request {
     } else {
       __uri = __fullUri
     }
+    var routeRest = (route.count > 0 && __uri.startsWith(route)) ? __uri[route.count..-1] : __uri
+    __segments = routeRest.trimStart("/").split("/")
     var startBody = false
     var headerName
     var headerValue
