@@ -29,6 +29,11 @@ on:
         required: false
         type: boolean
         default: false
+      series:
+        description: JSON array of Ubuntu series to publish
+        required: false
+        type: string
+        default: '["jammy","noble","resolute","stonking"]'
     secrets:
       PPA_GPG_KEY:
         required: false
@@ -44,6 +49,11 @@ on:
         description: Build and lint the source package without uploading
         type: boolean
         default: false
+      series:
+        description: JSON array of Ubuntu series to publish
+        required: false
+        type: string
+        default: '["jammy","noble","resolute","stonking"]'
 
 permissions:
   contents: read
@@ -59,17 +69,12 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
+      # Every series uploads the same bialet_<version>.orig.tar.gz filename to
+      # the same Launchpad incoming directory. Concurrent dputs race with each
+      # other there and only one upload gets processed, so serialize them.
+      max-parallel: 1
       matrix:
-        # Ubuntu releases in standard support: the LTS releases plus the
-        # current interim release. Keys must be Launchpad series names, and
-        # every one of them must be enabled for the PPA (with arm64 enabled
-        # too, which is not on by default). Drop a series when it goes EOL and
-        # add the new one after each release.
-        series:
-          - jammy
-          - noble
-          - resolute
-          - stonking
+        series: ${{ fromJSON(inputs.series) }}
     env:
       DEBEMAIL: "Rodrigo Arce <rsarce@gmail.com>"
       DEBFULLNAME: "Rodrigo Arce"
