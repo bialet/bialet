@@ -187,6 +187,11 @@ int wrenUtf8Encode(int value, uint8_t* bytes) {
 }
 
 int wrenUtf8Decode(const uint8_t* bytes, uint32_t length) {
+  // The truncation guard below tests `remainingBytes > length - 1`, which
+  // underflows to a huge value when length is 0.
+  if(length == 0)
+    return -1;
+
   // Single byte (i.e. fits in ASCII).
   if(*bytes <= 0x7f)
     return *bytes;

@@ -965,6 +965,7 @@ run_test "Query binds reject NUL bytes  " "nul-bind" 200 "paramAborted:true|text
 run_test "For-in rejects non-instances   " "iterate-guard" 200 "bool:true|num:true|null:true|missing:true|rowValues:true|rowKeys:true|fromString:true|fetchFromString:true|saveBool:true|saveMissing:true|control:9"
 run_test "NULL column maps to null     " "db-null"         200 "literal:true|bound:true"
 run_test "UTF-8 range slices stay intact" "utf8-range" "v=café" 200 "lit:true|litHex:63,61,66,c3,a9|emoji:true|emojiHex:61,f0,9f,98,80,62|reverseHex:c3,a9,66,61,63|reverse:true|tailHex:a9|midHex:f0,9f,98,80|split:true|splitHex:64,c3,b3,73|trim:true|trimHex:73,65,c3,b1,6f,72|replace:true|replaceHex:63,61,66,c3,a9,20,73,69,6e,20,6c,65,63,68,65|posted:true|postedHex:63,61,66,c3,a9"
+run_test "UTF-8 code point above max   " "utf8-codepoint" 200 "same:yes|byte:244|iter:yes"
 
 # Tests - HTTP & External
 run_test "API call                    " "http"            200 "Adeel Solangi"

@@ -981,8 +981,12 @@ Value wrenStringCodePointAt(WrenVM* vm, ObjString* string, uint32_t index) {
 
   int codePoint =
       wrenUtf8Decode((uint8_t*)string->value + index, string->length - index);
-  if(codePoint == -1) {
-    // If it isn't a valid UTF-8 sequence, treat it as a single raw byte.
+  if(codePoint == -1 || codePoint > 0x10ffff) {
+    // If it isn't a valid UTF-8 sequence, or it decodes above the Unicode range
+    // (a 0xF4 0x90.. lead or a 0xF5-0xF7 lead), treat it as a single raw byte:
+    // the same rule wrenNewStringFromRange applies. Forwarding such a value to
+    // wrenStringFromCodePoint allocated an empty string and reached
+    // UNREACHABLE() in wrenUtf8Encode, which cannot encode it.
     char bytes[2];
     bytes[0] = string->value[index];
     bytes[1] = '\0';
