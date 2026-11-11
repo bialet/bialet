@@ -791,18 +791,13 @@ static void readNumber(Parser* parser) {
 }
 
 // Finishes lexing an identifier. Handles reserved words.
-static void readName(Parser* parser, WrenTokenType type, char firstChar) {
-  ByteBuffer string;
-  wrenByteBufferInit(&string);
-  wrenByteBufferWrite(parser->vm, &string, firstChar);
+static void readName(Parser* parser, WrenTokenType type) {
+  while(isName(peekChar(parser)) || isDigit(peekChar(parser)))
+    nextChar(parser);
 
-  while(isName(peekChar(parser)) || isDigit(peekChar(parser))) {
-    char c = nextChar(parser);
-    wrenByteBufferWrite(parser->vm, &string, c);
-  }
+  size_t length = (size_t)(parser->currentChar - parser->tokenStart);
 
   // Update the type if it's a keyword.
-  size_t length = parser->currentChar - parser->tokenStart;
   for(int i = 0; keywords[i].identifier != NULL; i++) {
     if(length == keywords[i].length &&
        memcmp(parser->tokenStart, keywords[i].identifier, length) == 0) {
@@ -811,10 +806,10 @@ static void readName(Parser* parser, WrenTokenType type, char firstChar) {
     }
   }
 
-  parser->next.value =
-      wrenNewStringLength(parser->vm, (char*)string.data, string.count);
-
-  wrenByteBufferClear(parser->vm, &string);
+  // The token already spans the identifier, so build the string from the
+  // source bytes. Copying it through a ByteBuffer added a malloc/realloc/free
+  // per identifier, which is most of what compiling a source file allocates.
+  parser->next.value = wrenNewStringLength(parser->vm, parser->tokenStart, length);
   makeToken(parser, type);
 }
 
@@ -1500,8 +1495,7 @@ static void nextToken(Parser* parser) {
         return;
 
       case '_':
-        readName(parser, peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD,
-                 c);
+        readName(parser, peekChar(parser) == '_' ? TOKEN_STATIC_FIELD : TOKEN_FIELD);
         return;
 
       case '0':
@@ -1515,7 +1509,7 @@ static void nextToken(Parser* parser) {
 
       default:
         if(isName(c)) {
-          readName(parser, TOKEN_NAME, c);
+          readName(parser, TOKEN_NAME);
         } else if(isDigit(c)) {
           readNumber(parser);
         } else {
