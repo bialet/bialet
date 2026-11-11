@@ -1,5 +1,14 @@
 # Live Reload
 
+```bash
+bialet dev
+```
+
+`bialet dev` starts a server from the current directory with live reload
+already on. It also enables the in-browser error display and opens your browser
+(see [Getting Started](../getting-started/2-setup)). The setting is stored in
+the database, so later `bialet` runs keep live reload on until you disable it.
+
 When enabled, Bialet injects a small polling script into every HTML response.
 The script checks for file changes once per second and reloads the page
 automatically — no browser extensions, no WebSocket server, no extra process.
@@ -8,12 +17,7 @@ automatically — no browser extensions, no WebSocket server, no extra process.
 
 Live reload is controlled by the `BIALET_LIVE_RELOAD` configuration key.
 
-The easiest way to turn it on is `bialet dev`, which also enables the
-in-browser error display, serves the current directory, and opens your browser
-(see [Getting Started](../getting-started/2-setup)). It is stored in the
-database, so it stays on for later `bialet` runs until you disable it.
-
-Or set it once in your development database:
+Set it once in your development database:
 
 ```bash
 bialet -r 'Config.enable("BIALET_LIVE_RELOAD")' .
