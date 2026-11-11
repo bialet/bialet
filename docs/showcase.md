@@ -4,27 +4,30 @@ Bialet is small on purpose, so the useful question is not "how does it scale to
 a million users" but "does a real app survive on it". This page answers that
 with one app and its actual numbers.
 
-## home.dev.ar
+## dev.ar
 
-[home.dev.ar](https://home.dev.ar/) is a free `.dev.ar` subdomain service. You
-search for a name, sign in, and point the subdomain at whatever you want to
-run — a redirect, a server, a project. It is server-rendered HTML with a
-session login and a dashboard, built and maintained by one developer, and it
-has been running on Bialet since 2023.
+[dev.ar](https://home.dev.ar/) is a free `.dev.ar` subdomain service. You
+search for a name, sign in, and point the subdomain at whatever you want to run
+— a redirect, a server, a project. It is server-rendered HTML with a session
+login and a dashboard, built and maintained by one developer, and it has been
+running on Bialet since 2023.
 
-It is not a showcase app written for this page. It is the site that pays for
-the framework's existence.
+It is not a showcase app written for this page. It is the site that pays for the
+framework's existence.
 
 ### Traffic, 20 October – 11 November 2026
 
-| Metric                        | Value                                   |
-| ----------------------------- | --------------------------------------- |
-| Requests                      | ~160,000 (about 7,300 per day)          |
-| Bytes served                  | 620 MB                                  |
-| 5xx responses                 | under 0.1%                              |
-| 200 / 302 / 403 / 404         | 24% / 10.5% / 27% / 38%                 |
-| Logins (`/iniciar-sesion`)    | 545                                     |
-| Dashboard views (`/dashboard`)| 508                                     |
+> ℹ️ This is a small production app, not a benchmark. For latency, throughput,
+> and memory, see [Performance](performance.md).
+
+| Metric                         | Value                          |
+| ------------------------------ | ------------------------------ |
+| Requests                       | ~160,000 (about 7,300 per day) |
+| Bytes served                   | 620 MB                         |
+| 5xx responses                  | under 0.1%                     |
+| 200 / 302 / 403 / 404          | 24% / 10.5% / 27% / 38%        |
+| Logins (`/iniciar-sesion`)     | 545                            |
+| Dashboard views (`/dashboard`) | 508                            |
 
 Top paths over the same window:
 
@@ -53,19 +56,10 @@ Top paths over the same window:
 
 ### What runs it
 
-nginx terminates TLS and proxies to Bialet; the app is server-rendered pages
-and a SQLite file. There is no frontend build, no API gateway, and no
-JavaScript framework. The one operational number worth repeating is the 5xx
-rate: everything else is a scanner.
-
-### Caveats
-
-- The nginx log has no `$host` field, so requests were attributed to
-  home.dev.ar by response signature and the Bialet app log. The wildcard
-  `*.dev.ar` redirect count is an upper bound; a few other vhosts also answer
-  with the same redirect.
-- This is a small production app, not a benchmark. For latency, throughput,
-  and memory, see [Performance](performance.md).
+nginx terminates TLS and proxies to Bialet; the app is server-rendered pages and
+a SQLite file. There is no frontend build, no API gateway, and no JavaScript
+framework. The one operational number worth repeating is the 5xx rate:
+everything else is a scanner.
 
 ## Add yours
 

@@ -12,11 +12,7 @@ Small on purpose.
    <p class="hero__subline">It should have stayed this simple.</p>
 
    <p class="hero__lede">
-     Bialet is a small full-stack web framework: one executable that runs your
-     HTTP server, your SQLite database, and your Wren application. Build
-     data-driven web apps from <code>.wren</code> files. No package manager, no
-     YAML, no separate database server, no build step. The Linux x86_64 binary
-     is 3.7&nbsp;MB.
+     Bialet is a small web framework with everything you need and nothing you don't. Write a little Wren, store your data in SQLite, and serve your application.
    </p>
 
 .. raw:: html
@@ -53,9 +49,8 @@ Small on purpose.
      </div>
 
      <p class="install__more">
-       <a href="installation.html">Other platforms, Homebrew, and Docker</a>
-       &middot; MIT licensed &middot; {{release_stamp}} &middot;
-       <a href="https://github.com/bialet/bialet/releases">releases</a>
+       <a href="installation.html">Other platforms, package managers and Docker</a>
+       &middot; {{release_stamp}}
      </p>
 
    </div>
@@ -127,12 +122,6 @@ Small on purpose.
      })();
    </script>
 
-----
-
-.. raw:: html
-
-   <div class="copy-status" role="status" aria-live="polite"></div>
-
 .. llms-txt-ignore-end
 
 ----
@@ -153,7 +142,7 @@ your Wren code. There is no stack to assemble around it.
       **One executable**
 
       Copy the binary to a server and run it. No runtime to install, no
-      ``node_modules``. 3.7 MB on Linux x86_64.
+      ``node_modules``, no bundler. 3.7 MB on Linux.
 
    .. grid-item-card::
 
@@ -170,8 +159,7 @@ your Wren code. There is no stack to assemble around it.
       ^^^
       **No build step**
 
-      Save a ``.wren`` file and refresh the browser. No compiler, no bundler,
-      no watch process.
+      Save a ``.wren`` file and refresh the browser. **Wren** is a small, class-based, object-oriented language.
 
    .. grid-item-card::
 
@@ -181,20 +169,6 @@ your Wren code. There is no stack to assemble around it.
 
       Server-rendered pages, standard HTML and CSS, and SQL you write
       yourself. Add JavaScript only if you want it.
-
-----
-
-Why Wren?
----------
-
-Apps are written in Wren: a small, class-based, object-oriented language that
-links into the binary, so there is no runtime to install. Bialet extends it in
-two places — backtick strings run SQL, and ``<...>`` blocks are HTML with
-``{{ }}`` interpolation.
-
-The language is also the project's biggest trade-off: no LSP yet, no package
-registry, and few developers have written it. The :doc:`wren` covers the
-syntax, the dialect, and those costs in full.
 
 ----
 
@@ -263,7 +237,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
 Built with Bialet
 -----------------
 
-`home.dev.ar <https://home.dev.ar/>`_ is a free ``.dev.ar`` subdomain service
+`dev.ar <https://home.dev.ar/>`_ is a free ``.dev.ar`` subdomain service
 running on Bialet: server-rendered pages, a session login, and a redirect
 dashboard. Over 22 days it served about 160,000 requests — two-thirds of them
 scanner traffic answered with a 403 or 404 — with fewer than 0.1% 5xx
@@ -358,7 +332,7 @@ responses. :doc:`showcase`
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Built and maintained by Rodrigo Arce</strong></p>
+     <p class="community-banner__title"><strong>Built and maintained by a solo developer</strong></p>
      <p>
        Bialet is MIT licensed and runs in production. There is no commercial
        support or SLA. Bugs go to GitHub Issues; questions and project

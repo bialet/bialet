@@ -12,8 +12,8 @@ import sys
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Bialet'
-copyright = '2026, Rodrigo Arce'
-author = 'Rodrigo Arce'
+copyright = '2026, Rodrigo "Albo" Arce'
+author = 'Rodrigo "Albo" Arce'
 
 
 def _get_bialet_version():
@@ -59,8 +59,6 @@ _release_urls = {
 }
 
 _release_stamp = f'v{_bialet_version}'
-if _release_date:
-    _release_stamp += f' &middot; {_release_date}'
 
 _substitutions = {
     'bialet_version': _bialet_version,
