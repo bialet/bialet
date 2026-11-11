@@ -228,6 +228,14 @@ jobs:
           merge-multiple: true
           path: dist/
 
+      # The install script verifies the archive it downloads against this file,
+      # so it has to be published with the assets, not generated on demand.
+      - name: Write checksums
+        working-directory: dist
+        run: |
+          sha256sum *.tar.gz *.zip > SHA256SUMS
+          cat SHA256SUMS
+
       - name: Create release and upload assets
         uses: softprops/action-gh-release@v3
         with:
@@ -235,6 +243,7 @@ jobs:
           files: |
             dist/*.tar.gz
             dist/*.zip
+            dist/SHA256SUMS
           generate_release_notes: true
 
       # Bumps the formula in bialet/homebrew-bialet to the released version.

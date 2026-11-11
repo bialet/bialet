@@ -46,15 +46,15 @@ Download the latest `bialet.exe` (inside the zip) directly:
 
 - **[bialet-{{release_tag}}-windows-x86_64.zip]({{release_windows_url}})**
 
-Extract and run — no installation required:
+Extract it, open PowerShell or Windows Terminal in that folder, and run:
 
-```bash
-bialet.exe
+```powershell
+.\bialet.exe
 ```
 
-Double-clicking `bialet.exe` in File Explorer starts it in dev mode (live
-reload, in-browser error display, and the browser opens automatically). Run it
-from a terminal to start without dev mode.
+Double-clicking `bialet.exe` in File Explorer also works: it starts in dev mode
+(live reload, in-browser error display, and the browser opens automatically).
+The terminal is the better default — it shows the logs and leaves dev mode off.
 
 ## Releases
 
@@ -76,6 +76,17 @@ Download the archive for your platform, extract it, and place the binary
 tar xzf bialet-{{release_tag}}-linux-x86_64.tar.gz
 sudo mv bialet /usr/local/bin/
 ```
+
+Each release publishes a `SHA256SUMS` file next to the archives. To check a
+download by hand:
+
+```bash
+curl -fsSLO https://github.com/bialet/bialet/releases/download/{{release_tag}}/SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS   # shasum -a 256 -c on macOS
+```
+
+The install script does this automatically: it refuses an archive whose
+checksum does not match, and warns when a release predates `SHA256SUMS`.
 
 ## With Brew
 

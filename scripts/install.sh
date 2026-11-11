@@ -14,6 +14,14 @@ yellow() { printf "\033[33m%s\033[0m\n" "$*"; }
 red()    { printf "\033[31m%s\033[0m\n" "$*" >&2; }
 abort()  { red "$1"; exit 1; }
 
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
 # ── Detect platform ────────────────────────────────────────────
 OS="$(uname -s)"
 ARCH="$(uname -m)"
@@ -133,6 +141,24 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "==> Downloading $TARNAME..."
 curl -fsSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
+
+# ── Verify checksum ────────────────────────────────────────────
+# Releases from 1.2.12 publish SHA256SUMS next to the archives. An older
+# release has no file, so a missing one warns; a mismatch always aborts.
+CHECKSUMS_URL="${DOWNLOAD_URL%/*}/SHA256SUMS"
+if curl -fsSL "$CHECKSUMS_URL" -o "$TMPDIR/SHA256SUMS" 2>/dev/null; then
+  EXPECTED=$(awk -v f="$TARNAME" '$2 == f { print $1; exit }' "$TMPDIR/SHA256SUMS")
+  if [ -z "$EXPECTED" ]; then
+    abort "$TARNAME is not listed in SHA256SUMS. Refusing to install an unverified archive."
+  fi
+  ACTUAL=$(sha256_of "$TMPDIR/$TARNAME")
+  if [ "$EXPECTED" != "$ACTUAL" ]; then
+    abort "Checksum mismatch for $TARNAME. Expected $EXPECTED, got $ACTUAL."
+  fi
+  green "==> Checksum verified."
+else
+  yellow "==> Warning: no SHA256SUMS published for $TAG; skipping verification."
+fi
 
 # ── Verify tar ──────────────────────────────────────────────────
 if ! tar tzf "$TMPDIR/$TARNAME" > /dev/null 2>&1; then
