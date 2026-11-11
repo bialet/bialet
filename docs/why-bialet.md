@@ -132,33 +132,104 @@ lighter alternative to a full backend framework.
 PHP is the closest philosophical relative. Both let you drop files in a
 directory and serve them immediately. Both embed logic in HTML.
 
-|                 | Bialet                           | PHP                               |
-| --------------- | -------------------------------- | --------------------------------- |
-| Language        | Wren (object-oriented)           | PHP                               |
-| Database        | SQLite built-in, always present  | Must install and configure        |
-| Deployment      | Single binary + app directory    | PHP runtime + web server + DB     |
-| Package manager | None (import from GitHub URLs)   | Composer                          |
-| Template engine | Inline HTML strings (JSX-like)   | Plain PHP or Twig/Blade           |
-| Configuration   | None                             | php.ini, .env, server config      |
+|                 | Bialet                          | PHP                                |
+| --------------- | ------------------------------- | ---------------------------------- |
+| Language        | Wren (object-oriented)          | PHP                                |
+| Database        | SQLite built in, always present | SQLite via `pdo_sqlite`, no server |
+| Deployment      | Single binary + app directory   | PHP-FPM or Apache + app directory  |
+| Package manager | None (import from GitHub URLs)  | Composer (optional)                |
+| Template engine | Inline HTML strings             | Plain PHP, or Twig/Blade           |
+| Configuration   | None                            | php.ini, .env, server config       |
+| Shared hosting  | No                              | Yes                                |
 
-Bialet wins on simplicity. PHP wins on ecosystem and scalability.
+`pdo_sqlite` is compiled into most PHP builds, so "PHP with SQLite" is a real
+one-file setup that needs no database server. What Bialet adds is the
+executable: no web server to configure, no php.ini, no FPM worker pool, and no
+Composer step. What PHP adds is a hosting industry, a large ecosystem, and
+plenty of people who already know it.
+
+PHP wins on ecosystem, hiring, and hosting. Bialet wins on one artifact that
+runs the same way on every machine.
+
+### Bialet vs. Go
+
+Go is the closest match on deployment: one static binary, an HTTP server in the
+standard library, `database/sql`, and `html/template`. If a single binary is
+the whole argument, Go already wins.
+
+|            | Bialet                  | Go                              |
+| ---------- | ----------------------- | ------------------------------- |
+| Deployment | Single binary + app dir | Single binary                   |
+| Concurrency| One request per worker  | Goroutines across all cores     |
+| Database   | SQLite bundled          | A driver (CGO or pure Go)       |
+| Templates  | Inline HTML + `{{ }}`   | `html/template` files           |
+| Build step | None                    | `go build`                      |
+| Types      | Dynamic                 | Static                          |
+| Ecosystem  | Minimal                 | Large                           |
+
+Go is the better tool when you need real parallelism, a typed codebase, or a
+library for everything. Bialet is the better tool when you want to edit a
+`.wren` file and refresh, keep one small binary, and not think about
+compilation or dependencies at all.
+
+### Bialet vs. PocketBase
+
+PocketBase is also a single executable with SQLite behind it, but it is a
+backend-as-a-service, not a template engine. It ships an admin UI, a collection
+editor, auth, file storage, REST and realtime APIs, and a JavaScript SDK.
+Bialet ships a language and expects you to write the HTML.
+
+|            | Bialet                     | PocketBase                           |
+| ---------- | -------------------------- | ------------------------------------ |
+| What it is | Code-first, server-rendered| Backend with admin UI and APIs       |
+| Data model | SQL schema you write       | Collections in the admin             |
+| UI         | Your HTML                  | Built-in admin; you bring a frontend |
+| Auth       | Sessions, CSRF, basic auth | Built-in auth, OAuth2 providers      |
+| Realtime   | No (polling)               | SSE subscriptions                    |
+| Extend     | `.wren` files              | Go or JavaScript hooks               |
+| Database   | SQLite                     | SQLite                               |
+
+Choose PocketBase when you want a ready-made backend and a JavaScript
+frontend. Choose Bialet when the app is server-rendered pages and you want to
+write the HTML and SQL yourself.
 
 ### Bialet vs. Express / Flask
 
-Express and Flask are minimalist frameworks, but they still need a database
-driver, a template engine, and often an ORM — all configured separately.
+Express and Flask are deliberately minimal: you add only what the app needs. A
+minimal Express app can return HTML strings and talk to SQLite through a
+driver; Flask ships Jinja2, and Python's standard library already has
+`sqlite3`. Neither requires an ORM or a database server.
 
-|                 | Bialet                           | Express / Flask                   |
-| --------------- | -------------------------------- | --------------------------------- |
-| Setup           | One binary, zero config          | Install packages, configure DB    |
-| Database        | SQLite built-in                  | SQLAlchemy + driver (Flask)       |
-| Routing         | File-based                       | Decorators / router definitions   |
-| Templates       | Inline HTML + interpolation      | EJS / Jinja2 / Pug                |
-| Production      | Single binary                    | pm2 + nginx / gunicorn + nginx    |
-| Language        | Wren                             | JavaScript / Python               |
+What neither includes is the wiring: sessions with CSRF protection, database
+migrations, a request/response API, and a deployment story. Bialet's difference
+is that all of it is in the binary and already connected.
 
-Bialet eliminates the "glue code" phase entirely. Express/Flask give you more
-control over the stack but require more decisions up front.
+|                 | Bialet                      | Minimal Express / Flask        |
+| --------------- | --------------------------- | ------------------------------ |
+| Setup           | One binary, zero config     | Runtime plus npm/pip install   |
+| Database        | SQLite bundled              | SQLite via driver/stdlib       |
+| Routing         | File-based                  | Decorators/router              |
+| Templates       | Inline HTML + interpolation | Strings, or add EJS/Jinja2     |
+| Sessions + CSRF | Built in                    | Sessions via middleware, CSRF via extension |
+| Migrations      | `_migration.wren`           | Add a migration tool           |
+| Production      | Single binary               | pm2 + nginx / gunicorn + nginx |
+| Language        | Wren                        | JavaScript / Python            |
+
+Express and Flask give you more control over the stack and a language people
+already know. Bialet gives you fewer decisions and fewer moving parts.
+
+### Bialet vs. HTMX plus a backend
+
+If SPA complexity is the problem but a new language is not worth it, HTMX in
+front of Flask, Express, or Go gives you partial updates without a JavaScript
+build. That is a legitimate answer, and Bialet does not beat it on flexibility:
+you keep a language and ecosystem you already know.
+
+Bialet differs in what is already assembled — server, database, sessions, CSRF,
+migrations — and in rendering whole pages by default instead of fragments. If
+you already have a backend you like, adding HTMX is less work than adopting
+Bialet. If you are starting from nothing on one server, Bialet removes more
+pieces.
 
 ### Bialet vs. Django / Rails
 
