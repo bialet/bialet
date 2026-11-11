@@ -441,6 +441,15 @@ class List is Sequence {
     return other
   }
 
+  // Non-mutating: returns a new list in reverse order. Both spellings work,
+  // matching the other zero-argument helpers on List.
+  reverse {
+    var out = []
+    for (i in 0...count) out.add(this[count - 1 - i])
+    return out
+  }
+  reverse() { reverse }
+
   sort() { sort {|low, high| low < high } }
 
   sort(comparer) {
