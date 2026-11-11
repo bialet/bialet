@@ -34,6 +34,7 @@ on:
         required: false
         type: string
         default: '["jammy","noble","resolute","stonking"]'
+
     secrets:
       PPA_GPG_KEY:
         required: false
@@ -55,6 +56,7 @@ on:
         type: string
         default: '["jammy","noble","resolute","stonking"]'
 
+
 permissions:
   contents: read
 
@@ -70,8 +72,9 @@ jobs:
     strategy:
       fail-fast: false
       # Every series uploads the same bialet_<version>.orig.tar.gz filename to
-      # the same Launchpad incoming directory. Concurrent dputs race with each
-      # other there and only one upload gets processed, so serialize them.
+      # the same Launchpad incoming directory. The tarball is reproducible, so
+      # the contents match, but keep the uploads sequential so two dputs never
+      # write that file at the same time.
       max-parallel: 1
       matrix:
         series: ${{ fromJSON(inputs.series) }}
@@ -122,7 +125,13 @@ jobs:
           git archive HEAD | tar -x -C "/tmp/orig/bialet-${V}"
           # dpkg-source rejects an .orig tarball that contains debian/.
           rm -rf "/tmp/orig/bialet-${V}/debian"
-          tar -C /tmp/orig -czf "../bialet_${V}.orig.tar.gz" "bialet-${V}"
+          # Every series uploads this same filename, so the bytes have to be
+          # identical: pin mtimes/ownership and drop the gzip timestamp.
+          # Otherwise Launchpad sees different contents for the same file and
+          # rejects all but the first upload.
+          tar -C /tmp/orig --sort=name --mtime=@0 --owner=0 --group=0 \
+              --numeric-owner -cf - "bialet-${V}" \
+            | gzip -n -9 > "../bialet_${V}.orig.tar.gz"
 
       - name: Add the changelog entry
         run: |
