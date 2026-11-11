@@ -12,10 +12,11 @@ Small on purpose.
    <p class="hero__subline">It should have stayed this simple.</p>
 
    <p class="hero__lede">
-     One executable: an HTTP server, SQLite, and the Wren scripting language.
-     Build data-driven web apps from <code>.wren</code> files. No package
-     manager, no YAML, no separate database server, no build step. The Linux
-     x86_64 binary is 3.7&nbsp;MB.
+     Bialet is a small full-stack web framework: one executable that runs your
+     HTTP server, your SQLite database, and your Wren application. Build
+     data-driven web apps from <code>.wren</code> files. No package manager, no
+     YAML, no separate database server, no build step. The Linux x86_64 binary
+     is 3.7&nbsp;MB.
    </p>
 
 .. raw:: html
@@ -40,7 +41,7 @@ Small on purpose.
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="{{release_windows_url}}">
          Download for Windows (.zip)
        </a>
-       <p class="install__note">Zero installation required. Just extract and run.</p>
+       <p class="install__note">No installation: extract and run.</p>
      </div>
 
      <!-- Fallback: all platforms (also what visitors see without JS) -->
@@ -48,7 +49,7 @@ Small on purpose.
        <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/releases/latest">
          Download the binaries (all platforms)
        </a>
-       <p class="install__note">Zero installation required. Just extract and run.</p>
+       <p class="install__note">No installation: extract and run.</p>
      </div>
 
      <p class="install__more">
@@ -80,7 +81,7 @@ Small on purpose.
        </figcaption>
      </figure>
      <div class="proof__notes">
-       <p class="proof__heading">Under a minute, start to styled</p>
+       <p class="proof__heading">From zero to styled in under a minute</p>
        <ul class="proof__list">
          <li>A page, a form handler, a migration.</li>
          <li><code>bialet</code> serves the files. No build step.</li>
