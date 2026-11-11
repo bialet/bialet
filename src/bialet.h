@@ -13,6 +13,17 @@
 
 #define BIALET_VERSION "1.2.15"
 
+/* Core dumps are off (POSIX: RLIMIT_CORE is set to 0 at startup) because the
+ * process keeps the deployment key from --secret-key-file in memory for its
+ * whole life, so a dump contains it in cleartext -- and a default
+ * core_pattern writes the dump into the working directory, where the static
+ * handler would serve it by its public name. Set this to 1 and rebuild to keep
+ * dumps while debugging; nothing else changes. An -D on the command line
+ * (-DBIALET_ALLOW_CORE_DUMPS=1) overrides it without touching the source. */
+#ifndef BIALET_ALLOW_CORE_DUMPS
+#define BIALET_ALLOW_CORE_DUMPS 0
+#endif
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

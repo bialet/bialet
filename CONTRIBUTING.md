@@ -221,6 +221,35 @@ string includes before rebuilding:
 make wren_files && make
 ```
 
+### Core Dumps
+
+Core dumps are disabled at startup. Bialet holds the `--secret-key-file`
+deployment key in memory for the whole life of the process, so a dump written
+after a `SIGSEGV`, `SIGABRT`, or `SIGQUIT` contains that key in cleartext — and
+the default `core_pattern` puts the file in the working directory, where the
+static handler serves any name that does not start with `_` or `.`. `main()`
+sets `RLIMIT_CORE` to 0 before the fork loop, so the supervisor and every HTTP
+child inherit it.
+
+When you need a dump to debug a crash, rebuild with dumps enabled:
+
+```bash
+make -B EXTRA_CFLAGS=-DBIALET_ALLOW_CORE_DUMPS=1
+# or set BIALET_ALLOW_CORE_DUMPS to 1 in src/bialet.h
+```
+
+`-B` matters: the Makefile does not track `CFLAGS` changes, so a plain `make`
+on an up-to-date tree keeps the objects built without the flag and the binary
+silently stays dump-free.
+
+Rebuild without the flag before running `make check` or committing. If the
+environment forbids `setrlimit` (some sandboxes), startup prints a
+`setrlimit(RLIMIT_CORE)` warning and continues; the limit is simply not
+applied there.
+
+On Windows the macro has no effect: `RLIMIT_CORE` does not exist, and dumps
+are controlled by Windows Error Reporting.
+
 ## Project Structure
 
 ```

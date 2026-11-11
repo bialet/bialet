@@ -159,6 +159,15 @@ when editing or adding docs.
 - Use `System.print(...)` inside Wren files for runtime logs on server stdout
 - Live-reload uses inotify on Linux to watch `.wren` files (see `src/main.c`)
 - On macOS, restart the server manually for changes
+- **Core dumps are off.** `src/main.c` sets `RLIMIT_CORE` to 0 before the fork
+  loop, because the process keeps the `--secret-key-file` deployment key in
+  memory for its whole life and a dump from a fatal signal would contain it —
+  with the default `core_pattern` written into the served directory, where the
+  static handler would return it. To debug a crash with a dump, rebuild with
+  `make -B EXTRA_CFLAGS=-DBIALET_ALLOW_CORE_DUMPS=1` (or set
+  `BIALET_ALLOW_CORE_DUMPS` to 1 in `src/bialet.h`). The `-B` is required: the
+  Makefile does not track flag changes, so a plain `make` keeps the objects
+  built without it. Do not ship that build.
 
 ## C Editing Guidelines
 

@@ -578,6 +578,20 @@ int main(int argc, char* argv[]) {
    * migrations, to -r provisioning, and to every request. It is deliberately
    * not stored in BIALET_CONFIG: a copy of the database would otherwise contain
    * both the ciphertext and the key. */
+#if !defined(_WIN32) && !BIALET_ALLOW_CORE_DUMPS
+  /* A core dump is the whole memory image, and the key loaded just below stays
+   * in it for the life of the process. With the default core_pattern the file
+   * lands in the working directory, where the static handler would serve it by
+   * its public name -- `core`, `core.1234`, neither of which is private by the
+   * _ / . rule. Applied before the fork loop so the supervisor and every HTTP
+   * child inherit it; rlim_max of 0 also means nothing can turn it back on.
+   * Not fatal: a sandbox that forbids setrlimit would otherwise refuse to
+   * start over a hardening step, but the warning stays visible at boot. */
+  struct rlimit core_limit = {0, 0};
+  if(setrlimit(RLIMIT_CORE, &core_limit) == -1)
+    perror("setrlimit(RLIMIT_CORE)");
+#endif
+
   atexit(secret_key_clear);
   if(bialet_config.secret_key_file != NULL) {
     char secret_err[512];

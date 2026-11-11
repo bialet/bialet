@@ -27,6 +27,16 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   material itself is never exposed to Wren, so it cannot reach a template, a
   log line, or a `%(...)` interpolation.
 
+### Security
+
+- Core dumps are disabled at startup (`RLIMIT_CORE` set to 0 before the fork
+  loop). The process holds the deployment key from `--secret-key-file` in memory
+  for its entire life, so a dump produced by a fatal signal contains it in
+  cleartext — and with the default `core_pattern` the file lands in the working
+  directory, where the static handler serves it by its public name. Set
+  `BIALET_ALLOW_CORE_DUMPS` to 1 in `src/bialet.h` (or build with
+  `-DBIALET_ALLOW_CORE_DUMPS=1`) to keep dumps while debugging.
+
 ### Tests
 
 - `tests/crypto.wren` and `tests/crypto-config.wren` cover encryption round
