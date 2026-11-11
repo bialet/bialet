@@ -399,6 +399,11 @@ class Session {
     return HtmlNode.new('<input type="hidden" name="_bialet_csrf" value="%( Util.htmlEscape(token) )">')
   }
   csrfOk { Util.secureEquals(get("_bialet_csrf"), Request.post("_bialet_csrf")) }
+  // Statics so a handler or template can write Session.csrf / Session.csrfOk
+  // without holding an instance. Each call builds a session from the live
+  // cookie, so the token rendered by a GET is the one a later POST validates.
+  static csrf { Session.new().csrf }
+  static csrfOk { Session.new().csrfOk }
 }
 
 // Json library and Util functions are from Matthew Brandly

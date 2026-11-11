@@ -335,6 +335,8 @@ static const char* bialetModuleSource =
 "    return HtmlNode.new('<input type=\"hidden\" name=\"_bialet_csrf\" value=\"%( Util.htmlEscape(token) )\">')\n"
 "  }\n"
 "  csrfOk { Util.secureEquals(get(\"_bialet_csrf\"), Request.post(\"_bialet_csrf\")) }\n"
+"  static csrf { Session.new().csrf }\n"
+"  static csrfOk { Session.new().csrfOk }\n"
 "}\n"
 "class Json {\n"
 "  static parse(string) {\n"

@@ -206,39 +206,7 @@ var out = []
 for (i in 0...xs.count) out.add(xs[xs.count - 1 - i])
 ```
 
-## 19. CSRF is on the `session` instance, and tests have no cookie jar
-
-```wren
-var session = Session.new()
-if (Request.isPost) {
-  if (!session.csrfOk && Config.get("test_mode") != "1") return Response.status(403)
-  ...
-}
-{{ session.csrf }}
-```
-
-`Session.csrf` / `Session.csrfOk` are **not** static: they are members of
-`session = Session.new()`. In tests, `Test.post` cannot reuse the token from a
-previous `Test.get` (there is no cookie jar), so a CSRF-protected form returns
-200 instead of 302. The same applies to any session value: a name set by one
-`Test.get` is not visible to the next `Test.post`. Pass the value in the body
-(or test the domain method directly) instead of relying on session state. Make
-the check test-aware with a config flag and set it once in `_tests/_init.wren`:
-
-```wren
-// _tests/_init.wren
-Config.set("test_mode", "1")
-```
-
-Read that flag with `Config.get("test_mode") == "1"`: it is explicit about the
-"off unless set" default. (`Config.bool` works too — it returns `true` only for
-`"1"`/`"true"`, and `false` for a missing key — but `get` makes the intent
-obvious at the call site.) Never disable CSRF outside the test flag.
-
-Tests also share one `BIALET_CONFIG`: a test that sets a config value leaks it
-into every other test file. Reset the key or use a unique one.
-
-## 20. Zero-argument methods still need `()`
+## 19. Zero-argument methods still need `()`
 
 ```wren
 class Klass {
@@ -251,7 +219,7 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 21. `Map` has no `get(key)`
+## 20. `Map` has no `get(key)`
 
 ```wren
 var m = {"a": 1}
@@ -261,12 +229,12 @@ m["missing"]        // null
 m.containsKey("a")  // true
 ```
 
-## 22. `_init.wren` runs once; do not collide with UNIQUE keys
+## 21. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 23. HTML templates use `{{ }}`, not `%(...)`
+## 22. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -279,7 +247,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 24. Name the columns in every INSERT
+## 23. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -291,7 +259,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 25. The form `name` must match `Request.post` exactly
+## 24. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -302,7 +270,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 26. Strings do not implement `<` or `>`
+## 25. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -318,7 +286,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 27. A failed migration can still be marked as applied
+## 26. A failed migration can still be marked as applied
 
 If the SQL in `Db.migrate` fails (`incomplete input`, a missing column, ...),
 Bialet can still record the version in `BIALET_MIGRATIONS`. Fixing the `.wren`
@@ -331,7 +299,7 @@ DELETE FROM BIALET_MIGRATIONS WHERE version = 'Create coverage table';
 
 Check this before assuming a schema change took effect.
 
-## 28. Do not call `Date.new()` inside a `Db.migrate` callback
+## 27. Do not call `Date.new()` inside a `Db.migrate` callback
 
 `Db.migrate` callbacks run before `Date.init`, so any date construction or date
 arithmetic there crashes the whole process with SIGSEGV (exit 139) and the app
@@ -353,7 +321,7 @@ Db.migrate("Seed", `
 Seed dates with SQL (`date('now')`, `strftime`) or lazily from a route/domain
 method after the app is up.
 
-## 29. `Num.fromString(null)` raises "Argument must be a string"
+## 28. `Num.fromString(null)` raises "Argument must be a string"
 
 ```wren
 // wrong: a missing form field is null
@@ -366,7 +334,7 @@ _amount = Num.fromString("%(data["amount"] || 0)") || 0
 `Num.fromString` only accepts a String. A null (or an absent key) crashes the
 constructor, so every POST 500s even though the GETs work.
 
-## 30. `{{ }}` must sit inside an HTML tag
+## 29. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -383,14 +351,14 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 31. Private apps need a first-run credential
+## 30. Private apps need a first-run credential
 
 An empty admin key/password either locks everyone out or opens everything. Seed
 one in the migration (`INSERT OR IGNORE ...`) or add a first-run page that
 creates the first user and shows the recovery key. Then verify login end to end;
 a redirect loop on the login page usually means there is no user to log in with.
 
-## 32. `""` is truthy in Wren
+## 31. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -401,7 +369,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 33. HTML whitespace makes multi-word `.contains` assertions fragile
+## 32. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -410,14 +378,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 34. Enforce rules in the domain, not only in the UI
+## 33. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 35. `bialet -r` is not a request
+## 34. `bialet -r` is not a request
 
 `bialet -r` executes a bare Wren script. It does **not** create the `BIALET_*`
 tables or a request/session, so these fail there:

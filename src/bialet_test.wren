@@ -7,6 +7,17 @@ class TestResponse {
   code { _code }
   body { _body }
   headers { _headers }
+  // The hidden field rendered by Session.csrf, so a test can GET a form and
+  // post its token back instead of hard-coding one.
+  csrf() {
+    var marker = 'name="_bialet_csrf" value="'
+    var start = _body.indexOf(marker)
+    if (start < 0) Fiber.abort("Response body does not contain a CSRF token")
+    start = start + marker.count
+    var end = _body.indexOf('"', start)
+    if (end < 0) Fiber.abort("Malformed CSRF token in response body")
+    return _body[start...end]
+  }
 }
 
 class Test {
@@ -16,6 +27,44 @@ class Test {
     _postData = {}
     _headers = {}
     _response = null
+  }
+  // A request runs in a fresh VM, so state a handler stores in a cookie (the
+  // session identifier above all) survives only when the client sends it back.
+  // Keep a jar shared by every Test call in this file: Test.get then Test.post
+  // now sees the same session, the way a browser would.
+  static cookies_ {
+    if (!__cookies) __cookies = {}
+    return __cookies
+  }
+  static cookie(name) { Test.cookies_[name] }
+  static clearCookies() { __cookies = {} }
+  // Set-Cookie is a response header like any other, but it can repeat and its
+  // value is not a single token, so it gets parsed instead of stored verbatim.
+  static storeCookies_(lines) {
+    for (line in lines) {
+      var parts = line.split(";")
+      var pair = parts[0]
+      var eq = pair.indexOf("=")
+      if (eq <= 0) continue
+      var name = pair[0...eq].trim()
+      var value = pair[eq + 1..-1].trim()
+      // An empty value or a non-positive Max-Age is a deletion; Cookie.delete
+      // emits exactly that (empty value plus a 1970 expiry).
+      var remove = value.count == 0
+      for (i in 1...parts.count) {
+        var attr = parts[i].trim().lower
+        if (attr.startsWith("max-age=")) {
+          var age = Num.fromString(attr["max-age=".count..-1])
+          if (age != null && age <= 0) remove = true
+        }
+        if (attr.startsWith("expires=") && attr.contains("1970")) remove = true
+      }
+      if (remove) {
+        Test.cookies_.remove(name)
+      } else {
+        Test.cookies_[name] = value
+      }
+    }
   }
   route(r) {
     _path = r
@@ -92,6 +141,11 @@ class Test {
     if (!_response) run_()
     return Json.parse(_response.body)
   }
+  // Runs the request (if needed) and returns the CSRF token it rendered.
+  csrf() {
+    if (!_response) run_()
+    return _response.csrf()
+  }
   jsonContains(key) {
     if (!_response) run_()
     var data = Json.parse(_response.body)
@@ -155,6 +209,13 @@ class Test {
     
     var message = "%(_method) %(_path) HTTP/1.1\r\n"
     message = message + "Host: localhost\r\n"
+    if (!_headers.containsKey("Cookie") && Test.cookies_.count > 0) {
+      var stored = []
+      for (name in Test.cookies_.keys) {
+        stored.add("%(name)=%(Test.cookies_[name])")
+      }
+      message = message + "Cookie: %(stored.join("; "))\r\n"
+    }
     if (body.count > 0 && !_headers.containsKey("Content-Type")) {
       message = message + "Content-Type: application/x-www-form-urlencoded\r\n"
     }
@@ -171,6 +232,7 @@ class Test {
     
     var result = runTestRequest_(_path, message)
     var headerMap = {}
+    var setCookies = []
     if (result[2] != "") {
       var lines = result[2].split("\r\n")
       for (line in lines) {
@@ -179,9 +241,11 @@ class Test {
           var name = line[0...colonIdx].trim()
           var value = line[colonIdx + 1..-1].trim()
           headerMap[name] = value
+          if (name.lower == "set-cookie") setCookies.add(value)
         }
       }
     }
+    Test.storeCookies_(setCookies)
     _response = TestResponse.new(result[0], result[1], headerMap)
   }
   

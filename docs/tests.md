@@ -96,6 +96,26 @@ Test.get("/api/user")
     .postData({"key": "value"})                       // Set POST data
 ```
 
+### Cookies and Sessions
+
+The `Test` client keeps a cookie jar shared by every request in a test file, so
+a session minted by one call is the session the next call presents:
+
+```wren
+var page = Test.get("/login").status(200)
+var token = page.csrf()      // hidden _bialet_csrf value from the form
+Test.post("/login", {
+  "email": "user@example.com",
+  "password": "secret",
+  "_bialet_csrf": token
+}).status(302)
+```
+
+`Test.cookie(name)` reads a stored cookie and `Test.clearCookies()` empties the
+jar. `.csrf()` aborts the test when the response rendered no token. Session
+values set during a `Test.get` are therefore visible to the following
+`Test.post`, and a CSRF-protected form validates without a `test_mode` flag.
+
 ### Assertions
 
 Chain these after the request method:
