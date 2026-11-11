@@ -118,11 +118,18 @@ It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 11. Assertions match raw markup
+## 11. Raw `.contains` matches markup, not visible text
 
 `Test.get("/").contains("device")` also matches `width=device-width` in the
-viewport meta tag. Assert on visible, unique text (a heading, a row label), not
-on a substring that appears in the HTML boilerplate.
+viewport meta tag. Assert visible text with `.textContains(...)`, which strips
+tags and attributes:
+
+```wren
+Test.get("/").textContains("Visible heading")
+```
+
+`.text()` returns the stripped body for custom checks. Keep `.contains` for
+exact markup assertions (attributes, script bodies).
 
 ## 12. Do not nest the same outermost HTML tag
 

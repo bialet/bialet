@@ -126,6 +126,8 @@ Chain these after the request method:
 | `.contains(str)` | Assert body contains string |
 | `.equals(str)` | Assert body exactly equals string |
 | `.notContains(str)` | Assert body doesn't contain string |
+| `.textContains(str)` | Assert visible text (tags/attributes stripped) contains string |
+| `.text()` | Return visible text (tags/attributes stripped) |
 | `.header(name)` | Assert header exists |
 | `.header(name, value)` | Assert header equals value |
 | `.json()` | Return parsed JSON body (Map or List) |

@@ -7,6 +7,24 @@ class TestResponse {
   code { _code }
   body { _body }
   headers { _headers }
+  // The body with HTML tags removed, so an assertion cannot match an
+  // attribute or a script body instead of the text a person sees.
+  text {
+    var out = []
+    var inTag = false
+    for (char in _body) {
+      if (char == "<") {
+        inTag = true
+        continue
+      }
+      if (char == ">") {
+        inTag = false
+        continue
+      }
+      if (!inTag) out.add(char)
+    }
+    return out.join("")
+  }
   // The hidden field rendered by Session.csrf, so a test can GET a form and
   // post its token back instead of hard-coding one.
   csrf() {
@@ -122,6 +140,20 @@ class Test {
       Fiber.abort("Expected response body to contain \"%(str)\"")
     }
     return this
+  }
+  // Asserts on visible text (tags and attributes stripped) instead of raw
+  // markup, so "device" cannot match width=device-width.
+  textContains(str) {
+    if (!_response) run_()
+    if (!_response.text.contains(str)) {
+      Fiber.abort("Expected visible text to contain \"%(str)\"")
+    }
+    return this
+  }
+  // The body with tags removed, for custom assertions.
+  text() {
+    if (!_response) run_()
+    return _response.text
   }
   equals(expected) {
     if (!_response) run_()
