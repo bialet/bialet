@@ -14,9 +14,9 @@ Bialet optimizes for **getting things done on a single server**. It bundles the
 HTTP server, the database, and the language runtime into one binary. Your app
 is a directory of `.wren` files and a SQLite database. That's it.
 
-If your needs fit within Bialet's scope, you get an experience no other
-framework can match: zero-config development, single-command deployment, and
-no dependency management.
+If your needs fit within Bialet's scope, you get an experience that is hard to
+assemble elsewhere: zero-config development, single-command deployment, and no
+dependency management.
 
 If your needs grow beyond that scope, you'll want a different tool — and that's
 okay.
@@ -48,6 +48,20 @@ okay.
   offline support need client-side state. Bialet re-renders the page instead.
 - **Complex auth flows** — Bialet supports basic auth and sessions, but not
   OAuth, SAML, or multi-factor authentication out of the box.
+
+## The Language Bet
+
+Embedding Wren is the decision that makes Bialet Bialet. The VM is small,
+dependency-free C, so it links into the same binary as the server and SQLite;
+the language is class-based and object-oriented, so HTML, SQL, and application
+logic live in one file without a build step.
+
+It is also the biggest thing Bialet asks of you. There is no package registry,
+no LSP or autocomplete yet, and most developers have never written Wren. The
+[Wren guide](wren.md#what-wren-costs-you) states those costs plainly, and
+[Wren for JavaScript and Python
+developers](wren.md#wren-for-javascript-and-python-developers) is most of the
+mapping you need to start.
 
 ## Comparisons
 

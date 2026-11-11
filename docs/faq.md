@@ -10,6 +10,18 @@ database in a single binary. You write HTML with embedded queries and logic
 in `.wren` files — no build steps, no configuration files, no separate
 database server.
 
+### Why does Bialet use Wren instead of JavaScript or Python?
+
+Because the language has to live inside a 3.7 MB binary. Wren is a small
+class-based, object-oriented language with a dependency-free C VM, so it links
+into the executable alongside the HTTP server and SQLite — there is no runtime
+to install and no second process to supervise. Bialet extends the syntax with
+backtick SQL and `<...>` HTML blocks.
+
+The trade-off is real: no package registry, no LSP yet, and a small talent
+pool. The [Wren guide](wren.md#why-wren) covers the reasoning and the
+[costs](wren.md#what-wren-costs-you) in full.
+
 ### Why the name "Bialet"?
 
 Bialet is named after [Juan Bialet Massé](https://es.wikipedia.org/wiki/Juan_Bialet_Mass%C3%A9),

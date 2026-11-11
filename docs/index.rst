@@ -183,6 +183,20 @@ your Wren code. There is no stack to assemble around it.
 
 ----
 
+Why Wren?
+---------
+
+Apps are written in Wren: a small, class-based, object-oriented language that
+links into the binary, so there is no runtime to install. Bialet extends it in
+two places — backtick strings run SQL, and ``<...>`` blocks are HTML with
+``{{ }}`` interpolation.
+
+The language is also the project's biggest trade-off: no LSP yet, no package
+registry, and few developers have written it. The :doc:`wren` covers the
+syntax, the dialect, and those costs in full.
+
+----
+
 What it costs
 -------------
 
@@ -201,7 +215,8 @@ What it costs
      :doc:`deployment`.
    - **Wren, with basic tooling.** Apps are written in Wren. The VS Code and
      Vim plugins provide syntax highlighting; autocomplete and an LSP are on
-     the roadmap.
+     the roadmap. See :doc:`wren` for what the language does and does not give
+     you.
    - **No WebSockets.** Request/response HTTP only. Use polling or an external
      service for realtime features.
 
