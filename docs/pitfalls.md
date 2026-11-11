@@ -339,15 +339,20 @@ in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 31. `bialet -r` is not a request
+## 31. `bialet -r` has no request, but it does initialize the framework
 
-`bialet -r` executes a bare Wren script. It does **not** create the `BIALET_*`
-tables or a request/session, so these fail there:
+`bialet -r` executes a bare Wren script. It runs `Db.init` first, so the
+`BIALET_*` tables exist and the framework helpers work:
 
-- `Session.new()` → `Query Error no such table: BIALET_SESSION`
-- `Config.get(...)` → `Query Error no such table: BIALET_CONFIG`
-- App queries (`SELECT ... FROM my_table`) → `no such table`
+- `Config.get(...)` and `Config.set(...)` work
+- `Session.new()` and its `get`/`set` work (there is no incoming cookie, so a
+  new session id is minted)
 
-Use it only for pure language questions (`Date`, `Num`, `String`, `List`,
-`Map`). For framework behaviour, write a test in `_tests/` and run `bialet -T`,
+It still has no request state: `Request.method`, `Request.get(...)`,
+`Request.body` and the other request getters return null. It also does not run
+your migration, so app tables exist only if this database was already migrated
+(for example by starting the server or running `bialet -T`).
+
+Use it for language questions and framework helpers that do not need a
+request. For request behaviour, write a test in `_tests/` and run `bialet -T`,
 or start the server and try the page.

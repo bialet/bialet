@@ -1675,6 +1675,20 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
 }
 
 int bialet_run_cli(char* code) {
+  // A bare -r script runs no migration and has no request, so none of the
+  // BIALET_* tables existed: Config.get() and Session.new() failed with
+  // "no such table". Db.init is idempotent and the SQLite handle is shared by
+  // the whole process, so initialize the framework tables in their own VM
+  // before running the user's code.
+  struct BialetResponse init = bialet_run(CLI_MODULE_NAME, "Db.init", NULL);
+  int                   init_failed = init.status == HTTP_ERROR;
+  if(init.body_owned)
+    free(init.body);
+  if(init.header_owned)
+    free(init.header);
+  if(init_failed)
+    return 1;
+
   struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
   int                   status = response.status == HTTP_ERROR ? 1 : 0;
   if(status == 0 && response.body != NULL) {

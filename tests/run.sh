@@ -90,6 +90,32 @@ else
   skip_test "Syntax validation (11 checks)  " "requires local binary access (-t flag)"
 fi
 
+# Tests - bare -r initializes the framework tables
+# A -r script has no migration and no request, so Config/Session used to fail
+# with "no such table: BIALET_CONFIG". Db.init now runs before the script.
+r_line=$LINENO
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  r_dir="$(mktemp -d)"
+  if [[ "$TARGET_EXEC" == */* ]]; then
+    r_exec="$(cd "$(dirname "$TARGET_EXEC")" && pwd)/$(basename "$TARGET_EXEC")"
+  else
+    r_exec="$(command -v "$TARGET_EXEC")"
+  fi
+  r_out=$(cd "$r_dir" && "$r_exec" -r \
+    $'Config.set("r_probe", "set")\nvar s = Session.new()\ns.set("r_session", "ok")\nreturn Config.get("r_probe") + "|" + s.get("r_session")' \
+    2>/dev/null)
+  r_status=$?
+  rm -rf "$r_dir"
+  if [[ "$r_status" -eq 0 && "$r_out" == "set|ok" ]]; then
+    report_result "-r initializes framework tables" "$r_line" 0
+  else
+    report_result "-r initializes framework tables" "$r_line" 1 \
+      "Expected 'set|ok', got '$r_out' (exit $r_status)"
+  fi
+else
+  skip_test "-r initializes framework tables" "requires local binary access"
+fi
+
 # Tests - Module imports
 # Regression: a relative import ("./x") inside a file that is itself only
 # ever reached transitively (entry.wren -> ./sub/lib -> ./helper) must
