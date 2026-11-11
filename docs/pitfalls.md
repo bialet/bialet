@@ -19,18 +19,25 @@ name=(val) { _name = val.toString.trim() }    // correct
 a **method**: it needs `()`. Mixing the two forms is the most common source of
 500s in setters.
 
-## 2. Never compare a Date (or a user class) to `null` with `date == null`
+## 2. A user class's `==` must not dereference a null operand
+
+`Date` is null-safe: `date == null` is `false` and `date != null` is `true`.
+A class of your own does not get that for free, because `==` is a method on the
+left-hand receiver:
 
 ```wren
-if (!date) { ... }          // safe
-if (null == date) { ... }   // safe
-// if (date == null) ...    // Runtime Error: Null does not implement 'unix'.
+class Item {
+  construct new(id) { _id = id }
+  id { _id }
+  ==(o) { _id == o.id }   // item == null -> Null does not implement 'id'.
+}
 ```
 
-`date == null` calls `Date.==`, which reads `other.unix`; `null` has no `unix`.
-`!date` is `true` only when the value is null (a Date makes `!date` return null,
-which is falsy), so it is the idiomatic guard. The same rule applies to your own
-classes: put the null check on the left, or test `if (!value)`.
+Guard the operand with an `is` check or a null check, and keep the body a single
+expression (`==(o) { o is Item ? _id == o.id : false }`). `!value` is the
+idiomatic null guard outside an operator: it is `true` only when the value is
+null. Putting the null check on the left (`if (null == item)`) also avoids the
+call.
 
 ## 3. Every method that produces a value needs an explicit `return`
 

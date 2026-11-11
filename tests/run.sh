@@ -878,7 +878,7 @@ fi
 # Tests - Date & Time
 run_test "Date formatting             " "date"            200 "13/09/2024 15:45:30"
 run_test "Date now and components     " "date-now"        200 "true"
-run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true"
+run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true,false,true,false,true"
 run_test "Date parse from string      " "date-parse"      200 "2024-12-25 14:30:45,UTC"
 run_test "Date constructors and get   " "date-more"       200 "dow:5|doy:366|woy:37|diff:86400|fmt:2024-09-13"
 

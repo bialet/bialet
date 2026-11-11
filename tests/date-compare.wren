@@ -9,4 +9,13 @@ var ge = d2 >= d1
 var eq = d1 == d3
 var ne = d1 != d2
 
-return lt.toString + "," + gt.toString + "," + le.toString + "," + ge.toString + "," + eq.toString + "," + ne.toString
+// Comparing to null (or to anything that is not a Date) is false/true, not a
+// runtime error: an absent date is a normal value.
+var eqNull = d1 == null
+var neNull = d1 != null
+var eqString = d1 == "2024-01-01"
+var neString = d1 != "2024-01-01"
+
+return lt.toString + "," + gt.toString + "," + le.toString + "," + ge.toString + "," +
+  eq.toString + "," + ne.toString + "," + eqNull.toString + "," + neNull.toString + "," +
+  eqString.toString + "," + neString.toString

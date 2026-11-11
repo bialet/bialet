@@ -695,8 +695,11 @@ class Date {
   > (o) { cmp_(o) >  0 }
   <=(o) { cmp_(o) <= 0 }
   >=(o) { cmp_(o) >= 0 }
-  ==(o) { cmp_(o) == 0 }
-  !=(o) { cmp_(o) != 0 }
+  // A Date is often absent (a nullable column, a parsed field). `date == null`
+  // dispatches here and used to read null.unix; anything that is not a Date is
+  // simply unequal.
+  ==(o) { o is Date ? cmp_(o) == 0 : false }
+  !=(o) { o is Date ? cmp_(o) != 0 : true }
 }
 
 class Query {
