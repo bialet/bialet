@@ -257,6 +257,17 @@ Not a fit if you need multi-server horizontal scaling, in-process TLS,
 WebSockets, or a package ecosystem. Bialet does not provide them. See
 :doc:`why-bialet` for the longer version.
 
+----
+
+Built with Bialet
+-----------------
+
+`home.dev.ar <https://home.dev.ar/>`_ is a free ``.dev.ar`` subdomain service
+running on Bialet: server-rendered pages, a session login, and a redirect
+dashboard. Over 22 days it served about 160,000 requests — two-thirds of them
+scanner traffic answered with a 403 or 404 — with fewer than 0.1% 5xx
+responses. :doc:`showcase`
+
 .. raw:: html
 
    <div class="hero-actions">
@@ -275,6 +286,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    installation
    editor-support
    wren
+   showcase
 
 .. toctree::
    :hidden:
@@ -345,11 +357,11 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
 .. raw:: html
 
    <div class="community-banner">
-     <p class="community-banner__title"><strong>Maintained by one developer</strong></p>
+     <p class="community-banner__title"><strong>Built and maintained by Rodrigo Arce</strong></p>
      <p>
-       Bialet is stable for personal use. There is no commercial support or
-       SLA. Bugs go to GitHub Issues; questions and project showcases go to
-       GitHub Discussions. Planned work is in the
+       Bialet is MIT licensed and runs in production. There is no commercial
+       support or SLA. Bugs go to GitHub Issues; questions and project
+       showcases go to GitHub Discussions. Planned work is in the
        <a href="https://github.com/bialet/bialet/blob/main/ROADMAP.md">roadmap</a>.
      </p>
      <a class="sd-sphinx-override sd-btn sd-text-wrap sd-btn-outline-secondary" href="https://github.com/bialet/bialet/discussions">Join the discussion →</a>
