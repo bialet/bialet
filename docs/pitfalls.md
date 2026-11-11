@@ -56,17 +56,18 @@ raises a catchable `Value is not iterable.` error and turns the request into a
 500. Checking the result first (`if (!rows) rows = []`) avoids the failed
 request.
 
-## 4. A literal `%` in a Wren string is `\x25`
+## 4. `%(` starts interpolation; a bare `%` is literal
 
 ```wren
-System.print("100\x25")   // 100%
-// System.print("100%")   // Compilation Error: Expect '(' after '%'.
+System.print("100%")            // 100%
+System.print("%(count) items")  // interpolates
+System.print("\%(")             // %(
 ```
 
-`%(` starts interpolation, so a bare `%` is a syntax error. In an **HTML
-template** `%` is plain text: write `100%` there (if the template parser
-complains, use the entity `&#37;`). Do not write `\x25` in HTML: it renders
-literally as `\x25`.
+Only `%(` starts interpolation. A `%` followed by anything else is plain
+text, in Wren strings and in HTML templates alike, so `100%` needs no escape.
+Write `\%` when a literal percent must be followed by `(`. Do not use `\x25`
+in HTML: it renders literally as `\x25`.
 
 ## 5. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
 

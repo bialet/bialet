@@ -921,6 +921,7 @@ run_test "Config json and delete      " "config-json"     200 "a:1|b:2|raw:{\"b\
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
 run_test "String trim edge cases      " "string-trim"     200 "hello,trim,no-whitespace,,123,trimleft,trimright,hello"
+run_test "Bare percent is literal     " "percent"         200 "100% 50%|world|2%|%("
 run_test "toString accepts parentheses" "tostring"       200 "abc|42|true||custom|true"
 run_test "More extensions             " "extensions-more" 200 "toNum:42,null|map:Alice|list:2,A,B|take:1,2"
 run_test "Num.fromString null         " "num-fromstring"  200 "null:null|bad:null|good:42"

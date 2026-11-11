@@ -1195,9 +1195,13 @@ static void readString(Parser* parser, char quote) {
 
     if(c == '%') {
       if(parser->numParens < MAX_INTERPOLATION_NESTING) {
-        // TODO: Allow format string.
-        if(nextChar(parser) != '(')
-          lexError(parser, "Expect '(' after '%%'.");
+        // `%(` starts interpolation. Any other percent is a literal, so
+        // "100%" does not need the \x25 escape.
+        if(nextChar(parser) != '(') {
+          parser->currentChar--; // keep the looked-ahead character
+          wrenByteBufferWrite(parser->vm, &string, '%');
+          continue;
+        }
 
         parser->quotes[parser->numParens] = quote;
         parser->parens[parser->numParens++] = 1;
