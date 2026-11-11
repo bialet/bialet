@@ -798,19 +798,11 @@ class Util {
   // Constant-time byte comparison. String.count walks code points while
   // String[i] indexes bytes, so the old loop stopped before the end of a
   // multi-byte value and compared only each character's lead byte: "é"/"à",
-  // "aéX"/"aéY" and "contraseña"/"contraseñX" were all reported equal.
+  // "aéX"/"aéY" and "contraseña"/"contraseñX" were all reported equal. The
+  // native side compares raw bytes and folds the length into the result.
   static secureEquals(left, right) {
     if (left == null || right == null) return false
-    var a = "%(left)".bytes.toList
-    var b = "%(right)".bytes.toList
-    var diff = a.count == b.count ? 0 : 1
-    var limit = a.count > b.count ? a.count : b.count
-    for (i in 0...limit) {
-      var leftByte = i < a.count ? a[i] : 0
-      var rightByte = i < b.count ? b[i] : 0
-      diff = diff | (leftByte ^ rightByte)
-    }
-    return diff == 0
+    return secureEquals_("%(left)", "%(right)")
   }
 
   static hasHeaderBreak(value) {

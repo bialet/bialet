@@ -1244,6 +1244,187 @@ DEF_PRIMITIVE(string_toString) {
   RETURN_VAL(args[0]);
 }
 
+// Bounded byte search used by String.split. memchr() finds candidate first
+// bytes, so a delimiter that does not occur costs one vectorized scan.
+static const char* string_find(const char* hay, size_t hay_len, const char* needle,
+                               size_t needle_len) {
+  if(needle_len == 0 || hay_len < needle_len)
+    return NULL;
+  size_t      remaining = hay_len - needle_len + 1;
+  const char* p = hay;
+  while(remaining > 0) {
+    const char* hit = (const char*)memchr(p, needle[0], remaining);
+    if(hit == NULL)
+      return NULL;
+    if(memcmp(hit, needle, needle_len) == 0)
+      return hit;
+    remaining -= (size_t)(hit - p) + 1;
+    p = hit + 1;
+  }
+  return NULL;
+}
+
+// Escapes the five HTML specials for template output. A string with nothing to
+// escape is returned as-is, which is the common case for an interpolation.
+DEF_PRIMITIVE(string_safe) {
+  ObjString* in = AS_STRING(args[0]);
+  size_t     length = (size_t)in->length;
+  size_t     out_len = 0;
+  bool       special = false;
+
+  for(size_t i = 0; i < length; i++) {
+    size_t add;
+    switch((unsigned char)in->value[i]) {
+      case '&':
+        add = 5;
+        break; // &amp;
+      case '<':
+        add = 4;
+        break; // &lt;
+      case '>':
+        add = 4;
+        break; // &gt;
+      case '"':
+        add = 6;
+        break; // &quot;
+      case '\'':
+        add = 6;
+        break; // &apos;
+      default:
+        add = 1;
+        break;
+    }
+    if(add > 1)
+      special = true;
+    if(out_len > SIZE_MAX - add)
+      RETURN_ERROR("Escaped string is too large.");
+    out_len += add;
+  }
+
+  if(!special)
+    RETURN_VAL(args[0]);
+  if(out_len == SIZE_MAX)
+    RETURN_ERROR("Escaped string is too large.");
+
+  char* out = (char*)malloc(out_len + 1);
+  if(out == NULL)
+    RETURN_ERROR("Out of memory escaping string.");
+
+  size_t j = 0;
+  for(size_t i = 0; i < length; i++) {
+    char c = in->value[i];
+    switch(c) {
+      case '&':
+        memcpy(out + j, "&amp;", 5);
+        j += 5;
+        break;
+      case '<':
+        memcpy(out + j, "&lt;", 4);
+        j += 4;
+        break;
+      case '>':
+        memcpy(out + j, "&gt;", 4);
+        j += 4;
+        break;
+      case '"':
+        memcpy(out + j, "&quot;", 6);
+        j += 6;
+        break;
+      case '\'':
+        memcpy(out + j, "&apos;", 6);
+        j += 6;
+        break;
+      default:
+        out[j++] = c;
+        break;
+    }
+  }
+  out[j] = '\0';
+
+  Value result = wrenNewStringLength(vm, out, out_len);
+  free(out);
+  RETURN_VAL(result);
+}
+
+static bool string_is_trim_byte(unsigned char c) {
+  return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+// Trims the default whitespace set. ASCII bytes can be compared directly: a
+// UTF-8 continuation byte is always >= 0x80, so it can never be one of these.
+static Value string_trim_impl(WrenVM* vm, Value receiver, bool trimStart,
+                              bool trimEnd) {
+  ObjString* in = AS_STRING(receiver);
+  size_t     begin = 0;
+  size_t     finish = (size_t)in->length;
+
+  if(trimStart) {
+    while(begin < finish && string_is_trim_byte((unsigned char)in->value[begin]))
+      begin++;
+  }
+  if(trimEnd) {
+    while(finish > begin &&
+          string_is_trim_byte((unsigned char)in->value[finish - 1]))
+      finish--;
+  }
+  return wrenNewStringLength(vm, in->value + begin, finish - begin);
+}
+
+DEF_PRIMITIVE(string_trim) {
+  RETURN_VAL(string_trim_impl(vm, args[0], true, true));
+}
+
+DEF_PRIMITIVE(string_trimStart) {
+  RETURN_VAL(string_trim_impl(vm, args[0], true, false));
+}
+
+DEF_PRIMITIVE(string_trimEnd) {
+  RETURN_VAL(string_trim_impl(vm, args[0], false, true));
+}
+
+// split(_) is byte-based: the delimiter is matched as bytes, so multi-byte
+// text and embedded NULs are preserved in the pieces.
+DEF_PRIMITIVE(string_split) {
+  if(!validateString(vm, args[1], "Delimiter"))
+    return false;
+  ObjString* in = AS_STRING(args[0]);
+  ObjString* delimiter = AS_STRING(args[1]);
+  if(delimiter->length == 0)
+    RETURN_ERROR("Delimiter must be a non-empty string.");
+
+  ObjList* result = wrenNewList(vm, 0);
+  wrenPushRoot(vm, (Obj*)result);
+
+  size_t size = (size_t)in->length;
+  size_t delim_len = (size_t)delimiter->length;
+  size_t last = 0;
+
+  while(last < size) {
+    const char* hit =
+        string_find(in->value + last, size - last, delimiter->value, delim_len);
+    if(hit == NULL)
+      break;
+    size_t index = (size_t)(hit - in->value);
+    // Root the piece across the append: wrenValueBufferWrite may grow the
+    // list, and a collection there must not free the string before it is
+    // stored.
+    Value part = wrenNewStringLength(vm, in->value + last, index - last);
+    wrenPushRoot(vm, AS_OBJ(part));
+    wrenValueBufferWrite(vm, &result->elements, part);
+    wrenPopRoot(vm);
+    last = index + delim_len;
+  }
+
+  Value tail = last < size ? wrenNewStringLength(vm, in->value + last, size - last)
+                           : wrenNewStringLength(vm, "", 0);
+  wrenPushRoot(vm, AS_OBJ(tail));
+  wrenValueBufferWrite(vm, &result->elements, tail);
+  wrenPopRoot(vm);
+
+  wrenPopRoot(vm); // result
+  RETURN_OBJ(result);
+}
+
 DEF_PRIMITIVE(system_clock) {
   RETURN_NUM((double)clock() / CLOCKS_PER_SEC);
 }
@@ -1295,6 +1476,27 @@ DEF_PRIMITIVE(util_verify) {
   char* hash_and_salt = AS_CSTRING(args[2]);
   int   result = verify_password(password, hash_and_salt);
   RETURN_BOOL(result);
+}
+
+// Constant-time byte comparison for tokens and passwords. Lengths are folded
+// into the result instead of returning early, so two equal-length values take
+// the same path regardless of where they differ.
+DEF_PRIMITIVE(util_secureEquals) {
+  if(!validateString(vm, args[1], "Argument") ||
+     !validateString(vm, args[2], "Argument"))
+    return false;
+
+  ObjString* a = AS_STRING(args[1]);
+  ObjString* b = AS_STRING(args[2]);
+  size_t     limit = (size_t)(a->length > b->length ? a->length : b->length);
+  uint32_t   diff = a->length == b->length ? 0 : 1;
+
+  for(size_t i = 0; i < limit; i++) {
+    uint8_t ca = i < (size_t)a->length ? (uint8_t)a->value[i] : 0;
+    uint8_t cb = i < (size_t)b->length ? (uint8_t)b->value[i] : 0;
+    diff |= (uint32_t)(ca ^ cb);
+  }
+  RETURN_BOOL(diff == 0);
 }
 
 DEF_PRIMITIVE(util_randomString) {
@@ -2456,6 +2658,11 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(vm->stringClass, "iteratorValue(_)", string_iteratorValue);
   PRIMITIVE(vm->stringClass, "startsWith(_)", string_startsWith);
   PRIMITIVE(vm->stringClass, "toString", string_toString);
+  PRIMITIVE(vm->stringClass, "safe", string_safe);
+  PRIMITIVE(vm->stringClass, "split(_)", string_split);
+  PRIMITIVE(vm->stringClass, "trim()", string_trim);
+  PRIMITIVE(vm->stringClass, "trimStart()", string_trimStart);
+  PRIMITIVE(vm->stringClass, "trimEnd()", string_trimEnd);
 
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
   PRIMITIVE(vm->queryClass->obj.classObj, "new(_)", query_new);
@@ -2537,6 +2744,7 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* utilClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Util"));
   PRIMITIVE(utilClass->obj.classObj, "hash_(_)", util_hash);
   PRIMITIVE(utilClass->obj.classObj, "verify_(_,_)", util_verify);
+  PRIMITIVE(utilClass->obj.classObj, "secureEquals_(_,_)", util_secureEquals);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
   PRIMITIVE(utilClass->obj.classObj, "monotonicMs_()", util_monotonicMs);

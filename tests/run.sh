@@ -927,6 +927,7 @@ run_test "Map get with default        " "map-get"         200 "a:1|missing:null|
 run_test "List reverse                " "list-reverse"    200 "rev:3,2,1|call:5,4|empty:0|orig:1,2,3"
 run_test "User class null equality    " "user-eq-null"    200 "false,true,false,false,true,true"
 run_test "toString accepts parentheses" "tostring"       200 "abc|42|true||custom|true"
+run_test "Native string primitives  " "string-native"   200 "split:a||b||empty:1:true|one:a|trim:[x]|safe:&lt;&quot;&amp;&apos;&gt;|eq:truefalsefalse"
 run_test "More extensions             " "extensions-more" 200 "toNum:42,null|map:Alice|list:2,A,B|take:1,2"
 run_test "Num.fromString null         " "num-fromstring"  200 "null:null|bad:null|good:42"
 
