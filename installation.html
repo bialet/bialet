@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/installation.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="For how to run and configure the bialet binary, see Command Line Usage. With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is w..." />
+<meta property="og:description" content="For how to run and configure the bialet binary, see Command Line Usage. Debian and Ubuntu: Bialet is available as a Debian package from the ppa:bialet/bialet Personal Package Archive. It is built f..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="For how to run and configure the bialet binary, see Command Line Usage. With the Install Script: The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu x86_64, Ubuntu ARM) is w..." />
+<meta name="description" content="For how to run and configure the bialet binary, see Command Line Usage. Debian and Ubuntu: Bialet is available as a Debian package from the ppa:bialet/bialet Personal Package Archive. It is built f..." />
 
     <title>Installation &#8212; Bialet</title>
   
@@ -436,6 +436,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
@@ -461,6 +462,31 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <p>For how to run and configure the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary, see
 <a class="reference internal" href="usage.html"><span class="std std-doc">Command Line Usage</span></a>.</p>
+<section id="debian-and-ubuntu">
+<h2>Debian and Ubuntu<a class="headerlink" href="#debian-and-ubuntu" title="Link to this heading">#</a></h2>
+<p>Bialet is available as a Debian package from the
+<a class="reference external" href="https://launchpad.net/~bialet/+archive/ubuntu/bialet"><code class="docutils literal notranslate"><span class="pre">ppa:bialet/bialet</span></code></a>
+Personal Package Archive. It is built for every Ubuntu release still in
+standard support, on <code class="docutils literal notranslate"><span class="pre">amd64</span></code> and <code class="docutils literal notranslate"><span class="pre">arm64</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>add-apt-repository<span class="w"> </span>ppa:bialet/bialet
+sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>bialet
+</pre></div>
+</div>
+<p>Upgrades arrive with the rest of your system packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>upgrade
+</pre></div>
+</div>
+<p>The package installs the binary as <code class="docutils literal notranslate"><span class="pre">/usr/bin/bialet</span></code> and links against the
+distribution’s SQLite, libcurl, and OpenSSL. It is not installed as a service:
+run <code class="docutils literal notranslate"><span class="pre">bialet</span></code> from your app directory, or point a reverse proxy at it as
+described in <a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a>.</p>
+<blockquote>
+<div><p>If you previously installed Bialet with the install script, remove
+<code class="docutils literal notranslate"><span class="pre">~/.local/bin/bialet</span></code> first. That path usually comes before <code class="docutils literal notranslate"><span class="pre">/usr/bin</span></code> in
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code>, so the old binary would keep running after the package is installed.</p>
+</div></blockquote>
+</section>
 <section id="with-the-install-script">
 <h2>With the Install Script<a class="headerlink" href="#with-the-install-script" title="Link to this heading">#</a></h2>
 <p>The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu
@@ -611,6 +637,7 @@ on GitHub.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debian-and-ubuntu">Debian and Ubuntu</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#with-the-install-script">With the Install Script</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#for-windows">For Windows</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
