@@ -95,3 +95,26 @@ with ``bialet`` inside ``docs/examples/guestbook``.
 The styled version in ``docs/examples/guestbook-styled`` adds ``_app.wren``
 (a ``Template`` layout class) and ``css/style.css``. The landing page video
 walks through both.
+
+A small authenticated app
+-------------------------
+
+The inventory app in ``docs/examples/inventory`` is a complete internal tool:
+session login with CSRF and password hashing, a filtered and paginated list,
+create/edit/delete, a file upload, and migrations.
+
+.. code-block:: bash
+
+   bialet docs/examples/inventory
+
+Sign in with ``admin@example.com`` / ``changeme``.
+
+- ``_migration.wren`` — the tables and the demo account
+- ``_app.wren`` — the layout and the session lookup
+- ``login.wren`` — CSRF check, ``Util.verify``, ``Session.rotate``
+- ``items.wren`` — list, search, pagination, and the detail page in one file
+- ``item.wren`` — create/edit with validation and the upload
+- ``photo.wren`` — serves only photos attached to an item
+
+It is under 300 lines of Wren plus one small stylesheet, which is the honest
+size of an authenticated CRUD app in Bialet.
