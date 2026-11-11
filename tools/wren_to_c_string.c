@@ -53,15 +53,12 @@ static char *moduleNameFromPath(const char *path) {
   return module;
 }
 
-static int isBlankLine(const char *line) {
-  return line[0] == '\0';
-}
-
-static int isCommentLine(const char *line) {
-  while (*line == ' ' || *line == '\t') line++;
-  return line[0] == '/' && line[1] == '/';
-}
-
+/* Emits every source line. The old filter dropped blank and `//`-prefixed
+ * lines with no lexer state, so a line that was content of a multi-line string
+ * literal disappeared from the embedded program and every diagnostic line
+ * number shifted. Keeping the source line-for-line is what makes the .inc the
+ * source of record: comment and blank lines are ordinary bytes in a C string
+ * literal, so there is nothing to save. */
 int main(int argc, char **argv) {
   if (argc != 3) {
     fprintf(stderr, "Usage: %s <output.wren.inc> <input.wren>\n", argv[0]);
@@ -87,6 +84,12 @@ int main(int argc, char **argv) {
   /* Escaped output for a single line is at most 4x its length (each byte
    * can become \\, \", or contribute to \n), plus the wrapping quotes. */
   char *escaped = malloc((size_t)len * 4 + 8);
+  if (!escaped) {
+    fclose(out);
+    free(module);
+    free(source);
+    return 1;
+  }
 
   int first = 1;
   char *lineStart = source;
@@ -94,27 +97,22 @@ int main(int argc, char **argv) {
     char *newline = strchr(lineStart, '\n');
     size_t lineLen = newline ? (size_t)(newline - lineStart) : strlen(lineStart);
 
-    char *line = strndup(lineStart, lineLen);
-
-    if (!isBlankLine(line) && !isCommentLine(line)) {
-      char *w = escaped;
-      *w++ = '"';
-      for (size_t i = 0; i < lineLen; i++) {
-        char c = line[i];
-        if (c == '\\' || c == '"') *w++ = '\\';
-        *w++ = c;
-      }
-      *w++ = '\\';
-      *w++ = 'n';
-      *w++ = '"';
-      *w = '\0';
-
-      if (!first) fputc('\n', out);
-      first = 0;
-      fputs(escaped, out);
+    char *w = escaped;
+    *w++ = '"';
+    for (size_t i = 0; i < lineLen; i++) {
+      char c = lineStart[i];
+      if (c == '\\' || c == '"') *w++ = '\\';
+      *w++ = c;
     }
+    *w++ = '\\';
+    *w++ = 'n';
+    *w++ = '"';
+    *w = '\0';
 
-    free(line);
+    if (!first) fputc('\n', out);
+    first = 0;
+    fputs(escaped, out);
+
     lineStart = newline ? newline + 1 : lineStart + lineLen;
   }
 
