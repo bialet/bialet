@@ -305,14 +305,7 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 27. Private apps need a first-run credential
-
-An empty admin key/password either locks everyone out or opens everything. Seed
-one in the migration (`INSERT OR IGNORE ...`) or add a first-run page that
-creates the first user and shows the recovery key. Then verify login end to end;
-a redirect loop on the login page usually means there is no user to log in with.
-
-## 28. `""` is truthy in Wren
+## 27. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -323,7 +316,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 29. HTML whitespace makes multi-word `.contains` assertions fragile
+## 28. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -332,14 +325,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 30. Enforce rules in the domain, not only in the UI
+## 29. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 31. `bialet -r` has no request, but it does initialize the framework
+## 30. `bialet -r` has no request, but it does initialize the framework
 
 `bialet -r` executes a bare Wren script. It runs `Db.init` first, so the
 `BIALET_*` tables exist and the framework helpers work:
