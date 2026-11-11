@@ -208,7 +208,7 @@ What it costs
    - **One worker per process, with instant queueing.** Requests are served
      sequentially per worker. For parallel concurrency on multi-core servers,
      spin up multiple local instances behind Caddy or nginx. See
-     :doc:`deployment`.
+     :doc:`deployment` and the measured numbers in :doc:`performance`.
    - **HTTP/1.1, one request per connection.** No keep-alive, no native TLS.
      Bialet serves HTTP. Put nginx, Apache, or Caddy in front for HTTPS,
      HTTP/2, rate limiting, request buffering, and static-asset caching. See
@@ -326,6 +326,7 @@ WebSockets, or a package ecosystem. Bialet does not provide them. See
    cron
    tests
    deployment
+   performance
 
 .. toctree::
    :hidden:

@@ -17,6 +17,9 @@ Usage:
   python3 scripts/perf_bench.py --rounds 5 --requests 200
   python3 scripts/perf_bench.py --json out.json       # save raw timings
   python3 scripts/perf_bench.py --baseline out.json   # compare to a saved run
+  python3 scripts/perf_bench.py --concurrency 32 --allow-refused
+                                                      # keep counting past the
+                                                      # listen-backlog drops
 
 Only the standard library is used, so it runs anywhere Python 3.8+ does.
 """
@@ -187,7 +190,8 @@ def measure_sequential(port, path, requests, body=None):
     }
 
 
-def measure_concurrent(port, path, requests, concurrency, body=None):
+def measure_concurrent(port, path, requests, concurrency, body=None,
+                       allow_refused=False):
     errors = []
 
     def worker(count):
@@ -209,9 +213,16 @@ def measure_concurrent(port, path, requests, concurrency, body=None):
         t.join()
     elapsed = time.perf_counter() - start
     total = per_thread * concurrency
-    if errors:
+    refused = len(errors)
+    if refused and not allow_refused:
         raise RuntimeError("concurrent requests failed: %r" % errors[0])
-    return {"rps": total / elapsed, "n": total, "seconds": elapsed}
+    if refused == total:
+        raise RuntimeError("all concurrent requests failed: %r" % errors[0])
+    # The listen backlog is 10, so a burst above it is refused before the
+    # worker accepts it (documented in docs/deployment.md). --allow-refused
+    # measures throughput from the requests that made it through.
+    return {"rps": (total - refused) / elapsed, "n": total, "ok": total - refused,
+            "refused": refused, "seconds": elapsed}
 
 
 def run(args):
@@ -238,16 +249,20 @@ def run(args):
         for name, path, body in ENDPOINTS:
             seq = measure_sequential(port, path, args.requests, body)
             conc = measure_concurrent(port, path, args.requests,
-                                      args.concurrency, body)
+                                      args.concurrency, body,
+                                      args.allow_refused)
             results[name] = {"sequential": seq, "concurrent": conc}
+            refused = ("  (%d refused)" % conc["refused"]
+                       if conc["refused"] else "")
             print(
-                "%-9s median %7.2fms  p95 %7.2fms  %8.1f req/s (%d threads)"
+                "%-9s median %7.2fms  p95 %7.2fms  %8.1f req/s (%d threads)%s"
                 % (
                     name,
                     seq["median"] * 1000,
                     seq["p95"] * 1000,
                     conc["rps"],
                     args.concurrency,
+                    refused,
                 )
             )
         return results
@@ -284,6 +299,9 @@ def main():
     ap.add_argument("--requests", type=int, default=150,
                     help="sequential requests per endpoint (default 150)")
     ap.add_argument("--concurrency", type=int, default=8)
+    ap.add_argument("--allow-refused", action="store_true",
+                    help="keep going when the listen backlog refuses connections "
+                         "(reports throughput from the accepted requests)")
     ap.add_argument("--rounds", type=int, default=1,
                     help="repeat the whole measurement N times, keep the best median")
     ap.add_argument("--port", type=int, default=0)

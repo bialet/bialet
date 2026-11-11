@@ -33,6 +33,9 @@ before the worker ever accepts it. The proxy holds the burst in its own event
 loop and feeds the worker only as it frees up — one more reason not to expose
 Bialet directly.
 
+Measured latency and throughput for one worker are in
+[Performance](performance.md); they are what makes the trade-off concrete.
+
 The proxy is therefore not just for TLS — it is the layer that absorbs slow
 clients, connection churn, and request buffering, and, when you scale, the
 load balancer. Treat the proxy as part of your security posture, not a
