@@ -11,7 +11,7 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#define BIALET_VERSION "1.2.15"
+#define BIALET_VERSION "1.2.16"
 
 /* Core dumps are off (POSIX: RLIMIT_CORE is set to 0 at startup) because the
  * process keeps the deployment key from --secret-key-file in memory for its

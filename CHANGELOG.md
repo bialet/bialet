@@ -4,7 +4,7 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
-## 1.2.16 — unreleased
+## 1.2.16 — 2026-11-11
 
 ### Added
 
