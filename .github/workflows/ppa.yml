@@ -1,8 +1,13 @@
 name: PPA
 
-# Builds a signed Debian source package for the published tag and uploads it
-# to ppa:bialet/bialet. Launchpad builds the binaries for each series and
-# architecture; this job only produces the _source.changes.
+# Builds a signed Debian source package for a release tag and uploads it to
+# ppa:bialet/bialet. Launchpad builds the binaries for each series and
+# architecture; this workflow only produces the _source.changes.
+#
+# It is called by release.yml after the GitHub release is created, and can be
+# run by hand from the Actions tab to (re)publish a specific tag. It must not
+# use `on: release: published`: a release created with the default
+# GITHUB_TOKEN does not trigger other workflows.
 #
 # Required repository secrets (Settings -> Secrets and variables -> Actions):
 #   PPA_GPG_KEY     base64 of the ASCII-armored private upload key
@@ -10,17 +15,31 @@ name: PPA
 #
 # The key's email must be a verified address on the Launchpad account, and the
 # public key must be added to that account. Until PPA_GPG_KEY exists the job
-# builds and lints an unsigned source package, then skips the upload, so the
-# workflow is safe to merge before the key is created.
+# builds and lints an unsigned source package, then skips the upload.
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag to publish (for example v1.2.11)
+        required: true
+        type: string
+      dry_run:
+        description: Build and lint the source package without uploading
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      PPA_GPG_KEY:
+        required: false
+      PPA_GPG_KEY_ID:
+        required: false
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to publish (for example v1.2.7)
+        description: Tag to publish (for example v1.2.11)
         required: true
+        type: string
       dry_run:
         description: Build and lint the source package without uploading
         type: boolean
@@ -30,13 +49,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: ppa-${{ github.event.release.tag_name || inputs.tag }}
+  group: ppa-${{ inputs.tag }}
   cancel-in-progress: false
 
 jobs:
   upload:
-    # Prereleases never go to the PPA.
-    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    # Prerelease tags (for example v1.2.11-rc.1) never go to the PPA.
+    if: ${{ !contains(inputs.tag, '-') }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -59,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: ${{ inputs.tag }}
 
       - name: Install packaging tools
         run: |
@@ -79,7 +98,7 @@ jobs:
 
       - name: Check the tag and derive the version
         run: |
-          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          TAG="${{ inputs.tag }}"
           case "${TAG}" in
             v[0-9]*) ;;
             *) echo "::error::expected a v-prefixed version tag, got '${TAG}'"; exit 1 ;;

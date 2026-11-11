@@ -325,3 +325,14 @@ jobs:
           fi
 
           rm -f /tmp/tap_key
+
+  # ── PPA ─────────────────────────────────────────────────────────
+  # Called directly rather than reacting to `release: published`: a release
+  # created with the default GITHUB_TOKEN does not trigger other workflows.
+  ppa:
+    name: PPA
+    needs: release
+    uses: ./.github/workflows/ppa.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
