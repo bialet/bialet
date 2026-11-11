@@ -34,11 +34,7 @@ on:
         required: false
         type: string
         default: '["jammy","noble","resolute","stonking"]'
-      include_orig:
-        description: Include the .orig.tar.gz (only for the first series of a release)
-        required: false
-        type: boolean
-        default: true
+
     secrets:
       PPA_GPG_KEY:
         required: false
@@ -59,11 +55,7 @@ on:
         required: false
         type: string
         default: '["jammy","noble","resolute","stonking"]'
-      include_orig:
-        description: Include the .orig.tar.gz (only for the first series of a release)
-        required: false
-        type: boolean
-        default: true
+
 
 permissions:
   contents: read
@@ -80,8 +72,9 @@ jobs:
     strategy:
       fail-fast: false
       # Every series uploads the same bialet_<version>.orig.tar.gz filename to
-      # the same Launchpad incoming directory. Concurrent dputs race with each
-      # other there and only one upload gets processed, so serialize them.
+      # the same Launchpad incoming directory. The tarball is reproducible, so
+      # the contents match, but keep the uploads sequential so two dputs never
+      # write that file at the same time.
       max-parallel: 1
       matrix:
         series: ${{ fromJSON(inputs.series) }}
@@ -132,7 +125,13 @@ jobs:
           git archive HEAD | tar -x -C "/tmp/orig/bialet-${V}"
           # dpkg-source rejects an .orig tarball that contains debian/.
           rm -rf "/tmp/orig/bialet-${V}/debian"
-          tar -C /tmp/orig -czf "../bialet_${V}.orig.tar.gz" "bialet-${V}"
+          # Every series uploads this same filename, so the bytes have to be
+          # identical: pin mtimes/ownership and drop the gzip timestamp.
+          # Otherwise Launchpad sees different contents for the same file and
+          # rejects all but the first upload.
+          tar -C /tmp/orig --sort=name --mtime=@0 --owner=0 --group=0 \
+              --numeric-owner -cf - "bialet-${V}" \
+            | gzip -n -9 > "../bialet_${V}.orig.tar.gz"
 
       - name: Add the changelog entry
         run: |
@@ -142,13 +141,8 @@ jobs:
 
       - name: Build the source package
         run: |
-          if [ "${{ inputs.include_orig }}" = "true" ]; then
-            ORIG_FLAG=-sa
-          else
-            ORIG_FLAG=-sd
-          fi
           if [ -z "${PPA_GPG_KEY}" ]; then
-            dpkg-buildpackage -S "${ORIG_FLAG}" -d -us -uc
+            dpkg-buildpackage -S -sa -d -us -uc
           else
             export GNUPGHOME=/tmp/gnupg
             mkdir -m 700 "$GNUPGHOME"
@@ -158,7 +152,7 @@ jobs:
             printf '%s' "${PPA_GPG_KEY}" | base64 -d | gpg --batch --import
             # A key with a passphrase needs gpg-agent to have it cached; use a
             # dedicated key without one for unattended uploads.
-            dpkg-buildpackage -S "${ORIG_FLAG}" -d -k"${PPA_GPG_KEY_ID}"
+            dpkg-buildpackage -S -sa -d -k"${PPA_GPG_KEY_ID}"
           fi
 
       - name: Lintian
