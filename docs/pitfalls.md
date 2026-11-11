@@ -20,27 +20,7 @@ a **method**: it needs `()`. `toString()` is accepted as an alias for the getter
 work; `count()`, `keys()` and `values()` still fail. Forgetting the `()` on
 `trim` is the usual source of 500s in setters.
 
-## 2. A user class's `==` must not dereference a null operand
-
-`Date` is null-safe: `date == null` is `false` and `date != null` is `true`.
-A class of your own does not get that for free, because `==` is a method on the
-left-hand receiver:
-
-```wren
-class Item {
-  construct new(id) { _id = id }
-  id { _id }
-  ==(o) { _id == o.id }   // item == null -> Null does not implement 'id'.
-}
-```
-
-Guard the operand with an `is` check or a null check, and keep the body a single
-expression (`==(o) { o is Item ? _id == o.id : false }`). `!value` is the
-idiomatic null guard outside an operator: it is `true` only when the value is
-null. Putting the null check on the left (`if (null == item)`) also avoids the
-call.
-
-## 3. Every method that produces a value needs an explicit `return`
+## 2. Every method that produces a value needs an explicit `return`
 
 Wren is not expression-oriented: a method returns the value of `return`, not the
 last expression.
@@ -56,7 +36,7 @@ raises a catchable `Value is not iterable.` error and turns the request into a
 500. Checking the result first (`if (!rows) rows = []`) avoids the failed
 request.
 
-## 4. `%(` starts interpolation; a bare `%` is literal
+## 3. `%(` starts interpolation; a bare `%` is literal
 
 ```wren
 System.print("100%")            // 100%
@@ -69,7 +49,7 @@ text, in Wren strings and in HTML templates alike, so `100%` needs no escape.
 Write `\%` when a literal percent must be followed by `(`. Do not use `\x25`
 in HTML: it renders literally as `\x25`.
 
-## 5. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
+## 4. `BIALET_CONFIG` stores `(key, val)`, not `(key, value)`
 
 ```wren
 Config.set("fee_amount", "20000")   // correct
@@ -80,7 +60,7 @@ Config.set("fee_amount", "20000")   // correct
 Use `Config.set/get/bool/num/enable/disable/json` (see
 [Configuration](configuration.md)); never hand-write the table.
 
-## 6. Query methods take at most three positional arguments
+## 5. Query methods take at most three positional arguments
 
 ```wren
 `SELECT * FROM x WHERE a=? AND b=? AND c=? AND d=?`.fetch([a, b, c, d])
@@ -90,7 +70,7 @@ Use `Config.set/get/bool/num/enable/disable/json` (see
 The same limit applies to `.first`, `.val`, `.toNum`, `.toBool`, `.query` and
 `.order`. Four or more values go in one List.
 
-## 7. Every file imports what it uses
+## 6. Every file imports what it uses
 
 ```wren
 // route file
@@ -105,7 +85,7 @@ A template is a separate module: it does not inherit the route's imports. This
 is why `{{ Periods.label(...) }}` can fail with `Variable is used but not
 defined` even though `Periods` exists in `_app/domain.wren`.
 
-## 8. `_tests/_init.wren` variables are global to every test file
+## 7. `_tests/_init.wren` variables are global to every test file
 
 ```wren
 // _tests/_init.wren
@@ -119,31 +99,31 @@ Use the variable from `_init.wren`, give the local one another name, or wrap the
 shared data in a function. `Test` is also preloaded: never
 `import "bialet/test" for Test`.
 
-## 9. Tests use a temporary database; manual HTTP does not
+## 8. Tests use a temporary database; manual HTTP does not
 
 `bialet -T` runs against a temporary database, so test rows do not pollute
 `_db.sqlite3`. Manual `curl` POSTs against a running server **do** write to
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 10. `Date.new(unixSeconds)` does not exist
+## 9. `Date.new(unixSeconds)` does not exist
 
 `Date.new(1792292400)` is a year-1792292400 date, not a timestamp. For date
 arithmetic use the helpers in [Recipes](recipes.md); for "now" use `Date.new()`.
 
-## 11. `Num.fromString` does not understand `1.234,50`
+## 10. `Num.fromString` does not understand `1.234,50`
 
 It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 12. Assertions match raw markup
+## 11. Assertions match raw markup
 
 `Test.get("/").contains("device")` also matches `width=device-width` in the
 viewport meta tag. Assert on visible, unique text (a heading, a row label), not
 on a substring that appears in the HTML boilerplate.
 
-## 13. Do not nest the same outermost HTML tag
+## 12. Do not nest the same outermost HTML tag
 
 Bialet's inline-HTML parser rejects an outermost tag that also appears as a
 direct child at any level:
@@ -157,7 +137,7 @@ The error points at the closing tag, not the opening one, which makes it hard to
 find. Wrap with a different tag (`<div><section>...`) or split the view into
 partials. See [Template](template.md) for the nesting rules.
 
-## 14. Assigning a property needs an explicit setter
+## 13. Assigning a property needs an explicit setter
 
 ```wren
 class Wine {
@@ -170,7 +150,7 @@ Wren does not synthesize setters. `Wine does not implement 'id=(_)'` means the
 getter exists but the setter does not. The constructor writing `_id` is not a
 public setter.
 
-## 15. Do not put a Query inside `%(...)` or `{{ }}`
+## 14. Do not put a Query inside `%(...)` or `{{ }}`
 
 ```wren
 // wrong: Query is not allowed inside handlebars or interpolated expressions
@@ -184,7 +164,7 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 16. Zero-argument methods still need `()`
+## 15. Zero-argument methods still need `()`
 
 ```wren
 class Klass {
@@ -197,12 +177,12 @@ Klass.total()   // correct
 Getters (`count`, `toString`, `keys`) are defined without parentheses and
 called without them. If you wrote `total() { ... }`, call it with `()`.
 
-## 17. `_init.wren` runs once; do not collide with UNIQUE keys
+## 16. `_init.wren` runs once; do not collide with UNIQUE keys
 
 A test that inserts the same unique value as `_tests/_init.wren` fails before it
 exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 
-## 18. HTML templates use `{{ }}`, not `%(...)`
+## 17. HTML templates use `{{ }}`, not `%(...)`
 
 ```wren
 // correct in a route/template HTML block
@@ -215,7 +195,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `%(...)` only works inside a Wren string literal. In an HTML block Bialet uses
 `{{ expression }}`. See [Template](template.md).
 
-## 19. Name the columns in every INSERT
+## 18. Name the columns in every INSERT
 
 ```wren
 // breaks as soon as the table has an id/createdAt column:
@@ -227,7 +207,7 @@ exercises anything. Use `INSERT OR IGNORE`, or seed distinct values per file.
 `expenses has 7 columns but 6 values supplied` is this mistake. Naming the
 columns also keeps the insert valid when a later migration adds a column.
 
-## 20. The form `name` must match `Request.post` exactly
+## 19. The form `name` must match `Request.post` exactly
 
 ```wren
 <input name="dia" type="date">
@@ -238,7 +218,7 @@ A mismatch silently yields null; the POST returns 302 but nothing is saved, or
 the handler crashes formatting null. Keep the HTML `name` and the
 `Request.post`/`Request.get` key identical (or use the same constant).
 
-## 21. Strings do not implement `<` or `>`
+## 20. Strings do not implement `<` or `>`
 
 ```wren
 "2026-01-01" < "2026-02-01"
@@ -254,7 +234,7 @@ Num.fromString(a) < Num.fromString(b)
 
 This is the classic "the list works until the first row exists" 500.
 
-## 22. `Num.fromString` returns null for null and unparseable input
+## 21. `Num.fromString` returns null for null and unparseable input
 
 ```wren
 var amount = Num.fromString(data["amount"])   // null, not a crash
@@ -265,7 +245,7 @@ var total = (amount || 0) + shipping
 column and an unparseable string all return null, so coalesce before doing
 arithmetic. `Num.fromString(false)` and other non-string values still raise.
 
-## 23. `{{ }}` must sit inside an HTML tag
+## 22. `{{ }}` must sit inside an HTML tag
 
 At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
 fails with `Expect '}' after map entries`:
@@ -282,7 +262,7 @@ Once the expression is inside a tag, an HTML block works as an operand. If it
 gets long, assign it to a variable above the template and interpolate that
 inside a tag.
 
-## 24. `""` is truthy in Wren
+## 23. `""` is truthy in Wren
 
 ```wren
 var name = Request.post("name") || ""
@@ -293,7 +273,7 @@ if (name.trim().count == 0) { ... }   // correct empty check
 Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
 (or `trim() == ""`), not `!text`.
 
-## 25. HTML whitespace makes multi-word `.contains` assertions fragile
+## 24. HTML whitespace makes multi-word `.contains` assertions fragile
 
 ```wren
 Test.get("/").contains("1 paciente para")  // fails if the template wraps the line
@@ -302,14 +282,14 @@ Test.get("/").contains("1 paciente para")  // fails if the template wraps the li
 HTML collapses or inserts whitespace between words. Assert a single stable
 token (a heading, a name, a badge) instead of a multi-word sentence.
 
-## 26. Enforce rules in the domain, not only in the UI
+## 25. Enforce rules in the domain, not only in the UI
 
 Disabling a button is not validation: a direct `POST` bypasses it. Put the rule
 in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
-## 27. `bialet -r` has no request, but it does initialize the framework
+## 26. `bialet -r` has no request, but it does initialize the framework
 
 `bialet -r` executes a bare Wren script. It runs `Db.init` first, so the
 `BIALET_*` tables exist and the framework helpers work:

@@ -109,6 +109,11 @@ struct WrenVM {
   // There is a single global symbol table for all method names on all classes.
   // Method calls are dispatched directly by index in this table.
   SymbolTable methodNames;
+
+  // Cached symbols for `==(_)` and `!=(_)`, used to keep null equality
+  // non-overridable in completeCall().
+  int equalitySymbol;
+  int inequalitySymbol;
 };
 
 // A generic allocation function that handles all explicit memory management.

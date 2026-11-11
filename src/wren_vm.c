@@ -86,6 +86,12 @@ WrenVM* wrenNewVM(WrenConfiguration* config) {
 
   vm->modules = wrenNewMap(vm);
   wrenInitializeCore(vm);
+
+  // `==` and `!=` are compiled as ordinary method calls. Cache their symbols
+  // so the interpreter can compare a null operand without dispatching to a
+  // user-defined == (which may dereference it).
+  vm->equalitySymbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "==(_)", 5);
+  vm->inequalitySymbol = wrenSymbolTableEnsure(vm, &vm->methodNames, "!=(_)", 5);
   return vm;
 }
 
@@ -959,6 +965,17 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber) 
       goto completeCall;
 
     completeCall:
+      // Null equality is not overridable. `value == null` used to dispatch to
+      // the value's ==, which may read fields off the null argument; compare
+      // by identity instead, for primitives and user classes alike.
+      if(numArgs == 2 && IS_NULL(args[1]) &&
+         (symbol == vm->equalitySymbol || symbol == vm->inequalitySymbol)) {
+        args[0] = BOOL_VAL(symbol == vm->equalitySymbol ? IS_NULL(args[0])
+                                                        : !IS_NULL(args[0]));
+        fiber->stackTop -= numArgs - 1;
+        DISPATCH();
+      }
+
       // If the class's method table doesn't include the symbol, bail.
       if(symbol >= classObj->methods.count ||
          (method = &classObj->methods.data[symbol])->type == METHOD_NONE) {
