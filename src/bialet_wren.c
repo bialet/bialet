@@ -612,8 +612,25 @@ static char* sqlite_int_to_string(sqlite3_int64 value) {
   return str;
 }
 
+// A statement that failed must reach Wren. query_execute() used to log the
+// error and return, so callers carried on as if the SQL had run -- Db.migrate
+// then recorded the version as applied, and fixing the .wren did nothing on
+// the next boot. Fail the primitive instead and let queryPrepare() propagate.
+static void set_query_error(WrenVM* vm, const char* label, const char* detail) {
+  if(vm->fiber == NULL || wrenHasError(vm->fiber))
+    return;
+  size_t needed = strlen(label) + strlen(detail) + 1;
+  char*  msg = malloc(needed);
+  if(msg == NULL) {
+    vm->fiber->error = wrenNewString(vm, label);
+    return;
+  }
+  snprintf(msg, needed, "%s%s", label, detail);
+  vm->fiber->error = wrenNewString(vm, msg);
+  free(msg);
+}
+
 static void query_execute(WrenVM* vm, BialetQuery* query) {
-  (void)vm;
   sqlite3_stmt* stmt;
   const char*   columns[MAX_COLUMNS];
   int           colType, colCount = 0, rowCount = 0, bindCounter = 0;
@@ -635,7 +652,9 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
   /* Prepare the query */
   int result = sqlite3_prepare_v2(db, query->queryString, -1, &stmt, 0);
   if(result != SQLITE_OK) {
-    message(red("Query Error"), sqlite3_errmsg(db));
+    const char* err = sqlite3_errmsg(db);
+    message(red("Query Error"), err);
+    set_query_error(vm, "Query Error: ", err);
     return;
   }
 
@@ -735,6 +754,7 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
 
   if(alloc_error) {
     message(red("Query Error"), "Out of memory while collecting query results");
+    set_query_error(vm, "Query Error: ", "out of memory");
   }
 
   /* Check for errors during query execution.
@@ -747,7 +767,9 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
    * - Calling sqlite3_step after it has returned SQLITE_DONE
    * This error handling ensures proper cleanup even on errors. */
   if(result != SQLITE_DONE && result != SQLITE_OK) {
-    message(red("SQL Error"), sqlite3_errmsg(db));
+    const char* err = sqlite3_errmsg(db);
+    message(red("SQL Error"), err);
+    set_query_error(vm, "SQL Error: ", err);
   }
   query->lastInsertId = sqlite_int_to_string(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);

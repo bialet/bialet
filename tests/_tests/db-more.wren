@@ -29,6 +29,27 @@ Db.migrate("t-dbmore-date", Fn.new {
 })
 Test.assert(`SELECT COUNT(*) FROM t_dbmore WHERE name = 'dated'`.toNum == 1, "migrate callback inserted a date")
 
+// A statement that fails must surface as an error and must not record the
+// version: Db.migrate uses that row to skip work, so a failed migration marked
+// as applied could never be retried. This covers both the SQL-string form and
+// a callback whose query fails.
+`DROP TABLE IF EXISTS t_dbmore_fail`.query
+var failingSql = Fiber.new {
+  Db.migrate("t-dbmore-fail", "CREATE TABLE t_dbmore_fail (id INTEGER); CREATE TABLE broken (")
+}
+failingSql.try()
+Test.assert(failingSql.error != null, "a failed migration raises an error")
+Test.assert(`SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 't-dbmore-fail'`.toNum == 0,
+            "a failed migration is not recorded")
+
+var failingCallback = Fiber.new {
+  Db.migrate("t-dbmore-fail-cb", Fn.new { `INSERT INTO t_missing (x) VALUES (1)`.query })
+}
+failingCallback.try()
+Test.assert(failingCallback.error != null, "a failed callback migration raises an error")
+Test.assert(`SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 't-dbmore-fail-cb'`.toNum == 0,
+            "a failed callback migration is not recorded")
+
 `INSERT INTO BIALET_SESSION (id, key, val, updatedAt) VALUES ('t-old', 'k', 'v', '2020-01-01')`.query
 Db.clean
 Test.assert(`SELECT COUNT(*) FROM BIALET_SESSION WHERE id = 't-old'`.toNum == 0, "Db.clean removed old session")

@@ -2078,6 +2078,11 @@ static bool queryPrepare(WrenVM* vm, BialetQuery* query, ObjList* params) {
       }
     }
     vm->config.queryFn(vm, query);
+    // queryFn has no return value; it reports failure by setting the fiber's
+    // error. Without this check the primitive still succeeded, so Db.migrate
+    // recorded a version whose SQL never ran.
+    if(wrenHasError(vm->fiber))
+      return false;
   }
   return true;
 }
