@@ -168,6 +168,14 @@ static bool is_safe_url(const char* url, size_t n) {
 }
 
 static bool render_inline(const char* src, MdBuf* b) {
+  // A link or image candidate needs a ']' at or after the opener, then a '('
+  // after that ']', then a ')' after that '('. This loop only moves forward, so
+  // a scan that finds nothing can never succeed for a later opener in the same
+  // line. Latch that once. Before, every '[' byte without a complete '](...)'
+  // re-ran three full-line strchr() calls, so a 128 KiB body of unmatched
+  // brackets cost O(n^2) CPU on the single HTTP worker.
+  bool no_link_left = false;
+
   while(*src) {
     if(strncmp(src, "**", 2) == 0) {
       if(!md_append(b, "<strong>"))
@@ -207,10 +215,17 @@ static bool render_inline(const char* src, MdBuf* b) {
         continue;
       }
     } else if(strncmp(src, "![", 2) == 0) {
-      const char* alt_end = strchr(src + 2, ']');
-      const char* url_start = alt_end ? strchr(alt_end, '(') : NULL;
-      const char* url_end = url_start ? strchr(url_start, ')') : NULL;
-      if(alt_end && url_start && url_end) {
+      const char* alt_end = NULL;
+      const char* url_start = NULL;
+      const char* url_end = NULL;
+      if(!no_link_left) {
+        alt_end = strchr(src + 2, ']');
+        url_start = alt_end ? strchr(alt_end, '(') : NULL;
+        url_end = url_start ? strchr(url_start, ')') : NULL;
+        if(url_end == NULL)
+          no_link_left = true;
+      }
+      if(url_end != NULL) {
         // Both the URL and the alt text are escaped before going into an
         // attribute. They were interpolated raw, so a " in either one closed the
         // attribute and let the rest inject markup:
@@ -229,10 +244,17 @@ static bool render_inline(const char* src, MdBuf* b) {
         continue;
       }
     } else if(*src == '[') {
-      const char* text_end = strchr(src, ']');
-      const char* url_start = text_end ? strchr(text_end, '(') : NULL;
-      const char* url_end = url_start ? strchr(url_start, ')') : NULL;
-      if(text_end && url_start && url_end) {
+      const char* text_end = NULL;
+      const char* url_start = NULL;
+      const char* url_end = NULL;
+      if(!no_link_left) {
+        text_end = strchr(src, ']');
+        url_start = text_end ? strchr(text_end, '(') : NULL;
+        url_end = url_start ? strchr(url_start, ')') : NULL;
+        if(url_end == NULL)
+          no_link_left = true;
+      }
+      if(url_end != NULL) {
         size_t url_len = (size_t)(url_end - url_start - 1);
         size_t text_len = (size_t)(text_end - (src + 1));
         if(is_safe_url(url_start + 1, url_len)) {

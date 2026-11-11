@@ -326,6 +326,62 @@ else
     "Expected 200 under cap, 413 over cap, server alive. Got under:$under_code over:$over_code alive:$alive_code"
 fi
 
+# Regression for the quadratic inline-Markdown scan: every '[' without a
+# complete '](...)' used to repeat three full-line strchr() calls, and
+# Request.init joins the body into one line, so a bracket body cost O(n^2) CPU
+# on the single worker. The server runs with the body cap raised so the
+# difference is unambiguous: this body is ~9 s when quadratic and a few
+# hundredths of a second once the failed delimiter lookup is latched.
+md_scan_line=$LINENO
+_test_start_ms=$(now_ms)
+md_scan_ok=1
+md_scan_result="skipped"
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  md_scan_db="$(mktemp /tmp/bialet-mdscan.XXXXXX)"
+  md_scan_body="$(mktemp /tmp/bialet-mdscan-body.XXXXXX)"
+  head -c 786432 /dev/zero | tr '\0' '[' > "$md_scan_body"
+  require_free_port "$HOST" "$MULTIPART_PORT" "markdown scan server"
+  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l /tmp/tests-mdscan.log \
+    -m 512 -M 1024 -b 768 -d "$md_scan_db" "$(dirname "$0")" \
+    > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  md_scan_time=$(curl -s -o /dev/null -w "%{time_total}" --max-time 30 \
+    -H "Content-Type: text/plain" --data-binary "@$md_scan_body" \
+    "http://$HOST:$MULTIPART_PORT/md-body")
+  md_scan_head=$(curl -s --max-time 30 -H "Content-Type: text/plain" \
+    --data-binary "@$md_scan_body" "http://$HOST:$MULTIPART_PORT/md-body" |
+    head -c 7)
+  # Matched links, images and unmatched text must still render exactly as before.
+  md_scan_link=$(curl -s --max-time 10 -H "Content-Type: text/plain" \
+    --data-binary '[a](b)' "http://$HOST:$MULTIPART_PORT/md-body")
+  md_scan_img=$(curl -s --max-time 10 -H "Content-Type: text/plain" \
+    --data-binary '![i](j)' "http://$HOST:$MULTIPART_PORT/md-body")
+  md_scan_text=$(curl -s --max-time 10 -H "Content-Type: text/plain" \
+    --data-binary '[x] ![y]' "http://$HOST:$MULTIPART_PORT/md-body")
+  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-mdscan.log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -f "$md_scan_body" "$md_scan_db" "$md_scan_db"-*
+  md_scan_result="time:${md_scan_time} head:${md_scan_head} link:${md_scan_link} img:${md_scan_img} text:${md_scan_text}"
+  if [[ "$md_scan_head" != "<p>[[[[" ]] ||
+     [[ "$md_scan_link" != '<p><a href="b">a</a></p>' ]] ||
+     [[ "$md_scan_img" != '<p><img alt="i" src="j"></p>' ]] ||
+     [[ "$md_scan_text" != '<p>[x] ![y]</p>' ]] ||
+     ! awk -v t="$md_scan_time" 'BEGIN { exit !(t < 2.0) }'; then
+    md_scan_ok=0
+  fi
+else
+  md_scan_ok=2
+fi
+if [[ "$md_scan_ok" == 2 ]]; then
+  skip_test "Markdown unmatched brackets  " "requires local binary access"
+elif [[ "$md_scan_ok" == 1 ]]; then
+  report_result "Markdown unmatched brackets  " "$md_scan_line" 0
+else
+  report_result "Markdown unmatched brackets  " "$md_scan_line" 1 \
+    "Expected '<p>[[[[' in under 2s for $md_scan_body, got $md_scan_result"
+fi
+
 # Custom 413 error page: like 404/500, an oversized body is served the app's
 # own 413.html (or 413.wren) page via custom_error.
 custom_413_line=$LINENO
