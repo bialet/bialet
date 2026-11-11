@@ -881,6 +881,7 @@ run_test "Date now and components     " "date-now"        200 "true"
 run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true,false,true,false,true"
 run_test "Date parse from string      " "date-parse"      200 "2024-12-25 14:30:45,UTC"
 run_test "Date constructors and get   " "date-more"       200 "dow:5|doy:366|woy:37|diff:86400|fmt:2024-09-13"
+run_test "Date from unix timestamp   " "date-unix"       200 "round:2024-09-13 10:30:45|eq:true|zero:true"
 
 # Tests - Util functions
 run_test "Util functions              " "util"            200 "true"

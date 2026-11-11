@@ -537,6 +537,7 @@ static const char* coreModuleSource =
 "  static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }\n"
 "  static new(date) { Date.new(date, Date.tz) }\n"
 "  static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }\n"
+"  static fromUnix(seconds) { Date.fromString(Date.fromUnix_(seconds, Date.tz), Date.tz) }\n"
 "  static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }\n"
 "  static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }\n"
 "  static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }\n"

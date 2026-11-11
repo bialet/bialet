@@ -672,6 +672,9 @@ class Date {
   static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
   static new(date) { Date.new(date, Date.tz) }
   static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
+  // `Date.new(1792292400)` is a year, not a timestamp. Use fromUnix for epoch
+  // seconds, formatted in Date.tz.
+  static fromUnix(seconds) { Date.fromString(Date.fromUnix_(seconds, Date.tz), Date.tz) }
   static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
   static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
   static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }

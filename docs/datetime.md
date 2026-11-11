@@ -15,6 +15,7 @@ and specific dates:
 var now = Date.new()
 var specificDate = Date.new(2024, 9, 13, 15, 45, 30)
 var justDate = Date.new(2024, 9, 13)
+var fromEpoch = Date.fromUnix(1700000000)
 ```
 
 - `Date.new()` creates a new `Date` object representing the current date and time.
@@ -23,6 +24,9 @@ var justDate = Date.new(2024, 9, 13)
   specific date and time.
 - `Date.new(year, month, day)` creates a date object with the specified year,
   month, and day at midnight.
+- `Date.fromUnix(seconds)` creates a date from a Unix timestamp (epoch
+  seconds), formatted in `Date.tz`. `Date.new(1700000000)` is a year, not a
+  timestamp.
 
 ## Per-Instance Timezone Handling
 
@@ -66,11 +70,10 @@ System.print("Unix Timestamp: %(date.unix)")
 ## Adding and Subtracting Time
 
 `Date` does **not** implement `+`/`-` — `date + 86400` raises
-`Date does not implement '+(_)'.`. There is also no way to build a `Date`
-directly from a Unix timestamp number — `Date.new(1700000000)` raises
-`Num does not implement 'split(_)'.` (the constructor always expects a
-string in `"YYYY-MM-DD"` or `"YYYY-MM-DD HH:MM:SS"` format, or another
-`Date`).
+`Date does not implement '+(_)'`. Build a date from epoch seconds with
+`Date.fromUnix(1700000000)`; `Date.new(1700000000)` is a year, not a
+timestamp (the constructor expects a string in `"YYYY-MM-DD"` or
+`"YYYY-MM-DD HH:MM:SS"` format, or another `Date`).
 
 For two **instants** (comparing "how many seconds apart"), use `.unix` and
 `.diff` directly — both already return plain numbers:

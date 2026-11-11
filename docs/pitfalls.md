@@ -106,10 +106,11 @@ shared data in a function. `Test` is also preloaded: never
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 9. `Date.new(unixSeconds)` does not exist
+## 9. `Date.new(unixSeconds)` does not exist; use `Date.fromUnix`
 
-`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. For date
-arithmetic use the helpers in [Recipes](recipes.md); for "now" use `Date.new()`.
+`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. Build a date
+from epoch seconds with `Date.fromUnix(seconds)` (formatted in `Date.tz`), and
+go the other way with `.unix`. For "now" use `Date.new()`.
 
 ## 10. `Num.fromString` does not understand `1.234,50`
 

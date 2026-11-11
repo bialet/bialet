@@ -1795,6 +1795,25 @@ DEF_PRIMITIVE(date_current) {
   RETURN_VAL(wrenNewString(vm, fullDate));
 }
 
+// Formats an epoch value as a local date string. Date.new(number) is a year,
+// not a timestamp, so this is the constructor for unix seconds.
+DEF_PRIMITIVE(date_fromUnix) {
+  if(!validateNum(vm, args[1], "Unix time"))
+    return false;
+  const char* tz;
+  if(!date_timezone_arg(vm, args[2], &tz))
+    return false;
+  setTimezone(tz);
+  time_t     seconds = (time_t)AS_NUM(args[1]);
+  struct tm* local = localtime(&seconds);
+  if(local == NULL)
+    RETURN_ERROR("Unix time is out of range.");
+  char fullDate[20];
+  if(strftime(fullDate, sizeof(fullDate), "%Y-%m-%d %H:%M:%S", local) == 0)
+    RETURN_ERROR("Unix time is out of range.");
+  RETURN_VAL(wrenNewString(vm, fullDate));
+}
+
 /* Whether year [y] has 53 ISO 8601 weeks: it does exactly when its January 1
  * falls on a Thursday, or on a Wednesday in a leap year. */
 static int year_has_53_iso_weeks(int y) {
@@ -2488,6 +2507,7 @@ void wrenInitializeCore(WrenVM* vm) {
 
   ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
   PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
+  PRIMITIVE(dateClass->obj.classObj, "fromUnix_(_,_)", date_fromUnix);
   PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
   PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
 
