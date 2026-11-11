@@ -900,6 +900,7 @@ run_test "Http jar is host-only        " "http-cookie-host-only" 200 "cross:[]|o
 run_test "Session meta                " "session-meta" 200 "sidLen:40|default:BIALETSESSID|renamed:MYTESTCOOKIE|got:meta_value"
 run_test "Session rotate rekeys writes" "session-rotate" 200 "planted:none|fresh:alice"
 run_test "Session rows stay bounded " "session-sweep" 200 "live:bounded"
+run_test "Session cap spares authed  " "session-evict" 200 "authed:yes|evicted:yes"
 
 # Regression: the sweep counter lived in a Wren class variable, but bialet_run()
 # builds and frees a VM per request, so the counter restarted at 0 and never

@@ -331,7 +331,13 @@ class Session {
     var excess = live - Session.maxSessions
     if (excess > 0) {
       if (excess > batch) excess = batch
-      `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
+      // The cap may only evict sessions that were never authenticated. A
+      // flood adds one fresh id per request, so the oldest rows are the
+      // logged-in users' login-time rows, and deleting those logs them out
+      // globally. rotate() marks the id it mints, so the candidates here are
+      // the ids without that marker; a session that was authenticated stays
+      // until the 30-day expiry above removes it.
+      `DELETE FROM BIALET_SESSION WHERE id IN (SELECT id FROM BIALET_SESSION WHERE id NOT IN (SELECT id FROM BIALET_SESSION WHERE key = '_bialet_authenticated') GROUP BY id ORDER BY MAX(updatedAt) ASC LIMIT ?)`.query(excess)
     }
   }
   static destroy() {
@@ -363,6 +369,10 @@ class Session {
     }
     var id = Util.randomString(40)
     Cookie.set(Session.name, id)
+    // Mark the minted id as authenticated, so sweep_() can tell a logged-in
+    // session from the anonymous rows a flood creates. Written through set()
+    // so it follows the live cookie like every other key.
+    Session.new().set("_bialet_authenticated", "1")
     return id
   }
   construct new() {
