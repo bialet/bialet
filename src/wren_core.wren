@@ -357,7 +357,7 @@ class String is Sequence {
   // string with a few becomes a handful of slices.
   safe {
     var size = byteCount_
-    var parts = []
+    var parts = null
     var last = 0
     var off = iterate(null)
     while (off) {
@@ -375,6 +375,9 @@ class String is Sequence {
         repl = "&apos;"
       }
       if (repl) {
+        // Defer the list until the first special: the common case (a name or
+        // a number in a template) has nothing to escape and allocates nothing.
+        if (!parts) parts = []
         if (off > last) parts.add(this[last...off])
         parts.add(repl)
         // Every escaped character is ASCII, so the next byte starts the next
@@ -383,7 +386,7 @@ class String is Sequence {
       }
       off = iterate(off)
     }
-    if (parts.count == 0) return this
+    if (!parts) return this
     if (last < size) parts.add(this[last..-1])
     return parts.join("")
   }

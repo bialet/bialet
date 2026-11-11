@@ -2154,18 +2154,22 @@ DEF_PRIMITIVE(query_fetch) {
   // wrenNewList(n) leaves its n slots uninitialized, so both lists grow by
   // appending: a slot only ever holds a real Value.
   ObjList* list = wrenNewList(vm, 0);
+
+  // Column names are identical on every row of a result set, so build them
+  // once instead of allocating a fresh list and a fresh string per column for
+  // each row. A 2000-row SELECT used to intern thousands of duplicate names.
+  ObjList* names = wrenNewList(vm, 0);
+  if(query->resultsCount > 0) {
+    BialetQueryResult first = query->results[0];
+    for(int j = 0; j < first.rowCount; j++) {
+      wrenValueBufferWrite(vm, &names->elements,
+                           wrenNewString(vm, first.rows[j].name));
+    }
+  }
+
   for(int i = 0; i < query->resultsCount; i++) {
     BialetQueryResult res = query->results[i];
     ObjMap*           row = wrenNewMap(vm);
-
-    // Column names repeat on every row of a result set, so each name becomes a
-    // Wren string once here instead of once per cell: a 2000-row, 4-column
-    // SELECT used to intern 8000 copies of the same four names.
-    ObjList* names = wrenNewList(vm, 0);
-    for(int j = 0; j < res.rowCount; j++) {
-      wrenValueBufferWrite(vm, &names->elements,
-                           wrenNewString(vm, res.rows[j].name));
-    }
 
     for(int j = 0; j < res.rowCount; j++) {
       Value colValue =
