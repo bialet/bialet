@@ -1,0 +1,127 @@
+.TH BIALET 1 "2026-11-09" "bialet" "User Commands"
+.SH NAME
+bialet \- full-stack web framework with embedded Wren and SQLite
+.SH SYNOPSIS
+.B bialet
+[\fIOPTIONS\fR] [\fIAPPDIR\fR]
+.br
+.B bialet dev
+.SH DESCRIPTION
+.B bialet
+serves the application directory as a web site. Each
+.I .wren
+file in the directory is a route handler that returns a response body. The
+server, the Wren interpreter, and an SQLite database live in one binary, with
+no configuration files and no separate runtime.
+.PP
+With no arguments it serves the current directory on 127.0.0.1:7001. The
+argument after the options, if given, selects a different application
+directory.
+.PP
+The subcommand
+.B dev
+enables live reload and the in-browser error display, and opens the server URL
+in a browser. The flags are stored in the database and persist across restarts.
+.PP
+Bialet speaks HTTP/1.0 and does not terminate TLS. Put nginx, Apache, or Caddy
+in front for HTTPS, HTTP/2, and rate limiting.
+.SH OPTIONS
+Every option has a short and a long form; values may be passed as
+\fB\-\-option value\fR or \fB\-\-option=value\fR.
+.TP
+.BR \-p ", " \-\-port " \fIPORT\fR"
+Port to listen on. Default: 7001.
+.TP
+.BR \-h ", " \-\-host " \fIHOST\fR"
+Host name or address to bind. Default: 127.0.0.1.
+.TP
+.BR \-H ", " \-\-help
+Show help and exit.
+.TP
+.BR \-r ", " \-\-run " \fICODE\fR"
+Run the Wren code passed as the argument, then exit.
+.TP
+.BR \-t ", " \-\-validate " \fIFILE\fR"
+Validate the syntax of a Wren file, then exit.
+.TP
+.BR \-T ", " \-\-tests
+Run the tests in the \fI_tests/\fR folder.
+.TP
+.BR \-v ", " \-\-version
+Print the version and exit.
+.TP
+.BR \-l ", " \-\-log " \fIFILE\fR"
+Write the log to a file instead of standard output.
+.TP
+.BR \-d ", " \-\-db " \fIFILE\fR"
+SQLite database file. Default: \fI_db.sqlite3\fR.
+.TP
+.BR \-w ", " \-\-wal
+Enable SQLite write-ahead logging.
+.TP
+.BR \-i ", " \-\-ignore " \fIGLOBS\fR"
+Comma-separated list of glob patterns of files to ignore.
+Default: \fIREADME*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml\fR.
+.TP
+.BR \-m ", " \-\-mem\-soft " \fIMB\fR"
+Soft memory limit in MB. Default: 128.
+.TP
+.BR \-M ", " \-\-mem\-hard " \fIMB\fR"
+Hard memory limit in MB. Default: 256.
+.TP
+.BR \-c ", " \-\-cpu\-soft " \fIPERCENT\fR"
+Soft CPU limit in percent. Default: 15.
+.TP
+.BR \-C ", " \-\-cpu\-hard " \fIPERCENT\fR"
+Hard CPU limit in percent. Default: 30.
+.TP
+.BR \-b ", " \-\-max\-post " \fIKB\fR"
+Maximum request body size in KB. Default: 128.
+.TP
+.BR \-u ", " \-\-max\-upload\-size " \fISIZE\fR"
+Maximum size per uploaded file in bytes; a
+.B K
+,
+.B M
+, or
+.B G
+suffix scales it. Default: 4M.
+.TP
+.BR \-f ", " \-\-foreign\-keys " \fION|OFF\fR"
+SQLite foreign key enforcement. Default: on.
+.TP
+.BR \-s ", " \-\-synchronous " \fILEVEL\fR"
+SQLite synchronous mode: off, normal, full, or extra. Default: normal.
+.TP
+.BR \-q ", " \-\-quiet
+Suppress the browser auto-open and colored output.
+.SH EXAMPLES
+Run the application in the current directory:
+.PP
+.nf
+.RS
+bialet
+.RE
+.fi
+.PP
+Serve another directory on all interfaces, port 8080:
+.PP
+.nf
+.RS
+bialet \-h 0.0.0.0 \-p 8080 /path/to/app
+.RE
+.fi
+.PP
+Start in development mode:
+.PP
+.nf
+.RS
+bialet dev
+.RE
+.fi
+.SH FILES
+.TP
+.I _db.sqlite3
+Default SQLite database, created next to the application files.
+.SH SEE ALSO
+Documentation at https://bialet.dev.

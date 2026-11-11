@@ -3,6 +3,34 @@
 For how to run and configure the `bialet` binary, see
 [Command Line Usage](usage.md).
 
+## Debian and Ubuntu
+
+Bialet is available as a Debian package from the
+[`ppa:bialet/bialet`](https://launchpad.net/~bialet/+archive/ubuntu/bialet)
+Personal Package Archive. It is built for every Ubuntu release still in
+standard support, on `amd64` and `arm64`:
+
+```bash
+sudo add-apt-repository ppa:bialet/bialet
+sudo apt update
+sudo apt install bialet
+```
+
+Upgrades arrive with the rest of your system packages:
+
+```bash
+sudo apt update && sudo apt upgrade
+```
+
+The package installs the binary as `/usr/bin/bialet` and links against the
+distribution's SQLite, libcurl, and OpenSSL. It is not installed as a service:
+run `bialet` from your app directory, or point a reverse proxy at it as
+described in [Deployment](deployment.md).
+
+> If you previously installed Bialet with the install script, remove
+> `~/.local/bin/bialet` first. That path usually comes before `/usr/bin` in
+> `PATH`, so the old binary would keep running after the package is installed.
+
 ## With the Install Script
 
 The easiest way to install Bialet on supported platforms (macOS ARM, Ubuntu

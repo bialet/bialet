@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DPKG_GENSYMBOLS_CHECK_LEVEL = 0
+
+%:
+	dh $@
+
+# EXTRA_CFLAGS/EXTRA_LDFLAGS are Makefile hooks, not a replacement: passing
+# CFLAGS= here would override the Makefile's own assignment and drop its
+# -DHAVE_SSL and hardening flags. -Wno-error goes first so dpkg's
+# -Werror=format-security still applies.
+override_dh_auto_build:
+	dh_auto_build -- \
+		EXTRA_CFLAGS="-Wno-error $(shell dpkg-buildflags --get CFLAGS)" \
+		EXTRA_LDFLAGS="$(shell dpkg-buildflags --get LDFLAGS)"
+
+# The full suite (make check) starts an HTTP server and needs python3 for the
+# documentation examples. Keep the PPA build to a smoke test; CI runs the
+# real suite on every push.
+override_dh_auto_test:
+	./build/bialet -v
+
+# dh_auto_install would run `make install`, which ignores DESTDIR and copies
+# the binary to ~/.local/bin -- the package would ship empty.
+override_dh_auto_install:
+	install -Dm0755 build/bialet debian/bialet/usr/bin/bialet
