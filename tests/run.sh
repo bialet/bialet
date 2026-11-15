@@ -95,6 +95,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax_msg "Unclosed names the wrong close" "syntax_err_nest_mismatched.wren" 1 "Unclosed <div>: 2 open, 1 closed. </span> does not close <div>"
   test_syntax_msg "Unclosed names the start line " "syntax_err_nest_interp_unterminated.wren" 1 "Unclosed <div>: 2 open, 0 closed (string opened on line 1)"
   test_syntax_msg "Cut opening tag names the tag " "syntax_err_nest_cut_tag.wren" 1 "Expected '>' to close the opening <div> tag."
+  test_syntax_msg "Cut attributes report the tag" "syntax_err_nest_cut_attrs.wren" 1 "Expected '>' to close the opening <div> tag."
   # One extra close tag used to leave '</div>' for the parser, which then
   # reported two more errors. It must be a single error.
   test_syntax_errors "Extra close tag, one error    " "syntax_err_nest_stray_close.wren" 1 1 "Unexpected </div>: <div> is already closed."
@@ -962,6 +963,7 @@ run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html-nest.html")"
 run_test "Literal text with <          " "html-lt-text"   200 "<main><p>a<b c</p><p>1 < 2 and 3 > 2</p></main>"
+run_test "Nested attr interpolation    " "html-nest-attr-interp" 200 '<main><div><div style="width:&lt;/b&gt;">a</div><div>b</div></div><div><div title=true>x</div></div><div style="&lt;/div&gt;">y</div></main>'
 run_test "Multiline call arguments    " "html-multiline-args" 200 "three:same"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500

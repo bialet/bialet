@@ -150,11 +150,15 @@ reported where the file ended. When the literal was split by `{{ }}`, the line
 is still the one the literal opened on, not the line it resumed on.
 
 An opening tag cut short by a newline or the end of the file is a different
-error, because there is no content to read:
+error, because there is no content to read. It covers both a cut inside the tag
+name and one after it, in the attributes:
 
 ```wren
 // Compilation error — Expected '>' to close the opening <div> tag.
 var cut = <div
+
+// Compilation error — same message: the name is complete, the tag is not.
+var cutAttributes = <div class="a"
 ```
 
 **Mismatched closing tags are not validated.** The parser only tracks the tag

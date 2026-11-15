@@ -1044,16 +1044,58 @@ static size_t htmlStrayCloseTagLength(const char* text, const char* tagName) {
   return i + 1;
 }
 
+// Returns the position just past the "}}" of the interpolation that starts at
+// [text], or NULL when it never closes. Nested "{{ }}", and braces inside a
+// quoted string, do not end it: the expression may hold a string with a quote
+// or another HTML literal, and the lookahead below must not mistake that for
+// the markup around it.
+static const char* htmlSkipInterpolation(const char* text) {
+  int depth = 1;
+  for(const char* p = text + 2; *p != '\0'; p++) {
+    if(*p == '"' || *p == '\'') {
+      char quote = *p++;
+      while(*p != '\0' && *p != quote) {
+        if(*p == '\\' && p[1] != '\0')
+          p++;
+        p++;
+      }
+      if(*p == '\0')
+        return NULL;
+      continue;
+    }
+    if(p[0] == '{' && p[1] == '{') {
+      depth++;
+      p++;
+      continue;
+    }
+    if(p[0] == '}' && p[1] == '}') {
+      if(--depth == 0)
+        return p + 2;
+      p++;
+    }
+  }
+  return NULL;
+}
+
 // Returns true when the tag that starts at [text] closes before another tag
-// starts: a '>' outside quotes comes first. Prose such as "a<b c" has no '>'
-// before the markup that follows it, so it stays text instead of swallowing the
-// rest of the literal.
+// starts: a '>' outside quotes and outside "{{ }}" comes first. Prose such as
+// "a<b c" has no '>' before the markup that follows it, so it stays text
+// instead of swallowing the rest of the literal.
 static int htmlTagClosesAhead(const char* text) {
   char quote = '\0';
   for(;;) {
     char c = *text++;
     if(c == '\0')
       return 0;
+    // An interpolation is expression text, not markup: its quotes and '<' must
+    // not decide whether this is a tag, wherever it sits.
+    if(c == '{' && *text == '{') {
+      const char* after = htmlSkipInterpolation(text - 1);
+      if(after == NULL)
+        return 1;
+      text = after;
+      continue;
+    }
     if(quote != '\0') {
       if(c == quote)
         quote = '\0';
@@ -1177,7 +1219,11 @@ static void readHtmlString(Parser* parser, HtmlHandlebar* state) {
         // opened and closed says which mistake ended it, and a close tag for a
         // different name shows the tag the author meant to close with.
         int opens = closed + depth;
-        if(mismatchedClose[0] != '\0') {
+        if(tagIsOpen) {
+          // The literal's own opening tag never reached its '>': the tag name
+          // is complete but its attributes are not, so nothing was opened yet.
+          lexError(parser, "Expected '>' to close the opening <%s> tag.", tagName);
+        } else if(mismatchedClose[0] != '\0') {
           lexError(parser,
                    "Unclosed <%s>: %d open, %d closed. </%s> does not close <%s> "
                    "(string opened on line %d).",

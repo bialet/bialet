@@ -31,7 +31,12 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   nesting change: a tag start only counts when a `>` follows before the next
   `<`. A `{{ }}` inside the attribute list of a *nested* copy of the outermost
   tag (`<div><div style="width:{{ w }}px">`) now resumes inside that tag, so the
-  literal no longer ends at the inner close tag.
+  literal no longer ends at the inner close tag, and a `{{ }}` whose expression
+  holds a quote or a `<` (`style="{{ "</b>" }}"`, `title={{ 1 < 2 }}`) no
+  longer hides that tag from the scan.
+- An opening tag cut short after its name (`<div class="a"`) reports
+  `Expected '>' to close the opening <div> tag.` like `<div` does, instead of
+  claiming the literal was opened and never closed.
 - The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`
   recognised only `/` as the path separator, so on Windows — where the resolved
   path separates with `\` — a log file, database or key file placed inside the
