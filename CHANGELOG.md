@@ -42,6 +42,8 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   backtick string reported `Invalid escape character` and then read one byte
   past the end of the buffer. It stops at the end of the file and reports
   `Unterminated string.` / `Unterminated query string.`
+- A source file ending in an unterminated raw string (`"""a`) no longer steps
+  past the NUL while consuming the closing quotes it never found.*
 - The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`
   recognised only `/` as the path separator, so on Windows — where the resolved
   path separates with `\` — a log file, database or key file placed inside the

@@ -881,7 +881,7 @@ static void readRawString(Parser* parser) {
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_STRING;
 
-  // consume the second and third "
+  // consume the second and third " of the opening delimiter
   nextChar(parser);
   nextChar(parser);
 
@@ -890,6 +890,7 @@ static void readRawString(Parser* parser) {
 
   int skipEnd = -1;
   int lastNewline = -1;
+  int closed = 0;
 
   for(;;) {
     char c = nextChar(parser);
@@ -917,8 +918,10 @@ static void readRawString(Parser* parser) {
       firstNewline = firstNewline == -1 ? string.count : firstNewline;
     }
 
-    if(c == '"' && c1 == '"' && c2 == '"')
+    if(c == '"' && c1 == '"' && c2 == '"') {
+      closed = 1;
       break;
+    }
 
     bool isWhitespace = c == ' ' || c == '\t';
     skipEnd = c == '\n' || isWhitespace ? skipEnd : -1;
@@ -944,9 +947,12 @@ static void readRawString(Parser* parser) {
     wrenByteBufferWrite(parser->vm, &string, c);
   }
 
-  // consume the second and third "
-  nextChar(parser);
-  nextChar(parser);
+  // consume the second and third " of the closing delimiter, and only then: at
+  // the end of an unterminated string they would step past the terminator.
+  if(closed) {
+    nextChar(parser);
+    nextChar(parser);
+  }
 
   int offset = 0;
   int count = string.count;
