@@ -76,9 +76,10 @@ sqlite3*                   db;
 // unauthenticated client could keep posting 100-part bodies and grow the shared
 // database until every write fails with SQLITE_FULL. A byte sum alone is not
 // enough: a file part with a filename and no data is a legal row of size 0, so
-// a row ceiling is needed too. Both aggregates are read through the index on
-// isTemp. When either is exhausted the request is refused with 507 instead of
-// being served with the file silently missing.
+// a row ceiling is needed too. Both aggregates are read through the composite
+// (isTemp, createdAt, id) index, which also serves the oldest-row eviction.
+// When either is exhausted the request is refused with 507 instead of being
+// served with the file silently missing.
 #define MAX_TEMP_UPLOAD_BYTES ((sqlite3_int64)64 * 1024 * 1024)
 #define MAX_TEMP_UPLOAD_ROWS 4096
 

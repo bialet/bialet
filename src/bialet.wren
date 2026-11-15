@@ -1211,9 +1211,14 @@ class Db {
     `CREATE TABLE IF NOT EXISTS BIALET_LOGS (message TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, originalFileName TEXT, type TEXT, size INTEGER, file BLOB, isTemp INTEGER DEFAULT 1, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
     // The upload path reads SUM(size) and COUNT(*) WHERE isTemp = 1 before the
-    // handler runs, so without this index every multipart request scans every
-    // file row, including the app's own saved files.
-    `CREATE INDEX IF NOT EXISTS BIALET_FILES_ISTEMP ON BIALET_FILES (isTemp)`.query()
+    // handler runs, so without an index every multipart request scans every
+    // file row, including the app's own saved files. The trailing columns let
+    // evict_oldest_temp_upload's "ORDER BY createdAt ASC, id ASC LIMIT 1" read
+    // the oldest row directly instead of sorting the whole temp pool per
+    // deleted row. The older isTemp-only index is dropped: it is a prefix of
+    // this one and only added write cost.
+    `DROP INDEX IF EXISTS BIALET_FILES_ISTEMP`.query()
+    `CREATE INDEX IF NOT EXISTS BIALET_FILES_TEMP_AGE ON BIALET_FILES (isTemp, createdAt, id)`.query()
     // Session.set's write-path sweep filters on updatedAt; without this index
     // both the sweep and Session.destroy scan every row.
     `CREATE INDEX IF NOT EXISTS BIALET_SESSION_UPDATED ON BIALET_SESSION (updatedAt)`.query()

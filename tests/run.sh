@@ -836,7 +836,7 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
   if [[ "$cap_first" == "200" && "$cap_last" == "200" \
-        && "$cap_usage" == "rows:4096|index:true|scan:" \
+        && "$cap_usage" == "rows:4096|index:true|scan:|evict:true" \
         && "$cap_legit" == "200" && "$cap_big" == "200" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
