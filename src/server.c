@@ -1113,34 +1113,40 @@ void handle_client(bialet_socket_t client_socket) {
   size_t root_len = strlen(bialet_config.full_root_dir);
 
   // Only a path strictly below the root may be probed with a synthesized name.
-  // For the bare-root URI the strip above left path == full_root_dir, so
-  // "%s.wren" named "<root>.wren" - a sibling of the root - and "//" left
+  // For the bare-root URI the strip above left path == full_root_dir, which has
+  // no name to append: that is the normal "/" request, not an error. "//" left
   // "<root>/", naming "<root>/.wren", which the '_'/'.' rule blocks when it is
   // requested directly. Re-apply containment and the private-component rule to
   // the synthesized name before using it.
-  if(strlen(path) + 5 < PATH_SIZE && // 5 accounts for ".wren" and terminator
-     strlen(path) > root_len &&
+  size_t probe_len = strlen(path);
+  if(probe_len > root_len &&
      strncmp(path, bialet_config.full_root_dir, root_len) == 0) {
-    snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
-    // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
-    // accepted as a route file, which is exactly what a following stat() did
-    // before the realpath() private-file check caught it further down.
-    if(strncmp(wren_path, bialet_config.full_root_dir, root_len) == 0 &&
-       wren_path[root_len] == '/' &&
-       !has_forbidden_uri_component(wren_path + root_len) &&
-       is_regular_file_no_follow(wren_path, &file_stat)) {
-      // Set the route prefix to this file's URL path so Request.route(n)
-      // reads the segments that follow it (null at the bare URL). Without
-      // this, route() falls back to the full URI and /about would report
-      // "about" as its own first segment.
-      free(hm->routes.str);
-      const char* route_prefix = path + root_len;
-      hm->routes = create_string(route_prefix, strlen(route_prefix));
-      strncpy(path, wren_path, PATH_SIZE - 1);
-      path[PATH_SIZE - 1] = '\0'; // Ensure null termination
+    if(probe_len + 5 >= PATH_SIZE) { // 5 accounts for ".wren" and terminator
+      // The URI did not fit in `path`, so the probe would name a truncated file
+      // the client never asked for. Report the truncation and skip the probe.
+      // Not perror(): no syscall failed here, so errno is merely whatever the
+      // previous one left behind and the text would be meaningless.
+      message(red("Error"), "Path too long to append .wren suffix");
+    } else {
+      snprintf(wren_path, PATH_SIZE + 5, "%s.wren", path);
+      // lstat, not stat: a planted "x.wren -> ../_db.sqlite3" symlink must not be
+      // accepted as a route file, which is exactly what a following stat() did
+      // before the realpath() private-file check caught it further down.
+      if(strncmp(wren_path, bialet_config.full_root_dir, root_len) == 0 &&
+         wren_path[root_len] == '/' &&
+         !has_forbidden_uri_component(wren_path + root_len) &&
+         is_regular_file_no_follow(wren_path, &file_stat)) {
+        // Set the route prefix to this file's URL path so Request.route(n)
+        // reads the segments that follow it (null at the bare URL). Without
+        // this, route() falls back to the full URI and /about would report
+        // "about" as its own first segment.
+        free(hm->routes.str);
+        const char* route_prefix = path + root_len;
+        hm->routes = create_string(route_prefix, strlen(route_prefix));
+        strncpy(path, wren_path, PATH_SIZE - 1);
+        path[PATH_SIZE - 1] = '\0'; // Ensure null termination
+      }
     }
-  } else {
-    perror("Path too long to append .wren suffix");
   }
 
   if(is_directory_no_follow(path, &file_stat)) {

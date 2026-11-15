@@ -29,6 +29,7 @@ SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
 CRON_PORT="${args[6]:-7103}"
 MULTIPART_PORT="${args[7]:-7104}"
+ROOT_STDERR_PORT="${args[8]:-7105}"
 
 # The Windows binary is cross-compiled on Linux and exercised under Wine. Two
 # tests rely on POSIX semantics Wine does not reproduce and fail identically on
@@ -1101,6 +1102,55 @@ run_test "Safe method basic types     " "safe"            200 "true,42,{html: &l
 
 # Tests - Random
 run_test "Random sample               " "randomsample"    200 "true,true,true"
+
+# Regression: a plain "/" request wrote "Path too long to append .wren suffix:
+# <stale errno>" to stderr. The trailing-slash strip leaves path ==
+# full_root_dir, so the `strlen(path) > root_len` guard failed and the single
+# `else` - meant for a path with no room left for ".wren" - called perror() on
+# a perfectly normal request. The response was always correct, so this only
+# ever showed up in the logs. A URI that really is too long must still be
+# reported, once, through the log stream instead of a stale errno.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  quiet_root_line=$LINENO
+  _test_start_ms=$(now_ms)
+  quiet_root="$(mktemp -d)"
+  quiet_root_out="$(mktemp /tmp/bialet-quiet-root.XXXXXX)"
+  quiet_root_db="$(mktemp /tmp/bialet-quiet-root-db.XXXXXX)"
+  printf 'return <h1>Quiet Root</h1>\n' > "$quiet_root/index.wren"
+  printf 'return <h1>Quiet Page</h1>\n' > "$quiet_root/page.wren"
+  require_free_port "$HOST" "$ROOT_STDERR_PORT" "root stderr server"
+  "$TARGET_EXEC" -h "$HOST" -p "$ROOT_STDERR_PORT" -d "$quiet_root_db" \
+    "$quiet_root" > "$quiet_root_out" 2>&1 &
+  disown
+  wait_port "$HOST" "$ROOT_STDERR_PORT" 10
+  quiet_root_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/")
+  quiet_root_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/")
+  quiet_page_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/page")
+  quiet_page_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/page")
+  quiet_root_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  # A URI past PATH_SIZE truncates the probe name, so it must still be reported
+  # (and still answers 404).
+  quiet_long_uri=$(head -c 2100 /dev/zero | tr '\0' 'a')
+  quiet_long_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/$quiet_long_uri")
+  quiet_long_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_db" "$quiet_root_db"-*
+  if [[ "$quiet_root_code" == "200" && "$quiet_root_body" == *"Quiet Root"* \
+        && "$quiet_page_code" == "200" && "$quiet_page_body" == *"Quiet Page"* \
+        && "$quiet_root_noise" == "0" \
+        && "$quiet_long_code" == "404" && "$quiet_long_noise" == "1" ]]; then
+    report_result "Root request logs no path error" "$quiet_root_line" 0
+  else
+    report_result "Root request logs no path error" "$quiet_root_line" 1 \
+      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code long_noise:$quiet_long_noise"
+  fi
+else
+  skip_test "Root request logs no path error" "requires local binary access"
+fi
 
 # Tests - CORS
 run_test "CORS enabled                " "cors"            200 "cors"
