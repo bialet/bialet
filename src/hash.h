@@ -15,12 +15,20 @@
 
 #ifdef HAVE_SSL
 #include <openssl/opensslv.h>
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
 #define OPENSSL_OK 1
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/sha.h>
+#else
+/* Every API the PBKDF2 and AES-GCM paths use exists in 1.1.0, but the old gate
+ * demanded 3.0 while HAVE_SSL accepted any OpenSSL. A 1.1 build therefore
+ * compiled the OPENSSL_OK=0 fallback: passwords were stored as a 32-bit salted
+ * DJB2 digest and a pbkdf2$ row could not be verified at all, silently. Refuse
+ * the build instead of shipping that. */
+#error                                                                              \
+    "Bialet requires OpenSSL 1.1.0 or newer for password hashing and encryption. Build without OpenSSL for the legacy password hash (encryption unavailable), or use a supported OpenSSL."
 #endif
 #endif
 
@@ -61,7 +69,7 @@ int pbkdf2_sha256(const char* password, size_t password_len,
                   const unsigned char* salt, size_t salt_len,
                   unsigned int iterations, unsigned char* out, size_t out_len);
 
-// 1 when this build can encrypt at all (OpenSSL 3 or newer).
+// 1 when this build can encrypt at all (OpenSSL 1.1 or newer).
 int crypto_available(void);
 
 // AES-256-GCM with a random nonce and a per-message salt. Returns a malloc'd,

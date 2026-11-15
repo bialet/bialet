@@ -330,7 +330,7 @@ distinguish those cases, so a caller cannot use the failure as an oracle.
 > that logs `Config.get` for debugging is logging ciphertext — harmless — but
 > code that starts with `Config.get` where it needs a secret is a bug.
 
-> ⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+> ⚠️ Pitfall: encryption requires an OpenSSL 1.1+ build. Without it,
 > `Util.encrypt` and `Config.encrypt` raise a runtime error instead of falling
 > back to something weaker. Check `Secret.available` and your startup logs if a
 > value unexpectedly fails to encrypt.

@@ -471,7 +471,7 @@ Util.decrypt(sealed, "password")   // "honey"
   characters**, which are used directly as a 256-bit key.
 
 Every call uses a fresh random salt and nonce, so encrypting the same value
-twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+twice produces different ciphertext. Encryption requires an OpenSSL 1.1+ build;
 without one it raises a runtime error rather than using a weaker scheme.
 
 ### decrypt(value, secret)

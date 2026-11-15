@@ -1499,7 +1499,7 @@ DEF_PRIMITIVE(util_encrypt) {
   if(secret->length == 0)
     RETURN_ERROR("Secret cannot be empty.");
   if(!crypto_available())
-    RETURN_ERROR("Encryption requires a build with OpenSSL 3 or newer.");
+    RETURN_ERROR("Encryption requires a build with OpenSSL 1.1 or newer.");
 
   char* sealed = crypto_encrypt(secret->value, (size_t)secret->length, NULL, 0,
                                 value->value, (size_t)value->length);
@@ -1516,7 +1516,7 @@ DEF_PRIMITIVE(util_decrypt) {
   if(!validateString(vm, args[1], "Value") || !validateString(vm, args[2], "Secret"))
     return false;
   if(!crypto_available())
-    RETURN_ERROR("Decryption requires a build with OpenSSL 3 or newer.");
+    RETURN_ERROR("Decryption requires a build with OpenSSL 1.1 or newer.");
 
   ObjString*     value = AS_STRING(args[1]);
   ObjString*     secret = AS_STRING(args[2]);
@@ -1629,7 +1629,7 @@ static bool config_crypt(WrenVM* vm, Value* args, int encrypt, int has_secret) {
   }
 
   if(!crypto_available())
-    RETURN_ERROR("Encryption requires a build with OpenSSL 3 or newer.");
+    RETURN_ERROR("Encryption requires a build with OpenSSL 1.1 or newer.");
 
   if(encrypt) {
     char* sealed =
