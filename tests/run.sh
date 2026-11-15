@@ -1144,8 +1144,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     "http://$HOST:$ROOT_STDERR_PORT/page")
   quiet_page_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/page")
   quiet_root_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
-  # A URI past PATH_SIZE truncates the probe name, so it must still be reported
-  # (and still answers 404).
+  # A URI past PATH_SIZE truncates the probe name, so on POSIX it must still be
+  # reported (and still answers 404). Windows cannot reach that path at all: its
+  # header buffer is BUFSIZ * 4 = 2048 bytes, so any URI that could overflow
+  # PATH_SIZE is refused as a malformed request (400) before the probe.
   quiet_long_uri=$(head -c 2100 /dev/zero | tr '\0' 'a')
   quiet_long_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$ROOT_STDERR_PORT/$quiet_long_uri")
@@ -1153,6 +1155,13 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # longer uses perror, and why with -l given it goes to the file alone.
   quiet_long_log=$(grep -c "Path too long" "$quiet_root_log" 2>/dev/null)
   quiet_long_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  if [[ "$IS_WINE" == 1 ]]; then
+    quiet_long_expected_code=400
+    quiet_long_expected_log=0
+  else
+    quiet_long_expected_code=404
+    quiet_long_expected_log=1
+  fi
   pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_log" "$quiet_root_db" \
@@ -1160,12 +1169,13 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   if [[ "$quiet_root_code" == "200" && "$quiet_root_body" == *"Quiet Root"* \
         && "$quiet_page_code" == "200" && "$quiet_page_body" == *"Quiet Page"* \
         && "$quiet_root_noise" == "0" \
-        && "$quiet_long_code" == "404" && "$quiet_long_log" == "1" \
+        && "$quiet_long_code" == "$quiet_long_expected_code" \
+        && "$quiet_long_log" == "$quiet_long_expected_log" \
         && "$quiet_long_noise" == "0" ]]; then
     report_result "Root request logs no path error" "$quiet_root_line" 0
   else
     report_result "Root request logs no path error" "$quiet_root_line" 1 \
-      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code long_noise:$quiet_long_noise long_log:$quiet_long_log"
+      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code (want $quiet_long_expected_code) long_noise:$quiet_long_noise long_log:$quiet_long_log (want $quiet_long_expected_log)"
   fi
 else
   skip_test "Root request logs no path error" "requires local binary access"

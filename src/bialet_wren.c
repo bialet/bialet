@@ -2186,7 +2186,7 @@ void bialet_init(struct BialetConfig* config) {
     if(have_real) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
-         real_db[root_len] == '/' &&
+         (real_db[root_len] == '/' || real_db[root_len] == '\\') &&
          !has_forbidden_uri_component(real_db + root_len)) {
         message(red("Error"),
                 "Database inside the app root must start with '_' or '.' "

@@ -32,6 +32,11 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   `<`. A `{{ }}` inside the attribute list of a *nested* copy of the outermost
   tag (`<div><div style="width:{{ w }}px">`) now resumes inside that tag, so the
   literal no longer ends at the inner close tag.
+- The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`
+  recognised only `/` as the path separator, so on Windows — where the resolved
+  path separates with `\` — a log file, database or key file placed inside the
+  served tree was accepted. They now accept either separator, like the other
+  containment checks already did.
 
 ## 1.2.16 — 2026-11-11
 

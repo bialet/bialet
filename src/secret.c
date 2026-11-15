@@ -83,7 +83,8 @@ int secret_key_load(const char* path, const char* app_root, char* err,
   if(app_root != NULL && strlen(app_root) > 1) {
     size_t root_len = strlen(app_root);
     if(strncmp(resolved, app_root, root_len) == 0 &&
-       (resolved[root_len] == '/' || resolved[root_len] == '\0')) {
+       (resolved[root_len] == '/' || resolved[root_len] == '\\' ||
+        resolved[root_len] == '\0')) {
       snprintf(err, err_size,
                "secret key file must live outside the app root (%s); a key "
                "stored with the database protects nothing",
