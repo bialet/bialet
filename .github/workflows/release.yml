@@ -20,9 +20,44 @@ env:
   REF_NAME: ${{ github.ref_name }}
 
 jobs:
+  # ── Release gate ────────────────────────────────────────────────
+  # Runs before anything is built or published. A pushed tag is not trusted on
+  # its own: it must point at a commit already on main, and its version must
+  # match BIALET_VERSION. Without this, any collaborator able to push a tag
+  # could publish a release from an unreviewed branch.
+  guard:
+    name: Guard
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Tag must be on main
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "::error::tag ${REF_NAME} points at a commit that is not on main"
+            exit 1
+          fi
+
+      - name: Tag must match BIALET_VERSION
+        run: |
+          set -euo pipefail
+          V="${REF_NAME#v}"
+          if ! grep -q "BIALET_VERSION \"${V}\"" src/bialet.h; then
+            echo "::error::tag ${REF_NAME} does not match BIALET_VERSION in src/bialet.h"
+            exit 1
+          fi
+
   # ── Linux x86_64 ────────────────────────────────────────────────
   build-linux:
     name: Linux x86_64
+    needs: guard
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7.0.1
@@ -90,6 +125,7 @@ jobs:
   # lockfile cannot pin (it pins action commits, not images).
   build-linux-arm64:
     name: Linux arm64
+    needs: guard
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Install build dependencies
@@ -116,6 +152,7 @@ jobs:
   # ── macOS arm64 (Apple Silicon) ─────────────────────────────────
   build-macos-arm64:
     name: macOS arm64
+    needs: guard
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -150,6 +187,7 @@ jobs:
   # ── Windows x86_64 (cross-compiled, static) ─────────────────────
   build-windows:
     name: Windows x86_64
+    needs: guard
     runs-on: ubuntu-22.04
     env:
       SQLITE_YEAR: 2024
@@ -204,7 +242,11 @@ jobs:
   # DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets.
   docker:
     name: Docker image
+    needs: guard
     runs-on: ubuntu-latest
+    # Gate the job behind a protected environment (Settings -> Environments):
+    # add required reviewers or a wait timer there to hold publishing.
+    environment: release
     permissions:
       contents: read
     steps:
@@ -242,6 +284,9 @@ jobs:
       - build-macos-arm64
       - build-windows
     runs-on: ubuntu-latest
+    # Same protected environment as the Docker image: a reviewer can hold the
+    # publish step without cancelling the builds that already succeeded.
+    environment: release
     permissions:
       contents: write
     steps:

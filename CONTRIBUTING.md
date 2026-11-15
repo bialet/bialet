@@ -361,11 +361,14 @@ sphinx-build -M html . ../build/
 ## CI/CD
 
 Four GitHub Actions workflows:
-- **release.yml** — on version tags (`v*`): builds platform binaries (Linux
-  x86_64, Linux ARM64, macOS ARM64, Windows), creates the GitHub Release with
-  the archives and `SHA256SUMS`, bumps the Homebrew formula, publishes the
-  Debian source package to the PPA, and finally redeploys the documentation —
-  so the site's download links only go live once the assets exist
+- **release.yml** — on version tags (`v*`): a guard job first refuses a tag that
+  is not on `main` or whose version does not match `BIALET_VERSION`; then it
+  builds platform binaries (Linux x86_64, Linux ARM64, macOS ARM64, Windows),
+  creates the GitHub Release with the archives and `SHA256SUMS`, bumps the
+  Homebrew formula, publishes the Debian source package to the PPA, and finally
+  redeploys the documentation — so the site's download links only go live once
+  the assets exist. The image and release jobs use the `release` environment;
+  add required reviewers there to hold a publish
 - **sphinx.yml** (Documentation) — builds `docs/` and deploys it to
   `bialet.dev`. It is deliberately not triggered by a push: the site embeds
   download links for one tag, so it is called by `release.yml` after the
