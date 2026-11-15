@@ -27,6 +27,11 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   close tag is one `Unexpected </div>: <div> is already closed.` instead of
   three parse errors, and an opening tag cut short by a newline reports
   `Expected '>' to close the opening <div> tag.`
+- A `<` in literal text (`<p>a<b c</p>`) is text again, as it was before the
+  nesting change: a tag start only counts when a `>` follows before the next
+  `<`. A `{{ }}` inside the attribute list of a *nested* copy of the outermost
+  tag (`<div><div style="width:{{ w }}px">`) now resumes inside that tag, so the
+  literal no longer ends at the inner close tag.
 
 ## 1.2.16 — 2026-11-11
 

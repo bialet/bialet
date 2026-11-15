@@ -28,8 +28,10 @@ every page is at <https://bialet.dev/llms.txt>.
 > `<div><div>...</div></div>` compiles — every tag can contain any other tag,
 > including its own name. Start a `<div>` inside a `<div>` whenever the markup
 > calls for it; do not work around a nesting error by swapping in
-> `<section>`/`<article>` wrappers. What still fails is unbalanced markup: a
-> missing close tag, a close tag with a different name, or an extra close tag.
+> `<section>`/`<article>` wrappers. What still fails is balance on the outermost
+> tag: a missing close tag, or one close tag too many. A close tag whose name
+> does not match is not validated — it only fails when it leaves the outermost
+> tag one close short.
 
 > ⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**
 > `SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at

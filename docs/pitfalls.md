@@ -116,9 +116,11 @@ var served = <div><span>Hello</div>
 // <div><span>Hello</div> — the browser closes the <span>
 ```
 
-Same-tag nesting is fine (`<div><div>Hello</div></div>`), but every level must
-be closed: a missing close tag, a close tag with a different name, or one extra
-close tag is a compile error. See [Template](template.md) for the nesting rules.
+Same-tag nesting is fine (`<div><div>Hello</div></div>`), but every copy of the
+outermost tag must be closed: a missing close tag or one extra close tag is a
+compile error. A close tag with a different name is not validated, so it only
+fails when it leaves the outermost tag one close short. See
+[Template](template.md) for the nesting rules.
 
 ## 11. Assigning a property needs an explicit setter
 

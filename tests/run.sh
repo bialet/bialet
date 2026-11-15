@@ -961,6 +961,7 @@ run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html-nest.html")"
+run_test "Literal text with <          " "html-lt-text"   200 "<main><p>a<b c</p><p>1 < 2 and 3 > 2</p></main>"
 run_test "Multiline call arguments    " "html-multiline-args" 200 "three:same"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500
@@ -1121,18 +1122,19 @@ run_test "Random sample               " "randomsample"    200 "true,true,true"
 # `else` - meant for a path with no room left for ".wren" - called perror() on
 # a perfectly normal request. The response was always correct, so this only
 # ever showed up in the logs. A URI that really is too long must still be
-# reported, once, through the log stream instead of a stale errno.
+# reported, once, in the -l stream (not with a stale errno).
 if [[ "$TARGET_EXEC" != "-" ]]; then
   quiet_root_line=$LINENO
   _test_start_ms=$(now_ms)
   quiet_root="$(mktemp -d)"
   quiet_root_out="$(mktemp /tmp/bialet-quiet-root.XXXXXX)"
+  quiet_root_log="$(mktemp /tmp/bialet-quiet-root-log.XXXXXX)"
   quiet_root_db="$(mktemp /tmp/bialet-quiet-root-db.XXXXXX)"
   printf 'return <h1>Quiet Root</h1>\n' > "$quiet_root/index.wren"
   printf 'return <h1>Quiet Page</h1>\n' > "$quiet_root/page.wren"
   require_free_port "$HOST" "$ROOT_STDERR_PORT" "root stderr server"
-  "$TARGET_EXEC" -h "$HOST" -p "$ROOT_STDERR_PORT" -d "$quiet_root_db" \
-    "$quiet_root" > "$quiet_root_out" 2>&1 &
+  "$TARGET_EXEC" -h "$HOST" -p "$ROOT_STDERR_PORT" -l "$quiet_root_log" \
+    -d "$quiet_root_db" "$quiet_root" > "$quiet_root_out" 2>&1 &
   disown
   wait_port "$HOST" "$ROOT_STDERR_PORT" 10
   quiet_root_code=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -1147,18 +1149,23 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   quiet_long_uri=$(head -c 2100 /dev/zero | tr '\0' 'a')
   quiet_long_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$ROOT_STDERR_PORT/$quiet_long_uri")
+  # The report has to reach the -l stream and not stderr: that is why it no
+  # longer uses perror, and why with -l given it goes to the file alone.
+  quiet_long_log=$(grep -c "Path too long" "$quiet_root_log" 2>/dev/null)
   quiet_long_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
   pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
-  rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_db" "$quiet_root_db"-*
+  rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_log" "$quiet_root_db" \
+    "$quiet_root_db"-*
   if [[ "$quiet_root_code" == "200" && "$quiet_root_body" == *"Quiet Root"* \
         && "$quiet_page_code" == "200" && "$quiet_page_body" == *"Quiet Page"* \
         && "$quiet_root_noise" == "0" \
-        && "$quiet_long_code" == "404" && "$quiet_long_noise" == "1" ]]; then
+        && "$quiet_long_code" == "404" && "$quiet_long_log" == "1" \
+        && "$quiet_long_noise" == "0" ]]; then
     report_result "Root request logs no path error" "$quiet_root_line" 0
   else
     report_result "Root request logs no path error" "$quiet_root_line" 1 \
-      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code long_noise:$quiet_long_noise"
+      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code long_noise:$quiet_long_noise long_log:$quiet_long_log"
   fi
 else
   skip_test "Root request logs no path error" "requires local binary access"

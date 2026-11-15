@@ -157,6 +157,31 @@ typedef struct {
   Value value;
 } Token;
 
+// Everything the lexer needs to keep scanning an inline HTML literal that a
+// "{{ }}" interrupted: the literal is read in pieces, and the piece after "}}"
+// must resume exactly where the expression started, inside a tag, inside a
+// quoted attribute, or in plain text.
+typedef struct {
+  // Outermost tag name; empty for a literal that reads its own opening tag.
+  char tag[MAX_METHOD_NAME];
+  // Copies of the outermost tag still open, and copies already closed.
+  int depth;
+  int closed;
+  // Line the literal opened on, for errors reported after "}}".
+  int line;
+  // Inside a tag of the content, so quotes and '>' belong to that tag.
+  int inTag;
+  // The tag being read opens the outermost name, so it adds a level.
+  int openingSame;
+  // The literal's own opening tag has not reached its '>' yet.
+  int tagIsOpen;
+  // Quote character inside an attribute value, or 0 outside one.
+  char quote;
+  // Skip whitespace after the closing tag, exactly as a literal without
+  // interpolation does: a newline before a comma must not end the call.
+  bool skipsSpace;
+} HtmlHandlebar;
+
 typedef struct {
   WrenVM* vm;
 
@@ -198,26 +223,12 @@ typedef struct {
   // This tracks that state. The parser maintains a stack of ints, one for each
   // level of current interpolation nesting. Each value is the number of
   // unmatched "(" that are waiting to be closed.
-  int  parens[MAX_INTERPOLATION_NESTING];
-  int  quotes[MAX_INTERPOLATION_NESTING];
-  int  numParens;
-  char handlebars[MAX_INTERPOLATION_NESTING][MAX_METHOD_NAME];
-  // Nesting depth of the literal that opened each pending "{{", so the text
-  // after "}}" resumes at the same depth instead of restarting at the
-  // outermost level.
-  int handlebarDepths[MAX_INTERPOLATION_NESTING];
-  // Close tags for that literal's tag name seen before the split, so a literal
-  // that ends unterminated can report totals for the whole literal instead of
-  // only for the piece after "}}".
-  int handlebarClosed[MAX_INTERPOLATION_NESTING];
-  // Line the literal opened on, so an error after "}}" can point back at the
-  // start of the literal instead of the resumed piece.
-  int handlebarLines[MAX_INTERPOLATION_NESTING];
-  // Whether the whitespace after that literal's closing tag is skipped, as the
-  // lexer does for a literal without interpolation. Without it, a newline
-  // between the closing tag and a comma misreads the call as finished.
-  bool handlebarSkipsSpace[MAX_INTERPOLATION_NESTING];
-  int  numHandlebars;
+  int parens[MAX_INTERPOLATION_NESTING];
+  int quotes[MAX_INTERPOLATION_NESTING];
+  int numParens;
+  // One row per pending "{{ }}", holding the interrupted HTML literal's state.
+  HtmlHandlebar handlebars[MAX_INTERPOLATION_NESTING];
+  int           numHandlebars;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -1033,21 +1044,42 @@ static size_t htmlStrayCloseTagLength(const char* text, const char* tagName) {
   return i + 1;
 }
 
-// Lexes an HTML string literal from the opening '<'. [previousTagName] is the
-// outermost tag name when the literal was split by a "{{ }}" interpolation, in
-// which case the lexer resumes after "}}" with [previousDepth] copies of it
-// open, [previousClosed] of them already closed, and [startLine] the line the
-// literal opened on. A literal that starts here has an empty [previousTagName]
-// and counts its own opening tag.
-static void readHtmlString(Parser* parser, char* previousTagName, int previousDepth,
-                           bool skipsTrailingSpace, int previousClosed,
-                           int startLine) {
+// Returns true when the tag that starts at [text] closes before another tag
+// starts: a '>' outside quotes comes first. Prose such as "a<b c" has no '>'
+// before the markup that follows it, so it stays text instead of swallowing the
+// rest of the literal.
+static int htmlTagClosesAhead(const char* text) {
+  char quote = '\0';
+  for(;;) {
+    char c = *text++;
+    if(c == '\0')
+      return 0;
+    if(quote != '\0') {
+      if(c == quote)
+        quote = '\0';
+      continue;
+    }
+    if(c == '"' || c == '\'') {
+      quote = c;
+      continue;
+    }
+    if(c == '>')
+      return 1;
+    if(c == '<')
+      return 0;
+  }
+}
+
+// Lexes an inline HTML literal. [state] is either a fresh literal - its tag is
+// empty and this call reads the opening tag - or the state saved when a
+// "{{ }}" interrupted it, in which case [state->tag] names the outermost tag
+// and the scan continues from the current character.
+static void readHtmlString(Parser* parser, HtmlHandlebar* state) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_HTML_NODE;
   int           closingTag = -1;
-  char*         tagName = malloc(MAX_METHOD_NAME);
-  int           tagIsOpen = 1;
+  char          tagName[MAX_METHOD_NAME];
   int           tagDone = 0;
   int           invalidTag = 0;
   // The opening tag ran into a newline or the end of the file before its '>',
@@ -1056,15 +1088,27 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
   int openTagCut = 0;
   // Close tags for [tagName] seen so far, plus the last close tag for a
   // different name, so an unterminated literal can say what went wrong.
-  int  closed = previousClosed;
+  int  closed = state->closed;
   char mismatchedClose[MAX_METHOD_NAME];
   mismatchedClose[0] = '\0';
   // The opening tag's name scan stopped at a space, so its attributes (and
   // their quoted values) are still ahead in the content loop.
   int openTagHasAttributes = 0;
+  // Scanning state, carried across "{{ }}" so a literal can resume inside a
+  // tag, a quoted attribute, or plain text.
+  int  depth = state->depth;
+  int  startLine = state->line;
+  int  inTag = state->inTag;
+  int  openingSame = state->openingSame;
+  int  tagIsOpen = state->tagIsOpen;
+  char quote = state->quote;
+  bool skipsTrailingSpace = state->skipsSpace;
+  // Only a literal that reads its own opening tag has to validate and count
+  // it; a resumed one already did so before the interpolation.
+  int readsOpeningTag = state->tag[0] == '\0';
 
-  if(strlen(previousTagName) > 0) {
-    strcpy(tagName, previousTagName);
+  if(!readsOpeningTag) {
+    strcpy(tagName, state->tag);
   } else {
     wrenByteBufferWrite(parser->vm, &string, '<');
     int i = 0;
@@ -1116,19 +1160,13 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
     }
   }
 
+  // A fresh literal may have stopped its name scan at the first attribute, so
+  // the content loop starts inside its opening tag.
+  if(readsOpeningTag)
+    inTag = openTagHasAttributes;
+
   if(closingTag < 0 && !invalidTag && !openTagCut) {
-    // Nesting depth of the outermost tag. A child with the same name is legal
-    // (<div><div>Nested</div></div>): the string ends only when a close tag
-    // matching the outermost name brings this back to zero. Children with a
-    // different name never change the depth, so a stray tag cannot end it.
-    // A doctype string starts at 0: its first <html> is the root.
-    int depth = previousDepth;
-    // Inside a tag of the content. Attribute values must not move the depth,
-    // and a '>' inside one must not be read as the end of the tag.
-    int  inTag = openTagHasAttributes;
-    char quote = '\0';
-    // The tag being read opens or closes <tagName> itself.
-    int  openingSame = 0;
+    // The tag being read closes <tagName> itself.
     int  closingSame = 0;
     char prev = '\0';
 
@@ -1159,12 +1197,16 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
         // Cap the handlebar stack so pathological nesting cannot write past
         // the fixed-size handlebars array (MAX_INTERPOLATION_NESTING rows).
         if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
-          strcpy(parser->handlebars[parser->numHandlebars], tagName);
-          parser->handlebarDepths[parser->numHandlebars] = depth;
-          parser->handlebarClosed[parser->numHandlebars] = closed;
-          parser->handlebarLines[parser->numHandlebars] = startLine;
-          parser->handlebarSkipsSpace[parser->numHandlebars] = skipsTrailingSpace;
-          parser->numHandlebars++;
+          HtmlHandlebar* entry = &parser->handlebars[parser->numHandlebars++];
+          strcpy(entry->tag, tagName);
+          entry->depth = depth;
+          entry->closed = closed;
+          entry->line = startLine;
+          entry->inTag = inTag;
+          entry->openingSame = openingSame;
+          entry->tagIsOpen = tagIsOpen;
+          entry->quote = quote;
+          entry->skipsSpace = skipsTrailingSpace;
         }
         nextChar(parser);
         break;
@@ -1204,14 +1246,16 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
         }
       } else if(c == '<') {
         // Track every tag, so a '>' inside its attributes cannot be taken for
-        // the end of the tag. Only a tag named like the outermost one changes
-        // the depth.
+        // the end of the tag, and only when it really is one: a '<' in prose
+        // ("a<b c") has no '>' before the markup that follows, so it stays
+        // text instead of swallowing the rest of the literal. Only a tag named
+        // like the outermost one changes the depth.
         const char* name = parser->currentChar;
         int         isClose = name[0] == '/';
         if(isClose)
           name++;
         size_t nameLength = htmlTagNameLength(name);
-        if(nameLength > 0) {
+        if(nameLength > 0 && htmlTagClosesAhead(name + nameLength)) {
           inTag = 1;
           if(nameLength == strlen(tagName) &&
              memcmp(name, tagName, nameLength) == 0) {
@@ -1259,8 +1303,6 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
     lexError(parser, "Unexpected </%s>: <%s> is already closed.", tagName, tagName);
     parser->currentChar += strayClose;
   }
-
-  free(tagName);
 }
 
 static void readQueryString(Parser* parser) {
@@ -1492,18 +1534,15 @@ static void nextToken(Parser* parser) {
         if(peekChar(parser) == '}') {
           // Are we in an interpolated expression?
           if(parser->numHandlebars > 0) {
-            parser->numHandlebars--;
+            // Copy the row: readHtmlString() can push a new one, so its fields
+            // must not be read through the shared stack index afterwards.
+            HtmlHandlebar entry = parser->handlebars[--parser->numHandlebars];
             nextChar(parser);
-            readHtmlString(parser, parser->handlebars[parser->numHandlebars],
-                           parser->handlebarDepths[parser->numHandlebars],
-                           parser->handlebarSkipsSpace[parser->numHandlebars],
-                           parser->handlebarClosed[parser->numHandlebars],
-                           parser->handlebarLines[parser->numHandlebars]);
+            readHtmlString(parser, &entry);
             // The literal's last piece is done: skip its trailing whitespace
             // like a literal without interpolation does, so a newline between
             // the closing tag and a comma or ')' cannot end the call.
-            if(parser->next.type == TOKEN_HTML_NODE &&
-               parser->handlebarSkipsSpace[parser->numHandlebars]) {
+            if(parser->next.type == TOKEN_HTML_NODE && entry.skipsSpace) {
               while(peekChar(parser) == ' ' || peekChar(parser) == '\t' ||
                     peekChar(parser) == '\r' || peekChar(parser) == '\n')
                 nextChar(parser);
@@ -1607,12 +1646,24 @@ static void nextToken(Parser* parser) {
             lastTokenType(parser) == TOKEN_QUESTION ||
             lastTokenType(parser) == TOKEN_LINE)) {
           if(!isDocType) {
-            readHtmlString(parser, "", 1, !notIgnoreSpacesTokens, 0,
-                           parser->currentLine);
+            HtmlHandlebar literal;
+            memset(&literal, 0, sizeof(literal));
+            literal.depth = 1;
+            literal.tagIsOpen = 1;
+            literal.line = parser->currentLine;
+            literal.skipsSpace = !notIgnoreSpacesTokens;
+            readHtmlString(parser, &literal);
           } else {
+            // A doctype string opens with <!doctype>: the outermost tag is
+            // <html>, which has not been reached yet, so the depth starts at 0.
+            HtmlHandlebar doctype;
+            memset(&doctype, 0, sizeof(doctype));
+            strcpy(doctype.tag, "html");
+            doctype.tagIsOpen = 1;
+            doctype.line = parser->currentLine;
+            doctype.skipsSpace = !notIgnoreSpacesTokens;
             parser->currentChar--; // Need to consume again the "<"
-            readHtmlString(parser, "html", 0, !notIgnoreSpacesTokens, 0,
-                           parser->currentLine);
+            readHtmlString(parser, &doctype);
           }
           // Ignore white space after the end of the string
           if(!notIgnoreSpacesTokens) {

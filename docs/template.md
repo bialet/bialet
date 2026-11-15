@@ -119,19 +119,25 @@ var siblings = <div><div>One</div><div>Two</div></div>
 var list = <ul>{{ items.map{|item| <li>{{ item }}</li> } }}</ul>
 ```
 
-Each level must still be closed. A missing close tag, a close tag with a
-different name, or one extra close tag is a compile error, and the message says
-which of the three you hit:
+Each level of the *outermost* tag must be closed. A missing close tag or one
+close tag too many is a compile error, and the message says which one you hit.
+A close tag with a different name is not validated at all: it only fails when it
+leaves the outermost tag one close short.
 
 ```wren
 // Compilation error
 // Unclosed <div>: 2 open, 1 closed (string opened on line 1).
 var bad = <div><div>Hello</div>
 
-// Compilation error
+// Compilation error — the outer <div> is one close short; the message names
+// the </section> that was mistaken for it
 // Unclosed <div>: 2 open, 1 closed. </section> does not close <div>
 // (string opened on line 1).
 var alsoBad = <div><div>Hello</section></div>
+
+// Compiles: </section> is not validated, and the outer <div> is closed twice.
+// The served markup is unbalanced — the browser repairs it.
+var accepted = <div><div>Hello</section></div></div>
 
 // Compilation error
 // Unexpected </div>: <div> is already closed.
@@ -1035,9 +1041,10 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
 ## Common Pitfalls
 
 - **Tag nesting:** Any tag may contain any other tag, including its own name —
-  `<div><div>...</div></div>` compiles. Every level must still be closed: a
-  missing close tag, a close tag with a different name, or an extra close tag
-  is a compile error.
+  `<div><div>...</div></div>` compiles. Every copy of the outermost tag must
+  still be closed: a missing close tag or an extra one is a compile error. A
+  close tag with a different name is not validated, so it only fails when it
+  leaves the outermost tag one close short.
 - **Mismatched tags are not validated:** Only the outer closing tag is
   matched; `<div><span>Hello</div>` compiles and is served verbatim (the
   browser auto-closes the `<span>`). Write well-formed HTML yourself.
