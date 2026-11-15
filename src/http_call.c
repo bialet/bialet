@@ -722,9 +722,17 @@ static int resolve_with_deadline(const char* host, const char* port, DWORD wait_
     resolve_job_release(job);
     return -1;
   }
+  int rc = job->rc;
   InterlockedDecrement(&resolver_waiters);
   *result = resolve_job_take_result(job);
   resolve_job_release(job);
+  if(rc != 0 || *result == NULL) {
+    if(*result != NULL) {
+      freeaddrinfo(*result);
+      *result = NULL;
+    }
+    return -1;
+  }
   return 0;
 }
 
@@ -954,7 +962,8 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
   /* Resolution is bounded now, but it may still have spent the whole budget:
    * fail the hop instead of dialling. */
   if(win32_remaining_ms(hop_deadline, 0) == 0) {
-    freeaddrinfo(result);
+    if(result != NULL)
+      freeaddrinfo(result);
     result = NULL;
     response->error = HTTP_ERR_CONNECT;
     response->error_message = string_safe_copy("Connection failed or timed out");
@@ -1014,7 +1023,8 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tmo, sizeof(tmo));
     break;
   }
-  freeaddrinfo(result);
+  if(result != NULL)
+    freeaddrinfo(result);
   result = NULL;
 
   if(sockfd == INVALID_SOCKET) {

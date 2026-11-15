@@ -94,9 +94,14 @@ if (which == "strip") {
   Http.stripHeaders = ["X-Api-Key"]
   var classWide = Http.get(custom,
     {"headers": {"X-Api-Key": "secret"}})
+  // A per-call list adds to the class list; an empty one must not disable it.
+  var alsoCall = Http.get(custom,
+    {"headers": {"X-Api-Key": "secret"}, "stripHeaders": ["X-Other"]})
+  var emptyCall = Http.get(custom,
+    {"headers": {"X-Api-Key": "secret"}, "stripHeaders": []})
   var proxy = Http.get(target + "/echo?mode=redirect-auth&echo=proxyauth&to=" + otherHost,
     {"headers": {"Proxy-Authorization": "Basic CUSTOM"}})
-  return "%(without)|%(perCall)|%(classWide)|%(proxy)"
+  return "%(without)|%(perCall)|%(classWide)|%(alsoCall)|%(emptyCall)|%(proxy)"
 }
 
 if (which == "strip-type") {

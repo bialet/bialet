@@ -133,6 +133,11 @@ fi
 if [ -z "$TAG" ]; then
   abort "Could not determine the latest release (GitHub API unreachable or rate-limited). Set BIALET_VERSION=vX.Y.Z to install a specific release."
 fi
+
+case "$TAG" in
+  v*) ;;
+  *) TAG="v$TAG" ;;
+esac
 green "==> Latest version: ${TAG#v}"
 
 # ── Download ───────────────────────────────────────────────────

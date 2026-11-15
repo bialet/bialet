@@ -1428,7 +1428,12 @@ class Http {
     // emitted it, and lets credentials stop at the origin that issued them.
     var hops = 0
     var sendCredentials = true
-    var extraStrip = Http.normalizeStrip_(options.containsKey("stripHeaders") ? options["stripHeaders"] : Http.stripHeaders)
+    var extraStrip = Http.normalizeStrip_(Http.stripHeaders)
+    if (options.containsKey("stripHeaders")) {
+      // Add to the class-wide list rather than replacing it: an absent or
+      // empty per-call value must not silently disable an app-wide strip.
+      for (name in Http.normalizeStrip_(options["stripHeaders"])) extraStrip.add(name)
+    }
     while (true) {
       var hopTimeout = deadline - Util.monotonicMs
       if (hopTimeout <= 0) {

@@ -371,8 +371,8 @@ if (!http.call("https://api.example.com/health",
   basic auth. A custom auth header keeps following the hop unless you list it in
   the call's `stripHeaders` option, or set
   `Http.stripHeaders = ["X-Api-Key"]` at the top of the route file (or a module
-  it imports) before its calls; the list is per-request state, not saved
-  configuration.
+  it imports) before its calls. The per-call list is added to that class-wide
+  list; both are per-request state, not saved configuration.
 - **Response bodies are not size-capped** — a malicious endpoint could return
   an unbounded body. Only call APIs you trust.
 

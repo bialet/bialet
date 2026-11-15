@@ -364,6 +364,8 @@ jobs:
       # this workflow, and a formula bump must not invalidate them. A failure
       # surfaces as a warning annotation on the run.
       - name: Update Homebrew formula
+        # A prerelease must not become what `brew install bialet` serves.
+        if: ${{ !contains(github.ref_name, '-') }}
         continue-on-error: true
         env:
           TAP_SSH_KEY: ${{ secrets.HOMEBREW_TAP_SSH_KEY }}
