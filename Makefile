@@ -110,6 +110,24 @@ WREN_INCS := $(WREN_FILES:%.wren=%.wren.inc)
 %.wren.inc: %.wren $(BUILD_DIR)/tools/wren_to_c_string
 	$(BUILD_DIR)/tools/wren_to_c_string $@ $<
 
+# A .inc newer than its .wren is assumed up to date, so `make` after a
+# successful build compiles a hand-edited .inc without noticing. Regenerate
+# each one to a temporary file and compare: releases are safe (a clean build
+# always regenerates), but a tampered or stale committed copy is caught here.
+check-wren-inc: $(BUILD_DIR)/tools/wren_to_c_string
+	@tmp=$$(mktemp); status=0; \
+	for src in $(WREN_FILES); do \
+		src=$${src#./}; \
+		$(BUILD_DIR)/tools/wren_to_c_string "$$tmp" "$$src" || status=1; \
+		if ! cmp -s "$$tmp" "$$src.inc"; then \
+			echo "check-wren-inc: $$src.inc does not match a fresh regeneration" >&2; \
+			echo "  run: make wren_files" >&2; \
+			status=1; \
+		fi; \
+	done; \
+	rm -f "$$tmp"; \
+	exit $$status
+
 $(BUILD_DIR)/tools/wren_to_c_string: tools/wren_to_c_string.c | $(BUILD_DIR)/tools
 	$(HOSTCC) -O2 -o $@ $<
 
@@ -142,6 +160,7 @@ check-examples: $(BUILD_DIR)/$(TARGET_EXEC)
 		--binary $(BUILD_DIR)/$(TARGET_EXEC) --docs $(DOCS_DIRS)
 
 check: $(BUILD_DIR)/$(TARGET_EXEC)
+	@$(MAKE) --no-print-directory check-wren-inc
 	$(TEST_DIR)/run.sh
 	./$(BUILD_DIR)/$(TARGET_EXEC) -T $(TEST_DIR)
 	$(MAKE) check-examples
@@ -205,4 +224,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files install uninstall check check-examples html static install-hooks
+.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples html static install-hooks

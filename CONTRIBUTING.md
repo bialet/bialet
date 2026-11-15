@@ -121,6 +121,7 @@ when OpenSSL is detected).
 | `make installcheck` | Install, then run the tests against the installed binary                                |
 | `make static`       | Linux only — produce a statically linked, self-contained binary                         |
 | `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
+| `make check-wren-inc` | Verify every committed `.inc` matches a fresh regeneration                     |
 | `make html`         | Build the documentation with Sphinx                                                     |
 | `make check-release-links` | Check the built site's release download links resolve (needs network)            |
 | `make clean`        | Remove `build/` and test databases                                                      |
