@@ -122,6 +122,7 @@ when OpenSSL is detected).
 | `make static`       | Linux only — produce a statically linked, self-contained binary                         |
 | `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
 | `make html`         | Build the documentation with Sphinx                                                     |
+| `make check-release-links` | Check the built site's release download links resolve (needs network)            |
 | `make clean`        | Remove `build/` and test databases                                                      |
 
 ### Cross-compiling
@@ -358,11 +359,23 @@ sphinx-build -M html . ../build/
 
 ## CI/CD
 
-Two GitHub Actions workflows run on push:
-- **sphinx.yml** — Builds and deploys documentation to `bialet.dev` on push
-  to `main`
-- **release.yml** — Builds platform binaries (Linux x86_64, Linux ARM64,
-  macOS ARM64) and creates a GitHub Release on version tags (`v*`)
+Four GitHub Actions workflows:
+- **release.yml** — on version tags (`v*`): builds platform binaries (Linux
+  x86_64, Linux ARM64, macOS ARM64, Windows), creates the GitHub Release with
+  the archives and `SHA256SUMS`, bumps the Homebrew formula, publishes the
+  Debian source package to the PPA, and finally redeploys the documentation —
+  so the site's download links only go live once the assets exist
+- **sphinx.yml** (Documentation) — builds `docs/` and deploys it to
+  `bialet.dev`. It is deliberately not triggered by a push: the site embeds
+  download links for one tag, so it is called by `release.yml` after the
+  release, and run by hand after a docs change (Actions → Documentation → Run
+  workflow; tick `verify_links` to fail on a download link that does not
+  resolve)
+- **ppa.yml** (PPA) — builds and signs the Debian source package; called by
+  `release.yml`, and run by hand to (re)publish a specific tag
+- **lockfile.yml** (Lockfile) — verifies `.github/workflows/actions.lock`
+  against the workflows and upstream. Run `gh actions-lock` and commit the
+  lockfile after adding or changing an action
 
 ## Submitting Changes
 

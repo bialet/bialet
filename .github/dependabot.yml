@@ -1,0 +1,22 @@
+version: 2
+
+# Keeps the actions in .github/workflows/ current. Dependabot bumps the
+# `uses:` tag and .github/workflows/actions.lock in the same PR, which is what
+# lockfile.yml verifies — a tag bump without the matching lockfile entry fails
+# CI. After merging by hand instead, run `gh actions-lock` and commit the
+# lockfile.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # Let a release sit for a week before proposing it, so a compromised or
+    # yanked action version is usually caught upstream first. This is the
+    # mitigation for "the tag was fine when we pinned it".
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']
+    commit-message:
+      prefix: "chore(actions)"
