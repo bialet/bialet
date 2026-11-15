@@ -98,8 +98,26 @@ struct ParsedUrl {
   char host[256];
   char port[8];
   char path[1024];
+  /* What goes in the Host: header. host plus a non-default port, with an IPv6
+   * literal kept in brackets. */
+  char host_header[320];
   int  is_https;
 };
+
+/* ASCII case-insensitive compare of the first [n] bytes of [s] with [lit]. */
+static int scheme_is(const char* s, const char* lit, size_t n) {
+  for(size_t i = 0; i < n; i++) {
+    char a = s[i];
+    char b = lit[i];
+    if(a >= 'A' && a <= 'Z')
+      a = (char)(a - 'A' + 'a');
+    if(b >= 'A' && b <= 'Z')
+      b = (char)(b - 'A' + 'a');
+    if(a != b)
+      return 0;
+  }
+  return 1;
+}
 
 /* Splits [url] into its parts without modifying it.
  *
@@ -108,16 +126,21 @@ struct ParsedUrl {
  * passing AS_CSTRING(), i.e. the live bytes of an interned Wren string. And it
  * reported TLS by comparing the port to "443", so "https://host:8443/" was
  * sent as plaintext to a TLS listener, leaking any Authorization header or
- * post body. The scheme now decides. */
+ * post body. The scheme now decides.
+ *
+ * The splitter also matches the libcurl/Wren URL scope on the cases that used
+ * to fail only on Windows: an uppercase scheme, an authority ended by '?' or
+ * '#', an IPv6 literal in brackets, a trailing dot, a non-default port in
+ * Host:, and a fragment stripped from the initial URL. */
 static int parse_url(const char* url, struct ParsedUrl* out) {
-  const char* p;
   memset(out, 0, sizeof(*out));
 
-  if(strncmp(url, "https://", 8) == 0) {
+  const char* p;
+  if(scheme_is(url, "https://", 8)) {
     out->is_https = 1;
     snprintf(out->port, sizeof(out->port), "%s", "443");
     p = url + 8;
-  } else if(strncmp(url, "http://", 7) == 0) {
+  } else if(scheme_is(url, "http://", 7)) {
     out->is_https = 0;
     snprintf(out->port, sizeof(out->port), "%s", "80");
     p = url + 7;
@@ -125,26 +148,105 @@ static int parse_url(const char* url, struct ParsedUrl* out) {
     return -1; /* only http/https, matching the libcurl allowlist */
   }
 
-  const char* slash = strchr(p, '/');
-  const char* colon = strchr(p, ':');
-  const char* host_end = slash;
-  if(colon != NULL && (slash == NULL || colon < slash)) {
-    host_end = colon;
-    size_t plen = slash ? (size_t)(slash - colon - 1) : strlen(colon + 1);
-    if(plen == 0 || plen >= sizeof(out->port))
-      return -1;
-    memcpy(out->port, colon + 1, plen);
-    out->port[plen] = '\0';
+  /* The authority ends at '/', '?' or '#', not only at '/'. A query-only URL
+   * ("http://host?x=1") used to put "?x=1" in the host. */
+  const char* auth = p;
+  const char* end = auth;
+  while(*end != '\0' && *end != '/' && *end != '?' && *end != '#')
+    end++;
+
+  /* Userinfo is not turned into credentials here (basicAuth is the supported
+   * path), but it must not change which host is dialled. libcurl treats the
+   * text after the last '@' as the authority, so do the same: a URL such as
+   * http://victim:80@evil.example/ connects to evil.example, not victim. */
+  const char* at = NULL;
+  for(const char* c = auth; c < end; c++) {
+    if(*c == '@')
+      at = c;
   }
-  size_t hlen = host_end ? (size_t)(host_end - p) : strlen(p);
+  if(at != NULL)
+    auth = at + 1;
+  if(auth >= end)
+    return -1;
+
+  const char* host_start = auth;
+  const char* host_end = end;
+  const char* port_start = NULL;
+  int         bracketed = 0;
+
+  if(auth < end && *auth == '[') {
+    const char* close = memchr(auth, ']', (size_t)(end - auth));
+    if(close == NULL)
+      return -1;
+    bracketed = 1;
+    host_start = auth + 1;
+    host_end = close;
+    if(close + 1 < end) {
+      if(close[1] != ':')
+        return -1;
+      port_start = close + 2;
+    }
+  } else {
+    const char* colon = memchr(auth, ':', (size_t)(end - auth));
+    if(colon != NULL) {
+      host_end = colon;
+      port_start = colon + 1;
+    }
+  }
+
+  size_t hlen = (size_t)(host_end - host_start);
   if(hlen == 0 || hlen >= sizeof(out->host))
     return -1;
-  memcpy(out->host, p, hlen);
+  memcpy(out->host, host_start, hlen);
   out->host[hlen] = '\0';
 
-  int written = snprintf(out->path, sizeof(out->path), "%s", slash ? slash : "/");
+  if(port_start != NULL) {
+    size_t plen = (size_t)(end - port_start);
+    if(plen == 0 || plen >= sizeof(out->port))
+      return -1;
+    long port_num = 0;
+    for(size_t i = 0; i < plen; i++) {
+      if(port_start[i] < '0' || port_start[i] > '9')
+        return -1;
+      port_num = port_num * 10 + (port_start[i] - '0');
+      if(port_num > 65535)
+        return -1;
+    }
+    if(port_num == 0)
+      return -1;
+    memcpy(out->port, port_start, plen);
+    out->port[plen] = '\0';
+  }
+
+  /* Strip the fragment; the request target keeps the query string. */
+  const char* frag = memchr(end, '#', strlen(end));
+  size_t      tail_len = frag ? (size_t)(frag - end) : strlen(end);
+  int         written;
+  if(tail_len == 0 || *end == '?') {
+    written = snprintf(out->path, sizeof(out->path), "/%.*s", (int)tail_len, end);
+  } else {
+    written = snprintf(out->path, sizeof(out->path), "%.*s", (int)tail_len, end);
+  }
   if(written < 0 || written >= (int)sizeof(out->path))
     return -1;
+
+  const char* default_port = out->is_https ? "443" : "80";
+  int         needs_port = strcmp(out->port, default_port) != 0;
+  if(bracketed) {
+    written =
+        snprintf(out->host_header, sizeof(out->host_header), "[%s]", out->host);
+  } else {
+    written = snprintf(out->host_header, sizeof(out->host_header), "%s", out->host);
+  }
+  if(written < 0 || written >= (int)sizeof(out->host_header))
+    return -1;
+  if(needs_port) {
+    size_t used = (size_t)written;
+    written = snprintf(out->host_header + used, sizeof(out->host_header) - used,
+                       ":%s", out->port);
+    if(written < 0 || (size_t)written >= sizeof(out->host_header) - used)
+      return -1;
+  }
   return 0;
 }
 
@@ -420,7 +522,7 @@ static char* build_request(const struct ParsedUrl*   url,
       snprintf(NULL, 0,
                "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
                "Length: %zu\r\n\r\n",
-               method, url->path, url->host, auth_header ? auth_header : "",
+               method, url->path, url->host_header, auth_header ? auth_header : "",
                raw_headers, "", post_len);
   if(head_len < 0) {
     free(normalized);
@@ -437,8 +539,8 @@ static char* build_request(const struct ParsedUrl*   url,
   snprintf(req, (size_t)head_len + 1,
            "%s %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n%s%s%sContent-"
            "Length: %zu\r\n\r\n",
-           method, url->path, url->host, auth_header ? auth_header : "", raw_headers,
-           "", post_len);
+           method, url->path, url->host_header, auth_header ? auth_header : "",
+           raw_headers, "", post_len);
   free(normalized);
   free(auth_header);
   /* memcpy rather than a %s in the format: the body may contain NUL bytes. */
