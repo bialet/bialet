@@ -11,44 +11,40 @@ tree. No props, no children, no expressions-in-markup outside `{{ }}`, and no
 
 ---
 
-## 1. Tag Nesting Limitations
+## 1. Tag Nesting
 
-JSX lets you nest any element inside any element. Bialet has one hard rule:
-
-**The outermost tag of an inline HTML string must not appear again as a
-direct child tag at any nesting level.**
-
-The parser checks the whole string, not just the first level, and reports
-`Cannot nest <div> inside <div>` on the offending line.
+JSX lets you nest any element inside any element, and Bialet does too — a tag
+may contain its own name at any depth. The difference is balance: the parser
+tracks how many copies of the outermost tag are open and ends the string at the
+close tag that matches it, so every level must be closed.
 
 ```wren
-// WRONG — <div> is the outermost tag AND a child
-var bad = <div><div>Hello</div></div>
-var alsoBad = <section><section>Nested</section></section>
-
-// CORRECT — open with a different tag, then nest freely
-var good = <div><section>Hello</section></div>
-
-// CORRECT — once the tree starts with a different tag, the
-// original tag can appear at any depth below it
-var fine = <section>
+// Fine — the same tag nests, at any depth
+var fine = <div><div>Hello</div></div>
+var deep = <section>
   <div>
     <div>Deeply nested same tags work here</div>
   </div>
 </section>
+
+// Compilation error — the outer <div> is never closed
+var bad = <div><div>Hello</div>
 ```
 
-**Pitfall:** this bites the common JSX pattern of a wrapper `<div>` inside a
-`<div>` (row, then column). If you need the same tag twice, change the
-outermost wrapper or extract the inner one into a component method (see
-section 4).
+**Pitfall:** because only the outermost tag name is tracked, a *different* tag
+left unclosed is served as-is and repaired by the browser, not by the compiler:
 
-Two more parser quirks to unlearn from JSX:
+```wren
+// Compiles — <span> is never closed, the markup is served verbatim
+var loose = <div><span>Hello</div>
+```
 
-- **Mismatched closing tags are not validated.** Only the outermost closing
-  tag is matched. `<div><span>Hello</div>` compiles and is served verbatim —
-  the browser auto-closes the `<span>` at render time. Write well-formed HTML
-  yourself; there is no compiler checking your balance.
+Two parser quirks to unlearn from JSX:
+
+- **Mismatched closing tags are not validated.** `<div><span>Hello</div>`
+  compiles and is served verbatim — the browser auto-closes the `<span>` at
+  render time. Write well-formed HTML yourself; there is no compiler checking
+  your balance.
 - **Tag names are restricted.** Lowercase, start with a letter, only letters,
   numbers, and hyphens. `<MyComponent>` and `<my_component>` are compiler
   errors. PascalCase component names are a JSX thing — see section 4.

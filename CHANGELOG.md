@@ -4,6 +4,16 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.17 — unreleased
+
+### Added
+
+- Inline HTML strings can nest the outermost tag: `<div><div>...</div></div>`
+  compiles. The lexer tracks how many copies of the outermost tag name are open
+  and ends the string at the close tag that matches it, instead of reporting
+  `Cannot nest <div> inside <div>`. Every level must still be closed, and a
+  close tag with a different name or an extra close tag is still an error.
+
 ## 1.2.16 — 2026-11-11
 
 ### Added

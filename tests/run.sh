@@ -81,7 +81,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
   test_syntax "Multiline interp passes       " "syntax_ok_interp_multiline.wren" 0
-  test_syntax "Nested same tag rejected      " "syntax_err_nested.wren" 1
+  test_syntax "Nested same tag passes        " "syntax_ok_nested.wren" 0
+  test_syntax "Unclosed nested tag fails     " "syntax_err_nest_unterminated.wren" 1
+  test_syntax "Stray close tag fails         " "syntax_err_nest_stray_close.wren" 1
+  test_syntax "Mismatched nested close fails " "syntax_err_nest_mismatched.wren" 1
   test_syntax "Leading op rejected           " "syntax_err_interp_leading_op.wren" 1
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
@@ -944,6 +947,7 @@ run_test "JSON response               " "json"            200 '{"foo":"bar"}'
 run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
+run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html-nest.html")"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500
 run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"

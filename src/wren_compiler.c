@@ -202,7 +202,11 @@ typedef struct {
   int  quotes[MAX_INTERPOLATION_NESTING];
   int  numParens;
   char handlebars[MAX_INTERPOLATION_NESTING][MAX_METHOD_NAME];
-  int  numHandlebars;
+  // Nesting depth of the literal that opened each pending "{{", so the text
+  // after "}}" resumes at the same depth instead of restarting at the
+  // outermost level.
+  int handlebarDepths[MAX_INTERPOLATION_NESTING];
+  int numHandlebars;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -950,6 +954,36 @@ static int htmlTagIsVoidElement(char* tagName) {
          strcmp(tagName, "wbr") == 0;
 }
 
+// Returns the length of the tag name that starts at [text], or 0 when [text]
+// does not start a tag at all. A name starts with a lowercase letter, may
+// continue with lowercase letters, digits, and hyphens (e.g. my-element), and
+// must be followed by '>', '/', or whitespace. A '<' used as a comparison
+// ('a < b', 'a<b)') never looks like a tag, which is what lets it stay text
+// inside an HTML string.
+static size_t htmlTagNameLength(const char* text) {
+  size_t length = 0;
+  for(;;) {
+    char c = text[length];
+    if(c >= 'a' && c <= 'z') {
+      length++;
+      continue;
+    }
+    if(length > 0 && ((c >= '0' && c <= '9') || c == '-')) {
+      length++;
+      continue;
+    }
+    break;
+  }
+  if(length == 0)
+    return 0;
+
+  char after = text[length];
+  if(after == '>' || after == '/' || after == ' ' || after == '\t' ||
+     after == '\r' || after == '\n')
+    return length;
+  return 0;
+}
+
 // Returns true if [tagName] is a valid HTML tag name: it must start with a
 // lowercase letter and contain only lowercase letters, numbers, and hyphens
 // (e.g. <my-element>).
@@ -963,7 +997,8 @@ static int htmlTagNameIsValid(char* tagName) {
   return 1;
 }
 
-static void readHtmlString(Parser* parser, char* previousTagName) {
+static void readHtmlString(Parser* parser, char* previousTagName,
+                           int previousDepth) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_HTML_NODE;
@@ -972,11 +1007,9 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   int           tagIsOpen = 1;
   int           tagDone = 0;
   int           invalidTag = 0;
-
-  // Only a string that reads its own opening tag can detect a nested tag with
-  // the same name. Resumes after "{{ }}" and doctype strings already consumed
-  // their tag name elsewhere, so they skip the check.
-  bool readsOpeningTag = previousTagName[0] == '\0';
+  // The opening tag's name scan stopped at a space, so its attributes (and
+  // their quoted values) are still ahead in the content loop.
+  int openTagHasAttributes = 0;
 
   if(strlen(previousTagName) > 0) {
     strcpy(tagName, previousTagName);
@@ -1002,7 +1035,12 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         break;
       }
       wrenByteBufferWrite(parser->vm, &string, c);
-      if(c == '>' || c == ' ') {
+      if(c == '>') {
+        tagDone = 1;
+        break;
+      }
+      if(c == ' ') {
+        openTagHasAttributes = 1;
         tagDone = 1;
         break;
       }
@@ -1025,26 +1063,95 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
   }
 
   if(closingTag < 0 && !invalidTag) {
+    // Nesting depth of the outermost tag. A child with the same name is legal
+    // (<div><div>Nested</div></div>): the string ends only when a close tag
+    // matching the outermost name brings this back to zero. Children with a
+    // different name never change the depth, so a stray tag cannot end it.
+    // A doctype string starts at 0: its first <html> is the root.
+    int depth = previousDepth;
+    // Inside a tag of the content. Attribute values must not move the depth,
+    // and a '>' inside one must not be read as the end of the tag.
+    int  inTag = openTagHasAttributes;
+    char quote = '\0';
+    // The tag being read opens or closes <tagName> itself.
+    int  openingSame = 0;
+    int  closingSame = 0;
+    char prev = '\0';
+
     for(;;) {
       char c = nextChar(parser);
-      if(c == '>')
-        tagIsOpen = 0;
       if(c == '\0') {
         lexError(parser, "Unterminated HTML string.");
         parser->currentChar--;
         break;
       }
+
       if(c == '{' && peekChar(parser) == '{') {
         type = TOKEN_HTML_TEXT;
         // Cap the handlebar stack so pathological nesting cannot write past
         // the fixed-size handlebars array (MAX_INTERPOLATION_NESTING rows).
         if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
           strcpy(parser->handlebars[parser->numHandlebars], tagName);
+          parser->handlebarDepths[parser->numHandlebars] = depth;
           parser->numHandlebars++;
         }
         nextChar(parser);
         break;
       }
+
+      if(inTag && quote != '\0') {
+        if(c == quote)
+          quote = '\0';
+        wrenByteBufferWrite(parser->vm, &string, c);
+        prev = c;
+        continue;
+      }
+
+      if(c == '>')
+        tagIsOpen = 0;
+
+      if(inTag) {
+        if(c == '"' || c == '\'') {
+          quote = c;
+        } else if(c == '>') {
+          inTag = 0;
+          if(closingSame) {
+            closingSame = 0;
+            depth--;
+          } else if(openingSame) {
+            openingSame = 0;
+            // A self-closing child encloses nothing, so it adds no level.
+            if(prev != '/')
+              depth++;
+          }
+          wrenByteBufferWrite(parser->vm, &string, c);
+          prev = c;
+          if(depth <= 0)
+            break;
+          continue;
+        }
+      } else if(c == '<') {
+        // Track every tag, so a '>' inside its attributes cannot be taken for
+        // the end of the tag. Only a tag named like the outermost one changes
+        // the depth.
+        const char* name = parser->currentChar;
+        int         isClose = name[0] == '/';
+        if(isClose)
+          name++;
+        size_t nameLength = htmlTagNameLength(name);
+        if(nameLength > 0) {
+          inTag = 1;
+          if(nameLength == strlen(tagName) &&
+             memcmp(name, tagName, nameLength) == 0) {
+            if(isClose) {
+              closingSame = 1;
+            } else {
+              openingSame = 1;
+            }
+          }
+        }
+      }
+
       if(tagIsOpen && c == ' ' && peekChar(parser) == '/' &&
          peekNextChar(parser) == '>' && htmlTagIsVoidElement(tagName)) {
         // Omit space and slash in self closing tag
@@ -1052,42 +1159,9 @@ static void readHtmlString(Parser* parser, char* previousTagName) {
         wrenByteBufferWrite(parser->vm, &string, nextChar(parser));
         break;
       }
-      // The outermost tag cannot nest itself. A nested opening tag with the
-      // same name makes the first matching close tag end the string early and
-      // derails the parser, so fail with a clear message instead.
-      if(readsOpeningTag && c == '<' && peekChar(parser) >= 'a' &&
-         peekChar(parser) <= 'z') {
-        size_t tagLen = strlen(tagName);
-        if(strncmp(parser->currentChar, tagName, tagLen) == 0) {
-          char after = parser->currentChar[tagLen];
-          if(after == '>' || after == ' ' || after == '/' || after == '\r' ||
-             after == '\n' || after == '\0') {
-            lexError(parser,
-                     "Cannot nest <%s> inside <%s>: use a different "
-                     "tag for the inner element.",
-                     tagName, tagName);
-            break;
-          }
-        }
-      }
+
       wrenByteBufferWrite(parser->vm, &string, c);
-      if(c == '<' && peekChar(parser) == '/') {
-        closingTag = 0;
-      }
-      // Tags should start with a lowercase letter, next characters can be
-      // lowercase letters, numbers, or hyphens (e.g. custom elements like
-      // <my-element>).
-      if((closingTag >= 0 && c >= 'a' && c <= 'z') ||
-         (closingTag >= 1 && c >= '0' && c <= '9') ||
-         (closingTag >= 1 && c == '-')) {
-        if(tagName[closingTag] != c) {
-          closingTag = -1; // Different tag
-        } else {
-          closingTag++;
-        }
-      }
-      if(c == '>' && (size_t)closingTag == strlen(tagName))
-        break;
+      prev = c;
     }
   }
   free(tagName);
@@ -1330,7 +1404,8 @@ static void nextToken(Parser* parser) {
           if(parser->numHandlebars > 0) {
             parser->numHandlebars--;
             nextChar(parser);
-            readHtmlString(parser, parser->handlebars[parser->numHandlebars]);
+            readHtmlString(parser, parser->handlebars[parser->numHandlebars],
+                           parser->handlebarDepths[parser->numHandlebars]);
             return;
           }
         }
@@ -1430,10 +1505,10 @@ static void nextToken(Parser* parser) {
             lastTokenType(parser) == TOKEN_QUESTION ||
             lastTokenType(parser) == TOKEN_LINE)) {
           if(!isDocType) {
-            readHtmlString(parser, "");
+            readHtmlString(parser, "", 1);
           } else {
             parser->currentChar--; // Need to consume again the "<"
-            readHtmlString(parser, "html");
+            readHtmlString(parser, "html", 0);
           }
           // Ignore white space after the end of the string
           if(!notIgnoreSpacesTokens) {
