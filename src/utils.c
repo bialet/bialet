@@ -88,6 +88,16 @@ char* log_escape(const char* s) {
         }
         cp = (cp << 6) | (cont & 0x3F);
       }
+      /* Overlong forms are not valid UTF-8, and a consumer that accepts them
+       * would still decode a C1 control from C0 9B / E0 80 80. Surrogates and
+       * code points past U+10FFFF are invalid too. Treat all of them as
+       * invalid so each byte is escaped. */
+      if(valid) {
+        if((seq == 2 && cp < 0x80) || (seq == 3 && cp < 0x800) ||
+           (seq == 4 && cp < 0x10000) || cp > 0x10FFFF ||
+           (cp >= 0xD800 && cp <= 0xDFFF))
+          valid = 0;
+      }
     }
 
     int escape = 0;

@@ -642,9 +642,9 @@ except OSError:
     offset = 0
 
 conn = http.client.HTTPConnection(host, port, timeout=20)
-# C0 (LF, ESC) and C1 (CSI U+009B, OSC U+009D in their UTF-8 form) must all be
-# hex-escaped before the record reaches the operator log.
-body = 'v=abc%0aFORGED%1b%5b31mEND%c2%9bC1%c2%9dos'
+# C0 (LF, ESC), C1 (CSI U+009B, OSC U+009D in their UTF-8 form), and
+# non-shortest forms of the same controls must all be hex-escaped.
+body = 'v=abc%0aFORGED%1b%5b31mEND%c2%9bC1%c2%9dos%c0%9bOV%e0%80%80V'
 conn.request('POST', '/log-escape', body,
              {'Content-Type': 'application/x-www-form-urlencoded'})
 resp = conn.getresponse()
@@ -657,7 +657,7 @@ except OSError:
     log = b''
 print("status:%d|escaped:%s|rawEsc:%s|rawC1:%s|forged:%s" % (
     resp.status,
-    b'Log probe abc\\x0aFORGED\\x1b[31mEND\\xc2\\x9bC1\\xc2\\x9dos' in log,
+    b'Log probe abc\\x0aFORGED\\x1b[31mEND\\xc2\\x9bC1\\xc2\\x9dos\\xc0\\x9bOV\\xe0\\x80\\x80V' in log,
     b'\x1b' in log,
     b'\xc2\x9b' in log,
     b'\nFORGED' in log))
@@ -1117,7 +1117,8 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
     run_test "Http userinfo key is real host" "http-redirect?which=userinfo&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|session=abc123"
   fi
   run_test "Http credential strip by name " "http-redirect?which=case&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "no-auth|no-auth|no-auth"
-  run_test "Http custom credential strip  " "http-redirect?which=strip&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "Basic CUSTOM|no-auth|no-auth"
+  run_test "Http custom credential strip  " "http-redirect?which=strip&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "secret|no-auth|no-auth|no-auth"
+  run_test "Http strip list type-checked " "http-redirect?which=strip-type&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "no-auth|type:true"
   run_test "Http no credential when unset " "http-redirect?which=noauth&target=http://$HOST:$ECHO_PORT" 200 "no-auth"
   run_test "Http reuse keeps per-call auth" "http-redirect?which=reuse&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "here:Basic cmV1c2U6cHc=|other:no-auth|form:a=b|formother:no-k=no-v"
   run_test "Http token not written to map" "http-redirect?which=shared&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "Bearer bearer-shared|no-auth|intact"

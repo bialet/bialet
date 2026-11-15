@@ -1330,7 +1330,8 @@ class Http {
   status { _status }
   headers { _headers }
   headers(name) {
-    var key = name == null ? "" : "%(name)".trim().lower
+    if (name == null) return null
+    var key = "%(name)".trim().lower
     return _headers.containsKey(key) ? _headers[key] : null
   }
   error { _error }
@@ -1427,7 +1428,7 @@ class Http {
     // emitted it, and lets credentials stop at the origin that issued them.
     var hops = 0
     var sendCredentials = true
-    var extraStrip = options.containsKey("stripHeaders") ? options["stripHeaders"] : Http.stripHeaders
+    var extraStrip = Http.normalizeStrip_(options.containsKey("stripHeaders") ? options["stripHeaders"] : Http.stripHeaders)
     while (true) {
       var hopTimeout = deadline - Util.monotonicMs
       if (hopTimeout <= 0) {
@@ -1488,7 +1489,9 @@ class Http {
         tmp = line.split(":")
         headerName = tmp.removeAt(0).trim().lower
         headerValue = tmp.join(":").trim().lower
-        _headers[headerName] = headerValue
+        // A line with no field name is not a header; storing it under "" made
+        // headers(null) return upstream-controlled text.
+        if (headerName != "") _headers[headerName] = headerValue
       }
     }
 
@@ -1500,17 +1503,30 @@ class Http {
   // an origin), Authorization and Cookie are dropped by name, not by exact map
   // key, so every spelling stops at the origin that issued it.
   // Header names dropped when a redirect crosses an origin, on top of the
-  // always-dropped Authorization and Cookie. A caller-supplied
-  // Proxy-Authorization or custom auth header would otherwise follow the hop.
-  // Set this from _app.wren (which runs per request) or per call with the
-  // stripHeaders option.
+  // always-dropped Authorization, Cookie and Proxy-Authorization. A
+  // caller-supplied custom auth header would otherwise follow the hop. Set
+  // this in the route file (or a module it imports) before its Http.* calls,
+  // or per call with the stripHeaders option: the list is per-request state.
   static stripHeaders { __stripHeaders ? __stripHeaders : [] }
-  static stripHeaders=(names) {
+  static stripHeaders=(names) { __stripHeaders = Http.normalizeStrip_(names) }
+
+  static normalizeStrip_(names) {
     var list = []
-    if (names != null) {
-      for (name in names) list.add("%(name)".trim().lower)
+    if (names == null) return list
+    if (names is String) {
+      list.add(names.trim().lower)
+      return list
     }
-    __stripHeaders = list
+    if (!(names is List)) {
+      Fiber.abort("stripHeaders must be a list of header names")
+    }
+    for (name in names) {
+      if (!(name is String)) {
+        Fiber.abort("stripHeaders entries must be header names")
+      }
+      list.add(name.trim().lower)
+    }
+    return list
   }
 
   static headerBlock_(headers, url, sendCredentials, extraStrip) {
@@ -1533,12 +1549,12 @@ class Http {
 
   static isCredentialHeader_(name, extraStrip) {
     var n = "%(name)".trim().lower
-    // Authorization and Cookie are always stripped: dropping the default set
-    // would make every redirect leak them again.
-    if (n == "authorization" || n == "cookie") return true
-    if (extraStrip == null) return false
+    // These are always stripped: dropping the default set would make every
+    // redirect leak them again, and Proxy-Authorization is never valid on
+    // another origin's request.
+    if (n == "authorization" || n == "cookie" || n == "proxy-authorization") return true
     for (h in extraStrip) {
-      if ("%(h)".trim().lower == n) return true
+      if (h == n) return true
     }
     return false
   }

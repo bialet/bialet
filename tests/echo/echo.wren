@@ -13,6 +13,7 @@ var mode = Request.get("mode")
 if (mode == "header") return Request.header("x-echo") || "no-header"
 if (mode == "auth") return Request.header("authorization") || "no-auth"
 if (mode == "proxyauth") return Request.header("proxy-authorization") || "no-auth"
+if (mode == "apikey") return Request.header("x-api-key") || "no-auth"
 if (mode == "json") {
   Response.json(Json.parse(Request.body))
   return

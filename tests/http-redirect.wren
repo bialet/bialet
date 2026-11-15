@@ -82,18 +82,34 @@ if (which == "shared") {
 }
 
 if (which == "strip") {
-  // A caller-supplied Proxy-Authorization follows a cross-origin redirect
-  // unless its name is in the strip list, either per call or on the class.
-  var custom = target + "/echo?mode=redirect-auth&echo=proxyauth&to=" + otherHost
+  // A custom auth header follows a cross-origin redirect unless its name is in
+  // the strip list, either per call or on the class. Proxy-Authorization is
+  // always stripped because it is never valid on another origin's request.
+  var custom = target + "/echo?mode=redirect-auth&echo=apikey&to=" + otherHost
   var without = Http.get(custom,
-    {"headers": {"Proxy-Authorization": "Basic CUSTOM"}})
+    {"headers": {"X-Api-Key": "secret"}})
   var perCall = Http.get(custom,
-    {"headers": {"Proxy-Authorization": "Basic CUSTOM"},
-     "stripHeaders": ["Proxy-Authorization"]})
-  Http.stripHeaders = ["Proxy-Authorization"]
+    {"headers": {"X-Api-Key": "secret"},
+     "stripHeaders": ["x-api-key"]})
+  Http.stripHeaders = ["X-Api-Key"]
   var classWide = Http.get(custom,
+    {"headers": {"X-Api-Key": "secret"}})
+  var proxy = Http.get(target + "/echo?mode=redirect-auth&echo=proxyauth&to=" + otherHost,
     {"headers": {"Proxy-Authorization": "Basic CUSTOM"}})
-  return "%(without)|%(perCall)|%(classWide)"
+  return "%(without)|%(perCall)|%(classWide)|%(proxy)"
+}
+
+if (which == "strip-type") {
+  // A string is one header name, not an iterable of characters. Anything that
+  // is not a list or string is refused instead of silently stripping nothing.
+  Http.stripHeaders = "X-Api-Key"
+  var one = Http.get(target + "/echo?mode=redirect-auth&echo=apikey&to=" + otherHost,
+    {"headers": {"X-Api-Key": "secret"}})
+  var badFiber = Fiber.new {
+    Http.stripHeaders = 42
+  }
+  badFiber.try()
+  return "%(one)|type:" + (badFiber.error != null).toString
 }
 
 if (which == "control") {
