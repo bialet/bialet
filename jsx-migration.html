@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'jsx-migration';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=da11c51e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=046b95af"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Template" href="template.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.16" />
+  <meta name="docsearch:version" content="1.2.17" />
   </head>
   
   
@@ -438,7 +438,7 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting-limitations">1. Tag Nesting Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting">1. Tag Nesting</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>
@@ -484,39 +484,36 @@ cheatsheet — the five differences that turn JSX code into Bialet code.</p>
 tree. No props, no children, no expressions-in-markup outside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, and no
 <code class="docutils literal notranslate"><span class="pre">dangerouslySetInnerHTML</span></code>.</p>
 <hr class="docutils" />
-<section id="tag-nesting-limitations">
-<h2>1. Tag Nesting Limitations<a class="headerlink" href="#tag-nesting-limitations" title="Link to this heading">#</a></h2>
-<p>JSX lets you nest any element inside any element. Bialet has one hard rule:</p>
-<p><strong>The outermost tag of an inline HTML string must not appear again as a
-direct child tag at any nesting level.</strong></p>
-<p>The parser checks the whole string, not just the first level, and reports
-<code class="docutils literal notranslate"><span class="pre">Cannot</span> <span class="pre">nest</span> <span class="pre">&lt;div&gt;</span> <span class="pre">inside</span> <span class="pre">&lt;div&gt;</span></code> on the offending line.</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — &lt;div&gt; is the outermost tag AND a child</span>
-<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
-<span class="k">var</span><span class="w"> </span><span class="n">alsoBad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
-
-<span class="c1">// CORRECT — open with a different tag, then nest freely</span>
-<span class="k">var</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;section&gt;</span><span class="nc">Hello</span><span class="x">&lt;/section&gt;&lt;/div&gt;</span>
-
-<span class="c1">// CORRECT — once the tree starts with a different tag, the</span>
-<span class="c1">// original tag can appear at any depth below it</span>
-<span class="k">var</span><span class="w"> </span><span class="n">fine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
+<section id="tag-nesting">
+<h2>1. Tag Nesting<a class="headerlink" href="#tag-nesting" title="Link to this heading">#</a></h2>
+<p>JSX lets you nest any element inside any element, and Bialet does too — a tag
+may contain its own name at any depth. The difference is balance: the parser
+tracks how many copies of the outermost tag are open and ends the string at the
+close tag that matches it, so every level must be closed.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Fine — the same tag nests, at any depth</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;&lt;/div&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">deep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;</span>
 <span class="x">  &lt;div&gt;</span>
 <span class="w">    </span><span class="x">&lt;div&gt;Deeply nested same tags work here&lt;/div&gt;</span>
 <span class="w">  </span><span class="x">&lt;/div&gt;</span>
 <span class="x">&lt;/section&gt;</span>
+
+<span class="c1">// Compilation error — the outer &lt;div&gt; is never closed</span>
+<span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;div&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
 </pre></div>
 </div>
-<p><strong>Pitfall:</strong> this bites the common JSX pattern of a wrapper <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> inside a
-<code class="docutils literal notranslate"><span class="pre">&lt;div&gt;</span></code> (row, then column). If you need the same tag twice, change the
-outermost wrapper or extract the inner one into a component method (see
-section 4).</p>
-<p>Two more parser quirks to unlearn from JSX:</p>
+<p><strong>Pitfall:</strong> because only the outermost tag name is tracked, a <em>different</em> tag
+left unclosed is served as-is and repaired by the browser, not by the compiler:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Compiles — &lt;span&gt; is never closed, the markup is served verbatim</span>
+<span class="k">var</span><span class="w"> </span><span class="n">loose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>Two parser quirks to unlearn from JSX:</p>
 <ul class="simple">
-<li><p><strong>Mismatched closing tags are not validated.</strong> Only the outermost closing
-tag is matched. <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code> compiles and is served verbatim —
-the browser auto-closes the <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code> at render time. Write well-formed HTML
-yourself; there is no compiler checking your balance.</p></li>
+<li><p><strong>Mismatched closing tags are not validated.</strong> <code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span></code>
+compiles and is served verbatim — the browser auto-closes the <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code> at
+render time. Write well-formed HTML yourself; there is no compiler checking
+your balance.</p></li>
 <li><p><strong>Tag names are restricted.</strong> Lowercase, start with a letter, only letters,
 numbers, and hyphens. <code class="docutils literal notranslate"><span class="pre">&lt;MyComponent&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;my_component&gt;</span></code> are compiler
 errors. PascalCase component names are a JSX thing — see section 4.</p></li>
@@ -685,11 +682,10 @@ There is no prop syntax, no children slot, no component invocation in markup.</p
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Because the method returns a plain string, the same-tag nesting rule applies
-across the boundary: if a component’s outermost tag would repeat under a
-caller’s outermost tag, the parser rejects it. <code class="docutils literal notranslate"><span class="pre">card()</span></code> returning an
-<code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code> inside a page whose outermost tag is also <code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code> fails —
-widen one of them.</p>
+<p>Because the method returns a plain string, there is no extra rule at the
+boundary: each literal is parsed on its own, so a component may return an
+<code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code> inside a page whose outermost tag is also <code class="docutils literal notranslate"><span class="pre">&lt;article&gt;</span></code>. Only the
+tags inside a single literal have to balance.</p>
 <p><strong>Pitfall:</strong> instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>. <code class="docutils literal notranslate"><span class="pre">Template.layout(...)</span></code> looks for
 a static method and fails. Always instantiate first.</p>
 <p><strong>Pitfall:</strong> a method body is an expression body only when the expression
@@ -759,8 +755,8 @@ it crash the request. Guard every read:</p>
 <h2>Migration checklist<a class="headerlink" href="#migration-checklist" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>[ ] Replace <code class="docutils literal notranslate"><span class="pre">{expr}</span></code> with <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">expr</span> <span class="pre">}}</span></code> — and expect values to be escaped.</p></li>
-<li><p>[ ] Open repeated same-tag nesting with a different outer tag, or extract a
-component method.</p></li>
+<li><p>[ ] Balance the tags inside every literal: same-tag nesting is fine, an
+unclosed level is a compile error.</p></li>
 <li><p>[ ] Move statements out of <code class="docutils literal notranslate"><span class="pre">map</span></code> callbacks; keep the callback body a single
 expression starting on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line.</p></li>
 <li><p>[ ] Compute strings before interpolating into attributes; no template
@@ -822,7 +818,7 @@ you fully control; never for user input.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting-limitations">1. Tag Nesting Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting">1. Tag Nesting</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>

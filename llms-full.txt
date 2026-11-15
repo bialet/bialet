@@ -3440,8 +3440,8 @@ var inputField = <input value="{{ userInput }}" />
 ```
 
 Without the space (`<input/>`) the parser reads the slash as part of the tag
-name, never finds a matching close tag, and reports "Unterminated HTML
-string."
+name and rejects it as `Invalid tag name: must be lowercase alphanumeric +
+hyphens` instead of ending the string.
 
 ### Multi-line Inline HTML
 
@@ -3457,34 +3457,68 @@ var card = <article>
 
 ### Pitfalls
 
-**The opening tag cannot nest itself.** The outermost tag of an inline HTML
-string must not appear as a direct child tag at any nesting level. Once the
-tree starts with a *different* tag, the original tag can be used freely below
-it. The parser checks this on the *whole* string, not just the first level,
-and reports `Cannot nest <div> inside <div>` on the offending line.
+**The outermost tag may nest itself.** `<div><div>Hello</div></div>` is a
+valid string: the lexer tracks how many copies of the outermost tag name are
+open and ends the string only at the close tag that matches the outermost
+opening tag. Whether the string starts with `<div>` or `<section>` makes no
+difference, and any tag can appear inside any other one.
 
 ```wren
-// Wrong — <div> is the outermost tag AND a direct child
-var bad = <div><div>Hello</div></div>
-var alsoBad = <section><section>Nested</section></section>
+var two = <div><div>Hello</div></div>
+var three = <div><div><div>Deep</div>Middle</div>Outer</div>
+var mixed = <section><div><section>Also fine</section></div></section>
 
-// Correct — use a different tag as the outermost wrapper
-var good = <div><section>Hello</section></div>
-
-// Also correct — wrapping with a different tag breaks the conflict
-var fine = <section>
-  <div style="border:1px solid #ccc">
-    <div style="background:#eee">
-      Deeply nested same tags work once the outer tag differs.
-    </div>
-  </div>
-</section>
+// Siblings and interpolation work the same way
+var siblings = <div><div>One</div><div>Two</div></div>
+var list = <ul>{{ items.map{|item| <li>{{ item }}</li> } }}</ul>
 ```
 
-**Mismatched closing tags are not validated.** The parser only matches the
-closing tag against the *outermost* opening tag. Inner tags are never checked
-for balance — the string ends at the first closing tag that matches the outer
-tag, and everything before it is served verbatim, unclosed inner tags included:
+Each level of the *outermost* tag must be closed. A missing close tag or one
+close tag too many is a compile error, and the message says which one you hit.
+A close tag with a different name is not validated at all: it only fails when it
+leaves the outermost tag one close short.
+
+```wren
+// Compilation error
+// Unclosed <div>: 2 open, 1 closed (string opened on line 1).
+var bad = <div><div>Hello</div>
+
+// Compilation error — the outer <div> is one close short; the message names
+// the </section> that was mistaken for it
+// Unclosed <div>: 2 open, 1 closed. </section> does not close <div>
+// (string opened on line 1).
+var alsoBad = <div><div>Hello</section></div>
+
+// Compiles: </section> is not validated, and the outer <div> is closed twice.
+// The served markup is unbalanced — the browser repairs it.
+var accepted = <div><div>Hello</section></div></div>
+
+// Compilation error
+// Unexpected </div>: <div> is already closed.
+var stillBad = <div><div>Hello</div></div></div>
+```
+
+The `Unclosed` message counts how many copies of the outermost tag were opened
+and closed, then names the line the literal started on — the error itself is
+reported where the file ended. When the literal was split by `{{ }}`, the line
+is still the one the literal opened on, not the line it resumed on.
+
+An opening tag cut short by a newline or the end of the file is a different
+error, because there is no content to read. It covers both a cut inside the tag
+name and one after it, in the attributes:
+
+```wren
+// Compilation error — Expected '>' to close the opening <div> tag.
+var cut = <div
+
+// Compilation error — same message: the name is complete, the tag is not.
+var cutAttributes = <div class="a"
+```
+
+**Mismatched closing tags are not validated.** The parser only tracks the tag
+name it is matching against. Inner tags with a different name are never checked
+for balance — everything before the outermost close tag is served verbatim,
+unclosed inner tags included:
 
 ```wren
 // Compiles fine — <span> is never closed, the markup is served as-is
@@ -3497,11 +3531,16 @@ var good = <div><span>Hello</span></div>
 The browser receives `<div><span>Hello</div>` and auto-closes the `<span>`
 when it renders, so the page usually looks fine. But the markup is not
 validated, so write matching tags yourself. Anything after the first matching
-close tag is outside the string and fails to compile:
+close tag is outside the string and fails to compile. A second close tag for
+the outermost name gets a clear message; one for any other name is only seen as
+stray tokens:
 
 ```wren
-// Compilation error — the string already ended at </div>
-var alsoBad = <div><span>Hello</div></span>
+// Compilation error — Unexpected </div>: <div> is already closed.
+var alsoBad = <div><span>Hello</div></div>
+
+// Compilation error — Error at '/': Expected expression.
+var alsoBad2 = <div><span>Hello</div></span>
 ```
 
 **Invalid tag names.** Tag names must be lowercase, start with a letter, and
@@ -4071,20 +4110,17 @@ thank you).
 
 ### Pitfall
 
-**Same-tag nesting rule still applies.** The outermost tag of the inline
-HTML string cannot repeat at any nesting level:
+**Same-tag nesting still needs matching close tags.** The outermost tag of an
+inline HTML string may repeat at any depth, but every copy has to be closed —
+the string ends only at the close tag that brings the outermost one back to
+zero:
 
 ```wren
-// Wrong — <section> is outermost and repeats deeper
-var bad = <section><section>Nested section</section></section>
+// Wrong — the second <section> is never closed
+var bad = <section><section>Nested section</section>
 
-// Correct — wrap with a different semantic tag
-var good = <main>
-  <article>
-    <section>One block</section>
-    <section>Another block</section>
-  </article>
-</main>
+// Correct — close the nested copy too
+var good = <section><section>Nested section</section></section>
 ```
 
 ---
@@ -4362,9 +4398,11 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
 
 ## Common Pitfalls
 
-- **Opening-tag nesting:** The outermost tag of an inline HTML string cannot
-  appear again as a child at any level. This means `<div><div>...</div></div>` fails because `<div>` is both the outermost and a nested tag. Wrap with a different tag (e.g. `<section>`) and nest freely below it:
-  `<section><div><div>...</div></div></section>`.
+- **Tag nesting:** Any tag may contain any other tag, including its own name —
+  `<div><div>...</div></div>` compiles. Every copy of the outermost tag must
+  still be closed: a missing close tag or an extra one is a compile error. A
+  close tag with a different name is not validated, so it only fails when it
+  leaves the outermost tag one close short.
 - **Mismatched tags are not validated:** Only the outer closing tag is
   matched; `<div><span>Hello</div>` compiles and is served verbatim (the
   browser auto-closes the `<span>`). Write well-formed HTML yourself.
@@ -4409,44 +4447,40 @@ tree. No props, no children, no expressions-in-markup outside `{{ }}`, and no
 
 ---
 
-## 1. Tag Nesting Limitations
+## 1. Tag Nesting
 
-JSX lets you nest any element inside any element. Bialet has one hard rule:
-
-**The outermost tag of an inline HTML string must not appear again as a
-direct child tag at any nesting level.**
-
-The parser checks the whole string, not just the first level, and reports
-`Cannot nest <div> inside <div>` on the offending line.
+JSX lets you nest any element inside any element, and Bialet does too — a tag
+may contain its own name at any depth. The difference is balance: the parser
+tracks how many copies of the outermost tag are open and ends the string at the
+close tag that matches it, so every level must be closed.
 
 ```wren
-// WRONG — <div> is the outermost tag AND a child
-var bad = <div><div>Hello</div></div>
-var alsoBad = <section><section>Nested</section></section>
-
-// CORRECT — open with a different tag, then nest freely
-var good = <div><section>Hello</section></div>
-
-// CORRECT — once the tree starts with a different tag, the
-// original tag can appear at any depth below it
-var fine = <section>
+// Fine — the same tag nests, at any depth
+var fine = <div><div>Hello</div></div>
+var deep = <section>
   <div>
     <div>Deeply nested same tags work here</div>
   </div>
 </section>
+
+// Compilation error — the outer <div> is never closed
+var bad = <div><div>Hello</div>
 ```
 
-**Pitfall:** this bites the common JSX pattern of a wrapper `<div>` inside a
-`<div>` (row, then column). If you need the same tag twice, change the
-outermost wrapper or extract the inner one into a component method (see
-section 4).
+**Pitfall:** because only the outermost tag name is tracked, a *different* tag
+left unclosed is served as-is and repaired by the browser, not by the compiler:
 
-Two more parser quirks to unlearn from JSX:
+```wren
+// Compiles — <span> is never closed, the markup is served verbatim
+var loose = <div><span>Hello</div>
+```
 
-- **Mismatched closing tags are not validated.** Only the outermost closing
-  tag is matched. `<div><span>Hello</div>` compiles and is served verbatim —
-  the browser auto-closes the `<span>` at render time. Write well-formed HTML
-  yourself; there is no compiler checking your balance.
+Two parser quirks to unlearn from JSX:
+
+- **Mismatched closing tags are not validated.** `<div><span>Hello</div>`
+  compiles and is served verbatim — the browser auto-closes the `<span>` at
+  render time. Write well-formed HTML yourself; there is no compiler checking
+  your balance.
 - **Tag names are restricted.** Lowercase, start with a letter, only letters,
   numbers, and hyphens. `<MyComponent>` and `<my_component>` are compiler
   errors. PascalCase component names are a JSX thing — see section 4.
@@ -4634,11 +4668,10 @@ return Template.new().layout(
 )
 ```
 
-Because the method returns a plain string, the same-tag nesting rule applies
-across the boundary: if a component's outermost tag would repeat under a
-caller's outermost tag, the parser rejects it. `card()` returning an
-`<article>` inside a page whose outermost tag is also `<article>` fails —
-widen one of them.
+Because the method returns a plain string, there is no extra rule at the
+boundary: each literal is parsed on its own, so a component may return an
+`<article>` inside a page whose outermost tag is also `<article>`. Only the
+tags inside a single literal have to balance.
 
 **Pitfall:** instance methods need `new()`. `Template.layout(...)` looks for
 a static method and fails. Always instantiate first.
@@ -4716,8 +4749,8 @@ var msg = Request.post("msg") || ""
 ## Migration checklist
 
 - [ ] Replace `{expr}` with `{{ expr }}` — and expect values to be escaped.
-- [ ] Open repeated same-tag nesting with a different outer tag, or extract a
-      component method.
+- [ ] Balance the tags inside every literal: same-tag nesting is fine, an
+      unclosed level is a compile error.
 - [ ] Move statements out of `map` callbacks; keep the callback body a single
       expression starting on the `{` line.
 - [ ] Compute strings before interpolating into attributes; no template
@@ -11318,19 +11351,22 @@ It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 10. Do not nest the same outermost HTML tag
+## 10. Inner HTML tags are not checked for balance
 
-Bialet's inline-HTML parser rejects an outermost tag that also appears as a
-direct child at any level:
+The parser tracks the outermost tag name and ends the string at the close tag
+that matches it. Tags with a *different* name inside are never validated, so an
+unclosed inner tag is served verbatim and only the browser repairs it:
 
 ```wren
-var bad = <section><section>Nested</section></section>
-// Cannot nest <section> inside <section>
+var served = <div><span>Hello</div>
+// <div><span>Hello</div> — the browser closes the <span>
 ```
 
-The error points at the closing tag, not the opening one, which makes it hard to
-find. Wrap with a different tag (`<div><section>...`) or split the view into
-partials. See [Template](template.md) for the nesting rules.
+Same-tag nesting is fine (`<div><div>Hello</div></div>`), but every copy of the
+outermost tag must be closed: a missing close tag or one extra close tag is a
+compile error. A close tag with a different name is not validated, so it only
+fails when it leaves the outermost tag one close short. See
+[Template](template.md) for the nesting rules.
 
 ## 11. Assigning a property needs an explicit setter
 

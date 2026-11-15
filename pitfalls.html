@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'pitfalls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=da11c51e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=046b95af"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.16" />
+  <meta name="docsearch:version" content="1.2.17" />
   </head>
   
   
@@ -447,7 +447,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">10. Do not nest the same outermost HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inner-html-tags-are-not-checked-for-balance">10. Inner HTML tags are not checked for balance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
@@ -567,17 +567,20 @@ go the other way with <code class="docutils literal notranslate"><span class="pr
 (see <code class="docutils literal notranslate"><span class="pre">Money.parse</span></code> in <a class="reference internal" href="recipes.html"><span class="std std-doc">Recipes</span></a>), or store integer cents and parse
 the form value with the helper.</p>
 </section>
-<section id="do-not-nest-the-same-outermost-html-tag">
-<h2>10. Do not nest the same outermost HTML tag<a class="headerlink" href="#do-not-nest-the-same-outermost-html-tag" title="Link to this heading">#</a></h2>
-<p>Bialet’s inline-HTML parser rejects an outermost tag that also appears as a
-direct child at any level:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;section&gt;&lt;section&gt;</span><span class="nc">Nested</span><span class="x">&lt;/section&gt;&lt;/section&gt;</span>
-<span class="c1">// Cannot nest &lt;section&gt; inside &lt;section&gt;</span>
+<section id="inner-html-tags-are-not-checked-for-balance">
+<h2>10. Inner HTML tags are not checked for balance<a class="headerlink" href="#inner-html-tags-are-not-checked-for-balance" title="Link to this heading">#</a></h2>
+<p>The parser tracks the outermost tag name and ends the string at the close tag
+that matches it. Tags with a <em>different</em> name inside are never validated, so an
+unclosed inner tag is served verbatim and only the browser repairs it:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">served</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;div&gt;&lt;span&gt;</span><span class="nc">Hello</span><span class="x">&lt;/div&gt;</span>
+<span class="x">// &lt;div&gt;&lt;span&gt;Hello&lt;/div&gt;</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">browser</span><span class="w"> </span><span class="n">closes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="x">&lt;span&gt;</span>
 </pre></div>
 </div>
-<p>The error points at the closing tag, not the opening one, which makes it hard to
-find. Wrap with a different tag (<code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;section&gt;...</span></code>) or split the view into
-partials. See <a class="reference internal" href="template.html"><span class="std std-doc">Template</span></a> for the nesting rules.</p>
+<p>Same-tag nesting is fine (<code class="docutils literal notranslate"><span class="pre">&lt;div&gt;&lt;div&gt;Hello&lt;/div&gt;&lt;/div&gt;</span></code>), but every copy of the
+outermost tag must be closed: a missing close tag or one extra close tag is a
+compile error. A close tag with a different name is not validated, so it only
+fails when it leaves the outermost tag one close short. See
+<a class="reference internal" href="template.html"><span class="std std-doc">Template</span></a> for the nesting rules.</p>
 </section>
 <section id="assigning-a-property-needs-an-explicit-setter">
 <h2>11. Assigning a property needs an explicit setter<a class="headerlink" href="#assigning-a-property-needs-an-explicit-setter" title="Link to this heading">#</a></h2>
@@ -756,7 +759,7 @@ rendering the button as disabled.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-nest-the-same-outermost-html-tag">10. Do not nest the same outermost HTML tag</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inner-html-tags-are-not-checked-for-balance">10. Inner HTML tags are not checked for balance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>

@@ -11,44 +11,40 @@ tree. No props, no children, no expressions-in-markup outside `{{ }}`, and no
 
 ---
 
-## 1. Tag Nesting Limitations
+## 1. Tag Nesting
 
-JSX lets you nest any element inside any element. Bialet has one hard rule:
-
-**The outermost tag of an inline HTML string must not appear again as a
-direct child tag at any nesting level.**
-
-The parser checks the whole string, not just the first level, and reports
-`Cannot nest <div> inside <div>` on the offending line.
+JSX lets you nest any element inside any element, and Bialet does too — a tag
+may contain its own name at any depth. The difference is balance: the parser
+tracks how many copies of the outermost tag are open and ends the string at the
+close tag that matches it, so every level must be closed.
 
 ```wren
-// WRONG — <div> is the outermost tag AND a child
-var bad = <div><div>Hello</div></div>
-var alsoBad = <section><section>Nested</section></section>
-
-// CORRECT — open with a different tag, then nest freely
-var good = <div><section>Hello</section></div>
-
-// CORRECT — once the tree starts with a different tag, the
-// original tag can appear at any depth below it
-var fine = <section>
+// Fine — the same tag nests, at any depth
+var fine = <div><div>Hello</div></div>
+var deep = <section>
   <div>
     <div>Deeply nested same tags work here</div>
   </div>
 </section>
+
+// Compilation error — the outer <div> is never closed
+var bad = <div><div>Hello</div>
 ```
 
-**Pitfall:** this bites the common JSX pattern of a wrapper `<div>` inside a
-`<div>` (row, then column). If you need the same tag twice, change the
-outermost wrapper or extract the inner one into a component method (see
-section 4).
+**Pitfall:** because only the outermost tag name is tracked, a *different* tag
+left unclosed is served as-is and repaired by the browser, not by the compiler:
 
-Two more parser quirks to unlearn from JSX:
+```wren
+// Compiles — <span> is never closed, the markup is served verbatim
+var loose = <div><span>Hello</div>
+```
 
-- **Mismatched closing tags are not validated.** Only the outermost closing
-  tag is matched. `<div><span>Hello</div>` compiles and is served verbatim —
-  the browser auto-closes the `<span>` at render time. Write well-formed HTML
-  yourself; there is no compiler checking your balance.
+Two parser quirks to unlearn from JSX:
+
+- **Mismatched closing tags are not validated.** `<div><span>Hello</div>`
+  compiles and is served verbatim — the browser auto-closes the `<span>` at
+  render time. Write well-formed HTML yourself; there is no compiler checking
+  your balance.
 - **Tag names are restricted.** Lowercase, start with a letter, only letters,
   numbers, and hyphens. `<MyComponent>` and `<my_component>` are compiler
   errors. PascalCase component names are a JSX thing — see section 4.
@@ -236,11 +232,10 @@ return Template.new().layout(
 )
 ```
 
-Because the method returns a plain string, the same-tag nesting rule applies
-across the boundary: if a component's outermost tag would repeat under a
-caller's outermost tag, the parser rejects it. `card()` returning an
-`<article>` inside a page whose outermost tag is also `<article>` fails —
-widen one of them.
+Because the method returns a plain string, there is no extra rule at the
+boundary: each literal is parsed on its own, so a component may return an
+`<article>` inside a page whose outermost tag is also `<article>`. Only the
+tags inside a single literal have to balance.
 
 **Pitfall:** instance methods need `new()`. `Template.layout(...)` looks for
 a static method and fails. Always instantiate first.
@@ -318,8 +313,8 @@ var msg = Request.post("msg") || ""
 ## Migration checklist
 
 - [ ] Replace `{expr}` with `{{ expr }}` — and expect values to be escaped.
-- [ ] Open repeated same-tag nesting with a different outer tag, or extract a
-      component method.
+- [ ] Balance the tags inside every literal: same-tag nesting is fine, an
+      unclosed level is a compile error.
 - [ ] Move statements out of `map` callbacks; keep the callback body a single
       expression starting on the `{` line.
 - [ ] Compute strings before interpolating into attributes; no template
