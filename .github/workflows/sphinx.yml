@@ -1,22 +1,49 @@
-name: Build and publish documentation website
+name: Documentation
+
+# Builds the Sphinx site from docs/ and publishes it to GitHub Pages.
+#
+# Deployment is deliberately not triggered by a push to main: the site embeds
+# download links for a specific release tag (see docs/conf.py), so publishing it
+# before those assets exist would ship 404s. It is called by release.yml once
+# the release assets are up, and can be run by hand from the Actions tab after
+# editing docs/.
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      verify_links:
+        description: Fail when a release download link in the built site does not resolve
+        required: false
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      verify_links:
+        description: Fail when a release download link in the built site does not resolve
+        required: false
+        type: boolean
+        default: false
+
+permissions: {}
+
+# One publisher at a time: a manual run and a release run both push to
+# gh-pages, and two concurrent pushes would race on the same branch.
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.9'
 
@@ -29,8 +56,7 @@ jobs:
         run: echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v6
-        if: github.ref == 'refs/heads/main'
+        uses: actions/cache@v6.1.0
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -46,8 +72,22 @@ jobs:
       - name: Sphinx build
         run: sphinx-build -M html docs/ build/
 
+      # Checks the links the site actually renders, not the ones conf.py meant
+      # to render, so a renamed artifact is caught too. Non-fatal for a manual
+      # run (a version bump before its tag legitimately 404s), fatal during a
+      # release.
+      - name: Check release download links
+        env:
+          VERIFY_LINKS: ${{ inputs.verify_links }}
+        run: |
+          if [ "${VERIFY_LINKS}" = "true" ]; then
+            python3 tools/check_release_urls.py build/html
+          else
+            python3 tools/check_release_urls.py build/html --warn-only
+          fi
+
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/html

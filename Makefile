@@ -173,6 +173,11 @@ clean:
 html:
 	@$(SPHINXBUILD) -M html "$(DOCS_DIRS)" "$(BUILD_DIR)" $(SPHINXOPTS) $(O)
 
+# Network required: verifies the release download links inside the built site
+# point at assets that actually exist. Run `make html` first.
+check-release-links:
+	@python3 tools/check_release_urls.py $(BUILD_DIR)/html
+
 # Static build — self-contained binary with all deps linked in
 # MinGW cross-compilation (Windows) — uses -static, no libcurl on Windows
 ifneq (,$(findstring mingw32,$(CC)))

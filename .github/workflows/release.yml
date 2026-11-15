@@ -7,13 +7,27 @@ on:
   push:
     tags: ['v*']
 
+# Least privilege for every job; the jobs that need more (release, docs) widen
+# it themselves. Without this the token gets the repository default, which is
+# usually write.
+permissions:
+  contents: read
+
+env:
+  # The pushed tag (v1.2.17). Run steps read this from the environment instead
+  # of interpolating ${{ github.ref_name }} into the script, where a crafted tag
+  # name would be a shell injection.
+  REF_NAME: ${{ github.ref_name }}
+
 jobs:
   # ── Linux x86_64 ────────────────────────────────────────────────
   build-linux:
     name: Linux x86_64
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install build dependencies
         run: |
@@ -32,9 +46,9 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar czf dist/bialet-${{ github.ref_name }}-linux-x86_64.tar.gz -C build bialet
+          tar czf "dist/bialet-${REF_NAME}-linux-x86_64.tar.gz" -C build bialet
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: bialet-linux-x86_64
           path: dist/
@@ -49,7 +63,7 @@ jobs:
     needs: build-linux
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: bialet-linux-x86_64
           path: dist/
@@ -71,27 +85,30 @@ jobs:
           echo "$BODY" | grep -q 'bialet-smoke' && echo "HTTP smoke test passed"
 
   # ── Linux arm64 ──────────────────────────────────────────────────
+  # Runs on the 22.04 arm64 image directly: the release binaries are built for
+  # 22.04, and a `container: ubuntu:22.04` would be a mutable tag the action
+  # lockfile cannot pin (it pins action commits, not images).
   build-linux-arm64:
     name: Linux arm64
-    runs-on: ubuntu-24.04-arm
-    container:
-      image: ubuntu:22.04
+    runs-on: ubuntu-22.04-arm
     steps:
       - name: Install build dependencies
         run: |
-          apt-get update
-          apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git \
+          sudo apt-get update
+          sudo apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
             libgnutls28-dev libsasl2-dev
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
       - name: Build (static)
         run: make clean && make static
       - name: Package
         run: |
           mkdir -p dist
-          tar czf dist/bialet-${{ github.ref_name }}-linux-arm64.tar.gz -C build bialet
-      - uses: actions/upload-artifact@v7
+          tar czf "dist/bialet-${REF_NAME}-linux-arm64.tar.gz" -C build bialet
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: bialet-linux-arm64
           path: dist/
@@ -101,7 +118,9 @@ jobs:
     name: macOS arm64
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install build dependencies
         run: brew install openssl
@@ -121,9 +140,9 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          tar czf dist/bialet-${{ github.ref_name }}-macos-arm64.tar.gz -C build bialet
+          tar czf "dist/bialet-${REF_NAME}-macos-arm64.tar.gz" -C build bialet
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: bialet-macos-arm64
           path: dist/
@@ -137,7 +156,9 @@ jobs:
       SQLITE_VERSION: 3460100
       OPENSSL_VERSION: 3.0.15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install MinGW toolchain
         run: |
@@ -171,9 +192,9 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          zip -j dist/bialet-${{ github.ref_name }}-windows-x86_64.zip build/bialet.exe
+          zip -j "dist/bialet-${REF_NAME}-windows-x86_64.zip" build/bialet.exe
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: bialet-windows-x86_64
           path: dist/
@@ -187,21 +208,23 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set image version (strip leading 'v')
         run: echo "IMAGE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@v4.4.1
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.4.0
         with:
           context: .
           push: true
@@ -222,7 +245,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           pattern: bialet-*
           merge-multiple: true
@@ -236,15 +259,23 @@ jobs:
           sha256sum *.tar.gz *.zip > SHA256SUMS
           cat SHA256SUMS
 
+      # `gh` instead of an upload action: it is already on the runner, it keeps
+      # the asset set explicit, and re-running a partially failed release
+      # clobbers the uploads instead of failing on the existing release.
       - name: Create release and upload assets
-        uses: softprops/action-gh-release@v3
-        with:
-          name: ${{ github.ref_name }}
-          files: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/SHA256SUMS
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "${REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${REF_NAME}" \
+              dist/*.tar.gz dist/*.zip dist/SHA256SUMS --clobber
+          else
+            gh release create "${REF_NAME}" \
+              dist/*.tar.gz dist/*.zip dist/SHA256SUMS \
+              --title "${REF_NAME}" --generate-notes
+          fi
 
       # Bumps the formula in bialet/homebrew-bialet to the released version.
       #
@@ -267,7 +298,7 @@ jobs:
           set -euo pipefail
           trap 'rc=$?; rm -f /tmp/tap_key; [ $rc -eq 0 ] || echo "::warning::Homebrew tap bump failed (exit ${rc}). The release itself is unaffected, but the formula was not updated."' EXIT
 
-          VERSION="${{ github.ref_name }}"
+          VERSION="${REF_NAME}"
           TAP_REPO="bialet/homebrew-bialet"
           TAP_DIR="/tmp/homebrew-bialet"
 
@@ -344,4 +375,24 @@ jobs:
     uses: ./.github/workflows/ppa.yml
     with:
       tag: ${{ github.ref_name }}
-    secrets: inherit
+    secrets:
+      PPA_GPG_KEY: ${{ secrets.PPA_GPG_KEY }}
+      PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+
+  # ── Documentation ───────────────────────────────────────────────
+  # Runs last, so the download links the site publishes
+  # (https://github.com/bialet/bialet/releases/download/vX.Y.Z/...) are live by
+  # the time a visitor clicks them. The docs are built from this tag, so
+  # docs/conf.py reads the released BIALET_VERSION, and verify_links makes a
+  # missing asset fail the job instead of publishing a 404.
+  #
+  # Docs are no longer deployed from a push to main: run the Documentation
+  # workflow by hand after editing docs/.
+  docs:
+    name: Documentation
+    needs: release
+    uses: ./.github/workflows/sphinx.yml
+    permissions:
+      contents: write
+    with:
+      verify_links: true

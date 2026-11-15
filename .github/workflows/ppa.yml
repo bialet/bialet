@@ -83,10 +83,15 @@ jobs:
       DEBFULLNAME: "Rodrigo Arce"
       PPA_GPG_KEY: ${{ secrets.PPA_GPG_KEY }}
       PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+      # Passed through the environment rather than interpolated into run steps,
+      # so a crafted tag or series string cannot reach the shell as code.
+      TAG: ${{ inputs.tag }}
+      SERIES: ${{ matrix.series }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ inputs.tag }}
+          persist-credentials: false
 
       - name: Install packaging tools
         run: |
@@ -106,14 +111,13 @@ jobs:
 
       - name: Check the tag and derive the version
         run: |
-          TAG="${{ inputs.tag }}"
           case "${TAG}" in
             v[0-9]*) ;;
             *) echo "::error::expected a v-prefixed version tag, got '${TAG}'"; exit 1 ;;
           esac
           V="${TAG#v}"
           echo "V=${V}" >> "$GITHUB_ENV"
-          echo "VERSION=${V}-1~${{ matrix.series }}1" >> "$GITHUB_ENV"
+          echo "VERSION=${V}-1~${SERIES}1" >> "$GITHUB_ENV"
 
           # The binary and the package must report the same version.
           grep -q "BIALET_VERSION \"${V}\"" src/bialet.h \
@@ -136,7 +140,7 @@ jobs:
       - name: Add the changelog entry
         run: |
           dch --newversion "${VERSION}" \
-              --distribution ${{ matrix.series }} \
+              --distribution "${SERIES}" \
               "New upstream release ${V}."
 
       - name: Build the source package
