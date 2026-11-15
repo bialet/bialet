@@ -24,14 +24,16 @@ every page is at <https://bialet.dev/llms.txt>.
 > *"Every code example using `Request.post()` **must** include a null-handling
 > strategy (`|| fallback` or `if (value != null)`) by default."*
 
-> ⚠️ **CRITICAL: an inline HTML string may nest its own tag.**
+> ⚠️ **CRITICAL: an inline HTML string may nest its own tag (Bialet 1.2.17+).**
 > `<div><div>...</div></div>` compiles — every tag can contain any other tag,
 > including its own name. Start a `<div>` inside a `<div>` whenever the markup
 > calls for it; do not work around a nesting error by swapping in
 > `<section>`/`<article>` wrappers. What still fails is balance on the outermost
 > tag: a missing close tag, or one close tag too many. A close tag whose name
 > does not match is not validated — it only fails when it leaves the outermost
-> tag one close short.
+> tag one close short. On 1.2.16 and earlier the compiler still reports
+> `Cannot nest <div> inside <div>`; there the inner block needs a different
+> element.
 
 > ⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**
 > `SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at
@@ -132,12 +134,15 @@ class User {
   static count() { 0 }        // static method
 }
 
-// A block (method or class body) ending in an expression returns it
-// automatically — no `return` keyword needed for single-expression bodies.
+// A method returns only through `return`. The single exception is a body
+// whose whole expression sits on the same line as its `{`.
 class Math {
-  static square(n) { n * n }          // implicit return
+  static square(n) { n * n }          // returned: same line as the `{`
+  static double(n) {
+    n * 2                             // NOT returned: this method returns null
+  }
   static classify(n) {
-    if (n > 0) return "positive"      // explicit return needed for early exit
+    if (n > 0) return "positive"      // explicit return for an early exit
     return "non-positive"
   }
 }
@@ -167,6 +172,11 @@ class Poll {
 
 // Strings only implement == and != -- no <, >, <=, >=.
 // "a" < "b" raises "String does not implement '<(_)'."
+
+// `count`, `toString`, `keys` and `bytes` are getters; `trim`, `lower` and
+// `replace` are methods. `" x ".trim` fails with "String does not implement
+// 'trim'."; `" x ".trim()` works. There is no `String.fromBytes`: to build
+// text from numbers use `String.fromCodePoint`, and read text as a String.
 ```
 
 ### Newlines
@@ -268,7 +278,8 @@ var greeting = <h1>Hello, {{ name }}!</h1>
 - Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
   Hyphens enable custom elements like `<my-element>`.
 - Any tag may nest any other tag, including its own name
-  (`<div><div>...</div></div>` is valid). Every level must be closed.
+  (`<div><div>...</div></div>` is valid on 1.2.17+; 1.2.16 and earlier reject
+  the nested copy — use a different element there). Every level must be closed.
 - Self-closing tags need a space before the slash: `<br />`, `<input ... />`.
 - `{{ expr }}` inside an inline HTML string evaluates any Wren expression —
   it's sugar for `%(...)` interpolation inside an HTML block.
@@ -513,6 +524,13 @@ return Layout.render(
 > **Pitfall:** if `Layout`'s methods are `static` (as above), call
 > `Layout.render(...)` directly. If you instead define instance methods, you
 > must instantiate first: `Layout.new().render(...)`.
+
+**Markup is not a string.** Write the tags raw inside the method body, as in the
+example: don't concatenate fragments (`"<div>" + value + "</div>"`) and don't
+open a quoted string to hold markup for `{{ }}` (inside a string it renders
+literally, and a real newline there is a syntax error). Tags are balanced at
+compile time: a missing or an extra close tag is an error, and any tag may nest
+any other, including its own name.
 
 ## Database
 
@@ -1252,6 +1270,44 @@ Task.delete(Request.post("id") || "")
 return Response.redirect("/")
 ```
 
+## Testing
+
+Tests live in `_tests/` (the underscore keeps them off HTTP) and run with
+`bialet -T`:
+
+```bash
+bialet -T            # the whole suite
+bialet -T -q         # quiet, CI-friendly
+```
+
+The runner prepends its own prelude, which defines `Test` and `Tests`. Never
+import them, and never check a `_tests/*.wren` file with `bialet -t`: outside
+the runner the prelude does not exist, so the compiler reports
+`Test: Variable is used but not defined`. A test file is checked by running the
+suite.
+
+`_tests/_init.wren`, when present, runs once before every test file: seed rows
+and set configuration there. Its variables are global to every test file, so
+give them unique names and do not collide with `UNIQUE` keys.
+
+```wren
+// _tests/tasks.wren
+Test.get("/").status(200).contains("Mis tareas")
+Test.post("/", {"title": "Comprar pan"}).status(302)
+Test.get("/").contains("Comprar pan")
+```
+
+- Assert the flow the user asked for: a POST that writes, then a GET that reads
+  the same value back. A page that renders is not a flow that works.
+- Add a boundary case (empty table, today against a future date, the first and
+  last day of a month) instead of one mid-month date.
+- `Test.headers` does not exist: drop the header and assert the rest, or gate
+  the check on `Config.get("test_mode")` set in `_init.wren`.
+- Every file shares one temporary database per run: do not assume isolation,
+  and never weaken an assertion to make a red test go green.
+- Keep the suite quiet: no `System.print` of whole tables and no leftover
+  `debug*.wren` files.
+
 ## Running the App
 
 ```bash
@@ -1259,6 +1315,7 @@ bialet              # runs the current directory on 127.0.0.1:7001
 bialet -p 7001 .    # explicit port and directory
 bialet -t index.wren              # validate a standalone file's syntax
 bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports)
+bialet -T                         # run the test suite in _tests/
 ```
 
 ## Summary
@@ -1281,3 +1338,6 @@ bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports
 12. **Styling**: semantic HTML, no stylesheet by default; add a small modern
     CSS file (or a classless framework such as µCSS or Beak CSS) only when the
     page needs presentation
+13. **Tests**: `_tests/` with the fluent `Test.get/post` API, run with
+    `bialet -T`; `Test` comes from the runner, so never import it or validate a
+    test file with `bialet -t`
