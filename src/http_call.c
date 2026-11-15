@@ -591,6 +591,100 @@ static DWORD win32_remaining_ms(ULONGLONG deadline, long timeout_ms) {
     left = 1;
   return (DWORD)left;
 }
+/* getaddrinfo has no timeout and cannot be cancelled in-process. Resolving on
+ * the request thread therefore lets one slow resolver hold the single worker
+ * for as long as the OS takes (tens of seconds), past the hop budget, and the
+ * budget can only notice the overrun afterwards. Resolve on a short-lived
+ * thread instead and wait on the budget.
+ *
+ * The cap bounds how many resolver threads a hostile client can accumulate:
+ * once it is reached, new hops fail fast rather than creating more threads.
+ * A timed-out job is not killed (TerminateThread would corrupt the resolver's
+ * state); it is abandoned, and the thread frees its own result and job. */
+#define MAX_RESOLVER_THREADS 8
+static volatile LONG resolver_threads = 0;
+
+struct ResolveJob {
+  char             host[256];
+  char             port[8];
+  struct addrinfo  hints;
+  struct addrinfo* result;
+  int              rc;
+  HANDLE           done;
+  LONG             refs;
+  LONG             abandoned;
+};
+
+static void resolve_job_release(struct ResolveJob* job) {
+  if(InterlockedDecrement(&job->refs) == 0) {
+    if(job->done != NULL)
+      CloseHandle(job->done);
+    free(job);
+  }
+}
+
+static DWORD WINAPI resolve_thread_proc(LPVOID param) {
+  struct ResolveJob* job = (struct ResolveJob*)param;
+  job->rc = getaddrinfo(job->host, job->port, &job->hints, &job->result);
+  SetEvent(job->done);
+  /* The waiter may have timed out and left. If so, nobody will read the
+   * result, so free it here. */
+  if(InterlockedCompareExchange(&job->abandoned, 0, 0) != 0) {
+    if(job->result != NULL) {
+      freeaddrinfo(job->result);
+      job->result = NULL;
+    }
+  }
+  InterlockedDecrement(&resolver_threads);
+  resolve_job_release(job);
+  return 0;
+}
+
+/* Resolves [host]:[port] within [wait_ms]. Returns 0 and stores the list in
+ * *result on success; the caller frees it with freeaddrinfo(). */
+static int resolve_with_deadline(const char* host, const char* port, DWORD wait_ms,
+                                 struct addrinfo** result) {
+  if(InterlockedIncrement(&resolver_threads) > MAX_RESOLVER_THREADS) {
+    InterlockedDecrement(&resolver_threads);
+    return -1;
+  }
+  struct ResolveJob* job = (struct ResolveJob*)calloc(1, sizeof(*job));
+  if(job == NULL) {
+    InterlockedDecrement(&resolver_threads);
+    return -1;
+  }
+  snprintf(job->host, sizeof(job->host), "%s", host);
+  snprintf(job->port, sizeof(job->port), "%s", port);
+  job->hints.ai_family = AF_UNSPEC;
+  job->hints.ai_socktype = SOCK_STREAM;
+  job->hints.ai_protocol = IPPROTO_TCP;
+  job->done = CreateEvent(NULL, TRUE, FALSE, NULL);
+  if(job->done == NULL) {
+    free(job);
+    InterlockedDecrement(&resolver_threads);
+    return -1;
+  }
+  job->refs = 2; /* this function and the resolver thread */
+  HANDLE thread = CreateThread(NULL, 0, resolve_thread_proc, job, 0, NULL);
+  if(thread == NULL) {
+    CloseHandle(job->done);
+    free(job);
+    InterlockedDecrement(&resolver_threads);
+    return -1;
+  }
+  CloseHandle(thread);
+  if(WaitForSingleObject(job->done, wait_ms) != WAIT_OBJECT_0) {
+    /* Abandon it: the resolver thread frees the result and the job. */
+    InterlockedExchange(&job->abandoned, 1);
+    resolve_job_release(job);
+    return -1;
+  }
+  *result = job->result;
+  job->result = NULL;
+  resolve_job_release(job);
+  return 0;
+}
+
 /* True when [line] starts with [name] (ASCII case-insensitive) followed by
  * ':' or the end of the line. */
 static int header_name_is(const char* line, size_t len, const char* name) {
@@ -782,7 +876,8 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
 #ifdef _WIN32
   struct ParsedUrl url;
   SOCKET           sockfd = INVALID_SOCKET;
-  struct addrinfo  hints, *result = NULL, *ptr = NULL;
+  struct addrinfo* result = NULL;
+  struct addrinfo* ptr = NULL;
   SSL_CTX*         ctx = NULL;
   SSL*             ssl = NULL;
   char*            req = NULL;
@@ -796,11 +891,6 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
     return;
   }
 
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-
   long connect_ms = request->connectTimeout > 0 ? request->connectTimeout : 2000L;
   long timeout_ms = request->timeout > 0 ? request->timeout : 20000L;
 
@@ -810,12 +900,15 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
    * answer cost addresses x connectTimeout however small the caller's timeout. */
   ULONGLONG hop_deadline = GetTickCount64() + (ULONGLONG)timeout_ms;
 
-  if(getaddrinfo(url.host, url.port, &hints, &result) != 0) {
+  if(resolve_with_deadline(url.host, url.port,
+                           win32_remaining_ms(hop_deadline, timeout_ms),
+                           &result) != 0) {
     response->error = HTTP_ERR_RESOLVE;
-    response->error_message = string_safe_copy("Could not resolve host");
+    response->error_message =
+        string_safe_copy("Could not resolve host or resolution timed out");
     return;
   }
-  /* getaddrinfo cannot be cancelled in-process: if it alone spent the budget,
+  /* Resolution is bounded now, but it may still have spent the whole budget:
    * fail the hop instead of dialling. */
   if(win32_remaining_ms(hop_deadline, 0) == 0) {
     freeaddrinfo(result);
