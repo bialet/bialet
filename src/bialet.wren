@@ -402,8 +402,35 @@ class Session {
     }
   }
   static id { Session.new().id }
-  id { _id }
-  get(key) { __values[key] ? __values[key] : null }
+  id {
+    sync_()
+    return _id
+  }
+  get(key) {
+    sync_()
+    return __values[key] ? __values[key] : null
+  }
+  // Reconcile this instance with the live cookie before a read. rotate() and
+  // destroy() change the cookie underneath an instance that was built earlier
+  // in the request, and the constructor snapshot used to keep serving the
+  // retired id and its values until the next set(). A valid different id is
+  // reloaded from the table; a cleared cookie (destroy) leaves this instance
+  // naming no session, so reads return null instead of the stale snapshot.
+  sync_() {
+    var current = Cookie.get(Session.name)
+    if (current == _id) return
+    if (!Session.validId_(current)) {
+      _id = null
+      __values = {}
+      return
+    }
+    _id = current
+    __values = {}
+    var res = `SELECT key, val FROM BIALET_SESSION WHERE id = ? ORDER BY updatedAt DESC`.fetch([_id])
+    if (res && res.count > 0) {
+      res.each{|r| __values[r["key"]] = r["val"] }
+    }
+  }
   set(key, value) {
     // rotate() earlier in this request retired the identifier this instance was
     // built with, and destroy() may have cleared the cookie: follow the live
