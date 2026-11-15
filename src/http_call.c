@@ -104,6 +104,19 @@ struct ParsedUrl {
   int  is_https;
 };
 
+/* True when [s] has no byte that would end the request line or a header line.
+ * The path is pasted into "GET <path> HTTP/1.1" and the host into "Host:",
+ * and this transport builds both with snprintf, so a raw CR, LF, space or NUL
+ * from an app-built URL would inject a second request. */
+static int url_component_ok(const char* s) {
+  for(; *s != '\0'; s++) {
+    unsigned char b = (unsigned char)*s;
+    if(b <= 0x20 || b == 0x7f)
+      return 0;
+  }
+  return 1;
+}
+
 /* ASCII case-insensitive compare of the first [n] bytes of [s] with [lit]. */
 static int scheme_is(const char* s, const char* lit, size_t n) {
   for(size_t i = 0; i < n; i++) {
@@ -199,6 +212,8 @@ static int parse_url(const char* url, struct ParsedUrl* out) {
     return -1;
   memcpy(out->host, host_start, hlen);
   out->host[hlen] = '\0';
+  if(!url_component_ok(out->host))
+    return -1;
 
   if(port_start != NULL) {
     size_t plen = (size_t)(end - port_start);
@@ -228,6 +243,8 @@ static int parse_url(const char* url, struct ParsedUrl* out) {
     written = snprintf(out->path, sizeof(out->path), "%.*s", (int)tail_len, end);
   }
   if(written < 0 || written >= (int)sizeof(out->path))
+    return -1;
+  if(!url_component_ok(out->path))
     return -1;
 
   const char* default_port = out->is_https ? "443" : "80";
@@ -597,11 +614,16 @@ static DWORD win32_remaining_ms(ULONGLONG deadline, long timeout_ms) {
  * budget can only notice the overrun afterwards. Resolve on a short-lived
  * thread instead and wait on the budget.
  *
- * The cap bounds how many resolver threads a hostile client can accumulate:
- * once it is reached, new hops fail fast rather than creating more threads.
- * A timed-out job is not killed (TerminateThread would corrupt the resolver's
- * state); it is abandoned, and the thread frees its own result and job. */
-#define MAX_RESOLVER_THREADS 8
+ * Two limits, because a timed-out job cannot be killed (TerminateThread would
+ * corrupt the resolver's state): it is abandoned and its thread lives on until
+ * the OS resolver returns. resolver_waiters bounds how many request threads
+ * are blocked on DNS (and is released as soon as a waiter stops waiting, even
+ * when it abandons the job), while resolver_threads is the hard cap on live
+ * threads, including abandoned ones. Without the split, eight blackholed
+ * lookups would exhaust the only counter and fail every later call. */
+#define MAX_RESOLVER_WAITERS 8
+#define MAX_RESOLVER_THREADS 64
+static volatile LONG resolver_waiters = 0;
 static volatile LONG resolver_threads = 0;
 
 struct ResolveJob {
@@ -623,6 +645,14 @@ static void resolve_job_release(struct ResolveJob* job) {
   }
 }
 
+/* Claims the result exactly once. The waiter and the resolver thread both race
+ * to take it when the deadline and completion coincide; whoever exchanges
+ * first owns the list, so it can never be double-freed or leaked. */
+static struct addrinfo* resolve_job_take_result(struct ResolveJob* job) {
+  return (struct addrinfo*)InterlockedExchangePointer((PVOID volatile*)&job->result,
+                                                      NULL);
+}
+
 static DWORD WINAPI resolve_thread_proc(LPVOID param) {
   struct ResolveJob* job = (struct ResolveJob*)param;
   job->rc = getaddrinfo(job->host, job->port, &job->hints, &job->result);
@@ -630,10 +660,9 @@ static DWORD WINAPI resolve_thread_proc(LPVOID param) {
   /* The waiter may have timed out and left. If so, nobody will read the
    * result, so free it here. */
   if(InterlockedCompareExchange(&job->abandoned, 0, 0) != 0) {
-    if(job->result != NULL) {
-      freeaddrinfo(job->result);
-      job->result = NULL;
-    }
+    struct addrinfo* lost = resolve_job_take_result(job);
+    if(lost != NULL)
+      freeaddrinfo(lost);
   }
   InterlockedDecrement(&resolver_threads);
   resolve_job_release(job);
@@ -644,13 +673,19 @@ static DWORD WINAPI resolve_thread_proc(LPVOID param) {
  * *result on success; the caller frees it with freeaddrinfo(). */
 static int resolve_with_deadline(const char* host, const char* port, DWORD wait_ms,
                                  struct addrinfo** result) {
+  if(InterlockedIncrement(&resolver_waiters) > MAX_RESOLVER_WAITERS) {
+    InterlockedDecrement(&resolver_waiters);
+    return -1;
+  }
   if(InterlockedIncrement(&resolver_threads) > MAX_RESOLVER_THREADS) {
     InterlockedDecrement(&resolver_threads);
+    InterlockedDecrement(&resolver_waiters);
     return -1;
   }
   struct ResolveJob* job = (struct ResolveJob*)calloc(1, sizeof(*job));
   if(job == NULL) {
     InterlockedDecrement(&resolver_threads);
+    InterlockedDecrement(&resolver_waiters);
     return -1;
   }
   snprintf(job->host, sizeof(job->host), "%s", host);
@@ -662,6 +697,7 @@ static int resolve_with_deadline(const char* host, const char* port, DWORD wait_
   if(job->done == NULL) {
     free(job);
     InterlockedDecrement(&resolver_threads);
+    InterlockedDecrement(&resolver_waiters);
     return -1;
   }
   job->refs = 2; /* this function and the resolver thread */
@@ -670,17 +706,24 @@ static int resolve_with_deadline(const char* host, const char* port, DWORD wait_
     CloseHandle(job->done);
     free(job);
     InterlockedDecrement(&resolver_threads);
+    InterlockedDecrement(&resolver_waiters);
     return -1;
   }
   CloseHandle(thread);
   if(WaitForSingleObject(job->done, wait_ms) != WAIT_OBJECT_0) {
-    /* Abandon it: the resolver thread frees the result and the job. */
+    /* Stop waiting: release the waiter slot, mark the job abandoned, and let
+     * whichever side gets there first free the result. The thread itself is
+     * still counted in resolver_threads until getaddrinfo returns. */
     InterlockedExchange(&job->abandoned, 1);
+    struct addrinfo* lost = resolve_job_take_result(job);
+    if(lost != NULL)
+      freeaddrinfo(lost);
+    InterlockedDecrement(&resolver_waiters);
     resolve_job_release(job);
     return -1;
   }
-  *result = job->result;
-  job->result = NULL;
+  InterlockedDecrement(&resolver_waiters);
+  *result = resolve_job_take_result(job);
   resolve_job_release(job);
   return 0;
 }

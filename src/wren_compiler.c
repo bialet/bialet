@@ -1455,9 +1455,12 @@ static void readString(Parser* parser, char quote) {
     // open swallowed every following line as string data and only failed at
     // EOF, which made the reported line and the error both misleading.
     if(c == '\n') {
-      lexError(parser, "Unterminated string.");
-      // Leave the newline for the next token, as the EOF case does.
+      // Leave the newline for the next token, as the EOF case does, and undo
+      // nextChar()'s line bump so the newline is not counted twice. Undo both
+      // before reporting: lexError() snapshots the current line.
       parser->currentChar--;
+      parser->currentLine--;
+      lexError(parser, "Unterminated string.");
       break;
     }
 

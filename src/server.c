@@ -112,6 +112,21 @@ static size_t header_block_len(const char* buf, size_t len) {
 // body while the other still scanned it: a request the app saw as
 // text/plain/application/json could still have its multipart parts stored.
 static int header_block_well_formed(const char* buf, size_t hdr_len) {
+  // A NUL in the request line would end the C string in parse_request() while
+  // the length-framed Wren map saw the rest of the line, so the C router and
+  // the Wren router could disagree about the path. Header values are allowed
+  // to carry one: both parsers are length-bounded there and agree.
+  size_t request_line_end = hdr_len;
+  for(size_t i = 0; i + 1 < hdr_len; i++) {
+    if(buf[i] == '\r' && buf[i + 1] == '\n') {
+      request_line_end = i;
+      break;
+    }
+  }
+  for(size_t i = 0; i < request_line_end; i++) {
+    if(buf[i] == '\0')
+      return 0;
+  }
   for(size_t i = 0; i < hdr_len; i++) {
     if(buf[i] == '\n' && (i == 0 || buf[i - 1] != '\r'))
       return 0;

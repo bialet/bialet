@@ -101,6 +101,20 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax_msg "Complete tag still names unclosed" "syntax_err_nest_unclosed_text.wren" 1 "Unclosed <div>: 1 open, 0 closed"
   test_syntax_msg "Trailing backslash at EOF" "syntax_err_string_trailing_escape.wren" 1 "Unterminated string."
   test_syntax_errors "Newline ends an open string " "syntax_err_string_newline.wren" 1 1 "Unterminated string."
+  # The error is reported at the line the literal was opened on, and the
+  # swallowed newline is not counted twice for the tokens after it.
+  if [[ "$TARGET_EXEC" != "-" ]]; then
+    strline_line=$LINENO
+    strline_out=$("$TARGET_EXEC" -t "$(dirname "$0")/syntax_err_string_line.wren" 2>&1)
+    if [[ "$strline_out" == *"line 2 Error: Unterminated string."* ]]; then
+      report_result "Open string reports its line " "$strline_line" 0
+    else
+      report_result "Open string reports its line " "$strline_line" 1 \
+        "Expected the error on line 2. Got: $strline_out"
+    fi
+  else
+    skip_test "Open string reports its line " "requires local binary access (-t flag)"
+  fi
   test_syntax_msg "Raw string unterminated at EOF" "syntax_err_raw_string_unterminated.wren" 1 "Unterminated raw string."
   # One extra close tag used to leave '</div>' for the parser, which then
   # reported two more errors. It must be a single error.
@@ -574,26 +588,35 @@ if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
 import socket, sys
 
 host, port = sys.argv[1], int(sys.argv[2])
-req = (b'GET /nul-header HTTP/1.1\r\nHost: x\r\nX-Bin: a\x00bz\r\n'
-       b'Connection: close\r\n\r\n')
-s = socket.create_connection((host, port), 10)
-s.settimeout(20)
-s.sendall(req)
-data = b''
-try:
-    while True:
-        chunk = s.recv(4096)
-        if not chunk:
-            break
-        data += chunk
-except OSError:
-    pass
-s.close()
-body = data.split(b'\r\n\r\n', 1)[1] if b'\r\n\r\n' in data else b''
-print(body.decode('utf-8', 'replace').strip())
+
+def exchange(req):
+    s = socket.create_connection((host, port), 10)
+    s.settimeout(20)
+    s.sendall(req)
+    data = b''
+    try:
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    except OSError:
+        pass
+    s.close()
+    return data
+
+ok = exchange(b'GET /nul-header HTTP/1.1\r\nHost: x\r\nX-Bin: a\x00bz\r\n'
+              b'Connection: close\r\n\r\n')
+body = ok.split(b'\r\n\r\n', 1)[1] if b'\r\n\r\n' in ok else b''
+# A NUL in the request line is refused: the C router and the length-framed
+# Wren map would otherwise disagree on the path.
+bad = exchange(b'GET /nul\x00-header HTTP/1.1\r\nHost: x\r\n'
+               b'Connection: close\r\n\r\n')
+status = int(bad.split(b' ')[1]) if bad.startswith(b'HTTP/') else 0
+print(body.decode('utf-8', 'replace').strip() + '|nulreq:%d' % status)
 PY
 )
-  if [[ "$nulhdr_out" == "len:4|hasNul:true|tail:z" ]]; then
+  if [[ "$nulhdr_out" == "len:4|hasNul:true|tail:z|nulreq:400" ]]; then
     report_result "NUL-bearing header preserved  " "$nulhdr_line" 0
   else
     report_result "NUL-bearing header preserved  " "$nulhdr_line" 1 \
