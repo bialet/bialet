@@ -1203,9 +1203,12 @@ static void readHtmlString(Parser* parser, HtmlHandlebar* state) {
   }
 
   // A fresh literal may have stopped its name scan at the first attribute, so
-  // the content loop starts inside its opening tag.
-  if(readsOpeningTag)
+  // the content loop starts inside its opening tag; when the scan stopped at
+  // the tag's own '>', that tag is already open.
+  if(readsOpeningTag) {
     inTag = openTagHasAttributes;
+    tagIsOpen = openTagHasAttributes;
+  }
 
   if(closingTag < 0 && !invalidTag && !openTagCut) {
     // The tag being read closes <tagName> itself.
@@ -1372,7 +1375,8 @@ static void readQueryString(Parser* parser) {
     }
 
     if(c == '\\') {
-      switch(nextChar(parser)) {
+      char escaped = nextChar(parser);
+      switch(escaped) {
         case '`':
           wrenByteBufferWrite(parser->vm, &string, '`');
           break;
@@ -1401,10 +1405,20 @@ static void readQueryString(Parser* parser) {
           wrenByteBufferWrite(parser->vm, &string,
                               (uint8_t)readHexEscape(parser, 2, "byte"));
           break;
+        case '\0':
+          // The source ends right after the backslash. nextChar() returned the
+          // terminator and stepped past it; reported below, after the switch,
+          // so no further read happens.
+          break;
         default:
           lexError(parser, "Invalid escape character '%c'.",
                    *(parser->currentChar - 1));
           break;
+      }
+      if(escaped == '\0') {
+        lexError(parser, "Unterminated query string.");
+        parser->currentChar--;
+        break;
       }
     } else {
       wrenByteBufferWrite(parser->vm, &string, c);
@@ -1461,7 +1475,8 @@ static void readString(Parser* parser, char quote) {
     }
 
     if(c == '\\') {
-      switch(nextChar(parser)) {
+      char escaped = nextChar(parser);
+      switch(escaped) {
         case '"':
           wrenByteBufferWrite(parser->vm, &string, '"');
           break;
@@ -1512,10 +1527,20 @@ static void readString(Parser* parser, char quote) {
                               (uint8_t)readHexEscape(parser, 2, "byte"));
           break;
 
+        case '\0':
+          // The source ends right after the backslash. nextChar() returned the
+          // terminator and stepped past it; reported below, after the switch,
+          // so no further read happens.
+          break;
         default:
           lexError(parser, "Invalid escape character '%c'.",
                    *(parser->currentChar - 1));
           break;
+      }
+      if(escaped == '\0') {
+        lexError(parser, "Unterminated string.");
+        parser->currentChar--;
+        break;
       }
     } else {
       wrenByteBufferWrite(parser->vm, &string, c);

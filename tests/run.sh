@@ -96,6 +96,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax_msg "Unclosed names the start line " "syntax_err_nest_interp_unterminated.wren" 1 "Unclosed <div>: 2 open, 0 closed (string opened on line 1)"
   test_syntax_msg "Cut opening tag names the tag " "syntax_err_nest_cut_tag.wren" 1 "Expected '>' to close the opening <div> tag."
   test_syntax_msg "Cut attributes report the tag" "syntax_err_nest_cut_attrs.wren" 1 "Expected '>' to close the opening <div> tag."
+  # A complete opening tag that never closes is still the Unclosed message, and
+  # a source ending in a backslash must stop at the end of the file.
+  test_syntax_msg "Complete tag still names unclosed" "syntax_err_nest_unclosed_text.wren" 1 "Unclosed <div>: 1 open, 0 closed"
+  test_syntax_msg "Trailing backslash at EOF" "syntax_err_string_trailing_escape.wren" 1 "Unterminated string."
   # One extra close tag used to leave '</div>' for the parser, which then
   # reported two more errors. It must be a single error.
   test_syntax_errors "Extra close tag, one error    " "syntax_err_nest_stray_close.wren" 1 1 "Unexpected </div>: <div> is already closed."

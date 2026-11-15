@@ -36,7 +36,12 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   longer hides that tag from the scan.
 - An opening tag cut short after its name (`<div class="a"`) reports
   `Expected '>' to close the opening <div> tag.` like `<div` does, instead of
-  claiming the literal was opened and never closed.
+  claiming the literal was opened and never closed; a complete opening tag that
+  never closes still reports `Unclosed <div>: 1 open, 0 closed`.
+- A source file that ends immediately after a backslash inside a quoted or
+  backtick string reported `Invalid escape character` and then read one byte
+  past the end of the buffer. It stops at the end of the file and reports
+  `Unterminated string.` / `Unterminated query string.`
 - The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`
   recognised only `/` as the path separator, so on Windows — where the resolved
   path separates with `\` — a log file, database or key file placed inside the
