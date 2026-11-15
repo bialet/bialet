@@ -105,19 +105,22 @@ It returns null for thousands separators and decimal commas. Normalize first
 (see `Money.parse` in [Recipes](recipes.md)), or store integer cents and parse
 the form value with the helper.
 
-## 10. Do not nest the same outermost HTML tag
+## 10. Inner HTML tags are not checked for balance
 
-Bialet's inline-HTML parser rejects an outermost tag that also appears as a
-direct child at any level:
+The parser tracks the outermost tag name and ends the string at the close tag
+that matches it. Tags with a *different* name inside are never validated, so an
+unclosed inner tag is served verbatim and only the browser repairs it:
 
 ```wren
-var bad = <section><section>Nested</section></section>
-// Cannot nest <section> inside <section>
+var served = <div><span>Hello</div>
+// <div><span>Hello</div> — the browser closes the <span>
 ```
 
-The error points at the closing tag, not the opening one, which makes it hard to
-find. Wrap with a different tag (`<div><section>...`) or split the view into
-partials. See [Template](template.md) for the nesting rules.
+Same-tag nesting is fine (`<div><div>Hello</div></div>`), but every copy of the
+outermost tag must be closed: a missing close tag or one extra close tag is a
+compile error. A close tag with a different name is not validated, so it only
+fails when it leaves the outermost tag one close short. See
+[Template](template.md) for the nesting rules.
 
 ## 11. Assigning a property needs an explicit setter
 

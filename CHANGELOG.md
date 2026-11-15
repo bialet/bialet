@@ -4,6 +4,52 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.17 — 2026-11-15
+
+### Added
+
+- Inline HTML strings can nest the outermost tag: `<div><div>...</div></div>`
+  compiles. The lexer tracks how many copies of the outermost tag name are open
+  and ends the string at the close tag that matches it, instead of reporting
+  `Cannot nest <div> inside <div>`. Every level must still be closed, and a
+  close tag with a different name or an extra close tag is still an error.
+
+### Fixed
+
+- A newline after an interpolated inline HTML string no longer ends the call it
+  belongs to. The whitespace after the closing tag is now skipped for the
+  interpolated case too, so `Layout.render(<div>{{ x }}</div>\n, "Title")`
+  compiles like the single-line form.
+- Inline HTML literals that never close now say what is wrong: `Unclosed <div>:
+  2 open, 1 closed (string opened on line 1).` counts the copies of the
+  outermost tag, names the line the literal started on even when `{{ }}` split
+  it, and names the close tag when a `</span>` does not close the tag. An extra
+  close tag is one `Unexpected </div>: <div> is already closed.` instead of
+  three parse errors, and an opening tag cut short by a newline reports
+  `Expected '>' to close the opening <div> tag.`
+- A `<` in literal text (`<p>a<b c</p>`) is text again, as it was before the
+  nesting change: a tag start only counts when a `>` follows before the next
+  `<`. A `{{ }}` inside the attribute list of a *nested* copy of the outermost
+  tag (`<div><div style="width:{{ w }}px">`) now resumes inside that tag, so the
+  literal no longer ends at the inner close tag, and a `{{ }}` whose expression
+  holds a quote or a `<` (`style="{{ "</b>" }}"`, `title={{ 1 < 2 }}`) no
+  longer hides that tag from the scan.
+- An opening tag cut short after its name (`<div class="a"`) reports
+  `Expected '>' to close the opening <div> tag.` like `<div` does, instead of
+  claiming the literal was opened and never closed; a complete opening tag that
+  never closes still reports `Unclosed <div>: 1 open, 0 closed`.
+- A source file that ends immediately after a backslash inside a quoted or
+  backtick string reported `Invalid escape character` and then read one byte
+  past the end of the buffer. It stops at the end of the file and reports
+  `Unterminated string.` / `Unterminated query string.`
+- A source file ending in an unterminated raw string (`"""a`) no longer steps
+  past the NUL while consuming the closing quotes it never found.*
+- The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`
+  recognised only `/` as the path separator, so on Windows — where the resolved
+  path separates with `\` — a log file, database or key file placed inside the
+  served tree was accepted. They now accept either separator, like the other
+  containment checks already did.
+
 ## 1.2.16 — 2026-11-11
 
 ### Added

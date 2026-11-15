@@ -24,12 +24,14 @@ every page is at <https://bialet.dev/llms.txt>.
 > *"Every code example using `Request.post()` **must** include a null-handling
 > strategy (`|| fallback` or `if (value != null)`) by default."*
 
-> ⚠️ **CRITICAL: inline HTML strings cannot nest the same tag.**
-> `<div>...<div>...</div>...</div>` is a parse error, and it is the mistake
-> that costs the most round-trips in practice. When a `<div>` needs a child
-> wrapper, use a **different** element — `<section>`, `<article>`,
-> `<fieldset>` — never another `<div>`. Do not paste the same nesting back
-> after a `bialet_validate` error.
+> ⚠️ **CRITICAL: an inline HTML string may nest its own tag.**
+> `<div><div>...</div></div>` compiles — every tag can contain any other tag,
+> including its own name. Start a `<div>` inside a `<div>` whenever the markup
+> calls for it; do not work around a nesting error by swapping in
+> `<section>`/`<article>` wrappers. What still fails is balance on the outermost
+> tag: a missing close tag, or one close tag too many. A close tag whose name
+> does not match is not validated — it only fails when it leaves the outermost
+> tag one close short.
 
 > ⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**
 > `SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at
@@ -265,8 +267,8 @@ var greeting = <h1>Hello, {{ name }}!</h1>
   **same** tag name.
 - Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
   Hyphens enable custom elements like `<my-element>`.
-- A tag cannot directly nest another tag of the **same** name
-  (`<div><div>...` is a parse error) — use a different tag for the inner one.
+- Any tag may nest any other tag, including its own name
+  (`<div><div>...</div></div>` is valid). Every level must be closed.
 - Self-closing tags need a space before the slash: `<br />`, `<input ... />`.
 - `{{ expr }}` inside an inline HTML string evaluates any Wren expression —
   it's sugar for `%(...)` interpolation inside an HTML block.

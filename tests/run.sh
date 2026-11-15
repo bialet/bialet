@@ -29,6 +29,7 @@ SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
 CRON_PORT="${args[6]:-7103}"
 MULTIPART_PORT="${args[7]:-7104}"
+ROOT_STDERR_PORT="${args[8]:-7105}"
 
 # The Windows binary is cross-compiled on Linux and exercised under Wine. Two
 # tests rely on POSIX semantics Wine does not reproduce and fail identically on
@@ -81,13 +82,34 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
   test_syntax "Multiline interp passes       " "syntax_ok_interp_multiline.wren" 0
-  test_syntax "Nested same tag rejected      " "syntax_err_nested.wren" 1
+  test_syntax "Nested same tag passes        " "syntax_ok_nested.wren" 0
+  test_syntax "Unclosed nested tag fails     " "syntax_err_nest_unterminated.wren" 1
+  test_syntax "Stray close tag fails         " "syntax_err_nest_stray_close.wren" 1
+  test_syntax "Mismatched nested close fails " "syntax_err_nest_mismatched.wren" 1
+  test_syntax "Cut opening tag fails         " "syntax_err_nest_cut_tag.wren" 1
+  test_syntax "Unclosed after interp fails   " "syntax_err_nest_interp_unterminated.wren" 1
+  # The next four pin the wording of the nesting errors: the tag name, how many
+  # copies are open and closed, and (for a literal split by {{ }}) the line the
+  # literal started on rather than the line it resumed on.
+  test_syntax_msg "Unclosed counts open/closed   " "syntax_err_nest_unterminated.wren" 1 "Unclosed <div>: 2 open, 1 closed (string opened on line 1)"
+  test_syntax_msg "Unclosed names the wrong close" "syntax_err_nest_mismatched.wren" 1 "Unclosed <div>: 2 open, 1 closed. </span> does not close <div>"
+  test_syntax_msg "Unclosed names the start line " "syntax_err_nest_interp_unterminated.wren" 1 "Unclosed <div>: 2 open, 0 closed (string opened on line 1)"
+  test_syntax_msg "Cut opening tag names the tag " "syntax_err_nest_cut_tag.wren" 1 "Expected '>' to close the opening <div> tag."
+  test_syntax_msg "Cut attributes report the tag" "syntax_err_nest_cut_attrs.wren" 1 "Expected '>' to close the opening <div> tag."
+  # A complete opening tag that never closes is still the Unclosed message, and
+  # a source ending in a backslash must stop at the end of the file.
+  test_syntax_msg "Complete tag still names unclosed" "syntax_err_nest_unclosed_text.wren" 1 "Unclosed <div>: 1 open, 0 closed"
+  test_syntax_msg "Trailing backslash at EOF" "syntax_err_string_trailing_escape.wren" 1 "Unterminated string."
+  test_syntax_msg "Raw string unterminated at EOF" "syntax_err_raw_string_unterminated.wren" 1 "Unterminated raw string."
+  # One extra close tag used to leave '</div>' for the parser, which then
+  # reported two more errors. It must be a single error.
+  test_syntax_errors "Extra close tag, one error    " "syntax_err_nest_stray_close.wren" 1 1 "Unexpected </div>: <div> is already closed."
   test_syntax "Leading op rejected           " "syntax_err_interp_leading_op.wren" 1
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
 else
-  skip_test "Syntax validation (11 checks)  " "requires local binary access (-t flag)"
+  skip_test "Syntax validation             " "requires local binary access (-t flag)"
 fi
 
 # Tests - bare -r initializes the framework tables
@@ -944,6 +966,10 @@ run_test "JSON response               " "json"            200 '{"foo":"bar"}'
 run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
+run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html-nest.html")"
+run_test "Literal text with <          " "html-lt-text"   200 "<main><p>a<b c</p><p>1 < 2 and 3 > 2</p></main>"
+run_test "Nested attr interpolation    " "html-nest-attr-interp" 200 '<main><div><div style="width:&lt;/b&gt;">a</div><div>b</div></div><div><div title=true>x</div></div><div style="&lt;/div&gt;">y</div></main>'
+run_test "Multiline call arguments    " "html-multiline-args" 200 "three:same"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500
 run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"
@@ -1096,6 +1122,71 @@ run_test "Safe method basic types     " "safe"            200 "true,42,{html: &l
 
 # Tests - Random
 run_test "Random sample               " "randomsample"    200 "true,true,true"
+
+# Regression: a plain "/" request wrote "Path too long to append .wren suffix:
+# <stale errno>" to stderr. The trailing-slash strip leaves path ==
+# full_root_dir, so the `strlen(path) > root_len` guard failed and the single
+# `else` - meant for a path with no room left for ".wren" - called perror() on
+# a perfectly normal request. The response was always correct, so this only
+# ever showed up in the logs. A URI that really is too long must still be
+# reported, once, in the -l stream (not with a stale errno).
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  quiet_root_line=$LINENO
+  _test_start_ms=$(now_ms)
+  quiet_root="$(mktemp -d)"
+  quiet_root_out="$(mktemp /tmp/bialet-quiet-root.XXXXXX)"
+  quiet_root_log="$(mktemp /tmp/bialet-quiet-root-log.XXXXXX)"
+  quiet_root_db="$(mktemp /tmp/bialet-quiet-root-db.XXXXXX)"
+  printf 'return <h1>Quiet Root</h1>\n' > "$quiet_root/index.wren"
+  printf 'return <h1>Quiet Page</h1>\n' > "$quiet_root/page.wren"
+  require_free_port "$HOST" "$ROOT_STDERR_PORT" "root stderr server"
+  "$TARGET_EXEC" -h "$HOST" -p "$ROOT_STDERR_PORT" -l "$quiet_root_log" \
+    -d "$quiet_root_db" "$quiet_root" > "$quiet_root_out" 2>&1 &
+  disown
+  wait_port "$HOST" "$ROOT_STDERR_PORT" 10
+  quiet_root_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/")
+  quiet_root_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/")
+  quiet_page_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/page")
+  quiet_page_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/page")
+  quiet_root_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  # A URI past PATH_SIZE truncates the probe name, so on POSIX it must still be
+  # reported (and still answers 404). Windows cannot reach that path at all: its
+  # header buffer is BUFSIZ * 4 = 2048 bytes, so any URI that could overflow
+  # PATH_SIZE is refused as a malformed request (400) before the probe.
+  quiet_long_uri=$(head -c 2100 /dev/zero | tr '\0' 'a')
+  quiet_long_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$ROOT_STDERR_PORT/$quiet_long_uri")
+  # The report has to reach the -l stream and not stderr: that is why it no
+  # longer uses perror, and why with -l given it goes to the file alone.
+  quiet_long_log=$(grep -c "Path too long" "$quiet_root_log" 2>/dev/null)
+  quiet_long_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  if [[ "$IS_WINE" == 1 ]]; then
+    quiet_long_expected_code=400
+    quiet_long_expected_log=0
+  else
+    quiet_long_expected_code=404
+    quiet_long_expected_log=1
+  fi
+  pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_log" "$quiet_root_db" \
+    "$quiet_root_db"-*
+  if [[ "$quiet_root_code" == "200" && "$quiet_root_body" == *"Quiet Root"* \
+        && "$quiet_page_code" == "200" && "$quiet_page_body" == *"Quiet Page"* \
+        && "$quiet_root_noise" == "0" \
+        && "$quiet_long_code" == "$quiet_long_expected_code" \
+        && "$quiet_long_log" == "$quiet_long_expected_log" \
+        && "$quiet_long_noise" == "0" ]]; then
+    report_result "Root request logs no path error" "$quiet_root_line" 0
+  else
+    report_result "Root request logs no path error" "$quiet_root_line" 1 \
+      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code (want $quiet_long_expected_code) long_noise:$quiet_long_noise long_log:$quiet_long_log (want $quiet_long_expected_log)"
+  fi
+else
+  skip_test "Root request logs no path error" "requires local binary access"
+fi
 
 # Tests - CORS
 run_test "CORS enabled                " "cors"            200 "cors"
