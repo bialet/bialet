@@ -117,7 +117,8 @@ build_windows() {
     ok "Windows: $DIST_DIR/bialet-windows-x86_64.exe"
 
     if [ -n "$parked_artifact" ]; then
-        cp "$parked_artifact" "$linux_artifact"
+        # install, not cp: the parked copy came from mktemp and is mode 600.
+        install -m 0755 "$parked_artifact" "$linux_artifact"
         rm -f "$parked_artifact"
     fi
 }
