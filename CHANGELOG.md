@@ -42,6 +42,10 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   backtick string reported `Invalid escape character` and then read one byte
   past the end of the buffer. It stops at the end of the file and reports
   `Unterminated string.` / `Unterminated query string.`
+- A quoted string literal left open now fails at the end of its line with
+  `Unterminated string.` instead of swallowing every following line as string
+  data and reporting at EOF. A normal string is single-line; write `\n` for a
+  newline.
 - A source file ending in an unterminated raw string (`"""a`) no longer steps
   past the NUL while consuming the closing quotes it never found.*
 - The "inside the app root" guards for `-l`, `-d` and `--secret-key-file`

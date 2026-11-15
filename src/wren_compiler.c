@@ -1451,6 +1451,16 @@ static void readString(Parser* parser, char quote) {
     if(c == '\r')
       continue;
 
+    // A normal string literal is single-line. Without this case a quote left
+    // open swallowed every following line as string data and only failed at
+    // EOF, which made the reported line and the error both misleading.
+    if(c == '\n') {
+      lexError(parser, "Unterminated string.");
+      // Leave the newline for the next token, as the EOF case does.
+      parser->currentChar--;
+      break;
+    }
+
     if(c == '\0') {
       lexError(parser, "Unterminated string.");
 

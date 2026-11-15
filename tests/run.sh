@@ -100,6 +100,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # a source ending in a backslash must stop at the end of the file.
   test_syntax_msg "Complete tag still names unclosed" "syntax_err_nest_unclosed_text.wren" 1 "Unclosed <div>: 1 open, 0 closed"
   test_syntax_msg "Trailing backslash at EOF" "syntax_err_string_trailing_escape.wren" 1 "Unterminated string."
+  test_syntax_errors "Newline ends an open string " "syntax_err_string_newline.wren" 1 1 "Unterminated string."
   test_syntax_msg "Raw string unterminated at EOF" "syntax_err_raw_string_unterminated.wren" 1 "Unterminated raw string."
   # One extra close tag used to leave '</div>' for the parser, which then
   # reported two more errors. It must be a single error.
