@@ -82,9 +82,14 @@ ifeq ($(HAVE_SSL),1)
 	LDFLAGS += $(SSL_LIBS)
 endif
 else
+	# HAVE_SSL=0 is an explicit opt-out (for a LibreSSL or an OpenSSL below
+	# 1.1, which src/hash.h refuses). Without the override this branch always
+	# defined HAVE_SSL, so the documented escape did not exist on macOS.
+	ifneq ($(HAVE_SSL),0)
 		CFLAGS += $(shell pkg-config --cflags openssl) -DHAVE_SSL
 		SSL_LIBS := $(shell pkg-config --libs openssl)
 		LDFLAGS += $(SSL_LIBS) -framework CoreServices
+	endif
 endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
@@ -224,4 +229,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples html static install-hooks
+.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples check-release-links html static install-hooks

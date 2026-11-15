@@ -122,13 +122,16 @@ if [ "$OS" = "Darwin" ]; then
 fi
 
 # ── Fetch latest release tag ───────────────────────────────────
-echo "==> Fetching latest Bialet release..."
-RELEASE_URL="https://api.github.com/repos/$REPO/releases/latest"
-TAG=$(curl -fsSLf "$RELEASE_URL" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+# BIALET_VERSION=vX.Y.Z installs a specific release and skips the API call.
+TAG="${BIALET_VERSION:-}"
+if [ -z "$TAG" ]; then
+  echo "==> Fetching latest Bialet release..."
+  RELEASE_URL="https://api.github.com/repos/$REPO/releases/latest"
+  TAG=$(curl -fsSLf "$RELEASE_URL" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+fi
 
 if [ -z "$TAG" ]; then
-  yellow "Could not determine latest release. Using default version."
-  TAG="v0.10.0"
+  abort "Could not determine the latest release (GitHub API unreachable or rate-limited). Set BIALET_VERSION=vX.Y.Z to install a specific release."
 fi
 green "==> Latest version: ${TAG#v}"
 
@@ -168,7 +171,8 @@ green "==> Checksum verified."
 # Releases older than the attestation step have no entry; they still install
 # on the checksum. Set BIALET_REQUIRE_ATTESTATION=1 to make that fatal.
 if command -v gh >/dev/null 2>&1; then
-  if gh attestation verify "$TMPDIR/$TARNAME" --repo "$REPO" >/dev/null 2>&1; then
+  if gh attestation verify "$TMPDIR/$TARNAME" --repo "$REPO" \
+      --signer-workflow "$REPO/.github/workflows/release.yml" >/dev/null 2>&1; then
     green "==> Build provenance verified."
   elif [ "${BIALET_REQUIRE_ATTESTATION:-0}" = "1" ]; then
     abort "Build provenance verification failed for $TARNAME (BIALET_REQUIRE_ATTESTATION=1)."

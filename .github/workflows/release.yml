@@ -72,6 +72,9 @@ jobs:
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
             libgnutls28-dev libsasl2-dev sqlite3
 
+      - name: Verify embedded Wren sources
+        run: make check-wren-inc
+
       - name: Build (static)
         run: make clean && make static
 
@@ -272,7 +275,15 @@ jobs:
           push: true
           tags: |
             bialet/bialet:${{ env.IMAGE_VERSION }}
-            bialet/bialet:latest
+
+      # A pre-release must not become :latest: install.sh resolves
+      # /releases/latest, so moving the tag would hand every new install an RC.
+      - name: Point latest at a stable release
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          docker buildx imagetools create \
+            -t bialet/bialet:latest \
+            bialet/bialet:${IMAGE_VERSION}
 
   # ── GitHub Release ─────────────────────────────────────────────
   release:
@@ -327,13 +338,17 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          PRERELEASE=()
+          case "${REF_NAME}" in
+            *-*) PRERELEASE=(--prerelease) ;;
+          esac
           if gh release view "${REF_NAME}" > /dev/null 2>&1; then
             gh release upload "${REF_NAME}" \
               dist/*.tar.gz dist/*.zip dist/SHA256SUMS --clobber
           else
             gh release create "${REF_NAME}" \
               dist/*.tar.gz dist/*.zip dist/SHA256SUMS \
-              --title "${REF_NAME}" --generate-notes
+              --title "${REF_NAME}" --generate-notes "${PRERELEASE[@]}"
           fi
 
       # Bumps the formula in bialet/homebrew-bialet to the released version.

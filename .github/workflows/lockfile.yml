@@ -25,7 +25,9 @@ jobs:
           persist-credentials: false
 
       - name: Install gh-actions-lock
-        run: gh extension install github/gh-actions-lock --pin v0.4.1
+        # Pinned to a commit, not the tag: this job exists to catch a retagged
+        # action, so it must not select its own code by a retaggable ref.
+        run: gh extension install github/gh-actions-lock --pin 04b7a1a4d00b339dd3ff903bb4d78d4066b2bac7
 
       - name: Verify lockfile
         run: gh actions-lock --verify
