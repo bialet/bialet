@@ -4,6 +4,24 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## Unreleased
+
+### Security
+
+- Closed every remaining lead from the run-5/run-6/run-7 audits (see the
+  roadmap): bounded the Windows TLS handshake and DNS lookup by the hop
+  deadline, aligned the Windows URL splitter and `Host:` header with libcurl,
+  made framework header names case-insensitive, added a configurable
+  cross-origin credential strip list, reconciled session reads with the live
+  cookie, framed the request message for Wren by length, indexed the temporary
+  upload pool by age, escaped C1 controls in the log, made an unclosed string
+  fail at the end of its line, required OpenSSL 1.1 for the password KDF, and
+  verified committed `.inc` files against a regeneration.
+- Releases now attest their archives with the workflow's OIDC identity, and
+  `install.sh` refuses a release that publishes no `SHA256SUMS`.
+- A release tag must be on `main` and match `BIALET_VERSION` before anything is
+  built, and the image and release jobs sit behind a protected environment.
+
 ## 1.2.17 — 2026-11-15
 
 ### Added

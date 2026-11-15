@@ -68,17 +68,16 @@ quadratically (one 4 KB header ≈ 0.5 s of the single worker), the session-tabl
 sweep was gated on per-request VM state and never ran, an `-l` log file inside
 the app root was downloadable, the Markdown inline pass was quadratic in
 unmatched `[`, and password hashing truncated the credential at the first NUL.
-These are the remaining leads and hardening gaps from those runs and from
-run-7.
+All of the leads below are closed. The notes stay for the record.
 
-- [ ] **Win32 TLS handshake deadline** — `SSL_connect` is bounded per socket
+- [x] **Win32 TLS handshake deadline** — `SSL_connect` is bounded per socket
       read, not as a whole: a peer that drips one byte per interval can hold the
       single worker far past the hop budget. Needs a non-blocking handshake loop
       (or an out-of-band cancellation channel).
-- [ ] **Uncancellable DNS on Windows** — `getaddrinfo` has no timeout and cannot
+- [x] **Uncancellable DNS on Windows** — `getaddrinfo` has no timeout and cannot
       be interrupted; the hop budget now detects an overrun but cannot abort the
       resolver. Move resolution off the request thread or bound it externally.
-- [ ] **Win32 URL parser parity** — `parse_url` ends the authority only at `/`
+- [x] **Win32 URL parser parity** — `parse_url` ends the authority only at `/`
       or `:`, so a query-only URL, IPv6 literal, uppercase scheme, trailing dot
       or non-default port fails differently from `Http.urlScope_`/libcurl
       (`Host:` omits the port). Align the splitter and strip the fragment from
@@ -86,69 +85,69 @@ run-7.
       `Host: %s` from `url->host` only, so a call to a vhost-routed listener on
       a non-default port presents the wrong authority on Windows while the
       POSIX path lets libcurl write the full one.
-- [ ] **Case-insensitive framework headers** — a caller spelling
+- [x] **Case-insensitive framework headers** — a caller spelling
       `content-type`/`authorization` non-canonically gets duplicate header
       lines, and the Win32 transport can emit two `Authorization` lines; use one
       case-insensitive lookup and replace instead of append.
-- [ ] **Configurable credential strip list** — cross-origin redirects drop only
+- [x] **Configurable credential strip list** — cross-origin redirects drop only
       `Authorization` and `Cookie`; a caller-supplied `Proxy-Authorization` (or
       custom auth header) still follows the hop. Offer an opt-in strip list.
-- [ ] **Document `Session.rotate()`** — the login example never calls it, and
+- [x] **Document `Session.rotate()`** — the login example never calls it, and
       the session id is client-adoptable, so an app that follows the docs stays
       fixation-vulnerable. Call it in the example and state that it must precede
       any authenticated write. The adoption is confirmed: any shape-valid
       `BIALETSESSID` is kept verbatim with no re-mint, and the CSRF token is
       stored under the same id, so an app that skips `rotate()` hands the
       planter a valid token too.
-- [ ] **Session read-side staleness** — after `rotate()`/`destroy()` an existing
+- [x] **Session read-side staleness** — after `rotate()`/`destroy()` an existing
       `Session` still serves its constructor snapshot from `get()`/`id` until
       the next `set()`. Reconcile with the live cookie or document the window.
-- [ ] **Length-bounded header map** — the non-multipart request is handed to
+- [x] **Length-bounded header map** — the non-multipart request is handed to
       Wren with `wrenSetSlotString`, which truncates at an embedded NUL; use
       `wrenSetSlotBytes` with the framed length on both paths.
-- [ ] **Index the upload pool for eviction** — eviction sorts up to 4096 rows
+- [x] **Index the upload pool for eviction** — eviction sorts up to 4096 rows
       per deleted row (~1.7 ms each); an `(isTemp, createdAt, id)` index makes it
       O(log n) and removes a per-request cost multiplier.
-- [ ] **Temporary upload ids are not durable** — a temp id is readable only
+- [x] **Temporary upload ids are not durable** — a temp id is readable only
       inside the request that uploaded it; document that persistence needs
       `save()`.
-- [ ] **Session eviction has no owner scope** — the `maxSessions` cap evicts
+- [x] **Session eviction has no owner scope** — the `maxSessions` cap evicts
       the ids with the oldest `MAX(updatedAt)`, and the table carries no owner
       or authenticated marker, so an anonymous client that writes a fresh id per
       request evicts real users' sessions once the cap is reached and can force
       a global logout. Refuse new pre-auth rows at the cap, or record which ids
       were ever authenticated and evict only never-authenticated ones.
-- [ ] **Escape C1 controls in the log** — `log_escape` covers C0 and DEL only,
+- [x] **Escape C1 controls in the log** — `log_escape` covers C0 and DEL only,
       so 0x80–0x9F (CSI, OSC, ST, NEL) and their UTF-8 forms reach the operator
       log raw while the function's own comment promises every control byte is
       made inert. Confirm what the log consumer does with them, and escape the
       range either way.
-- [ ] **Report an unterminated string literal** — `readString` has no newline
+- [x] **Report an unterminated string literal** — `readString` has no newline
       case, so a quoted literal left open silently swallows the rest of the file
       as string data instead of failing with "Unterminated string". This is also
       what makes the `.inc` generator's line filtering only conditionally safe.
-- [ ] **Compare a committed `.inc` with a regeneration** — a clean build always
+- [x] **Compare a committed `.inc` with a regeneration** — a clean build always
       regenerates the embedded module text, so releases are safe, but `make`
       after a successful build reports a hand-edited `.inc` as up to date and
       compiles it. Add a `cmp` of a fresh regeneration in the pre-commit hook or
       CI.
-- [ ] **Make the password KDF a hard build requirement** — `OPENSSL_OK` demands
+- [x] **Make the password KDF a hard build requirement** — `OPENSSL_OK` demands
       3.0 while `HAVE_SSL` accepts any OpenSSL, and every API the PBKDF2 path
       needs exists in 1.1.x, so a 1.1 build silently stores a 32-bit salted
       DJB2 digest and cannot verify a `pbkdf2$` row at all. Widen the gate to
       1.1 or fail the build with a clear message.
-- [ ] **Sign the release, or anchor the checksum outside it** — `install.sh`
+- [x] **Sign the release, or anchor the checksum outside it** — `install.sh`
       verifies the archive against `SHA256SUMS` fetched from the same release,
       and a missing checksum is only a warning, so the check catches corruption
       but not an actor who can publish. Add a signature or attestation (or a
       digest in an independent channel) and make its absence fatal.
-- [ ] **Guard the release trigger** — `release.yml` runs on any pushed `v*` tag
+- [x] **Guard the release trigger** — `release.yml` runs on any pushed `v*` tag
       with no protected environment, repoints `docker:latest` in parallel with
       the build jobs, and only asserts `BIALET_VERSION` in the PPA job after the
       release and the image are already published. Require the tag to be on
       `main`, check the version before publishing, and gate the job behind an
       environment.
-- [ ] **Never interpolate a ref name into `run:`** — `release.yml` and `ppa.yml`
+- [x] **Never interpolate a ref name into `run:`** — `release.yml` and `ppa.yml`
       build shell text from `${{ github.ref_name }}` / `${{ inputs.tag }}`, so a
       tag containing a quote and `$(…)` is shell code in the steps holding the
       Homebrew deploy key and the PPA signing key. Use the `env:` form the
