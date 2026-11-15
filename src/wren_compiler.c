@@ -1573,6 +1573,29 @@ static void readString(Parser* parser, char quote) {
   makeToken(parser, type);
 }
 
+// Whether the whitespace after an inline HTML literal can be skipped whole.
+//
+// Skipping always is wrong: a literal that ends a statement (a ternary branch,
+// the last value of an assignment) is followed by a newline that must stay a
+// TOKEN_LINE, or the next statement gets glued to the literal's line and the
+// parser reports "Expect newline after statement" on it.
+//
+// So skip only the whitespace that cannot end the statement: spaces and tabs
+// always, and a newline only when the next token continues the expression (a
+// comma or a closer, which is where a multiline call puts them).
+static bool htmlTrailingSpaceContinues(Parser* parser) {
+  const char* c = parser->currentChar;
+  bool        newline = false;
+  while(*c == ' ' || *c == '\t' || *c == '\r' || *c == '\n') {
+    if(*c == '\n')
+      newline = true;
+    c++;
+  }
+  if(!newline)
+    return true;
+  return *c == ',' || *c == ')' || *c == ']' || *c == '}' || *c == ':';
+}
+
 // Lex the next token and store it in [parser.next].
 static void nextToken(Parser* parser) {
   parser->previous = parser->current;
@@ -1632,7 +1655,8 @@ static void nextToken(Parser* parser) {
             // The literal's last piece is done: skip its trailing whitespace
             // like a literal without interpolation does, so a newline between
             // the closing tag and a comma or ')' cannot end the call.
-            if(parser->next.type == TOKEN_HTML_NODE && entry.skipsSpace) {
+            if(parser->next.type == TOKEN_HTML_NODE && entry.skipsSpace &&
+               htmlTrailingSpaceContinues(parser)) {
               while(peekChar(parser) == ' ' || peekChar(parser) == '\t' ||
                     peekChar(parser) == '\r' || peekChar(parser) == '\n')
                 nextChar(parser);
@@ -1756,7 +1780,7 @@ static void nextToken(Parser* parser) {
             readHtmlString(parser, &doctype);
           }
           // Ignore white space after the end of the string
-          if(!notIgnoreSpacesTokens) {
+          if(!notIgnoreSpacesTokens && htmlTrailingSpaceContinues(parser)) {
             while(peekChar(parser) == ' ' || peekChar(parser) == '\t' ||
                   peekChar(parser) == '\r' || peekChar(parser) == '\n')
               nextChar(parser);

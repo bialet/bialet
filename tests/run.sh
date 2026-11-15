@@ -1063,6 +1063,7 @@ run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html
 run_test "Literal text with <          " "html-lt-text"   200 "<main><p>a<b c</p><p>1 < 2 and 3 > 2</p></main>"
 run_test "Nested attr interpolation    " "html-nest-attr-interp" 200 '<main><div><div style="width:&lt;/b&gt;">a</div><div>b</div></div><div><div title=true>x</div></div><div style="&lt;/div&gt;">y</div></main>'
 run_test "Multiline call arguments    " "html-multiline-args" 200 "three:same"
+run_test "Newline after HTML literal  " "html-literal-newline" 200 "badge:ok"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500
 run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"
