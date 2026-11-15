@@ -143,21 +143,42 @@ echo "==> Downloading $TARNAME..."
 curl -fsSLf "$DOWNLOAD_URL" -o "$TMPDIR/$TARNAME" || abort "Download failed. Check that release $TAG exists."
 
 # ── Verify checksum ────────────────────────────────────────────
-# Releases from 1.2.12 publish SHA256SUMS next to the archives. An older
-# release has no file, so a missing one warns; a mismatch always aborts.
+# Releases from 1.2.12 publish SHA256SUMS next to the archives. A missing
+# checksum is fatal: the download and the checksum come from the same release,
+# so verifying only catches corruption, but an unchecked archive catches
+# nothing at all.
 CHECKSUMS_URL="${DOWNLOAD_URL%/*}/SHA256SUMS"
-if curl -fsSL "$CHECKSUMS_URL" -o "$TMPDIR/SHA256SUMS" 2>/dev/null; then
-  EXPECTED=$(awk -v f="$TARNAME" '$2 == f { print $1; exit }' "$TMPDIR/SHA256SUMS")
-  if [ -z "$EXPECTED" ]; then
-    abort "$TARNAME is not listed in SHA256SUMS. Refusing to install an unverified archive."
+if ! curl -fsSL "$CHECKSUMS_URL" -o "$TMPDIR/SHA256SUMS" 2>/dev/null; then
+  abort "No SHA256SUMS published for $TAG. Refusing to install an unverified archive."
+fi
+EXPECTED=$(awk -v f="$TARNAME" '$2 == f { print $1; exit }' "$TMPDIR/SHA256SUMS")
+if [ -z "$EXPECTED" ]; then
+  abort "$TARNAME is not listed in SHA256SUMS. Refusing to install an unverified archive."
+fi
+ACTUAL=$(sha256_of "$TMPDIR/$TARNAME")
+if [ "$EXPECTED" != "$ACTUAL" ]; then
+  abort "Checksum mismatch for $TARNAME. Expected $EXPECTED, got $ACTUAL."
+fi
+green "==> Checksum verified."
+
+# ── Verify build provenance ────────────────────────────────────
+# Newer releases attest the archives with the release workflow's OIDC
+# identity. `gh attestation verify` checks that signature against the
+# repository, so a checksum file rewritten beside the archive does not pass.
+# Releases older than the attestation step have no entry; they still install
+# on the checksum. Set BIALET_REQUIRE_ATTESTATION=1 to make that fatal.
+if command -v gh >/dev/null 2>&1; then
+  if gh attestation verify "$TMPDIR/$TARNAME" --repo "$REPO" >/dev/null 2>&1; then
+    green "==> Build provenance verified."
+  elif [ "${BIALET_REQUIRE_ATTESTATION:-0}" = "1" ]; then
+    abort "Build provenance verification failed for $TARNAME (BIALET_REQUIRE_ATTESTATION=1)."
+  else
+    yellow "==> Warning: no verified build provenance for $TAG (it may predate attestations)."
   fi
-  ACTUAL=$(sha256_of "$TMPDIR/$TARNAME")
-  if [ "$EXPECTED" != "$ACTUAL" ]; then
-    abort "Checksum mismatch for $TARNAME. Expected $EXPECTED, got $ACTUAL."
-  fi
-  green "==> Checksum verified."
+elif [ "${BIALET_REQUIRE_ATTESTATION:-0}" = "1" ]; then
+  abort "BIALET_REQUIRE_ATTESTATION=1 but gh is not installed, so provenance cannot be verified."
 else
-  yellow "==> Warning: no SHA256SUMS published for $TAG; skipping verification."
+  yellow "==> Warning: gh not found; build provenance not checked (checksum verified)."
 fi
 
 # ── Verify tar ──────────────────────────────────────────────────

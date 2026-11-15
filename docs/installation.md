@@ -125,7 +125,10 @@ sha256sum --check --ignore-missing SHA256SUMS   # shasum -a 256 -c on macOS
 ```
 
 The install script does this automatically: it refuses an archive whose checksum
-does not match, and warns when a release predates `SHA256SUMS`.
+does not match and also refuses a release that publishes no `SHA256SUMS` at all.
+Newer releases also carry a GitHub build-provenance attestation; when `gh` is
+installed the script verifies it against the repository, and
+`BIALET_REQUIRE_ATTESTATION=1` makes an unverifiable archive fatal.
 
 ## Building from Source
 
