@@ -413,6 +413,13 @@ Returns `true` if the token is valid.
 
 Destroys the current session.
 
+### rotate()
+
+Mints a new session id, deletes the old id's rows, and sets the new cookie.
+Call it after a successful login and **before** any authenticated write, so a
+session identifier planted before authentication is worthless afterwards.
+Returns the new id.
+
 ## Json
 
 A class for handling JSON data, including parsing and stringifying.
@@ -471,7 +478,7 @@ Util.decrypt(sealed, "password")   // "honey"
   characters**, which are used directly as a 256-bit key.
 
 Every call uses a fresh random salt and nonce, so encrypting the same value
-twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+twice produces different ciphertext. Encryption requires an OpenSSL 1.1+ build;
 without one it raises a runtime error rather than using a weaker scheme.
 
 ### decrypt(value, secret)

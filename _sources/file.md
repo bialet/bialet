@@ -108,6 +108,12 @@ System.print("Uploaded temporary file: %(file.name)")
 
 If a file was already saved and you want it collected again, call `.temp`.
 
+> **Note:** a temporary upload id is not a durable handle. `File.get(id)` reads
+> only saved rows (`isTemp = 0`), and the row is purged within a day, so an id
+> kept in a session or a form field for a later request stops resolving. Call
+> `.save` on the file in the request that received it if a later request needs
+> to read it.
+
 > **Note:** `Request.file()` returns a temporary row. Call `.save` on the files
 > your handler keeps; everything else is deleted within a day or less.
 

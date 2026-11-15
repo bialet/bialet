@@ -829,7 +829,10 @@ sha256sum --check --ignore-missing SHA256SUMS   # shasum -a 256 -c on macOS
 ```
 
 The install script does this automatically: it refuses an archive whose checksum
-does not match, and warns when a release predates `SHA256SUMS`.
+does not match and also refuses a release that publishes no `SHA256SUMS` at all.
+Newer releases also carry a GitHub build-provenance attestation; when `gh` is
+installed the script verifies it against the repository, and
+`BIALET_REQUIRE_ATTESTATION=1` makes an unverifiable archive fatal.
 
 ## Building from Source
 
@@ -3091,6 +3094,12 @@ System.print("Uploaded temporary file: %(file.name)")
 
 If a file was already saved and you want it collected again, call `.temp`.
 
+> **Note:** a temporary upload id is not a durable handle. `File.get(id)` reads
+> only saved rows (`isTemp = 0`), and the row is purged within a day, so an id
+> kept in a session or a form field for a later request stops resolving. Call
+> `.save` on the file in the request that received it if a later request needs
+> to read it.
+
 > **Note:** `Request.file()` returns a temporary row. Call `.save` on the files
 > your handler keeps; everything else is deleted within a day or less.
 
@@ -4929,8 +4938,8 @@ Key points:
   the message inline on a single form, no duplication
 - `value="{{ email }}"` preserves the email on failed login
 - `Session.rotate()` mints a new session id on login, so an identifier planted
-  before authentication is worthless afterwards; then `session.set("user_id",
-  ...)` stores the user
+  before authentication is worthless afterwards. Call it **before** the first
+  authenticated write; then `session.set("user_id", ...)` stores the user
 - `return Response.redirect(...)` on success, no redirect on failure
 
 > ⚠️ Pitfall: never store plaintext passwords. Use `Util.hash(password)` to
@@ -6760,6 +6769,7 @@ Every shortcut accepts an optional options map:
 | `form`            | Map        | Sends the body as `application/x-www-form-urlencoded`    |
 | `timeout`         | Number     | Total transfer timeout in milliseconds (default 20000)   |
 | `connectTimeout`  | Number     | Connect timeout in milliseconds (default 2000)           |
+| `stripHeaders`    | List       | Extra header names dropped on a cross-origin redirect    |
 
 ```wren
 var options = {
@@ -7039,7 +7049,13 @@ if (!http.call("https://api.example.com/health",
   host that set them instead.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
-- **Redirects are followed** automatically, up to 10 hops.
+- **Redirects are followed** automatically, up to 10 hops. A redirect that
+  crosses an origin drops `Authorization`, `Cookie`, `Proxy-Authorization`, and
+  basic auth. A custom auth header keeps following the hop unless you list it in
+  the call's `stripHeaders` option, or set
+  `Http.stripHeaders = ["X-Api-Key"]` at the top of the route file (or a module
+  it imports) before its calls. The per-call list is added to that class-wide
+  list; both are per-request state, not saved configuration.
 - **Response bodies are not size-capped** — a malicious endpoint could return
   an unbounded body. Only call APIs you trust.
 
@@ -7871,6 +7887,24 @@ You can override any of these by passing an options map, for example
 `Cookie.set("pref", "dark", {"SameSite": "Strict"})`. Be careful overriding
 `HttpOnly` or `Secure` — both are there for a reason.
 
+### Regenerate the session id on login
+
+The session id is adopted from the client when it has a valid shape, so an
+attacker who plants an identifier before the victim logs in keeps reading the
+authenticated session unless the app rotates it:
+
+```wren
+if (Util.verify(password, user["password"])) {
+  Session.rotate()                 // before any authenticated write
+  Session.new().set("user_id", user["id"])
+  return Response.redirect("/dashboard")
+}
+```
+
+`Session.rotate()` deletes the old id's rows, mints a fresh 40-character id, and
+sets the cookie. An app that skips it is session-fixation vulnerable, and the
+CSRF token is stored under the same id, so the planter gets a valid token too.
+
 Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
@@ -7997,7 +8031,7 @@ distinguish those cases, so a caller cannot use the failure as an oracle.
 > that logs `Config.get` for debugging is logging ciphertext — harmless — but
 > code that starts with `Config.get` where it needs a secret is a bug.
 
-> ⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+> ⚠️ Pitfall: encryption requires an OpenSSL 1.1+ build. Without it,
 > `Util.encrypt` and `Config.encrypt` raise a runtime error instead of falling
 > back to something weaker. Check `Secret.available` and your startup logs if a
 > value unexpectedly fails to encrypt.
@@ -9987,6 +10021,13 @@ Returns `true` if the token is valid.
 
 Destroys the current session.
 
+### rotate()
+
+Mints a new session id, deletes the old id's rows, and sets the new cookie.
+Call it after a successful login and **before** any authenticated write, so a
+session identifier planted before authentication is worthless afterwards.
+Returns the new id.
+
 ## Json
 
 A class for handling JSON data, including parsing and stringifying.
@@ -10045,7 +10086,7 @@ Util.decrypt(sealed, "password")   // "honey"
   characters**, which are used directly as a 256-bit key.
 
 Every call uses a fresh random salt and nonce, so encrypting the same value
-twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+twice produces different ciphertext. Encryption requires an OpenSSL 1.1+ build;
 without one it raises a runtime error rather than using a weaker scheme.
 
 ### decrypt(value, secret)

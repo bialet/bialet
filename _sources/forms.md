@@ -162,8 +162,8 @@ Key points:
   the message inline on a single form, no duplication
 - `value="{{ email }}"` preserves the email on failed login
 - `Session.rotate()` mints a new session id on login, so an identifier planted
-  before authentication is worthless afterwards; then `session.set("user_id",
-  ...)` stores the user
+  before authentication is worthless afterwards. Call it **before** the first
+  authenticated write; then `session.set("user_id", ...)` stores the user
 - `return Response.redirect(...)` on success, no redirect on failure
 
 > ⚠️ Pitfall: never store plaintext passwords. Use `Util.hash(password)` to

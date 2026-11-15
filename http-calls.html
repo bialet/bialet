@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'http-calls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=046b95af"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.17" />
+  <meta name="docsearch:version" content="1.2.18" />
   </head>
   
   
@@ -584,6 +584,10 @@ map, a list, or a pre-built JSON string. Use the <code class="docutils literal n
 <td><p>Number</p></td>
 <td><p>Connect timeout in milliseconds (default 2000)</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stripHeaders</span></code></p></td>
+<td><p>List</p></td>
+<td><p>Extra header names dropped on a cross-origin redirect</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -873,7 +877,13 @@ then sends to a different registrant. Store and send cookies for the exact
 host that set them instead.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Request.post(name)</span></code> on the <em>other</em> side</strong> returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for missing keys
 — see <a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a> when you build the receiving end.</p></li>
-<li><p><strong>Redirects are followed</strong> automatically, up to 10 hops.</p></li>
+<li><p><strong>Redirects are followed</strong> automatically, up to 10 hops. A redirect that
+crosses an origin drops <code class="docutils literal notranslate"><span class="pre">Authorization</span></code>, <code class="docutils literal notranslate"><span class="pre">Cookie</span></code>, <code class="docutils literal notranslate"><span class="pre">Proxy-Authorization</span></code>, and
+basic auth. A custom auth header keeps following the hop unless you list it in
+the call’s <code class="docutils literal notranslate"><span class="pre">stripHeaders</span></code> option, or set
+<code class="docutils literal notranslate"><span class="pre">Http.stripHeaders</span> <span class="pre">=</span> <span class="pre">[&quot;X-Api-Key&quot;]</span></code> at the top of the route file (or a module
+it imports) before its calls. The per-call list is added to that class-wide
+list; both are per-request state, not saved configuration.</p></li>
 <li><p><strong>Response bodies are not size-capped</strong> — a malicious endpoint could return
 an unbounded body. Only call APIs you trust.</p></li>
 </ul>

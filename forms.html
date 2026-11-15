@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'forms';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=046b95af"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="JSX to Bialet Migration" href="jsx-migration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.17" />
+  <meta name="docsearch:version" content="1.2.18" />
   </head>
   
   
@@ -619,7 +619,8 @@ state-changing form</p></li>
 the message inline on a single form, no duplication</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">value=&quot;{{</span> <span class="pre">email</span> <span class="pre">}}&quot;</span></code> preserves the email on failed login</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Session.rotate()</span></code> mints a new session id on login, so an identifier planted
-before authentication is worthless afterwards; then <code class="docutils literal notranslate"><span class="pre">session.set(&quot;user_id&quot;,</span> <span class="pre">...)</span></code> stores the user</p></li>
+before authentication is worthless afterwards. Call it <strong>before</strong> the first
+authenticated write; then <code class="docutils literal notranslate"><span class="pre">session.set(&quot;user_id&quot;,</span> <span class="pre">...)</span></code> stores the user</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code> on success, no redirect on failure</p></li>
 </ul>
 <blockquote>

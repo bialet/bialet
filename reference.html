@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=046b95af"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.17" />
+  <meta name="docsearch:version" content="1.2.18" />
   </head>
   
   
@@ -508,6 +508,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf">csrf</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrfok">csrfOk</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#destroy">destroy()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rotate">rotate()</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Json</a><ul class="nav section-nav flex-column">
@@ -1129,6 +1130,13 @@ Returns <code class="docutils literal notranslate"><span class="pre">true</span>
 <h3>destroy()<a class="headerlink" href="#destroy" title="Link to this heading">#</a></h3>
 <p>Destroys the current session.</p>
 </section>
+<section id="rotate">
+<h3>rotate()<a class="headerlink" href="#rotate" title="Link to this heading">#</a></h3>
+<p>Mints a new session id, deletes the old id’s rows, and sets the new cookie.
+Call it after a successful login and <strong>before</strong> any authenticated write, so a
+session identifier planted before authentication is worthless afterwards.
+Returns the new id.</p>
+</section>
 </section>
 <section id="id4">
 <h2>Json<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
@@ -1191,7 +1199,7 @@ iterations, with a fresh random salt per message) or exactly <strong>64 hex
 characters</strong>, which are used directly as a 256-bit key.</p></li>
 </ul>
 <p>Every call uses a fresh random salt and nonce, so encrypting the same value
-twice produces different ciphertext. Encryption requires an OpenSSL 3+ build;
+twice produces different ciphertext. Encryption requires an OpenSSL 1.1+ build;
 without one it raises a runtime error rather than using a weaker scheme.</p>
 </section>
 <section id="decrypt-value-secret">
@@ -2294,6 +2302,7 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf">csrf</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrfok">csrfOk</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#destroy">destroy()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rotate">rotate()</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Json</a><ul class="nav section-nav flex-column">

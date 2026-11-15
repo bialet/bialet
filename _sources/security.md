@@ -204,6 +204,24 @@ You can override any of these by passing an options map, for example
 `Cookie.set("pref", "dark", {"SameSite": "Strict"})`. Be careful overriding
 `HttpOnly` or `Secure` — both are there for a reason.
 
+### Regenerate the session id on login
+
+The session id is adopted from the client when it has a valid shape, so an
+attacker who plants an identifier before the victim logs in keeps reading the
+authenticated session unless the app rotates it:
+
+```wren
+if (Util.verify(password, user["password"])) {
+  Session.rotate()                 // before any authenticated write
+  Session.new().set("user_id", user["id"])
+  return Response.redirect("/dashboard")
+}
+```
+
+`Session.rotate()` deletes the old id's rows, mints a fresh 40-character id, and
+sets the cookie. An app that skips it is session-fixation vulnerable, and the
+CSRF token is stored under the same id, so the planter gets a valid token too.
+
 Sessions are stored in SQLite in the `BIALET_SESSION` table. The session
 cookie (`BIALETSESSID` by default) holds only a 40-character random ID; all
 data lives server-side. Clear a session with `Session.destroy()`.
@@ -330,7 +348,7 @@ distinguish those cases, so a caller cannot use the failure as an oracle.
 > that logs `Config.get` for debugging is logging ciphertext — harmless — but
 > code that starts with `Config.get` where it needs a secret is a bug.
 
-> ⚠️ Pitfall: encryption requires an OpenSSL 3+ build. Without it,
+> ⚠️ Pitfall: encryption requires an OpenSSL 1.1+ build. Without it,
 > `Util.encrypt` and `Config.encrypt` raise a runtime error instead of falling
 > back to something weaker. Check `Secret.available` and your startup logs if a
 > value unexpectedly fails to encrypt.

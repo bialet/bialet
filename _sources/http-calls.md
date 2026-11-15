@@ -86,6 +86,7 @@ Every shortcut accepts an optional options map:
 | `form`            | Map        | Sends the body as `application/x-www-form-urlencoded`    |
 | `timeout`         | Number     | Total transfer timeout in milliseconds (default 20000)   |
 | `connectTimeout`  | Number     | Connect timeout in milliseconds (default 2000)           |
+| `stripHeaders`    | List       | Extra header names dropped on a cross-origin redirect    |
 
 ```wren
 var options = {
@@ -365,7 +366,13 @@ if (!http.call("https://api.example.com/health",
   host that set them instead.
 - **`Request.post(name)` on the *other* side** returns `null` for missing keys
   — see [Building REST APIs](rest-api.md) when you build the receiving end.
-- **Redirects are followed** automatically, up to 10 hops.
+- **Redirects are followed** automatically, up to 10 hops. A redirect that
+  crosses an origin drops `Authorization`, `Cookie`, `Proxy-Authorization`, and
+  basic auth. A custom auth header keeps following the hop unless you list it in
+  the call's `stripHeaders` option, or set
+  `Http.stripHeaders = ["X-Api-Key"]` at the top of the route file (or a module
+  it imports) before its calls. The per-call list is added to that class-wide
+  list; both are per-request state, not saved configuration.
 - **Response bodies are not size-capped** — a malicious endpoint could return
   an unbounded body. Only call APIs you trust.
 
