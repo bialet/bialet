@@ -56,6 +56,15 @@ build_linux() {
 build_windows() {
     step "Cross-compiling Windows x86_64 (static, MinGW)"
 
+    # `make clean` inside the container wipes build/, which holds the Linux
+    # artifact when TARGET=all: park it and put it back afterwards.
+    linux_artifact="$DIST_DIR/bialet-linux-x86_64"
+    parked_artifact=""
+    if [ -f "$linux_artifact" ]; then
+        parked_artifact="$(mktemp)"
+        cp "$linux_artifact" "$parked_artifact"
+    fi
+
     docker run --rm \
         -v "$PROJECT_DIR:/src" \
         -w /src \
@@ -106,6 +115,11 @@ build_windows() {
         err "Windows binary not found in build/"
     fi
     ok "Windows: $DIST_DIR/bialet-windows-x86_64.exe"
+
+    if [ -n "$parked_artifact" ]; then
+        cp "$parked_artifact" "$linux_artifact"
+        rm -f "$parked_artifact"
+    fi
 }
 
 # ── Main ────────────────────────────────────────────────────────────
