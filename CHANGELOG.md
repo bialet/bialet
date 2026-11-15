@@ -14,6 +14,13 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   `Cannot nest <div> inside <div>`. Every level must still be closed, and a
   close tag with a different name or an extra close tag is still an error.
 
+### Fixed
+
+- A newline after an interpolated inline HTML string no longer ends the call it
+  belongs to. The whitespace after the closing tag is now skipped for the
+  interpolated case too, so `Layout.render(<div>{{ x }}</div>\n, "Title")`
+  compiles like the single-line form.
+
 ## 1.2.16 — 2026-11-11
 
 ### Added

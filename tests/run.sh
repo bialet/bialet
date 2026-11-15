@@ -948,6 +948,7 @@ run_test "JSON parse and stringify    " "json-parse"      200 "Alice,30"
 run_test "JSON edge cases             " "json-edge"       200 "all-passed"
 run_test "Parse inline HTML strings   " "tags.wren"       200 "$(read_file "tags.html")"
 run_test "Same tag nesting            " "html-nest.wren"  200 "$(read_file "html-nest.html")"
+run_test "Multiline call arguments    " "html-multiline-args" 200 "three:same"
 run_test "Auto-escape interpolation   " "escape.wren"     200 "$(read_file "escape.html")"
 run_test "Parsing error               " "parsing-error"   500
 run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"

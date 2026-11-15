@@ -206,7 +206,11 @@ typedef struct {
   // after "}}" resumes at the same depth instead of restarting at the
   // outermost level.
   int handlebarDepths[MAX_INTERPOLATION_NESTING];
-  int numHandlebars;
+  // Whether the whitespace after that literal's closing tag is skipped, as the
+  // lexer does for a literal without interpolation. Without it, a newline
+  // between the closing tag and a comma misreads the call as finished.
+  bool handlebarSkipsSpace[MAX_INTERPOLATION_NESTING];
+  int  numHandlebars;
 
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
@@ -997,8 +1001,8 @@ static int htmlTagNameIsValid(char* tagName) {
   return 1;
 }
 
-static void readHtmlString(Parser* parser, char* previousTagName,
-                           int previousDepth) {
+static void readHtmlString(Parser* parser, char* previousTagName, int previousDepth,
+                           bool skipsTrailingSpace) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_HTML_NODE;
@@ -1093,6 +1097,7 @@ static void readHtmlString(Parser* parser, char* previousTagName,
         if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
           strcpy(parser->handlebars[parser->numHandlebars], tagName);
           parser->handlebarDepths[parser->numHandlebars] = depth;
+          parser->handlebarSkipsSpace[parser->numHandlebars] = skipsTrailingSpace;
           parser->numHandlebars++;
         }
         nextChar(parser);
@@ -1405,7 +1410,17 @@ static void nextToken(Parser* parser) {
             parser->numHandlebars--;
             nextChar(parser);
             readHtmlString(parser, parser->handlebars[parser->numHandlebars],
-                           parser->handlebarDepths[parser->numHandlebars]);
+                           parser->handlebarDepths[parser->numHandlebars],
+                           parser->handlebarSkipsSpace[parser->numHandlebars]);
+            // The literal's last piece is done: skip its trailing whitespace
+            // like a literal without interpolation does, so a newline between
+            // the closing tag and a comma or ')' cannot end the call.
+            if(parser->next.type == TOKEN_HTML_NODE &&
+               parser->handlebarSkipsSpace[parser->numHandlebars]) {
+              while(peekChar(parser) == ' ' || peekChar(parser) == '\t' ||
+                    peekChar(parser) == '\r' || peekChar(parser) == '\n')
+                nextChar(parser);
+            }
             return;
           }
         }
@@ -1505,10 +1520,10 @@ static void nextToken(Parser* parser) {
             lastTokenType(parser) == TOKEN_QUESTION ||
             lastTokenType(parser) == TOKEN_LINE)) {
           if(!isDocType) {
-            readHtmlString(parser, "", 1);
+            readHtmlString(parser, "", 1, !notIgnoreSpacesTokens);
           } else {
             parser->currentChar--; // Need to consume again the "<"
-            readHtmlString(parser, "html", 0);
+            readHtmlString(parser, "html", 0, !notIgnoreSpacesTokens);
           }
           // Ignore white space after the end of the string
           if(!notIgnoreSpacesTokens) {
