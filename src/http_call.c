@@ -1017,17 +1017,58 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
       response->error_message = string_safe_copy("TLS handshake timed out");
       goto done;
     }
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&handshake_ms,
-               sizeof(handshake_ms));
-    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&handshake_ms,
-               sizeof(handshake_ms));
-    if(SSL_connect(ssl) != 1) {
+    /* SSL_connect() on a blocking socket bounds each individual read, not the
+     * handshake: a peer that drips one byte per interval kept the single
+     * worker far past the hop budget. Run the handshake non-blocking and wait
+     * on the same deadline, then restore blocking I/O for send/recv. */
+    u_long handshake_nonblocking = 1;
+    ioctlsocket(sockfd, FIONBIO, &handshake_nonblocking);
+    int handshake_ok = 0;
+    for(;;) {
+      ERR_clear_error();
+      int rc = SSL_connect(ssl);
+      if(rc == 1) {
+        handshake_ok = 1;
+        break;
+      }
+      int ssl_err = SSL_get_error(ssl, rc);
+      if(ssl_err != SSL_ERROR_WANT_READ && ssl_err != SSL_ERROR_WANT_WRITE)
+        break; /* a real handshake or verification failure */
+      DWORD left = win32_remaining_ms(hop_deadline, 0);
+      if(left == 0)
+        break; /* the hop budget expired mid-handshake */
+      fd_set readfds, writefds;
+      FD_ZERO(&readfds);
+      FD_ZERO(&writefds);
+      if(ssl_err == SSL_ERROR_WANT_READ)
+        FD_SET(sockfd, &readfds);
+      else
+        FD_SET(sockfd, &writefds);
+      struct timeval tv;
+      tv.tv_sec = (long)(left / 1000);
+      tv.tv_usec = (long)((left % 1000) * 1000);
+      int sel =
+          select(0, ssl_err == SSL_ERROR_WANT_READ ? &readfds : NULL,
+                 ssl_err == SSL_ERROR_WANT_WRITE ? &writefds : NULL, NULL, &tv);
+      if(sel <= 0)
+        break;
+    }
+    handshake_nonblocking = 0;
+    ioctlsocket(sockfd, FIONBIO, &handshake_nonblocking);
+    if(!handshake_ok) {
       ERR_print_errors_fp(stderr); /* surface *why* the handshake failed */
       response->error = HTTP_ERR_TLS;
       response->error_message =
           string_safe_copy("TLS handshake or certificate verification failed");
       goto done;
     }
+    /* Re-arm the blocking send/recv timeouts from what is left of the budget:
+     * the handshake may have spent most of it. */
+    DWORD io_ms = win32_remaining_ms(hop_deadline, timeout_ms);
+    if(io_ms == 0)
+      io_ms = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&io_ms, sizeof(io_ms));
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&io_ms, sizeof(io_ms));
   }
 
   size_t req_len = 0;
