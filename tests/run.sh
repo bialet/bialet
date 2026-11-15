@@ -537,6 +537,45 @@ else
   skip_test "Multipart header agreement    " "requires local binary access and python3"
 fi
 
+# A non-multipart request reaches Wren as a length-framed string. A header value
+# with an embedded NUL used to be handed to the VM with wrenSetSlotString(),
+# which stops at that byte, so the app saw a truncated value.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v python3 >/dev/null 2>&1; then
+  nulhdr_line=$LINENO
+  _test_start_ms=$(now_ms)
+  nulhdr_out=$(python3 - "$HOST" "$PORT" <<'PY'
+import socket, sys
+
+host, port = sys.argv[1], int(sys.argv[2])
+req = (b'GET /nul-header HTTP/1.1\r\nHost: x\r\nX-Bin: a\x00bz\r\n'
+       b'Connection: close\r\n\r\n')
+s = socket.create_connection((host, port), 10)
+s.settimeout(20)
+s.sendall(req)
+data = b''
+try:
+    while True:
+        chunk = s.recv(4096)
+        if not chunk:
+            break
+        data += chunk
+except OSError:
+    pass
+s.close()
+body = data.split(b'\r\n\r\n', 1)[1] if b'\r\n\r\n' in data else b''
+print(body.decode('utf-8', 'replace').strip())
+PY
+)
+  if [[ "$nulhdr_out" == "len:4|hasNul:true|tail:z" ]]; then
+    report_result "NUL-bearing header preserved  " "$nulhdr_line" 0
+  else
+    report_result "NUL-bearing header preserved  " "$nulhdr_line" 1 \
+      "Expected the framed header value, got '$nulhdr_out'"
+  fi
+else
+  skip_test "NUL-bearing header preserved  " "requires local binary access and python3"
+fi
+
 # App-supplied log text: System.log() writes the operator log, stdout and
 # BIALET_LOGS, so a request value logged by the app (the documented shape) must
 # be escaped exactly like the framework's own wire-derived log values.

@@ -1496,7 +1496,10 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
       // fields, which reach Wren already parsed (Request.post / Request.file).
       wrenSetSlotBytes(vm, 1, hm->message.str, mp.head_len);
     } else {
-      wrenSetSlotString(vm, 1, hm->message.str);
+      // The framed length, not strlen(): wrenSetSlotString() stops at an
+      // embedded NUL, so a header value carrying one was silently truncated
+      // for the app while the C-side header scanner saw the whole line.
+      wrenSetSlotBytes(vm, 1, hm->message.str, hm->message.len);
     }
     wrenSetSlotString(vm, 2, hm->routes.str);
     wrenSetSlotString(vm, 3, filesIds);
