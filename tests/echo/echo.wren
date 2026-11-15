@@ -12,6 +12,7 @@ var mode = Request.get("mode")
 
 if (mode == "header") return Request.header("x-echo") || "no-header"
 if (mode == "auth") return Request.header("authorization") || "no-auth"
+if (mode == "proxyauth") return Request.header("proxy-authorization") || "no-auth"
 if (mode == "json") {
   Response.json(Json.parse(Request.body))
   return
@@ -49,9 +50,11 @@ if (mode == "redirect-echo") {
 }
 if (mode == "redirect-auth") {
   // 302 to another host's auth-echo endpoint: a credential header must not
-  // follow the redirect across the origin.
+  // follow the redirect across the origin. The echoed header defaults to
+  // Authorization; a test can ask for another one (proxyauth).
   Response.status(302)
-  Response.header("Location", "http://%(Request.get("to"))/echo?mode=auth")
+  var echoed = Request.get("echo") || "auth"
+  Response.header("Location", "http://%(Request.get("to"))/echo?mode=%(echoed)")
   return
 }
 if (mode == "redirect-set") {

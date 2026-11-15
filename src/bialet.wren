@@ -1427,6 +1427,7 @@ class Http {
     // emitted it, and lets credentials stop at the origin that issued them.
     var hops = 0
     var sendCredentials = true
+    var extraStrip = options.containsKey("stripHeaders") ? options["stripHeaders"] : Http.stripHeaders
     while (true) {
       var hopTimeout = deadline - Util.monotonicMs
       if (hopTimeout <= 0) {
@@ -1441,7 +1442,7 @@ class Http {
       // The native layer truncates a double to whole milliseconds and reads 0 as
       // "no timeout given"; never let a live remainder become that sentinel.
       if (hopTimeout < 1) hopTimeout = 1
-      var hopHeaders = Http.headerBlock_(headers, current, sendCredentials)
+      var hopHeaders = Http.headerBlock_(headers, current, sendCredentials, extraStrip)
       var response = call_(current, method, hopHeaders, postData, basicAuth,
                            hopTimeout, connectTimeout)
       _error = response[3]
@@ -1498,13 +1499,27 @@ class Http {
   // for exactly this host. When sendCredentials is false (the redirect crossed
   // an origin), Authorization and Cookie are dropped by name, not by exact map
   // key, so every spelling stops at the origin that issued it.
-  static headerBlock_(headers, url, sendCredentials) {
+  // Header names dropped when a redirect crosses an origin, on top of the
+  // always-dropped Authorization and Cookie. A caller-supplied
+  // Proxy-Authorization or custom auth header would otherwise follow the hop.
+  // Set this from _app.wren (which runs per request) or per call with the
+  // stripHeaders option.
+  static stripHeaders { __stripHeaders ? __stripHeaders : [] }
+  static stripHeaders=(names) {
+    var list = []
+    if (names != null) {
+      for (name in names) list.add("%(name)".trim().lower)
+    }
+    __stripHeaders = list
+  }
+
+  static headerBlock_(headers, url, sendCredentials, extraStrip) {
     var lines = []
     var hasCookie = false
     for (h in headers) {
       var name = Util.headerName(h.key)
       if (name.lower == "cookie") hasCookie = true
-      if (!sendCredentials && Http.isCredentialHeader_(name)) continue
+      if (!sendCredentials && Http.isCredentialHeader_(name, extraStrip)) continue
       lines.add("%(name): %(Util.headerValue(h.value))")
     }
     if (!hasCookie) {
@@ -1516,9 +1531,16 @@ class Http {
     return lines.join("\n")
   }
 
-  static isCredentialHeader_(name) {
+  static isCredentialHeader_(name, extraStrip) {
     var n = "%(name)".trim().lower
-    return n == "authorization" || n == "cookie"
+    // Authorization and Cookie are always stripped: dropping the default set
+    // would make every redirect leak them again.
+    if (n == "authorization" || n == "cookie") return true
+    if (extraStrip == null) return false
+    for (h in extraStrip) {
+      if ("%(h)".trim().lower == n) return true
+    }
+    return false
   }
 
   // Last Location header of a response block, or null when there is none.

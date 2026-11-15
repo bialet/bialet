@@ -81,6 +81,21 @@ if (which == "shared") {
   return "%(first)|%(second)|%(kept)"
 }
 
+if (which == "strip") {
+  // A caller-supplied Proxy-Authorization follows a cross-origin redirect
+  // unless its name is in the strip list, either per call or on the class.
+  var custom = target + "/echo?mode=redirect-auth&echo=proxyauth&to=" + otherHost
+  var without = Http.get(custom,
+    {"headers": {"Proxy-Authorization": "Basic CUSTOM"}})
+  var perCall = Http.get(custom,
+    {"headers": {"Proxy-Authorization": "Basic CUSTOM"},
+     "stripHeaders": ["Proxy-Authorization"]})
+  Http.stripHeaders = ["Proxy-Authorization"]
+  var classWide = Http.get(custom,
+    {"headers": {"Proxy-Authorization": "Basic CUSTOM"}})
+  return "%(without)|%(perCall)|%(classWide)"
+}
+
 if (which == "control") {
   // Without a redirect the cookie is emitted and replayed by its own host.
   var set = Http.get(target + "/echo?mode=setcookie")

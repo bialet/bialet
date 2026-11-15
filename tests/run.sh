@@ -1093,6 +1093,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
     run_test "Http userinfo key is real host" "http-redirect?which=userinfo&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|no-cookie|session=abc123"
   fi
   run_test "Http credential strip by name " "http-redirect?which=case&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "no-auth|no-auth|no-auth"
+  run_test "Http custom credential strip  " "http-redirect?which=strip&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "Basic CUSTOM|no-auth|no-auth"
   run_test "Http no credential when unset " "http-redirect?which=noauth&target=http://$HOST:$ECHO_PORT" 200 "no-auth"
   run_test "Http reuse keeps per-call auth" "http-redirect?which=reuse&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "here:Basic cmV1c2U6cHc=|other:no-auth|form:a=b|formother:no-k=no-v"
   run_test "Http token not written to map" "http-redirect?which=shared&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "Bearer bearer-shared|no-auth|intact"
