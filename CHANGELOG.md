@@ -4,6 +4,19 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.19 — 2026-11-15
+
+### Fixed
+
+- An inline HTML literal that ends a statement no longer swallows the newline
+  after it. Since 1.2.17 the lexer skipped every whitespace character after an
+  interpolated literal, so a ternary branch at the end of a line
+  (`cond ? "" : <span>...</span>`) glued the next statement to it and the module
+  failed with "Expect newline after statement". A newline is now skipped only
+  when the next token continues the expression (a comma or a closer), which is
+  where a multiline call puts it. The same rule applies to literals without
+  interpolation.
+
 ## 1.2.18 — 2026-11-15
 
 ### Security
