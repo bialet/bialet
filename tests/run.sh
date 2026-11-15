@@ -311,6 +311,32 @@ run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 run_test "Response headers            " "headers"         200 "headers-set"
 
+# Header field names are case-insensitive (RFC 7230). The Wren map that holds
+# them is not, so setting content-type next to the default Content-Type used to
+# put two lines on the wire, and a request header looked up with another
+# spelling was null.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  hcase_line=$LINENO
+  _test_start_ms=$(now_ms)
+  hcase_hdr=$(curl -s -D - -o /dev/null --max-time 20 -H "x-input: v" \
+    "http://$HOST:$PORT/headers-case")
+  hcase_body=$(curl -s --max-time 20 -H "x-input: v" \
+    "http://$HOST:$PORT/headers-case")
+  hcase_xtest=$(printf '%s\n' "$hcase_hdr" | grep -ci '^x-test:')
+  hcase_value=$(printf '%s\n' "$hcase_hdr" | awk \
+    'tolower($0) ~ /^x-test:/ { gsub(/\r/, ""); print $2; exit }')
+  hcase_ctype=$(printf '%s\n' "$hcase_hdr" | grep -ci '^content-type:')
+  if [[ "$hcase_body" == "input:v" && "$hcase_xtest" == "1" \
+        && "$hcase_value" == "two" && "$hcase_ctype" == "1" ]]; then
+    report_result "Header names case-insensitive" "$hcase_line" 0
+  else
+    report_result "Header names case-insensitive" "$hcase_line" 1 \
+      "Expected one X-Test: two and one Content-Type. Got body:'$hcase_body' x-test:$hcase_xtest value:'$hcase_value' content-type:$hcase_ctype"
+  fi
+else
+  skip_test "Header names case-insensitive" "requires local binary access"
+fi
+
 # Tests - Request & Response (extended coverage)
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"

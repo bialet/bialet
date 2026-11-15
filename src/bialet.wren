@@ -105,7 +105,11 @@ class Request {
   static isPost { __method == "POST" }
   static isJson { header("content-type") == "application/json" }
   static json() { Json.parse(__body) }
-  static header(name) { __headers[name] ? __headers[name]:null }
+  static header(name) {
+    if (name == null) return null
+    var key = "%(name)".trim().lower
+    return __headers[key] ? __headers[key] : null
+  }
   static get(name) { __get[name] ? __get[name]:null }
   static query(name) { get(name) }
   static post(name) { __post[name] ? __post[name]:null }
@@ -172,7 +176,7 @@ class Response {
   static status(status) { __status = status }
   static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
-  static header(header, value) { __headers[Util.headerName(header)] = Util.headerValue(value) }
+  static header(header, value) { Util.setHeader_(__headers, header, Util.headerValue(value)) }
   // Out of band: the id of the blob Response.file selected, or null. The id
   // used to live in the body as a leading 0x1A marker, which client-influenced
   // output could forge to read an arbitrary BIALET_FILES row.
@@ -922,6 +926,29 @@ class Util {
     return header
   }
 
+  // Header field names are case-insensitive (RFC 7230). The framework keeps
+  // them in a Wren Map, which is not, so setting "content-type" next to the
+  // default "Content-Type" used to emit two lines and let the transport pick
+  // one. These helpers find the existing spelling and replace it.
+  static headerKey_(map, name) {
+    var lower = "%(name)".trim().lower
+    for (key in map.keys) {
+      if ("%(key)".lower == lower) return key
+    }
+    return null
+  }
+
+  static getHeader_(map, name) {
+    var key = Util.headerKey_(map, name)
+    return key == null ? null : map[key]
+  }
+
+  static setHeader_(map, name, value) {
+    var key = Util.headerKey_(map, name)
+    if (key != null) map.remove(key)
+    map[Util.headerName(name)] = value
+  }
+
   static headerValue(value) {
     return stripControlChars(value).trim()
   }
@@ -1302,7 +1329,10 @@ class Http {
   body { _body }
   status { _status }
   headers { _headers }
-  headers(name) { _headers.containsKey(name) ? _headers[name] : null }
+  headers(name) {
+    var key = name == null ? "" : "%(name)".trim().lower
+    return _headers.containsKey(key) ? _headers[key] : null
+  }
   error { _error }
   errorMessage { _errorMessage }
   method { _method }
@@ -1354,7 +1384,10 @@ class Http {
     var headers = {}
     var given = options["headers"]
     if (given != null) {
-      for (h in given) headers[h.key] = h.value
+      // Collapse case variants of a field name onto one entry (last wins), so
+      // the wire block never carries two lines the server could interpret
+      // differently from this map.
+      for (h in given) Util.setHeader_(headers, h.key, h.value)
     }
     // Per-call options live in locals, not on the instance: an Http object
     // reused for another destination must not inherit the previous call's
@@ -1362,15 +1395,20 @@ class Http {
     var postData = options.containsKey("form") ? Util.params(options["form"]) : _postData
     var basicAuth = ""
     if (options.containsKey("form")) {
-      headers["Content-Type"] = "application/x-www-form-urlencoded"
-    } else if (!headers.containsKey("Content-Type")) {
-      headers["Content-Type"] = "application/json"
+      Util.setHeader_(headers, "Content-Type", "application/x-www-form-urlencoded")
+    } else if (Util.getHeader_(headers, "Content-Type") == null) {
+      Util.setHeader_(headers, "Content-Type", "application/json")
     }
     if (options["token"] != null) {
-      headers["Authorization"] = "Bearer %(options["token"])"
+      Util.setHeader_(headers, "Authorization", "Bearer %(options["token"])")
     }
     if (options["basicAuth"] != null) {
-      basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+      // An explicit Authorization header wins over basicAuth, matching what
+      // the libcurl path does. Emitting both put two Authorization lines on
+      // the wire on Windows.
+      if (Util.getHeader_(headers, "Authorization") == null) {
+        basicAuth = options["basicAuth"]["username"] + ":" + options["basicAuth"]["password"]
+      }
     }
     var timeout = options.containsKey("timeout") ? options["timeout"] : 0
     var connectTimeout = options.containsKey("connectTimeout") ? options["connectTimeout"] : 0

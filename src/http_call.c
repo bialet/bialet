@@ -348,6 +348,39 @@ static char* headers_crlf(const char* raw) {
   return out;
 }
 
+/* True when [raw] already holds a header line named [name], compared
+ * case-insensitively and anchored at the start of a line. */
+static int has_header_named(const char* raw, const char* name) {
+  size_t      n = strlen(name);
+  const char* p = raw;
+  while(*p != '\0') {
+    const char* eol = strchr(p, '\n');
+    size_t      len = eol ? (size_t)(eol - p) : strlen(p);
+    if(len > 0 && p[len - 1] == '\r')
+      len--;
+    if(len > n && p[n] == ':') {
+      size_t i = 0;
+      while(i < n) {
+        char a = p[i];
+        char b = name[i];
+        if(a >= 'A' && a <= 'Z')
+          a = (char)(a - 'A' + 'a');
+        if(b >= 'A' && b <= 'Z')
+          b = (char)(b - 'A' + 'a');
+        if(a != b)
+          break;
+        i++;
+      }
+      if(i == n)
+        return 1;
+    }
+    if(eol == NULL)
+      break;
+    p = eol + 1;
+  }
+  return 0;
+}
+
 static char* build_request(const struct ParsedUrl*   url,
                            const struct HttpRequest* request, size_t* out_len) {
   const char* method = request->method ? request->method : "GET";
@@ -363,9 +396,12 @@ static char* build_request(const struct ParsedUrl*   url,
 
   /* Basic auth is sent as "Authorization: Basic <base64(user:pass)>"; the
    * libcurl path handles this via CURLOPT_USERPWD, so it must be spelled out
-   * here. The header always ends with CRLF. */
+   * here. The header always ends with CRLF. Skip it when the caller supplied
+   * an Authorization line: libcurl lets an explicit header win, and emitting
+   * both put two Authorization lines on the wire. */
   char* auth_header = NULL;
-  if(request->basicAuth != NULL && request->basicAuth[0] != '\0') {
+  if(request->basicAuth != NULL && request->basicAuth[0] != '\0' &&
+     !has_header_named(raw_headers, "authorization")) {
     char* enc = base64_encode((const unsigned char*)request->basicAuth,
                               strlen(request->basicAuth));
     if(enc != NULL) {
