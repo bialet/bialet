@@ -1,0 +1,114 @@
+name: Tests
+
+# The release workflow runs the suite on Linux and macOS only; Windows is built
+# there but never exercised. This workflow runs the same suite on all three
+# targets from one commit, so a platform-specific failure shows up before a
+# release tag does.
+#
+# Triggered by hand, or by pushing a branch named ci/tests-*. It builds and
+# tests only: it publishes nothing.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "ci/tests-*"
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x86_64:
+    name: Linux x86_64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev \
+            libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
+            libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
+            libgnutls28-dev libsasl2-dev sqlite3
+
+      - name: Build (static)
+        run: make clean && make static
+
+      - name: Run test suite
+        run: ./tests/run.sh ./build/bialet
+
+  macos-arm64:
+    name: macOS arm64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install build dependencies
+        run: brew install openssl
+
+      - name: Build
+        run: make clean && make
+
+      - name: Run test suite
+        # GitHub's hosted macOS runners drop the cron file's FSEvents
+        # notification outright; see tests/run.sh and release.yml.
+        env:
+          BIALET_SKIP_CRON_RELOAD_TEST: "1"
+        run: ./tests/run.sh ./build/bialet
+
+  windows-x86_64:
+    name: Windows x86_64 (Wine)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    env:
+      SQLITE_YEAR: 2024
+      SQLITE_VERSION: 3460100
+      OPENSSL_VERSION: 3.0.15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install MinGW toolchain, Wine
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64-posix gcc wine sqlite3
+
+      - name: Build SQLite (static, for Windows)
+        run: |
+          curl -fsSLO "https://www.sqlite.org/${SQLITE_YEAR}/sqlite-amalgamation-${SQLITE_VERSION}.zip"
+          unzip -q "sqlite-amalgamation-${SQLITE_VERSION}.zip"
+          cd "sqlite-amalgamation-${SQLITE_VERSION}"
+          x86_64-w64-mingw32-gcc -c sqlite3.c -O2 -o sqlite3.o
+          x86_64-w64-mingw32-ar rcs libsqlite3.a sqlite3.o
+          sudo install -Dm644 libsqlite3.a /usr/x86_64-w64-mingw32/lib/libsqlite3.a
+          sudo install -Dm644 sqlite3.h sqlite3ext.h -t /usr/x86_64-w64-mingw32/include/
+
+      - name: Build OpenSSL (static, for Windows)
+        run: |
+          curl -fsSLO "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz"
+          tar xf "openssl-${OPENSSL_VERSION}.tar.gz"
+          cd "openssl-${OPENSSL_VERSION}"
+          ./Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- \
+            --prefix=/usr/x86_64-w64-mingw32 --libdir=lib \
+            no-shared no-tests
+          make -j"$(nproc)"
+          sudo make install_sw
+
+      - name: Build bialet (static)
+        run: make clean && CC=x86_64-w64-mingw32-gcc make static
+
+      - name: Run test suite under Wine
+        run: |
+          # PE binaries run through binfmt, so tests/run.sh can exec the .exe
+          # directly (see AGENTS.md). Two Wine-only failures are skipped by the
+          # runner when the target ends in .exe.
+          sudo sh -c 'echo ":WinePE:M::MZ::/usr/bin/wine:" > /proc/sys/fs/binfmt_misc/register'
+          wineboot -u > /dev/null 2>&1 || true
+          WINEDEBUG=-all ./tests/run.sh ./build/bialet.exe 127.0.0.1 7221
+          sudo sh -c 'echo -1 > /proc/sys/fs/binfmt_misc/WinePE'
