@@ -232,11 +232,10 @@ return Template.new().layout(
 )
 ```
 
-Because the method returns a plain string, the same-tag nesting rule applies
-across the boundary: if a component's outermost tag would repeat under a
-caller's outermost tag, the parser rejects it. `card()` returning an
-`<article>` inside a page whose outermost tag is also `<article>` fails —
-widen one of them.
+Because the method returns a plain string, there is no extra rule at the
+boundary: each literal is parsed on its own, so a component may return an
+`<article>` inside a page whose outermost tag is also `<article>`. Only the
+tags inside a single literal have to balance.
 
 **Pitfall:** instance methods need `new()`. `Template.layout(...)` looks for
 a static method and fails. Always instantiate first.
@@ -314,8 +313,8 @@ var msg = Request.post("msg") || ""
 ## Migration checklist
 
 - [ ] Replace `{expr}` with `{{ expr }}` — and expect values to be escaped.
-- [ ] Open repeated same-tag nesting with a different outer tag, or extract a
-      component method.
+- [ ] Balance the tags inside every literal: same-tag nesting is fine, an
+      unclosed level is a compile error.
 - [ ] Move statements out of `map` callbacks; keep the callback body a single
       expression starting on the `{` line.
 - [ ] Compute strings before interpolating into attributes; no template
