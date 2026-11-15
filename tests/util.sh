@@ -364,6 +364,47 @@ test_syntax_msg() {
     report_result "$description" "$line" 0
 }
 
+# Runs -t like test_syntax_msg, but also pins how many "Compilation Error"
+# lines the run printed. Use it where the point of the test is that a lexer
+# error stops the stray tokens that used to follow it.
+test_syntax_errors() {
+    description=$1
+    file=$2
+    expected_count=$3
+    expected_exit=$4
+    expected_msg=${5:-}
+    root_path=${6:-}
+    line=${BASH_LINENO[0]}
+    _test_start_ms=$(now_ms)
+
+    filepath="$(dirname "$0")/$file"
+
+    if [[ -n "$root_path" ]]; then
+        output=$("$TARGET_EXEC" -t "$filepath" "$root_path" 2>&1)
+    else
+        output=$("$TARGET_EXEC" -t "$filepath" 2>&1)
+    fi
+    actual_exit=$?
+    actual_count=$(grep -c "Compilation Error" <<< "$output")
+
+    if [[ "$actual_exit" -ne "$expected_exit" ]]; then
+        report_result "$description" "$line" 1 "Expected exit: ${expected_exit}\tActual: $actual_exit"
+        return 1
+    fi
+
+    if [[ "$actual_count" -ne "$expected_count" ]]; then
+        report_result "$description" "$line" 1 "Expected ${expected_count} Compilation Error line(s)\tActual: ${actual_count}\tOutput: $output"
+        return 1
+    fi
+
+    if [[ -n "$expected_msg" && "$output" != *"$expected_msg"* ]]; then
+        report_result "$description" "$line" 1 "Expected message: $expected_msg\tActual: $output"
+        return 1
+    fi
+
+    report_result "$description" "$line" 0
+}
+
 # Function to print the final result
 print_summary() {
     local elapsed

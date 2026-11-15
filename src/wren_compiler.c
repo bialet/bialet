@@ -206,6 +206,13 @@ typedef struct {
   // after "}}" resumes at the same depth instead of restarting at the
   // outermost level.
   int handlebarDepths[MAX_INTERPOLATION_NESTING];
+  // Close tags for that literal's tag name seen before the split, so a literal
+  // that ends unterminated can report totals for the whole literal instead of
+  // only for the piece after "}}".
+  int handlebarClosed[MAX_INTERPOLATION_NESTING];
+  // Line the literal opened on, so an error after "}}" can point back at the
+  // start of the literal instead of the resumed piece.
+  int handlebarLines[MAX_INTERPOLATION_NESTING];
   // Whether the whitespace after that literal's closing tag is skipped, as the
   // lexer does for a literal without interpolation. Without it, a newline
   // between the closing tag and a comma misreads the call as finished.
@@ -1001,8 +1008,40 @@ static int htmlTagNameIsValid(char* tagName) {
   return 1;
 }
 
+// Returns the length of a close tag for [tagName] at the start of [text],
+// including its '>', or 0 when [text] does not start one. Only an exact name
+// match counts: '</div>' matches "div", '</diva>' does not.
+static size_t htmlStrayCloseTagLength(const char* text, const char* tagName) {
+  if(text[0] != '<' || text[1] != '/')
+    return 0;
+
+  size_t nameLength = strlen(tagName);
+  if(nameLength == 0)
+    return 0;
+
+  size_t i = 0;
+  for(; i < nameLength; i++) {
+    if(text[2 + i] == '\0' || text[2 + i] != tagName[i])
+      return 0;
+  }
+
+  i += 2;
+  while(text[i] == ' ' || text[i] == '\t')
+    i++;
+  if(text[i] != '>')
+    return 0;
+  return i + 1;
+}
+
+// Lexes an HTML string literal from the opening '<'. [previousTagName] is the
+// outermost tag name when the literal was split by a "{{ }}" interpolation, in
+// which case the lexer resumes after "}}" with [previousDepth] copies of it
+// open, [previousClosed] of them already closed, and [startLine] the line the
+// literal opened on. A literal that starts here has an empty [previousTagName]
+// and counts its own opening tag.
 static void readHtmlString(Parser* parser, char* previousTagName, int previousDepth,
-                           bool skipsTrailingSpace) {
+                           bool skipsTrailingSpace, int previousClosed,
+                           int startLine) {
   ByteBuffer string;
   wrenByteBufferInit(&string);
   WrenTokenType type = TOKEN_HTML_NODE;
@@ -1011,6 +1050,15 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
   int           tagIsOpen = 1;
   int           tagDone = 0;
   int           invalidTag = 0;
+  // The opening tag ran into a newline or the end of the file before its '>',
+  // so there is no content to read: without this the lexer would report the
+  // same cut tag a second time as an unterminated literal.
+  int openTagCut = 0;
+  // Close tags for [tagName] seen so far, plus the last close tag for a
+  // different name, so an unterminated literal can say what went wrong.
+  int  closed = previousClosed;
+  char mismatchedClose[MAX_METHOD_NAME];
+  mismatchedClose[0] = '\0';
   // The opening tag's name scan stopped at a space, so its attributes (and
   // their quoted values) are still ahead in the content loop.
   int openTagHasAttributes = 0;
@@ -1023,7 +1071,9 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
     for(;;) {
       char c = nextChar(parser);
       if(c == '\0' || c == '\r' || c == '\n') {
-        lexError(parser, "Unterminated HTML string.");
+        tagName[i] = '\0';
+        lexError(parser, "Expected '>' to close the opening <%s> tag.", tagName);
+        openTagCut = 1;
 
         // Don't consume it if it isn't expected. Keeps us from reading past the
         // end of an unterminated string.
@@ -1066,7 +1116,7 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
     }
   }
 
-  if(closingTag < 0 && !invalidTag) {
+  if(closingTag < 0 && !invalidTag && !openTagCut) {
     // Nesting depth of the outermost tag. A child with the same name is legal
     // (<div><div>Nested</div></div>): the string ends only when a close tag
     // matching the outermost name brings this back to zero. Children with a
@@ -1085,7 +1135,21 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
     for(;;) {
       char c = nextChar(parser);
       if(c == '\0') {
-        lexError(parser, "Unterminated HTML string.");
+        // Report the whole literal: how many copies of the outermost tag were
+        // opened and closed says which mistake ended it, and a close tag for a
+        // different name shows the tag the author meant to close with.
+        int opens = closed + depth;
+        if(mismatchedClose[0] != '\0') {
+          lexError(parser,
+                   "Unclosed <%s>: %d open, %d closed. </%s> does not close <%s> "
+                   "(string opened on line %d).",
+                   tagName, opens, closed, mismatchedClose, tagName, startLine);
+        } else {
+          lexError(parser,
+                   "Unclosed <%s>: %d open, %d closed (string opened on "
+                   "line %d).",
+                   tagName, opens, closed, startLine);
+        }
         parser->currentChar--;
         break;
       }
@@ -1097,6 +1161,8 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
         if(parser->numHandlebars < MAX_INTERPOLATION_NESTING) {
           strcpy(parser->handlebars[parser->numHandlebars], tagName);
           parser->handlebarDepths[parser->numHandlebars] = depth;
+          parser->handlebarClosed[parser->numHandlebars] = closed;
+          parser->handlebarLines[parser->numHandlebars] = startLine;
           parser->handlebarSkipsSpace[parser->numHandlebars] = skipsTrailingSpace;
           parser->numHandlebars++;
         }
@@ -1123,6 +1189,7 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
           if(closingSame) {
             closingSame = 0;
             depth--;
+            closed++;
           } else if(openingSame) {
             openingSame = 0;
             // A self-closing child encloses nothing, so it adds no level.
@@ -1153,6 +1220,12 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
             } else {
               openingSame = 1;
             }
+          } else if(isClose && nameLength < MAX_METHOD_NAME) {
+            // Keep the name of the last close tag for another tag, so a
+            // literal that runs to the end of the file can point at it: a
+            // '</span>' where a '</div>' belonged is the common mistake.
+            memcpy(mismatchedClose, name, nameLength);
+            mismatchedClose[nameLength] = '\0';
           }
         }
       }
@@ -1169,13 +1242,25 @@ static void readHtmlString(Parser* parser, char* previousTagName, int previousDe
       prev = c;
     }
   }
-  free(tagName);
+  // The literal ended at the close tag matching its outermost tag. One more
+  // close tag for the same name right after it closes nothing: report it and
+  // consume it, so the parser does not also see a stray '/' and name.
+  int strayClose = 0;
+  if(!invalidTag && !openTagCut)
+    strayClose = (int)htmlStrayCloseTagLength(parser->currentChar, tagName);
 
   parser->next.value =
       wrenNewStringLength(parser->vm, (char*)string.data, string.count);
 
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
+
+  if(strayClose > 0) {
+    lexError(parser, "Unexpected </%s>: <%s> is already closed.", tagName, tagName);
+    parser->currentChar += strayClose;
+  }
+
+  free(tagName);
 }
 
 static void readQueryString(Parser* parser) {
@@ -1411,7 +1496,9 @@ static void nextToken(Parser* parser) {
             nextChar(parser);
             readHtmlString(parser, parser->handlebars[parser->numHandlebars],
                            parser->handlebarDepths[parser->numHandlebars],
-                           parser->handlebarSkipsSpace[parser->numHandlebars]);
+                           parser->handlebarSkipsSpace[parser->numHandlebars],
+                           parser->handlebarClosed[parser->numHandlebars],
+                           parser->handlebarLines[parser->numHandlebars]);
             // The literal's last piece is done: skip its trailing whitespace
             // like a literal without interpolation does, so a newline between
             // the closing tag and a comma or ')' cannot end the call.
@@ -1520,10 +1607,12 @@ static void nextToken(Parser* parser) {
             lastTokenType(parser) == TOKEN_QUESTION ||
             lastTokenType(parser) == TOKEN_LINE)) {
           if(!isDocType) {
-            readHtmlString(parser, "", 1, !notIgnoreSpacesTokens);
+            readHtmlString(parser, "", 1, !notIgnoreSpacesTokens, 0,
+                           parser->currentLine);
           } else {
             parser->currentChar--; // Need to consume again the "<"
-            readHtmlString(parser, "html", 0, !notIgnoreSpacesTokens);
+            readHtmlString(parser, "html", 0, !notIgnoreSpacesTokens, 0,
+                           parser->currentLine);
           }
           // Ignore white space after the end of the string
           if(!notIgnoreSpacesTokens) {

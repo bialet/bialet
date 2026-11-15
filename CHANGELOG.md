@@ -20,6 +20,13 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   belongs to. The whitespace after the closing tag is now skipped for the
   interpolated case too, so `Layout.render(<div>{{ x }}</div>\n, "Title")`
   compiles like the single-line form.
+- Inline HTML literals that never close now say what is wrong: `Unclosed <div>:
+  2 open, 1 closed (string opened on line 1).` counts the copies of the
+  outermost tag, names the line the literal started on even when `{{ }}` split
+  it, and names the close tag when a `</span>` does not close the tag. An extra
+  close tag is one `Unexpected </div>: <div> is already closed.` instead of
+  three parse errors, and an opening tag cut short by a newline reports
+  `Expected '>' to close the opening <div> tag.`
 
 ## 1.2.16 — 2026-11-11
 

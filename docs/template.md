@@ -86,8 +86,8 @@ var inputField = <input value="{{ userInput }}" />
 ```
 
 Without the space (`<input/>`) the parser reads the slash as part of the tag
-name, never finds a matching close tag, and reports "Unterminated HTML
-string."
+name and rejects it as `Invalid tag name: must be lowercase alphanumeric +
+hyphens` instead of ending the string.
 
 ### Multi-line Inline HTML
 
@@ -120,17 +120,35 @@ var list = <ul>{{ items.map{|item| <li>{{ item }}</li> } }}</ul>
 ```
 
 Each level must still be closed. A missing close tag, a close tag with a
-different name, or one extra close tag is a compile error:
+different name, or one extra close tag is a compile error, and the message says
+which of the three you hit:
 
 ```wren
-// Compilation error — the outer <div> is never closed
+// Compilation error
+// Unclosed <div>: 2 open, 1 closed (string opened on line 1).
 var bad = <div><div>Hello</div>
 
-// Compilation error — </section> does not close <div>
+// Compilation error
+// Unclosed <div>: 2 open, 1 closed. </section> does not close <div>
+// (string opened on line 1).
 var alsoBad = <div><div>Hello</section></div>
 
-// Compilation error — one </div> too many
+// Compilation error
+// Unexpected </div>: <div> is already closed.
 var stillBad = <div><div>Hello</div></div></div>
+```
+
+The `Unclosed` message counts how many copies of the outermost tag were opened
+and closed, then names the line the literal started on — the error itself is
+reported where the file ended. When the literal was split by `{{ }}`, the line
+is still the one the literal opened on, not the line it resumed on.
+
+An opening tag cut short by a newline or the end of the file is a different
+error, because there is no content to read:
+
+```wren
+// Compilation error — Expected '>' to close the opening <div> tag.
+var cut = <div
 ```
 
 **Mismatched closing tags are not validated.** The parser only tracks the tag
@@ -149,11 +167,16 @@ var good = <div><span>Hello</span></div>
 The browser receives `<div><span>Hello</div>` and auto-closes the `<span>`
 when it renders, so the page usually looks fine. But the markup is not
 validated, so write matching tags yourself. Anything after the first matching
-close tag is outside the string and fails to compile:
+close tag is outside the string and fails to compile. A second close tag for
+the outermost name gets a clear message; one for any other name is only seen as
+stray tokens:
 
 ```wren
-// Compilation error — the string already ended at </div>
-var alsoBad = <div><span>Hello</div></span>
+// Compilation error — Unexpected </div>: <div> is already closed.
+var alsoBad = <div><span>Hello</div></div>
+
+// Compilation error — Error at '/': Expected expression.
+var alsoBad2 = <div><span>Hello</div></span>
 ```
 
 **Invalid tag names.** Tag names must be lowercase, start with a letter, and
@@ -723,20 +746,17 @@ thank you).
 
 ### Pitfall
 
-**Same-tag nesting rule still applies.** The outermost tag of the inline
-HTML string cannot repeat at any nesting level:
+**Same-tag nesting still needs matching close tags.** The outermost tag of an
+inline HTML string may repeat at any depth, but every copy has to be closed —
+the string ends only at the close tag that brings the outermost one back to
+zero:
 
 ```wren
-// Wrong — <section> is outermost and repeats deeper
-var bad = <section><section>Nested section</section></section>
+// Wrong — the second <section> is never closed
+var bad = <section><section>Nested section</section>
 
-// Correct — wrap with a different semantic tag
-var good = <main>
-  <article>
-    <section>One block</section>
-    <section>Another block</section>
-  </article>
-</main>
+// Correct — close the nested copy too
+var good = <section><section>Nested section</section></section>
 ```
 
 ---

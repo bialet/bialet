@@ -86,12 +86,24 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Unclosed nested tag fails     " "syntax_err_nest_unterminated.wren" 1
   test_syntax "Stray close tag fails         " "syntax_err_nest_stray_close.wren" 1
   test_syntax "Mismatched nested close fails " "syntax_err_nest_mismatched.wren" 1
+  test_syntax "Cut opening tag fails         " "syntax_err_nest_cut_tag.wren" 1
+  test_syntax "Unclosed after interp fails   " "syntax_err_nest_interp_unterminated.wren" 1
+  # The next four pin the wording of the nesting errors: the tag name, how many
+  # copies are open and closed, and (for a literal split by {{ }}) the line the
+  # literal started on rather than the line it resumed on.
+  test_syntax_msg "Unclosed counts open/closed   " "syntax_err_nest_unterminated.wren" 1 "Unclosed <div>: 2 open, 1 closed (string opened on line 1)"
+  test_syntax_msg "Unclosed names the wrong close" "syntax_err_nest_mismatched.wren" 1 "Unclosed <div>: 2 open, 1 closed. </span> does not close <div>"
+  test_syntax_msg "Unclosed names the start line " "syntax_err_nest_interp_unterminated.wren" 1 "Unclosed <div>: 2 open, 0 closed (string opened on line 1)"
+  test_syntax_msg "Cut opening tag names the tag " "syntax_err_nest_cut_tag.wren" 1 "Expected '>' to close the opening <div> tag."
+  # One extra close tag used to leave '</div>' for the parser, which then
+  # reported two more errors. It must be a single error.
+  test_syntax_errors "Extra close tag, one error    " "syntax_err_nest_stray_close.wren" 1 1 "Unexpected </div>: <div> is already closed."
   test_syntax "Leading op rejected           " "syntax_err_interp_leading_op.wren" 1
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
 else
-  skip_test "Syntax validation (11 checks)  " "requires local binary access (-t flag)"
+  skip_test "Syntax validation             " "requires local binary access (-t flag)"
 fi
 
 # Tests - bare -r initializes the framework tables
