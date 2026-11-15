@@ -553,7 +553,9 @@ except OSError:
     offset = 0
 
 conn = http.client.HTTPConnection(host, port, timeout=20)
-body = 'v=abc%0aFORGED%1b%5b31mEND'
+# C0 (LF, ESC) and C1 (CSI U+009B, OSC U+009D in their UTF-8 form) must all be
+# hex-escaped before the record reaches the operator log.
+body = 'v=abc%0aFORGED%1b%5b31mEND%c2%9bC1%c2%9dos'
 conn.request('POST', '/log-escape', body,
              {'Content-Type': 'application/x-www-form-urlencoded'})
 resp = conn.getresponse()
@@ -564,18 +566,19 @@ try:
     log = open(logpath, 'rb').read()[offset:]
 except OSError:
     log = b''
-print("status:%d|escaped:%s|rawEsc:%s|forged:%s" % (
+print("status:%d|escaped:%s|rawEsc:%s|rawC1:%s|forged:%s" % (
     resp.status,
-    b'Log probe abc\\x0aFORGED\\x1b[31mEND' in log,
+    b'Log probe abc\\x0aFORGED\\x1b[31mEND\\xc2\\x9bC1\\xc2\\x9dos' in log,
     b'\x1b' in log,
+    b'\xc2\x9b' in log,
     b'\nFORGED' in log))
 PY
 )
-  if [[ "$applog_out" == "status:200|escaped:True|rawEsc:False|forged:False" ]]; then
+  if [[ "$applog_out" == "status:200|escaped:True|rawEsc:False|rawC1:False|forged:False" ]]; then
     report_result "App log text escaped         " "$applog_line" 0
   else
     report_result "App log text escaped         " "$applog_line" 1 \
-      "Expected one escaped Log record and no raw ESC. Got $applog_out"
+      "Expected one escaped Log record with no raw ESC or C1. Got $applog_out"
   fi
 else
   skip_test "App log text escaped         " "requires local binary access and python3"

@@ -41,7 +41,15 @@ char* safe_malloc(size_t size) {
 // may carry a bare LF, CR, TAB or ESC: written verbatim they let one request
 // open a second log record and emit terminal/OSC sequences into the operator's
 // log or journal. Two hex digits per byte keeps the value readable while making
-// every control byte inert. Returns a heap string (caller frees) or NULL on OOM.
+// every control byte inert.
+//
+// C1 controls (U+0080..U+009F, the range that carries CSI, OSC, ST and NEL) are
+// escaped too, including their two-byte UTF-8 form C2 80..C2 9F: a value that
+// arrived as valid UTF-8 used to reach the log raw while this function's own
+// promise said every control byte was inert. Other UTF-8 is passed through
+// unchanged, so an accented or CJK log message stays readable.
+//
+// Returns a heap string (caller frees) or NULL on OOM.
 char* log_escape(const char* s) {
   if(s == NULL)
     return NULL;
@@ -51,15 +59,68 @@ char* log_escape(const char* s) {
     return NULL;
   static const char hex[] = "0123456789abcdef";
   size_t            n = 0;
-  for(size_t i = 0; i < len; i++) {
+  size_t            i = 0;
+  while(i < len) {
     unsigned char b = (unsigned char)s[i];
+    size_t        seq = 1;
+    unsigned long cp = b;
+
+    if((b & 0xE0) == 0xC0) {
+      seq = 2;
+      cp = b & 0x1F;
+    } else if((b & 0xF0) == 0xE0) {
+      seq = 3;
+      cp = b & 0x0F;
+    } else if((b & 0xF8) == 0xF0) {
+      seq = 4;
+      cp = b & 0x07;
+    } else if(b >= 0x80) {
+      seq = 0; /* bare continuation byte or invalid lead */
+    }
+
+    int valid = seq > 0 && i + seq <= len;
+    if(valid) {
+      for(size_t k = 1; k < seq; k++) {
+        unsigned char cont = (unsigned char)s[i + k];
+        if((cont & 0xC0) != 0x80) {
+          valid = 0;
+          break;
+        }
+        cp = (cp << 6) | (cont & 0x3F);
+      }
+    }
+
+    int escape = 0;
     if(b < 0x20 || b == 0x7f) {
-      out[n++] = '\\';
-      out[n++] = 'x';
-      out[n++] = hex[b >> 4];
-      out[n++] = hex[b & 15];
+      escape = 1; /* C0 and DEL */
+    } else if(valid && cp >= 0x80 && cp <= 0x9f) {
+      escape = 1; /* C1, including its UTF-8 form */
+    } else if(!valid) {
+      escape = 1; /* not a well-formed sequence: make the bytes inert */
+    }
+
+    if(escape) {
+      if(seq > 1 && valid) {
+        /* Escape the whole sequence, so neither byte is left raw. */
+        for(size_t k = 0; k < seq; k++) {
+          unsigned char e = (unsigned char)s[i + k];
+          out[n++] = '\\';
+          out[n++] = 'x';
+          out[n++] = hex[e >> 4];
+          out[n++] = hex[e & 15];
+        }
+        i += seq;
+      } else {
+        out[n++] = '\\';
+        out[n++] = 'x';
+        out[n++] = hex[b >> 4];
+        out[n++] = hex[b & 15];
+        i++;
+      }
     } else {
-      out[n++] = (char)b;
+      memcpy(out + n, s + i, seq);
+      n += seq;
+      i += seq;
     }
   }
   out[n] = '\0';
