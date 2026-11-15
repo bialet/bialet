@@ -888,7 +888,7 @@ Session data is server-side and per visitor. You always work with an
 **instance** created by `Session.new()`; only a few members are static:
 
 - static: `Session.new()`, `Session.id`, `Session.name` / `Session.name=`,
-  `Session.destroy()`
+  `Session.destroy()`, `Session.rotate()`
 - instance (on the object from `Session.new()`): `.id`, `.get(key)`,
   `.set(key, value)`, `.csrf`, `.csrfOk`
 
@@ -899,6 +899,7 @@ var session = Session.new()
 if (Request.isPost) {
   var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email") || "")
   if (user && Util.verify(Request.post("password") || "", user["password"])) {
+    Session.rotate()            // before any authenticated write
     session.set("userId", user["id"])
     return Response.redirect("/dashboard")
   }

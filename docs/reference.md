@@ -413,6 +413,13 @@ Returns `true` if the token is valid.
 
 Destroys the current session.
 
+### rotate()
+
+Mints a new session id, deletes the old id's rows, and sets the new cookie.
+Call it after a successful login and **before** any authenticated write, so a
+session identifier planted before authentication is worthless afterwards.
+Returns the new id.
+
 ## Json
 
 A class for handling JSON data, including parsing and stringifying.
