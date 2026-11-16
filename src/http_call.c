@@ -846,6 +846,11 @@ void http_call_perform(struct HttpRequest* request, struct HttpResponse* respons
 #endif
   curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 2L);
+  /* Bialet is multi-threaded (cron, dmon, the request worker). Without this,
+   * libcurl builds that lack the threaded resolver implement the DNS timeout
+   * with alarm()/SIGALRM, which is process-wide: a slow lookup could deliver
+   * SIGALRM to another thread and take the whole process down. */
+  curl_easy_setopt(handle, CURLOPT_NOSIGNAL, 1L);
   /* Headers */
   char* header_string = strdup(raw_headers);
   if(header_string == NULL) {

@@ -718,11 +718,15 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
                                         : BIALETQUERYTYPE_NUMBER;
           value = (const char*)sqlite3_column_text(stmt, i);
           /* sqlite3_column_text returns NULL if the conversion cannot be
-           * allocated; strlen() on it was an unconditional NULL dereference. */
+           * allocated; strlen() on it was an unconditional NULL dereference.
+           * column_bytes is the length SQLite already knows: it avoids a full
+           * strlen() scan of every text cell (the dominant cost of a wide
+           * SELECT) and stays correct for text containing NUL bytes, which
+           * strlen() truncated. */
           if(value == NULL) {
             alloc_error = 1;
           } else {
-            size = (int)strlen(value);
+            size = sqlite3_column_bytes(stmt, i);
           }
           break;
         case SQLITE_BLOB:
@@ -1604,14 +1608,25 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenEnsureSlots(vm, 1);
     WrenHandle* statusMethod = wrenMakeCallHandle(vm, "status");
     wrenSetSlotHandle(vm, 0, responseClass);
-    if((error = wrenCall(vm, statusMethod) != WREN_RESULT_SUCCESS)) {
+    if(wrenCall(vm, statusMethod) != WREN_RESULT_SUCCESS) {
       message(red("Runtime Error"), "Failed to get status");
+      error = 1;
     } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_NUM) {
       message(red("Runtime Error"), "Response status is not a number");
       error = 1;
     } else {
       const double status = wrenGetSlotDouble(vm, 0);
-      r.status = (int)status;
+      // (int) on a NaN or an out-of-range double is undefined behavior, and the
+      // value is printed straight into the status line. Accept only the three
+      // digits HTTP defines. Fractional values are rejected too: 200.7 used to
+      // become 200 on one build and 201 on another.
+      if(status < 100 || status > 999 || status != (double)(int)status) {
+        message(red("Runtime Error"),
+                "Response.status must be a whole number between 100 and 999");
+        error = 1;
+      } else {
+        r.status = (int)status;
+      }
     }
     wrenReleaseHandle(vm, statusMethod);
     /* Get headers from response */
@@ -1619,8 +1634,12 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
       wrenEnsureSlots(vm, 1);
       WrenHandle* headersMethod = wrenMakeCallHandle(vm, "headers");
       wrenSetSlotHandle(vm, 0, responseClass);
-      if((error = wrenCall(vm, headersMethod) != WREN_RESULT_SUCCESS)) {
+      // `error =` here used to clear an error raised while validating the
+      // status, so Response.status(1e300) logged the error but still served the
+      // handler's body with the default 200.
+      if(wrenCall(vm, headersMethod) != WREN_RESULT_SUCCESS) {
         message(red("Runtime Error"), "Failed to get headers");
+        error = 1;
       } else if(wrenGetSlotType(vm, 0) != WREN_TYPE_STRING) {
         message(red("Runtime Error"), "Response headers are not a string");
         error = 1;
@@ -2191,7 +2210,7 @@ void bialet_init(struct BialetConfig* config) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
          (real_db[root_len] == '/' || real_db[root_len] == '\\') &&
-         !has_forbidden_uri_component(real_db + root_len)) {
+         !has_private_uri_component(real_db + root_len)) {
         message(red("Error"),
                 "Database inside the app root must start with '_' or '.' "
                 "(like _db.sqlite3), or live outside the app root:",

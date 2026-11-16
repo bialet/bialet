@@ -24,6 +24,7 @@ FILE* open_file_no_follow(const char* path);
 // path and the Wren file API so both enforce the same boundary. The single
 // exception is an RFC 8615 ".well-known" first segment.
 int has_forbidden_uri_component(const char* uri);
+int has_private_uri_component(const char* uri);
 
 #ifndef _WIN32
 // POSIX building blocks behind open_file_no_follow, shared with the module

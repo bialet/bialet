@@ -153,7 +153,9 @@ class Request {
 
 class Response {
   static init {
-    __headers = {"Content-Type": "text/html; charset=UTF-8"}
+    __headers = {"Content-Type": "text/html; charset=UTF-8",
+                 "X-Content-Type-Options": "nosniff",
+                 "Cache-Control": "no-store"}
     __cookies = []
     __status = 200
     __out = ""
@@ -188,8 +190,22 @@ class Response {
     if (!numeric) return false
     __fileId = numeric
     __out = ""
-    header("Content-Type", type)
+    // The type came from the uploader's part header, so it is untrusted. Only
+    // media types that cannot execute script in the app's origin are served
+    // inline; everything else (text/html, image/svg+xml, ...) is downloaded as
+    // an opaque blob. nosniff is on by default in Response.init.
+    var safe = Response.inlineFileType_(type)
+    header("Content-Type", safe)
+    if (safe != type.trim().lower) {
+      header("Content-Disposition", "attachment; filename=\"download\"")
+    }
     return true
+  }
+  static inlineFileType_(type) {
+    var t = type is String ? type.trim().lower : ""
+    var inline = ["image/png", "image/jpeg", "image/gif", "image/webp",
+                  "image/avif", "application/pdf", "text/plain"]
+    return inline.contains(t) ? t : "application/octet-stream"
   }
 
   static json(data) {
@@ -1297,6 +1313,18 @@ class Db {
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
       if (schemaOrCallback is Fn) {
         schemaOrCallback.call()
+      } else if (schemaOrCallback is List) {
+        // Documented form: a list of queries (backtick templates or SQL
+        // strings) applied in order. A List used to fall into the string
+        // branch, where `toString` produced "[instance of Query, ...]" and
+        // SQLite rejected the whole migration.
+        for (q in schemaOrCallback) {
+          if (q is String) {
+            Query.fromString(q, [])
+          } else {
+            q.query
+          }
+        }
       } else {
         schemaOrCallback.toString.split(";").each{|q| Query.fromString(q, []) }
       }
@@ -1342,7 +1370,17 @@ class Http {
     if (!_method) {
       _method = "POST"
     }
-    _postData = data ? (data is String ? data : Json.stringify(data)) : ""
+    // Json.stringify has no branch for instances, Date, HtmlNode or functions
+    // and returns null for them. Passing that null to the transport used to
+    // crash the worker (AS_CSTRING on null). Fall back to toString so the body
+    // is at least a string the transport can send.
+    if (data == null) {
+      _postData = ""
+    } else if (data is String) {
+      _postData = data
+    } else {
+      _postData = Json.stringify(data) || "%(data)"
+    }
   }
   // An outbound request is assembled as raw header text, so a header *value*
   // carrying CRLF would append headers of the attacker's choosing to the
@@ -1850,7 +1888,7 @@ class Cron {
   }
   static at(hours, minutes, dayOfWeek, job) {
     if (!__now) __now = Date.now
-    return run_(__now.hours == hours && __now.minutes == minutes && __now.weekday == dayOfWeek, job)
+    return run_(__now.hours == hours && __now.minutes == minutes && __now.dayOfWeek == dayOfWeek, job)
   }
   static at(hours, minutes, job) {
     if (!__now) __now = Date.now

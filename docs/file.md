@@ -159,6 +159,19 @@ Once a file is saved in the database, the only way to show it in the browser is
 by using `Response.file(id)`. This will take the file ID and return the file to
 the browser.
 
+The stored `Content-Type` comes from whoever uploaded the file, so it is not
+trusted. Only media types that cannot execute script in your origin are served
+inline: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/avif`,
+`application/pdf` and `text/plain`. Everything else — `text/html`,
+`image/svg+xml`, an unknown type — is sent as `application/octet-stream` with
+`Content-Disposition: attachment`, and responses carry
+`X-Content-Type-Options: nosniff`. This prevents a file uploaded as
+`payload.html` from running as a page on your site.
+
+File ids are sequential integers, so a route that serves
+`Response.file(Request.get("id"))` lets anyone enumerate every stored file.
+Check ownership in your own table before calling it, as the example below does.
+
 You can also use a path-based route file (`<folder>.wren`) to dynamically
 fetch files from your database and display them based on user input, such
 as a filename.

@@ -160,9 +160,23 @@ installcheck: install
 # validator users have: a snippet that stopped compiling should fail the build,
 # not ship. `literalinclude` pulls the real file, and this proves the slice it
 # shows is still a valid script.
+#
+# `-T docs/examples` then runs the HTTP tests that live next to the examples,
+# and check_docs_apps.sh boots the three examples that own their schema
+# (guestbook, guestbook-styled, inventory): those cannot run as pages of a
+# shared app root, so nothing else covered them.
 check-examples: $(BUILD_DIR)/$(TARGET_EXEC)
 	python3 tools/check_docs_examples.py \
 		--binary $(BUILD_DIR)/$(TARGET_EXEC) --docs $(DOCS_DIRS)
+	./$(BUILD_DIR)/$(TARGET_EXEC) -T $(DOCS_DIRS)/examples
+	./tools/check_docs_apps.sh $(BUILD_DIR)/$(TARGET_EXEC)
+
+# Optional fast Windows gate: compiles every source for _WIN32 with MinGW
+# (-fsyntax-only). Needs mingw-w64 and the target headers; skips cleanly when
+# they are not installed. The release build still crosscompiles and runs the
+# suite under Wine -- see AGENTS.md.
+check-mingw:
+	./tools/check_mingw_syntax.sh
 
 check: $(BUILD_DIR)/$(TARGET_EXEC)
 	@$(MAKE) --no-print-directory check-wren-inc
@@ -229,4 +243,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples check-release-links html static install-hooks
+.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples check-mingw check-release-links html static install-hooks

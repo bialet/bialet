@@ -692,6 +692,14 @@ class Date {
   month { _month }
   year { _year }
   tz { _tz }
+  // Changing the zone reinterprets the same wall-clock fields in a different
+  // zone. The fields themselves are left alone.
+  tz=(tz) { _tz = tz }
+  // The native primitives take the zone as a string (a TZ name), but the docs
+  // show numeric offsets such as `date.tz = -5` and Date.new(...,-3). Passing
+  // the number straight through raised "Timezone must be a string." from
+  // mktime/strftime, so numeric values are stringified here.
+  tzName_ { _tz == null ? "" : (_tz is Num ? "%(_tz)" : _tz) }
 
   yyyy { _year.toString }
   yy { _year.toString.substring(2, 4) }
@@ -701,11 +709,11 @@ class Date {
   mi { _minutes > 9 ? _minutes.toString : "0%(minutes)" }
   ss { _seconds > 9 ? _seconds.toString : "0%(seconds)" }
 
-  dayOfWeek { Date.format_("\%w", year, month, day, hours, minutes, seconds, tz).toNum }
-  weekOfYear { Date.format_("\%V", year, month, day, hours, minutes, seconds, tz).toNum }
-  dayOfYear { Date.format_("\%j", year, month, day, hours, minutes, seconds, tz).toNum }
-  unix { Date.unix_(year, month, day, hours, minutes, seconds, tz) }
-  format(format) { Date.format_(format.replace("#", "\%"), year, month, day, hours, minutes, seconds, tz) }
+  dayOfWeek { Date.format_("\%w", year, month, day, hours, minutes, seconds, tzName_).toNum }
+  weekOfYear { Date.format_("\%V", year, month, day, hours, minutes, seconds, tzName_).toNum }
+  dayOfYear { Date.format_("\%j", year, month, day, hours, minutes, seconds, tzName_).toNum }
+  unix { Date.unix_(year, month, day, hours, minutes, seconds, tzName_) }
+  format(format) { Date.format_(format.replace("#", "\%"), year, month, day, hours, minutes, seconds, tzName_) }
   iso { toString }
   toString { "%(year)-%(mo)-%(dd) %(hh):%(mi):%(ss)" }
   diff(otherDate) { unix - otherDate.unix }

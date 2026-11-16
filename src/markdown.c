@@ -167,6 +167,21 @@ static bool is_safe_url(const char* url, size_t n) {
   return false;
 }
 
+// Returns the ')' that closes the '(' at [open], counting nested pairs, or NULL.
+// A plain strchr() stopped at the first ')' even when it was inside the URL:
+// "[x](javascript:alert(1))" took "javascript:alert(1" as the URL, rejected the
+// scheme, and leaked the remaining ")" as text.
+static const char* matching_paren(const char* open) {
+  int depth = 0;
+  for(const char* p = open; *p; p++) {
+    if(*p == '(')
+      depth++;
+    else if(*p == ')' && --depth == 0)
+      return p;
+  }
+  return NULL;
+}
+
 static bool render_inline(const char* src, MdBuf* b) {
   // A link or image candidate needs a ']' at or after the opener, then a '('
   // after that ']', then a ')' after that '('. This loop only moves forward, so
@@ -178,23 +193,23 @@ static bool render_inline(const char* src, MdBuf* b) {
 
   while(*src) {
     if(strncmp(src, "**", 2) == 0) {
-      if(!md_append(b, "<strong>"))
-        return false;
-      src += 2;
-      const char* end = strstr(src, "**");
+      // Check for the closing delimiter before emitting the opener. Emitting
+      // "<strong>" first and then falling through on an unterminated span put
+      // generated markup in front of a byte that was copied verbatim, so a
+      // later ">" inside the raw text closed the generated tag early.
+      const char* end = strstr(src + 2, "**");
       if(end) {
-        if(!md_printf(b, "%.*s</strong>", (int)(end - src), src))
+        if(!md_append(b, "<strong>") ||
+           !md_printf(b, "%.*s</strong>", (int)(end - (src + 2)), src + 2))
           return false;
         src = end + 2;
         continue;
       }
     } else if(*src == '*' && src[1] != '*') {
-      if(!md_append(b, "<em>"))
-        return false;
-      src++;
-      const char* end = strchr(src, '*');
+      const char* end = strchr(src + 1, '*');
       if(end) {
-        if(!md_printf(b, "%.*s</em>", (int)(end - src), src))
+        if(!md_append(b, "<em>") ||
+           !md_printf(b, "%.*s</em>", (int)(end - (src + 1)), src + 1))
           return false;
         src = end + 1;
         continue;
@@ -221,7 +236,7 @@ static bool render_inline(const char* src, MdBuf* b) {
       if(!no_link_left) {
         alt_end = strchr(src + 2, ']');
         url_start = alt_end ? strchr(alt_end, '(') : NULL;
-        url_end = url_start ? strchr(url_start, ')') : NULL;
+        url_end = url_start ? matching_paren(url_start) : NULL;
         if(url_end == NULL)
           no_link_left = true;
       }
@@ -231,15 +246,18 @@ static bool render_inline(const char* src, MdBuf* b) {
         // attribute and let the rest inject markup:
         //   ![" onerror=alert(1) x="](y)
         size_t url_len = (size_t)(url_end - url_start - 1);
-        if(!md_append(b, "<img alt=\"") ||
-           !escape_html_n(src + 2, (size_t)(alt_end - (src + 2)), b) ||
-           !md_append(b, "\" src=\""))
-          return false;
-        if(is_safe_url(url_start + 1, url_len) &&
-           !escape_html_n(url_start + 1, url_len, b))
-          return false;
-        if(!md_append(b, "\">"))
-          return false;
+        size_t alt_len = (size_t)(alt_end - (src + 2));
+        if(is_safe_url(url_start + 1, url_len)) {
+          if(!md_append(b, "<img alt=\"") || !escape_html_n(src + 2, alt_len, b) ||
+             !md_append(b, "\" src=\"") ||
+             !escape_html_n(url_start + 1, url_len, b) || !md_append(b, "\">"))
+            return false;
+        } else {
+          // Rejected scheme: render the alt text rather than an <img> whose src
+          // is empty, which makes the browser re-request the current page.
+          if(!escape_html_n(src + 2, alt_len, b))
+            return false;
+        }
         src = url_end + 1;
         continue;
       }
@@ -250,7 +268,7 @@ static bool render_inline(const char* src, MdBuf* b) {
       if(!no_link_left) {
         text_end = strchr(src, ']');
         url_start = text_end ? strchr(text_end, '(') : NULL;
-        url_end = url_start ? strchr(url_start, ')') : NULL;
+        url_end = url_start ? matching_paren(url_start) : NULL;
         if(url_end == NULL)
           no_link_left = true;
       }
@@ -427,9 +445,14 @@ char* markdown_to_html(const char* markdown) {
       while(cell) {
         while(*cell == ' ')
           cell++;
-        char* end = cell + strlen(cell) - 1;
-        while(end > cell && *end == ' ')
-          *end-- = '\0';
+        // An empty cell (a row like "| | x |") left `end` one byte before the
+        // allocation, which is undefined even though the loop never deref'd it.
+        size_t cell_len = strlen(cell);
+        if(cell_len > 0) {
+          char* end = cell + cell_len - 1;
+          while(end > cell && *end == ' ')
+            *end-- = '\0';
+        }
 
         if(!md_append(&buf, table_header_parsed ? "<td>" : "<th>"))
           goto fail;

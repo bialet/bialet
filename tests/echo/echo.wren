@@ -35,6 +35,7 @@ if (mode == "setcookie") {
   return "set"
 }
 if (mode == "cookie") return Request.header("cookie") || "no-cookie"
+if (mode == "body") return Request.body
 if (mode == "redirect") {
   // 302 to an absolute URL in "to", or to a same-origin path by default.
   var to = Request.get("to") || "/echo?mode=echo&msg=redirected"

@@ -19,3 +19,10 @@ Test.assert(File.get(id).id == id, "File.save restores permanence")
 
 created.destroy
 Test.assert(File.get(id).id == null, "File.destroy deletes file")
+
+// The 4-arg form declares an explicit size, which is stored verbatim.
+var declared = File.create("t-declared.txt", "text/plain", "abc", 12345)
+Test.assert(declared.size == 12345, "File.create 4-arg keeps the declared size")
+Test.assert(File.get(declared.id).size == 12345, "File.get reads the declared size")
+declared.destroy
+Test.assert(File.get(declared.id).id == null, "declared file destroy")

@@ -1,6 +1,10 @@
 # Build generated files
 build/
 
+# Coverage artifacts (tools/coverage.sh)
+build-cov/
+*.gcov
+
 # Windows binaries
 *.exe
 

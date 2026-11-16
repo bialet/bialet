@@ -161,6 +161,36 @@ static const char* find_header(const char* buf, size_t hdr_len, const char* name
   return NULL;
 }
 
+// Counts how many header lines carry [name]. A duplicated Content-Length is
+// ambiguous (the C framer took the first, the Wren header map the last) and a
+// Transfer-Encoding is not implemented at all, so both are rejected instead of
+// being interpreted differently by Bialet and by a buffering proxy in front of
+// it.
+static int count_header(const char* buf, size_t hdr_len, const char* name,
+                        size_t name_len) {
+  const char* p = buf;
+  const char* end = buf + hdr_len;
+  int         count = 0;
+
+  while(p + 1 < end && !(p[0] == '\r' && p[1] == '\n'))
+    p++;
+  if(p + 1 >= end)
+    return 0;
+  p += 2;
+  while(p < end) {
+    const char* eol = p;
+    while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
+      eol++;
+    size_t line_len = (size_t)(eol - p);
+    if(line_len > name_len && p[name_len] == ':' && ci_ncmp(p, name, name_len) == 0)
+      count++;
+    if(eol + 1 >= end)
+      break;
+    p = eol + 2;
+  }
+  return count;
+}
+
 // Strict unsigned decimal parse of a Content-Length value. Returns 0 on
 // success, 1 when well-formed but above [max], -1 when malformed. strtol()
 // previously accepted leading signs and stopped at the first non-digit, so
@@ -241,10 +271,10 @@ static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
 // Returns 0 on success (including a peer that closed early), -1 on error.
 static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_len,
                               const char* body, size_t body_len) {
-  size_t total = head_len + body_len;
   size_t sent = 0;
   if(body == NULL)
     body_len = 0;
+  size_t total = head_len + body_len;
 
   while(sent < total) {
     size_t body_done = sent > head_len ? sent - head_len : 0;
@@ -880,6 +910,26 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
+  // Framing ambiguity: two Content-Length lines (the C side used the first,
+  // the Wren header map the last) or a Transfer-Encoding (chunked bodies are
+  // not implemented). Either can make a proxy in front of Bialet disagree with
+  // Bialet about where this request ends.
+  {
+    static const char kContentLength[] = "Content-Length";
+    static const char kTransferEncoding[] = "Transfer-Encoding";
+    int               cl_count =
+        count_header(buffer, hdr_len, kContentLength, sizeof(kContentLength) - 1);
+    int te_count = count_header(buffer, hdr_len, kTransferEncoding,
+                                sizeof(kTransferEncoding) - 1);
+    if(cl_count > 1 || te_count > 0) {
+      struct BialetResponse bad = {0};
+      custom_error(400, &bad);
+      write_response(client_socket, &bad);
+      free_response_owned(&bad);
+      return;
+    }
+  }
+
   // Total wall-clock budget for the body phase. A single recv() is bounded by
   // the socket timeout; this bounds the whole body against a slow-drip peer.
   long long deadline = monotonic_ms() + BIALET_BODY_READ_DEADLINE_MS;
@@ -1067,6 +1117,23 @@ void handle_client(bialet_socket_t client_socket) {
   // and its containment check from the hot path; before, a static file request
   // resolved the same path twice, once with realpath() and again with the
   // no-follow walk, at roughly one syscall per path component each time.
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  // Reject an over-long URI instead of truncating it into `path`. The truncated
+  // path could name a different file than the request (and root_len, computed
+  // from the true root, would point past the buffer when the root itself is
+  // long). 414 is the status RFC 9110 defines for exactly this.
+  if(root_len + strlen(hm->uri.str) + 1 > PATH_SIZE) {
+    // Logged once, without the URI itself: it is attacker-controlled and can be
+    // kilobytes long.
+    message(red("Error"), "URI too long; request not served");
+    clean_http_message(hm);
+    custom_error(414, &response);
+    write_response(client_socket, &response);
+    free_response_owned(&response);
+    if(should_free_request)
+      free(full_request);
+    return;
+  }
   snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
   // Defense in depth: whatever the probes below do to `path`, it must stay the
   // root itself or a path below it. Cheap (no syscalls) and independent of the
@@ -1101,7 +1168,7 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   // Check for directory traversal patterns in the URI before processing
-  if(strstr(hm->uri.str, "..") != NULL) {
+  if(strstr(path, "..") != NULL) {
     {
       char* log_uri = log_escape(hm->uri.str);
       message(red("Security Error"), "Path traversal attempt blocked",
@@ -1122,10 +1189,6 @@ void handle_client(bialet_socket_t client_socket) {
   if(pathlen > 0 && path[pathlen - 1] == '/') {
     path[pathlen - 1] = '\0';
   }
-
-  // Length of the served root, so a request path can be turned back into the
-  // route prefix Request.route(n) reads from.
-  size_t root_len = strlen(bialet_config.full_root_dir);
 
   // Only a path strictly below the root may be probed with a synthesized name.
   // For the bare-root URI the strip above left path == full_root_dir, which has
@@ -1464,6 +1527,13 @@ void custom_error(int status, struct BialetResponse* response) {
               if(wren_response.body && wren_response.length == 0)
                 wren_response.length = strlen(wren_response.body);
               if(wren_response.status != 0) {
+                // bialet_run() defaults the status to 200 whenever the handler
+                // does not call Response.status(). An error page that only
+                // returns a body must still answer with the error code: before
+                // this, a 404.wren turned every 404 into a 200 with its body.
+                // A page that sets a status explicitly keeps it.
+                if(wren_response.status == 200)
+                  wren_response.status = status;
                 *response = wren_response;
                 if(!response->header) {
                   response->header = BIALET_HEADERS;

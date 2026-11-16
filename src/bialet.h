@@ -184,7 +184,9 @@ int  add_parameter(BialetQuery* query, const char* value, BialetQueryType type);
 void free_bialet_query(BialetQuery* query);
 
 /* Welcome, not found and error pages */
-#define BIALET_HEADERS "Content-Type: text/html; charset=UTF-8\r\n"
+#define BIALET_HEADERS                                                              \
+  "Content-Type: text/html; charset=UTF-8\r\n"                                      \
+  "X-Content-Type-Options: nosniff\r\n"
 /* Shared page chrome. Bialet's brand palette (BRAND.md), hardcoded so the
  * default pages carry no CSS variables or external assets. Wren's
  * Response.defaultPage_ builds the same chrome from these macros, so the

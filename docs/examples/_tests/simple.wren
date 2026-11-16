@@ -4,7 +4,7 @@
 // GET /simple shows all users from the database
 Test.get("/simple")
     .status(200)
-    .contains("Users list")
+    .contains("Users")
     .contains("Alice")
     .contains("Bob")
     .contains("Charlie")

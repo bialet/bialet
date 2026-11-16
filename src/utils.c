@@ -281,6 +281,16 @@ int has_forbidden_uri_component(const char* uri) {
   if(strncmp(c, ".well-known", 11) == 0 &&
      (c[11] == '\0' || c[11] == '/' || c[11] == '\\'))
     return 0;
+  return has_private_uri_component(c);
+}
+
+// Same rule without the RFC 8615 exception. Startup guards use this: a log or
+// database file placed under .well-known would be served publicly (that
+// namespace is exempt from the ignore list too), which defeats the guard.
+int has_private_uri_component(const char* uri) {
+  if(!uri)
+    return 0;
+  const char* c = uri;
   while(*c) {
     while(*c == '/' || *c == '\\')
       c++;

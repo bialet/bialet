@@ -10,3 +10,13 @@ Test.assert(Date.new(2024, 9, 13, 8, 5, 3).format("#T") == "08:05:03", "Date for
 Test.assert(Date.new(2024, 9, 13, 15, 45, 30).format("#I:#M #p") == "03:45 PM", "Date format 12-hour")
 Test.assert(Date.new(2024, 9, 13).unix > 0, "Date unix")
 Test.assert(Date.new(2024, 9, 13) < Date.new(2024, 9, 14), "Date comparison")
+
+// tz= works, and a numeric offset no longer makes the native primitives throw
+// ("Timezone must be a string."): the docs show `date.tz = -5`.
+var zoned = Date.new(2024, 9, 13, 15, 45, 30, 0)
+Test.assert(zoned.unix > 0, "numeric tz constructor reaches unix")
+zoned.tz = -5
+Test.assert(zoned.tz == -5, "Date.tz setter")
+Test.assert(zoned.hours == 15, "Date.tz setter keeps the wall clock")
+Test.assert(zoned.toString == "2024-09-13 15:45:30", "numeric tz keeps toString")
+Test.assert(zoned.format("#F") == "2024-09-13", "numeric tz reaches format")

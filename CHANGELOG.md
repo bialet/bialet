@@ -4,6 +4,77 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## Unreleased
+
+### Added
+
+- Tests for the parts of the documented surface that had none: ignored-file
+  patterns, `Response.file` and its untrusted-type policy, `.wren` error pages,
+  runtime-error recovery, HtmlNode raw-vs-escaped rendering, the Markdown
+  syntax table and its URL filtering, four-parameter and `LIMIT ? OFFSET ?`
+  queries, last-value-wins form fields, cookie option overrides and
+  proxy-aware `Secure`, custom CORS headers, folder-route precedence,
+  `Cookie.parseHeader`, null-safe accessors, `Json.stringify` escaping,
+  class-instance `save()`, list-form migrations, foreign keys, `Config.bool`
+  truthiness, the 4-argument `File.create`, the numeric `Date.tz` setter and
+  the secret-key-file guards.
+- `make check-examples` now also runs `bialet -T docs/examples` and
+  `tools/check_docs_apps.sh`, which boots the guestbook, styled guestbook and
+  inventory example apps and walks their flows (login, CSRF, multipart create,
+  search, photo, delete, logout).
+- Cron jobs are tested to actually run, including the 3-argument
+  `Cron.at(hour, minute, dayOfWeek)` form.
+
+### Fixed
+
+- `Cron.at(hour, minute, dayOfWeek)` raised `Date does not implement 'weekday'`
+  on every tick; the getter is `dayOfWeek`.
+- `Date.tz=` was documented but missing. Numeric offsets such as
+  `date.tz = -5`, which the docs use, reached the native date primitives
+  unchanged and failed with "Timezone must be a string."
+- `Db.migrate(version, [...])` accepted a list per the documentation but
+  stringified it into invalid SQL. Lists are now applied in order.
+- `.wren` error pages were executed but always answered `200`: the response
+  default status overwrote the error code. They now keep the error status
+  unless the page calls `Response.status()`.
+- A Markdown link or image URL containing parentheses swallowed only up to the
+  first `)` (leaking the rest as text) and an unsafe image emitted an `<img>`
+  with an empty `src`. URLs are matched with nesting, and a rejected image now
+  renders its alt text.
+- `error =` assignments while reading the Wren response cleared an error raised
+  by the status guard, so `Response.status(1e300)` logged the error and still
+  served the body with `200`.
+- The documented `README*/AGENTS*/...` ignore list and the `.well-known`
+  exemption are covered by tests again after the docs example suite had rotted
+  (it referenced renamed routes and content).
+
+### Security
+
+- `Http` request bodies no longer crash the worker: `postData` stringifies
+  values `Json.stringify` has no branch for (instances, `Date`, `HtmlNode`),
+  and the native `http_call` primitive validates every string argument.
+- `Response.file` treats the uploader-supplied `Content-Type` as untrusted.
+  Only script-free media types are served inline; HTML/SVG and unknown types
+  are sent as `application/octet-stream` with `Content-Disposition: attachment`.
+  Responses now carry `X-Content-Type-Options: nosniff`; Wren-rendered
+  responses add `Cache-Control: no-store`.
+- Requests with a duplicate `Content-Length` or any `Transfer-Encoding` are
+  refused with `400` instead of being framed differently by Bialet and a proxy.
+- An over-long request target is refused with `414` instead of being truncated
+  into a different route.
+- `libcurl` is configured with `CURLOPT_NOSIGNAL`, so a DNS timeout cannot
+  deliver `SIGALRM` to another thread and kill the process.
+- The secret key file is opened with `O_NOFOLLOW` and `fstat`-checked, closing
+  the stat/open race.
+- `Response.status` accepts only integral values in 100–999 instead of casting
+  an arbitrary double (undefined behavior).
+- `-b/-m/-M/-c/-C` reject values that overflow `long`/`int`/`size_t`.
+- The `-d`/`-l` in-root guards no longer accept a file under `.well-known`
+  (which the static handler serves despite the `_`/`.` rule).
+- A `..` in the query string is no longer treated as a path-traversal attempt.
+- Unterminated Markdown emphasis no longer copies the following byte raw, and
+  an empty table cell no longer forms a pointer before its buffer.
+
 ## 1.2.19 — 2026-11-15
 
 ### Fixed

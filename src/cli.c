@@ -12,6 +12,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -218,8 +219,11 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
       break;
     case CLI_OPT_MEM_SOFT:
     case CLI_OPT_MEM_HARD:
+      errno = 0;
       num = strtol(value, &endptr, 10);
-      if(*endptr != '\0' || num < 0) {
+      // ERANGE left num at LONG_MAX/LONG_MIN, and the (int) cast below would
+      // then truncate to an unrelated limit (or a negative one).
+      if(errno == ERANGE || *endptr != '\0' || num < 0 || num > INT_MAX) {
         cli_error(opts, "Invalid memory limit: %s", value);
         return;
       }
@@ -230,8 +234,9 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
       break;
     case CLI_OPT_CPU_SOFT:
     case CLI_OPT_CPU_HARD:
+      errno = 0;
       num = strtol(value, &endptr, 10);
-      if(*endptr != '\0' || num < 0) {
+      if(errno == ERANGE || *endptr != '\0' || num < 0 || num > INT_MAX) {
         cli_error(opts, "Invalid CPU limit: %s", value);
         return;
       }
@@ -241,13 +246,27 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
         config->cpu_hard_limit = (int)num;
       break;
     case CLI_OPT_MAX_POST:
+      errno = 0;
       num = strtol(value, &endptr, 10);
-      if(*endptr != '\0' || num <= 0) {
+      // `(size_t)num * 1024` with LONG_MAX wraps to a tiny or zero limit, which
+      // then disables the clamp against mem_soft_limit further down.
+      if(errno == ERANGE || *endptr != '\0' || num <= 0) {
         cli_error(opts, "Invalid max post size: %s (use kilobytes, e.g. 128)",
                   value);
         return;
       }
-      config->max_post_size = (size_t)num * 1024;
+      {
+        // Compare as size_t: `long` is 32-bit under Windows LLP64, so a
+        // `(unsigned long)num > SIZE_MAX / 1024` test is a constant false there
+        // and -Wtype-limits (with -Werror) rejects it.
+        size_t kilobytes = (size_t)num;
+        if(kilobytes > SIZE_MAX / 1024) {
+          cli_error(opts, "Invalid max post size: %s (use kilobytes, e.g. 128)",
+                    value);
+          return;
+        }
+        config->max_post_size = kilobytes * 1024;
+      }
       break;
     case CLI_OPT_MAX_UPLOAD: {
       size_t bytes;

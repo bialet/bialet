@@ -540,7 +540,7 @@ int main(int argc, char* argv[]) {
       // output on Windows, which separates with backslashes.
       if(strncmp(real_log, bialet_config.full_root_dir, root_len) == 0 &&
          (real_log[root_len] == '/' || real_log[root_len] == '\\') &&
-         !has_forbidden_uri_component(real_log + root_len)) {
+         !has_private_uri_component(real_log + root_len)) {
         /* stderr, not message(): message() writes to log_file, which is this
          * very file, so the operator would see a silent exit. */
         fprintf(stderr,

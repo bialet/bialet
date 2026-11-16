@@ -2,6 +2,12 @@
 // query-string builder, timeouts, error message). These hit the local echo
 // server (tests/echo), except the timeout case which targets the reserved,
 // non-routable TEST-NET-1 address and must fail fast.
+// A type Json.stringify has no branch for: returns null, which must not reach
+// the transport as a null body (it used to segfault the worker).
+class NotJson {
+  construct new() {}
+}
+
 var target = Request.get("target")
 var other = Request.get("other")
 var which = Request.get("which")
@@ -70,6 +76,12 @@ if (which == "query") {
   // Http.url(base, params) appends and URL-encodes query parameters
   var built = Http.url(target + "/echo", {"mode": "echo", "msg": "hi there"})
   return Http.get(built)
+}
+if (which == "nonstring") {
+  var http = Http.new()
+  http.postData = NotJson.new()
+  var ok = http.call(target + "/echo?mode=body", {})
+  return "ok:%(ok == true)|body:%(http.body)"
 }
 if (which == "timeout") {
   // A tiny connect timeout fails fast and surfaces a curl error message

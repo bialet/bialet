@@ -110,6 +110,12 @@ sudo apt-get install -y gcc-mingw-w64-x86-64-posix wine
 make clean && CC=x86_64-w64-mingw32-gcc make static
 ```
 
+Fast syntax gate (no Windows host, no Docker): `make check-mingw` runs the
+MinGW compiler over every source with `-fsyntax-only`. It skips cleanly when
+mingw-w64 or the SQLite/curl/OpenSSL target headers are absent, and it catches
+`_WIN32` compile breakage (LLP64 `long` assumptions, unguarded POSIX calls,
+socket/format types) long before a release. It does not replace the Wine run.
+
 Run the suite under Wine by registering a binfmt handler so PE executables run
 directly (needs root), then remove it when done:
 

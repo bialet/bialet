@@ -43,14 +43,16 @@ BENCH_APP = {
     "static.html": "<!doctype html>\n<html><body><h1>static</h1>"
     + ("<p>filler filler filler filler filler filler</p>" * 40)
     + "</body></html>\n",
+    # Built with a list: `md = md + ...` in a loop is quadratic in Wren and
+    # would measure user-level string concatenation instead of Markdown.
     "markdown.wren": """
-var md = ""
+var parts = []
 for (i in 0...60) {
-  md = md + "## Section " + i.toString + "\\n\\n"
-  md = md + "Some **bold** text with a [link](https://example.com/x) and `code`.\\n\\n"
-  md = md + "- item one\\n- item two\\n- item three\\n\\n"
+  parts.add("## Section " + i.toString + "\\n")
+  parts.add("Some **bold** text with a [link](https://example.com/x) and `code`.\\n")
+  parts.add("- item one\\n- item two\\n- item three\\n")
 }
-return Markdown.html(md)
+return Markdown.html(parts.join("\\n"))
 """,
     "json.wren": """
 var parts = []
@@ -73,12 +75,13 @@ for (i in 0...500) {
 }
 return <ul>{{ items.map { |it| <li>{{ it["name"] }}={{ it["value"] }}</li> } }}</ul>
 """,
+    # Same as markdown: a list keeps the measurement on the escaping path.
     "escape.wren": """
-var doc = ""
+var lines = []
 for (i in 0...200) {
-  doc = doc + "line " + i.toString + " with <tags> & 'apostrophes' and more text\n"
+  lines.add("line " + i.toString + " with <tags> & 'apostrophes' and more text\\n")
 }
-return <pre>{{ doc }}</pre>
+return <pre>{{ lines.join("") }}</pre>
 """,
     "upload.wren": """
 var file = Request.file("file")

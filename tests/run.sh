@@ -322,6 +322,44 @@ fi
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"
+
+# A .wren error page is executed when present, and it keeps the error status
+# unless it calls Response.status() itself. Regression: bialet_run() defaults
+# the status to 200, and custom_error() used that default, so a 404.wren made
+# every 404 look like a successful page. Needs its own root: the shared tests/
+# app must keep its static 404.html for the assertions above.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  errpage_line=$LINENO
+  _test_start_ms=$(now_ms)
+  errpage_root=$(mktemp -d)
+  printf 'return <div><h1>WREN-404-PAGE</h1></div>\n' > "$errpage_root/404.wren"
+  printf 'Response.status(418)\nreturn <div><h1>WREN-500-PAGE</h1></div>\n' > "$errpage_root/500.wren"
+  printf 'return "ok"\n' > "$errpage_root/index.wren"
+  printf 'var value = null\nreturn value.get("missing")\n' > "$errpage_root/boom.wren"
+  require_free_port "$HOST" "$CRON_PORT" "error page server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" "$errpage_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  errpage_404=$(curl -s -o /tmp/bialet-errpage-404 -w "%{http_code}" \
+    "http://$HOST:$CRON_PORT/missing-page")
+  errpage_500=$(curl -s -o /tmp/bialet-errpage-500 -w "%{http_code}" \
+    "http://$HOST:$CRON_PORT/boom")
+  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT $errpage_root" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$errpage_root"
+  if [[ "$errpage_404" == "404" ]] \
+     && grep -q "WREN-404-PAGE" /tmp/bialet-errpage-404 2>/dev/null \
+     && [[ "$errpage_500" == "418" ]] \
+     && grep -q "WREN-500-PAGE" /tmp/bialet-errpage-500 2>/dev/null; then
+    report_result "Wren error pages keep status" "$errpage_line" 0
+  else
+    report_result "Wren error pages keep status" "$errpage_line" 1 \
+      "Expected 404/WREN-404-PAGE and 418/WREN-500-PAGE. Got $errpage_404:'$(cat /tmp/bialet-errpage-404 2>/dev/null | head -c 80)' $errpage_500:'$(cat /tmp/bialet-errpage-500 2>/dev/null | head -c 80)'"
+  fi
+  rm -f /tmp/bialet-errpage-404 /tmp/bialet-errpage-500
+else
+  skip_test "Wren error pages keep status" "requires local binary access"
+fi
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 run_test "Response headers            " "headers"         200 "headers-set"
@@ -1126,6 +1164,7 @@ if [[ "$ECHO_REACHABLE" == 1 ]]; then
   run_test "Http redirect cookie control  " "http-redirect?which=control&target=http://$HOST:$ECHO_PORT" 200 "set|session=abc123"
   run_test "Http cookie jar manual hdr  " "http-options?which=cookie-manual&target=http://$HOST:$ECHO_PORT&other=http://localhost:$ECHO_PORT" 200 "set|manual=1"
   run_test "Http query-string builder   " "http-options?which=query&target=http://$HOST:$ECHO_PORT" 200 "hi there"
+  run_test "Http non-string body safe    " "http-options?which=nonstring&target=http://$HOST:$ECHO_PORT" 200 "ok:true|body:"
   run_test "Http timeout + error message" "http-options?which=timeout&target=http://$HOST:$ECHO_PORT" 200 "false|error-present"
 else
   echo_skip_reason="echo server not reachable at $HOST:$ECHO_PORT"
@@ -1142,6 +1181,7 @@ else
   skip_test "Http cookie jar override    " "$echo_skip_reason"
   skip_test "Http cookie jar manual hdr  " "$echo_skip_reason"
   skip_test "Http query-string builder   " "$echo_skip_reason"
+  skip_test "Http non-string body safe    " "$echo_skip_reason"
   skip_test "Http timeout + error message" "$echo_skip_reason"
 fi
 
@@ -1197,6 +1237,78 @@ else
   skip_test "Config encrypt/decrypt      " "server was not started with --secret-key-file"
 fi
 
+# Tests - CLI surface
+# The option parser is user-facing too: a version flag that exits non-zero, or
+# an unknown option that starts a server anyway, is a bug.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cli_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cli_version=$("$TARGET_EXEC" -v 2>&1)
+  cli_version_code=$?
+  cli_help=$("$TARGET_EXEC" --help 2>&1)
+  cli_help_code=$?
+  cli_bad=$("$TARGET_EXEC" --definitely-not-an-option 2>&1)
+  cli_bad_code=$?
+  cli_no_port=$("$TARGET_EXEC" -p 2>&1)
+  cli_no_port_code=$?
+  if [[ "$cli_version_code" == 0 && "$cli_version" == *bialet* \
+        && "$cli_help_code" == 0 && "$cli_help" == *sage* \
+        && "$cli_bad_code" != 0 && "$cli_no_port_code" != 0 ]]; then
+    report_result "CLI version and bad options " "$cli_line" 0
+  else
+    report_result "CLI version and bad options " "$cli_line" 1 \
+      "version($cli_version_code):'$cli_version' bad($cli_bad_code):'${cli_bad:0:80}' missing($cli_no_port_code):'${cli_no_port:0:80}'"
+  fi
+else
+  skip_test "CLI version and bad options " "requires local binary access"
+fi
+
+# The deployment key loader refuses unsafe files instead of falling back to an
+# unencrypted build or reading whatever it was pointed at.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  secret_guard_line=$LINENO
+  _test_start_ms=$(now_ms)
+  secret_root=$(mktemp -d)
+  secret_dir=$(mktemp -d)
+  secret_missing="$secret_dir/missing"
+  secret_empty="$secret_dir/empty"
+  : > "$secret_empty"
+  secret_big="$secret_dir/big"
+  head -c 5000 /dev/zero | tr '\0' 'a' > "$secret_big"
+  secret_nul="$secret_dir/nul"
+  printf 'ab\0cd\n' > "$secret_nul"
+  secret_inside="$secret_root/key.txt"
+  printf '%s\n' "00112233445566778899aabbccddeeff" > "$secret_inside"
+  secret_guard_ok=1
+
+  secret_case() { # label file expected-text
+    local label="$1" file="$2" needle="$3" out code
+    out=$("$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" "$secret_root" -k "$file" 2>&1)
+    code=$?
+    if [[ "$code" == "0" ]] || [[ "$out" != *"$needle"* ]]; then
+      secret_guard_ok=0
+      printf '      %s: expected exit 1 with "%s", got %s: %s\n' \
+        "$label" "$needle" "$code" "${out//$'\n'/ }"
+    fi
+  }
+
+  secret_case "missing" "$secret_missing" "secret key file not found"
+  secret_case "empty" "$secret_empty" "secret key file is empty"
+  secret_case "too large" "$secret_big" "larger than"
+  secret_case "NUL byte" "$secret_nul" "NUL byte"
+  secret_case "inside root" "$secret_inside" "must live outside the app root"
+
+  rm -rf "$secret_root" "$secret_dir"
+  if [[ "$secret_guard_ok" == 1 ]]; then
+    report_result "Secret key file guards      " "$secret_guard_line" 0
+  else
+    report_result "Secret key file guards      " "$secret_guard_line" 1 \
+      "One or more unsafe key files was accepted (see the lines above)"
+  fi
+else
+  skip_test "Secret key file guards      " "requires local binary access"
+fi
+
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
@@ -1212,6 +1324,120 @@ run_test "Num.fromString null         " "num-fromstring"  200 "null:null|bad:nul
 
 # Tests - File handling
 run_test "File create get destroy     " "file-more"       200 "tempBlocksGet:true|saveRestores:true|destroy:true"
+
+# Tests - documented file serving contracts
+run_test "Response.file serves blob   " "file-serve"      200 "served-bytes"
+test_method "Response.file content type " "GET" "file-serve" 200 "Content-Type: text/plain" "served-bytes"
+test_method "Untrusted file type downloads" "GET" "file-serve-untrusted" 200 \
+  "Content-Type: application/octet-stream" "<script>alert(1)</script>"
+test_method "Untrusted file sets disposition" "GET" "file-serve-untrusted" 200 \
+  "Content-Disposition: attachment" ""
+test_method "Responses carry nosniff     " "GET" "get?foo=bar" 200 \
+  "X-Content-Type-Options: nosniff" "bar"
+run_test "Invalid status is a 500     " "status-guard"    500 "custom-500-page"
+# The documented ignore list (README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml) is
+# applied at the final served path, while .well-known stays exempt (tested
+# above). The fixtures live in ignored/ so a stray AGENTS.md does not land in
+# the repository root where agents and tools would read it.
+run_test "Ignored README is 404       " "ignored/README.md"  404 "custom-404-page"
+run_test "Ignored AGENTS is 404       " "ignored/AGENTS.md"  404 "custom-404-page"
+run_test "Ignored LICENSE is 404      " "ignored/LICENSE"    404 "custom-404-page"
+run_test "Ignored json is 404         " "ignored/data.json"  404 "custom-404-page"
+run_test "Ignored yml is 404          " "ignored/conf.yml"   404 "custom-404-page"
+run_test "Ignored yaml is 404         " "ignored/conf.yaml"  404 "custom-404-page"
+
+# Tests - error pages and recovery
+run_test "Runtime error uses 500 page " "throw"           500 "custom-500-page"
+run_test "Server alive after an error " "get?foo=bar"     200 "bar"
+run_test "404 page is static html     " "donotexists"     404 "custom-404-page"
+
+# Tests - HtmlNode and Markdown
+run_test "HtmlNode raw vs escaped     " "htmlnode-raw"    200 '<div><p><b>x</b></p><p>&lt;b&gt;x&lt;/b&gt;</p></div>'
+run_test "Markdown headings           " "md-syntax"       200 "<h1>H1</h1>"
+run_test "Markdown strong             " "md-syntax"       200 "<strong>bold</strong>"
+run_test "Markdown emphasis           " "md-syntax"       200 "<em>italic</em>"
+run_test "Markdown unordered list     " "md-syntax"       200 "<li>one</li>"
+run_test "Markdown blockquote         " "md-syntax"       200 "<blockquote>"
+run_test "Markdown table              " "md-syntax"       200 "<table>"
+run_test "Markdown code is escaped    " "md-syntax"       200 "<code>a &lt; b</code>"
+run_test "Markdown fenced code        " "md-syntax"       200 "<pre><code>"
+run_test "Markdown skips front matter " "md-syntax"       200 "<h1>Body</h1>"
+run_test "Markdown drops script link  " "md-security"     200 "links:<p>click</p>"
+run_test "Markdown escapes code span  " "md-security"     200 "code:<p><code>&lt;b&gt;</code></p>"
+run_test "Markdown keeps raw html     " "md-security"     200 "raw:<p><b>raw</b></p>"
+run_test "Markdown missing file false " "md-missing"      200 "true"
+
+# Tests - Query binding limits
+run_test "Query four params and paging" "query-pagination" 200 "four:5|page:2|first:3"
+
+# Tests - forms
+run_test "Post keeps the last value   " "request-contract" "a=1&a=2" 200 "2|7|true"
+
+# Framing ambiguity must be refused: two Content-Length lines (the C framer and
+# the Wren header map disagreed on which one to read) and any
+# Transfer-Encoding (chunked bodies are not implemented).
+framing_line=$LINENO
+_test_start_ms=$(now_ms)
+# bash's /dev/tcp keeps this dependency-free and works under Wine too.
+framing_dup=$(
+  exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+  printf 'GET /get?foo=bar HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\nContent-Length: 0\r\n\r\n' >&3
+  IFS= read -r -t 3 first <&3
+  printf '%s' "$first"
+)
+framing_te=$(
+  exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+  printf 'GET /get?foo=bar HTTP/1.1\r\nHost: x\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n' >&3
+  IFS= read -r -t 3 first <&3
+  printf '%s' "$first"
+)
+if [[ "$framing_dup" == *" 400 "* && "$framing_te" == *" 400 "* ]]; then
+  report_result "Ambiguous framing refused   " "$framing_line" 0
+else
+  report_result "Ambiguous framing refused   " "$framing_line" 1 \
+    "Expected 400 for duplicate Content-Length and for Transfer-Encoding. Got '$framing_dup' and '$framing_te'"
+fi
+
+# A ".." in the query string is data, not a traversal attempt.
+run_test "Dots in query string allowed" "get?foo=.."     200 ".."
+
+# Tests - routing precedence
+run_test "Folder route file beats index" "dupe"           200 "dupe-route:root"
+run_test "Folder route sees a segment"  "dupe/42"        200 "dupe-route:42"
+
+# Tests - Cookie options and proxy-aware Secure
+cookie_opts_line=$LINENO
+_test_start_ms=$(now_ms)
+cookie_opts_headers=$(curl -s -D- -o /dev/null "http://$HOST:$PORT/cookie-options")
+if [[ "$cookie_opts_headers" == *"SameSite=Strict"* ]] \
+   && ! printf "%s" "$cookie_opts_headers" | grep -qi '^set-cookie:.*httponly'; then
+  report_result "Cookie options override     " "$cookie_opts_line" 0
+else
+  report_result "Cookie options override     " "$cookie_opts_line" 1 \
+    "Expected SameSite=Strict and no HttpOnly. Got: $cookie_opts_headers"
+fi
+
+cookie_secure_line=$LINENO
+_test_start_ms=$(now_ms)
+secure_proxy=$(curl -s -D- -o /dev/null -H "X-Forwarded-Proto: https" \
+  "http://$HOST:$PORT/cookie-secure")
+secure_plain=$(curl -s -D- -o /dev/null "http://$HOST:$PORT/cookie-secure")
+# Match the attribute, not the cookie name ("secure-probe" would otherwise
+# make the plain response look secure too).
+if printf "%s" "$secure_proxy" | grep -qi '^set-cookie:.*; secure' \
+   && ! printf "%s" "$secure_plain" | grep -qi '^set-cookie:.*; secure'; then
+  report_result "Cookie Secure follows proxy " "$cookie_secure_line" 0
+else
+  report_result "Cookie Secure follows proxy " "$cookie_secure_line" 1 \
+    "Expected Secure with X-Forwarded-Proto: https and not without. Got: proxy=$secure_proxy plain=$secure_plain"
+fi
+
+# Tests - CORS variants
+test_method "CORS custom preflight       " "OPTIONS" "cors-custom" 204 \
+  "Access-Control-Allow-Methods: GET, POST" ""
+test_method "CORS custom headers         " "OPTIONS" "cors-custom" 204 \
+  "Access-Control-Allow-Headers: X-Token" ""
+run_test "CORS custom GET continues   " "cors-custom"     200 "cors-custom"
 
 # Tests - safe method on basic types
 run_test "Safe method basic types     " "safe"            200 "true,42,{html: &lt;b&gt;bold&lt;/b&gt;}"
@@ -1247,22 +1473,23 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     "http://$HOST:$ROOT_STDERR_PORT/page")
   quiet_page_body=$(curl -s "http://$HOST:$ROOT_STDERR_PORT/page")
   quiet_root_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
-  # A URI past PATH_SIZE truncates the probe name, so on POSIX it must still be
-  # reported (and still answers 404). Windows cannot reach that path at all: its
-  # header buffer is BUFSIZ * 4 = 2048 bytes, so any URI that could overflow
-  # PATH_SIZE is refused as a malformed request (400) before the probe.
+  # A URI that would not fit in PATH_SIZE is refused with 414 before the router
+  # builds a truncated path, and the refusal is logged once. Windows cannot
+  # reach that branch at all: its header buffer is BUFSIZ * 4 = 2048 bytes, so
+  # any URI that could overflow PATH_SIZE is refused as a malformed request
+  # (400) before the probe.
   quiet_long_uri=$(head -c 2100 /dev/zero | tr '\0' 'a')
   quiet_long_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$ROOT_STDERR_PORT/$quiet_long_uri")
   # The report has to reach the -l stream and not stderr: that is why it no
   # longer uses perror, and why with -l given it goes to the file alone.
-  quiet_long_log=$(grep -c "Path too long" "$quiet_root_log" 2>/dev/null)
-  quiet_long_noise=$(grep -c "Path too long" "$quiet_root_out" 2>/dev/null)
+  quiet_long_log=$(grep -c "URI too long" "$quiet_root_log" 2>/dev/null)
+  quiet_long_noise=$(grep -c "URI too long" "$quiet_root_out" 2>/dev/null)
   if [[ "$IS_WINE" == 1 ]]; then
     quiet_long_expected_code=400
     quiet_long_expected_log=0
   else
-    quiet_long_expected_code=404
+    quiet_long_expected_code=414
     quiet_long_expected_log=1
   fi
   pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
@@ -1278,7 +1505,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     report_result "Root request logs no path error" "$quiet_root_line" 0
   else
     report_result "Root request logs no path error" "$quiet_root_line" 1 \
-      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 404 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code (want $quiet_long_expected_code) long_noise:$quiet_long_noise long_log:$quiet_long_log (want $quiet_long_expected_log)"
+      "Expected 200 + index body for '/', 200 + page body for /page, no 'Path too long' line, then 414 + exactly one line for an overlong URI. Got root:$quiet_root_code body:'$quiet_root_body' page:$quiet_page_code body:'$quiet_page_body' root_noise:$quiet_root_noise long:$quiet_long_code (want $quiet_long_expected_code) long_noise:$quiet_long_noise long_log:$quiet_long_log (want $quiet_long_expected_log)"
   fi
 else
   skip_test "Root request logs no path error" "requires local binary access"
@@ -1303,14 +1530,20 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   show_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$SHOW_ERRORS_PORT/broken")
   show_body=$(curl -s "http://$HOST:$SHOW_ERRORS_PORT/broken")
+  # A runtime error (not a compile error) must render the same diagnostics page.
+  show_run_code=$(curl -s -o /dev/null -w "%{http_code}" \
+    "http://$HOST:$SHOW_ERRORS_PORT/boom")
+  show_run_body=$(curl -s "http://$HOST:$SHOW_ERRORS_PORT/boom")
   pgrep -f "$TARGET_EXEC -h $HOST -p $SHOW_ERRORS_PORT -l /tmp/tests-show-errors.log" \
     2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
   if [[ "$show_code" == "500" && "$show_body" == *"Compilation Error"* \
-        && "$show_body" != *"Oops! Something broke"* ]]; then
-    report_result "Show errors on compile error" "$show_errors_line" 0
+        && "$show_body" != *"Oops! Something broke"* \
+        && "$show_run_code" == "500" && "$show_run_body" == *"Runtime Error"* \
+        && "$show_run_body" != *"Oops! Something broke"* ]]; then
+    report_result "Show errors on errors      " "$show_errors_line" 0
   else
-    report_result "Show errors on compile error" "$show_errors_line" 1 \
-      "Expected 500 with 'Compilation Error', no generic 500 page. Got code:$show_code body:'$show_body'"
+    report_result "Show errors on errors      " "$show_errors_line" 1 \
+      "Expected 500 with 'Compilation Error' and 'Runtime Error', no generic page. Got compile:$show_code:'${show_body:0:80}' runtime:$show_run_code:'${show_run_body:0:80}'"
   fi
 else
   skip_test "Show errors on compile error" "requires local binary access"
@@ -1378,6 +1611,55 @@ elif [[ -n "$BIALET_SKIP_CRON_RELOAD_TEST" ]]; then
   skip_test "Cron reload on file create/edit" "BIALET_SKIP_CRON_RELOAD_TEST set (flaky FSEvents delivery on this runner)"
 else
   skip_test "Cron reload on file create/edit" "requires local binary access"
+fi
+
+# Tests - Cron execution
+# The reload test above proves the cron file is re-installed; it never proved a
+# job runs. Cron.at(hour, minute, dayOfWeek) was broken on every tick: it read
+# Date#weekday, which does not exist (the getter is dayOfWeek), so the 4-arg
+# form raised "Date does not implement 'weekday'" instead of matching.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cron_exec_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cron_exec_root=$(mktemp -d)
+  cron_exec_log=/tmp/tests-cron-exec.log
+  rm -f "$cron_exec_log"
+  cat > "$cron_exec_root/_cron.wren" <<'CRON_EOF'
+var now = Date.now
+Cron.every(1) { |d| System.print("CRON-EXEC-EVERY") }
+Cron.at(now.hours, now.minutes, now.dayOfWeek) { |d| System.print("CRON-EXEC-AT") }
+Cron.at((now.hours + 1) % 24, now.minutes) { |d| System.print("CRON-EXEC-MISS") }
+CRON_EOF
+  require_free_port "$HOST" "$CRON_PORT" "cron execution server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -l "$cron_exec_log" \
+    "$cron_exec_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  cron_exec_deadline=$(( $(now_ms) + 15000 ))
+  while [[ $(now_ms) -lt $cron_exec_deadline ]]; do
+    if grep -q "CRON-EXEC-EVERY" "$cron_exec_log" 2>/dev/null \
+       && grep -q "CRON-EXEC-AT" "$cron_exec_log" 2>/dev/null; then
+      break
+    fi
+    sleep 0.5
+  done
+  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT -l $cron_exec_log" \
+    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  rm -rf "$cron_exec_root"
+  cron_every_ran=0
+  cron_at_ran=0
+  cron_at_miss_ran=0
+  grep -q "CRON-EXEC-EVERY" "$cron_exec_log" 2>/dev/null && cron_every_ran=1
+  grep -q "CRON-EXEC-AT" "$cron_exec_log" 2>/dev/null && cron_at_ran=1
+  grep -q "CRON-EXEC-MISS" "$cron_exec_log" 2>/dev/null && cron_at_miss_ran=1
+  if [[ "$cron_every_ran" == 1 && "$cron_at_ran" == 1 && "$cron_at_miss_ran" == 0 ]]; then
+    report_result "Cron jobs execute           " "$cron_exec_line" 0
+  else
+    report_result "Cron jobs execute           " "$cron_exec_line" 1 \
+      "every:$cron_every_ran at:$cron_at_ran miss:$cron_at_miss_ran (log: $cron_exec_log)"
+  fi
+else
+  skip_test "Cron jobs execute           " "requires local binary access"
 fi
 
 # Tests - bialet dev

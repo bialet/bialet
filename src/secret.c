@@ -17,6 +17,11 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#ifndef _WIN32
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 /* A key is 32 bytes written as hex (64 characters), or a passphrase of any
  * length. 4KB leaves room for a long passphrase without turning the file into
  * an accidental data channel. */
@@ -100,11 +105,40 @@ int secret_key_load(const char* path, const char* app_root, char* err,
     secret_key_loose_perms = 1;
 #endif
 
+#ifndef _WIN32
+  /* Open the path we just validated without following a symlink planted between
+   * the stat() above and this call. The fd is then checked directly: a local
+   * attacker able to swap the entry could otherwise point the server at a FIFO
+   * (startup hang) or at a different regular file (different key). */
+  int flags = O_RDONLY;
+#ifdef O_CLOEXEC
+  flags |= O_CLOEXEC;
+#endif
+  flags |= O_NOFOLLOW;
+  int fd = open(resolved, flags);
+  if(fd < 0) {
+    snprintf(err, err_size, "cannot open secret key file: %s", resolved);
+    return -1;
+  }
+  struct stat opened;
+  if(fstat(fd, &opened) != 0 || !S_ISREG(opened.st_mode)) {
+    close(fd);
+    snprintf(err, err_size, "secret key file is not a regular file: %s", resolved);
+    return -1;
+  }
+  FILE* f = fdopen(fd, "rb");
+  if(f == NULL) {
+    close(fd);
+    snprintf(err, err_size, "cannot open secret key file: %s", resolved);
+    return -1;
+  }
+#else
   FILE* f = fopen(resolved, "rb");
   if(f == NULL) {
     snprintf(err, err_size, "cannot open secret key file: %s", resolved);
     return -1;
   }
+#endif
   /* Read one byte past the limit so "exactly at the limit" and "over it" are
    * distinguishable. */
   size_t n = fread(secret_key_buf, 1, SECRET_KEY_MAX + 1, f);

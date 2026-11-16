@@ -1860,6 +1860,16 @@ DEF_PRIMITIVE(response_default_page) {
 }
 
 DEF_PRIMITIVE(http_call) {
+  // Every argument is read as a C string. AS_CSTRING on a Wren null yields a
+  // bogus pointer (0x21), not NULL, so one non-string argument -- reachable
+  // through Http.post(url, modelInstance) when Json.stringify has no branch for
+  // the type -- segfaults the worker instead of raising a catchable error.
+  if(!validateString(vm, args[1], "URL") ||
+     !validateString(vm, args[2], "HTTP method") ||
+     !validateString(vm, args[3], "HTTP headers") ||
+     !validateString(vm, args[4], "HTTP body") ||
+     !validateString(vm, args[5], "HTTP basic auth"))
+    return false;
   struct HttpRequest request;
   request.url = AS_CSTRING(args[1]);
   request.method = AS_CSTRING(args[2]);

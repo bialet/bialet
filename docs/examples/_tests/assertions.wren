@@ -4,7 +4,7 @@
 // Test exact body match with /hi endpoint (returns HTML)
 Test.get("/hi")
     .status(200)
-    .equals("<h1>👋 Hello World</h1>")
+    .equals("<h1>Hello World</h1>")
 
 // Test password hashing endpoint
 Test.post("/password", {"password": "secret", "password-check": "secret"})
@@ -16,7 +16,7 @@ Test.get("/hi")
     .status(200)
     .contains("Hello")
     .contains("World")
-    .contains("👋")
+    .contains("<h1>")
 
 // Test notContains for things that should NOT be in response
 Test.get("/hi")

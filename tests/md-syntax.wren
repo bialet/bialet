@@ -1,0 +1,10 @@
+var parts = []
+parts.add(Markdown.html("**bold** and *italic*"))
+parts.add(Markdown.html("- one\n- two"))
+parts.add(Markdown.html("> quoted"))
+parts.add(Markdown.html("`a < b`"))
+parts.add(Markdown.html("```\n<x>\n```"))
+parts.add(Markdown.html("| a | b |\n| - | - |\n| 1 | 2 |"))
+parts.add(Markdown.html("---\ntitle: front matter\n---\n\n# Body"))
+parts.add(Markdown.html("# H1\n\n## H2"))
+return parts.join("\n")

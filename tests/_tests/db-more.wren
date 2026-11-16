@@ -53,3 +53,26 @@ Test.assert(`SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 't-dbmore-fa
 `INSERT INTO BIALET_SESSION (id, key, val, updatedAt) VALUES ('t-old', 'k', 'v', '2020-01-01')`.query
 Db.clean
 Test.assert(`SELECT COUNT(*) FROM BIALET_SESSION WHERE id = 't-old'`.toNum == 0, "Db.clean removed old session")
+
+// The documented list form of Db.migrate: queries applied in order, recorded
+// once. A List used to be stringified into "[instance of Query, ...]".
+`DROP TABLE IF EXISTS t_dbmore_array`.query
+`DELETE FROM BIALET_MIGRATIONS WHERE version = 't-dbmore-array'`.query
+Db.migrate("t-dbmore-array", [
+  `CREATE TABLE t_dbmore_array (n INTEGER)`,
+  `INSERT INTO t_dbmore_array (n) VALUES (1)`,
+  `INSERT INTO t_dbmore_array (n) VALUES (2)`
+])
+Test.assert(`SELECT COUNT(*) FROM t_dbmore_array`.toNum == 2, "Db.migrate list form ran every query")
+Test.assert(`SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 't-dbmore-array'`.toNum == 1,
+            "Db.migrate list form recorded once")
+
+// Foreign keys are on by default, so an orphan row is refused.
+Test.assert(`PRAGMA foreign_keys`.toNum == 1, "foreign_keys pragma is on")
+`DROP TABLE IF EXISTS t_child`.query
+`DROP TABLE IF EXISTS t_parent`.query
+`CREATE TABLE t_parent (id INTEGER PRIMARY KEY)`.query
+`CREATE TABLE t_child (id INTEGER PRIMARY KEY, parent_id INTEGER REFERENCES t_parent(id))`.query
+var orphan = Fiber.new { `INSERT INTO t_child (parent_id) VALUES (999)`.query }
+orphan.try()
+Test.assert(orphan.error != null, "an orphan row is rejected")

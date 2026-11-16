@@ -494,8 +494,20 @@ fi
 finish() {
   if [[ "$TARGET_EXEC" != "-" ]]; then
     [[ "${QUIET:-0}" != 1 ]] && echo -e -n "\n${BLUE}Stop server process...\t"
-    # kill all
-    pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    # BIALET_COVERAGE=1 asks for a graceful stop: SIGKILL never runs atexit, so
+    # the gcov counters the request-handling child accumulated are lost and
+    # every file the HTTP surface touches reports 0%. SIGTERM lets it exit
+    # cleanly (see tools/coverage.sh).
+    if [[ "${BIALET_COVERAGE:-0}" == "1" ]]; then
+      pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -TERM {} 2>/dev/null
+      for _ in $(seq 1 30); do
+        pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" >/dev/null 2>&1 || break
+        sleep 0.1
+      done
+    else
+      # kill all
+      pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    fi
     [[ -n "${SECRET_KEY_FILE:-}" ]] && rm -f "$SECRET_KEY_FILE"
     [[ "${QUIET:-0}" != 1 ]] && echo -e " ${GREEN}OK${NC}"
   fi
