@@ -151,6 +151,12 @@ def parse_percent_tokens(line):
 
 def perf_symbol(tokens, last_pct_index):
     rest = tokens[last_pct_index + 1:]
+    # perf 6.x appends placeholder columns (a bare "-") for IPC and IPC
+    # coverage when the event carries neither, e.g.
+    #   "8.45%  [.] _int_malloc    -    -"
+    # Dropping them keeps the last token the real symbol instead of a dash.
+    while rest and rest[-1] == "-":
+        rest.pop()
     if not rest:
         return "", ""
     path_match = PATH_RE.search(rest[-1])

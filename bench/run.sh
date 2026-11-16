@@ -575,7 +575,11 @@ run_alloc() {
   mapfile -t urls < <(workload_url_list "$file" "${BASE_URLS[@]}")
   trace="$RESULTS/alloc/heaptrack.zst"
   info "heaptrack attach: $wl"
-  heaptrack --pid "$PRIMARY_CHILD" --output "$trace" \
+  # heaptrack 1.5's wrapper script does not accept --output on the attach
+  # path ("[: --output: unexpected operator"): it always writes
+  # heaptrack.<binary>.<pid>.zst into the current directory. Run it inside the
+  # results directory so the trace lands where the report looks for it.
+  ( cd "$RESULTS/alloc" && heaptrack --pid "$PRIMARY_CHILD" ) \
     >"$RESULTS/alloc/attach.log" 2>&1 &
   attach_pid=$!
   sleep 2
