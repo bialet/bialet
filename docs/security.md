@@ -466,11 +466,13 @@ The server can enforce memory and CPU ceilings per app with CLI flags, which
 limits the blast radius of a runaway script or a memory-exhaustion attack:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
+bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 /www/myapp
 ```
 
 - `-m` / `-M` — soft / hard memory limit in MB
-- `-c` / `-C` — soft / hard CPU limit in percent
+- `-c` / `-C` — soft / hard CPU time limit in seconds: the soft one sends
+  `SIGXCPU`, the hard one `SIGKILL`, and the supervisor restarts the HTTP child
+  on either (which drops the bytecode cache). `0` disables the limit.
 - `-b` — max request body in KB (default 128 KB)
 
 Request bodies are rejected with `413 Payload Too Large` before parsing when

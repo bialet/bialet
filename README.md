@@ -239,7 +239,7 @@ Every option has a short and a long form; values accept `--option value` or
 | `-w`, `--wal`                           | Enable SQLite WAL mode                         |
 | `-i`, `--ignore`                        | Glob of files to ignore                        |
 | `-m`, `--mem-soft` / `-M`, `--mem-hard` | Memory soft / hard limit in MB                 |
-| `-c`, `--cpu-soft` / `-C`, `--cpu-hard` | CPU soft / hard limit in %                     |
+| `-c`, `--cpu-soft` / `-C`, `--cpu-hard` | CPU time soft / hard limit in seconds          |
 | `-r`, `--run`                           | Run an inline Wren snippet and exit            |
 | `-t`, `--validate`                      | Validate the syntax of a `.wren` file          |
 | `-T`, `--tests`                         | Run the test suite                             |

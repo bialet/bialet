@@ -95,6 +95,11 @@ struct BialetConfig {
   int   quiet;
   int   output_color;
 
+  /* Memory limits in MB (-m/-M) and CPU-time limits in seconds (-c/-C) of
+   * CPU time, not a percentage. The CPU pair feeds RLIMIT_CPU: the soft limit
+   * raises SIGXCPU, the hard one SIGKILL, and the supervisor restarts the
+   * HTTP child on either. 0 means no limit (RLIM_INFINITY, clamped to the hard
+   * limit inherited from the shell). */
   int mem_soft_limit, mem_hard_limit, cpu_soft_limit, cpu_hard_limit;
 
   char* db_path;
