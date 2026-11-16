@@ -4,6 +4,7 @@
 #include "bialet.wren.inc"
 #include "bialet_test.wren.inc"
 #include "bialet_wren.h"
+#include "bytecode_cache.h"
 #include "hash.h"
 #include "http_call.h"
 #include "json.h"
@@ -2877,7 +2878,10 @@ void wrenInitializeCore(WrenVM* vm) {
   }
 
   // Bialet classes
-  WrenInterpretResult bialetResult = wrenInterpret(vm, NULL, bialetModuleSource);
+  // Always cached: the source is part of this binary, so the entry can never
+  // go stale and needs no content check. -x only affects user files.
+  WrenInterpretResult bialetResult =
+      bytecode_cache_interpret_framework(vm, bialetModuleSource);
   if(bialetResult != WREN_RESULT_SUCCESS) {
     fprintf(stderr, "ERROR: Failed to load bialet module: %d\n", bialetResult);
   }

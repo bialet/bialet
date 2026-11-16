@@ -147,6 +147,19 @@ WrenHandle* wrenMakeHandle(WrenVM* vm, Value value);
 ObjClosure* wrenCompileSource(WrenVM* vm, const char* module, const char* source,
                               bool isExpression, bool printErrors);
 
+// Returns the module named [name], creating it and implicitly importing the
+// core module's variables into it if it does not exist yet.
+//
+// This is the module setup half of compileInModule(), shared with the bytecode
+// cache so a deserialised module lands in exactly the module a compile would
+// have produced. Modules are never passed as first-class values, so the
+// returned pointer is only valid while it stays in vm->modules (which it does).
+ObjModule* wrenGetOrCreateModule(WrenVM* vm, Value name);
+
+// Wraps [closure] in a new fiber and runs it to completion. This is the
+// execution half of wrenInterpret(), shared with the bytecode cache.
+WrenInterpretResult wrenRunClosure(WrenVM* vm, ObjClosure* closure);
+
 // Looks up a variable from a previously-loaded module.
 //
 // Aborts the current fiber if the module or variable could not be found.

@@ -10,6 +10,7 @@
  */
 #include "bialet.h"
 #include "bialet_wren.h"
+#include "bytecode_cache.h"
 #include "cli.h"
 #include "http_call.h"
 #include "livereload.h"
@@ -423,6 +424,7 @@ int main(int argc, char* argv[]) {
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
+  bialet_config.bytecode_cache = 0;      // OFF unless -x / --cache
 
   /* Parse args */
   cli_parse(argc, argv, &bialet_config, &cli_opts);
@@ -440,6 +442,7 @@ int main(int argc, char* argv[]) {
     default:
       break;
   }
+  bytecode_cache_set_user_files(bialet_config.bytecode_cache != 0);
   code = (char*)cli_opts.run_code;
   validate_file = cli_opts.validate_file;
   test_dir = cli_opts.test_dir;

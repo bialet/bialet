@@ -98,7 +98,11 @@ void cli_print_version(void);
   "                        passphrase, outside the app root       (default: "       \
   "none)\n"                                                                         \
   "  -q, --quiet           Quiet: suppress the browser auto-open and colored "      \
-  "output\n\n"                                                                      \
+  "output\n"                                                                        \
+  "  -x, --cache           Cache compiled user .wren files in memory (served "      \
+  "files and\n"                                                                     \
+  "                        local imports). The framework module is always "         \
+  "cached.\n\n"                                                                     \
   "Long options take a value as `--port 8080` or `--port=8080`.\n\n"                \
   "Any other long-form option is rejected as an invalid parameter.\n\n"             \
   "Full documentation: https://bialet.dev/usage.html\n"

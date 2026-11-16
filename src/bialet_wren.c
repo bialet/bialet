@@ -11,6 +11,7 @@
 #include "bialet_wren.h"
 
 #include "bialet.h"
+#include "bytecode_cache.h"
 #include "http_call.h"
 #include "livereload.h"
 #include "messages.h"
@@ -323,6 +324,9 @@ static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
   (void)vm;
   (void)name;
   free((char*)result.source);
+  // bytecode_cache_compile_user() only reads it during compilation; the path is
+  // carried here so the cache can key a module by file, not by module name.
+  free(result.userData);
 }
 
 // Resolve a (possibly relative) import name into an absolute, canonical
@@ -554,6 +558,10 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
   if(buffer) {
     result.source = buffer;
     result.onComplete = bialet_wren_free_module_source;
+    // Canonical path of the file just read, for the bytecode cache. Only the
+    // opt-in --cache run pays the extra copy.
+    if(bytecode_cache_user_files_enabled())
+      result.userData = string_safe_copy(resolved);
   }
   return result;
 }
@@ -1441,6 +1449,14 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 }
 
 struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm) {
+  return bialet_run_file(module, code, NULL, hm);
+}
+
+// [code] may be NULL when [stat] is given: the served file is then served
+// from the bytecode cache on a signature hit, and only read (here) on a miss.
+struct BialetResponse bialet_run_file(char* module, char* code,
+                                      const struct BialetFileStat* stat,
+                                      struct HttpMessage*          hm) {
   struct BialetResponse r;
   r.status = HTTP_OK;
   r.header = NULL;
@@ -1502,9 +1518,59 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenReleaseHandle(vm, initMethod);
   }
   /* Run user code */
+  int file_missing = 0;
   if(!error) {
-    WrenInterpretResult result = wrenInterpret(vm, module, code);
+    /* With --cache a served .wren file is looked up by its canonical path.
+     * Anything else (migration, cron, -r code) keeps the plain path. */
+    char* cache_key = NULL;
+    if(bytecode_cache_user_files_enabled() && module != NULL) {
+      size_t root_len = strlen(bialet_config.full_root_dir);
+      if(strncmp(module, bialet_config.full_root_dir, root_len) == 0 &&
+         (module[root_len] == '/' || module[root_len] == '\\'))
+        cache_key = bytecode_cache_path_key(module);
+    }
+
+    char*               owned = NULL;
+    int                 served = 0;
+    WrenInterpretResult result = WREN_RESULT_COMPILE_ERROR;
+
+    /* Stat-first: a matching file signature serves the cached blob without
+     * opening, reading or hashing the file. */
+    if(cache_key != NULL) {
+      ObjClosure* closure = bytecode_cache_load_by_stat(vm, module, cache_key, stat);
+      if(closure != NULL) {
+        result = wrenRunClosure(vm, closure);
+        served = 1;
+      }
+    }
+
+    if(!served) {
+      if(code == NULL) {
+        owned = read_file(module);
+        code = owned;
+      }
+      if(code == NULL) {
+        file_missing = 1;
+      } else if(cache_key != NULL) {
+        ObjClosure* closure =
+            bytecode_cache_compile_user(vm, module, code, cache_key, stat);
+        result = closure != NULL ? wrenRunClosure(vm, closure)
+                                 : WREN_RESULT_COMPILE_ERROR;
+      } else {
+        result = wrenInterpret(vm, module, code);
+      }
+    }
+
+    free(owned);
+    free(cache_key);
     error = result != WREN_RESULT_SUCCESS;
+  }
+  if(file_missing) {
+    /* The router lstat'ed the file but it was gone by the time it was read.
+     * Hand back an empty response so the caller can emit its normal 404. */
+    wrenFreeVM(vm);
+    r.status = 0;
+    return r;
   }
   if(!error) {
     wrenEnsureSlots(vm, 2);

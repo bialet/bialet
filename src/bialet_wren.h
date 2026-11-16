@@ -23,6 +23,14 @@ const char* bialet_get_full_root_dir();
 
 struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm);
 
+/* Like bialet_run(), but [code] may be NULL when [stat] names the served file:
+ * the bytecode cache is tried on that signature first and the file is only
+ * read when the cache misses. A zeroed status with no body means the file
+ * vanished between the router's lstat and the read. */
+struct BialetResponse bialet_run_file(char* module, char* code,
+                                      const struct BialetFileStat* stat,
+                                      struct HttpMessage*          hm);
+
 char* read_file(const char* path);
 char* bialet_read_file(const char* path);
 
