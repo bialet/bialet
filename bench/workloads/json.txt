@@ -1,0 +1,5 @@
+# JSON endpoint: SELECT 20 rows, build a map, serialise it.
+name=json
+path=/api/items
+method=GET
+status=200

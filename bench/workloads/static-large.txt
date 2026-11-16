@@ -1,0 +1,5 @@
+# ~1 MiB binary asset: read + write path, no template work.
+name=static-large
+path=/assets/blob.bin
+method=GET
+status=200

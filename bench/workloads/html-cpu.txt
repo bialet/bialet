@@ -1,0 +1,5 @@
+# CPU-heavy template: 600 escaped HTML rows, no database work.
+name=html-cpu
+path=/render
+method=GET
+status=200
