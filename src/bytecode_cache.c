@@ -69,18 +69,20 @@ typedef enum { CACHE_VAR_NULL = 0, CACHE_VAR_LINE = 1 } CacheVarKind;
 /* Process-global state                                                      */
 /* ------------------------------------------------------------------------- */
 
-// One entry per source file. [source] is the exact text the blob was compiled
-// from; cache_entry_matches() compares it on every lookup, so an edit that
-// keeps the same length is detected too.
+// One entry per source file. A user entry is invalidated by comparing the
+// length and xxHash64 of the source with what it was built from; the framework
+// entry is built from a string compiled into this binary, so it carries no
+// source metadata and is never content-checked.
 typedef struct {
   char*    key; // realpath (or the framework's synthetic key)
-  uint8_t* source;
-  size_t   source_len;
   uint8_t* blob;
   size_t   blob_len;
+  bool     framework;
+  size_t   source_len;
+  uint64_t source_hash;
 } CacheEntry;
 
-static bool        cache_enabled = false;
+static bool        cache_user_files = false;
 static CacheEntry* cache_entries = NULL;
 static size_t      cache_entry_count = 0;
 static size_t      cache_entry_capacity = 0;
@@ -114,16 +116,16 @@ static void cache_lock_release(void) {
 }
 #endif
 
-void bytecode_cache_enable(bool enabled) {
-  cache_enabled = enabled;
+void bytecode_cache_set_user_files(bool enabled) {
+  cache_user_files = enabled;
 }
 
-bool bytecode_cache_is_enabled(void) {
-  return cache_enabled;
+bool bytecode_cache_user_files_enabled(void) {
+  return cache_user_files;
 }
 
 char* bytecode_cache_path_key(const char* path) {
-  if(!cache_enabled || path == NULL)
+  if(!cache_user_files || path == NULL)
     return NULL;
 
   char resolved[PATH_MAX];
@@ -432,16 +434,121 @@ static bool write_fn(CacheWriter* w, const ObjFn* fn, int depth) {
 }
 
 /* ------------------------------------------------------------------------- */
+/* Source digest (xxHash64)                                                 */
+/* ------------------------------------------------------------------------- */
+
+// xxHash64, seed 0, one-shot. Self-contained on purpose: explicit
+// little-endian loads, no intrinsics, no alignment assumptions, no dependency.
+// It replaces a stored copy of every source file; at 64 bits a collision would
+// be needed to serve bytecode for different source, which is not a practical
+// risk (see cache_entry_matches()).
+#define CACHE_HASH_PRIME64_1 11400714785074694791ULL
+#define CACHE_HASH_PRIME64_2 14029467366897019727ULL
+#define CACHE_HASH_PRIME64_3 1609587929392839161ULL
+#define CACHE_HASH_PRIME64_4 9650029242287828579ULL
+#define CACHE_HASH_PRIME64_5 2870177450012600261ULL
+
+static uint64_t hash_rotate_left(uint64_t value, int bits) {
+  return (value << bits) | (value >> (64 - bits));
+}
+
+static uint64_t hash_read64(const uint8_t* p) {
+  return (uint64_t)p[0] | ((uint64_t)p[1] << 8) | ((uint64_t)p[2] << 16) |
+         ((uint64_t)p[3] << 24) | ((uint64_t)p[4] << 32) | ((uint64_t)p[5] << 40) |
+         ((uint64_t)p[6] << 48) | ((uint64_t)p[7] << 56);
+}
+
+static uint32_t hash_read32(const uint8_t* p) {
+  return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) |
+         ((uint32_t)p[3] << 24);
+}
+
+static uint64_t hash_round(uint64_t acc, uint64_t input) {
+  acc += input * CACHE_HASH_PRIME64_2;
+  acc = hash_rotate_left(acc, 31);
+  acc *= CACHE_HASH_PRIME64_1;
+  return acc;
+}
+
+static uint64_t hash_merge_round(uint64_t acc, uint64_t value) {
+  acc ^= hash_round(0, value);
+  acc = acc * CACHE_HASH_PRIME64_1 + CACHE_HASH_PRIME64_4;
+  return acc;
+}
+
+static uint64_t bytecode_cache_hash(const void* data, size_t len) {
+  const uint8_t* p = (const uint8_t*)data;
+  const uint8_t* end = p + len;
+  uint64_t       hash;
+
+  if(len >= 32) {
+    uint64_t v1 = CACHE_HASH_PRIME64_1 + CACHE_HASH_PRIME64_2;
+    uint64_t v2 = CACHE_HASH_PRIME64_2;
+    uint64_t v3 = 0;
+    uint64_t v4 = (uint64_t)0 - CACHE_HASH_PRIME64_1;
+
+    while(p + 32 <= end) {
+      v1 = hash_round(v1, hash_read64(p));
+      p += 8;
+      v2 = hash_round(v2, hash_read64(p));
+      p += 8;
+      v3 = hash_round(v3, hash_read64(p));
+      p += 8;
+      v4 = hash_round(v4, hash_read64(p));
+      p += 8;
+    }
+
+    hash = hash_rotate_left(v1, 1) + hash_rotate_left(v2, 7) +
+           hash_rotate_left(v3, 12) + hash_rotate_left(v4, 18);
+    hash = hash_merge_round(hash, v1);
+    hash = hash_merge_round(hash, v2);
+    hash = hash_merge_round(hash, v3);
+    hash = hash_merge_round(hash, v4);
+  } else {
+    hash = CACHE_HASH_PRIME64_5;
+  }
+
+  hash += (uint64_t)len;
+
+  while(p + 8 <= end) {
+    hash ^= hash_round(0, hash_read64(p));
+    hash = hash_rotate_left(hash, 27) * CACHE_HASH_PRIME64_1 + CACHE_HASH_PRIME64_4;
+    p += 8;
+  }
+  if(p + 4 <= end) {
+    hash ^= (uint64_t)hash_read32(p) * CACHE_HASH_PRIME64_1;
+    hash = hash_rotate_left(hash, 23) * CACHE_HASH_PRIME64_2 + CACHE_HASH_PRIME64_3;
+    p += 4;
+  }
+  while(p < end) {
+    hash ^= (uint64_t)(*p) * CACHE_HASH_PRIME64_5;
+    hash = hash_rotate_left(hash, 11) * CACHE_HASH_PRIME64_1;
+    p++;
+  }
+
+  hash ^= hash >> 33;
+  hash *= CACHE_HASH_PRIME64_2;
+  hash ^= hash >> 29;
+  hash *= CACHE_HASH_PRIME64_3;
+  hash ^= hash >> 32;
+  return hash;
+}
+
+/* ------------------------------------------------------------------------- */
 /* Invalidation                                                             */
 /* ------------------------------------------------------------------------- */
 
-// The single invalidation point. v1 compares the exact source bytes the entry
-// was built from; a stat()/mtime fast path (or a content hash) can replace the
-// body of this function without touching anything else.
+// The single invalidation point for user files: length plus xxHash64 of the
+// bytes. 64 bits is deliberate. A collision means serving bytecode compiled
+// from different source, and at 2^-64 per comparison that is not a practical
+// risk; a 32-bit CRC would save four bytes and make collisions worth worrying
+// about. A stat() fast path can sit in front of this check without changing it.
 static bool cache_entry_matches(const CacheEntry* entry, const char* source,
                                 size_t source_len) {
+  if(entry->framework)
+    return true; // The source is part of this binary.
   return entry->source_len == source_len &&
-         (source_len == 0 || memcmp(entry->source, source, source_len) == 0);
+         entry->source_hash == bytecode_cache_hash(source, source_len);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -923,7 +1030,6 @@ static bool entry_find_locked(const char* key, size_t* index) {
 
 static void entry_clear(CacheEntry* entry) {
   free(entry->key);
-  free(entry->source);
   free(entry->blob);
   memset(entry, 0, sizeof(*entry));
 }
@@ -994,15 +1100,14 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
     return;
   }
 
-  uint8_t* source_copy = NULL;
-  if(source_len > 0) {
-    source_copy = (uint8_t*)malloc(source_len);
-    if(source_copy == NULL) {
+  uint64_t source_hash = 0;
+  if(!is_core) {
+    if(source == NULL) {
       free(key_copy);
       free(writer.data);
       return;
     }
-    memcpy(source_copy, source, source_len);
+    source_hash = bytecode_cache_hash(source, source_len);
   }
 
   cache_lock_acquire();
@@ -1019,7 +1124,6 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
       if(entries == NULL) {
         cache_lock_release();
         free(key_copy);
-        free(source_copy);
         free(writer.data);
         return;
       }
@@ -1031,10 +1135,11 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
 
   CacheEntry* entry = &cache_entries[index];
   entry->key = key_copy;
-  entry->source = source_copy;
-  entry->source_len = source_len;
   entry->blob = writer.data;
   entry->blob_len = writer.len;
+  entry->framework = is_core;
+  entry->source_len = source_len;
+  entry->source_hash = source_hash;
   cache_lock_release();
 }
 
@@ -1042,9 +1147,13 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
 /* Public entry points                                                      */
 /* ------------------------------------------------------------------------- */
 
-ObjClosure* bytecode_cache_compile(WrenVM* vm, const char* module_name,
-                                   const char* source, const char* cache_key) {
-  if(!cache_enabled || cache_key == NULL)
+// Shared by the framework and user-file entry points. [framework] entries are
+// always cacheable and are not content-checked; user entries need user-file
+// caching to be on and a resolved key.
+static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
+                                 const char* source, const char* cache_key,
+                                 bool framework) {
+  if(!framework && (!cache_user_files || cache_key == NULL))
     return wrenCompileSource(vm, module_name, source, false, true);
 
   size_t source_len = strlen(source);
@@ -1098,13 +1207,29 @@ ObjClosure* bytecode_cache_compile(WrenVM* vm, const char* module_name,
   return closure;
 }
 
-WrenInterpretResult bytecode_cache_interpret(WrenVM* vm, const char* module_name,
-                                             const char* source,
-                                             const char* cache_key) {
-  if(!cache_enabled || cache_key == NULL)
+WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
+                                                       const char* source) {
+  ObjClosure* closure =
+      cache_compile(vm, NULL, source, BYTECODE_CACHE_FRAMEWORK_KEY, true);
+  if(closure == NULL)
+    return WREN_RESULT_COMPILE_ERROR;
+
+  return wrenRunClosure(vm, closure);
+}
+
+ObjClosure* bytecode_cache_compile_user(WrenVM* vm, const char* module_name,
+                                        const char* source, const char* cache_key) {
+  return cache_compile(vm, module_name, source, cache_key, false);
+}
+
+WrenInterpretResult bytecode_cache_interpret_user(WrenVM*     vm,
+                                                  const char* module_name,
+                                                  const char* source,
+                                                  const char* cache_key) {
+  if(!cache_user_files || cache_key == NULL)
     return wrenInterpret(vm, module_name, source);
 
-  ObjClosure* closure = bytecode_cache_compile(vm, module_name, source, cache_key);
+  ObjClosure* closure = cache_compile(vm, module_name, source, cache_key, false);
   if(closure == NULL)
     return WREN_RESULT_COMPILE_ERROR;
 

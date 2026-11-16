@@ -2878,8 +2878,10 @@ void wrenInitializeCore(WrenVM* vm) {
   }
 
   // Bialet classes
-  WrenInterpretResult bialetResult = bytecode_cache_interpret(
-      vm, NULL, bialetModuleSource, BYTECODE_CACHE_FRAMEWORK_KEY);
+  // Always cached: the source is part of this binary, so the entry can never
+  // go stale and needs no content check. -x only affects user files.
+  WrenInterpretResult bialetResult =
+      bytecode_cache_interpret_framework(vm, bialetModuleSource);
   if(bialetResult != WREN_RESULT_SUCCESS) {
     fprintf(stderr, "ERROR: Failed to load bialet module: %d\n", bialetResult);
   }

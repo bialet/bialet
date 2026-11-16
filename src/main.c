@@ -442,7 +442,7 @@ int main(int argc, char* argv[]) {
     default:
       break;
   }
-  bytecode_cache_enable(bialet_config.bytecode_cache != 0);
+  bytecode_cache_set_user_files(bialet_config.bytecode_cache != 0);
   code = (char*)cli_opts.run_code;
   validate_file = cli_opts.validate_file;
   test_dir = cli_opts.test_dir;

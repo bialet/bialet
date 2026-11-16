@@ -722,7 +722,7 @@ static Value importModule(WrenVM* vm, Value name) {
   // than by module name. It is NULL for modules with no file (remote imports).
   const char* cache_key = (const char*)result.userData;
   ObjClosure* moduleClosure =
-      bytecode_cache_compile(vm, AS_CSTRING(name), result.source, cache_key);
+      bytecode_cache_compile_user(vm, AS_CSTRING(name), result.source, cache_key);
 
   // Now that we're done, give the result back in case there's cleanup to do.
   if(result.onComplete)

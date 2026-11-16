@@ -360,6 +360,54 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
 else
   skip_test "Wren error pages keep status" "requires local binary access"
 fi
+
+# User-file caching is opt-in (-x); the framework module is cached either way.
+# Without -x no user file may ever be served from a stale compile; with -x an
+# edited served file must be noticed on the next request (source digest
+# mismatch), never served from the previous blob.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  cache_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cache_root=$(mktemp -d)
+  cache_ok=1
+  cache_detail=""
+  run_cache_case() {
+    local flag=$1 first=$2 second=$3
+    local args=()
+    [[ -n "$flag" ]] && args+=("$flag")
+    printf 'return "%s"\n' "$first" > "$cache_root/index.wren"
+    require_free_port "$HOST" "$CRON_PORT" "cache server"
+    "$TARGET_EXEC" "${args[@]}" -h "$HOST" -p "$CRON_PORT" "$cache_root" \
+      > /dev/null 2>&1 &
+    disown
+    wait_port "$HOST" "$CRON_PORT" 10
+    local got_first got_second
+    got_first=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
+    printf 'return "%s"\n' "$second" > "$cache_root/index.wren"
+    got_second=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
+    pgrep -f -- "$TARGET_EXEC.*-p $CRON_PORT $cache_root" \
+      2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    # Let the port go before the next case starts a server on it.
+    for _ in $(seq 1 20); do
+      check_port "$HOST" "$CRON_PORT" 0.2 || break
+      sleep 0.1
+    done
+    [[ "$got_first" == "$first" && "$got_second" == "$second" ]] || {
+      cache_ok=0
+      cache_detail="flag:'$flag' expected '$first' then '$second', got '$got_first' then '$got_second'"
+    }
+  }
+  run_cache_case "" "cache-A" "cache-B"
+  run_cache_case "-x" "cache-A" "cache-B"
+  rm -rf "$cache_root"
+  if [[ "$cache_ok" == "1" ]]; then
+    report_result "Served file cache invalidation" "$cache_line" 0
+  else
+    report_result "Served file cache invalidation" "$cache_line" 1 "$cache_detail"
+  fi
+else
+  skip_test "Served file cache invalidation" "requires local binary access"
+fi
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 run_test "Response headers            " "headers"         200 "headers-set"

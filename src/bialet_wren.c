@@ -324,7 +324,7 @@ static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
   (void)vm;
   (void)name;
   free((char*)result.source);
-  // bytecode_cache_compile() only reads it during compilation; the path is
+  // bytecode_cache_compile_user() only reads it during compilation; the path is
   // carried here so the cache can key a module by file, not by module name.
   free(result.userData);
 }
@@ -560,7 +560,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
     result.onComplete = bialet_wren_free_module_source;
     // Canonical path of the file just read, for the bytecode cache. Only the
     // opt-in --cache run pays the extra copy.
-    if(bytecode_cache_is_enabled())
+    if(bytecode_cache_user_files_enabled())
       result.userData = string_safe_copy(resolved);
   }
   return result;
@@ -1529,14 +1529,14 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     /* With --cache a served .wren file is looked up by its canonical path.
      * Anything else (migration, cron, -r code) keeps the plain path. */
     char* cache_key = NULL;
-    if(bytecode_cache_is_enabled() && module != NULL) {
+    if(bytecode_cache_user_files_enabled() && module != NULL) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(module, bialet_config.full_root_dir, root_len) == 0 &&
          (module[root_len] == '/' || module[root_len] == '\\'))
         cache_key = bytecode_cache_path_key(module);
     }
     WrenInterpretResult result =
-        bytecode_cache_interpret(vm, module, code, cache_key);
+        bytecode_cache_interpret_user(vm, module, code, cache_key);
     free(cache_key);
     error = result != WREN_RESULT_SUCCESS;
   }
