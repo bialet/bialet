@@ -144,7 +144,7 @@ Db.migrate("bench: writes schema", \`
 \`)
 
 // Refresh the label on every start; it is one tiny read/write.
-\`INSERT OR REPLACE INTO BIALET_CONFIG (key, value) VALUES ("bench_site_name", ?)\`.query("$NAME")
+\`INSERT OR REPLACE INTO BIALET_CONFIG (key, val) VALUES ("bench_site_name", ?)\`.query("$NAME")
 
 var existing = \`SELECT COUNT(*) FROM items\`.toNum || 0
 if (existing < $SEED) {
