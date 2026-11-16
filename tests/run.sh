@@ -370,6 +370,33 @@ else
 fi
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
+
+# Every status code get_http_status_description() knows must reach the wire with
+# its reason phrase, not the "Unknown Status" fallback. Codes the test app would
+# not otherwise emit are driven through the handler's numeric branch; 1xx is out
+# because curl treats it as an interim response and waits for a second one.
+status_phrase_line=$LINENO
+_test_start_ms=$(now_ms)
+status_phrase_ok=1
+status_phrase_bad=""
+for phrase_code in 202 203 204 205 206 300 301 303 304 307 308 \
+                   405 406 407 408 409 410 429 501 502 503 504 505 507; do
+  phrase_head=$(curl -s -D- -o /dev/null --max-time 5 \
+    "http://$HOST:$PORT/status-codes?code=$phrase_code" |
+    head -1)
+  if [[ "$phrase_head" != "HTTP/1.1 $phrase_code "* \
+        || "$phrase_head" == *"Unknown Status"* ]]; then
+    status_phrase_ok=0
+    status_phrase_bad="$status_phrase_bad $phrase_code:'${phrase_head//$'\r'/}'"
+  fi
+done
+if [[ "$status_phrase_ok" == 1 ]]; then
+  report_result "Status reason phrases       " "$status_phrase_line" 0
+else
+  report_result "Status reason phrases       " "$status_phrase_line" 1 \
+    "Expected every probed code to carry its reason phrase. Got:$status_phrase_bad"
+fi
+
 run_test "Response headers            " "headers"         200 "headers-set"
 
 # Header field names are case-insensitive (RFC 7230). The Wren map that holds
@@ -902,6 +929,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   cap_last="skipped"
   cap_usage="skipped"
   cap_legit="skipped"
+  cap_many="skipped"
   if command -v python3 >/dev/null 2>&1; then
     python3 -c "
 part = '--zz\r\nContent-Disposition: form-data; name=\"g\"; filename=\"z\"\r\n\r\n\r\n'
@@ -925,16 +953,31 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
     cap_big=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
       -F "form_file_name=@$cap_big_file" "http://$HOST:$MULTIPART_PORT/upload")
     rm -f "$cap_big_file"
+    # MAX_UPLOAD_FILES caps one request at 100 file parts. The 101st and later
+    # are skipped instead of inserting rows the per-request cap was meant to
+    # bound; text fields after the cap still read.
+    cap_many_body="$(mktemp)"
+    python3 -c "
+parts = []
+for i in range(150):
+    parts.append('--zz\r\nContent-Disposition: form-data; name=\"g%d\"; filename=\"z\"\r\n\r\n\r\n' % i)
+open('$cap_many_body', 'w').write(''.join(parts) + '--zz--\r\n')"
+    cap_many=$(curl -s --max-time 20 \
+      -H "Content-Type: multipart/form-data; boundary=zz" \
+      --data-binary "@$cap_many_body" \
+      "http://$HOST:$MULTIPART_PORT/multipart-files")
+    rm -f "$cap_many_body"
   fi
   stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log"
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
   if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:|evict:true" \
-        && "$cap_legit" == "200" && "$cap_big" == "200" ]]; then
+        && "$cap_legit" == "200" && "$cap_big" == "200" \
+        && "$cap_many" == "files:100" ]]; then
     report_result "Upload ceiling bounds rows     " "$cap_line" 0
   else
     report_result "Upload ceiling bounds rows     " "$cap_line" 1 \
-      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit big:$cap_big"
+      "Expected every fill and the later upload to answer 200 with the pool bounded at 4096 rows from the index, and a 150-file request to retain 100. Got first:$cap_first last:$cap_last usage:'$cap_usage' legit:$cap_legit big:$cap_big many:'$cap_many'"
   fi
 else
   skip_test "Upload ceiling bounds rows     " "requires local binary access"
@@ -1313,6 +1356,112 @@ else
   skip_test "Secret key file guards      " "requires local binary access"
 fi
 
+# The other half of the same class of guard: the database path. Each of these
+# must be refused at startup with a clear message instead of being opened
+# somewhere the static handler can serve it, or being truncated.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  db_guard_line=$LINENO
+  _test_start_ms=$(now_ms)
+  db_guard_ok=1
+  db_guard_case() { # label args...
+    local label="$1" needle="$2" out code
+    shift 2
+    out=$("$TARGET_EXEC" "$@" 2>&1)
+    code=$?
+    if [[ "$code" == "0" ]] || [[ "$out" != *"$needle"* ]]; then
+      db_guard_ok=0
+      printf '      %s: expected a refusal with "%s", got %s: %s\n' \
+        "$label" "$needle" "$code" "${out//$'\n'/ }"
+    fi
+  }
+  db_guard_case "empty" "Database path is empty" -d ""
+  # A relative -d is joined onto the root: a trailing slash must be trimmed
+  # before that join, and a non-'_' name inside the root must be refused.
+  db_guard_case "inside root" "Database inside the app root" -d "data.sqlite3/"
+  # An absolute path whose directory does not exist cannot be opened.
+  db_guard_case "unopenable" "Can't open database in" \
+    -d "/nonexistent-bialet-dir/x.sqlite3"
+  db_guard_long="/$(printf 'a%.0s' $(seq 1 1100))"
+  db_guard_case "too long" "Database path too long" -d "$db_guard_long"
+  unset db_guard_long
+  if [[ "$db_guard_ok" == 1 ]]; then
+    report_result "Database path guards        " "$db_guard_line" 0
+  else
+    report_result "Database path guards        " "$db_guard_line" 1 \
+      "One or more unsafe database paths was accepted (see the lines above)"
+  fi
+else
+  skip_test "Database path guards        " "requires local binary access"
+fi
+
+# The -T runner's own surface. A failing test file must be reported with its
+# line and assertion message, in the plain output and in the -q summary; a
+# missing test directory must fail loudly; an empty one must not.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  runner_line=$LINENO
+  _test_start_ms=$(now_ms)
+  runner_root=$(mktemp -d)
+  mkdir -p "$runner_root/_tests"
+  printf 'Test.assert(1 == 2, "two is one")\n' > "$runner_root/_tests/fail.wren"
+  printf 'Test.assert(true, "ok")\n' > "$runner_root/_tests/pass.wren"
+  # Run from the parent with a relative directory: read_file() resolves a
+  # relative test path before its no-follow open, while an absolute path under
+  # macOS' /var or /tmp symlink is refused by that same open.
+  runner_exe=$(realpath "$TARGET_EXEC")
+  runner_parent=$(dirname "$runner_root")
+  runner_name=$(basename "$runner_root")
+  runner_quiet=$(cd "$runner_parent" && "$runner_exe" -T "$runner_name" -q 2>&1)
+  runner_plain=$(cd "$runner_parent" && "$runner_exe" -T "$runner_name" 2>&1)
+  runner_notests_root=$(mktemp -d)
+  runner_nodir=$("$TARGET_EXEC" -T "$runner_notests_root" 2>&1)
+  runner_nodir_code=$?
+  runner_empty_root=$(mktemp -d)
+  mkdir -p "$runner_empty_root/_tests"
+  runner_empty=$(cd "$runner_parent" &&
+    "$runner_exe" -T "$(basename "$runner_empty_root")" 2>&1)
+  runner_empty_code=$?
+  rm -rf "$runner_root" "$runner_empty_root" "$runner_notests_root"
+  if [[ "$runner_quiet" == *"1 of 2 tests failed"* \
+        && "$runner_quiet" == *"### FAIL _tests/fail.wren:"* \
+        && "$runner_quiet" == *"two is one"* \
+        && "$runner_plain" == *"✗ fail.wren"* \
+        && "$runner_nodir_code" != 0 \
+        && "$runner_nodir" == *"Test directory not found"* \
+        && "$runner_empty_code" == 0 \
+        && "$runner_empty" == *"No tests found."* ]]; then
+    report_result "Test runner output paths    " "$runner_line" 0
+  else
+    report_result "Test runner output paths    " "$runner_line" 1 \
+      "quiet:'${runner_quiet:0:160}' plain:'${runner_plain:0:120}' nodir($runner_nodir_code):'${runner_nodir:0:80}' empty($runner_empty_code):'${runner_empty:0:60}'"
+  fi
+else
+  skip_test "Test runner output paths    " "requires local binary access"
+fi
+
+# -t (validate) must refuse a file it cannot resolve, and a file outside the
+# application root, instead of validating something else.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  validate_line=$LINENO
+  _test_start_ms=$(now_ms)
+  validate_missing=$("$TARGET_EXEC" -t "$(dirname "$0")/no-such-file.wren" 2>&1)
+  validate_missing_code=$?
+  validate_outside_file=$(mktemp /tmp/bialet-outside.XXXXXX)
+  printf 'var x = 1\n' > "$validate_outside_file"
+  validate_outside=$("$TARGET_EXEC" -t "$validate_outside_file" "$(dirname "$0")" 2>&1)
+  validate_outside_code=$?
+  rm -f "$validate_outside_file"
+  if [[ "$validate_missing_code" != 0 && "$validate_missing" == *"Cannot resolve file"* \
+        && "$validate_outside_code" != 0 \
+        && "$validate_outside" == *"outside the application root"* ]]; then
+    report_result "Validate rejects bad paths  " "$validate_line" 0
+  else
+    report_result "Validate rejects bad paths  " "$validate_line" 1 \
+      "missing($validate_missing_code):'${validate_missing:0:80}' outside($validate_outside_code):'${validate_outside:0:80}'"
+  fi
+else
+  skip_test "Validate rejects bad paths  " "requires local binary access"
+fi
+
 # Tests - String & List Extensions
 run_test "String extensions           " "string-ext"      200 "hello,WORLD"
 run_test "List extensions             " "list-ext"        200 "1,null"
@@ -1339,6 +1488,61 @@ test_method "Untrusted file sets disposition" "GET" "file-serve-untrusted" 200 \
 test_method "Responses carry nosniff     " "GET" "get?foo=bar" 200 \
   "X-Content-Type-Options: nosniff" "bar"
 run_test "Invalid status is a 500     " "status-guard"    500 "custom-500-page"
+
+# Static files: get_content_type() picks the Content-Type from the extension.
+# The fixtures are tiny; only the header matters here.
+test_method "Static html content type    " "GET" "static/page.html" 200 \
+  "Content-Type: text/html" "page-html"
+test_method "Static htm content type     " "GET" "static/page.htm" 200 \
+  "Content-Type: text/html" "page-htm"
+test_method "Static css content type     " "GET" "static/style.css" 200 \
+  "Content-Type: text/css" "color:red"
+test_method "Static js content type      " "GET" "static/app.js" 200 \
+  "Content-Type: application/javascript" "var js"
+test_method "Static jpg content type     " "GET" "static/photo.jpg" 200 \
+  "Content-Type: image/jpeg" ""
+test_method "Static jpeg content type    " "GET" "static/photo.jpeg" 200 \
+  "Content-Type: image/jpeg" ""
+test_method "Static png content type     " "GET" "static/icon.png" 200 \
+  "Content-Type: image/png" ""
+test_method "Static gif content type     " "GET" "static/anim.gif" 200 \
+  "Content-Type: image/gif" ""
+test_method "Static svg content type     " "GET" "static/logo.svg" 200 \
+  "Content-Type: image/svg+xml" ""
+test_method "Static txt content type     " "GET" "static/notes.txt" 200 \
+  "Content-Type: text/plain" "plain-text"
+test_method "Static xml content type     " "GET" "static/data.xml" 200 \
+  "Content-Type: application/xml" ""
+test_method "Static pdf content type     " "GET" "static/doc.pdf" 200 \
+  "Content-Type: application/pdf" ""
+test_method "Static no extension type    " "GET" "static/blob" 200 \
+  "Content-Type: application/octet-stream" "no-extension"
+test_method "Static unknown type         " "GET" "static/blob.unknownext" 200 \
+  "Content-Type: application/octet-stream" "mystery"
+
+# The favicon is answered from the embedded blob, before routing and the ignore
+# list ever run.
+test_method "Favicon served embedded     " "GET" "favicon.ico" 200 \
+  "Content-Type: image/x-icon" ""
+
+# "OPTIONS *" (asterisk-form) is legal HTTP but names no path below the app
+# root, so the router must refuse it with 400 instead of building a path from
+# the root and the bare "*". Old builds served whatever that string happened to
+# name.
+asterisk_line=$LINENO
+_test_start_ms=$(now_ms)
+asterisk_status=$(
+  exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+  printf 'OPTIONS * HTTP/1.1\r\nHost: x\r\n\r\n' >&3
+  IFS= read -r -t 3 first <&3
+  printf '%s' "$first"
+)
+if [[ "$asterisk_status" == *" 400 "* ]]; then
+  report_result "Non-origin target refused   " "$asterisk_line" 0
+else
+  report_result "Non-origin target refused   " "$asterisk_line" 1 \
+    "Expected 400 for 'OPTIONS *'. Got '$asterisk_status'"
+fi
 # The documented ignore list (README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml) is
 # applied at the final served path, while .well-known stays exempt (tested
 # above). The fixtures live in ignored/ so a stray AGENTS.md does not land in
@@ -1366,6 +1570,27 @@ run_test "Markdown table              " "md-syntax"       200 "<table>"
 run_test "Markdown code is escaped    " "md-syntax"       200 "<code>a &lt; b</code>"
 run_test "Markdown fenced code        " "md-syntax"       200 "<pre><code>"
 run_test "Markdown skips front matter " "md-syntax"       200 "<h1>Body</h1>"
+run_test "Markdown list type switch   " "md-syntax"       200 "</ul>
+<ol>
+<li>b</li>"
+run_test "Markdown escapes quotes amp " "md-syntax"       200 "a &amp; b &quot;c&quot; &#39;d&#39;"
+run_test "Markdown h3 to h6           " "md-syntax"       200 "<h6>h6</h6>"
+run_test "Markdown fenced language    " "md-syntax"       200 "<pre><code>x &lt; y"
+run_test "Markdown table then para    " "md-syntax"       200 "</table>
+<p>after table</p>"
+run_test "Markdown paragraph joins    " "md-syntax"       200 "<p>line one line two</p>"
+run_test "Markdown heading ends para  " "md-syntax"       200 "<h1>heading right after</h1>"
+run_test "Markdown relative link      " "md-syntax"       200 '<a href="/a/b">rel</a>'
+run_test "Markdown uppercase scheme   " "md-syntax"       200 '<a href="HTTP://Example.COM/x">up</a>'
+run_test "Markdown rejects bad scheme " "md-syntax"       200 "<p>bad [open](z</p>"
+run_test "Markdown drops image scheme " "md-syntax"       200 "dropped ![none]</p>"
+run_test "Markdown escapes alt text   " "md-syntax"       200 '<img alt="&quot;alt&quot;" src="y">'
+run_test "Markdown image rendered     " "md-syntax"       200 '<img alt="alt" src="pic.png">'
+run_test "Markdown quote without space" "md-syntax"       200 "<blockquote>
+tight<br>
+</blockquote>"
+run_test "Markdown trims indent       " "md-syntax"       200 "<p>spaced paragraph</p>"
+run_test "Markdown long document      " "md-syntax"       200 "<p>line 1 with some more words to fill it line 2"
 run_test "Markdown drops script link  " "md-security"     200 "links:<p>click</p>"
 run_test "Markdown escapes code span  " "md-security"     200 "code:<p><code>&lt;b&gt;</code></p>"
 run_test "Markdown keeps raw html     " "md-security"     200 "raw:<p><b>raw</b></p>"

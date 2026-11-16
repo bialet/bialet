@@ -40,3 +40,23 @@ Test.assert(Json.parse("\"\\uD83D\\uDE00\"") == "😀", "surrogate pair is combi
 Test.assert(Json.parse("[1,2,3]").count == 3, "array still parses")
 Test.assert(Json.parse("{\"a\":{\"b\":null}}")["a"]["b"] == null, "nested null still parses")
 Test.assert(Json.parse("0.5") == 0.5, "decimal still parses")
+
+// The argument must be a string: the primitive is reached through
+// Json.parse(_) and rejects anything else before scanning.
+Test.assert(fails.call(42), "a number is rejected")
+Test.assert(fails.call(null), "null is rejected")
+Test.assert(fails.call([]), "a list is rejected")
+
+// A number whose magnitude overflows a double is rejected instead of being
+// silently turned into infinity.
+Test.assert(fails.call("1e999"), "overflowing number is rejected")
+
+// Literals with the right first byte but the wrong tail, and a bad escape in
+// an object key, must be reported as parse errors.
+Test.assert(fails.call("falze"), "bad false literal is rejected")
+Test.assert(fails.call("nul"), "bad null literal is rejected")
+Test.assert(fails.call("{\"\\uZZZZ\":1}"), "bad escape in a key is rejected")
+
+// Escapes above the 2-byte UTF-8 range encode as 3 bytes.
+Test.assert(Json.parse("\"\\u4e2d\"") == "中", "CJK escape encodes as 3 bytes")
+Test.assert(Json.parse("\"\\u20AC\"") == "€", "euro sign encodes as 3 bytes")
