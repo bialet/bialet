@@ -1,7 +1,6 @@
 #include "utils.h"
 
 #include "bialet.h"
-#include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -147,48 +146,6 @@ char* string_safe_copy(const char* zSrc) {
   zDest = (char*)safe_malloc(size);
   strcpy(zDest, zSrc);
   return zDest;
-}
-
-char* string_append(char* zPrior, const char* zSep, const char* zSrc) {
-  char*  zDest;
-  size_t size;
-  size_t n0, n1, n2;
-
-  if(zSrc == 0)
-    return 0;
-  if(zPrior == 0)
-    return string_safe_copy(zSrc);
-  n0 = strlen(zPrior);
-  n1 = strlen(zSep);
-  n2 = strlen(zSrc);
-  size = n0 + n1 + n2 + 1;
-  zDest = (char*)safe_malloc(size);
-  memcpy(zDest, zPrior, n0);
-  free(zPrior);
-  memcpy(&zDest[n0], zSep, n1);
-  memcpy(&zDest[n0 + n1], zSrc, n2 + 1);
-  return zDest;
-}
-
-void trim(char* str) {
-  char* start = str;
-  char* end;
-
-  while(isspace((unsigned char)*start))
-    start++;
-
-  if(*start == 0) {
-    *str = '\0';
-    return;
-  }
-
-  end = start + strlen(start) - 1;
-  while(end > start && isspace((unsigned char)*end))
-    end--;
-  end[1] = '\0';
-
-  if(start != str)
-    memmove(str, start, strlen(start) + 1);
 }
 
 #ifndef _WIN32

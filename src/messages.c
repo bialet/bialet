@@ -16,7 +16,6 @@
 #define YELLOW_COLOR 33
 #define BLUE_COLOR 34
 #define MAGENTA_COLOR 35
-#define CYAN_COLOR 36
 
 FILE* log_file;
 int   apply_color = 0;
@@ -105,9 +104,6 @@ char* yellow(char* str) {
 }
 char* magenta(char* str) {
   return colorize(str, MAGENTA_COLOR);
-}
-char* cyan(char* str) {
-  return colorize(str, CYAN_COLOR);
 }
 
 /* The leading "YYYY-MM-DD HH:MM:SS " stamp, cached per thread for the second it

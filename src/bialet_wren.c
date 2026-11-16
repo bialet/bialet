@@ -779,21 +779,6 @@ static void query_execute(WrenVM* vm, BialetQuery* query) {
   query->lastInsertId = sqlite_int_to_string(sqlite3_last_insert_rowid(db));
   sqlite3_finalize(stmt);
 }
-char* escape_special_chars(const char* input) {
-  size_t i, j = 0, len = strlen(input);
-  char*  output = malloc(len * 2 + 1);
-  if(output == NULL)
-    return NULL;
-
-  for(i = 0; i < len; i++) {
-    if(input[i] == '"' || input[i] == '\\' || input[i] == '%') {
-      output[j++] = '\\';
-    }
-    output[j++] = input[i];
-  }
-  output[j] = '\0';
-  return output;
-}
 
 // Bounded byte search: the request body is arbitrary binary data, so nothing
 // here may use str*() functions. The old parser ran strstr/strchr/strcasestr

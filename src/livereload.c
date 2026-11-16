@@ -73,10 +73,6 @@ void livereload_init(void) {
   sqlite3_finalize(stmt);
 }
 
-int livereload_enabled(void) {
-  return enabled;
-}
-
 int livereload_is_poll(const char* uri) {
   return uri != NULL && strcmp(uri, "/_livereload") == 0;
 }

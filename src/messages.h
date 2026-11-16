@@ -13,7 +13,6 @@ char* red(char* str);
 char* blue(char* str);
 char* yellow(char* str);
 char* magenta(char* str);
-char* cyan(char* str);
 
 void message_internal(int num, ...);
 
