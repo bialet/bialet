@@ -4,7 +4,7 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
-## Unreleased
+## 1.2.20 — 2026-11-16
 
 ### Added
 
@@ -74,6 +74,14 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 - A `..` in the query string is no longer treated as a path-traversal attempt.
 - Unterminated Markdown emphasis no longer copies the following byte raw, and
   an empty table cell no longer forms a pointer before its buffer.
+
+### Documentation
+
+- The prompt guide no longer claims a multi-line method body returns its last
+  expression: Wren returns only through `return` (or a single expression on the
+  line as the opening `{`). It now spells out the markup nesting rules, the
+  `trim`/`fromBytes` string traps, and that `Test` comes from the `-T` runner's
+  prelude — never import it or check a `_tests` file with `-t`.
 
 ## 1.2.19 — 2026-11-15
 
