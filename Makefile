@@ -184,6 +184,14 @@ check: $(BUILD_DIR)/$(TARGET_EXEC)
 	./$(BUILD_DIR)/$(TARGET_EXEC) -T $(TEST_DIR)
 	$(MAKE) check-examples
 
+# Per-file line coverage of the C sources, built instrumented in build-cov/
+# (see tools/coverage.sh). clang by default; override with
+# `make coverage COVERAGE_CC=gcc`.
+COVERAGE_CC ?= clang
+
+coverage:
+	./tools/coverage.sh $(COVERAGE_CC)
+
 install: $(BUILD_DIR)/$(TARGET_EXEC)
 	mkdir -p $(INSTALL_DIR)
 	@# Overwriting a running binary in place corrupts its on-disk image and
@@ -243,4 +251,4 @@ static:
 	@exit 1
 endif
 
-.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples check-mingw check-release-links html static install-hooks
+.PHONY: all clean wren_files check-wren-inc install uninstall check check-examples check-mingw check-release-links html static install-hooks coverage

@@ -101,6 +101,31 @@ wait_http() {
     return 1
 }
 
+# Stop every server whose command line matches the given pattern.
+#
+# Default is SIGKILL: instant, and it cannot be blocked by a wedged server, so
+# a broken build can never hang the suite. With BIALET_COVERAGE=1 (see
+# tools/coverage.sh) the auxiliary servers started inside individual tests are
+# stopped with SIGTERM and given a short grace period instead: SIGKILL skips
+# atexit, so the gcov counters they accumulated are never flushed to disk and
+# the files only the HTTP path reaches report 0% coverage. Whatever is still
+# alive after the grace period is SIGKILLed, so coverage runs cannot leak
+# processes either.
+stop_matching_servers() {
+    local pattern=$1
+    if [[ "${BIALET_COVERAGE:-0}" == "1" ]]; then
+        pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -TERM {} 2>/dev/null
+        local deadline=$(( $(now_ms) + 3000 ))
+        while pgrep -f "$pattern" >/dev/null 2>&1; do
+            [[ $(now_ms) -lt $deadline ]] || break
+            sleep 0.1
+        done
+        pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    else
+        pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    fi
+}
+
 # Per-test start timestamp, set at the entry of every test helper and before
 # each inline test block in run.sh; report_result() reads it for the (Nms).
 _test_start_ms=$(now_ms)
@@ -498,16 +523,7 @@ finish() {
     # the gcov counters the request-handling child accumulated are lost and
     # every file the HTTP surface touches reports 0%. SIGTERM lets it exit
     # cleanly (see tools/coverage.sh).
-    if [[ "${BIALET_COVERAGE:-0}" == "1" ]]; then
-      pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -TERM {} 2>/dev/null
-      for _ in $(seq 1 30); do
-        pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" >/dev/null 2>&1 || break
-        sleep 0.1
-      done
-    else
-      # kill all
-      pgrep -f "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
-    fi
+    stop_matching_servers "$TARGET_EXEC -h $HOST -p $PORT -l /tmp/tests.log"
     [[ -n "${SECRET_KEY_FILE:-}" ]] && rm -f "$SECRET_KEY_FILE"
     [[ "${QUIET:-0}" != 1 ]] && echo -e " ${GREEN}OK${NC}"
   fi
