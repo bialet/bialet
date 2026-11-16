@@ -278,8 +278,10 @@ This is the simplest way to enable CORS.
 
 ### file(id)
 
-Fetches the file type based on its ID and output the file, setting the
-appropriate headers.
+Sends a stored file as the response body, setting `Content-Type` from the row.
+The type is treated as untrusted: script-free media types (PNG/JPEG/GIF/WebP/
+AVIF, PDF, plain text) are served inline, everything else is sent as
+`application/octet-stream` with `Content-Disposition: attachment`.
 
 - `id`: The ID of the file to fetch.
 
@@ -885,7 +887,8 @@ assigning `postData` defaults it to `POST`.
 ### postData
 
 Set before `call` for the request body. Maps and lists are JSON-stringified;
-strings are sent as-is.
+strings are sent as-is. Any other value falls back to `toString` rather than
+sending an empty body.
 
 ### status
 

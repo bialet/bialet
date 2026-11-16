@@ -3145,6 +3145,19 @@ Once a file is saved in the database, the only way to show it in the browser is
 by using `Response.file(id)`. This will take the file ID and return the file to
 the browser.
 
+The stored `Content-Type` comes from whoever uploaded the file, so it is not
+trusted. Only media types that cannot execute script in your origin are served
+inline: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/avif`,
+`application/pdf` and `text/plain`. Everything else — `text/html`,
+`image/svg+xml`, an unknown type — is sent as `application/octet-stream` with
+`Content-Disposition: attachment`, and responses carry
+`X-Content-Type-Options: nosniff`. This prevents a file uploaded as
+`payload.html` from running as a page on your site.
+
+File ids are sequential integers, so a route that serves
+`Response.file(Request.get("id"))` lets anyone enumerate every stored file.
+Check ownership in your own table before calling it, as the example below does.
+
 You can also use a path-based route file (`<folder>.wren`) to dynamically
 fetch files from your database and display them based on user input, such
 as a filename.
@@ -5061,12 +5074,15 @@ renderer before relying on it.
 
 The parser escapes HTML **only inside code blocks and inline code**. Raw HTML
 in paragraphs, headings, and lists passes through to the output unescaped.
-Link and image URLs are not validated either.
+Link and image URLs are checked: only `http`, `https`, `mailto`, `tel`, `ftp`,
+relative references and fragments are rendered. A link or image with any other
+scheme (including `javascript:`) is dropped, keeping its label or alt text as
+plain escaped text.
 
-> ⚠️ Pitfall: rendering untrusted input with `Markdown.html()` can produce
-> XSS. `Markdown.html("<script>alert(1)</script>")` emits a live `<script>`
-> tag, and `[x](javascript:alert(1))` emits a `javascript:` link. Render only
-> Markdown you trust, or sanitize the output before serving it.
+> ⚠️ Pitfall: rendering untrusted input with `Markdown.html()` can still
+> produce XSS, because raw HTML passes through.
+> `Markdown.html("<script>alert(1)</script>")` emits a live `<script>` tag.
+> Render only Markdown you trust, or sanitize the output before serving it.
 
 ## Pitfalls
 
@@ -5109,7 +5125,7 @@ The welcome page shown at `/` when the root has no `index.wren` or
 
 ## Custom Error Pages
 
-Drop an HTML file named after the status code in your app root directory.
+Drop a file named after the status code in your app root directory.
 The server looks for it every time that error is produced:
 
 ```text
@@ -5141,18 +5157,36 @@ serves it with the correct HTTP status code and `Content-Type: text/html`.
 > generates itself. If a `.wren` file calls `Response.status(404)` and
 > returns its own body, that body wins and `404.html` is not used.
 
+## Dynamic Error Pages
+
+A `<status>.wren` file is executed instead when it exists, before looking for
+`<status>.html`:
+
+```wren
+// 404.wren — rendered with an empty Request, no route and no session
+return <main>
+  <h1>Lost?</h1>
+  <p>Try the <a href="/">home page</a>.</p>
+</main>
+```
+
+The page keeps the error status (`404` above) unless it calls
+`Response.status(...)` itself, so the client still receives the right code.
+
 ## Scope
 
-Custom error pages are **static HTML only**. The file is served verbatim:
+`<status>.html` pages are **static**: the file is served verbatim.
 
 - No `{{ ... }}` interpolation
 - No `_app.wren` template wrapping
-- No Wren execution
 
-> ⚠️ Pitfall: don't name the file `500.wren` expecting it to run. Bialet
-> does not execute `.wren` error pages; it only reads `.html` files. If your
-> error page must be dynamic, serve the error through your own `.wren` route
-> with `Response.status(...)` instead.
+A `<status>.wren` page does run in the interpreter, but without a request
+object: `Request` is not initialized, and `Db`, `Config`, `Date` and the
+template machinery are available. It runs in a fresh VM each time, like any
+other handler. Keep it free of per-request logic.
+
+> ⚠️ Pitfall: an error page that throws is replaced by the built-in page for
+> that status rather than recursing into itself.
 
 ## Showing Compile Errors in the Browser
 
@@ -7776,16 +7810,16 @@ var items = ["<b>a</b>", "b"]
 
 The built-in Markdown parser escapes HTML **only inside code blocks and inline
 code**. Raw HTML in paragraphs, headings, and lists passes through unescaped,
-and link/image URLs are not validated. Rendering untrusted input with
-`Markdown.html()` can therefore produce XSS:
+so rendering untrusted input with `Markdown.html()` can still produce XSS:
 
 ```wren
 // WRONG — raw HTML passes through to the output
 var content = Markdown.html("<script>alert('xss')</script>")
-
-// WRONG — javascript: links are not filtered
-var link = Markdown.html("[x](javascript:alert('xss'))")
 ```
+
+Link and image URLs are restricted to `http`, `https`, `mailto`, `tel`, `ftp`
+and relative references; a script-capable scheme such as
+`[x](javascript:alert(1))` is dropped and only the label is rendered.
 
 Render only Markdown you trust, or sanitize the output before serving it. See
 the [Markdown](markdown.md) guide for the full syntax and security notes.
@@ -8171,6 +8205,18 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 - File uploads are stored inside the SQLite database, not on disk — they
   are never served from a writable directory. See the `File` class in the
   [Reference](reference.md).
+- Every response carries `X-Content-Type-Options: nosniff`. Responses rendered
+  by Wren also carry `Cache-Control: no-store`, so a shared cache cannot replay
+  one user's authenticated page to another. Call
+  `Response.header("Cache-Control", "public, max-age=60")` on a page that is
+  genuinely public and cacheable.
+- `Response.file` only serves script-free media types inline; an uploaded
+  `text/html` or `image/svg+xml` is downloaded as an attachment instead.
+- A request with two `Content-Length` headers, or with any
+  `Transfer-Encoding`, is refused with `400`: chunked bodies are not
+  implemented, and two lengths can be framed differently by a proxy.
+- A request target too long to resolve inside `PATH_SIZE` is refused with
+  `414` instead of being truncated to a different route.
 - Validate user input before trusting it: check types and ranges, convert
   with `Num.fromString()`, and reject values you did not expect. Do this in
   your domain classes before saving, and again in the form handler.
@@ -9886,8 +9932,10 @@ This is the simplest way to enable CORS.
 
 ### file(id)
 
-Fetches the file type based on its ID and output the file, setting the
-appropriate headers.
+Sends a stored file as the response body, setting `Content-Type` from the row.
+The type is treated as untrusted: script-free media types (PNG/JPEG/GIF/WebP/
+AVIF, PDF, plain text) are served inline, everything else is sent as
+`application/octet-stream` with `Content-Disposition: attachment`.
 
 - `id`: The ID of the file to fetch.
 
@@ -10493,7 +10541,8 @@ assigning `postData` defaults it to `POST`.
 ### postData
 
 Set before `call` for the request body. Maps and lists are JSON-stringified;
-strings are sent as-is.
+strings are sent as-is. Any other value falls back to `toString` rather than
+sending an empty body.
 
 ### status
 

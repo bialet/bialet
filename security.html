@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'security';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -593,15 +593,14 @@ so it cannot happen.</p>
 <h3>Markdown rendering<a class="headerlink" href="#markdown-rendering" title="Link to this heading">#</a></h3>
 <p>The built-in Markdown parser escapes HTML <strong>only inside code blocks and inline
 code</strong>. Raw HTML in paragraphs, headings, and lists passes through unescaped,
-and link/image URLs are not validated. Rendering untrusted input with
-<code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can therefore produce XSS:</p>
+so rendering untrusted input with <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can still produce XSS:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — raw HTML passes through to the output</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"&lt;script&gt;alert('xss')&lt;/script&gt;"</span><span class="p">)</span>
-
-<span class="c1">// WRONG — javascript: links are not filtered</span>
-<span class="k">var</span><span class="w"> </span><span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"[x](javascript:alert('xss'))"</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Link and image URLs are restricted to <code class="docutils literal notranslate"><span class="pre">http</span></code>, <code class="docutils literal notranslate"><span class="pre">https</span></code>, <code class="docutils literal notranslate"><span class="pre">mailto</span></code>, <code class="docutils literal notranslate"><span class="pre">tel</span></code>, <code class="docutils literal notranslate"><span class="pre">ftp</span></code>
+and relative references; a script-capable scheme such as
+<code class="docutils literal notranslate"><span class="pre">[x](javascript:alert(1))</span></code> is dropped and only the label is rendered.</p>
 <p>Render only Markdown you trust, or sanitize the output before serving it. See
 the <a class="reference internal" href="markdown.html"><span class="std std-doc">Markdown</span></a> guide for the full syntax and security notes.</p>
 </section>
@@ -995,6 +994,18 @@ cannot accumulate through a careless delete.</p></li>
 <li><p>File uploads are stored inside the SQLite database, not on disk — they
 are never served from a writable directory. See the <code class="docutils literal notranslate"><span class="pre">File</span></code> class in the
 <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a>.</p></li>
+<li><p>Every response carries <code class="docutils literal notranslate"><span class="pre">X-Content-Type-Options:</span> <span class="pre">nosniff</span></code>. Responses rendered
+by Wren also carry <code class="docutils literal notranslate"><span class="pre">Cache-Control:</span> <span class="pre">no-store</span></code>, so a shared cache cannot replay
+one user’s authenticated page to another. Call
+<code class="docutils literal notranslate"><span class="pre">Response.header(&quot;Cache-Control&quot;,</span> <span class="pre">&quot;public,</span> <span class="pre">max-age=60&quot;)</span></code> on a page that is
+genuinely public and cacheable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Response.file</span></code> only serves script-free media types inline; an uploaded
+<code class="docutils literal notranslate"><span class="pre">text/html</span></code> or <code class="docutils literal notranslate"><span class="pre">image/svg+xml</span></code> is downloaded as an attachment instead.</p></li>
+<li><p>A request with two <code class="docutils literal notranslate"><span class="pre">Content-Length</span></code> headers, or with any
+<code class="docutils literal notranslate"><span class="pre">Transfer-Encoding</span></code>, is refused with <code class="docutils literal notranslate"><span class="pre">400</span></code>: chunked bodies are not
+implemented, and two lengths can be framed differently by a proxy.</p></li>
+<li><p>A request target too long to resolve inside <code class="docutils literal notranslate"><span class="pre">PATH_SIZE</span></code> is refused with
+<code class="docutils literal notranslate"><span class="pre">414</span></code> instead of being truncated to a different route.</p></li>
 <li><p>Validate user input before trusting it: check types and ranges, convert
 with <code class="docutils literal notranslate"><span class="pre">Num.fromString()</span></code>, and reject values you did not expect. Do this in
 your domain classes before saving, and again in the form handler.</p></li>

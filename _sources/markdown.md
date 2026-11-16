@@ -53,12 +53,15 @@ renderer before relying on it.
 
 The parser escapes HTML **only inside code blocks and inline code**. Raw HTML
 in paragraphs, headings, and lists passes through to the output unescaped.
-Link and image URLs are not validated either.
+Link and image URLs are checked: only `http`, `https`, `mailto`, `tel`, `ftp`,
+relative references and fragments are rendered. A link or image with any other
+scheme (including `javascript:`) is dropped, keeping its label or alt text as
+plain escaped text.
 
-> ⚠️ Pitfall: rendering untrusted input with `Markdown.html()` can produce
-> XSS. `Markdown.html("<script>alert(1)</script>")` emits a live `<script>`
-> tag, and `[x](javascript:alert(1))` emits a `javascript:` link. Render only
-> Markdown you trust, or sanitize the output before serving it.
+> ⚠️ Pitfall: rendering untrusted input with `Markdown.html()` can still
+> produce XSS, because raw HTML passes through.
+> `Markdown.html("<script>alert(1)</script>")` emits a live `<script>` tag.
+> Render only Markdown you trust, or sanitize the output before serving it.
 
 ## Pitfalls
 

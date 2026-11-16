@@ -18,7 +18,7 @@ The welcome page shown at `/` when the root has no `index.wren` or
 
 ## Custom Error Pages
 
-Drop an HTML file named after the status code in your app root directory.
+Drop a file named after the status code in your app root directory.
 The server looks for it every time that error is produced:
 
 ```text
@@ -50,18 +50,36 @@ serves it with the correct HTTP status code and `Content-Type: text/html`.
 > generates itself. If a `.wren` file calls `Response.status(404)` and
 > returns its own body, that body wins and `404.html` is not used.
 
+## Dynamic Error Pages
+
+A `<status>.wren` file is executed instead when it exists, before looking for
+`<status>.html`:
+
+```wren
+// 404.wren — rendered with an empty Request, no route and no session
+return <main>
+  <h1>Lost?</h1>
+  <p>Try the <a href="/">home page</a>.</p>
+</main>
+```
+
+The page keeps the error status (`404` above) unless it calls
+`Response.status(...)` itself, so the client still receives the right code.
+
 ## Scope
 
-Custom error pages are **static HTML only**. The file is served verbatim:
+`<status>.html` pages are **static**: the file is served verbatim.
 
 - No `{{ ... }}` interpolation
 - No `_app.wren` template wrapping
-- No Wren execution
 
-> ⚠️ Pitfall: don't name the file `500.wren` expecting it to run. Bialet
-> does not execute `.wren` error pages; it only reads `.html` files. If your
-> error page must be dynamic, serve the error through your own `.wren` route
-> with `Response.status(...)` instead.
+A `<status>.wren` page does run in the interpreter, but without a request
+object: `Request` is not initialized, and `Db`, `Config`, `Date` and the
+template machinery are available. It runs in a fresh VM each time, like any
+other handler. Keep it free of per-request logic.
+
+> ⚠️ Pitfall: an error page that throws is replaced by the built-in page for
+> that status rather than recursing into itself.
 
 ## Showing Compile Errors in the Browser
 

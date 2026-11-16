@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'file';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Database" href="database.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -615,6 +615,17 @@ works for uploaded and dynamically created files.</p>
 <p>Once a file is saved in the database, the only way to show it in the browser is
 by using <code class="docutils literal notranslate"><span class="pre">Response.file(id)</span></code>. This will take the file ID and return the file to
 the browser.</p>
+<p>The stored <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> comes from whoever uploaded the file, so it is not
+trusted. Only media types that cannot execute script in your origin are served
+inline: <code class="docutils literal notranslate"><span class="pre">image/png</span></code>, <code class="docutils literal notranslate"><span class="pre">image/jpeg</span></code>, <code class="docutils literal notranslate"><span class="pre">image/gif</span></code>, <code class="docutils literal notranslate"><span class="pre">image/webp</span></code>, <code class="docutils literal notranslate"><span class="pre">image/avif</span></code>,
+<code class="docutils literal notranslate"><span class="pre">application/pdf</span></code> and <code class="docutils literal notranslate"><span class="pre">text/plain</span></code>. Everything else — <code class="docutils literal notranslate"><span class="pre">text/html</span></code>,
+<code class="docutils literal notranslate"><span class="pre">image/svg+xml</span></code>, an unknown type — is sent as <code class="docutils literal notranslate"><span class="pre">application/octet-stream</span></code> with
+<code class="docutils literal notranslate"><span class="pre">Content-Disposition:</span> <span class="pre">attachment</span></code>, and responses carry
+<code class="docutils literal notranslate"><span class="pre">X-Content-Type-Options:</span> <span class="pre">nosniff</span></code>. This prevents a file uploaded as
+<code class="docutils literal notranslate"><span class="pre">payload.html</span></code> from running as a page on your site.</p>
+<p>File ids are sequential integers, so a route that serves
+<code class="docutils literal notranslate"><span class="pre">Response.file(Request.get(&quot;id&quot;))</span></code> lets anyone enumerate every stored file.
+Check ownership in your own table before calling it, as the example below does.</p>
 <p>You can also use a path-based route file (<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;.wren</span></code>) to dynamically
 fetch files from your database and display them based on user input, such
 as a filename.</p>

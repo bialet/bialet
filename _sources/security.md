@@ -93,16 +93,16 @@ var items = ["<b>a</b>", "b"]
 
 The built-in Markdown parser escapes HTML **only inside code blocks and inline
 code**. Raw HTML in paragraphs, headings, and lists passes through unescaped,
-and link/image URLs are not validated. Rendering untrusted input with
-`Markdown.html()` can therefore produce XSS:
+so rendering untrusted input with `Markdown.html()` can still produce XSS:
 
 ```wren
 // WRONG — raw HTML passes through to the output
 var content = Markdown.html("<script>alert('xss')</script>")
-
-// WRONG — javascript: links are not filtered
-var link = Markdown.html("[x](javascript:alert('xss'))")
 ```
+
+Link and image URLs are restricted to `http`, `https`, `mailto`, `tel`, `ftp`
+and relative references; a script-capable scheme such as
+`[x](javascript:alert(1))` is dropped and only the label is rendered.
 
 Render only Markdown you trust, or sanitize the output before serving it. See
 the [Markdown](markdown.md) guide for the full syntax and security notes.
@@ -488,6 +488,18 @@ See the resource limits table in [Deployment](deployment.md) for defaults.
 - File uploads are stored inside the SQLite database, not on disk — they
   are never served from a writable directory. See the `File` class in the
   [Reference](reference.md).
+- Every response carries `X-Content-Type-Options: nosniff`. Responses rendered
+  by Wren also carry `Cache-Control: no-store`, so a shared cache cannot replay
+  one user's authenticated page to another. Call
+  `Response.header("Cache-Control", "public, max-age=60")` on a page that is
+  genuinely public and cacheable.
+- `Response.file` only serves script-free media types inline; an uploaded
+  `text/html` or `image/svg+xml` is downloaded as an attachment instead.
+- A request with two `Content-Length` headers, or with any
+  `Transfer-Encoding`, is refused with `400`: chunked bodies are not
+  implemented, and two lengths can be framed differently by a proxy.
+- A request target too long to resolve inside `PATH_SIZE` is refused with
+  `414` instead of being truncated to a different route.
 - Validate user input before trusting it: check types and ranges, convert
   with `Num.fromString()`, and reject values you did not expect. Do this in
   your domain classes before saving, and again in the form handler.

@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'errors';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Markdown" href="markdown.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -440,6 +440,7 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-pages">Default Pages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-error-pages">Custom Error Pages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-error-pages">Dynamic Error Pages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#showing-compile-errors-in-the-browser">Showing Compile Errors in the Browser</a></li>
 </ul>
@@ -485,7 +486,7 @@ no Wren required.</p>
 </section>
 <section id="custom-error-pages">
 <h2>Custom Error Pages<a class="headerlink" href="#custom-error-pages" title="Link to this heading">#</a></h2>
-<p>Drop an HTML file named after the status code in your app root directory.
+<p>Drop a file named after the status code in your app root directory.
 The server looks for it every time that error is produced:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-site/
 ├── index.wren
@@ -514,19 +515,34 @@ generates itself. If a <code class="docutils literal notranslate"><span class="p
 returns its own body, that body wins and <code class="docutils literal notranslate"><span class="pre">404.html</span></code> is not used.</p>
 </div></blockquote>
 </section>
+<section id="dynamic-error-pages">
+<h2>Dynamic Error Pages<a class="headerlink" href="#dynamic-error-pages" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">&lt;status&gt;.wren</span></code> file is executed instead when it exists, before looking for
+<code class="docutils literal notranslate"><span class="pre">&lt;status&gt;.html</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// 404.wren — rendered with an empty Request, no route and no session</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">  &lt;h1&gt;</span><span class="nc">Lost</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="w">  </span><span class="x">&lt;p&gt;Try the &lt;a href="/"&gt;</span><span class="n">home</span><span class="w"> </span><span class="n">page</span><span class="x">&lt;/a&gt;.&lt;/p&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<p>The page keeps the error status (<code class="docutils literal notranslate"><span class="pre">404</span></code> above) unless it calls
+<code class="docutils literal notranslate"><span class="pre">Response.status(...)</span></code> itself, so the client still receives the right code.</p>
+</section>
 <section id="scope">
 <h2>Scope<a class="headerlink" href="#scope" title="Link to this heading">#</a></h2>
-<p>Custom error pages are <strong>static HTML only</strong>. The file is served verbatim:</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;status&gt;.html</span></code> pages are <strong>static</strong>: the file is served verbatim.</p>
 <ul class="simple">
 <li><p>No <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code> interpolation</p></li>
 <li><p>No <code class="docutils literal notranslate"><span class="pre">_app.wren</span></code> template wrapping</p></li>
-<li><p>No Wren execution</p></li>
 </ul>
+<p>A <code class="docutils literal notranslate"><span class="pre">&lt;status&gt;.wren</span></code> page does run in the interpreter, but without a request
+object: <code class="docutils literal notranslate"><span class="pre">Request</span></code> is not initialized, and <code class="docutils literal notranslate"><span class="pre">Db</span></code>, <code class="docutils literal notranslate"><span class="pre">Config</span></code>, <code class="docutils literal notranslate"><span class="pre">Date</span></code> and the
+template machinery are available. It runs in a fresh VM each time, like any
+other handler. Keep it free of per-request logic.</p>
 <blockquote>
-<div><p>⚠️ Pitfall: don’t name the file <code class="docutils literal notranslate"><span class="pre">500.wren</span></code> expecting it to run. Bialet
-does not execute <code class="docutils literal notranslate"><span class="pre">.wren</span></code> error pages; it only reads <code class="docutils literal notranslate"><span class="pre">.html</span></code> files. If your
-error page must be dynamic, serve the error through your own <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route
-with <code class="docutils literal notranslate"><span class="pre">Response.status(...)</span></code> instead.</p>
+<div><p>⚠️ Pitfall: an error page that throws is replaced by the built-in page for
+that status rather than recursing into itself.</p>
 </div></blockquote>
 </section>
 <section id="showing-compile-errors-in-the-browser">
@@ -606,6 +622,7 @@ reach the server. Use it only in development, never in production.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#default-pages">Default Pages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-error-pages">Custom Error Pages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-error-pages">Dynamic Error Pages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope">Scope</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#showing-compile-errors-in-the-browser">Showing Compile Errors in the Browser</a></li>
 </ul>

@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -982,8 +982,10 @@ This is the simplest way to enable CORS.</p>
 </section>
 <section id="file-id">
 <h3>file(id)<a class="headerlink" href="#file-id" title="Link to this heading">#</a></h3>
-<p>Fetches the file type based on its ID and output the file, setting the
-appropriate headers.</p>
+<p>Sends a stored file as the response body, setting <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> from the row.
+The type is treated as untrusted: script-free media types (PNG/JPEG/GIF/WebP/
+AVIF, PDF, plain text) are served inline, everything else is sent as
+<code class="docutils literal notranslate"><span class="pre">application/octet-stream</span></code> with <code class="docutils literal notranslate"><span class="pre">Content-Disposition:</span> <span class="pre">attachment</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: The ID of the file to fetch.</p></li>
 </ul>
@@ -1636,7 +1638,8 @@ assigning <code class="docutils literal notranslate"><span class="pre">postData<
 <section id="postdata">
 <h3>postData<a class="headerlink" href="#postdata" title="Link to this heading">#</a></h3>
 <p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code> for the request body. Maps and lists are JSON-stringified;
-strings are sent as-is.</p>
+strings are sent as-is. Any other value falls back to <code class="docutils literal notranslate"><span class="pre">toString</span></code> rather than
+sending an empty body.</p>
 </section>
 <section id="id10">
 <h3>status<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>

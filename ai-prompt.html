@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -502,14 +502,16 @@ every page is at &lt;https://bialet.dev/llms.txt&gt;.
 <span class="ge">&gt; *"Every code example using `Request.post()` **must** include a null-handling</span>
 <span class="k">&gt; </span><span class="ge">strategy (`|| fallback` or `if (value != null)`) by default."*</span>
 
-<span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: an inline HTML string may nest its own tag.**</span>
+<span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: an inline HTML string may nest its own tag (Bialet 1.2.17+).**</span>
 <span class="k">&gt; </span><span class="ge">`&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;` compiles — every tag can contain any other tag,</span>
 <span class="k">&gt; </span><span class="ge">including its own name. Start a `&lt;div&gt;` inside a `&lt;div&gt;` whenever the markup</span>
 <span class="k">&gt; </span><span class="ge">calls for it; do not work around a nesting error by swapping in</span>
 <span class="k">&gt; </span><span class="ge">`&lt;section&gt;`/`&lt;article&gt;` wrappers. What still fails is balance on the outermost</span>
 <span class="k">&gt; </span><span class="ge">tag: a missing close tag, or one close tag too many. A close tag whose name</span>
 <span class="k">&gt; </span><span class="ge">does not match is not validated — it only fails when it leaves the outermost</span>
-<span class="k">&gt; </span><span class="ge">tag one close short.</span>
+<span class="k">&gt; </span><span class="ge">tag one close short. On 1.2.16 and earlier the compiler still reports</span>
+<span class="k">&gt; </span><span class="ge">`Cannot nest &lt;div&gt; inside &lt;div&gt;`; there the inner block needs a different</span>
+<span class="k">&gt; </span><span class="ge">element.</span>
 
 <span class="k">&gt; </span><span class="ge">⚠️ **CRITICAL: `.first`, `.val` and `.toNum` add `LIMIT 1` themselves.**</span>
 <span class="k">&gt; </span><span class="ge">`SELECT ... LIMIT 1`.first becomes `... LIMIT 1 LIMIT 1` and fails at</span>
@@ -610,12 +612,15 @@ the upstream language). A few things you need to know to write correct code:
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}</span><span class="w">        </span><span class="c1">// static method</span>
 <span class="p">}</span>
 
-<span class="c1">// A block (method or class body) ending in an expression returns it</span>
-<span class="c1">// automatically — no `return` keyword needed for single-expression bodies.</span>
+<span class="c1">// A method returns only through `return`. The single exception is a body</span>
+<span class="c1">// whose whole expression sits on the same line as its `{`.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Math</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// implicit return</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// returned: same line as the `{`</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">double</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2</span><span class="w">                             </span><span class="c1">// NOT returned: this method returns null</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">classify</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"positive"</span><span class="w">      </span><span class="c1">// explicit return needed for early exit</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"positive"</span><span class="w">      </span><span class="c1">// explicit return for an early exit</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">"non-positive"</span>
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
@@ -645,6 +650,11 @@ the upstream language). A few things you need to know to write correct code:
 
 <span class="c1">// Strings only implement == and != -- no &lt;, &gt;, &lt;=, &gt;=.</span>
 <span class="c1">// "a" &lt; "b" raises "String does not implement '&lt;(_)'."</span>
+
+<span class="c1">// `count`, `toString`, `keys` and `bytes` are getters; `trim`, `lower` and</span>
+<span class="c1">// `replace` are methods. `" x ".trim` fails with "String does not implement</span>
+<span class="c1">// 'trim'."; `" x ".trim()` works. There is no `String.fromBytes`: to build</span>
+<span class="c1">// text from numbers use `String.fromCodePoint`, and read text as a String.</span>
 <span class="sb">```</span>
 
 <span class="gu">### Newlines</span>
@@ -746,7 +756,8 @@ language:
 <span class="k">-</span><span class="w"> </span>Tag names: lowercase letters/numbers/hyphens — no underscores or uppercase.
   Hyphens enable custom elements like <span class="sb">`&lt;my-element&gt;`</span>.
 <span class="k">-</span><span class="w"> </span>Any tag may nest any other tag, including its own name
-  (<span class="sb">`&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;`</span> is valid). Every level must be closed.
+  (<span class="sb">`&lt;div&gt;&lt;div&gt;...&lt;/div&gt;&lt;/div&gt;`</span> is valid on 1.2.17+; 1.2.16 and earlier reject
+  the nested copy — use a different element there). Every level must be closed.
 <span class="k">-</span><span class="w"> </span>Self-closing tags need a space before the slash: <span class="sb">`&lt;br /&gt;`</span>, <span class="sb">`&lt;input ... /&gt;`</span>.
 <span class="k">-</span><span class="w"> </span><span class="sb">`{{ expr }}`</span> inside an inline HTML string evaluates any Wren expression —
   it's sugar for <span class="sb">`%(...)`</span> interpolation inside an HTML block.
@@ -991,6 +1002,13 @@ the folder; the deepest match wins.
 <span class="k">&gt; </span><span class="ge">**Pitfall:** if `Layout`'s methods are `static` (as above), call</span>
 <span class="k">&gt; </span><span class="ge">`Layout.render(...)` directly. If you instead define instance methods, you</span>
 <span class="k">&gt; </span><span class="ge">must instantiate first: `Layout.new().render(...)`.</span>
+
+<span class="gs">**Markup is not a string.**</span> Write the tags raw inside the method body, as in the
+example: don't concatenate fragments (<span class="sb">`"&lt;div&gt;" + value + "&lt;/div&gt;"`</span>) and don't
+open a quoted string to hold markup for <span class="sb">`{{ }}`</span> (inside a string it renders
+literally, and a real newline there is a syntax error). Tags are balanced at
+compile time: a missing or an extra close tag is an error, and any tag may nest
+any other, including its own name.
 
 <span class="gu">## Database</span>
 
@@ -1730,6 +1748,44 @@ behind a <span class="sb">`_`</span>/<span class="sb">`.`</span> prefix (those r
 <span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 <span class="sb">```</span>
 
+<span class="gu">## Testing</span>
+
+Tests live in <span class="sb">`_tests/`</span> (the underscore keeps them off HTTP) and run with
+<span class="sb">`bialet -T`</span>:
+
+<span class="sb">```bash</span>
+bialet<span class="w"> </span>-T<span class="w">            </span><span class="c1"># the whole suite</span>
+bialet<span class="w"> </span>-T<span class="w"> </span>-q<span class="w">         </span><span class="c1"># quiet, CI-friendly</span>
+<span class="sb">```</span>
+
+The runner prepends its own prelude, which defines <span class="sb">`Test`</span> and <span class="sb">`Tests`</span>. Never
+import them, and never check a <span class="sb">`_tests/*.wren`</span> file with <span class="sb">`bialet -t`</span>: outside
+the runner the prelude does not exist, so the compiler reports
+<span class="sb">`Test: Variable is used but not defined`</span>. A test file is checked by running the
+suite.
+
+<span class="sb">`_tests/_init.wren`</span>, when present, runs once before every test file: seed rows
+and set configuration there. Its variables are global to every test file, so
+give them unique names and do not collide with <span class="sb">`UNIQUE`</span> keys.
+
+<span class="sb">```wren</span>
+<span class="c1">// _tests/tasks.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Mis tareas"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Comprar pan"</span><span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Comprar pan"</span><span class="p">)</span>
+<span class="sb">```</span>
+
+<span class="k">-</span><span class="w"> </span>Assert the flow the user asked for: a POST that writes, then a GET that reads
+  the same value back. A page that renders is not a flow that works.
+<span class="k">-</span><span class="w"> </span>Add a boundary case (empty table, today against a future date, the first and
+  last day of a month) instead of one mid-month date.
+<span class="k">-</span><span class="w"> </span><span class="sb">`Test.headers`</span> does not exist: drop the header and assert the rest, or gate
+  the check on <span class="sb">`Config.get("test_mode")`</span> set in <span class="sb">`_init.wren`</span>.
+<span class="k">-</span><span class="w"> </span>Every file shares one temporary database per run: do not assume isolation,
+  and never weaken an assertion to make a red test go green.
+<span class="k">-</span><span class="w"> </span>Keep the suite quiet: no <span class="sb">`System.print`</span> of whole tables and no leftover
+  <span class="sb">`debug*.wren`</span> files.
+
 <span class="gu">## Running the App</span>
 
 <span class="sb">```bash</span>
@@ -1737,6 +1793,7 @@ bialet<span class="w">              </span><span class="c1"># runs the current d
 bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>.<span class="w">    </span><span class="c1"># explicit port and directory</span>
 bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w">              </span><span class="c1"># validate a standalone file's syntax</span>
 bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class="w"> </span>/my/app<span class="w">   </span><span class="c1"># validate with app context (for _app/ imports)</span>
+bialet<span class="w"> </span>-T<span class="w">                         </span><span class="c1"># run the test suite in _tests/</span>
 <span class="sb">```</span>
 
 <span class="gu">## Summary</span>
@@ -1759,6 +1816,9 @@ bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class
 <span class="k">12.</span> <span class="gs">**Styling**</span>: semantic HTML, no stylesheet by default; add a small modern
     CSS file (or a classless framework such as µCSS or Beak CSS) only when the
     page needs presentation
+<span class="k">13.</span> <span class="gs">**Tests**</span>: <span class="sb">`_tests/`</span> with the fluent <span class="sb">`Test.get/post`</span> API, run with
+    <span class="sb">`bialet -T`</span>; <span class="sb">`Test`</span> comes from the runner, so never import it or validate a
+    test file with <span class="sb">`bialet -t`</span>
 </pre></div>
 </div>
 </section>

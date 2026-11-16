@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'markdown';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=bd342833"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Forms" href="forms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.19" />
+  <meta name="docsearch:version" content="1.2.20" />
   </head>
   
   
@@ -531,12 +531,15 @@ renderer before relying on it.</p>
 <h2>Security<a class="headerlink" href="#security" title="Link to this heading">#</a></h2>
 <p>The parser escapes HTML <strong>only inside code blocks and inline code</strong>. Raw HTML
 in paragraphs, headings, and lists passes through to the output unescaped.
-Link and image URLs are not validated either.</p>
+Link and image URLs are checked: only <code class="docutils literal notranslate"><span class="pre">http</span></code>, <code class="docutils literal notranslate"><span class="pre">https</span></code>, <code class="docutils literal notranslate"><span class="pre">mailto</span></code>, <code class="docutils literal notranslate"><span class="pre">tel</span></code>, <code class="docutils literal notranslate"><span class="pre">ftp</span></code>,
+relative references and fragments are rendered. A link or image with any other
+scheme (including <code class="docutils literal notranslate"><span class="pre">javascript:</span></code>) is dropped, keeping its label or alt text as
+plain escaped text.</p>
 <blockquote>
-<div><p>⚠️ Pitfall: rendering untrusted input with <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can produce
-XSS. <code class="docutils literal notranslate"><span class="pre">Markdown.html(&quot;&lt;script&gt;alert(1)&lt;/script&gt;&quot;)</span></code> emits a live <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code>
-tag, and <code class="docutils literal notranslate"><span class="pre">[x](javascript:alert(1))</span></code> emits a <code class="docutils literal notranslate"><span class="pre">javascript:</span></code> link. Render only
-Markdown you trust, or sanitize the output before serving it.</p>
+<div><p>⚠️ Pitfall: rendering untrusted input with <code class="docutils literal notranslate"><span class="pre">Markdown.html()</span></code> can still
+produce XSS, because raw HTML passes through.
+<code class="docutils literal notranslate"><span class="pre">Markdown.html(&quot;&lt;script&gt;alert(1)&lt;/script&gt;&quot;)</span></code> emits a live <code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag.
+Render only Markdown you trust, or sanitize the output before serving it.</p>
 </div></blockquote>
 </section>
 <section id="pitfalls">
