@@ -45,6 +45,7 @@ typedef enum {
   CLI_OPT_SYNCHRONOUS,
   CLI_OPT_SECRET_KEY,
   CLI_OPT_QUIET,
+  CLI_OPT_CACHE,
   CLI_OPT_COUNT
 } CliOptId;
 
@@ -76,6 +77,7 @@ static const CliOptSpec cli_opts[] = {
     {"synchronous", 's', 1},
     {"secret-key-file", 'k', 1},
     {"quiet", 'q', 0},
+    {"cache", 'x', 0},
 };
 
 /* cli_opts[] is indexed by CliOptId, so the two must stay the same length and
@@ -312,6 +314,9 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
     case CLI_OPT_QUIET:
       config->quiet = 1;
       config->output_color = 0;
+      break;
+    case CLI_OPT_CACHE:
+      config->bytecode_cache = 1;
       break;
     case CLI_OPT_COUNT:
       break;

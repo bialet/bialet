@@ -1,5 +1,6 @@
 #include "wren_vm.h"
 
+#include "bytecode_cache.h"
 #include "wren.h"
 #include "wren_common.h"
 #include "wren_compiler.h"
@@ -414,32 +415,41 @@ static ObjModule* getModule(WrenVM* vm, Value name) {
   return !IS_UNDEFINED(moduleValue) ? AS_MODULE(moduleValue) : NULL;
 }
 
-static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
-                                   bool isExpression, bool printErrors) {
+ObjModule* wrenGetOrCreateModule(WrenVM* vm, Value name) {
   // See if the module has already been loaded.
   ObjModule* module = getModule(vm, name);
-  if(module == NULL) {
-    module = wrenNewModule(vm, AS_STRING(name));
+  if(module != NULL)
+    return module;
 
-    // It's possible for the wrenMapSet below to resize the modules map,
-    // and trigger a GC while doing so. When this happens it will collect
-    // the module we've just created. Once in the map it is safe.
-    wrenPushRoot(vm, (Obj*)module);
+  // The core module is created by initializeCore() with a NULL name; every
+  // other module is named by an ObjString.
+  module = wrenNewModule(vm, IS_NULL(name) ? NULL : AS_STRING(name));
 
-    // Store it in the VM's module registry so we don't load the same module
-    // multiple times.
-    wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
+  // It's possible for the wrenMapSet below to resize the modules map,
+  // and trigger a GC while doing so. When this happens it will collect
+  // the module we've just created. Once in the map it is safe.
+  wrenPushRoot(vm, (Obj*)module);
 
-    wrenPopRoot(vm);
+  // Store it in the VM's module registry so we don't load the same module
+  // multiple times.
+  wrenMapSet(vm, vm->modules, name, OBJ_VAL(module));
 
-    // Implicitly import the core module.
-    ObjModule* coreModule = getModule(vm, NULL_VAL);
-    for(int i = 0; i < coreModule->variables.count; i++) {
-      wrenDefineVariable(vm, module, coreModule->variableNames.data[i]->value,
-                         coreModule->variableNames.data[i]->length,
-                         coreModule->variables.data[i], NULL);
-    }
+  wrenPopRoot(vm);
+
+  // Implicitly import the core module.
+  ObjModule* coreModule = getModule(vm, NULL_VAL);
+  for(int i = 0; i < coreModule->variables.count; i++) {
+    wrenDefineVariable(vm, module, coreModule->variableNames.data[i]->value,
+                       coreModule->variableNames.data[i]->length,
+                       coreModule->variables.data[i], NULL);
   }
+
+  return module;
+}
+
+static ObjClosure* compileInModule(WrenVM* vm, Value name, const char* source,
+                                   bool isExpression, bool printErrors) {
+  ObjModule* module = wrenGetOrCreateModule(vm, name);
 
   ObjFn* fn = wrenCompile(vm, module, source, isExpression, printErrors);
   if(fn == NULL) {
@@ -707,7 +717,12 @@ static Value importModule(WrenVM* vm, Value name) {
     return NULL_VAL;
   }
 
-  ObjClosure* moduleClosure = compileInModule(vm, name, result.source, false, true);
+  // bialet's file loader returns the canonical path of the file it read in
+  // result.userData, so the bytecode cache can key the module by file rather
+  // than by module name. It is NULL for modules with no file (remote imports).
+  const char* cache_key = (const char*)result.userData;
+  ObjClosure* moduleClosure =
+      bytecode_cache_compile(vm, AS_CSTRING(name), result.source, cache_key);
 
   // Now that we're done, give the result back in case there's cleanup to do.
   if(result.onComplete)
@@ -1428,6 +1443,10 @@ WrenInterpretResult wrenInterpret(WrenVM* vm, const char* module,
   if(closure == NULL)
     return WREN_RESULT_COMPILE_ERROR;
 
+  return wrenRunClosure(vm, closure);
+}
+
+WrenInterpretResult wrenRunClosure(WrenVM* vm, ObjClosure* closure) {
   wrenPushRoot(vm, (Obj*)closure);
   ObjFiber* fiber = wrenNewFiber(vm, closure);
   wrenPopRoot(vm); // closure.

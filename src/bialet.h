@@ -121,6 +121,10 @@ struct BialetConfig {
 
   /* Set to true when running tests with -T flag */
   int enable_tests;
+
+  /* Opt-in in-memory bytecode cache (-x / --cache). Off by default: the normal
+   * path compiles every module on every request, exactly as before. */
+  int bytecode_cache;
 };
 
 struct BialetResponse {
