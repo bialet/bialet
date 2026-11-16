@@ -721,8 +721,10 @@ static Value importModule(WrenVM* vm, Value name) {
   // result.userData, so the bytecode cache can key the module by file rather
   // than by module name. It is NULL for modules with no file (remote imports).
   const char* cache_key = (const char*)result.userData;
-  ObjClosure* moduleClosure =
-      bytecode_cache_compile_user(vm, AS_CSTRING(name), result.source, cache_key);
+  // Imports keep the read+hash path: the file is already read by the host
+  // loader before the VM sees it, so there is no signature to check first.
+  ObjClosure* moduleClosure = bytecode_cache_compile_user(
+      vm, AS_CSTRING(name), result.source, cache_key, NULL);
 
   // Now that we're done, give the result back in case there's cleanup to do.
   if(result.onComplete)

@@ -3,6 +3,7 @@
 
 #include "bialet.h"
 #include "wren_vm.h"
+#include <sys/stat.h>
 
 // Process-global, in-memory cache of compiled Wren bytecode.
 //
@@ -44,6 +45,21 @@ bool bytecode_cache_user_files_enabled(void);
 // user-file caching is enabled.
 char* bytecode_cache_path_key(const char* path);
 
+// Fills [out] with the identity of one version of a file. Returns false when
+// the platform cannot be trusted for a stat fast hit (see struct
+// BialetFileStat); the caller then takes the read+hash path.
+bool bytecode_cache_stat_from_native(const struct stat*     st,
+                                     struct BialetFileStat* out);
+
+// Serves [cache_key] straight from the cache when the entry's file signature
+// matches [stat]: no open, no read, no source hash. Returns NULL on a miss
+// (including an entry with no recorded signature), and the caller falls back
+// to reading the file. Only served route/error files use this; imported
+// modules are read by the loader before the VM sees them.
+ObjClosure* bytecode_cache_load_by_stat(WrenVM* vm, const char* module_name,
+                                        const char*                  cache_key,
+                                        const struct BialetFileStat* stat);
+
 // Compiles and runs the embedded framework module, always through the cache.
 WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
                                                        const char* source);
@@ -56,7 +72,8 @@ WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
 // entry is deserialised instead of compiled; a miss (or any invalid/corrupt
 // entry) falls back to a normal compile and stores the result.
 ObjClosure* bytecode_cache_compile_user(WrenVM* vm, const char* module_name,
-                                        const char* source, const char* cache_key);
+                                        const char* source, const char* cache_key,
+                                        const struct BialetFileStat* stat);
 
 // bytecode_cache_compile_user() plus the execution half of wrenInterpret().
 WrenInterpretResult bytecode_cache_interpret_user(WrenVM*     vm,

@@ -381,10 +381,15 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
       > /dev/null 2>&1 &
     disown
     wait_port "$HOST" "$CRON_PORT" 10
-    local got_first got_second
+    local got_first got_second got_touched
     got_first=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
     printf 'return "%s"\n' "$second" > "$cache_root/index.wren"
     got_second=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
+    # A touch (new mtime, same bytes) must keep the old content: on the cached
+    # path the signature misses, the digest matches and the stored signature is
+    # refreshed; with -x off the file is simply read again.
+    touch "$cache_root/index.wren"
+    got_touched=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
     pgrep -f -- "$TARGET_EXEC.*-p $CRON_PORT $cache_root" \
       2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
     # Let the port go before the next case starts a server on it.
@@ -392,9 +397,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
       check_port "$HOST" "$CRON_PORT" 0.2 || break
       sleep 0.1
     done
-    [[ "$got_first" == "$first" && "$got_second" == "$second" ]] || {
+    [[ "$got_first" == "$first" && "$got_second" == "$second" \
+       && "$got_touched" == "$second" ]] || {
       cache_ok=0
-      cache_detail="flag:'$flag' expected '$first' then '$second', got '$got_first' then '$got_second'"
+      cache_detail="flag:'$flag' expected '$first' then '$second' twice, got '$got_first', '$got_second', '$got_touched'"
     }
   }
   run_cache_case "" "cache-A" "cache-B"

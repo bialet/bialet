@@ -1464,6 +1464,14 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
 }
 
 struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* hm) {
+  return bialet_run_file(module, code, NULL, hm);
+}
+
+// [code] may be NULL when [stat] is given: the served file is then served
+// from the bytecode cache on a signature hit, and only read (here) on a miss.
+struct BialetResponse bialet_run_file(char* module, char* code,
+                                      const struct BialetFileStat* stat,
+                                      struct HttpMessage*          hm) {
   struct BialetResponse r;
   r.status = HTTP_OK;
   r.header = NULL;
@@ -1525,6 +1533,7 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
     wrenReleaseHandle(vm, initMethod);
   }
   /* Run user code */
+  int file_missing = 0;
   if(!error) {
     /* With --cache a served .wren file is looked up by its canonical path.
      * Anything else (migration, cron, -r code) keeps the plain path. */
@@ -1535,10 +1544,48 @@ struct BialetResponse bialet_run(char* module, char* code, struct HttpMessage* h
          (module[root_len] == '/' || module[root_len] == '\\'))
         cache_key = bytecode_cache_path_key(module);
     }
-    WrenInterpretResult result =
-        bytecode_cache_interpret_user(vm, module, code, cache_key);
+
+    char*               owned = NULL;
+    int                 served = 0;
+    WrenInterpretResult result = WREN_RESULT_COMPILE_ERROR;
+
+    /* Stat-first: a matching file signature serves the cached blob without
+     * opening, reading or hashing the file. */
+    if(cache_key != NULL) {
+      ObjClosure* closure = bytecode_cache_load_by_stat(vm, module, cache_key, stat);
+      if(closure != NULL) {
+        result = wrenRunClosure(vm, closure);
+        served = 1;
+      }
+    }
+
+    if(!served) {
+      if(code == NULL) {
+        owned = read_file(module);
+        code = owned;
+      }
+      if(code == NULL) {
+        file_missing = 1;
+      } else if(cache_key != NULL) {
+        ObjClosure* closure =
+            bytecode_cache_compile_user(vm, module, code, cache_key, stat);
+        result = closure != NULL ? wrenRunClosure(vm, closure)
+                                 : WREN_RESULT_COMPILE_ERROR;
+      } else {
+        result = wrenInterpret(vm, module, code);
+      }
+    }
+
+    free(owned);
     free(cache_key);
     error = result != WREN_RESULT_SUCCESS;
+  }
+  if(file_missing) {
+    /* The router lstat'ed the file but it was gone by the time it was read.
+     * Hand back an empty response so the caller can emit its normal 404. */
+    wrenFreeVM(vm);
+    r.status = 0;
+    return r;
   }
   if(!error) {
     wrenEnsureSlots(vm, 2);

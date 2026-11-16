@@ -80,6 +80,10 @@ typedef struct {
   bool     framework;
   size_t   source_len;
   uint64_t source_hash;
+  // File signature captured when the blob was stored (served files only).
+  // A matching signature serves the blob without reading the file.
+  bool                  has_stat;
+  struct BialetFileStat stat;
 } CacheEntry;
 
 static bool        cache_user_files = false;
@@ -532,6 +536,51 @@ static uint64_t bytecode_cache_hash(const void* data, size_t len) {
   hash *= CACHE_HASH_PRIME64_3;
   hash ^= hash >> 32;
   return hash;
+}
+
+/* ------------------------------------------------------------------------- */
+/* File signature (stat-first hit path)                                     */
+/* ------------------------------------------------------------------------- */
+
+bool bytecode_cache_stat_from_native(const struct stat*     st,
+                                     struct BialetFileStat* out) {
+  if(st == NULL || out == NULL)
+    return false;
+
+  memset(out, 0, sizeof(*out));
+#if defined(_WIN32)
+  // Mingw exposes seconds only, and st_ino is frequently 0 -- which is the
+  // signal that this stamp must not be trusted for a fast hit.
+  out->mtime_ns = (long long)st->st_mtime * 1000000000LL;
+  out->size = (unsigned long long)st->st_size;
+  out->inode = 0;
+#elif defined(__APPLE__)
+  out->mtime_ns = (long long)st->st_mtimespec.tv_sec * 1000000000LL +
+                  (long long)st->st_mtimespec.tv_nsec;
+  out->size = (unsigned long long)st->st_size;
+  out->inode = (unsigned long long)st->st_ino;
+#else
+  out->mtime_ns =
+      (long long)st->st_mtim.tv_sec * 1000000000LL + (long long)st->st_mtim.tv_nsec;
+  out->size = (unsigned long long)st->st_size;
+  out->inode = (unsigned long long)st->st_ino;
+#endif
+  out->valid = out->inode != 0;
+  return out->valid != 0;
+}
+
+// Whether [stat] names the version the entry was built from. The signature is
+// mtime (nanoseconds where available), size and inode, which catches edits,
+// truncation and replacement. It cannot catch a preserved mtime (`cp -p`,
+// `rsync --inplace`) or an in-place rewrite within the same timestamp tick of
+// the same length; a dmon-driven dirty mark or periodic content revalidation
+// is the intended backstop for those, not implemented here.
+static bool cache_stat_matches(const CacheEntry*            entry,
+                               const struct BialetFileStat* stat) {
+  if(entry->framework || !entry->has_stat || stat == NULL || !stat->valid)
+    return false;
+  return entry->stat.mtime_ns == stat->mtime_ns && entry->stat.size == stat->size &&
+         entry->stat.inode == stat->inode;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1050,7 +1099,8 @@ typedef enum {
 static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
                                       const char* module_name, const char* key,
                                       const char* source, size_t source_len,
-                                      ObjClosure** out) {
+                                      const struct BialetFileStat* stat,
+                                      ObjClosure**                 out) {
   CacheLookupResult result = CACHE_LOOKUP_MISS;
 
   cache_lock_acquire();
@@ -1063,6 +1113,13 @@ static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
       if(validation == CACHE_VALIDATE_OK) {
         *out = build_blob(entry->blob, entry->blob_len, vm, module);
         result = *out != NULL ? CACHE_LOOKUP_HIT : CACHE_LOOKUP_CORRUPT;
+        // The bytes matched, so this is the same source under a newer
+        // signature (a touch or a no-op save): remember it so the next
+        // request can stop at stat() and skip the read and hash entirely.
+        if(result == CACHE_LOOKUP_HIT && stat != NULL && stat->valid) {
+          entry->has_stat = true;
+          entry->stat = *stat;
+        }
       } else if(validation == CACHE_VALIDATE_CORRUPT) {
         result = CACHE_LOOKUP_CORRUPT;
       }
@@ -1078,7 +1135,8 @@ static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
 /* ------------------------------------------------------------------------- */
 
 static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char* key,
-                        const char* source, size_t source_len, int symbol_base,
+                        const char* source, size_t source_len,
+                        const struct BialetFileStat* stat, int symbol_base,
                         int var_base, ObjFn* fn) {
   CacheWriter writer = {NULL, 0, 0, false};
   writer_u32(&writer, CACHE_BLOB_VERSION);
@@ -1140,6 +1198,9 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
   entry->framework = is_core;
   entry->source_len = source_len;
   entry->source_hash = source_hash;
+  entry->has_stat = !is_core && stat != NULL && stat->valid;
+  if(entry->has_stat)
+    entry->stat = *stat;
   cache_lock_release();
 }
 
@@ -1152,7 +1213,7 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
 // caching to be on and a resolved key.
 static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
                                  const char* source, const char* cache_key,
-                                 bool framework) {
+                                 const struct BialetFileStat* stat, bool framework) {
   if(!framework && (!cache_user_files || cache_key == NULL))
     return wrenCompileSource(vm, module_name, source, false, true);
 
@@ -1172,8 +1233,8 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
   int var_base = module->variables.count;
 
   ObjClosure*       closure = NULL;
-  CacheLookupResult lookup =
-      cache_lookup(vm, module, module_name, cache_key, source, source_len, &closure);
+  CacheLookupResult lookup = cache_lookup(vm, module, module_name, cache_key, source,
+                                          source_len, stat, &closure);
   if(lookup == CACHE_LOOKUP_CORRUPT) {
     // The entry is replaced by the store below (same key) and the source is
     // compiled normally. Never serve a half-built module.
@@ -1196,7 +1257,7 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
     // superclass constants and field slots into their ObjFns during execution,
     // so only the pristine compile output is a valid cache entry.
     wrenPushRoot(vm, (Obj*)closure);
-    cache_store(vm, module, module_name == NULL, cache_key, source, source_len,
+    cache_store(vm, module, module_name == NULL, cache_key, source, source_len, stat,
                 symbol_base, var_base, fn);
     wrenPopRoot(vm);
   }
@@ -1210,7 +1271,7 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
 WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
                                                        const char* source) {
   ObjClosure* closure =
-      cache_compile(vm, NULL, source, BYTECODE_CACHE_FRAMEWORK_KEY, true);
+      cache_compile(vm, NULL, source, BYTECODE_CACHE_FRAMEWORK_KEY, NULL, true);
   if(closure == NULL)
     return WREN_RESULT_COMPILE_ERROR;
 
@@ -1218,8 +1279,51 @@ WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
 }
 
 ObjClosure* bytecode_cache_compile_user(WrenVM* vm, const char* module_name,
-                                        const char* source, const char* cache_key) {
-  return cache_compile(vm, module_name, source, cache_key, false);
+                                        const char* source, const char* cache_key,
+                                        const struct BialetFileStat* stat) {
+  return cache_compile(vm, module_name, source, cache_key, stat, false);
+}
+
+ObjClosure* bytecode_cache_load_by_stat(WrenVM* vm, const char* module_name,
+                                        const char*                  cache_key,
+                                        const struct BialetFileStat* stat) {
+  if(!cache_user_files || cache_key == NULL || stat == NULL || !stat->valid)
+    return NULL;
+
+  // The module must exist (with its implicit core variables) exactly as it
+  // would for a compile, because the blob's variable indices assume that base.
+  Value name_value = NULL_VAL;
+  if(module_name != NULL) {
+    name_value = wrenNewString(vm, module_name);
+    wrenPushRoot(vm, AS_OBJ(name_value));
+  }
+  ObjModule* module = wrenGetOrCreateModule(vm, name_value);
+
+  ObjClosure* closure = NULL;
+  bool        corrupt = false;
+
+  cache_lock_acquire();
+  size_t index;
+  if(entry_find_locked(cache_key, &index)) {
+    CacheEntry* entry = &cache_entries[index];
+    if(cache_stat_matches(entry, stat)) {
+      CacheValidation validation = validate_blob(entry->blob, entry->blob_len, vm,
+                                                 module, module_name == NULL);
+      if(validation == CACHE_VALIDATE_OK)
+        closure = build_blob(entry->blob, entry->blob_len, vm, module);
+      else if(validation == CACHE_VALIDATE_CORRUPT)
+        corrupt = true;
+    }
+  }
+  cache_lock_release();
+
+  if(module_name != NULL)
+    wrenPopRoot(vm); // name_value
+
+  if(corrupt)
+    cache_warn("Discarding a corrupt cached module; recompiling");
+
+  return closure;
 }
 
 WrenInterpretResult bytecode_cache_interpret_user(WrenVM*     vm,
@@ -1229,7 +1333,8 @@ WrenInterpretResult bytecode_cache_interpret_user(WrenVM*     vm,
   if(!cache_user_files || cache_key == NULL)
     return wrenInterpret(vm, module_name, source);
 
-  ObjClosure* closure = cache_compile(vm, module_name, source, cache_key, false);
+  ObjClosure* closure =
+      cache_compile(vm, module_name, source, cache_key, NULL, false);
   if(closure == NULL)
     return WREN_RESULT_COMPILE_ERROR;
 

@@ -127,6 +127,17 @@ struct BialetConfig {
   int bytecode_cache;
 };
 
+/* Identity of one version of a source file, for the bytecode cache's
+ * stat-first path. [valid] is false when the platform's stat cannot be
+ * trusted for a fast hit (Windows reports st_ino == 0 for many files), in
+ * which case the caller must read the file and compare its digest. */
+struct BialetFileStat {
+  long long          mtime_ns; /* nanoseconds where the platform exposes them */
+  unsigned long long size;
+  unsigned long long inode;
+  int                valid;
+};
+
 struct BialetResponse {
   int    status;
   char*  header;

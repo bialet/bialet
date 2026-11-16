@@ -12,6 +12,7 @@
 
 #include "bialet.h"
 #include "bialet_wren.h"
+#include "bytecode_cache.h"
 #include "favicon.h"
 #include "livereload.h"
 #include "messages.h"
@@ -1325,51 +1326,14 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
 
-  FILE* file = open_file_within_root(path);
-  if(file == NULL) {
-    // The path passed the component walk's parent check but could not be
-    // opened: a symlinked component (the probe above stats through the link,
-    // the open refuses to follow it), a permission problem, or a directory
-    // that vanished. Answer 404 rather than closing the socket with no reply,
-    // which is what clients saw before.
-    perror("Error opening file");
-    custom_error(404, &response);
-    write_response(client_socket, &response);
-    free_response_owned(&response);
-    clean_http_message(hm);
-    if(should_free_request)
-      free(full_request);
-    return;
-  }
-  if(fseek(file, 0, SEEK_END) != 0) {
-    perror("fseek");
-    fclose(file);
-    clean_http_message(hm);
-    if(should_free_request)
-      free(full_request);
-    socket_close(client_socket);
-    return;
-  }
-  long file_size_l = ftell(file);
-  if(file_size_l < 0) {
-    perror("ftell");
-    fclose(file);
-    clean_http_message(hm);
-    if(should_free_request)
-      free(full_request);
-    socket_close(client_socket);
-    return;
-  }
-  size_t file_size = (size_t)file_size_l;
-  rewind(file);
-
   // Only a genuine ".wren" suffix on the final component selects the
   // interpreter. strstr(path, ".wren") matched the substring anywhere, so
   // "/notes.wren.txt" and "/dir.wren/style.css" were both handed to the VM as
   // source code. The test is case-insensitive on purpose: on a case-insensitive
   // filesystem (APFS, NTFS) "/blog.WREN" opens blog.wren, and a case-sensitive
   // compare would classify that route module as a static asset and hand its
-  // source to the client.
+  // source to the client. Calculate it before opening: with -x the cache can
+  // answer without touching the file at all.
   unsigned char is_wren_file = 0;
   {
     const char* base = path_basename(path);
@@ -1381,45 +1345,105 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  // Always reserve room for a terminator, for wren and non-wren files alike.
-  // A zero-byte static file previously produced malloc(0), and the
-  // `length == 0 -> strlen(body)` fallback in write_response then read out of
-  // bounds to compute Content-Length and sent whatever heap bytes followed.
-  size_t alloc_size = file_size + 1;
-  char*  file_content = malloc(alloc_size);
-  if(file_content == NULL) {
-    perror("Error allocating memory for file content");
-    fclose(file);
-    clean_http_message(hm);
-    if(should_free_request)
-      free(full_request);
-    socket_close(client_socket);
-    return;
-  }
-  size_t read_bytes = fread(file_content, 1, file_size, file);
-  if(read_bytes != file_size) {
-    perror("Error reading file");
-    free(file_content);
-    fclose(file);
-    clean_http_message(hm);
-    if(should_free_request)
-      free(full_request);
-    socket_close(client_socket);
-    return;
-  }
-  fclose(file);
-  file_content[read_bytes] = '\0';
+  char*  file_content = NULL;
+  size_t file_size = 0;
+  size_t read_bytes = 0;
 
-  if(is_wren_file) {
-    response = bialet_run(path, file_content, hm);
-    if(response.length == 0 && response.body) {
+  if(is_wren_file && bytecode_cache_user_files_enabled()) {
+    // Stat-first: [file_stat] is the final lstat the router took for this
+    // exact path. A matching signature runs the cached blob without opening,
+    // reading or hashing the file; on a miss bialet_run_file() reads it and
+    // either reuses the blob (same digest) or recompiles.
+    struct BialetFileStat stamp;
+    bool have_stamp = bytecode_cache_stat_from_native(&file_stat, &stamp);
+    response = bialet_run_file(path, NULL, have_stamp ? &stamp : NULL, hm);
+    if(response.status == 0 && response.body == NULL) {
+      // The router lstat'ed it, but it was gone by the time it was read.
+      custom_error(404, &response);
+    } else if(response.length == 0 && response.body) {
       response.length = strlen(response.body);
     }
   } else {
-    response.status = 200;
-    response.body = file_content;
-    response.length = read_bytes;
-    response.header = get_content_type(path);
+    FILE* file = open_file_within_root(path);
+    if(file == NULL) {
+      // The path passed the component walk's parent check but could not be
+      // opened: a symlinked component (the probe above stats through the link,
+      // the open refuses to follow it), a permission problem, or a directory
+      // that vanished. Answer 404 rather than closing the socket with no reply,
+      // which is what clients saw before.
+      perror("Error opening file");
+      custom_error(404, &response);
+      write_response(client_socket, &response);
+      free_response_owned(&response);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
+    if(fseek(file, 0, SEEK_END) != 0) {
+      perror("fseek");
+      fclose(file);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      socket_close(client_socket);
+      return;
+    }
+    long file_size_l = ftell(file);
+    if(file_size_l < 0) {
+      perror("ftell");
+      fclose(file);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      socket_close(client_socket);
+      return;
+    }
+    file_size = (size_t)file_size_l;
+    rewind(file);
+
+    // Always reserve room for a terminator, for wren and non-wren files alike.
+    // A zero-byte static file previously produced malloc(0), and the
+    // `length == 0 -> strlen(body)` fallback in write_response then read out of
+    // bounds to compute Content-Length and sent whatever heap bytes followed.
+    size_t alloc_size = file_size + 1;
+    file_content = malloc(alloc_size);
+    if(file_content == NULL) {
+      perror("Error allocating memory for file content");
+      fclose(file);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      socket_close(client_socket);
+      return;
+    }
+    read_bytes = fread(file_content, 1, file_size, file);
+    if(read_bytes != file_size) {
+      perror("Error reading file");
+      free(file_content);
+      fclose(file);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      socket_close(client_socket);
+      return;
+    }
+    fclose(file);
+    file_content[read_bytes] = '\0';
+
+    if(is_wren_file) {
+      struct BialetFileStat stamp;
+      bool have_stamp = bytecode_cache_stat_from_native(&file_stat, &stamp);
+      response = bialet_run_file(path, file_content, have_stamp ? &stamp : NULL, hm);
+      if(response.length == 0 && response.body) {
+        response.length = strlen(response.body);
+      }
+    } else {
+      response.status = 200;
+      response.body = file_content;
+      response.length = read_bytes;
+      response.header = get_content_type(path);
+    }
   }
 
   (void)livereload_inject_response(&response);
