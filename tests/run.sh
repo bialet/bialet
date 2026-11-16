@@ -105,7 +105,16 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # swallowed newline is not counted twice for the tokens after it.
   if [[ "$TARGET_EXEC" != "-" ]]; then
     strline_line=$LINENO
-    strline_out=$("$TARGET_EXEC" -t "$(dirname "$0")/syntax_err_string_line.wren" 2>&1)
+    # The "module line N" prefix is capped at MAX_LINE_ERROR_LEN (100 bytes) in
+    # bialet_wren_error(), so a deep checkout path pushes the line number out
+    # of the printed message. Run the file under its bare name from a short
+    # temp directory instead, so the assertion holds wherever the repo lives.
+    strline_dir=$(mktemp -d /tmp/bialet-strline.XXXXXX)
+    strline_exe=$(realpath "$TARGET_EXEC")
+    cp "$(dirname "$0")/syntax_err_string_line.wren" "$strline_dir/"
+    strline_out=$(cd "$strline_dir" &&
+      "$strline_exe" -t syntax_err_string_line.wren 2>&1)
+    rm -rf "$strline_dir"
     if [[ "$strline_out" == *"line 2 Error: Unterminated string."* ]]; then
       report_result "Open string reports its line " "$strline_line" 0
     else
@@ -344,8 +353,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     "http://$HOST:$CRON_PORT/missing-page")
   errpage_500=$(curl -s -o /tmp/bialet-errpage-500 -w "%{http_code}" \
     "http://$HOST:$CRON_PORT/boom")
-  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT $errpage_root" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT $errpage_root"
   rm -rf "$errpage_root"
   if [[ "$errpage_404" == "404" ]] \
      && grep -q "WREN-404-PAGE" /tmp/bialet-errpage-404 2>/dev/null \
@@ -460,8 +468,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     --data-binary '![i](j)' "http://$HOST:$MULTIPART_PORT/md-body")
   md_scan_text=$(curl -s --max-time 10 -H "Content-Type: text/plain" \
     --data-binary '[x] ![y]' "http://$HOST:$MULTIPART_PORT/md-body")
-  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-mdscan.log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-mdscan.log"
   rm -f "$md_scan_body" "$md_scan_db" "$md_scan_db"-*
   md_scan_result="time:${md_scan_time} head:${md_scan_head} link:${md_scan_link} img:${md_scan_img} text:${md_scan_text}"
   if [[ "$md_scan_head" != "<p>[[[[" ]] ||
@@ -862,8 +869,7 @@ open('$mp_many', 'w').write(b * 100000 + '--BND--\r\n')"
   fi
   mp_big_alive=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
     "http://$HOST:$MULTIPART_PORT/multipart")
-  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-multipart.log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-multipart.log"
   rm -f "$mp_big" "$mp_db" "$mp_db"-*
   if [[ "$mp_big_body" == "a=before|b=after|"*"|file="*":5242880" \
         && "$mp_many_code" != "000" && "$mp_big_alive" == "200" ]]; then
@@ -920,8 +926,7 @@ open('$cap_body', 'w').write(part * 100 + '--zz--\r\n')"
       -F "form_file_name=@$cap_big_file" "http://$HOST:$MULTIPART_PORT/upload")
     rm -f "$cap_big_file"
   fi
-  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l /tmp/tests-cap.log"
   rm -f "$cap_body" "$cap_db" "$cap_db"-*
   if [[ "$cap_first" == "200" && "$cap_last" == "200" \
         && "$cap_usage" == "rows:4096|index:true|scan:|evict:true" \
@@ -955,13 +960,12 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   done
   if kill -0 "$log_guard_pid" 2>/dev/null; then
     log_guard_state="started"
-    kill -9 "$log_guard_pid" 2>/dev/null
+    stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file"
   else
     wait "$log_guard_pid" 2>/dev/null
     log_guard_state="exit:$?"
   fi
-  pgrep -f "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file"
   rm -f "$log_guard_file" "$log_guard_db" "$log_guard_db"-*
   if [[ "$log_guard_state" == "exit:11" ]] &&
      grep -q "log file inside the app root" /tmp/tests-logguard.out; then
@@ -1492,8 +1496,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     quiet_long_expected_code=414
     quiet_long_expected_log=1
   fi
-  pgrep -f "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $ROOT_STDERR_PORT"
   rm -rf "$quiet_root" "$quiet_root_out" "$quiet_root_log" "$quiet_root_db" \
     "$quiet_root_db"-*
   if [[ "$quiet_root_code" == "200" && "$quiet_root_body" == *"Quiet Root"* \
@@ -1534,8 +1537,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   show_run_code=$(curl -s -o /dev/null -w "%{http_code}" \
     "http://$HOST:$SHOW_ERRORS_PORT/boom")
   show_run_body=$(curl -s "http://$HOST:$SHOW_ERRORS_PORT/boom")
-  pgrep -f "$TARGET_EXEC -h $HOST -p $SHOW_ERRORS_PORT -l /tmp/tests-show-errors.log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $SHOW_ERRORS_PORT -l /tmp/tests-show-errors.log"
   if [[ "$show_code" == "500" && "$show_body" == *"Compilation Error"* \
         && "$show_body" != *"Oops! Something broke"* \
         && "$show_run_code" == "500" && "$show_run_body" == *"Runtime Error"* \
@@ -1550,7 +1552,7 @@ else
 fi
 
 if [[ "$TARGET_EXEC" != "-" ]]; then
-  pgrep -f "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $ECHO_PORT -l /tmp/tests-echo.log"
 fi
 
 # Tests - Cron reload
@@ -1597,8 +1599,7 @@ if [[ "$TARGET_EXEC" != "-" && -z "$BIALET_SKIP_CRON_RELOAD_TEST" ]]; then
     cron_installs_edit=${cron_installs_edit:-0}
     [[ $cron_installs_edit -le $cron_installs_create ]] && sleep 1
   done
-  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT -l /tmp/tests-cron.log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -l /tmp/tests-cron.log"
   rm -rf "$cron_root"
   if [[ $cron_installs_create -gt $cron_installs_before \
         && $cron_installs_edit -gt $cron_installs_create ]]; then
@@ -1643,8 +1644,7 @@ CRON_EOF
     fi
     sleep 0.5
   done
-  pgrep -f "$TARGET_EXEC -h $HOST -p $CRON_PORT -l $cron_exec_log" \
-    2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -l $cron_exec_log"
   rm -rf "$cron_exec_root"
   cron_every_ran=0
   cron_at_ran=0
@@ -1694,7 +1694,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     [[ "$dev_v2" == "$dev_v1" ]] && sleep 1
   done
   rm -f "$dev_root/reload_scratch"
-  pgrep -f "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+  stop_matching_servers "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log"
   if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \
         && "$dev_flags" == "2" && "$dev_v1" != "$dev_v2" ]]; then
     report_result "bialet dev starts" "$dev_starts_line" 0
