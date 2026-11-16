@@ -1,0 +1,5 @@
+# Database read by id: prepared SELECT + HTML render of one row.
+name=db-read
+path=/item?id=5000
+method=GET
+status=200

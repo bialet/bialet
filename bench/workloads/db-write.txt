@@ -1,0 +1,8 @@
+# Database write: POST that upserts one of 1000 fixed slots (201).
+# The fixed slot keeps the table from growing across repeats.
+name=db-write
+path=/write
+method=POST
+status=201
+body=slot=7&value=benchmark-write-payload
+content_type=application/x-www-form-urlencoded

@@ -1,6 +1,10 @@
 # Build generated files
 build/
 
+# Benchmark generated apps and results (bench/)
+/bench/work/
+/bench/results/
+
 # Coverage artifacts (tools/coverage.sh)
 build-cov/
 *.gcov

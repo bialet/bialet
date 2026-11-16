@@ -1,0 +1,9 @@
+# Realistic mix for profiling: static, dynamic DB, template CPU, JSON, session,
+# and both a large and a small generated route (so -x / cache A/B is visible).
+# kind=mixed makes the harness cycle these paths (and every site, when more
+# than one server is running) within one load run.
+name=mixed
+kind=mixed
+paths=/,/render,/item?id=5000,/api/items,/session,/assets/app.js,/page-000,/page-001
+method=GET
+status=200

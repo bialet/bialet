@@ -1,0 +1,5 @@
+# Session + cookie endpoint: one session read, two session writes, Set-Cookie.
+name=session
+path=/session
+method=GET
+status=200

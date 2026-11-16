@@ -1,0 +1,5 @@
+# Small static asset: the fast path, no interpreter.
+name=static-small
+path=/assets/site.css
+method=GET
+status=200
