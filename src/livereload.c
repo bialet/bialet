@@ -37,7 +37,7 @@ static const char kScript[] = "<script>"
 
 extern sqlite3* db;
 
-void livereload_init(void) {
+void livereload_init(int force_on) {
 #if IS_LINUX || IS_MAC
   shared_version = mmap(NULL, sizeof(long), PROT_READ | PROT_WRITE,
                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -45,32 +45,32 @@ void livereload_init(void) {
     shared_version = NULL;
 #endif
 
-  if(db == NULL)
-    return;
-
-  sqlite3_stmt* stmt = NULL;
-  const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
-  if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    return;
-
-  sqlite3_bind_text(stmt, 1, LIVERELOAD_KEY, -1, SQLITE_STATIC);
-  if(sqlite3_step(stmt) == SQLITE_ROW) {
-    const char* val = (const char*)sqlite3_column_text(stmt, 0);
-    // Allow-list, matching Config.bool: only "1"/"true" enable the flag. The
-    // old denylist treated "false" and "off" as true.
-    if(val != NULL && (strcmp(val, "1") == 0 || strcmp(val, "true") == 0 ||
-                       strcmp(val, "TRUE") == 0 || strcmp(val, "True") == 0)) {
-      enabled = 1;
-#if IS_LINUX || IS_MAC
-      if(shared_version != NULL)
-        *shared_version = (long)time(NULL);
-#else
-      version = (long)time(NULL);
-#endif
-      message(yellow("Live reloading"));
+  int on = force_on;
+  if(!on && db != NULL) {
+    sqlite3_stmt* stmt = NULL;
+    const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
+    if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+      sqlite3_bind_text(stmt, 1, LIVERELOAD_KEY, -1, SQLITE_STATIC);
+      if(sqlite3_step(stmt) == SQLITE_ROW) {
+        const char* val = (const char*)sqlite3_column_text(stmt, 0);
+        // Allow-list, matching Config.bool: only "1"/"true" enable the flag.
+        // The old denylist treated "false" and "off" as true.
+        on = val != NULL && (strcmp(val, "1") == 0 || strcmp(val, "true") == 0 ||
+                             strcmp(val, "TRUE") == 0 || strcmp(val, "True") == 0);
+      }
+      sqlite3_finalize(stmt);
     }
   }
-  sqlite3_finalize(stmt);
+  if(on) {
+    enabled = 1;
+#if IS_LINUX || IS_MAC
+    if(shared_version != NULL)
+      *shared_version = (long)time(NULL);
+#else
+    version = (long)time(NULL);
+#endif
+    message(yellow("Live reloading"));
+  }
 }
 
 int livereload_is_poll(const char* uri) {

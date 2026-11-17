@@ -12,27 +12,27 @@ static size_t captured_cap = 0;
 
 extern sqlite3* db;
 
-void show_errors_init(void) {
-  if(db == NULL)
-    return;
-
-  sqlite3_stmt* stmt = NULL;
-  const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
-  if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    return;
-
-  sqlite3_bind_text(stmt, 1, SHOW_ERRORS_KEY, -1, SQLITE_STATIC);
-  if(sqlite3_step(stmt) == SQLITE_ROW) {
-    const char* val = (const char*)sqlite3_column_text(stmt, 0);
-    // Allow-list, matching Config.bool: only "1"/"true" enable the flag. The
-    // old denylist treated "false" and "off" as true.
-    if(val != NULL && (strcmp(val, "1") == 0 || strcmp(val, "true") == 0 ||
-                       strcmp(val, "TRUE") == 0 || strcmp(val, "True") == 0)) {
-      enabled = 1;
-      message(yellow("Showing errors in browser"));
+void show_errors_init(int force_on) {
+  int on = force_on;
+  if(!on && db != NULL) {
+    sqlite3_stmt* stmt = NULL;
+    const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
+    if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+      sqlite3_bind_text(stmt, 1, SHOW_ERRORS_KEY, -1, SQLITE_STATIC);
+      if(sqlite3_step(stmt) == SQLITE_ROW) {
+        const char* val = (const char*)sqlite3_column_text(stmt, 0);
+        // Allow-list, matching Config.bool: only "1"/"true" enable the flag.
+        // The old denylist treated "false" and "off" as true.
+        on = val != NULL && (strcmp(val, "1") == 0 || strcmp(val, "true") == 0 ||
+                             strcmp(val, "TRUE") == 0 || strcmp(val, "True") == 0);
+      }
+      sqlite3_finalize(stmt);
     }
   }
-  sqlite3_finalize(stmt);
+  if(on) {
+    enabled = 1;
+    message(yellow("Showing errors in browser"));
+  }
 }
 
 int show_errors_enabled(void) {

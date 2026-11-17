@@ -2186,31 +2186,6 @@ static void apply_sqlite_pragmas() {
   }
 }
 
-// Enables the development flags (live reload + showing errors in the browser)
-// in the BIALET_CONFIG table. Idempotent: missing or disabled values are set
-// to "1", already-enabled values are left untouched. Runs in dev mode so the
-// behavior is one-time and self-healing across restarts.
-void bialet_enable_dev_flags() {
-  if(db == NULL)
-    return;
-
-  sqlite_exec_checked("CREATE TABLE IF NOT EXISTS BIALET_CONFIG (key TEXT PRIMARY "
-                      "KEY, val TEXT)");
-
-  const char* sql =
-      "INSERT OR REPLACE INTO BIALET_CONFIG (key, val) VALUES (?, '1')";
-  const char* keys[] = {LIVERELOAD_KEY, SHOW_ERRORS_KEY};
-
-  for(size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
-    sqlite3_stmt* stmt = NULL;
-    if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-      continue;
-    sqlite3_bind_text(stmt, 1, keys[i], -1, SQLITE_STATIC);
-    sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-  }
-}
-
 // Exits when [real_db] (a resolved path) names a public file inside the app
 // root, which the static handler would serve. [shown] is the path as given.
 static void refuse_public_db_path(const char* real_db, const char* shown) {

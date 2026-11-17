@@ -2197,9 +2197,11 @@ else
 fi
 
 # Tests - bialet dev
-# `bialet dev` must serve the current directory, enable BIALET_LIVE_RELOAD and
-# BIALET_SHOW_ERRORS in the DB, inject the live-reload script into HTML, and
-# bump the /_livereload version when a file in the app directory changes.
+# `bialet dev` must serve the current directory, turn on live reload and error
+# pages for that run, inject the live-reload script into HTML, and bump the
+# /_livereload version when a file in the app directory changes. It must not
+# write the flags into the database: they used to stay on for every later plain
+# `bialet` start, so production served error traces and /_livereload.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   dev_starts_line=$LINENO
   _test_start_ms=$(now_ms)
@@ -2215,7 +2217,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   dev_body=$(curl -s "http://$HOST:$DEV_PORT/")
   dev_live=$(printf "%s" "$dev_body" | grep -c "_livereload")
   dev_flags=$(sqlite3 "$dev_root/_db.sqlite3" \
-    "SELECT COUNT(*) FROM BIALET_CONFIG WHERE key IN ('BIALET_LIVE_RELOAD','BIALET_SHOW_ERRORS') AND val='1'" 2>/dev/null)
+    "SELECT COUNT(*) FROM BIALET_CONFIG WHERE key IN ('BIALET_LIVE_RELOAD','BIALET_SHOW_ERRORS')" 2>/dev/null)
   dev_v1=$(curl -s "http://$HOST:$DEV_PORT/_livereload")
   sleep 1
   printf 'reload\n' > "$dev_root/reload_scratch"
@@ -2229,12 +2231,21 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   done
   rm -f "$dev_root/reload_scratch"
   stop_matching_servers "$dev_exec dev -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log"
+  # A plain start on the same database afterwards has neither feature.
+  require_free_port "$HOST" "$DEV_PORT" "plain server after dev"
+  (cd "$dev_root" && "$dev_exec" -q -h "$HOST" -p "$DEV_PORT" -l /tmp/tests-dev.log) \
+    > /dev/null 2>&1 &
+  disown
+  wait_http "http://$HOST:$DEV_PORT/" 200 10
+  dev_after=$(curl -s -o /dev/null -w "%{http_code}" "http://$HOST:$DEV_PORT/_livereload")
+  stop_matching_servers "$dev_exec -q -h $HOST -p $DEV_PORT -l /tmp/tests-dev.log"
   if [[ "$dev_code" == "200" && "$dev_body" == *"Dev App"* && "$dev_live" == "1" \
-        && "$dev_flags" == "2" && "$dev_v1" != "$dev_v2" ]]; then
+        && "${dev_flags:-0}" == "0" && "$dev_after" == "403" \
+        && "$dev_v1" != "$dev_v2" ]]; then
     report_result "bialet dev starts" "$dev_starts_line" 0
   else
     report_result "bialet dev starts" "$dev_starts_line" 1 \
-      "Expected 200 + 'Dev App' + livereload script + 2 enabled flags + bumping version. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags v1:$dev_v1 v2:$dev_v2"
+      "Expected 200 + 'Dev App' + livereload script + no flags in the DB + 403 after a plain start + bumping version. Got code:$dev_code body:'$dev_body' livereload:$dev_live flags:$dev_flags after:$dev_after v1:$dev_v1 v2:$dev_v2"
   fi
   rm -f "$dev_root/_db.sqlite3"
 else

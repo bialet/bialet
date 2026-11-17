@@ -725,10 +725,12 @@ int main(int argc, char* argv[]) {
 
   welcome(port);
   trigger_reload_files(NULL);
-  if(dev_mode)
-    bialet_enable_dev_flags();
-  livereload_init();
-  show_errors_init();
+  // `bialet dev` turns both on for this run only. It used to write them into
+  // BIALET_CONFIG, where they stayed on for every later plain `bialet` start
+  // on the same database (or a copy of it), and production then served error
+  // traces and a public /_livereload endpoint.
+  livereload_init(dev_mode);
+  show_errors_init(dev_mode);
   if(dev_mode && !bialet_config.quiet)
     open_browser(server_url(port));
 

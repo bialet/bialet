@@ -17,7 +17,6 @@
 void bialet_init(struct BialetConfig* config);
 void bialet_cleanup();
 void bialet_reopen_db();
-void bialet_enable_dev_flags();
 
 const char* bialet_get_full_root_dir();
 

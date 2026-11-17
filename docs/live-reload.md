@@ -6,8 +6,9 @@ bialet dev
 
 `bialet dev` starts a server from the current directory with live reload
 already on. It also enables the in-browser error display and opens your browser
-(see [Getting Started](../getting-started/2-setup)). The setting is stored in
-the database, so later `bialet` runs keep live reload on until you disable it.
+(see [Getting Started](../getting-started/2-setup)). Both are on for that run
+only: nothing is written to the database, so a later plain `bialet` start does
+not inherit them.
 
 When enabled, Bialet injects a small polling script into every HTML response.
 The script checks for file changes once per second and reloads the page
@@ -35,9 +36,9 @@ Disable it:
 bialet -r 'Config.disable("BIALET_LIVE_RELOAD")' .
 ```
 
-Since configuration lives in the SQLite database, enabling it in dev has no
-effect on production — each environment has its own `_db.sqlite3` and its own
-`BIALET_CONFIG` table.
+A flag set with `Config.enable` lives in the SQLite database, so it travels
+with any copy of `_db.sqlite3`. Do not ship a development database with
+`BIALET_LIVE_RELOAD` or `BIALET_SHOW_ERRORS` enabled.
 
 > ⚠️ Pitfall: `BIALET_LIVE_RELOAD` is read when the server starts. Enabling or
 > disabling it while a server is running requires a restart.
