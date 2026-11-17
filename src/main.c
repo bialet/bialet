@@ -830,6 +830,9 @@ int main(int argc, char* argv[]) {
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);
 
+  // Run the jobs once at startup, like cron_thread() does on POSIX; starting
+  // the clock at now delayed the first tick by a full minute on Windows.
+  cron_run();
   time_t last_cron = time(NULL);
   while(keep_running) {
     server_poll(SERVER_POLL_DELAY);
