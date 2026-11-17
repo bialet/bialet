@@ -65,9 +65,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # A release call already verified actions.lock before it started. A manual
+  # dispatch did not: it checked out and signed with the PPA key using tag-pinned
+  # actions nobody had compared with the lockfile. Verify first on that path.
+  lockfile:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/lockfile.yml
+
   upload:
-    # Prerelease tags (for example v1.2.11-rc.1) never go to the PPA.
-    if: ${{ !contains(inputs.tag, '-') }}
+    needs: lockfile
+    # Prerelease tags (for example v1.2.11-rc.1) never go to the PPA. The job
+    # runs when the lockfile check passed or was skipped (a release call), never
+    # when it failed.
+    if: ${{ !failure() && !cancelled() && !contains(inputs.tag, '-') }}
     runs-on: ubuntu-24.04
     # A manual dispatch publishes signed packages, so gate it like a release.
     environment: release
