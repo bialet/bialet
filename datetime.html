@@ -67,7 +67,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.21" />
+  <meta name="docsearch:version" content="1.2.22" />
   </head>
   
   
@@ -440,6 +440,10 @@
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-date-object">Creating a Date Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-timezone-handling">Per-Instance Timezone Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#application-timezone">Application Timezone</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps">Stored Timestamps</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displaying-date-and-time-components">Displaying Date and Time Components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-and-subtracting-time">Adding and Subtracting Time</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-dates">Comparing Dates</a></li>
@@ -503,6 +507,74 @@ other <code class="docutils literal notranslate"><span class="pre">Date</span></
 as <code class="docutils literal notranslate"><span class="pre">&quot;America/Bogota&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;Etc/GMT+3&quot;</span></code>. Anything else — a path, a string with
 <code class="docutils literal notranslate"><span class="pre">:</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> — raises an error, so a zone taken from a form field cannot make the
 server read a file. Prefer an allow-list of zones your app offers anyway.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: string zones keep POSIX signs, which count hours <strong>west</strong> of UTC:
+<code class="docutils literal notranslate"><span class="pre">&quot;UTC+3&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Etc/GMT+3&quot;</span></code> are UTC-3, while the <strong>number</strong> <code class="docutils literal notranslate"><span class="pre">3</span></code> is UTC+3.
+Prefer an <code class="docutils literal notranslate"><span class="pre">&quot;Area/City&quot;</span></code> name; the numeric form has no such ambiguity.</p>
+</div></blockquote>
+</section>
+<section id="application-timezone">
+<h2>Application Timezone<a class="headerlink" href="#application-timezone" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code> sets the zone every <code class="docutils literal notranslate"><span class="pre">Date</span></code> uses when the value does not carry
+one of its own. It applies to migrations, cron jobs and every request:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"BIALET_TIMEZONE"</span><span class="p">,</span><span class="w"> </span><span class="s2">"America/Bogota"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="w">                </span><span class="c1">// now, in America/Bogota</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="mf">1700000000</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2023-11-14 17:13:20</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">tz</span><span class="w">                   </span><span class="c1">// "America/Bogota"</span>
+</pre></div>
+</div>
+<p>Without the row, dates follow the process zone: the <code class="docutils literal notranslate"><span class="pre">TZ</span></code> of the environment
+that started the server (UTC on most servers).</p>
+<blockquote>
+<div><p>⚠️ Pitfall: the value is read once, when the server starts. Setting it from a
+request handler, or editing the row while the server runs, has no effect until
+you restart.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>A value the zone rules refuse (a path, a POSIX rule string) is ignored with a
+<code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">a</span> <span class="pre">zone</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">UTC</span> <span class="pre">offset;</span> <span class="pre">ignoring</span> <span class="pre">it</span></code> line at
+startup, and the process zone is used instead.</p></li>
+<li><p>A zone name needs the operating system’s timezone database. Windows does not
+ship one, so there use <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> or a <code class="docutils literal notranslate"><span class="pre">&quot;UTC&lt;offset&gt;&quot;</span></code> string, with the same
+west-positive sign as above; <code class="docutils literal notranslate"><span class="pre">&quot;Area/City&quot;</span></code> names only work on Linux and macOS.</p></li>
+<li><p>It does <strong>not</strong> change what SQLite stores: <code class="docutils literal notranslate"><span class="pre">CURRENT_TIMESTAMP</span></code>, <code class="docutils literal notranslate"><span class="pre">date('now')</span></code>
+and a <code class="docutils literal notranslate"><span class="pre">DEFAULT</span> <span class="pre">CURRENT_TIMESTAMP</span></code> column stay UTC. It does set the zone of
+SQLite’s <code class="docutils literal notranslate"><span class="pre">localtime</span></code> modifier and the <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code> prefix of Bialet’s
+own log lines.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Date.init(zone)</span></code> overrides the default for the current script or request.</p></li>
+</ul>
+<section id="stored-timestamps">
+<h3>Stored Timestamps<a class="headerlink" href="#stored-timestamps" title="Link to this heading">#</a></h3>
+<p>Keep storing UTC. Bialet does not change the timestamps SQLite writes —
+<code class="docutils literal notranslate"><span class="pre">CURRENT_TIMESTAMP</span></code>, <code class="docutils literal notranslate"><span class="pre">date('now')</span></code> and a <code class="docutils literal notranslate"><span class="pre">DEFAULT</span> <span class="pre">CURRENT_TIMESTAMP</span></code> column are
+UTC — and that is what you want: a local timestamp is ambiguous for the hour a
+DST change repeats, it stops ordering correctly, and it is wrong the day the app
+moves to another zone. Retention (<code class="docutils literal notranslate"><span class="pre">Db.clean</span></code>, the session sweep, the temporary
+upload purge) compares against UTC too.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code> applies to SQLite’s explicit <code class="docutils literal notranslate"><span class="pre">localtime</span></code> modifier, which is the
+conversion to the app zone:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT datetime(createdAt, 'localtime') AS createdAt,</span>
+<span class="sb">                   date('now', 'localtime') AS today</span>
+<span class="sb">            FROM items`</span><span class="o">.</span><span class="n">fetch</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Reading a stored UTC value as a <code class="docutils literal notranslate"><span class="pre">Date</span></code> in the app zone:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">stored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="w">                </span><span class="c1">// "2023-11-14 22:13:20", UTC</span>
+<span class="k">var</span><span class="w"> </span><span class="n">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">stored</span><span class="p">,</span><span class="w"> </span><span class="s2">"UTC"</span><span class="p">)</span><span class="o">.</span><span class="n">unix</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="w">                            </span><span class="c1">// 2023-11-14 17:13:20, America/Bogota</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: a <code class="docutils literal notranslate"><span class="pre">Date</span></code> saved through <code class="docutils literal notranslate"><span class="pre">Query.save</span></code> or as a query parameter is
+written as its wall-clock string, with no offset. <code class="docutils literal notranslate"><span class="pre">Date.now</span></code> therefore stores
+the app zone’s wall clock, which is <em>not</em> UTC. Store <code class="docutils literal notranslate"><span class="pre">Date.now.unix</span></code> (or a
+<code class="docutils literal notranslate"><span class="pre">CURRENT_TIMESTAMP</span></code> default) when you need an unambiguous instant.</p>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">createdAt</span></code> column of <code class="docutils literal notranslate"><span class="pre">BIALET_LOGS</span></code> is UTC like every other stored timestamp,
+even though the line Bialet prints to the log has a prefix in the app zone.</p>
+</section>
 </section>
 <section id="displaying-date-and-time-components">
 <h2>Displaying Date and Time Components<a class="headerlink" href="#displaying-date-and-time-components" title="Link to this heading">#</a></h2>
@@ -738,6 +810,10 @@ adapted to Wren:</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-date-object">Creating a Date Object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-instance-timezone-handling">Per-Instance Timezone Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#application-timezone">Application Timezone</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps">Stored Timestamps</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displaying-date-and-time-components">Displaying Date and Time Components</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-and-subtracting-time">Adding and Subtracting Time</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-dates">Comparing Dates</a></li>

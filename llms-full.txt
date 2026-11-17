@@ -2984,6 +2984,11 @@ Bialet tables are prefixed with `BIALET_`.
 If you delete or alter any of these tables your application will not work
 correctly.
 
+Every timestamp these tables store (`createdAt`, `updatedAt`) is UTC, and
+Bialet's retention compares against UTC. `BIALET_TIMEZONE` does not change that:
+it sets the zone of `Date`, the log line prefix and SQLite's `localtime`
+modifier. See [Stored timestamps](datetime.md#stored-timestamps).
+
 You may insert, update or delete rows, however do it with caution.
 
 
@@ -3247,6 +3252,78 @@ A zone is either a number (hours from UTC, `-3` is UTC-3) or a zone name such
 as `"America/Bogota"` or `"Etc/GMT+3"`. Anything else — a path, a string with
 `:` or `.` — raises an error, so a zone taken from a form field cannot make the
 server read a file. Prefer an allow-list of zones your app offers anyway.
+
+> ⚠️ Pitfall: string zones keep POSIX signs, which count hours **west** of UTC:
+> `"UTC+3"` and `"Etc/GMT+3"` are UTC-3, while the **number** `3` is UTC+3.
+> Prefer an `"Area/City"` name; the numeric form has no such ambiguity.
+
+## Application Timezone
+
+`BIALET_TIMEZONE` sets the zone every `Date` uses when the value does not carry
+one of its own. It applies to migrations, cron jobs and every request:
+
+```wren
+Config.set("BIALET_TIMEZONE", "America/Bogota")
+```
+
+```wren
+Date.new()                // now, in America/Bogota
+Date.fromUnix(1700000000) // 2023-11-14 17:13:20
+Date.tz                   // "America/Bogota"
+```
+
+Without the row, dates follow the process zone: the `TZ` of the environment
+that started the server (UTC on most servers).
+
+> ⚠️ Pitfall: the value is read once, when the server starts. Setting it from a
+> request handler, or editing the row while the server runs, has no effect until
+> you restart.
+
+- A value the zone rules refuse (a path, a POSIX rule string) is ignored with a
+  `BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it` line at
+  startup, and the process zone is used instead.
+- A zone name needs the operating system's timezone database. Windows does not
+  ship one, so there use `"UTC"` or a `"UTC<offset>"` string, with the same
+  west-positive sign as above; `"Area/City"` names only work on Linux and macOS.
+- It does **not** change what SQLite stores: `CURRENT_TIMESTAMP`, `date('now')`
+  and a `DEFAULT CURRENT_TIMESTAMP` column stay UTC. It does set the zone of
+  SQLite's `localtime` modifier and the `YYYY-MM-DD HH:MM:SS` prefix of Bialet's
+  own log lines.
+- `Date.init(zone)` overrides the default for the current script or request.
+
+### Stored Timestamps
+
+Keep storing UTC. Bialet does not change the timestamps SQLite writes —
+`CURRENT_TIMESTAMP`, `date('now')` and a `DEFAULT CURRENT_TIMESTAMP` column are
+UTC — and that is what you want: a local timestamp is ambiguous for the hour a
+DST change repeats, it stops ordering correctly, and it is wrong the day the app
+moves to another zone. Retention (`Db.clean`, the session sweep, the temporary
+upload purge) compares against UTC too.
+
+`BIALET_TIMEZONE` applies to SQLite's explicit `localtime` modifier, which is the
+conversion to the app zone:
+
+```wren
+var rows = `SELECT datetime(createdAt, 'localtime') AS createdAt,
+                   date('now', 'localtime') AS today
+            FROM items`.fetch()
+```
+
+Reading a stored UTC value as a `Date` in the app zone:
+
+```wren
+var stored = row["createdAt"]                // "2023-11-14 22:13:20", UTC
+var date = Date.fromUnix(Date.new(stored, "UTC").unix)
+System.print(date)                            // 2023-11-14 17:13:20, America/Bogota
+```
+
+> ⚠️ Pitfall: a `Date` saved through `Query.save` or as a query parameter is
+> written as its wall-clock string, with no offset. `Date.now` therefore stores
+> the app zone's wall clock, which is *not* UTC. Store `Date.now.unix` (or a
+> `CURRENT_TIMESTAMP` default) when you need an unambiguous instant.
+
+The `createdAt` column of `BIALET_LOGS` is UTC like every other stored timestamp,
+even though the line Bialet prints to the log has a prefix in the app zone.
 
 ## Displaying Date and Time Components
 
@@ -7160,15 +7237,21 @@ if (Config.bool("live_reload")) {
 }
 ```
 
-Bialet reads a few flags itself at startup. `BIALET_LIVE_RELOAD` enables the
-live-reload script (see [Live Reload](live-reload.md)), and
-`BIALET_SHOW_ERRORS` shows compile/runtime errors in the browser instead of the
-generic 500 page (see [Error Pages](errors.md)).
+Bialet reads a few settings itself at startup. `BIALET_LIVE_RELOAD` enables the
+live-reload script (see [Live Reload](live-reload.md)), `BIALET_SHOW_ERRORS`
+shows compile/runtime errors in the browser instead of the generic 500 page (see
+[Error Pages](errors.md)), and `BIALET_TIMEZONE` sets the zone every `Date` uses
+by default (see [Date and time](datetime.md#application-timezone)):
 
-> ⚠️ Pitfall: these flags are read once, at startup. Changing them in the
+```wren
+Config.set("BIALET_TIMEZONE", "America/Bogota")
+```
+
+> ⚠️ Pitfall: these settings are read once, at startup. Changing them in the
 > database while a server is running (e.g. with `Config.enable()` from a
 > request handler) has no effect until you restart the server. `bialet dev`
-> turns both on for its own run without touching the database.
+> turns live reload and error pages on for its own run without touching the
+> database.
 
 ### Development mode: `bialet dev`
 
@@ -10645,12 +10728,16 @@ var url = Http.url("https://api.example.com/search", {"q": "hello"})
 ## Date
 
 A class for managing date and time operations, supporting multiple constructors
-and methods for formatting, comparing, and manipulating dates relative to UTC.
+and methods for formatting, comparing, and manipulating dates as wall clocks in
+an explicit zone (UTC only when the zone says UTC).
 
 ### now
 
 Static getter that returns a new `Date` instance representing the current date
-and time in UTC. Equivalent to `Date.new()`.
+and time in the application timezone (`BIALET_TIMEZONE`, or the process zone
+when it is unset), the same value as `Date.new()` and with no UTC offset. Use
+`.unix` when you need an unambiguous instant (see
+[Stored timestamps](datetime.md#stored-timestamps)).
 
 ```wren
 var current = Date.now
@@ -10659,7 +10746,8 @@ System.log("Current time: %(current)")
 
 ### new()
 
-Creates a new `Date` object representing the current date and time in UTC.
+Creates a new `Date` object representing the current date and time in the
+application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
@@ -10726,7 +10814,9 @@ Sets the timezone offset for the current `Date` object.
 
 ### tz
 
-Returns the timezone offset for the current `Date` object.
+Returns the timezone of the current `Date` object. It is the zone passed to the
+constructor or set with `tz=`, otherwise the application default
+(`BIALET_TIMEZONE`, or `""` for the process zone).
 
 ### format(format)
 
@@ -11626,6 +11716,15 @@ in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
+## 22. Stored timestamps are UTC, `Date` is not
+
+`CURRENT_TIMESTAMP`, `date('now')` and every framework `createdAt`/`updatedAt`
+are UTC. `BIALET_TIMEZONE` changes `Date`, the log line prefix and SQLite's
+`localtime` modifier, not what is stored. Convert on read
+(`datetime(createdAt, 'localtime')`, or
+`Date.fromUnix(Date.new(createdAt, "UTC").unix)`), and do not store `Date.now`
+expecting UTC: it writes the app zone's wall clock with no offset. Store
+`Date.now.unix` when you need an unambiguous instant.
 
 
 Examples

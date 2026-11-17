@@ -67,7 +67,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.21" />
+  <meta name="docsearch:version" content="1.2.22" />
   </head>
   
   
@@ -851,6 +851,10 @@ keeps at most 100,000 rows.</p></li>
 </ul>
 <p>If you delete or alter any of these tables your application will not work
 correctly.</p>
+<p>Every timestamp these tables store (<code class="docutils literal notranslate"><span class="pre">createdAt</span></code>, <code class="docutils literal notranslate"><span class="pre">updatedAt</span></code>) is UTC, and
+Bialet’s retention compares against UTC. <code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code> does not change that:
+it sets the zone of <code class="docutils literal notranslate"><span class="pre">Date</span></code>, the log line prefix and SQLite’s <code class="docutils literal notranslate"><span class="pre">localtime</span></code>
+modifier. See <a class="reference internal" href="datetime.html#stored-timestamps"><span class="std std-ref">Stored timestamps</span></a>.</p>
 <p>You may insert, update or delete rows, however do it with caution.</p>
 </section>
 </section>

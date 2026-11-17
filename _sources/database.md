@@ -446,4 +446,9 @@ Bialet tables are prefixed with `BIALET_`.
 If you delete or alter any of these tables your application will not work
 correctly.
 
+Every timestamp these tables store (`createdAt`, `updatedAt`) is UTC, and
+Bialet's retention compares against UTC. `BIALET_TIMEZONE` does not change that:
+it sets the zone of `Date`, the log line prefix and SQLite's `localtime`
+modifier. See [Stored timestamps](datetime.md#stored-timestamps).
+
 You may insert, update or delete rows, however do it with caution.

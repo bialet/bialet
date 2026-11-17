@@ -67,7 +67,7 @@
     <link rel="prev" title="Making HTTP Calls" href="http-calls.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.21" />
+  <meta name="docsearch:version" content="1.2.22" />
   </head>
   
   
@@ -515,15 +515,20 @@ instead of hand-writing the <code class="docutils literal notranslate"><span cla
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Bialet reads a few flags itself at startup. <code class="docutils literal notranslate"><span class="pre">BIALET_LIVE_RELOAD</span></code> enables the
-live-reload script (see <a class="reference internal" href="live-reload.html"><span class="std std-doc">Live Reload</span></a>), and
-<code class="docutils literal notranslate"><span class="pre">BIALET_SHOW_ERRORS</span></code> shows compile/runtime errors in the browser instead of the
-generic 500 page (see <a class="reference internal" href="errors.html"><span class="std std-doc">Error Pages</span></a>).</p>
+<p>Bialet reads a few settings itself at startup. <code class="docutils literal notranslate"><span class="pre">BIALET_LIVE_RELOAD</span></code> enables the
+live-reload script (see <a class="reference internal" href="live-reload.html"><span class="std std-doc">Live Reload</span></a>), <code class="docutils literal notranslate"><span class="pre">BIALET_SHOW_ERRORS</span></code>
+shows compile/runtime errors in the browser instead of the generic 500 page (see
+<a class="reference internal" href="errors.html"><span class="std std-doc">Error Pages</span></a>), and <code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code> sets the zone every <code class="docutils literal notranslate"><span class="pre">Date</span></code> uses
+by default (see <a class="reference internal" href="datetime.html#application-timezone"><span class="std std-ref">Date and time</span></a>):</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"BIALET_TIMEZONE"</span><span class="p">,</span><span class="w"> </span><span class="s2">"America/Bogota"</span><span class="p">)</span>
+</pre></div>
+</div>
 <blockquote>
-<div><p>⚠️ Pitfall: these flags are read once, at startup. Changing them in the
+<div><p>⚠️ Pitfall: these settings are read once, at startup. Changing them in the
 database while a server is running (e.g. with <code class="docutils literal notranslate"><span class="pre">Config.enable()</span></code> from a
 request handler) has no effect until you restart the server. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code>
-turns both on for its own run without touching the database.</p>
+turns live reload and error pages on for its own run without touching the
+database.</p>
 </div></blockquote>
 </section>
 <section id="development-mode-bialet-dev">

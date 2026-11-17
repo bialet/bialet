@@ -45,15 +45,21 @@ if (Config.bool("live_reload")) {
 }
 ```
 
-Bialet reads a few flags itself at startup. `BIALET_LIVE_RELOAD` enables the
-live-reload script (see [Live Reload](live-reload.md)), and
-`BIALET_SHOW_ERRORS` shows compile/runtime errors in the browser instead of the
-generic 500 page (see [Error Pages](errors.md)).
+Bialet reads a few settings itself at startup. `BIALET_LIVE_RELOAD` enables the
+live-reload script (see [Live Reload](live-reload.md)), `BIALET_SHOW_ERRORS`
+shows compile/runtime errors in the browser instead of the generic 500 page (see
+[Error Pages](errors.md)), and `BIALET_TIMEZONE` sets the zone every `Date` uses
+by default (see [Date and time](datetime.md#application-timezone)):
 
-> ⚠️ Pitfall: these flags are read once, at startup. Changing them in the
+```wren
+Config.set("BIALET_TIMEZONE", "America/Bogota")
+```
+
+> ⚠️ Pitfall: these settings are read once, at startup. Changing them in the
 > database while a server is running (e.g. with `Config.enable()` from a
 > request handler) has no effect until you restart the server. `bialet dev`
-> turns both on for its own run without touching the database.
+> turns live reload and error pages on for its own run without touching the
+> database.
 
 ### Development mode: `bialet dev`
 

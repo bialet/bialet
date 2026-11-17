@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.21" />
+  <meta name="docsearch:version" content="1.2.22" />
   </head>
   
   
@@ -459,6 +459,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps-are-utc-date-is-not">22. Stored timestamps are UTC, <code class="docutils literal notranslate"><span class="pre">Date</span></code> is not</a></li>
 </ul>
             </nav>
         </div>
@@ -702,6 +703,16 @@ in the domain method (and a UNIQUE index where the database can express it).
 Example: “one open loan per book” must be checked in <code class="docutils literal notranslate"><span class="pre">Loan.create</span></code>, not only by
 rendering the button as disabled.</p>
 </section>
+<section id="stored-timestamps-are-utc-date-is-not">
+<h2>22. Stored timestamps are UTC, <code class="docutils literal notranslate"><span class="pre">Date</span></code> is not<a class="headerlink" href="#stored-timestamps-are-utc-date-is-not" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CURRENT_TIMESTAMP</span></code>, <code class="docutils literal notranslate"><span class="pre">date('now')</span></code> and every framework <code class="docutils literal notranslate"><span class="pre">createdAt</span></code>/<code class="docutils literal notranslate"><span class="pre">updatedAt</span></code>
+are UTC. <code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code> changes <code class="docutils literal notranslate"><span class="pre">Date</span></code>, the log line prefix and SQLite’s
+<code class="docutils literal notranslate"><span class="pre">localtime</span></code> modifier, not what is stored. Convert on read
+(<code class="docutils literal notranslate"><span class="pre">datetime(createdAt,</span> <span class="pre">'localtime')</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">Date.fromUnix(Date.new(createdAt,</span> <span class="pre">&quot;UTC&quot;).unix)</span></code>), and do not store <code class="docutils literal notranslate"><span class="pre">Date.now</span></code>
+expecting UTC: it writes the app zone’s wall clock with no offset. Store
+<code class="docutils literal notranslate"><span class="pre">Date.now.unix</span></code> when you need an unambiguous instant.</p>
+</section>
 </section>
 
 
@@ -771,6 +782,7 @@ rendering the button as disabled.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#must-sit-inside-an-html-tag">19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps-are-utc-date-is-not">22. Stored timestamps are UTC, <code class="docutils literal notranslate"><span class="pre">Date</span></code> is not</a></li>
 </ul>
   </nav></div>
 

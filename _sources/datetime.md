@@ -53,6 +53,78 @@ as `"America/Bogota"` or `"Etc/GMT+3"`. Anything else — a path, a string with
 `:` or `.` — raises an error, so a zone taken from a form field cannot make the
 server read a file. Prefer an allow-list of zones your app offers anyway.
 
+> ⚠️ Pitfall: string zones keep POSIX signs, which count hours **west** of UTC:
+> `"UTC+3"` and `"Etc/GMT+3"` are UTC-3, while the **number** `3` is UTC+3.
+> Prefer an `"Area/City"` name; the numeric form has no such ambiguity.
+
+## Application Timezone
+
+`BIALET_TIMEZONE` sets the zone every `Date` uses when the value does not carry
+one of its own. It applies to migrations, cron jobs and every request:
+
+```wren
+Config.set("BIALET_TIMEZONE", "America/Bogota")
+```
+
+```wren
+Date.new()                // now, in America/Bogota
+Date.fromUnix(1700000000) // 2023-11-14 17:13:20
+Date.tz                   // "America/Bogota"
+```
+
+Without the row, dates follow the process zone: the `TZ` of the environment
+that started the server (UTC on most servers).
+
+> ⚠️ Pitfall: the value is read once, when the server starts. Setting it from a
+> request handler, or editing the row while the server runs, has no effect until
+> you restart.
+
+- A value the zone rules refuse (a path, a POSIX rule string) is ignored with a
+  `BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it` line at
+  startup, and the process zone is used instead.
+- A zone name needs the operating system's timezone database. Windows does not
+  ship one, so there use `"UTC"` or a `"UTC<offset>"` string, with the same
+  west-positive sign as above; `"Area/City"` names only work on Linux and macOS.
+- It does **not** change what SQLite stores: `CURRENT_TIMESTAMP`, `date('now')`
+  and a `DEFAULT CURRENT_TIMESTAMP` column stay UTC. It does set the zone of
+  SQLite's `localtime` modifier and the `YYYY-MM-DD HH:MM:SS` prefix of Bialet's
+  own log lines.
+- `Date.init(zone)` overrides the default for the current script or request.
+
+### Stored Timestamps
+
+Keep storing UTC. Bialet does not change the timestamps SQLite writes —
+`CURRENT_TIMESTAMP`, `date('now')` and a `DEFAULT CURRENT_TIMESTAMP` column are
+UTC — and that is what you want: a local timestamp is ambiguous for the hour a
+DST change repeats, it stops ordering correctly, and it is wrong the day the app
+moves to another zone. Retention (`Db.clean`, the session sweep, the temporary
+upload purge) compares against UTC too.
+
+`BIALET_TIMEZONE` applies to SQLite's explicit `localtime` modifier, which is the
+conversion to the app zone:
+
+```wren
+var rows = `SELECT datetime(createdAt, 'localtime') AS createdAt,
+                   date('now', 'localtime') AS today
+            FROM items`.fetch()
+```
+
+Reading a stored UTC value as a `Date` in the app zone:
+
+```wren
+var stored = row["createdAt"]                // "2023-11-14 22:13:20", UTC
+var date = Date.fromUnix(Date.new(stored, "UTC").unix)
+System.print(date)                            // 2023-11-14 17:13:20, America/Bogota
+```
+
+> ⚠️ Pitfall: a `Date` saved through `Query.save` or as a query parameter is
+> written as its wall-clock string, with no offset. `Date.now` therefore stores
+> the app zone's wall clock, which is *not* UTC. Store `Date.now.unix` (or a
+> `CURRENT_TIMESTAMP` default) when you need an unambiguous instant.
+
+The `createdAt` column of `BIALET_LOGS` is UTC like every other stored timestamp,
+even though the line Bialet prints to the log has a prefix in the app zone.
+
 ## Displaying Date and Time Components
 
 You can access various components of a `Date` object:

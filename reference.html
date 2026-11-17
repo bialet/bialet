@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.21" />
+  <meta name="docsearch:version" content="1.2.22" />
   </head>
   
   
@@ -1707,11 +1707,15 @@ parameters.</p>
 <section id="date">
 <span id="date-reference"></span><h2>Date<a class="headerlink" href="#date" title="Link to this heading">#</a></h2>
 <p>A class for managing date and time operations, supporting multiple constructors
-and methods for formatting, comparing, and manipulating dates relative to UTC.</p>
+and methods for formatting, comparing, and manipulating dates as wall clocks in
+an explicit zone (UTC only when the zone says UTC).</p>
 <section id="now">
 <h3>now<a class="headerlink" href="#now" title="Link to this heading">#</a></h3>
 <p>Static getter that returns a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> instance representing the current date
-and time in UTC. Equivalent to <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
+and time in the application timezone (<code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code>, or the process zone
+when it is unset), the same value as <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code> and with no UTC offset. Use
+<code class="docutils literal notranslate"><span class="pre">.unix</span></code> when you need an unambiguous instant (see
+<a class="reference internal" href="datetime.html#stored-timestamps"><span class="std std-ref">Stored timestamps</span></a>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Current time: </span><span class="si">%(</span><span class="n">current</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
@@ -1719,7 +1723,8 @@ and time in UTC. Equivalent to <code class="docutils literal notranslate"><span 
 </section>
 <section id="id13">
 <h3>new()<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
-<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in UTC.</p>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in the
+application timezone (<code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code>, or the process zone when it is unset).</p>
 </section>
 <section id="new-date">
 <h3>new(date)<a class="headerlink" href="#new-date" title="Link to this heading">#</a></h3>
@@ -1793,7 +1798,9 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 </section>
 <section id="tz">
 <h3>tz<a class="headerlink" href="#tz" title="Link to this heading">#</a></h3>
-<p>Returns the timezone offset for the current <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p>
+<p>Returns the timezone of the current <code class="docutils literal notranslate"><span class="pre">Date</span></code> object. It is the zone passed to the
+constructor or set with <code class="docutils literal notranslate"><span class="pre">tz=</span></code>, otherwise the application default
+(<code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> for the process zone).</p>
 </section>
 <section id="format-format">
 <h3>format(format)<a class="headerlink" href="#format-format" title="Link to this heading">#</a></h3>
