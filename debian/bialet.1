@@ -105,8 +105,17 @@ SQLite foreign key enforcement. Default: on.
 .BR \-s ", " \-\-synchronous " \fILEVEL\fR"
 SQLite synchronous mode: off, normal, full, or extra. Default: normal.
 .TP
+.BR \-k ", " \-\-secret\-key\-file " \fIFILE\fR"
+Deployment key for \fBConfig.encrypt\fR and \fBConfig.decrypt\fR: 64 hex
+characters (an AES-256 key) or a passphrase. The file must be a regular file
+outside the app root; keep it readable only by the server's user.
+.TP
 .BR \-q ", " \-\-quiet
 Suppress the browser auto-open and colored output.
+.TP
+.BR \-x ", " \-\-cache
+Cache compiled user .wren files in memory (served files and local imports).
+The framework module is always cached.
 .SH EXAMPLES
 Run the application in the current directory:
 .PP
