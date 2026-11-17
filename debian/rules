@@ -10,8 +10,13 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 0
 # CFLAGS= here would override the Makefile's own assignment and drop its
 # -DHAVE_SSL and hardening flags. -Wno-error goes first so dpkg's
 # -Werror=format-security still applies.
+#
+# MIMALLOC=1: the packaged (non-static) build links the distro's mimalloc, so
+# ${shlibs:Depends} in debian/control picks up the runtime package by itself.
+# It only adds a Build-Depends, not a hard-coded version.
 override_dh_auto_build:
 	dh_auto_build -- \
+		MIMALLOC=1 \
 		EXTRA_CFLAGS="-Wno-error $(shell dpkg-buildflags --get CFLAGS)" \
 		EXTRA_LDFLAGS="$(shell dpkg-buildflags --get LDFLAGS)"
 

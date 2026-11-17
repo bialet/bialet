@@ -110,8 +110,10 @@ The default build uses `-Wall -Wextra -Werror` and links against
 `libsqlite3`, `libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto`
 when OpenSSL is detected).
 
-`make MIMALLOC=1` links mimalloc as the allocator instead. It is never
-required and nothing is vendored; see the README for the measured effect.
+`make MIMALLOC=1` links mimalloc as the allocator instead. A plain `make`
+never needs it and nothing is vendored; the official Linux release binaries
+and the Debian/Ubuntu package enable it for you. See the README for the
+measured effect.
 
 #### Make targets
 
