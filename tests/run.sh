@@ -328,6 +328,26 @@ else
     "Expected /get.WREN to execute or 404, never the module source. Got code:$wren_case_code body:'${wren_case_body:0:60}'"
 fi
 
+# Regression: Win32 strips a trailing dot or space from a path component, so
+# "/get.wren." opened get.wren while the suffix test saw "wren." and served the
+# module source as a static file. The same spelling bypassed the ignore list
+# ("/ignored/data.json."). Whatever the platform does, neither may come back.
+wren_alias_line=$LINENO
+_test_start_ms=$(now_ms)
+wren_alias_ok=1
+wren_alias_seen=""
+for alias in "get.wren." "get.wren%20" "get.wren::\$DATA" "ignored/data.json."; do
+  body=$(curl -s --path-as-is --max-time 10 "http://$HOST:$PORT/$alias?foo=bar")
+  wren_alias_seen+="$alias:'${body:0:40}' "
+  [[ "$body" != *"Request.get"* && "$body" != *"\"ignored\": true"* ]] || wren_alias_ok=0
+done
+if [[ "$wren_alias_ok" == 1 ]]; then
+  report_result "Win32 name alias no source   " "$wren_alias_line" 0
+else
+  report_result "Win32 name alias no source   " "$wren_alias_line" 1 \
+    "Expected no module source and no ignored file. Got $wren_alias_seen"
+fi
+
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"

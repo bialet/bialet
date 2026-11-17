@@ -261,6 +261,30 @@ static const char* path_basename(const char* path) {
   return last;
 }
 
+#ifdef _WIN32
+// Win32 strips trailing dots and spaces from every path component and reads
+// "name:stream" as an NTFS stream of "name", so "/hello.wren." opens hello.wren
+// while every test that looks at the request spelling sees "wren.". No real
+// file name can be requested that way, so such a target is refused outright.
+// Only the path is checked; the query string is data.
+static int has_win32_alias_component(const char* uri) {
+  const char* p = uri;
+  while(*p != '\0' && *p != '?') {
+    while(*p == '/')
+      p++;
+    const char* start = p;
+    while(*p != '\0' && *p != '?' && *p != '/') {
+      if(*p == ':' || *p == '\\')
+        return 1;
+      p++;
+    }
+    if(p > start && (p[-1] == '.' || p[-1] == ' '))
+      return 1;
+  }
+  return 0;
+}
+#endif
+
 // Returns 1 when [path] is a regular file without following a symlink in the
 // final component. On POSIX lstat reports the link itself; on Windows stat()
 // may still follow a junction, so the resolved-path basename check remains the
@@ -1298,7 +1322,11 @@ void handle_client(bialet_socket_t client_socket) {
   // Reject any URI whose decoded path component starts with '_' or '.'
   // (private files such as _db.sqlite3, .env). This runs before
   // any stat/fopen so "/sub/.env" and "//_db.sqlite3" cannot bypass it.
-  if(has_forbidden_uri_component(hm->uri.str)) {
+  int refuse_uri = has_forbidden_uri_component(hm->uri.str);
+#ifdef _WIN32
+  refuse_uri = refuse_uri || has_win32_alias_component(hm->uri.str);
+#endif
+  if(refuse_uri) {
     clean_http_message(hm);
     custom_error(403, &response);
     write_response(client_socket, &response);
@@ -1557,7 +1585,19 @@ void handle_client(bialet_socket_t client_socket) {
   // Apply the documented ignore list at the single point where the served path
   // is final: the .wren route probe and the directory index both rewrite `path`
   // before this, so one check covers them all.
-  if(!uri_is_well_known(hm->uri.str) && is_ignored_file_name(path_basename(path))) {
+  // The name to classify. On Windows it is the name the file system will
+  // actually open: an 8.3 short name such as "HELL~A14.WRE" opens hello.wren,
+  // so a lexical test on the request spelling would treat a route module as a
+  // static asset and send its source. realpath_n() returns the long, normalized
+  // name of an existing file; a path that does not resolve is classified as
+  // spelled and simply fails to open later.
+  const char* class_name = path_basename(path);
+#ifdef _WIN32
+  char canonical_path[PATH_SIZE];
+  if(resolve_within_root(path, canonical_path))
+    class_name = path_basename(canonical_path);
+#endif
+  if(!uri_is_well_known(hm->uri.str) && is_ignored_file_name(class_name)) {
     clean_http_message(hm);
     custom_error(404, &response);
     write_response(client_socket, &response);
@@ -1577,7 +1617,7 @@ void handle_client(bialet_socket_t client_socket) {
   // answer without touching the file at all.
   unsigned char is_wren_file = 0;
   {
-    const char* base = path_basename(path);
+    const char* base = class_name;
     size_t      base_len = strlen(base);
     if(base_len > BIALET_EXTENSION_LEN &&
        ci_ncmp(base + base_len - BIALET_EXTENSION_LEN, BIALET_EXTENSION,
