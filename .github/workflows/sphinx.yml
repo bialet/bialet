@@ -33,13 +33,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # The build installs Sphinx and its dependencies from PyPI, and their
+  # transitive versions are not pinned, so any code that arrives that way runs
+  # here. This job therefore holds a read-only token; it hands the finished site
+  # to the deploy job as an artifact, and only the deploy job, which runs no
+  # third-party Python, can write to the repository.
+  build:
     runs-on: ubuntu-22.04
-    # Publishing to the production host is a deploy; put it behind a protected
-    # environment (Settings -> Environments -> github-pages).
-    environment: github-pages
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -91,6 +93,28 @@ jobs:
           else
             python3 tools/check_release_urls.py build/html --warn-only
           fi
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: docs-site
+          path: build/html
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-22.04
+    # Publishing to the production host is a deploy; put it behind a protected
+    # environment (Settings -> Environments -> github-pages).
+    environment: github-pages
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: docs-site
+          path: build/html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4.1.0
