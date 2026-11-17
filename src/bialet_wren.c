@@ -234,6 +234,18 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
   free(safe);
 }
 
+// Case-insensitive suffix test on a NUL-terminated name.
+static int has_suffix_ci(const char* name, const char* suffix) {
+  size_t n = strlen(name), k = strlen(suffix);
+  if(n < k)
+    return 0;
+  for(size_t i = 0; i < k; i++) {
+    if(tolower((unsigned char)name[n - k + i]) != tolower((unsigned char)suffix[i]))
+      return 0;
+  }
+  return 1;
+}
+
 char* bialet_read_file(const char* path) {
   char fullPath[MAX_URL_LEN];
   int  ret = snprintf(fullPath, sizeof(fullPath), "%s/%s",
@@ -268,6 +280,25 @@ char* bialet_read_file(const char* path) {
             log_path ? log_path : "(unprintable)");
     free(log_path);
     return NULL;
+  }
+
+  // Markdown.file renders Markdown, so only a Markdown file may be read here.
+  // Without this the reader returned anything the private rule let through:
+  // Markdown.file(Request.get("page")) handed out config.json, deploy.yml and
+  // the source of .wren route modules, none of which the URL router serves.
+  {
+    const char* base = resolved;
+    for(const char* c = resolved; *c; c++) {
+      if(*c == '/' || *c == '\\')
+        base = c + 1;
+    }
+    if(!has_suffix_ci(base, ".md") && !has_suffix_ci(base, ".markdown")) {
+      char* log_path = log_escape(path);
+      message(red("Error"), "Markdown.file only reads .md and .markdown files",
+              log_path ? log_path : "(unprintable)");
+      free(log_path);
+      return NULL;
+    }
   }
 
   // Reopen the already-contained resolved path without following a symlink, so

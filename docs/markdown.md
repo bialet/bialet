@@ -65,8 +65,8 @@ plain escaped text.
 
 ## Pitfalls
 
-**`Markdown.file()` returns `false` when the file is missing**, it does not
-throw. Guard against it:
+**`Markdown.file()` returns `false` when the file is missing or not
+readable**, it does not throw. Guard against it:
 
 ```wren
 var content = Markdown.file("about.md")
@@ -75,9 +75,13 @@ if (content == false) content = "<p>About page not written yet.</p>"
 
 **Output is capped at 2 MB.** Larger documents are truncated silently.
 
-**`_`-prefixed files are private.** A `_about.md` file renders 403 when fetched
-directly, but `Markdown.file("_about.md")` still reads it from disk — the
-privacy rule applies to HTTP requests, not file reads.
+**`Markdown.file()` reads only Markdown inside the app root.** The path must
+end in `.md` or `.markdown`, must stay inside the app root, and no component may
+start with `_` or `.`: `Markdown.file("_about.md")`, `Markdown.file("config.json")`
+and `Markdown.file("page.wren")` all return `false`. That keeps
+`Markdown.file(Request.get("page"))` from handing out private files, config or
+route source, but still prefer an allow-list of page names over a raw request
+value.
 
 **Front matter is skipped, not parsed.** A leading `---` block is dropped from
 the output. Metadata inside it (title, date, tags) is not exposed — you must

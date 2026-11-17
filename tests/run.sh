@@ -1852,6 +1852,7 @@ run_test "Markdown drops script link  " "md-security"     200 "links:<p>click</p
 run_test "Markdown escapes code span  " "md-security"     200 "code:<p><code>&lt;b&gt;</code></p>"
 run_test "Markdown keeps raw html     " "md-security"     200 "raw:<p><b>raw</b></p>"
 run_test "Markdown missing file false " "md-missing"      200 "true"
+run_test "Markdown.file reads only .md" "md-file-policy"  200 "true|true|true"
 
 # Tests - Query binding limits
 run_test "Query four params and paging" "query-pagination" 200 "four:5|page:2|first:3"

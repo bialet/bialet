@@ -4,6 +4,6 @@ return Template.layout(
   "About Bialet",
   <main>
     {{ Markdown.html("[Back to home](/)") }}
-    {{ Markdown.file("_about-bialet.md") }}
+    {{ Markdown.file("about-bialet.md") }}
   </main>
 )

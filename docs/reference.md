@@ -1128,9 +1128,11 @@ var content = Markdown.html("## Hello **World**!")
 
 ### file(path)
 
-Reads a `.md` file from disk and renders its content to HTML.
+Reads a `.md` file from disk and renders its content to HTML. Returns `false`
+when the file is missing, is not a `.md` or `.markdown` file, is outside the app
+root, or has a path component starting with `_` or `.`.
 
-- `path`: The path to the Markdown file to render.
+- `path`: The path to the Markdown file to render, relative to the app root.
 
 ```wren
 var content = Markdown.file("about.md")
