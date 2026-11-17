@@ -70,19 +70,22 @@ Enable SQLite write-ahead logging.
 .TP
 .BR \-i ", " \-\-ignore " \fIGLOBS\fR"
 Comma-separated list of glob patterns of files to ignore.
-Default: \fIREADME*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml\fR.
+Default: \fIREADME*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe\fR.
+The list replaces the default one; repeat the defaults to keep them.
 .TP
 .BR \-m ", " \-\-mem\-soft " \fIMB\fR"
-Soft memory limit in MB. Default: 128.
+Soft memory limit in MB (Linux only; see \fIdocs/security.md\fR). Default: 128.
 .TP
 .BR \-M ", " \-\-mem\-hard " \fIMB\fR"
 Hard memory limit in MB. Default: 256.
 .TP
-.BR \-c ", " \-\-cpu\-soft " \fIPERCENT\fR"
-Soft CPU limit in percent. Default: 15.
+.BR \-c ", " \-\-cpu\-soft " \fISECONDS\fR"
+CPU time soft limit of the HTTP process, in seconds (not a percentage).
+Reaching it sends SIGXCPU and the supervisor starts a fresh process.
+0 means no limit. Default: 3600.
 .TP
-.BR \-C ", " \-\-cpu\-hard " \fIPERCENT\fR"
-Hard CPU limit in percent. Default: 30.
+.BR \-C ", " \-\-cpu\-hard " \fISECONDS\fR"
+CPU time hard limit, in seconds; reaching it sends SIGKILL. Default: 7200.
 .TP
 .BR \-b ", " \-\-max\-post " \fIKB\fR"
 Maximum request body size in KB. Default: 128.

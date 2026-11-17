@@ -60,7 +60,7 @@ bialet --port=8080 /path/to/app
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
 | `-d`, `--db`            | SQLite database file location                                               | `_db.sqlite3`                                |
 | `-w`, `--wal`           | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
-| `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
+| `-i`, `--ignore`        | Ignored files: comma-separated globs; replaces the default list             | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe` |
 | `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `128`                                        |
 | `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `256`                                        |
 | `-c`, `--cpu-soft`      | CPU time soft limit (seconds)                                               | `3600`                                       |
