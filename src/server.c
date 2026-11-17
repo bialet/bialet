@@ -159,6 +159,32 @@ static int header_block_well_formed(const char* buf, size_t hdr_len) {
   }
   if(spaces != 2)
     return 0;
+  // Every header line is a field line: a name with no whitespace, then ':'.
+  // Request.init ends the header block at the first line that is blank after
+  // trimming and skips a name with whitespace before the colon, while this
+  // side frames at CRLFCRLF and reads every line: a " " line made the app
+  // parse header bytes as the POST body (with no framed body at all) and hid
+  // a Content-Length the framer used. A whitespace-only line, an obs-fold
+  // continuation (RFC 9112 5.2), a line without ':' or a spaced name is
+  // refused, so the two parsers see the same headers.
+  for(size_t line = request_line_end + 2; line < hdr_len;) {
+    size_t eol = line;
+    while(eol + 1 < hdr_len && !(buf[eol] == '\r' && buf[eol + 1] == '\n'))
+      eol++;
+    if(eol + 1 >= hdr_len)
+      eol = hdr_len;
+    if(eol == line)
+      break;
+    size_t colon = line;
+    while(colon < eol && buf[colon] != ':') {
+      if(buf[colon] == ' ' || buf[colon] == '\t')
+        return 0;
+      colon++;
+    }
+    if(colon == line || colon == eol)
+      return 0;
+    line = eol + 2;
+  }
   for(size_t i = 0; i < hdr_len; i++) {
     if(buf[i] == '\n' && (i == 0 || buf[i - 1] != '\r'))
       return 0;

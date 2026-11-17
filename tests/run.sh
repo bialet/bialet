@@ -836,9 +836,6 @@ def send(extra):
     s.close()
     return data.split(b'\r\n\r\n', 1)[1].decode('utf-8', 'replace').strip()
 
-ws = send(b'Content-Type: text/plain\r\n \r\n'
-          b'Content-Type: multipart/form-data; boundary=zz\r\n')
-colon = send(b'Content-Type : multipart/form-data; boundary=zz\r\n')
 control = send(b'Content-Type: multipart/form-data; boundary=zz\r\n')
 
 def status(extra):
@@ -887,11 +884,18 @@ except OSError:
     pass
 s.close()
 last = 'ok' if b'--zX tail' in data else data.split(b'\r\n\r\n', 1)[-1][:60].decode('utf-8', 'replace')
-print('ws:%s|colon:%s|control:%s|barecr:%d|barelf:%d|last:%s' %
-      (ws, colon, control, bare_cr, bare_lf, last))
+# A whitespace-only line, a spaced field name and an obs-fold continuation
+# are read differently by the C framer and the Wren header map (one ended the
+# block early, one skipped the line), so such a block is refused outright.
+ws = status(b'Content-Type: text/plain\r\n \r\n'
+            b'Content-Type: multipart/form-data; boundary=zz\r\n')
+colon = status(b'Content-Type : multipart/form-data; boundary=zz\r\n')
+fold = status(b'Content-Type: multipart/form-data;\r\n boundary=zz\r\n')
+print('ws:%d|colon:%d|fold:%d|control:%s|barecr:%d|barelf:%d|last:%s' %
+      (ws, colon, fold, control, bare_cr, bare_lf, last))
 PY
 )
-  if [[ "$mpdetect_out" == "ws:ct:text/plain|note:none|file:none|colon:ct:none|note:none|file:none|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400|last:ok" ]]; then
+  if [[ "$mpdetect_out" == "ws:400|colon:400|fold:400|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400|last:ok" ]]; then
     report_result "Multipart header agreement    " "$mpdetect_line" 0
   else
     report_result "Multipart header agreement    " "$mpdetect_line" 1 \
