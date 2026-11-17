@@ -14,16 +14,21 @@
 //
 // Caching policy:
 //
-//   wren_core.wren (bootstrap)              never (compiled before the core
-//                                           classes exist; untouched here)
+//   wren_core.wren (bootstrap)              always, with or without --cache
 //   bialet.wren (embedded, core module)     always, with or without --cache
 //   served .wren file (route/error page)    only with --cache / -x
 //   locally imported .wren file             only with --cache / -x
 //
-// The framework entry is built from a string compiled into the binary, so it
-// cannot go stale at runtime: it needs no source copy and no content check,
-// only the format/build stamp in its header. User files are invalidated by a
-// 64-bit xxHash64 of their bytes: a collision would mean serving bytecode
+// The two embedded entries are built from strings compiled into the binary, so
+// they cannot go stale at runtime: they need no source copy and no content
+// check, only the format/build stamp in their header. The core module is the
+// same deal, bootstrapped in the same module: its blob is built by the first VM
+// in the process and replayed by every later one (see
+// bytecode_cache_interpret_core). What keeps both safe is the module-state
+// delta the format already carries: the recorded symbol and module-variable
+// base indices must match the VM and module they are loaded into, or the entry
+// is rejected and the source is compiled instead. User files are invalidated
+// by a 64-bit xxHash64 of their bytes: a collision would mean serving bytecode
 // compiled from different source, and 2^-64 per comparison is acceptable
 // (32-bit CRC is not, for a 4-byte saving).
 //
@@ -33,6 +38,12 @@
 
 // Key used for the embedded framework module, which has no file of its own.
 #define BYTECODE_CACHE_FRAMEWORK_KEY "<bialet-framework>"
+
+// Key used for the embedded core module (wren_core.wren). Both embedded
+// modules compile into the anonymous core module, so both blobs carry
+// is_core_module = 1 and are rejected unless the module is in the exact
+// bootstrap state the blob was built from.
+#define BYTECODE_CACHE_CORE_KEY "<wren-core>"
 
 // Enables or disables caching of user files (served routes and local imports).
 // The framework module is cached regardless. Must be called before any VM is
@@ -63,6 +74,13 @@ ObjClosure* bytecode_cache_load_by_stat(WrenVM* vm, const char* module_name,
 // Compiles and runs the embedded framework module, always through the cache.
 WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
                                                        const char* source);
+
+// Compiles and runs the embedded core module (wren_core.wren) in the anonymous
+// core module, through the cache. The first VM in the process compiles it and
+// stores the blob; every later VM replays that blob instead of re-parsing 25 KB
+// of source at boot. Same result as wrenInterpret(vm, NULL, source), with the
+// same fallback: any miss, mismatch or corrupt entry compiles the source.
+WrenInterpretResult bytecode_cache_interpret_core(WrenVM* vm, const char* source);
 
 // Compiles [source] in the module named [module_name] and returns the module
 // body closure, exactly like compileInModule() in wren_vm.c. Returns NULL on a
