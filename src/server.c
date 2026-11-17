@@ -139,6 +139,26 @@ static int header_block_well_formed(const char* buf, size_t hdr_len) {
     if(buf[i] == '\0')
       return 0;
   }
+  // The request line is exactly `method SP target SP version` (RFC 9112 3).
+  // parse_request() splits it with strtok_r(" "), which skips a leading space
+  // and folds a run of them, while Request.init splits on every single space
+  // and reads the fields by position: "GET  /x" reached the /x handler with
+  // Request.uri "", and " POST /x" with Request.method "". Any other spacing,
+  // or a tab or control byte the two tokenizers treat differently, is refused
+  // so both parsers see the same three fields.
+  size_t spaces = 0;
+  for(size_t i = 0; i < request_line_end; i++) {
+    unsigned char c = (unsigned char)buf[i];
+    if(c < 0x20 || c == 0x7f)
+      return 0;
+    if(c != ' ')
+      continue;
+    if(i == 0 || buf[i - 1] == ' ' || i + 1 == request_line_end)
+      return 0;
+    spaces++;
+  }
+  if(spaces != 2)
+    return 0;
   for(size_t i = 0; i < hdr_len; i++) {
     if(buf[i] == '\n' && (i == 0 || buf[i - 1] != '\r'))
       return 0;

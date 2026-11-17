@@ -1801,6 +1801,35 @@ else
     "Expected 400 for duplicate Content-Length and for Transfer-Encoding. Got '$framing_dup' and '$framing_te'"
 fi
 
+# The C router reads the request line with strtok_r(" ") and Request.init
+# splits it on every single space, so extra or leading spaces used to reach the
+# routed handler with an empty Request.uri or Request.method. Any request line
+# that is not exactly "METHOD SP target SP version" is refused.
+reqline_line=$LINENO
+_test_start_ms=$(now_ms)
+reqline_status() {
+  (
+    exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+    printf '%s\r\nHost: x\r\n\r\n' "$1" >&3
+    IFS= read -r -t 3 first <&3
+    printf '%s' "${first%$'\r'}"
+  )
+}
+reqline_bad=""
+for reqline in 'GET  /get?foo=bar HTTP/1.1' ' GET /get?foo=bar HTTP/1.1' \
+               $'GET\t/get?foo=bar HTTP/1.1' 'GET /get?foo=bar  HTTP/1.1' \
+               'GET /get?foo=bar'; do
+  got=$(reqline_status "$reqline")
+  [[ "$got" == *" 400 "* ]] || reqline_bad+="[$reqline] -> '$got'; "
+done
+reqline_ok=$(reqline_status 'GET /get?foo=bar HTTP/1.1')
+if [[ -z "$reqline_bad" && "$reqline_ok" == *" 200 "* ]]; then
+  report_result "Non-canonical request line  " "$reqline_line" 0
+else
+  report_result "Non-canonical request line  " "$reqline_line" 1 \
+    "Expected 400 for every malformed line and 200 for the canonical one. Got: $reqline_bad ok='$reqline_ok'"
+fi
+
 # A ".." in the query string is data, not a traversal attempt.
 run_test "Dots in query string allowed" "get?foo=.."     200 ".."
 
