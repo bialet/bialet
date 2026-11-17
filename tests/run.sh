@@ -1923,6 +1923,7 @@ run_test "Markdown escapes code span  " "md-security"     200 "code:<p><code>&lt
 run_test "Markdown keeps raw html     " "md-security"     200 "raw:<p><b>raw</b></p>"
 run_test "Markdown missing file false " "md-missing"      200 "true"
 run_test "Markdown.file reads only .md" "md-file-policy"  200 "true|true|true"
+run_test "Log table retention and cap " "log-retention"   200 "old:0|capped:true"
 
 # Tests - Query binding limits
 run_test "Query four params and paging" "query-pagination" 200 "four:5|page:2|first:3"

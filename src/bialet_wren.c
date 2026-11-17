@@ -212,6 +212,22 @@ void bialet_test_mark_skip(void) {
   test_skip_requested = 1;
 }
 
+#define BIALET_LOG_MESSAGE_MAX 4096
+#define BIALET_LOG_PRUNE_EVERY 1000
+#define BIALET_LOG_MAX_DAYS "30"
+#define BIALET_LOG_MAX_ROWS "100000"
+
+static void prune_log_table(void) {
+  if(db == NULL)
+    return;
+  sqlite3_exec(db,
+               "DELETE FROM BIALET_LOGS WHERE createdAt < datetime('now', "
+               "'-" BIALET_LOG_MAX_DAYS " days');"
+               "DELETE FROM BIALET_LOGS WHERE rowid <= "
+               "(SELECT MAX(rowid) FROM BIALET_LOGS) - " BIALET_LOG_MAX_ROWS ";",
+               NULL, NULL, NULL);
+}
+
 static void bialet_wren_write(WrenVM* vm, const char* message) {
   (void)vm;
   // Wren text is not trusted at the log boundary: an app may log a request
@@ -219,7 +235,11 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
   // and this stream is the operator's log file, stdout and BIALET_LOGS. Escape
   // control bytes exactly like every C-side wire-derived log value, so a value
   // cannot forge a record or drive the terminal.
-  char*       safe = log_escape(message);
+  char* safe = log_escape(message);
+  // One record is capped: the text may be a request value, and the escaping
+  // can quadruple it.
+  if(safe != NULL && strlen(safe) > BIALET_LOG_MESSAGE_MAX)
+    memcpy(safe + BIALET_LOG_MESSAGE_MAX, "...", 4);
   const char* text = safe ? safe : "(unprintable log line)";
   message(yellow("Log"), text);
   // A failed prepare (e.g. SQLITE_BUSY on the shared connection) leaves stmt
@@ -232,6 +252,14 @@ static void bialet_wren_write(WrenVM* vm, const char* message) {
     sqlite3_finalize(stmt);
   }
   free(safe);
+  // BIALET_LOGS had no retention at all: every log line from every request
+  // stayed in the app database forever. Every BIALET_LOG_PRUNE_EVERY writes,
+  // drop rows older than BIALET_LOG_MAX_DAYS and keep at most
+  // BIALET_LOG_MAX_ROWS. The counter is per process, which is enough to bound
+  // the table for a long-running server.
+  static unsigned long log_writes = 0;
+  if(++log_writes % BIALET_LOG_PRUNE_EVERY == 0)
+    prune_log_table();
 }
 
 // Case-insensitive suffix test on a NUL-terminated name.

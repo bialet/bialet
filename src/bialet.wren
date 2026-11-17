@@ -1303,6 +1303,8 @@ class Db {
     // TODO: Set expiration session and files date in config
     `DELETE FROM BIALET_SESSION WHERE updatedAt < date('now', '-1 year')`.query()
     `DELETE FROM BIALET_FILES WHERE isTemp = 1 AND createdAt < date('now', '-1 day')`.query()
+    // Same retention the C log writer applies every 1000 lines.
+    `DELETE FROM BIALET_LOGS WHERE createdAt < datetime('now', '-30 days')`.query()
   }
 
   static migrate(version, schemaOrCallback) {

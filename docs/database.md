@@ -438,7 +438,9 @@ Bialet tables are prefixed with `BIALET_`.
 - `BIALET_MIGRATIONS`: The migration history table.
 - `BIALET_SESSION`: The session table.
 - `BIALET_FILES`: The file storage table.
-- `BIALET_LOGS`: The logging table.
+- `BIALET_LOGS`: The logging table. Each `System.print`/`System.log` line is
+  stored (cut at 4096 bytes); rows older than 30 days are pruned, and the table
+  keeps at most 100,000 rows.
 - `BIALET_REMOTE_MODULES`: The remote module cache table.
 
 If you delete or alter any of these tables your application will not work

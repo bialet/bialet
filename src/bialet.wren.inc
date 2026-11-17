@@ -1305,6 +1305,8 @@ static const char* bialetModuleSource =
 "    // TODO: Set expiration session and files date in config\n"
 "    `DELETE FROM BIALET_SESSION WHERE updatedAt < date('now', '-1 year')`.query()\n"
 "    `DELETE FROM BIALET_FILES WHERE isTemp = 1 AND createdAt < date('now', '-1 day')`.query()\n"
+"    // Same retention the C log writer applies every 1000 lines.\n"
+"    `DELETE FROM BIALET_LOGS WHERE createdAt < datetime('now', '-30 days')`.query()\n"
 "  }\n"
 "\n"
 "  static migrate(version, schemaOrCallback) {\n"
