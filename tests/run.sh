@@ -348,6 +348,21 @@ else
     "Expected no module source and no ignored file. Got $wren_alias_seen"
 fi
 
+# Static files of every type say nosniff (only .html did), matched
+# case-insensitively, and a 414 carries its reason phrase.
+static_hdr_line=$LINENO
+_test_start_ms=$(now_ms)
+static_txt=$(curl -sI --max-time 5 "http://$HOST:$PORT/test.txt" | tr -d '\r')
+static_long=$(curl -s -o /dev/null -D - --max-time 5 \
+  "http://$HOST:$PORT/$(printf 'L%.0s' $(seq 1 2100))" | head -1 | tr -d '\r')
+if [[ "$static_txt" == *"X-Content-Type-Options: nosniff"* \
+      && "$static_long" == "HTTP/1.1 414 URI Too Long" ]]; then
+  report_result "Static nosniff, 414 phrase   " "$static_hdr_line" 0
+else
+  report_result "Static nosniff, 414 phrase   " "$static_hdr_line" 1 \
+    "Expected nosniff on /test.txt and 'HTTP/1.1 414 URI Too Long'. Got '${static_txt//$'\n'/ }' and '$static_long'"
+fi
+
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"

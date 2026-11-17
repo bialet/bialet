@@ -1561,6 +1561,9 @@ struct BialetResponse bialet_run_file(char* module, char* code,
       r.status = 507;
       r.body = string_safe_copy("Temporary upload storage is full");
       r.body_owned = 1;
+      r.header = (char*)"Content-Type: text/plain; charset=UTF-8\r\n"
+                        "X-Content-Type-Options: nosniff\r\n";
+      r.header_owned = 0;
       return r;
     }
     if(mp.is_multipart) {
@@ -1796,7 +1799,8 @@ struct BialetResponse bialet_run_file(char* module, char* code,
         r.body = page;
         r.body_owned = 1;
         r.length = strlen(page);
-        r.header = BIALET_HEADERS;
+        // The trace can quote request bytes: never let a cache keep it.
+        r.header = BIALET_HEADERS "Cache-Control: no-store\r\n";
         r.header_owned = 0;
       } else {
         custom_error(HTTP_ERROR, &r);

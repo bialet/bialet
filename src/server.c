@@ -682,6 +682,8 @@ const char* get_http_status_description(int status_code) {
       return "Not Found";
     case 413:
       return "Payload Too Large";
+    case 414:
+      return "URI Too Long";
     case 429:
       return "Too Many Requests";
     case 405:
@@ -715,35 +717,40 @@ const char* get_http_status_description(int status_code) {
   }
 }
 
+// Every static response says nosniff, not only HTML: a browser that sniffs a
+// .txt or extension-less file as HTML would run it in the app's origin. The
+// extension is matched case-insensitively, like the .wren suffix, so
+// "/PAGE.HTML" on a case-insensitive file system is still text/html.
+#define STATIC_TYPE(t)                                                              \
+  (char*)("Content-Type: " t "\r\nX-Content-Type-Options: nosniff\r\n")
 char* get_content_type(const char* path) {
+  static const struct {
+    const char* ext;
+    char*       header;
+  } types[] = {
+      {".html", BIALET_HEADERS},
+      {".htm", BIALET_HEADERS},
+      {".css", STATIC_TYPE("text/css")},
+      {".js", STATIC_TYPE("application/javascript")},
+      {".json", STATIC_TYPE("application/json")},
+      {".jpg", STATIC_TYPE("image/jpeg")},
+      {".jpeg", STATIC_TYPE("image/jpeg")},
+      {".png", STATIC_TYPE("image/png")},
+      {".gif", STATIC_TYPE("image/gif")},
+      {".svg", STATIC_TYPE("image/svg+xml")},
+      {".txt", STATIC_TYPE("text/plain")},
+      {".xml", STATIC_TYPE("application/xml")},
+      {".pdf", STATIC_TYPE("application/pdf")},
+  };
   const char* ext = strrchr(path, '.');
-  if(!ext) {
-    return (char*)"Content-Type: application/octet-stream\r\n";
+  if(ext != NULL) {
+    size_t ext_len = strlen(ext);
+    for(size_t i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
+      if(strlen(types[i].ext) == ext_len && ci_ncmp(ext, types[i].ext, ext_len) == 0)
+        return types[i].header;
+    }
   }
-  if(strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0) {
-    return BIALET_HEADERS;
-  } else if(strcmp(ext, ".css") == 0) {
-    return (char*)"Content-Type: text/css\r\n";
-  } else if(strcmp(ext, ".js") == 0) {
-    return (char*)"Content-Type: application/javascript\r\n";
-  } else if(strcmp(ext, ".json") == 0) {
-    return (char*)"Content-Type: application/json\r\n";
-  } else if(strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0) {
-    return (char*)"Content-Type: image/jpeg\r\n";
-  } else if(strcmp(ext, ".png") == 0) {
-    return (char*)"Content-Type: image/png\r\n";
-  } else if(strcmp(ext, ".gif") == 0) {
-    return (char*)"Content-Type: image/gif\r\n";
-  } else if(strcmp(ext, ".svg") == 0) {
-    return (char*)"Content-Type: image/svg+xml\r\n";
-  } else if(strcmp(ext, ".txt") == 0) {
-    return (char*)"Content-Type: text/plain\r\n";
-  } else if(strcmp(ext, ".xml") == 0) {
-    return (char*)"Content-Type: application/xml\r\n";
-  } else if(strcmp(ext, ".pdf") == 0) {
-    return (char*)"Content-Type: application/pdf\r\n";
-  }
-  return (char*)"Content-Type: application/octet-stream\r\n";
+  return STATIC_TYPE("application/octet-stream");
 }
 
 // Zeroed so that `headers` -- declared in struct HttpMessage but not populated

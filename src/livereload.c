@@ -94,7 +94,9 @@ int livereload_try_handle(const char* uri, struct BialetResponse* response) {
 #endif
 
   response->status = 200;
-  response->header = (char*)"Content-Type: text/plain\r\n";
+  response->header =
+      (char*)"Content-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\n"
+             "Cache-Control: no-store\r\n";
   response->body = version_str;
   response->length = (size_t)len;
   return 1;

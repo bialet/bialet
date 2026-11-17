@@ -1,7 +1,8 @@
 #include <stddef.h>
 #define FAVICON_SIZE 15406
 #define FAVICON_RESPONSE                                                            \
-  "HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nContent-Length: "               \
+  "HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nX-Content-Type-Options: "       \
+  "nosniff\r\nContent-Length: "                                                     \
   "15406\r\nConnection: close\r\n\r\n"
 // array size is 15406
 const unsigned char favicon_data[] = {
