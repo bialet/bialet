@@ -9,7 +9,9 @@ name: Lockfile
 # After adding or changing an action in a workflow, run `gh actions-lock` and
 # commit the updated lockfile.
 
-on: [push, pull_request, workflow_dispatch]
+# workflow_call lets the release workflow run the same check as a job that
+# every build and publish job depends on.
+on: [push, pull_request, workflow_dispatch, workflow_call]
 
 permissions: {}
 

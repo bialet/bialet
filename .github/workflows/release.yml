@@ -22,6 +22,16 @@ env:
   REF_NAME: ${{ github.ref_name }}
 
 jobs:
+  # ── Action pins ─────────────────────────────────────────────────
+  # Every action below is referenced by version tag; actions.lock records the
+  # commit each tag resolved to when it was reviewed. The Lockfile workflow
+  # also runs on the tag push, but in parallel, so a retagged action would
+  # already have run with the release credentials by the time it turned red.
+  # Verify first, inside this graph, and let nothing else start until it passes.
+  lockfile:
+    name: Lockfile
+    uses: ./.github/workflows/lockfile.yml
+
   # ── Release gate ────────────────────────────────────────────────
   # Runs before anything is built or published. A pushed tag is not trusted on
   # its own: it must point at a commit already on main, and its version must
@@ -29,6 +39,7 @@ jobs:
   # could publish a release from an unreviewed branch.
   guard:
     name: Guard
+    needs: lockfile
     runs-on: ubuntu-22.04
     permissions:
       contents: read
