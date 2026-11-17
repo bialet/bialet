@@ -1418,6 +1418,24 @@ else
   skip_test "Killed workers keep restarting" "requires local binary access (no supervisor on Windows)"
 fi
 
+# The -l log records request targets (tokens in query strings): a new file is
+# created readable by its owner only.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
+  logperm_line=$LINENO
+  _test_start_ms=$(now_ms)
+  logperm_dir=$(mktemp -d)
+  "$TARGET_EXEC" -l "$logperm_dir/new.log" -v > /dev/null 2>&1
+  logperm=$(ls -l "$logperm_dir/new.log" 2>/dev/null | cut -c1-10)
+  rm -rf "$logperm_dir"
+  if [[ "$logperm" == "-rw-------" ]]; then
+    report_result "New log file is 0600        " "$logperm_line" 0
+  else
+    report_result "New log file is 0600        " "$logperm_line" 1 "Expected -rw-------. Got '$logperm'"
+  fi
+else
+  skip_test "New log file is 0600        " "requires local binary access (POSIX modes)"
+fi
+
 # A complete header block with a declared Content-Length, and no body byte
 # behind it, must not park the only worker for the full 30 s body budget; the
 # 413 drain path must not either. One stalled socket, then a probe from a second

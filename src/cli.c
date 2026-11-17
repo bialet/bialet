@@ -19,6 +19,10 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef _WIN32
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 /* Options are identified by enum so short and long spellings dispatch to the
  * same handler. takes_arg: 0 = flag, 1 = required value, 2 = optional value
@@ -192,7 +196,20 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
       opts->action = BIALET_CLI_VERSION;
       break;
     case CLI_OPT_LOG: {
+      // The log records every request target (query strings carry tokens)
+      // and absolute source paths, so a new file is created 0600 instead of
+      // 0666 & ~umask. An existing file keeps the mode the operator gave it.
+#ifdef _WIN32
       FILE* opened = fopen(value, "a");
+#else
+      FILE* opened = NULL;
+      int   log_fd = open(value, O_WRONLY | O_APPEND | O_CREAT, 0600);
+      if(log_fd >= 0) {
+        opened = fdopen(log_fd, "a");
+        if(opened == NULL)
+          close(log_fd);
+      }
+#endif
       if(opened == NULL) {
         snprintf(opts->error, sizeof(opts->error), "Error opening log file %s: %s",
                  value, strerror(errno));

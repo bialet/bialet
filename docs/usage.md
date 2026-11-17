@@ -82,6 +82,10 @@ usage text instead of being silently ignored.
 > downloadable by any client. Bialet refuses to start and exits with status 11.
 > The public `.well-known/` directory counts as public here too.
 
+> ⚠️ Pitfall: the `-l` file records request targets, query strings included,
+> so Bialet creates it readable by its owner only (`0600`). An existing file
+> keeps its mode; do not make it group- or world-readable.
+
 > ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
 > line (the method and the first 512 bytes of the target), so rotate it with
 > the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
