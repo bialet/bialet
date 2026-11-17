@@ -505,9 +505,6 @@ class Json {
     return JsonStringifier.new(object).toString
   }
 
-  static tokenize(string) {
-    return JsonScanner.new(string).tokenize
-  }
 }
 
 class JsonStringifier {
@@ -563,277 +560,6 @@ class JsonStringifier {
       return "{" + substrings.join(",") + "}"
     }
   }
-}
-
-class JsonParser {
-  construct new(input) {
-    _input = input
-    _tokens = []
-  }
-
-  valueTypes { [JsonToken.String, JsonToken.Number, JsonToken.Bool, JsonToken.Null] }
-
-  parse { nest(JsonScanner.new(_input).tokenize) }
-
-  nest(tokens) {
-    if (tokens.count == 0) { parsingError }
-
-    var token = tokens.removeAt(0)
-
-    if (token.type == JsonToken.LeftBrace) {
-      // Making a Map
-      var map = {}
-
-      while (tokens[0].type != JsonToken.RightBrace) {
-        var key = tokens.removeAt(0)
-        if (key.type != JsonToken.String) { parsingError(key) }
-
-        var next = tokens.removeAt(0)
-        if (next.type != JsonToken.Colon) { parsingError(next) }
-
-        var value = nest(tokens)
-        map[key.value] = value
-
-        if (tokens.count >= 2 &&
-            tokens[0].type == JsonToken.Comma &&
-            tokens[1].type != JsonToken.RightBrace) {
-          tokens.removeAt(0)
-        }
-      }
-
-      // Remove JsonToken.RightBrace
-      tokens.removeAt(0)
-
-      return map
-
-    } else if (token.type == JsonToken.LeftBracket) {
-      // Making a List
-      var list = []
-      while (tokens[0].type != JsonToken.RightBracket) {
-        list.add(nest(tokens))
-
-        if (tokens[0].type == JsonToken.Comma) {
-          tokens.removeAt(0)
-        }
-      }
-
-      // Remove JsonToken.RightBracket
-      tokens.removeAt(0)
-
-      return list
-
-    } else if (valueTypes.contains(token.type)) {
-      return token.value
-
-    } else { parsingError(token) }
-  }
-
-  parsingError (token) {
-    var position = Util.getPositionForIndex(_input, token.index)
-    invalidJson("Unexpected \"%(token)\" at line %(position["line"]), column %(position["column"])")
-  }
-
-  parsingError {
-    invalidJson("")
-  }
-
-  invalidJson(message) {
-    var base = "Invalid Json"
-    Fiber.abort(message.count > 0 ? "%(base): %(message)" : base)
-  }
-}
-
-class JsonScanner {
-  construct new(input) {
-    _input = input
-    _tokens = []
-    // first unconsumed char
-    _start = 0
-    // char that will be considered next
-    _cursor = 0
-  }
-
-  numberChars { "0123456789.-" }
-  whitespaceChars { " \r\t\n"}
-  escapedCharMap {
-    return {
-      "\"": "\"",
-      "\\": "\\",
-      "b": "\b",
-      "f": "\f",
-      "n": "\n",
-      "r": "\r",
-      "t": "\t"
-    }
-  }
-
-  tokenize {
-    while (!isAtEnd()) {
-      _start = _cursor
-      scanToken()
-    }
-
-    addToken(JsonToken.End)
-
-    return _tokens
-  }
-
-  scanToken () {
-    var char = advance()
-
-    if (char == "{") {
-      addToken(JsonToken.LeftBrace)
-    } else if (char == "}") {
-      addToken(JsonToken.RightBrace)
-    } else if (char == "[") {
-      addToken(JsonToken.LeftBracket)
-    } else if (char == "]") {
-      addToken(JsonToken.RightBracket)
-    } else if (char == ":") {
-      addToken(JsonToken.Colon)
-    } else if (char == ",") {
-      addToken(JsonToken.Comma)
-    } else if (char == "/") {
-      // Don't allow comments
-      scanningError
-    } else if (char == "\"") {
-      scanString()
-    } else if (numberChars.contains(char)) {
-      scanNumber()
-    } else if (isAlpha(char)) {
-      scanIdentifier()
-    } else if (whitespaceChars.contains(char)) {
-      // pass
-    } else {
-      scanningError
-    }
-  }
-
-  scanString () {
-    var isEscaping = false
-    var valueInProgress = []
-    while ((peek() != "\"" || isEscaping) && !isAtEnd()) {
-      var char = advance()
-      if (isEscaping) {
-        if (escapedCharMap.containsKey(char)) {
-          valueInProgress.add(escapedCharMap[char])
-        } else if (char == "u") { // unicode char!
-          var charsToPull = 4
-          var start = _cursor
-          var hexString = _input.slice(start, start + charsToPull).join("")
-
-          var decimal = Util.hexToDec(hexString)
-          if (decimal == null) scanningError
-          valueInProgress.add(String.fromCodePoint(decimal))
-          _cursor = _cursor + charsToPull
-        } else {
-          scanningError
-        }
-        isEscaping = false
-      } else if (char == "\\") {
-        isEscaping = true
-      } else {
-        valueInProgress.add(char)
-      }
-    }
-
-    if (isAtEnd()) {
-      // unterminated string
-      scanningError
-      return
-    }
-    // consume closing "
-    advance()
-    addToken(JsonToken.String, valueInProgress.join(""))
-  }
-
-  scanNumber () {
-    var value = String.fromCodePoint(_input.codePoints[_cursor - 1])
-    while (numberChars.contains(peek())) {
-      value = "%( value )%( advance() )"
-    }
-    var number = Num.fromString(value)
-    if (number == null) {
-      scanningError
-    } else {
-      addToken(JsonToken.Number, number)
-    }
-  }
-
-  scanIdentifier () {
-    var value = String.fromCodePoint(_input.codePoints[_cursor - 1])
-    while (isAlpha(peek())) {
-      value = "%( value )%( advance() )"
-    }
-
-    if (value == "true") {
-      addToken(JsonToken.Bool, true)
-    } else if (value == "false") {
-      addToken(JsonToken.Bool, false)
-    } else if (value == "null") {
-      addToken(JsonToken.Null, null)
-    } else {
-      scanningError
-    }
-  }
-
-  advance () {
-    _cursor = _cursor + 1
-    return String.fromCodePoint(_input.codePoints[_cursor - 1])
-  }
-
-  isAlpha (char) {
-    var pt = char.codePoints[0]
-    return (pt >= "a".codePoints[0] && pt <= "z".codePoints[0]) ||
-           (pt >= "A".codePoints[0] && pt <= "Z".codePoints[0])
-  }
-
-  isAtEnd () {
-    return _cursor >= _input.bytes.count
-  }
-
-  peek () {
-    if (_input.codePoints[_cursor] < 0) { _cursor = _cursor + 1 }
-    if (isAtEnd()) return "\0"
-    return String.fromCodePoint(_input.codePoints[_cursor])
-  }
-
-  addToken(type) { addToken(type, null) }
-  addToken(type, value) { _tokens.add(JsonToken.new(type, value, _cursor)) }
-
-  scanningError {
-    var value = _input.slice(_start, _cursor).join("")
-    var position = Util.getPositionForIndex(_input, _start)
-    Fiber.abort("Invalid JSON: Unexpected \"%(value)\" at line %(position["line"]), column %(position["column"])")
-  }
-}
-
-class JsonToken {
-  static LeftBracket { "LEFT_BRACKET" }
-  static RightBracket { "RIGHT_BRACKET" }
-  static LeftBrace { "LEFT_BRACE" }
-  static RightBrace { "RIGHT_BRACE" }
-  static Colon { "COLON" }
-  static Comma { "COMMA" }
-  static String { "STRING" }
-  static Number { "NUMBER" }
-  static Bool { "BOOL" }
-  static Null { "NULL"}
-  static End { "EOF"}
-
-  construct new(type, value, index) {
-    _type = type
-    _value = value
-    _index = index
-  }
-
-  toString {
-    return (_value != null) ? (_type + " " + _value.toString) : _type
-  }
-
-  type { _type }
-  value { _value }
-  index { _index }
 }
 
 var HEX_CHARS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"]
@@ -1073,31 +799,35 @@ class Util {
     return s
   }
 
+  // Both used to be quadratic: reverse prepended one character at a time
+  // (copying the whole result each step), and getPositionForIndex re-counted
+  // the whole reversed string on every loop iteration. One pass each now.
   static reverse(str) {
-    var result = ""
-    for (char in str) {
-      result = char + result
+    var chars = str.toList
+    var result = []
+    var i = chars.count - 1
+    while (i >= 0) {
+      result.add(chars[i])
+      i = i - 1
     }
-    return result
+    return result.join("")
   }
 
   static getPositionForIndex(text, index) {
-    var precedingText = text.slice(0, index)
-    var linebreaks = precedingText.where {|char| char == "\n"}
-
-    var reversedPreceding = Util.reverse(precedingText)
-    var hasSeenLinebreak = false
-    var i = 0
-    while (i < reversedPreceding.count && !hasSeenLinebreak) {
-      if (reversedPreceding[i] == "\n") {
-        hasSeenLinebreak = true
+    var lines = 0
+    var sinceBreak = 0
+    for (char in text.slice(0, index)) {
+      if (char == "\n") {
+        lines = lines + 1
+        sinceBreak = 0
+      } else {
+        sinceBreak = sinceBreak + 1
       }
-      i = i + 1
     }
 
     return {
-      "line": linebreaks.count,
-      "column": i
+      "line": lines,
+      "column": lines > 0 ? sinceBreak + 1 : sinceBreak
     }
   }
 

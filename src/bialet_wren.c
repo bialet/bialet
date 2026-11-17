@@ -649,8 +649,8 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
   }
   char lineMessage[MAX_LINE_ERROR_LEN];
   snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
-  // Wren error text can embed request bytes (Fiber.abort of a request value, or
-  // the framework's JsonScanner quoting the token it rejected). Escape it for
+  // Wren error text can embed request bytes (Fiber.abort of a request value,
+  // or a parse error quoting the input it rejected). Escape it for
   // the log only; show_errors_capture() keeps the raw text for the error page,
   // which HTML-escapes it before rendering.
   char*       safeMsg = log_escape(msg);
