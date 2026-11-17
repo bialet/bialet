@@ -892,7 +892,41 @@ Value wrenNumToString(WrenVM* vm, double value) {
   // + 1 char for "\0"
   // = 24
   char buffer[24];
-  int  length = snprintf(buffer, sizeof(buffer), "%.14g", value);
+
+  // Most numbers are small integers: ids, counts, loop indices. "%.14g" sends
+  // those through the arbitrary-precision float formatter, which is far more
+  // expensive than a base-10 integer conversion. An integral value below 1e14
+  // has at most 14 significant digits and prints as plain digits, so build it
+  // here. The bound is well inside both int64 and 2^53, so the int64 round trip
+  // below is exact and stands in for a trunc() call. Everything else keeps the
+  // libc formatter.
+  if(fabs(value) < 1e14) {
+    int64_t whole = (int64_t)value;
+    if((double)whole == value) {
+      int      length = 0;
+      uint64_t magnitude;
+      // -0.0 prints as "-0": the sign is lost by the cast, so read it first.
+      if(signbit(value)) {
+        buffer[length++] = '-';
+        magnitude = (uint64_t)-whole;
+      } else {
+        magnitude = (uint64_t)whole;
+      }
+
+      char digits[16];
+      int  count = 0;
+      do {
+        digits[count++] = (char)('0' + (int)(magnitude % 10));
+        magnitude /= 10;
+      } while(magnitude != 0);
+      while(count > 0)
+        buffer[length++] = digits[--count];
+
+      return wrenNewStringLength(vm, buffer, length);
+    }
+  }
+
+  int length = snprintf(buffer, sizeof(buffer), "%.14g", value);
   // snprintf returns the length it would have written; clamp so a future
   // format change cannot make the caller read past the buffer.
   if(length < 0)
