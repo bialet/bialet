@@ -254,3 +254,12 @@ in the domain method (and a UNIQUE index where the database can express it).
 Example: "one open loan per book" must be checked in `Loan.create`, not only by
 rendering the button as disabled.
 
+## 22. Stored timestamps are UTC, `Date` is not
+
+`CURRENT_TIMESTAMP`, `date('now')` and every framework `createdAt`/`updatedAt`
+are UTC. `BIALET_TIMEZONE` changes `Date`, the log line prefix and SQLite's
+`localtime` modifier, not what is stored. Convert on read
+(`datetime(createdAt, 'localtime')`, or
+`Date.fromUnix(Date.new(createdAt, "UTC").unix)`), and do not store `Date.now`
+expecting UTC: it writes the app zone's wall clock with no offset. Store
+`Date.now.unix` when you need an unambiguous instant.

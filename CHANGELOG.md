@@ -15,14 +15,23 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   it, and an invalid value is logged once at startup instead of once per VM.
 - The `YYYY-MM-DD HH:MM:SS` prefix of every log line follows
   `BIALET_TIMEZONE` instead of the process zone, so a server configured for a
-  zone no longer logs in the OS zone. The process `TZ` is only swapped around
-  the conversion, so SQLite and app code still see the zone they did before.
+  zone no longer logs in the OS zone. The stamp is computed with the configured
+  zone applied around the conversion, so it stays right even if the process
+  zone changes after startup.
+
+### Changed
+
+- `BIALET_TIMEZONE` is also installed as the process `TZ`, so SQLite's
+  `localtime` modifier (`datetime(createdAt, 'localtime')`) uses the app zone.
+  What SQLite stores does not change: `CURRENT_TIMESTAMP`, `date('now')` and a
+  `DEFAULT CURRENT_TIMESTAMP` column stay UTC, and so does the retention that
+  compares them.
 
 ### Documentation
 
-- The configuration and date pages document `BIALET_TIMEZONE`: the restart
-  requirement, the POSIX sign of string zones, and the SQLite columns it does
-  not affect.
+- The configuration, date and database pages document `BIALET_TIMEZONE`: the
+  restart requirement, the POSIX sign of string zones, the log prefix, SQLite's
+  `localtime` modifier, and why stored timestamps stay UTC.
 
 ## 1.2.21 — 2026-11-17
 

@@ -2183,13 +2183,13 @@ static void date_zone_leave(bool changed) {
 }
 
 // localtime() that honours BIALET_TIMEZONE for the length of one call. The log
-// stamp used to print the process zone, so a server configured for another zone
-// logged in the OS zone while every Date in app code used the configured one.
-// date_zone_enter() cannot be reused here: it takes tz_lock itself and would
-// deadlock under the one this function holds. date_set_tz_env() goes straight
-// to setenv/TZ with no bookkeeping of its own, so the process zone is saved and
-// restored around the conversion. When the saved copy cannot be made the
-// process zone is used rather than leaving TZ moved for good.
+// stamp uses it so a line's prefix follows the configured zone even if the
+// process zone was changed after startup. date_zone_enter() cannot be reused
+// here: it takes tz_lock itself and would deadlock under the one this function
+// holds. date_set_tz_env() goes straight to setenv/TZ with no bookkeeping of
+// its own, so the process zone is saved and restored around the conversion.
+// When the saved copy cannot be made the process zone is used rather than
+// leaving TZ moved for good.
 struct tm* date_default_localtime(const time_t* now, struct tm* out) {
   tz_lock();
   const char* zone = date_default_zone;
@@ -2261,11 +2261,12 @@ static bool date_zone_name_allowed(const char* tz, uint32_t length) {
   return !empty_component;
 }
 
-// Installs the stored default zone. Called once from bialet_init(), before the
-// process forks, so the value is read-only afterwards and needs no lock. A
-// value the allow-list refuses leaves the process zone in place; it is logged
-// here instead of in Db.init so a server start says it once, not once per
-// migration VM.
+// Installs the stored default zone: it becomes the zone Date uses and the
+// process zone, so SQLite's localtime modifier and the log stamp agree with it.
+// Called once from bialet_init(), before the process forks, so the value is
+// read-only afterwards and needs no lock. A value the allow-list refuses leaves
+// the process zone in place; it is logged here instead of in Db.init so a
+// server start says it once, not once per migration VM.
 void date_set_default_zone(const char* zone) {
   free(date_default_zone);
   date_default_zone = NULL;
@@ -2282,6 +2283,12 @@ void date_set_default_zone(const char* zone) {
     return;
   memcpy(copy, zone, length + 1);
   date_default_zone = copy;
+  // Also install it as the process zone, so SQLite's "localtime" modifier and
+  // any C code that calls localtime() agree with Date. Storage is untouched:
+  // CURRENT_TIMESTAMP and date('now') are UTC whatever TZ says. This runs once,
+  // before the fork loop; date_tz_original is captured lazily on the first Date
+  // call, which is after this point, so the primitives restore to this zone.
+  date_set_tz_env(copy);
 }
 
 static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {

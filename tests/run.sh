@@ -176,8 +176,14 @@ if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" -eq 0 ]]; then
 return "TZREQUEST|%(Date.tz)|%(Date.fromUnix(1700000000))"
 WREN
   cat > "$tz_root/_migration.wren" <<'WREN'
-Db.migrate("timezone probe", `CREATE TABLE IF NOT EXISTS tz_probe (x INTEGER)`)
+Db.migrate("timezone probe", `CREATE TABLE IF NOT EXISTS tz_probe (x INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`)
 System.print("TZMIGRATION|%(Date.tz)|%(Date.fromUnix(1700000000))")
+WREN
+  cat > "$tz_root/tzdb.wren" <<'WREN'
+`INSERT INTO tz_probe (x) VALUES (1)`.query()
+var local = `SELECT datetime('now', 'localtime') AS v`.first()["v"]
+var stored = `SELECT createdAt FROM tz_probe ORDER BY rowid DESC`.first()["createdAt"]
+return "TZDB|%(local)|%(stored)"
 WREN
   cat > "$tz_root/_cron.wren" <<'WREN'
 System.print("TZCRON|%(Date.tz)|%(Date.fromUnix(1700000000))")
@@ -195,11 +201,13 @@ WREN
   # The hour is read on both sides of the run so a boundary crossing cannot
   # make the assertion flaky.
   tz_zone_hour_before=$(TZ=Pacific/Kiritimati date +'%Y-%m-%d %H')
+  tz_utc_hour_before=$(TZ=UTC date +'%Y-%m-%d %H')
   TZ=UTC "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$tz_run/tz.sqlite3" \
     "$tz_root" > "$tz_log" 2>&1 &
   disown
   wait_port "$HOST" "$CRON_PORT" 10
   tz_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  tz_db_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/tzdb")
   # The cron thread runs its first pass right after startup; one more second
   # covers a slow scheduler without waiting for the next minute.
   sleep 1
@@ -229,6 +237,37 @@ WREN
   else
     report_result "BIALET_TIMEZONE sets the log prefix" "$tz_log_line" 1 \
       "Expected a log prefix in Pacific/Kiritimati ($tz_zone_hour_before or $tz_zone_hour_after), not UTC ($tz_utc_prefix). Got '${tz_log_prefix}' from '$tz_migration_line'"
+  fi
+  # SQLite follows the setting through its explicit "localtime" modifier, while
+  # what it stores (CURRENT_TIMESTAMP, the default) stays UTC. TZ=UTC on the
+  # server makes both halves distinguishable: local must be the zone's date and
+  # hour, stored must be UTC's.
+  tz_db_line=$LINENO
+  tz_db_local=$(printf '%s' "${tz_db_request#TZDB|}")
+  tz_db_stored="${tz_db_local##*|}"
+  tz_db_local="${tz_db_local%|*}"
+  tz_db_local_prefix="${tz_db_local:0:13}"
+  tz_db_stored_prefix="${tz_db_stored:0:13}"
+  tz_db_ok=0
+  if [[ "$tz_db_request" == "TZDB|"* ]]; then
+    tz_db_ok=1
+    # Each value must land on one of the two hours read around the run, so an
+    # hour boundary crossed mid-test cannot make this flaky.
+    [[ "$tz_db_local_prefix" == "$tz_zone_hour_before" \
+       || "$tz_db_local_prefix" == "$tz_zone_hour_after" ]] || tz_db_ok=0
+    [[ "$tz_db_stored_prefix" == "$tz_utc_hour_before" \
+       || "$tz_db_stored_prefix" == "$tz_utc_prefix" ]] || tz_db_ok=0
+    # ...and neither may be the other zone's hour.
+    [[ "$tz_db_local_prefix" != "$tz_utc_hour_before" \
+       && "$tz_db_local_prefix" != "$tz_utc_prefix" ]] || tz_db_ok=0
+    [[ "$tz_db_stored_prefix" != "$tz_zone_hour_before" \
+       && "$tz_db_stored_prefix" != "$tz_zone_hour_after" ]] || tz_db_ok=0
+  fi
+  if [[ "$tz_db_ok" -eq 1 ]]; then
+    report_result "localtime follows the zone, storage stays UTC" "$tz_db_line" 0
+  else
+    report_result "localtime follows the zone, storage stays UTC" "$tz_db_line" 1 \
+      "Expected localtime in Pacific/Kiritimati ($tz_zone_hour_before/$tz_zone_hour_after) and stored UTC ($tz_utc_hour_before/$tz_utc_prefix). Got '$tz_db_request'"
   fi
   rm -rf "$tz_root" "$tz_run"
 else

@@ -25,18 +25,20 @@ void wrenInitializeCore(WrenVM* vm);
 // BIALET_TIMEZONE row in BIALET_CONFIG and installed once at startup. The Date
 // primitives use it when the Wren-level zone is absent or empty, so every VM
 // (migrations, cron, one per request) sees the same zone without consulting the
-// database. A zone the allow-list refuses is ignored with a log line.
+// database. It is also installed as the process TZ, so SQLite's "localtime"
+// modifier and the log stamp use the same zone; stored timestamps stay UTC. A
+// zone the allow-list refuses is ignored with a log line.
 // date_get_default_zone() returns NULL when no zone is configured, meaning "use
 // the process zone".
 void        date_set_default_zone(const char* zone);
 const char* date_get_default_zone(void);
 
-// localtime() with the configured default zone applied for this one call, then
-// the process zone restored. This is what message_stamp() (messages.c) uses, so
-// a log line's "YYYY-MM-DD HH:MM:SS" prefix follows BIALET_TIMEZONE without the
-// zone staying installed for SQLite, cron bodies or other threads. Takes
-// [now] and the buffer to fill, returns NULL when the time cannot be converted.
-// Nothing may log while it runs: it holds tz_lock, so message() would deadlock.
+// localtime() with the configured default zone applied for this one call.
+// message_stamp() (messages.c) uses it so a log line's "YYYY-MM-DD HH:MM:SS"
+// prefix follows BIALET_TIMEZONE even if the process zone was changed after
+// startup. Takes [now] and the buffer to fill, returns NULL when the time
+// cannot be converted. Nothing may log while it runs: it holds tz_lock, so
+// message() would deadlock.
 struct tm* date_default_localtime(const time_t* now, struct tm* out);
 
 #endif
