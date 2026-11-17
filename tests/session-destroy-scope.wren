@@ -12,8 +12,11 @@ var victim = "destroytestvictim000000000000000001"
 `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, '_bialet_authenticated', '1', datetime('now', '-40 days'))`.query([victim])
 `REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES (?, 'user_id', 'alice', datetime('now', '-40 days'))`.query([victim])
 
+// The caller's row is written directly: Session#set runs the idle sweep on
+// about one write in 62, and that sweep rightly expires the 40-day-old victim,
+// which made this test fail at random.
+`REPLACE INTO BIALET_SESSION (id, key, val, updatedAt) VALUES ('destroytestcaller000000000000000002', 'k', 'v', datetime('now'))`.query()
 Cookie.set(Session.name, "destroytestcaller000000000000000002")
-Session.new().set("k", "v")
 Session.destroy()
 
 var row = `SELECT COUNT(*) AS c FROM BIALET_SESSION WHERE id = ?`.first([victim])
