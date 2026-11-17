@@ -233,6 +233,10 @@ Virtual host configuration:
     # Every request goes to Bialet, static files included: it runs .wren files
     # and refuses private ones. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    # Bialet decides the cookie Secure flag from these two headers.
+    # Set the first, drop whatever the client sent in the second.
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
     ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
@@ -371,6 +375,8 @@ block — but prefer renaming those files.
 
     # Every request goes to Bialet. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
     ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
