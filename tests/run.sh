@@ -2094,11 +2094,18 @@ framing_te=$(
   IFS= read -r -t 3 first <&3
   printf '%s' "$first"
 )
-if [[ "$framing_dup" == *" 400 "* && "$framing_te" == *" 400 "* ]]; then
+framing_bad=$(
+  exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+  printf 'POST /get?foo=bar HTTP/1.1\r\nHost: x\r\nContent-Length: 5junk\r\n\r\nhello' >&3
+  IFS= read -r -t 3 first <&3
+  printf '%s' "$first"
+)
+if [[ "$framing_dup" == *" 400 "* && "$framing_te" == *" 400 "* \
+      && "$framing_bad" == *" 400 "* ]]; then
   report_result "Ambiguous framing refused   " "$framing_line" 0
 else
   report_result "Ambiguous framing refused   " "$framing_line" 1 \
-    "Expected 400 for duplicate Content-Length and for Transfer-Encoding. Got '$framing_dup' and '$framing_te'"
+    "Expected 400 for duplicate Content-Length, Transfer-Encoding and a malformed Content-Length. Got '$framing_dup', '$framing_te' and '$framing_bad'"
 fi
 
 # The C router reads the request line with strtok_r(" ") and Request.init

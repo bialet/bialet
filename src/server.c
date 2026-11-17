@@ -1276,8 +1276,10 @@ void handle_client(bialet_socket_t client_socket) {
             message(red("413"), oversized_msg);
           }
         }
+        // A value that is not a decimal length is a malformed request (400),
+        // not an oversized one.
         struct BialetResponse too_large = {0};
-        custom_error(413, &too_large);
+        custom_error(rc > 0 ? 413 : 400, &too_large);
         write_response(client_socket, &too_large);
         free_response_owned(&too_large);
         return;
@@ -1478,7 +1480,7 @@ void handle_client(bialet_socket_t client_socket) {
     if(strncmp(path, bialet_config.full_root_dir, root_prefix_len) != 0 ||
        (root_prefix_len > 1 && path[root_prefix_len] != '/' &&
         path[root_prefix_len] != '\0')) {
-      char* log_path = log_escape(path);
+      char* log_path = log_escape_uri(path);
       message(red("Security Error"), "Path outside the app root blocked",
               log_path ? log_path : "(unprintable)");
       free(log_path);
