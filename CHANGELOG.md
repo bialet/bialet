@@ -4,6 +4,94 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.21 — 2026-11-17
+
+### Added
+
+- `-x` / `--cache` keeps compiled user `.wren` files in memory and serves an
+  unchanged route file from its stat signature; the framework and core modules
+  are always replayed from the bytecode cache. User entries are capped at 256
+  and 64 MiB, oldest first.
+- Linux release builds and the Debian package link mimalloc
+  (`make MIMALLOC=1` for local builds).
+- A Linux performance harness under `bench/`.
+
+### Changed
+
+- `-c` / `-C` are CPU seconds (defaults 3600 / 7200), as the help text already
+  said; the man page called them percentages.
+- `-m` / `-M` are clamped to the inherited address-space limit, and `0` means
+  no limit of their own. They are enforced only on Linux; macOS and Windows
+  print a warning when they are set.
+- `bialet dev` turns on live reload and the error page for that run only and
+  no longer writes them into the database.
+- `Markdown.file()` reads only `.md` and `.markdown` files.
+- A numeric `Date` zone is the UTC offset the docs describe (`-3` is UTC-3; it
+  was applied with the opposite sign). A string zone must be a zone name or
+  `UTC±h[:mm]`; anything else raises. A zone applies to one `Date` value only.
+- `Json.tokenize` and the Wren JSON scanner behind it are removed;
+  `Json.parse` (the C parser) is unchanged.
+- `Request.body` keeps its line feeds.
+- `Response.header()` refuses `Content-Length`, `Transfer-Encoding`,
+  `Connection` and the other framing fields, and names with a space.
+- HEAD responses carry no body; 1xx, 204 and 304 carry neither body nor
+  `Content-Length`.
+- A new database and a new `-l` log file are created `0600`.
+- `BIALET_LOGS` keeps 30 days and at most 100,000 rows, each cut at 4096
+  bytes; the access log cuts the request target at 512 bytes.
+- The supervisor backs off (up to 30 s) only for a child that dies before it
+  can serve, and never stops on its own; a worker killed by a request is
+  restarted at once.
+
+### Fixed
+
+- Windows: cron jobs run at startup, file-watch reloads run on the main loop,
+  and a migration saved inside the reload debounce is no longer dropped.
+- A multipart `Content-Type` as the last header lost its final byte.
+- A malformed `Content-Length` answers `400`, not `413`; `414` has its reason
+  phrase.
+- A query value shaped like a private path (`?next=/_x`) is no longer refused
+  with `403`.
+- `Http.get` of a body larger than the GC budget wrote into a freed list and
+  crashed the worker.
+- `Util.reverse` and `Util.getPositionForIndex` are linear.
+- A stored `BIALET_TIMEZONE` the zone rules refuse is ignored with a log line.
+- The server binary builds with GCC 13 again.
+
+### Security
+
+- Request parsing: a request line must be exactly `METHOD SP target SP
+  version`, and every header line `name:value` with a visible-ASCII name, so the
+  C framer and the Wren request map read the same request.
+- Windows: a path component ending in `.` or space, or containing `:` or `\`,
+  is refused, and the `.wren`/ignore-list decision uses the name Windows
+  opens (it served route source for `/hello.wren.`).
+- The response write has a total deadline (30 s plus the body at 64 KiB/s).
+- The bytecode cache keys collapse separator runs and the table is bounded.
+- The `-d` guard re-checks the database location after the file exists, and
+  both `-d` and `-l` refuse a path under `.well-known`.
+- `Util.isHttpsRequest` parses `Forwarded` / `X-Forwarded-Proto` instead of
+  matching a substring.
+- Multi-worker deployments: an upload another worker is still serving is
+  never evicted from the temporary pool.
+- The Date zone swap is serialized with the log stamp on the supervisor's
+  threads.
+- Release: actions.lock is verified before any release or manual PPA job,
+  mimalloc is fetched by commit and SQLite/OpenSSL by SHA-256, the docs build
+  runs without the write token, and the PPA workflow validates its tag and
+  series before writing `$GITHUB_ENV`.
+
+### Documentation
+
+- The proxy examples proxy every request (no `root`/`DocumentRoot` on the app
+  directory), deny private paths while keeping `/.well-known/` open, set
+  `X-Forwarded-Proto`, drop a client `Forwarded`, and no longer label
+  responses cacheable by suffix.
+- The man page documents `bialet dev` as run-only with a production warning,
+  HTTP/1.1, CPU seconds, `-k` and `-x`.
+- Usage and security docs cover `-l` rotation and permissions, the `-m`/`-M`
+  platform matrix and the Date zone rules.
+
 ## 1.2.20 — 2026-11-16
 
 ### Added
