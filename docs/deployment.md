@@ -81,7 +81,9 @@ Caddy:
 
 ```
 example.com {
-    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003
+    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 {
+        header_up -Forwarded
+    }
 }
 ```
 
@@ -139,8 +141,15 @@ scp -r ./src/* user@your-server:/www/your-app/
 Bialet serves static files (CSS, JS, images, fonts) directly. For better
 performance, configure your reverse proxy to:
 
-- **Cache** static assets (add `Cache-Control` headers)
 - **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
+
+> ⚠️ Pitfall: do not label responses cacheable by URL suffix or by
+> `Content-Type` at the proxy. Bialet routes `/notes/42.css` to `notes.wren`
+> when no such file exists, and serves uploaded images through Wren, so a rule
+> like "`*.css` is public for a week" can store one user's page and replay it
+> to another. Wren responses say `Cache-Control: no-store` by default; set a
+> longer `Cache-Control` in the app (`Response.header(...)`) only on responses
+> you know are public.
 
 > ⚠️ Pitfall: do not let the proxy serve files from the app directory. The
 > app directory holds your `.wren` route files, `_db.sqlite3` and other private
@@ -203,7 +212,7 @@ server {
 Enable the required modules:
 
 ```bash
-sudo a2enmod proxy proxy_http rewrite headers expires
+sudo a2enmod proxy proxy_http rewrite headers
 ```
 
 Virtual host configuration:
@@ -219,16 +228,6 @@ Virtual host configuration:
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
 
     # Every request goes to Bialet, static files included: it runs .wren files
     # and refuses private ones. No DocumentRoot pointing at the app directory.
@@ -250,13 +249,11 @@ Caddy is the simplest option — it handles TLS automatically:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
-    }
-    header @static Cache-Control "public, max-age=604800, immutable"
 
-    reverse_proxy 127.0.0.1:7001
+    # Caddy sets X-Forwarded-Proto itself; drop a client-sent Forwarded.
+    reverse_proxy 127.0.0.1:7001 {
+        header_up -Forwarded
+    }
 }
 ```
 
@@ -357,16 +354,6 @@ block — but prefer renaming those files.
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
 
     # Deny private files at the proxy (defense in depth): any path segment
     # starting with "_" or ".", except the RFC 8615 /.well-known/ directory.
@@ -396,11 +383,6 @@ request bodies with a request matcher:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
-    }
-    header @static Cache-Control "public, max-age=604800, immutable"
 
     @private {
         path_regexp private (^|/)[_.]
@@ -410,6 +392,7 @@ example.com {
 
     reverse_proxy 127.0.0.1:7001 {
         flush_interval -1
+        header_up -Forwarded
     }
 }
 ```
