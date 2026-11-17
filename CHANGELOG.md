@@ -4,7 +4,7 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
-## Unreleased
+## 1.2.22 — 2026-11-17
 
 ### Fixed
 
@@ -32,6 +32,9 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 - The configuration, date and database pages document `BIALET_TIMEZONE`: the
   restart requirement, the POSIX sign of string zones, the log prefix, SQLite's
   `localtime` modifier, and why stored timestamps stay UTC.
+- The `Date.now` reference entry no longer claims UTC: `Date.now` is
+  `Date.new()`, which returns the application-zone wall clock with no offset
+  (`.unix` is the unambiguous instant), matching the pitfall page.
 
 ## 1.2.21 — 2026-11-17
 
