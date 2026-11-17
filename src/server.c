@@ -422,6 +422,10 @@ static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
 
 void handle_client(bialet_socket_t client_socket);
 
+#ifndef _WIN32
+static int open_app_root(void);
+#endif
+
 int start_server(struct BialetConfig* config) {
 #ifdef _WIN32
   WSADATA wsaData;
@@ -431,6 +435,12 @@ int start_server(struct BialetConfig* config) {
   }
 #endif
   bialet_config = *config;
+
+#ifndef _WIN32
+  // Open the app root once, before the accept loop: every served file is then
+  // opened relative to this descriptor (see open_fd_beneath_root()).
+  (void)open_app_root();
+#endif
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(server_fd == BIALET_INVALID_SOCKET) {
     perror("Failed to create socket");
@@ -770,6 +780,85 @@ static void free_response_owned(struct BialetResponse* response) {
 // instead of following them.
 static int resolve_within_root(const char* path, char* resolved);
 
+#ifndef _WIN32
+// The app root, opened once. Every served path is built as
+// full_root_dir + <sanitized URI>, and full_root_dir was realpath()'d at
+// startup, so walking the URI's components from this descriptor gives the same
+// per-component O_NOFOLLOW guarantee as walking the absolute path from "/",
+// without re-opening the root's own prefix (/home, /home/user, ...) on every
+// request. See open_fd_beneath_root().
+static int root_dir_fd = -1;
+
+static int open_app_root(void) {
+  if(root_dir_fd >= 0 || bialet_config.full_root_dir == NULL)
+    return root_dir_fd;
+  // O_NOFOLLOW: the root itself must be a real directory, not a link swapped
+  // in after startup. Its own components were resolved by realpath().
+  root_dir_fd = open(bialet_config.full_root_dir,
+                     O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+  return root_dir_fd;
+}
+
+// Walks [rel], a path relative to the open app root, one component at a time
+// with O_NOFOLLOW -- exactly the rule open_fd_no_follow() applies to an
+// absolute path. The only difference is the starting point: the root
+// descriptor instead of "/". Every component below the root still has to be a
+// real entry (a planted symlink fails with ELOOP), and ".." cannot appear: the
+// URI check upstream rejects it and the path is built from the root, so the
+// walk can never leave the root. Returns an fd the caller closes, or -1.
+static int open_fd_beneath_root(const char* rel) {
+  int         dirfd = root_dir_fd;
+  const char* p = rel;
+  char        comp[NAME_MAX + 1];
+  while(*p == '/')
+    p++;
+  while(*p) {
+    const char* next = strchr(p, '/');
+    size_t      comp_len = next ? (size_t)(next - p) : strlen(p);
+    if(comp_len >= sizeof(comp)) {
+      if(dirfd != root_dir_fd)
+        close(dirfd);
+      return -1;
+    }
+    memcpy(comp, p, comp_len);
+    comp[comp_len] = '\0';
+    int next_fd = openat(dirfd, comp, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    // The root descriptor is cached and must outlive the request.
+    if(dirfd != root_dir_fd)
+      close(dirfd);
+    if(next_fd < 0)
+      return -1;
+    dirfd = next_fd;
+    p += comp_len;
+    while(*p == '/')
+      p++;
+  }
+  if(dirfd == root_dir_fd) {
+    // The relative path named the root itself: hand back a duplicate so the
+    // caller's close() cannot close the cached descriptor.
+    return dup(root_dir_fd);
+  }
+  return dirfd;
+}
+
+// Opens [path] for reading with no symlink followed on any component and
+// returns the raw descriptor. POSIX only; open_file_within_root() wraps it in a
+// FILE* for the callers that want stdio.
+static int open_fd_within_root_path(const char* path) {
+  if(root_dir_fd >= 0 && bialet_config.full_root_dir != NULL) {
+    size_t root_len = strlen(bialet_config.full_root_dir);
+    // Strictly below the root: everything this server serves is built that
+    // way (custom_error() passes a resolve_within_root() result). Anything
+    // else keeps the previous absolute-path walk, so no caller changes
+    // behaviour because of this cache.
+    if(strncmp(path, bialet_config.full_root_dir, root_len) == 0 &&
+       path[root_len] == '/')
+      return open_fd_beneath_root(path + root_len);
+  }
+  return open_fd_no_follow(path);
+}
+#endif // !_WIN32
+
 static FILE* open_file_within_root(const char* path) {
 #ifdef _WIN32
   // FILE_FLAG_OPEN_REPARSE_POINT constrains only the final component, so an
@@ -783,7 +872,92 @@ static FILE* open_file_within_root(const char* path) {
     return NULL;
   return open_file_no_follow(resolved);
 #else
-  return open_file_no_follow(path);
+  int fd = open_fd_within_root_path(path);
+  if(fd < 0)
+    return NULL;
+  FILE* f = fdopen(fd, "rb");
+  if(f == NULL)
+    close(fd);
+  return f;
+#endif
+}
+
+#ifndef _WIN32
+// Reads the file behind [fd] (closing it) into a NUL-terminated heap buffer
+// with one fstat and one read. The stdio route -- fdopen, fseek to the end,
+// ftell, rewind, fread -- cost an fcntl (fdopen's F_GETFL), two lseek and a
+// second fstat (_IO_file_doallocate) per static request, and copied the bytes
+// through the FILE buffer on the way out. Returns NULL when the file cannot be
+// sized or read in full, exactly where the fseek/fread errors used to bail;
+// [*length] receives the byte count otherwise.
+static char* read_all_fd(int fd, size_t* length) {
+  if(fd < 0)
+    return NULL;
+  struct stat st;
+  if(fstat(fd, &st) != 0 || st.st_size < 0) {
+    close(fd);
+    return NULL;
+  }
+  size_t size = (size_t)st.st_size;
+  // Always reserve room for a terminator: the zero-byte case used to allocate
+  // nothing and the `length == 0 -> strlen(body)` fallback then read past it.
+  char* buffer = (char*)malloc(size + 1);
+  if(buffer == NULL) {
+    close(fd);
+    return NULL;
+  }
+  size_t got = 0;
+  while(got < size) {
+    ssize_t n = read(fd, buffer + got, size - got);
+    if(n <= 0)
+      break;
+    got += (size_t)n;
+  }
+  close(fd);
+  if(got != size) {
+    free(buffer);
+    return NULL;
+  }
+  buffer[got] = '\0';
+  *length = got;
+  return buffer;
+}
+#endif
+
+// Reads the whole of [path] into a NUL-terminated heap buffer, [*length] bytes,
+// or returns NULL if it cannot be opened or read. POSIX reads the raw
+// descriptor (see read_all_fd); Windows keeps the stdio path.
+static char* read_file_within_root(const char* path, size_t* length) {
+#ifdef _WIN32
+  FILE* file = open_file_within_root(path);
+  if(file == NULL)
+    return NULL;
+  if(fseek(file, 0, SEEK_END) != 0) {
+    fclose(file);
+    return NULL;
+  }
+  long size = ftell(file);
+  if(size < 0) {
+    fclose(file);
+    return NULL;
+  }
+  rewind(file);
+  char* buffer = (char*)malloc((size_t)size + 1);
+  if(buffer == NULL) {
+    fclose(file);
+    return NULL;
+  }
+  size_t got = fread(buffer, 1, (size_t)size, file);
+  fclose(file);
+  if(got != (size_t)size) {
+    free(buffer);
+    return NULL;
+  }
+  buffer[got] = '\0';
+  *length = got;
+  return buffer;
+#else
+  return read_all_fd(open_fd_within_root_path(path), length);
 #endif
 }
 
@@ -1410,14 +1584,14 @@ void handle_client(bialet_socket_t client_socket) {
       response.length = strlen(response.body);
     }
   } else {
-    FILE* file = open_file_within_root(path);
-    if(file == NULL) {
-      // The path passed the component walk's parent check but could not be
-      // opened: a symlinked component (the probe above stats through the link,
-      // the open refuses to follow it), a permission problem, or a directory
-      // that vanished. Answer 404 rather than closing the socket with no reply,
-      // which is what clients saw before.
-      perror("Error opening file");
+    file_content = read_file_within_root(path, &file_size);
+    if(file_content == NULL) {
+      // The path passed the router's checks but could not be opened or read:
+      // a symlinked component (the router lstat's through the link, the open
+      // refuses to follow it), a permission problem, or a file that vanished.
+      // Answer 404 rather than closing the socket with no reply, which is what
+      // clients saw before.
+      perror("Error reading file");
       custom_error(404, &response);
       write_response(client_socket, &response);
       free_response_owned(&response);
@@ -1426,56 +1600,7 @@ void handle_client(bialet_socket_t client_socket) {
         free(full_request);
       return;
     }
-    if(fseek(file, 0, SEEK_END) != 0) {
-      perror("fseek");
-      fclose(file);
-      clean_http_message(hm);
-      if(should_free_request)
-        free(full_request);
-      socket_close(client_socket);
-      return;
-    }
-    long file_size_l = ftell(file);
-    if(file_size_l < 0) {
-      perror("ftell");
-      fclose(file);
-      clean_http_message(hm);
-      if(should_free_request)
-        free(full_request);
-      socket_close(client_socket);
-      return;
-    }
-    file_size = (size_t)file_size_l;
-    rewind(file);
-
-    // Always reserve room for a terminator, for wren and non-wren files alike.
-    // A zero-byte static file previously produced malloc(0), and the
-    // `length == 0 -> strlen(body)` fallback in write_response then read out of
-    // bounds to compute Content-Length and sent whatever heap bytes followed.
-    size_t alloc_size = file_size + 1;
-    file_content = malloc(alloc_size);
-    if(file_content == NULL) {
-      perror("Error allocating memory for file content");
-      fclose(file);
-      clean_http_message(hm);
-      if(should_free_request)
-        free(full_request);
-      socket_close(client_socket);
-      return;
-    }
-    read_bytes = fread(file_content, 1, file_size, file);
-    if(read_bytes != file_size) {
-      perror("Error reading file");
-      free(file_content);
-      fclose(file);
-      clean_http_message(hm);
-      if(should_free_request)
-        free(full_request);
-      socket_close(client_socket);
-      return;
-    }
-    fclose(file);
-    file_content[read_bytes] = '\0';
+    read_bytes = file_size;
 
     if(is_wren_file) {
       struct BialetFileStat stamp;
