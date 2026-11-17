@@ -33,11 +33,12 @@ bialet dev
 
 `bialet dev` starts the server from the current directory, enables live reload
 and the in-browser error display, and opens
-[127.0.0.1:7001](http://127.0.0.1:7001) in your browser. It only needs to be
-run once — the flags are stored in the database and persist across restarts.
+[127.0.0.1:7001](http://127.0.0.1:7001) in your browser. Use it every time
+you develop: those conveniences last for that run only and are never saved, so
+they cannot leak into production with a copied database.
 
-If you don't need those development conveniences, plain `bialet` starts the
-server the same way without touching the flags or opening the browser.
+If you don't need them, plain `bialet` starts the server the same way without
+live reload, error display or opening the browser.
 
 On Windows, double-clicking `bialet.exe` in the project folder starts it in dev
 mode, just like `bialet dev`.

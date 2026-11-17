@@ -20,10 +20,10 @@ bialet dev
 ```
 
 Starts the server from the current directory, enables live reload and the
-in-browser error display, and opens the server URL in your browser. The flags
-are stored in the database and persist across restarts, so you only need to
-run `dev` once. Plain `bialet` starts the server without touching those flags
-or opening the browser.
+in-browser error display, and opens the server URL in your browser. Both are
+on for that run only: nothing is written to the database, so a plain `bialet`
+start afterwards (or on a copy of the database) has neither. Plain `bialet`
+does not open the browser.
 
 > On Windows, double-clicking `bialet.exe` in File Explorer counts as a dev
 > launch: the server starts in dev mode with the browser opening automatically.

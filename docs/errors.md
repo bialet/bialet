@@ -85,9 +85,10 @@ other handler. Keep it free of per-request logic.
 
 By default a `.wren` file that fails to parse or throws returns the generic 500
 page, and the actual error goes to the server log. During development it is
-often faster to see the error in the browser. `bialet dev` enables this for you
-(along with live reload and browser opening) — see
-[Getting Started](../getting-started/2-setup). Or enable it manually:
+often faster to see the error in the browser. `bialet dev` enables this for
+that run (along with live reload and browser opening) — see
+[Getting Started](../getting-started/2-setup). Or store it in the database,
+which keeps it on for every start that uses that database:
 
 ```bash
 bialet -r 'Config.enable("BIALET_SHOW_ERRORS")' .
