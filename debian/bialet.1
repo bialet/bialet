@@ -21,10 +21,19 @@ directory.
 The subcommand
 .B dev
 enables live reload and the in-browser error display, and opens the server URL
-in a browser. The flags are stored in the database and persist across restarts.
+in a browser. Both are on for that run only: nothing is written to the
+database, so a later plain \fBbialet\fR start, or a copy of
+\fI_db.sqlite3\fR, has neither unless \fIBIALET_LIVE_RELOAD\fR or
+\fIBIALET_SHOW_ERRORS\fR is set with \fBConfig.enable\fR.
 .PP
-Bialet speaks HTTP/1.0 and does not terminate TLS. Put nginx, Apache, or Caddy
-in front for HTTPS, HTTP/2, and rate limiting.
+While either is on, any client that can reach the port gets the error type,
+module path, line and message of a failing handler, and \fI/_livereload\fR is
+public. Use \fBbialet dev\fR on a development machine only, never in
+production.
+.PP
+Bialet speaks HTTP/1.1, one request per connection (\fIConnection: close\fR),
+and does not terminate TLS. Put nginx, Apache, or Caddy in front for HTTPS,
+HTTP/2, and rate limiting.
 .SH OPTIONS
 Every option has a short and a long form; values may be passed as
 \fB\-\-option value\fR or \fB\-\-option=value\fR.
