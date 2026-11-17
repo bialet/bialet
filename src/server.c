@@ -176,8 +176,11 @@ static int header_block_well_formed(const char* buf, size_t hdr_len) {
     if(eol == line)
       break;
     size_t colon = line;
+    // Only visible ASCII in the name (RFC 9110 token bytes): VT or FF there
+    // passed this check while Request.init's trim() dropped the line.
     while(colon < eol && buf[colon] != ':') {
-      if(buf[colon] == ' ' || buf[colon] == '\t')
+      unsigned char c = (unsigned char)buf[colon];
+      if(c < 0x21 || c > 0x7e)
         return 0;
       colon++;
     }

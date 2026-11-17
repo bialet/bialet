@@ -911,11 +911,12 @@ ws = status(b'Content-Type: text/plain\r\n \r\n'
             b'Content-Type: multipart/form-data; boundary=zz\r\n')
 colon = status(b'Content-Type : multipart/form-data; boundary=zz\r\n')
 fold = status(b'Content-Type: multipart/form-data;\r\n boundary=zz\r\n')
-print('ws:%d|colon:%d|fold:%d|control:%s|barecr:%d|barelf:%d|last:%s' %
-      (ws, colon, fold, control, bare_cr, bare_lf, last))
+vt = status(b'X\x0b: hidden\r\n')
+print('ws:%d|colon:%d|fold:%d|vt:%d|control:%s|barecr:%d|barelf:%d|last:%s' %
+      (ws, colon, fold, vt, control, bare_cr, bare_lf, last))
 PY
 )
-  if [[ "$mpdetect_out" == "ws:400|colon:400|fold:400|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400|last:ok" ]]; then
+  if [[ "$mpdetect_out" == "ws:400|colon:400|fold:400|vt:400|control:ct:multipart/form-data; boundary=zz|note:injected|file:e.txt:3|barecr:400|barelf:400|last:ok" ]]; then
     report_result "Multipart header agreement    " "$mpdetect_line" 0
   else
     report_result "Multipart header agreement    " "$mpdetect_line" 1 \
