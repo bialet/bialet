@@ -1119,11 +1119,12 @@ void handle_client(bialet_socket_t client_socket) {
   // resolved the same path twice, once with realpath() and again with the
   // no-follow walk, at roughly one syscall per path component each time.
   size_t root_len = strlen(bialet_config.full_root_dir);
+  size_t uri_len = strlen(hm->uri.str);
   // Reject an over-long URI instead of truncating it into `path`. The truncated
   // path could name a different file than the request (and root_len, computed
   // from the true root, would point past the buffer when the root itself is
   // long). 414 is the status RFC 9110 defines for exactly this.
-  if(root_len + strlen(hm->uri.str) + 1 > PATH_SIZE) {
+  if(root_len + uri_len + 1 > PATH_SIZE) {
     // Logged once, without the URI itself: it is attacker-controlled and can be
     // kilobytes long.
     message(red("Error"), "URI too long; request not served");
@@ -1135,7 +1136,11 @@ void handle_client(bialet_socket_t client_socket) {
       free(full_request);
     return;
   }
-  snprintf(path, PATH_SIZE, "%s%s", bialet_config.full_root_dir, hm->uri.str);
+  // Bounds are proven by the check above, so copy instead of snprintf: GCC
+  // cannot relate the checked lengths to the %s%s format and rejects the
+  // (correct) snprintf with -Werror=format-truncation.
+  memcpy(path, bialet_config.full_root_dir, root_len);
+  memcpy(path + root_len, hm->uri.str, uri_len + 1);
   // Defense in depth: whatever the probes below do to `path`, it must stay the
   // root itself or a path below it. Cheap (no syscalls) and independent of the
   // component walk, so a future route-probe change cannot escape the root the

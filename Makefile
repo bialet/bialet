@@ -46,6 +46,24 @@ CFLAGS := -std=gnu17 -Wall -Wextra -Werror -g -O2 -Wvla -Wpointer-arith \
           -fstack-protector-strong $(EXTRA_CFLAGS)
 LDFLAGS := -lm -lpthread -lsqlite3 -lcurl $(EXTRA_LDFLAGS)
 
+# Optional allocator: `make MIMALLOC=1` links mimalloc, which lowers the cost of
+# the allocation-heavy per-request path (strings, query rows, rendered pages).
+# It is opt-in on purpose: the default build depends on nothing beyond libc, and
+# no allocator is vendored. Detection prefers pkg-config and falls back to the
+# plain soname, since the Debian package ships the library without a .pc file.
+# `make static` keeps its own curated link line and is not affected.
+MIMALLOC_CFLAGS :=
+MIMALLOC_LIBS :=
+ifneq (,$(filter 1 yes on,$(MIMALLOC)))
+MIMALLOC_CFLAGS := $(shell pkg-config --cflags libmimalloc 2>/dev/null)
+MIMALLOC_LIBS := $(shell pkg-config --libs libmimalloc 2>/dev/null)
+ifeq ($(strip $(MIMALLOC_LIBS)),)
+MIMALLOC_LIBS := -lmimalloc
+endif
+CFLAGS += $(MIMALLOC_CFLAGS)
+LDFLAGS += $(MIMALLOC_LIBS)
+endif
+
 # Hardening for the network daemon. Gated on the *target*, not on uname: the
 # Windows cross-compile runs inside a Linux container, so `uname -s` says Linux
 # while the target is mingw (whose CRT does not implement _FORTIFY_SOURCE and
@@ -94,9 +112,26 @@ endif
 
 all: $(BUILD_DIR)/$(TARGET_EXEC)
 
+# Link flags are not prerequisites of the binary, so switching MIMALLOC on or
+# off after a build would leave the previous binary in place -- `make` would
+# find every object up to date and stop. Record the real link line in a stamp
+# whose timestamp only moves when that line (or the compiler) changes, so the
+# binary relinks exactly then and stays put otherwise. This is what makes
+# `make MIMALLOC=1` work on a tree that was already built.
+.PHONY: FORCE
+FORCE:
+
+LINK_STAMP := $(BUILD_DIR)/.link-flags
+
+$(LINK_STAMP): FORCE
+	@mkdir -p $(dir $@)
+	@printf '%s\n' '$(CC) $(LDFLAGS)' > $@.tmp
+	@cmp -s $@.tmp $@ || mv -f $@.tmp $@
+	@rm -f $@.tmp
+
 wren_files: $(WREN_INCS)
 
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(LINK_STAMP)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
 # The Wren sources are embedded as C strings via the .inc files, so any object

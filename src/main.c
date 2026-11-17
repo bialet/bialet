@@ -355,6 +355,42 @@ static int launched_from_gui(void) {
 }
 #endif
 
+#ifndef _WIN32
+/*
+ * Translate -c/-C into RLIMIT_CPU.
+ *
+ * RLIMIT_CPU counts seconds of CPU time, not a percentage of a core, so the
+ * value goes in as-is. 0 means "no limit"; a literal 0 would deliver SIGKILL
+ * on the first timer tick, so it maps to RLIM_INFINITY.
+ *
+ * Neither value may exceed the hard limit inherited from the shell: raising a
+ * hard limit needs CAP_SYS_RESOURCE, and setrlimit() failing here would exit
+ * the child on every start and turn the supervisor into a crash loop. So both
+ * are clamped to what the parent process already allows, and a soft limit
+ * above the hard one is folded into the hard one for the same reason. The
+ * result is the loosest limit the process is actually permitted to set.
+ */
+static void compute_cpu_limit(struct rlimit* cpu_limit) {
+  struct rlimit inherited;
+  if(getrlimit(RLIMIT_CPU, &inherited) == -1) {
+    perror("getrlimit");
+    exit(1);
+  }
+  rlim_t hard = bialet_config.cpu_hard_limit == 0
+                    ? inherited.rlim_max
+                    : (rlim_t)bialet_config.cpu_hard_limit;
+  if(hard > inherited.rlim_max)
+    hard = inherited.rlim_max;
+  rlim_t soft = bialet_config.cpu_soft_limit == 0
+                    ? hard
+                    : (rlim_t)bialet_config.cpu_soft_limit;
+  if(soft > hard)
+    soft = hard;
+  cpu_limit->rlim_cur = soft;
+  cpu_limit->rlim_max = hard;
+}
+#endif
+
 int main(int argc, char* argv[]) {
   char*            code = NULL;
   const char*      validate_file = NULL;
@@ -409,8 +445,13 @@ int main(int argc, char* argv[]) {
   bialet_config.log_file = stdout;
   bialet_config.mem_soft_limit = 128;
   bialet_config.mem_hard_limit = 256;
-  bialet_config.cpu_soft_limit = 15;
-  bialet_config.cpu_hard_limit = 30;
+  // Seconds of CPU time, not a percentage: these feed RLIMIT_CPU directly.
+  // The defaults are deliberately far above one cycle's worth of work. The
+  // supervisor restarts the HTTP child when either limit fires, and a restart
+  // drops the bytecode cache and every open connection, so a limit that trips
+  // under normal load is worse than no limit at all.
+  bialet_config.cpu_soft_limit = 3600;
+  bialet_config.cpu_hard_limit = 7200;
   /* Env config values */
   bialet_config.debug = 0;
   bialet_config.quiet = 0;
@@ -705,9 +746,7 @@ int main(int argc, char* argv[]) {
   // bore no relation to what was asked for.
   mem_limit.rlim_cur = (rlim_t)bialet_config.mem_soft_limit * MEGABYTE;
   mem_limit.rlim_max = (rlim_t)bialet_config.mem_hard_limit * MEGABYTE;
-  cpu_limit.rlim_cur = (rlim_t)bialet_config.cpu_soft_limit;
-  cpu_limit.rlim_max = (rlim_t)bialet_config.cpu_hard_limit;
-
+  compute_cpu_limit(&cpu_limit);
   for(;;) {
     pid = fork();
     if(pid == 0) {

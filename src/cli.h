@@ -77,10 +77,10 @@ void cli_print_version(void);
   "128)\n"                                                                          \
   "  -M, --mem-hard MB     Memory hard limit                      (default: "       \
   "256)\n"                                                                          \
-  "  -c, --cpu-soft PERC   CPU soft limit                         (default: "       \
-  "15)\n"                                                                           \
-  "  -C, --cpu-hard PERC   CPU hard limit                         (default: "       \
-  "30)\n"                                                                           \
+  "  -c, --cpu-soft SEC    CPU time soft limit (seconds)          (default: "       \
+  "3600)\n"                                                                         \
+  "  -C, --cpu-hard SEC    CPU time hard limit (seconds)          (default: "       \
+  "7200)\n"                                                                         \
   "  -b, --max-post KB     Max request body                       (default: "       \
   "128)\n"                                                                          \
   "  -u, --max-upload-size BYTES\n"                                                 \

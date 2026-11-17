@@ -63,8 +63,8 @@ bialet --port=8080 /path/to/app
 | `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
 | `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `128`                                        |
 | `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `256`                                        |
-| `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
-| `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
+| `-c`, `--cpu-soft`      | CPU time soft limit (seconds)                                               | `3600`                                       |
+| `-C`, `--cpu-hard`      | CPU time hard limit (seconds)                                               | `7200`                                       |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
 | `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
@@ -83,6 +83,15 @@ usage text instead of being silently ignored.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+`-c` and `-C` are **seconds of CPU time** for the HTTP process, not a
+percentage. The supervisor runs the server as a parent/child pair: reaching the
+soft limit sends `SIGXCPU`, reaching the hard limit sends `SIGKILL`, and in
+either case the parent starts a fresh child, which drops the compiled-bytecode
+cache and every open connection. The defaults (one and two hours) are sized so
+that only a runaway process hits them; lower them only to bound a specific
+workload. `0` means no limit, with the shell's own `ulimit -t` still applying
+as the ceiling.
 
 > The upload cap is also bounded by the request-body limit (`-b`). A file must
 > fit inside a multipart body smaller than `-b` (default 128 KB), so the
