@@ -718,11 +718,22 @@ class Util {
     return value
   }
 
+  // Only the first hop counts: the proxy nearest the client is the one that
+  // saw the transport. Forwarded used to be a substring test, so
+  // "proto=httpsx" or a proto in a later element also counted as HTTPS.
   static isHttpsRequest {
     var forwardedProto = Request.header("x-forwarded-proto")
-    if (forwardedProto && forwardedProto.lower == "https") return true
+    if (forwardedProto && forwardedProto.split(",")[0].trim().lower == "https") return true
     var forwarded = Request.header("forwarded")
-    return forwarded && forwarded.lower.contains("proto=https")
+    if (!forwarded) return false
+    for (pair in forwarded.split(",")[0].split(";")) {
+      var eq = pair.indexOf("=")
+      if (eq > 0 && pair[0...eq].trim().lower == "proto") {
+        var value = pair[eq + 1..-1].trim().trim("\"").lower
+        return value == "https"
+      }
+    }
+    return false
   }
 
   static hexToDec(hexStr) {

@@ -2154,9 +2154,17 @@ _test_start_ms=$(now_ms)
 secure_proxy=$(curl -s -D- -o /dev/null -H "X-Forwarded-Proto: https" \
   "http://$HOST:$PORT/cookie-secure")
 secure_plain=$(curl -s -D- -o /dev/null "http://$HOST:$PORT/cookie-secure")
+# Forwarded is parsed, not substring-matched: only an exact proto of the first
+# element counts.
+secure_fwd=$(curl -s -D- -o /dev/null -H 'Forwarded: for=1.2.3.4;proto="https"' \
+  "http://$HOST:$PORT/cookie-secure")
+secure_fake=$(curl -s -D- -o /dev/null -H "Forwarded: proto=httpsx" \
+  "http://$HOST:$PORT/cookie-secure")
 # Match the attribute, not the cookie name ("secure-probe" would otherwise
 # make the plain response look secure too).
 if printf "%s" "$secure_proxy" | grep -qi '^set-cookie:.*; secure' \
+   && printf "%s" "$secure_fwd" | grep -qi '^set-cookie:.*; secure' \
+   && ! printf "%s" "$secure_fake" | grep -qi '^set-cookie:.*; secure' \
    && ! printf "%s" "$secure_plain" | grep -qi '^set-cookie:.*; secure'; then
   report_result "Cookie Secure follows proxy " "$cookie_secure_line" 0
 else
