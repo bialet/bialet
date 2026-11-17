@@ -71,6 +71,17 @@ typedef int bialet_socket_t;
 // that timeout could otherwise hold the single-threaded accept loop forever.
 #define BIALET_BODY_READ_DEADLINE_MS (30000)
 
+// Total wall-clock budget for writing a response. SO_SNDTIMEO only bounds one
+// send()/writev(): a peer that frees a little window inside every timeout keeps
+// the call returning progress, and with one worker that parks every other
+// client for as long as it likes. The budget is a base plus the time the body
+// takes at BIALET_WRITE_MIN_BYTES_PER_SEC, so an honest slow client still gets
+// a large file while the hold any one connection can impose stays bounded.
+#define BIALET_WRITE_BASE_DEADLINE_MS (30000)
+#define BIALET_WRITE_MIN_BYTES_PER_SEC (64 * 1024)
+
+static long long monotonic_ms(void);
+
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
 
@@ -254,20 +265,6 @@ static int stat_path_no_follow(const char* path, struct stat* st) {
 #endif
 }
 
-static ssize_t send_all(bialet_socket_t fd, const void* buf, size_t count) {
-  size_t      sent = 0;
-  const char* p = (const char*)buf;
-  while(sent < count) {
-    ssize_t n = send(fd, p + sent, count - sent, 0);
-    if(n < 0)
-      return n; // error (including SO_SNDTIMEO expiry)
-    if(n == 0)
-      break; // peer closed
-    sent += (size_t)n;
-  }
-  return (ssize_t)sent;
-}
-
 // Writes the response head and the body. One writev/WSASend call covers both,
 // which is one syscall fewer per response than sending them separately, and it
 // also means a small page never sits in the socket as two segments.
@@ -277,9 +274,13 @@ static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_
   size_t sent = 0;
   if(body == NULL)
     body_len = 0;
-  size_t total = head_len + body_len;
+  size_t    total = head_len + body_len;
+  long long deadline = monotonic_ms() + BIALET_WRITE_BASE_DEADLINE_MS +
+                       (long long)(total / BIALET_WRITE_MIN_BYTES_PER_SEC) * 1000;
 
   while(sent < total) {
+    if(monotonic_ms() >= deadline)
+      return -1; // too slow a reader: drop it so the worker serves others
     size_t body_done = sent > head_len ? sent - head_len : 0;
 #ifdef _WIN32
     WSABUF bufs[2];
@@ -727,7 +728,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
       (void)send_head_and_body(client_socket, head, (size_t)head_len, response->body,
                                body_len);
     else
-      (void)send_all(client_socket, head, (size_t)head_len);
+      (void)send_head_and_body(client_socket, head, (size_t)head_len, NULL, 0);
     socket_close(client_socket);
     return;
   }
@@ -749,7 +750,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
     (void)send_head_and_body(client_socket, message, (size_t)head_len,
                              response->body, body_len);
   else
-    (void)send_all(client_socket, message, (size_t)head_len);
+    (void)send_head_and_body(client_socket, message, (size_t)head_len, NULL, 0);
   free(message);
 
   socket_close(client_socket);
