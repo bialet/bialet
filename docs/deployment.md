@@ -276,7 +276,8 @@ Key directives, regardless of which proxy you run:
   `-b` limit (default 128 KB) with `413 Payload Too Large` *before* parsing
   them, so a body can never stall the Wren runtime. The effective cap is the
   smaller of `-b` and a memory-safe ceiling (`-m` / 512) so a body can never
-  push the fork()ed child past its `RLIMIT_AS` budget — at the default 128 MB
+  push the fork()ed child past its `RLIMIT_AS` budget (Linux; other platforms
+  have no such budget, see Resource Limits) — at the default 128 MB
   soft limit that ceiling is 256 KB, so the default `-b 128` is fully
   effective. Set the proxy's body limit to the smallest your
   app needs — 1 MB is a sane default for the proxy.
@@ -636,6 +637,11 @@ Use CLI flags to constrain resources per app:
 | `-b` | Max request body (KB)  | 128     | `-b 512`         |
 | `-u` | Max per-file upload    | 4 MB    | `-u 8MB`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
+
+`-m` and `-M` are enforced only on Linux, where the HTTP child runs under
+`RLIMIT_AS`. On macOS and Windows Bialet prints a warning when you set them and
+runs without a memory ceiling; use the container or service manager to cap
+memory there.
 
 The request-body cap is the smaller of `-b` and the memory-safe ceiling
 (`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the

@@ -469,7 +469,9 @@ limits the blast radius of a runaway script or a memory-exhaustion attack:
 bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 /www/myapp
 ```
 
-- `-m` / `-M` — soft / hard memory limit in MB
+- `-m` / `-M` — soft / hard memory limit in MB, enforced on **Linux only**
+  (`RLIMIT_AS` on the HTTP child). macOS and Windows builds run with no memory
+  ceiling; put a container or service-manager limit around them instead.
 - `-c` / `-C` — soft / hard CPU time limit in seconds: the soft one sends
   `SIGXCPU`, the hard one `SIGKILL`, and the supervisor restarts the HTTP child
   on either (which drops the bytecode cache). `0` disables the limit.

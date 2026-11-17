@@ -773,6 +773,11 @@ int main(int argc, char* argv[]) {
 
   compute_mem_limit(&mem_limit);
   compute_cpu_limit(&cpu_limit);
+#if !IS_LINUX
+  if(bialet_config.mem_soft_limit != 128 || bialet_config.mem_hard_limit != 256)
+    message(yellow("Warning"),
+            "-m/-M are only enforced on Linux; this process has no memory ceiling");
+#endif
   // A child that dies right after it starts (a limit the kernel refuses, a
   // database it cannot open) dies the same way every time. Restarting it at
   // full speed only burns CPU and fills the log, so a fast failure waits a
@@ -870,6 +875,9 @@ int main(int argc, char* argv[]) {
 // the c-review report for tracking a Windows-appropriate resource cap
 // (e.g. a Job Object) that doesn't turn a killed job into a permanent outage.
 #ifdef _WIN32
+  if(bialet_config.mem_soft_limit != 128 || bialet_config.mem_hard_limit != 256)
+    message(yellow("Warning"),
+            "-m/-M are only enforced on Linux; this process has no memory ceiling");
   dmon_init();
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);
