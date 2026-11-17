@@ -181,7 +181,20 @@ class Response {
   static status(status) { __status = status }
   static useErrorFallback() { __useErrorFallback }
   static addCookieHeader(value) { __cookies.add("Set-Cookie: %(Util.headerValue(value))") }
-  static header(header, value) { Util.setHeader_(__headers, header, Util.headerValue(value)) }
+  static header(header, value) {
+    // The server writes the message framing itself (Connection: close and a
+    // Content-Length computed from the body). An app value for one of these
+    // gave one response two framings, e.g. two different Content-Lengths or
+    // Transfer-Encoding next to Content-Length, which clients and proxies
+    // resolve differently.
+    var lower = "%(header)".trim().lower
+    if (lower == "content-length" || lower == "transfer-encoding" ||
+        lower == "connection" || lower == "keep-alive" || lower == "upgrade" ||
+        lower == "te" || lower == "trailer" || lower == "proxy-connection") {
+      Fiber.abort("Response header %(header) is set by the server")
+    }
+    Util.setHeader_(__headers, header, Util.headerValue(value))
+  }
   // Out of band: the id of the blob Response.file selected, or null. The id
   // used to live in the body as a leading 0x1A marker, which client-influenced
   // output could forge to read an arbitrary BIALET_FILES row.
@@ -665,7 +678,7 @@ class Util {
   static headerName(value) {
     value = value == null ? "" : "%(value)"
     var header = value.trim()
-    if (header == "" || hasHeaderBreak(header) || header.contains(":")) {
+    if (header == "" || hasHeaderBreak(header) || header.contains(":") || header.contains(" ")) {
       Fiber.abort("Invalid response header name")
     }
     return header

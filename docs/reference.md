@@ -222,10 +222,14 @@ Adds a 'Set-Cookie' header to the response.
 
 ### header(header, value)
 
-Sets a response header.
+Sets a response header. Setting a header that already exists (in any letter
+case) replaces it. The server writes the framing headers itself, so
+`Content-Length`, `Transfer-Encoding`, `Connection`, `Keep-Alive`, `Upgrade`,
+`TE`, `Trailer` and `Proxy-Connection` raise an error, as does a name with a
+space, a colon or a control character.
 
 - `header`: The name of the header.
-- `value`: The value of the header.
+- `value`: The value of the header. Control characters are removed.
 
 ### json(data)
 
