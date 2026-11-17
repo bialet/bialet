@@ -271,8 +271,12 @@ static volatile LONG pending_migration_reload = 0;
 static void run_pending_reloads(void) {
   if(InterlockedExchange(&pending_cron_reload, 0))
     trigger_reload_files("_cron" BIALET_EXTENSION);
+  // Not through trigger_reload_files(): its debounce dropped a save that
+  // landed within WAIT_FOR_RELOAD of the previous one, and the flag was
+  // already cleared, so that migration never ran. The flag coalesces a burst
+  // of saves into one run here anyway.
   if(InterlockedExchange(&pending_migration_reload, 0))
-    trigger_reload_files("_migration" BIALET_EXTENSION);
+    migrate();
 }
 #endif
 
