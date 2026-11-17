@@ -1016,6 +1016,13 @@ static const char* find_last_header_value(const char* msg, size_t head_len,
     const char* eol = p;
     while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
       eol++;
+    // The header region ends where the blank line's CRLF starts, so the last
+    // header line has no CRLF of its own: the scan above stops one byte short
+    // of its end, and the value lost its final byte. An unquoted boundary in a
+    // last-line Content-Type was then split on a one-byte-shorter delimiter
+    // than the one the request declared.
+    if(!(eol + 1 < end && eol[0] == '\r' && eol[1] == '\n'))
+      eol = end;
     size_t line_len = (size_t)(eol - p);
     // A line that is blank after trimming SP/HTAB ends the header block, the
     // same rule Request.init applies. Without this the detector read a
