@@ -126,6 +126,61 @@ static void temp_upload_usage(sqlite3_int64* bytes, sqlite3_int64* rows) {
 // keeps the ceiling honest: predicting the freed bytes from the pool mean
 // under-frees whenever the oldest rows are smaller than average, and the caller
 // then refused a part that would have fit.
+// Upload leases. Several workers may share one database, and the temporary
+// pool is evicted table-wide; the per-request firstFileId guard below only
+// protects the rows of the request that evicts. A worker's flood therefore
+// deleted a part another worker had accepted moments earlier and was about to
+// hand to its handler, which then saw Request.file() == null on a 200.
+// Each accepted temporary row is leased to the process that inserted it.
+// Eviction skips a row with a live lease. A process handles one request at a
+// time, so it drops its own leases when it starts the next upload request;
+// a lease from a process that died expires after UPLOAD_LEASE_SECONDS.
+#define UPLOAD_LEASE_SECONDS 120
+
+#ifdef _WIN32
+#define upload_lease_owner() ((sqlite3_int64)GetCurrentProcessId())
+#else
+#define upload_lease_owner() ((sqlite3_int64)getpid())
+#endif
+
+static void upload_leases_begin_request(void) {
+  if(db == NULL)
+    return;
+  static int table_ready = 0;
+  if(!table_ready) {
+    if(sqlite3_exec(db,
+                    "CREATE TABLE IF NOT EXISTS BIALET_UPLOAD_LEASES "
+                    "(fileId INTEGER PRIMARY KEY, owner INTEGER, expiresAt INTEGER)",
+                    NULL, NULL, NULL) != SQLITE_OK)
+      return;
+    table_ready = 1;
+  }
+  sqlite3_stmt* del = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "DELETE FROM BIALET_UPLOAD_LEASES WHERE owner = ? OR "
+                        "expiresAt <= CAST(strftime('%s', 'now') AS INTEGER)",
+                        -1, &del, 0) == SQLITE_OK) {
+    sqlite3_bind_int64(del, 1, upload_lease_owner());
+    sqlite3_step(del);
+    sqlite3_finalize(del);
+  }
+}
+
+static void upload_lease_add(sqlite3_int64 file_id) {
+  sqlite3_stmt* ins = NULL;
+  if(sqlite3_prepare_v2(db,
+                        "INSERT OR REPLACE INTO BIALET_UPLOAD_LEASES "
+                        "(fileId, owner, expiresAt) VALUES (?, ?, "
+                        "CAST(strftime('%s', 'now') AS INTEGER) + ?)",
+                        -1, &ins, 0) == SQLITE_OK) {
+    sqlite3_bind_int64(ins, 1, file_id);
+    sqlite3_bind_int64(ins, 2, upload_lease_owner());
+    sqlite3_bind_int(ins, 3, UPLOAD_LEASE_SECONDS);
+    sqlite3_step(ins);
+    sqlite3_finalize(ins);
+  }
+}
+
 static sqlite3_int64 evict_oldest_temp_upload(sqlite3_int64 keep_from_id) {
   if(db == NULL)
     return -1;
@@ -134,7 +189,9 @@ static sqlite3_int64 evict_oldest_temp_upload(sqlite3_int64 keep_from_id) {
   sqlite3_int64 size = 0;
   if(sqlite3_prepare_v2(db,
                         "SELECT id, IFNULL(size, 0) FROM BIALET_FILES "
-                        "WHERE isTemp = 1 AND id < ? "
+                        "WHERE isTemp = 1 AND id < ? AND id NOT IN "
+                        "(SELECT fileId FROM BIALET_UPLOAD_LEASES WHERE expiresAt > "
+                        "CAST(strftime('%s', 'now') AS INTEGER)) "
                         "ORDER BY createdAt ASC, id ASC LIMIT 1",
                         -1, &sel, 0) != SQLITE_OK)
     return -1;
@@ -146,14 +203,17 @@ static sqlite3_int64 evict_oldest_temp_upload(sqlite3_int64 keep_from_id) {
   sqlite3_finalize(sel);
   if(id < 0)
     return -1;
+  // isTemp is checked again: another connection may have saved the row (File
+  // save) since the SELECT. The bytes count as freed only if a row went away.
   sqlite3_stmt* del = NULL;
-  if(sqlite3_prepare_v2(db, "DELETE FROM BIALET_FILES WHERE id = ?", -1, &del, 0) ==
-     SQLITE_OK) {
+  int           removed = 0;
+  if(sqlite3_prepare_v2(db, "DELETE FROM BIALET_FILES WHERE id = ? AND isTemp = 1",
+                        -1, &del, 0) == SQLITE_OK) {
     sqlite3_bind_int64(del, 1, id);
-    sqlite3_step(del);
+    removed = sqlite3_step(del) == SQLITE_DONE && sqlite3_changes(db) == 1;
     sqlite3_finalize(del);
   }
-  return size;
+  return removed ? size : -1;
 }
 
 // Make room for a part of [fileSize] bytes by evicting the oldest temporary
@@ -1271,6 +1331,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
       purge_temp_uploads();
     }
   }
+  upload_leases_begin_request();
   sqlite3_int64 tempBytes = 0;
   sqlite3_int64 tempRows = 0;
   temp_upload_usage(&tempBytes, &tempRows);
@@ -1469,6 +1530,7 @@ int save_uploaded_files(struct HttpMessage* hm, char* filesIds,
         sqlite3_int64 fileId = sqlite3_last_insert_rowid(db);
         if(firstFileId < 0)
           firstFileId = fileId;
+        upload_lease_add(fileId);
         tempBytes += (sqlite3_int64)fileSize;
         tempRows++;
 
