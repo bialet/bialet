@@ -132,10 +132,18 @@ jobs:
 
       - name: Check the tag and derive the version
         run: |
-          case "${TAG}" in
-            v[0-9]*) ;;
-            *) echo "::error::expected a v-prefixed version tag, got '${TAG}'"; exit 1 ;;
-          esac
+          # Both values end up in $GITHUB_ENV, one assignment per line. A
+          # newline in either would add assignments of its own choosing to the
+          # job that holds the signing key, so each must be a single plain
+          # token. (A glob such as v[0-9]* also matches across a newline.)
+          if ! [[ "${TAG}" =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::expected a version tag like v1.2.3"
+            exit 1
+          fi
+          if ! [[ "${SERIES}" =~ ^[a-z]+$ ]]; then
+            echo "::error::expected an Ubuntu series name such as noble"
+            exit 1
+          fi
           V="${TAG#v}"
           echo "V=${V}" >> "$GITHUB_ENV"
           echo "VERSION=${V}-1~${SERIES}1" >> "$GITHUB_ENV"
