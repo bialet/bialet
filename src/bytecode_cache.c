@@ -70,14 +70,14 @@ typedef enum { CACHE_VAR_NULL = 0, CACHE_VAR_LINE = 1 } CacheVarKind;
 /* ------------------------------------------------------------------------- */
 
 // One entry per source file. A user entry is invalidated by comparing the
-// length and xxHash64 of the source with what it was built from; the framework
-// entry is built from a string compiled into this binary, so it carries no
-// source metadata and is never content-checked.
+// length and xxHash64 of the source with what it was built from; an embedded
+// entry (wren_core.wren or bialet.wren) is built from a string compiled into
+// this binary, so it carries no source metadata and is never content-checked.
 typedef struct {
-  char*    key; // realpath (or the framework's synthetic key)
+  char*    key; // realpath (or the embedded module's synthetic key)
   uint8_t* blob;
   size_t   blob_len;
-  bool     framework;
+  bool     embedded;
   size_t   source_len;
   uint64_t source_hash;
   // File signature captured when the blob was stored (served files only).
@@ -577,7 +577,7 @@ bool bytecode_cache_stat_from_native(const struct stat*     st,
 // is the intended backstop for those, not implemented here.
 static bool cache_stat_matches(const CacheEntry*            entry,
                                const struct BialetFileStat* stat) {
-  if(entry->framework || !entry->has_stat || stat == NULL || !stat->valid)
+  if(entry->embedded || !entry->has_stat || stat == NULL || !stat->valid)
     return false;
   return entry->stat.mtime_ns == stat->mtime_ns && entry->stat.size == stat->size &&
          entry->stat.inode == stat->inode;
@@ -594,7 +594,7 @@ static bool cache_stat_matches(const CacheEntry*            entry,
 // about. A stat() fast path can sit in front of this check without changing it.
 static bool cache_entry_matches(const CacheEntry* entry, const char* source,
                                 size_t source_len) {
-  if(entry->framework)
+  if(entry->embedded)
     return true; // The source is part of this binary.
   return entry->source_len == source_len &&
          entry->source_hash == bytecode_cache_hash(source, source_len);
@@ -1134,6 +1134,10 @@ static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
 /* Cache store                                                              */
 /* ------------------------------------------------------------------------- */
 
+// [is_core] is true when the source compiles into the anonymous core module,
+// which is the case for both embedded modules (wren_core.wren and bialet.wren)
+// and never for a named user module. It selects the blob's module-state flag,
+// which is what ties the blob to that module's bootstrap state.
 static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char* key,
                         const char* source, size_t source_len,
                         const struct BialetFileStat* stat, int symbol_base,
@@ -1195,7 +1199,7 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
   entry->key = key_copy;
   entry->blob = writer.data;
   entry->blob_len = writer.len;
-  entry->framework = is_core;
+  entry->embedded = is_core;
   entry->source_len = source_len;
   entry->source_hash = source_hash;
   entry->has_stat = !is_core && stat != NULL && stat->valid;
@@ -1208,13 +1212,13 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
 /* Public entry points                                                      */
 /* ------------------------------------------------------------------------- */
 
-// Shared by the framework and user-file entry points. [framework] entries are
-// always cacheable and are not content-checked; user entries need user-file
-// caching to be on and a resolved key.
+// Shared by the embedded and user-file entry points. [embedded] sources come
+// from this binary and are always cacheable and never content-checked; user
+// entries need user-file caching to be on and a resolved key.
 static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
                                  const char* source, const char* cache_key,
-                                 const struct BialetFileStat* stat, bool framework) {
-  if(!framework && (!cache_user_files || cache_key == NULL))
+                                 const struct BialetFileStat* stat, bool embedded) {
+  if(!embedded && (!cache_user_files || cache_key == NULL))
     return wrenCompileSource(vm, module_name, source, false, true);
 
   size_t source_len = strlen(source);
@@ -1272,6 +1276,25 @@ WrenInterpretResult bytecode_cache_interpret_framework(WrenVM*     vm,
                                                        const char* source) {
   ObjClosure* closure =
       cache_compile(vm, NULL, source, BYTECODE_CACHE_FRAMEWORK_KEY, NULL, true);
+  if(closure == NULL)
+    return WREN_RESULT_COMPILE_ERROR;
+
+  return wrenRunClosure(vm, closure);
+}
+
+// The core module boots first, before any class exists: wrenInitializeCore has
+// defined Object, Class and Object metaclass and bound their primitives, and
+// nothing else. That fixed starting state is what the blob's module-state
+// header records, so a blob built by the first VM in the process loads into
+// every later one; anything else (a different symbol or variable base) is a
+// mismatch and falls back to compiling wren_core.wren.
+//
+// Strings deserialised here still have a NULL class: stringClass does not exist
+// yet, exactly as for a fresh compile, and wrenInitializeCore() fixes them up
+// once it does.
+WrenInterpretResult bytecode_cache_interpret_core(WrenVM* vm, const char* source) {
+  ObjClosure* closure =
+      cache_compile(vm, NULL, source, BYTECODE_CACHE_CORE_KEY, NULL, true);
   if(closure == NULL)
     return WREN_RESULT_COMPILE_ERROR;
 

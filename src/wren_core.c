@@ -2670,7 +2670,13 @@ void wrenInitializeCore(WrenVM* vm) {
   //   '---------'   '-------------------'            -'
 
   // The rest of the classes can now be defined normally.
-  wrenInterpret(vm, NULL, coreModuleSource);
+  //
+  // The first VM in the process compiles wren_core.wren and stores the bytecode;
+  // every later VM replays that blob instead of re-parsing 25 KB of source.
+  // The module state -- three variables defined above, primitives bound in the
+  // order above -- is identical for every VM, so the blob's recorded symbol and
+  // variable bases match; any drift falls back to compiling the source here.
+  bytecode_cache_interpret_core(vm, coreModuleSource);
 
   vm->boolClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Bool"));
   PRIMITIVE(vm->boolClass, "toString", bool_toString);
