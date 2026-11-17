@@ -14,6 +14,8 @@ permissions:
   contents: read
 
 env:
+  # mimalloc v2.5.3, by commit. Linked statically into both Linux binaries.
+  MIMALLOC_COMMIT: 9593e865ea9e984d7b19fe216b750cb9bdb35d2d
   # The pushed tag (v1.2.20). Run steps read this from the environment instead
   # of interpolating ${{ github.ref_name }} into the script, where a crafted tag
   # name would be a shell injection.
@@ -91,8 +93,14 @@ jobs:
       - name: Build mimalloc (static)
         run: |
           set -euo pipefail
-          git clone --depth 1 --branch v2.5.3 \
-            https://github.com/microsoft/mimalloc.git /tmp/mimalloc
+          # The tag is only a label: fetch the commit it was reviewed at and
+          # fail if the checkout is anything else, so a moved tag cannot change
+          # what the attested binary links.
+          git init -q /tmp/mimalloc
+          git -C /tmp/mimalloc fetch -q --depth 1 \
+            https://github.com/microsoft/mimalloc.git "${MIMALLOC_COMMIT}"
+          git -C /tmp/mimalloc checkout -q FETCH_HEAD
+          test "$(git -C /tmp/mimalloc rev-parse HEAD)" = "${MIMALLOC_COMMIT}"
           cmake -S /tmp/mimalloc -B /tmp/mimalloc/out \
             -DCMAKE_BUILD_TYPE=Release \
             -DMI_BUILD_SHARED=OFF \
@@ -177,8 +185,14 @@ jobs:
       - name: Build mimalloc (static)
         run: |
           set -euo pipefail
-          git clone --depth 1 --branch v2.5.3 \
-            https://github.com/microsoft/mimalloc.git /tmp/mimalloc
+          # The tag is only a label: fetch the commit it was reviewed at and
+          # fail if the checkout is anything else, so a moved tag cannot change
+          # what the attested binary links.
+          git init -q /tmp/mimalloc
+          git -C /tmp/mimalloc fetch -q --depth 1 \
+            https://github.com/microsoft/mimalloc.git "${MIMALLOC_COMMIT}"
+          git -C /tmp/mimalloc checkout -q FETCH_HEAD
+          test "$(git -C /tmp/mimalloc rev-parse HEAD)" = "${MIMALLOC_COMMIT}"
           cmake -S /tmp/mimalloc -B /tmp/mimalloc/out \
             -DCMAKE_BUILD_TYPE=Release \
             -DMI_BUILD_SHARED=OFF \
@@ -245,6 +259,10 @@ jobs:
       SQLITE_YEAR: 2024
       SQLITE_VERSION: 3460100
       OPENSSL_VERSION: 3.0.15
+      # Both sources are compiled into the Windows binary; a download that does
+      # not match these digests fails the build instead of being attested.
+      SQLITE_SHA256: 77823cb110929c2bcb0f5d48e4833b5c59a8a6e40cdea3936b99e199dbbe5784
+      OPENSSL_SHA256: 23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -258,6 +276,7 @@ jobs:
       - name: Build SQLite (static, for Windows)
         run: |
           curl -fsSLO "https://www.sqlite.org/${{ env.SQLITE_YEAR }}/sqlite-amalgamation-${{ env.SQLITE_VERSION }}.zip"
+          echo "${SQLITE_SHA256}  sqlite-amalgamation-${{ env.SQLITE_VERSION }}.zip" | sha256sum -c -
           unzip -q "sqlite-amalgamation-${{ env.SQLITE_VERSION }}.zip"
           cd "sqlite-amalgamation-${{ env.SQLITE_VERSION }}"
           x86_64-w64-mingw32-gcc -c sqlite3.c -O2 -o sqlite3.o
@@ -268,6 +287,7 @@ jobs:
       - name: Build OpenSSL (static, for Windows)
         run: |
           curl -fsSLO "https://www.openssl.org/source/openssl-${{ env.OPENSSL_VERSION }}.tar.gz"
+          echo "${OPENSSL_SHA256}  openssl-${{ env.OPENSSL_VERSION }}.tar.gz" | sha256sum -c -
           tar xf "openssl-${{ env.OPENSSL_VERSION }}.tar.gz"
           cd "openssl-${{ env.OPENSSL_VERSION }}"
           ./Configure mingw64 --cross-compile-prefix=x86_64-w64-mingw32- \

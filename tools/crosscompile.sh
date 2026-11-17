@@ -8,6 +8,9 @@ DIST_DIR="$PROJECT_DIR/build"
 SQLITE_YEAR="2024"
 SQLITE_VERSION="3460100"
 OPENSSL_VERSION="3.0.15"
+# Same digests as .github/workflows/release.yml: both sources are compiled in.
+SQLITE_SHA256="77823cb110929c2bcb0f5d48e4833b5c59a8a6e40cdea3936b99e199dbbe5784"
+OPENSSL_SHA256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533"
 MINGW_PREFIX="x86_64-w64-mingw32"
 MINGW_ROOT="/usr/$MINGW_PREFIX"
 
@@ -71,6 +74,8 @@ build_windows() {
         -e SQLITE_YEAR="$SQLITE_YEAR" \
         -e SQLITE_VERSION="$SQLITE_VERSION" \
         -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+        -e SQLITE_SHA256="$SQLITE_SHA256" \
+        -e OPENSSL_SHA256="$OPENSSL_SHA256" \
         ubuntu:22.04 bash -c '
         set -e
         export DEBIAN_FRONTEND=noninteractive
@@ -83,6 +88,7 @@ build_windows() {
         echo "  SQLite..."
         mkdir -p /tmp/_bialet_build && cd /tmp/_bialet_build
         curl -fsSL "https://www.sqlite.org/${SQLITE_YEAR}/sqlite-amalgamation-${SQLITE_VERSION}.zip" -o sqlite.zip
+        echo "${SQLITE_SHA256}  sqlite.zip" | sha256sum -c -
         unzip -oq sqlite.zip
         cd sqlite-amalgamation-${SQLITE_VERSION}
         ${CROSS}-gcc -c sqlite3.c -O2 -o sqlite3.o
@@ -93,6 +99,7 @@ build_windows() {
         echo "  OpenSSL (this takes a few minutes)..."
         cd /tmp/_bialet_build
         curl -fsSL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz" -o openssl.tar.gz
+        echo "${OPENSSL_SHA256}  openssl.tar.gz" | sha256sum -c -
         tar xf openssl.tar.gz
         cd openssl-${OPENSSL_VERSION}
         ./Configure mingw64 --cross-compile-prefix=${CROSS}- \
