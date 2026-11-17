@@ -1072,8 +1072,11 @@ void handle_client(bialet_socket_t client_socket) {
   }
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
-    (void)send_all(client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE));
-    (void)send_all(client_socket, favicon_data, FAVICON_SIZE);
+    // Head and body in one writev, like every other response: two send() calls
+    // put a chunk boundary where the bytes never had one.
+    (void)send_head_and_body(client_socket, FAVICON_RESPONSE,
+                             strlen(FAVICON_RESPONSE), (const char*)favicon_data,
+                             (size_t)FAVICON_SIZE);
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
