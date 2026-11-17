@@ -9,6 +9,21 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+#ifndef _WIN32
+static pthread_mutex_t tz_mutex = PTHREAD_MUTEX_INITIALIZER;
+void                   tz_lock(void) {
+  pthread_mutex_lock(&tz_mutex);
+}
+void tz_unlock(void) {
+  pthread_mutex_unlock(&tz_mutex);
+}
+#else
+void tz_lock(void) {}
+void tz_unlock(void) {}
 #endif
 
 #define GREEN_COLOR 32
@@ -129,7 +144,9 @@ static const char* message_stamp(void) {
 #ifdef _WIN32
   tm = localtime_s(&tmbuf, &now) == 0 ? &tmbuf : NULL;
 #else
+  tz_lock();
   tm = localtime_r(&now, &tmbuf);
+  tz_unlock();
 #endif
   if(tm == NULL) {
     msg_stamp.text[0] = '\0';

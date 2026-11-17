@@ -215,15 +215,21 @@ void* cron_thread(void* arg) {
 // parent and child guarantees no background bialet_run is in flight at fork
 // time, so the child's bialet_reopen_db() and later request handling never
 // touch a locked SQLite handle.
+// tz_lock too (after run_mutex, the order a Date call takes them in): a
+// thread logging at the moment of fork() would otherwise leave the child
+// with a held lock and no thread to release it.
 static void atfork_prepare(void) {
   pthread_mutex_lock(&run_mutex);
+  tz_lock();
 }
 
 static void atfork_parent(void) {
+  tz_unlock();
   pthread_mutex_unlock(&run_mutex);
 }
 
 static void atfork_child(void) {
+  tz_unlock();
   pthread_mutex_unlock(&run_mutex);
 }
 #endif

@@ -9,6 +9,7 @@
 #include "http_call.h"
 #include "json.h"
 #include "markdown.h"
+#include "messages.h"
 #include "secret.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
@@ -2141,12 +2142,21 @@ static char* date_tz_original = NULL; // NULL: TZ was not set
 // stamps, for the life of the worker, and an empty zone could not undo it.
 // Apply [tz] only for the duration of one primitive: date_zone_enter() returns
 // true when it changed TZ, and date_zone_leave() puts the original back.
+// The swap is process-wide, so it holds tz_lock (messages.h) from enter to
+// leave: the supervisor's other thread logged with the zone a cron or
+// migration body had installed. Nothing between enter and leave may log.
 static bool date_zone_enter(const char* tz) {
   if(tz == NULL || tz[0] == '\0')
     return false;
+  tz_lock();
   if(!date_tz_captured) {
     const char* current = getenv("TZ");
     date_tz_original = current ? strdup(current) : NULL;
+    if(current != NULL && date_tz_original == NULL) {
+      // Without the original the restore would unset TZ for good.
+      tz_unlock();
+      return false;
+    }
     date_tz_captured = true;
   }
   date_set_tz_env(tz);
@@ -2154,8 +2164,10 @@ static bool date_zone_enter(const char* tz) {
 }
 
 static void date_zone_leave(bool changed) {
-  if(changed)
-    date_set_tz_env(date_tz_original);
+  if(!changed)
+    return;
+  date_set_tz_env(date_tz_original);
+  tz_unlock();
 }
 
 // Accepts the Wren-level timezone argument for the date primitives: a string,

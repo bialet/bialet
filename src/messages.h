@@ -16,6 +16,13 @@ char* magenta(char* str);
 
 void message_internal(int num, ...);
 
+// The process time zone (TZ) is shared by every thread. A Date primitive swaps
+// it for the length of one call; holding this lock around the swap and around
+// the log stamp keeps another thread from stamping a record in a zone an app
+// chose. No-ops on Windows, where Wren runs on one thread.
+void tz_lock(void);
+void tz_unlock(void);
+
 #define message_1(x) message_internal(1, x)
 #define message_2(x, y) message_internal(2, x, y)
 #define message_3(x, y, z) message_internal(3, x, y, z)
