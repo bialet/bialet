@@ -422,6 +422,120 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
 else
   skip_test "Served file cache invalidation" "requires local binary access"
 fi
+
+# The two embedded modules (wren_core.wren and bialet.wren) are replayed from
+# blobs, never recompiled, once the process has one of each. Nothing about that
+# is visible from outside -- the blobs never leave the process -- so the binary
+# carries two test hooks for it: BIALET_CACHE_TRACE logs one line per embedded
+# module saying "replayed" or "compiled", and BIALET_CACHE_FAULT stores one
+# truncated copy of the framework blob so the next VM has to reject it.
+#
+# The parent process boots one VM before it forks the HTTP child, so by the time
+# the port answers both blobs exist and every request below is a later VM. That
+# is exactly the case R1 flagged: if the second VM silently missed, these tests
+# would see "compiled" and fail.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  replay_line=$LINENO
+  _test_start_ms=$(now_ms)
+  replay_root=$(mktemp -d)
+  replay_log=$(mktemp)
+  replay_ok=1
+  replay_detail=""
+  printf 'return "replay-A"\n' > "$replay_root/index.wren"
+
+  # Starts the server with [fault] (0/1) and leaves "port ready" as the state
+  # where the parent has already stored its blobs and every later line in
+  # $replay_log comes from a request.
+  start_replay_server() {
+    local fault=$1
+    : > "$replay_log"
+    require_free_port "$HOST" "$CRON_PORT" "replay server"
+    BIALET_CACHE_TRACE=1 BIALET_CACHE_FAULT="$fault" \
+      "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" "$replay_root" \
+      >> "$replay_log" 2>&1 &
+    disown
+    wait_port "$HOST" "$CRON_PORT" 10
+  }
+
+  stop_replay_server() {
+    pgrep -f -- "$TARGET_EXEC.*-p $CRON_PORT $replay_root" \
+      2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+    for _ in $(seq 1 20); do
+      check_port "$HOST" "$CRON_PORT" 0.2 || break
+      sleep 0.1
+    done
+  }
+
+  # Lines written after line [from], trimmed to the message text.
+  replay_lines_since() {
+    tail -n "+$(( $1 + 1 ))" "$replay_log" 2>/dev/null |
+      sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} //'
+  }
+
+  # Requests [count] times, expecting [body] each time, and reports the number of
+  # log lines seen before the first request in REPLY.
+  replay_requests() {
+    local count=$1 body=$2 got i
+    REPLY=$(wc -l < "$replay_log")
+    for ((i = 0; i < count; i++)); do
+      got=$(curl -s --max-time 10 "http://$HOST:$CRON_PORT/")
+      if [[ "$got" != "$body" ]]; then
+        replay_ok=0
+        replay_detail="request $((i + 1)) returned '${got:0:120}'"
+        return 1
+      fi
+    done
+    return 0
+  }
+
+  # Case 1: the second VM and every later one replays both embedded modules.
+  start_replay_server 0
+  replay_requests 1 "replay-A"
+  replay_before=$REPLY
+  replay_requests 1 "replay-A"
+  sleep 0.2
+  replay_delta=$(replay_lines_since "$replay_before" | grep "Bytecode cache")
+  stop_replay_server
+  if ! grep -q "Bytecode cache core: replayed" <<< "$replay_delta" ||
+     ! grep -q "Bytecode cache framework: replayed" <<< "$replay_delta" ||
+     grep -q "compiled" <<< "$replay_delta"; then
+    replay_ok=0
+    replay_detail="second request did not replay both embedded modules: $replay_delta"
+  fi
+
+  # Case 2: a corrupt blob falls back to compiling, leaves the module usable and
+  # is replaced; the request after it replays again.
+  start_replay_server 1
+  replay_requests 1 "replay-A"
+  replay_before=$REPLY
+  replay_requests 2 "replay-A"
+  sleep 0.2
+  replay_delta=$(replay_lines_since "$replay_before" | grep "Bytecode cache")
+  stop_replay_server
+  if ! grep -q "Discarding a corrupt cached module" <<< "$replay_delta" ||
+     ! grep -q "framework: compiled" <<< "$replay_delta" ||
+     ! grep -q "framework: replayed" <<< "$replay_delta"; then
+    replay_ok=0
+    replay_detail="corrupt blob did not fall back and recover: $replay_delta"
+  fi
+
+  # A maskable mismatch on an embedded blob must never pass silently either; the
+  # hook above is a truncation, so this only asserts the message is not printed
+  # for a healthy blob.
+  if grep -q "no longer fits this VM" "$replay_log"; then
+    replay_ok=0
+    replay_detail="a healthy embedded blob was reported as a mismatch"
+  fi
+
+  rm -rf "$replay_root" "$replay_log"
+  if [[ "$replay_ok" == "1" ]]; then
+    report_result "Embedded blob replay           " "$replay_line" 0
+  else
+    report_result "Embedded blob replay           " "$replay_line" 1 "$replay_detail"
+  fi
+else
+  skip_test "Embedded blob replay           " "requires local binary access"
+fi
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 
