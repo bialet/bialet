@@ -1435,7 +1435,11 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # An absolute path whose directory does not exist cannot be opened.
   db_guard_case "unopenable" "Can't open database in" \
     -d "/nonexistent-bialet-dir/x.sqlite3"
-  db_guard_long="/$(printf 'a%.0s' $(seq 1 1100))"
+  # Longer than PATH_MAX on every supported platform: the guard compares the
+  # absolute path against a PATH_MAX-sized buffer, and a 1101-byte path fits in
+  # Linux's 4096 but not in macOS's 1024, so the old value only exercised the
+  # guard on macOS.
+  db_guard_long="/$(printf 'a%.0s' $(seq 1 5000))"
   db_guard_case "too long" "Database path too long" -d "$db_guard_long"
   unset db_guard_long
   if [[ "$db_guard_ok" == 1 ]]; then
