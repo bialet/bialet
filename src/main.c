@@ -807,15 +807,25 @@ int main(int argc, char* argv[]) {
     message(yellow("Warning"),
             "-m/-M are only enforced on Linux; this process has no memory ceiling");
 #endif
-  // A child that dies right after it starts (a limit the kernel refuses, a
-  // database it cannot open) dies the same way every time. Restarting it at
-  // full speed only burns CPU and fills the log, so a fast failure waits a
-  // second, and too many in a row stop the server with an error.
-  int fast_failures = 0;
+  // A child that dies before it can serve (a limit the kernel refuses, a
+  // database it cannot open) dies the same way every time; restarting it at
+  // full speed only burns CPU and fills the log. The child reports through a
+  // pipe once its setup is done, so only a death before that report counts as
+  // a startup failure and backs off, doubling up to 30 s. A child killed while
+  // serving (its CPU or memory limit, a crash a request caused) is restarted
+  // at once: an earlier version timed deaths instead, so ten quick requests
+  // that each killed a fresh child stopped the whole server. Supervision never
+  // gives up on its own.
+  int startup_failures = 0;
   for(;;) {
-    time_t child_started = time(NULL);
+    int ready[2];
+    if(pipe(ready) == -1) {
+      perror("pipe");
+      exit(1);
+    }
     pid = fork();
     if(pid == 0) {
+      close(ready[0]);
       // The sqlite connection was opened in the parent before fork() and is
       // still used by the parent's cron/dmon threads. SQLite forbids sharing
       // a connection across fork(); open our own fresh connection so the HTTP
@@ -838,6 +848,9 @@ int main(int argc, char* argv[]) {
         perror("setrlimit");
         exit(1);
       }
+      ssize_t ready_written = write(ready[1], "R", 1);
+      (void)ready_written;
+      close(ready[1]);
       while(keep_running) {
         server_poll(SERVER_POLL_DELAY);
       }
@@ -847,6 +860,16 @@ int main(int argc, char* argv[]) {
       exit(0);
     } else if(pid > 0) {
       http_child_pid = (sig_atomic_t)pid;
+      // The report arrives, or the read sees end of file when the child dies
+      // without sending it.
+      close(ready[1]);
+      char    ready_mark = 0;
+      ssize_t ready_read;
+      do {
+        ready_read = read(ready[0], &ready_mark, 1);
+      } while(ready_read < 0 && errno == EINTR && keep_running);
+      close(ready[0]);
+      int child_started = ready_read == 1;
       // Parent: wait for the HTTP child specifically. `wait()` would also
       // reap the browser child forked by open_browser() in dev mode and, if
       // that one exited cleanly first, tear down dmon and exit while the
@@ -875,17 +898,15 @@ int main(int argc, char* argv[]) {
       } else if(!keep_running) {
         break; // child stopped because we are shutting down
       } else {
-        if(time(NULL) - child_started < 2) {
-          if(++fast_failures >= 10) {
-            message(red("Error"),
-                    "The HTTP process keeps failing right after it starts; "
-                    "stopping. Check the -m/-M limits and the log above.");
-            dmon_deinit();
-            exit(1);
-          }
-          sleep(1);
+        if(child_started) {
+          startup_failures = 0;
         } else {
-          fast_failures = 0;
+          startup_failures++;
+          unsigned pause = startup_failures < 5 ? 1u << startup_failures : 30u;
+          message(red("Error"),
+                  "The HTTP process failed before it could serve; check the "
+                  "-m/-M/-c/-C limits, the database and the log above");
+          sleep(pause);
         }
         message(red("Error"), "Restarting");
       }

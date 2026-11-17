@@ -1385,6 +1385,39 @@ else
   skip_test "Memory limits clamped       " "requires local binary access"
 fi
 
+# A worker killed by the request it serves (here its 1 s CPU limit) is
+# restarted, however often it happens. The supervisor used to count deaths
+# within two seconds of a fork as startup failures and stopped for good after
+# ten, so ten quick requests ended the server.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
+  cpukill_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cpukill_root=$(mktemp -d)
+  cpukill_db=$(mktemp /tmp/bialet-cpukill.XXXXXX)
+  printf 'return "alive"\n' > "$cpukill_root/index.wren"
+  printf 'var i = 0\nwhile (true) { i = i + 1 }\n' > "$cpukill_root/spin.wren"
+  require_free_port "$HOST" "$CRON_PORT" "worker restart server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -q -c 1 -C 2 -d "$cpukill_db" \
+    "$cpukill_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  for _ in $(seq 1 11); do
+    curl -s -o /dev/null --max-time 10 "http://$HOST:$CRON_PORT/spin"
+  done
+  sleep 0.5
+  cpukill_after=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/")
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -q -c 1 -C 2"
+  rm -rf "$cpukill_root" "$cpukill_db" "$cpukill_db"-*
+  if [[ "$cpukill_after" == "alive" ]]; then
+    report_result "Killed workers keep restarting" "$cpukill_line" 0
+  else
+    report_result "Killed workers keep restarting" "$cpukill_line" 1 \
+      "Expected the server to answer after 11 worker kills. Got '$cpukill_after'"
+  fi
+else
+  skip_test "Killed workers keep restarting" "requires local binary access (no supervisor on Windows)"
+fi
+
 # A complete header block with a declared Content-Length, and no body byte
 # behind it, must not park the only worker for the full 30 s body budget; the
 # 413 drain path must not either. One stalled socket, then a probe from a second
