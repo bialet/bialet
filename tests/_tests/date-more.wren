@@ -20,3 +20,10 @@ Test.assert(zoned.tz == -5, "Date.tz setter")
 Test.assert(zoned.hours == 15, "Date.tz setter keeps the wall clock")
 Test.assert(zoned.toString == "2024-09-13 15:45:30", "numeric tz keeps toString")
 Test.assert(zoned.format("#F") == "2024-09-13", "numeric tz reaches format")
+
+// A zone belongs to one Date value. It used to stay in the process environment,
+// so one request's Date.new(x, Request.post("tz")) moved the clock for every
+// later request and an empty zone could not undo it.
+var beforeZone = Date.fromUnix(0).toString
+Test.assert(Date.new("2024-01-01 12:00:00", "UTC-9").unix == 1704078000, "string zone applies")
+Test.assert(Date.fromUnix(0).toString == beforeZone, "a zone does not leak to later dates")

@@ -2085,35 +2085,66 @@ DEF_PRIMITIVE(tests_skip) {
   RETURN_NULL;
 }
 
-void setTimezone(const char* tz) {
-  if(tz == NULL || tz[0] == '\0')
-    return;
+// Writes TZ into the environment, or removes it when [value] is NULL, and
+// re-reads it with tzset().
+static void date_set_tz_env(const char* value) {
 #if defined(_WIN32)
   // putenv() stores the pointer it is given, so it must outlive the call.
   // Allocate a fresh string, publish it, then release the previous one (the
-  // Windows CRT never frees the replaced value itself).
+  // Windows CRT never frees the replaced value itself). "TZ=" removes it.
   static char* tz_buf = NULL;
-  int          needed = snprintf(NULL, 0, "TZ=%s", tz);
+  const char*  v = value ? value : "";
+  int          needed = snprintf(NULL, 0, "TZ=%s", v);
   if(needed < 0)
     return;
   char* new_buf = malloc((size_t)needed + 1);
   if(new_buf == NULL)
     return;
-  snprintf(new_buf, (size_t)needed + 1, "TZ=%s", tz);
+  snprintf(new_buf, (size_t)needed + 1, "TZ=%s", v);
   putenv(new_buf);
   free(tz_buf);
   tz_buf = new_buf;
 #else
-  setenv("TZ", tz, 1);
+  if(value)
+    setenv("TZ", value, 1);
+  else
+    unsetenv("TZ");
 #endif
   tzset();
 }
 
+// The process zone as it was before any Date call touched it.
+static bool  date_tz_captured = false;
+static char* date_tz_original = NULL; // NULL: TZ was not set
+
+// A Date's zone belongs to that one value. It used to be applied with setenv()
+// and left there, so one request's Date.new(x, Request.post("tz")) moved the
+// clock for every later request, the stored rows of other clients and the log
+// stamps, for the life of the worker, and an empty zone could not undo it.
+// Apply [tz] only for the duration of one primitive: date_zone_enter() returns
+// true when it changed TZ, and date_zone_leave() puts the original back.
+static bool date_zone_enter(const char* tz) {
+  if(tz == NULL || tz[0] == '\0')
+    return false;
+  if(!date_tz_captured) {
+    const char* current = getenv("TZ");
+    date_tz_original = current ? strdup(current) : NULL;
+    date_tz_captured = true;
+  }
+  date_set_tz_env(tz);
+  return true;
+}
+
+static void date_zone_leave(bool changed) {
+  if(changed)
+    date_set_tz_env(date_tz_original);
+}
+
 // Accepts the Wren-level timezone argument for the date primitives: a string,
 // or null/absent (which means "keep the current zone"). AS_CSTRING on a Wren
-// null yields the bogus pointer 0x21, not a C NULL, so the guard setTimezone()
-// already has was unreachable from Wren and a null Date.tz (Db.init installs
-// one when BIALET_TIMEZONE is unset) crashed the process.
+// null yields the bogus pointer 0x21, not a C NULL, so the NULL guard in
+// date_zone_enter() was unreachable from Wren and a null Date.tz (Db.init
+// installs one when BIALET_TIMEZONE is unset) crashed the process.
 static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
   if(IS_NULL(arg) || IS_UNDEFINED(arg)) {
     *out = NULL;
@@ -2131,11 +2162,15 @@ DEF_PRIMITIVE(date_current) {
   const char* tz;
   if(!date_timezone_arg(vm, args[1], &tz))
     return false;
-  setTimezone(tz);
+  bool       zoned = date_zone_enter(tz);
   char       fullDate[20];
   time_t     now = time(NULL);
   struct tm* local = localtime(&now);
-  strftime(fullDate, 20, "%Y-%m-%d %H:%M:%S", local);
+  size_t     written =
+      local ? strftime(fullDate, sizeof(fullDate), "%Y-%m-%d %H:%M:%S", local) : 0;
+  date_zone_leave(zoned);
+  if(written == 0)
+    RETURN_ERROR("Current time is out of range.");
   RETURN_VAL(wrenNewString(vm, fullDate));
 }
 
@@ -2147,13 +2182,14 @@ DEF_PRIMITIVE(date_fromUnix) {
   const char* tz;
   if(!date_timezone_arg(vm, args[2], &tz))
     return false;
-  setTimezone(tz);
+  bool       zoned = date_zone_enter(tz);
   time_t     seconds = (time_t)AS_NUM(args[1]);
   struct tm* local = localtime(&seconds);
-  if(local == NULL)
-    RETURN_ERROR("Unix time is out of range.");
-  char fullDate[20];
-  if(strftime(fullDate, sizeof(fullDate), "%Y-%m-%d %H:%M:%S", local) == 0)
+  char       fullDate[20];
+  size_t     written =
+      local ? strftime(fullDate, sizeof(fullDate), "%Y-%m-%d %H:%M:%S", local) : 0;
+  date_zone_leave(zoned);
+  if(written == 0)
     RETURN_ERROR("Unix time is out of range.");
   RETURN_VAL(wrenNewString(vm, fullDate));
 }
@@ -2230,7 +2266,7 @@ DEF_PRIMITIVE(date_format) {
   const char* tz;
   if(!date_timezone_arg(vm, args[8], &tz))
     return false;
-  setTimezone(tz);
+  bool      zoned = date_zone_enter(tz);
   struct tm t = {0};
   t.tm_year = year - 1900;
   t.tm_mon = month - 1;
@@ -2319,6 +2355,7 @@ DEF_PRIMITIVE(date_format) {
     }
   }
   out[pos] = '\0';
+  date_zone_leave(zoned);
   RETURN_VAL(wrenNewString(vm, out));
 }
 
@@ -2332,7 +2369,7 @@ DEF_PRIMITIVE(date_unix) {
   const char* tz;
   if(!date_timezone_arg(vm, args[7], &tz))
     return false;
-  setTimezone(tz);
+  bool zoned = date_zone_enter(tz);
 
   struct tm t = {0};
   t.tm_year = year - 1900;
@@ -2343,6 +2380,7 @@ DEF_PRIMITIVE(date_unix) {
   t.tm_sec = second;
 
   time_t result = mktime(&t);
+  date_zone_leave(zoned);
   RETURN_NUM((double)result);
 };
 
