@@ -44,6 +44,15 @@
 #define CACHE_MAX_DEBUG_NAME 4096
 #define CACHE_MAX_FN_DEPTH 512
 
+// Ceilings for the user-file part of the table. The key is a path the router
+// built from the request, so without a bound the client decided how many
+// blobs the worker kept: every distinct spelling of one route file ("/a",
+// "//a", or "/A" on a case-insensitive file system) compiled and stored a new
+// full copy, and nothing was ever evicted. The oldest user entries go first;
+// the two embedded framework entries are never evicted.
+#define CACHE_MAX_USER_ENTRIES 256
+#define CACHE_MAX_USER_BYTES ((size_t)64 * 1024 * 1024)
+
 // The debug-line array is written as one little-endian u32 per byte of code, and
 // it is the largest section of a blob. On a little-endian target with 32-bit int
 // that is the same byte layout an int array has, so a replay copies it with one
@@ -180,11 +189,27 @@ char* bytecode_cache_path_key(const char* path, bool already_canonical) {
   //
   // Everything else (a relative path, -r code) still goes through realpath_n(),
   // which is what makes the key canonical when the caller cannot promise that.
-  // Two spellings of one file ("//a.wren" vs "/a.wren") get two cache entries
-  // instead of one; the key is only a name, and each entry carries its own file
-  // signature, so the same edit invalidates both.
-  if(already_canonical)
-    return string_safe_copy(path);
+  // Other spellings of one file (letter case on a case-insensitive file
+  // system) still get separate entries; each carries its own file signature,
+  // so the same edit invalidates all of them, and the user-entry ceilings
+  // below keep their number bounded.
+  if(already_canonical) {
+    // Collapse runs of separators so "//a.wren" and "/a.wren" share one key.
+    // A "." or ".." component never gets here: the router refuses them.
+    size_t len = strlen(path);
+    char*  key = (char*)malloc(len + 1);
+    if(key == NULL)
+      return NULL;
+    size_t out = 0;
+    for(size_t i = 0; i < len; i++) {
+      bool sep = path[i] == '/' || path[i] == '\\';
+      if(sep && out > 0 && (key[out - 1] == '/' || key[out - 1] == '\\'))
+        continue;
+      key[out++] = path[i];
+    }
+    key[out] = '\0';
+    return key;
+  }
 
   char resolved[PATH_MAX];
   if(realpath_n(path, resolved, sizeof(resolved)) == NULL)
@@ -1108,6 +1133,31 @@ static void entry_clear(CacheEntry* entry) {
   memset(entry, 0, sizeof(*entry));
 }
 
+// Drops the oldest user entries until one more of [incoming] bytes fits both
+// ceilings. Entries are appended in insertion order, so the first non-embedded
+// one is the oldest.
+static void entry_make_room_locked(size_t incoming) {
+  for(;;) {
+    size_t users = 0, bytes = 0, oldest = SIZE_MAX;
+    for(size_t i = 0; i < cache_entry_count; i++) {
+      if(cache_entries[i].embedded)
+        continue;
+      if(oldest == SIZE_MAX)
+        oldest = i;
+      users++;
+      bytes += cache_entries[i].blob_len;
+    }
+    if(oldest == SIZE_MAX ||
+       (users < CACHE_MAX_USER_ENTRIES && bytes <= CACHE_MAX_USER_BYTES &&
+        incoming <= CACHE_MAX_USER_BYTES - bytes))
+      return;
+    entry_clear(&cache_entries[oldest]);
+    memmove(&cache_entries[oldest], &cache_entries[oldest + 1],
+            (cache_entry_count - oldest - 1) * sizeof(CacheEntry));
+    cache_entry_count--;
+  }
+}
+
 /* ------------------------------------------------------------------------- */
 /* Cache lookup                                                             */
 /* ------------------------------------------------------------------------- */
@@ -1206,11 +1256,25 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
 
   cache_lock_acquire();
   size_t index;
+  if(!is_core && writer.len > CACHE_MAX_USER_BYTES) {
+    // One module larger than the whole user budget is simply not cached.
+    cache_lock_release();
+    free(key_copy);
+    free(writer.data);
+    return;
+  }
   if(entry_find_locked(key, &index)) {
     // Replace on mismatch (an edited file, or a blob that no longer fits) so
-    // there is at most one entry per path.
+    // there is at most one entry per path. Drop it first so the ceilings below
+    // do not count the blob it replaces.
     entry_clear(&cache_entries[index]);
-  } else {
+    memmove(&cache_entries[index], &cache_entries[index + 1],
+            (cache_entry_count - index - 1) * sizeof(CacheEntry));
+    cache_entry_count--;
+  }
+  {
+    if(!is_core)
+      entry_make_room_locked(writer.len);
     if(cache_entry_count == cache_entry_capacity) {
       size_t capacity = cache_entry_capacity == 0 ? 16 : cache_entry_capacity * 2;
       CacheEntry* entries =
@@ -1316,6 +1380,18 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
     message(yellow("Bytecode cache"),
             strcmp(cache_key, BYTECODE_CACHE_CORE_KEY) == 0 ? "core:" : "framework:",
             lookup == CACHE_LOOKUP_HIT ? "replayed" : "compiled");
+  } else if(cache_trace && lookup != CACHE_LOOKUP_HIT) {
+    // User files: one line per compile, with the resulting number of user
+    // entries, so a test can see that spellings share an entry and that the
+    // table stays bounded.
+    size_t users = 0;
+    cache_lock_acquire();
+    for(size_t i = 0; i < cache_entry_count; i++)
+      users += cache_entries[i].embedded ? 0 : 1;
+    cache_lock_release();
+    char count[32];
+    snprintf(count, sizeof(count), "%zu", users);
+    message(yellow("Bytecode cache"), "user: compiled, entries", count);
   }
 
   return closure;

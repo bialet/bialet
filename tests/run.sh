@@ -556,6 +556,47 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
 else
   skip_test "Embedded blob replay           " "requires local binary access"
 fi
+
+# With -x the served-file cache key is the request path. Each run of slashes
+# ("/r", "//r", "///r") used to be a new key that compiled the file again and
+# kept one more full blob for the life of the worker, so a client decided how
+# much memory the cache held. Spellings must share one entry.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  ckey_line=$LINENO
+  _test_start_ms=$(now_ms)
+  ckey_root=$(mktemp -d)
+  ckey_log=$(mktemp)
+  printf 'return "ckey-route"\n' > "$ckey_root/r.wren"
+  for i in $(seq 1 260); do printf 'return "%s"\n' "$i" > "$ckey_root/f$i.wren"; done
+  require_free_port "$HOST" "$CRON_PORT" "cache key server"
+  BIALET_CACHE_TRACE=1 "$TARGET_EXEC" -x -h "$HOST" -p "$CRON_PORT" "$ckey_root" \
+    >> "$ckey_log" 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  ckey_bodies=""
+  for slashes in / // /// //// ///// /; do
+    ckey_bodies+=$(curl -s --path-as-is --max-time 10 "http://$HOST:$CRON_PORT${slashes}r")
+  done
+  ckey_compiles=$(grep -c "user: compiled" "$ckey_log" 2>/dev/null)
+  # And the table is bounded: 260 distinct files never hold more than the
+  # ceiling (256 user entries).
+  for i in $(seq 1 260); do
+    curl -s -o /dev/null --max-time 10 "http://$HOST:$CRON_PORT/f$i"
+  done
+  stop_matching_servers "$TARGET_EXEC -x -h $HOST -p $CRON_PORT $ckey_root"
+  ckey_max=$(sed -n 's/.*user: compiled, entries \([0-9]*\).*/\1/p' "$ckey_log" | sort -n | tail -1)
+  rm -rf "$ckey_root" "$ckey_log"
+  if [[ "$ckey_bodies" == "$(printf 'ckey-route%.0s' 1 2 3 4 5 6)" \
+        && "$ckey_compiles" == "1" && "${ckey_max:-0}" -le 256 \
+        && "${ckey_max:-0}" -ge 200 ]]; then
+    report_result "Cache key ignores slash runs  " "$ckey_line" 0
+  else
+    report_result "Cache key ignores slash runs  " "$ckey_line" 1 \
+      "Expected six route answers, one compile and at most 256 entries. Got compiles:$ckey_compiles max:$ckey_max bodies:'${ckey_bodies:0:80}'"
+  fi
+else
+  skip_test "Cache key ignores slash runs  " "requires local binary access"
+fi
 run_test "Response status codes       " "status-codes?code=404" 404 "not found"
 run_test "Response status 201         " "status-codes?code=201" 201 "created"
 
