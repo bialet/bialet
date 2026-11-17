@@ -241,9 +241,12 @@ int has_forbidden_uri_component(const char* uri) {
   return has_private_uri_component(c);
 }
 
-// Same rule without the RFC 8615 exception. Startup guards use this: a log or
-// database file placed under .well-known would be served publicly (that
-// namespace is exempt from the ignore list too), which defeats the guard.
+// Same rule without the RFC 8615 exception: any component starting with '_' or
+// '.' counts, including ".well-known". Startup guards for the database and log
+// paths must NOT use this one: they ask "would the router serve this file?",
+// and the router serves .well-known, so they use has_forbidden_uri_component().
+// Treating ".well-known" as private here let -d .well-known/app.db start and
+// serve the whole database.
 int has_private_uri_component(const char* uri) {
   if(!uri)
     return 0;

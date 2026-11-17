@@ -1241,32 +1241,43 @@ fi
 if [[ "$TARGET_EXEC" != "-" ]]; then
   log_guard_line=$LINENO
   _test_start_ms=$(now_ms)
-  log_guard_file="$(dirname "$0")/inside-root.log"
   log_guard_db="$(mktemp /tmp/bialet-logguard.XXXXXX)"
-  rm -f "$log_guard_file"
-  require_free_port "$HOST" "$MULTIPART_PORT" "log path guard server"
-  "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l "$log_guard_file" \
-    -d "$log_guard_db" "$(dirname "$0")" > /tmp/tests-logguard.out 2>&1 &
-  log_guard_pid=$!
-  for _ in $(seq 1 20); do
-    kill -0 "$log_guard_pid" 2>/dev/null || break
-    sleep 0.1
-  done
-  if kill -0 "$log_guard_pid" 2>/dev/null; then
-    log_guard_state="started"
+  log_guard_ok=1
+  log_guard_seen=""
+  # A public name, and a name under .well-known/: the router serves that
+  # subtree, so the guard must refuse it even though it starts with '.'.
+  for log_guard_file in "$(dirname "$0")/inside-root.log" \
+                        "$(dirname "$0")/.well-known/inside-root.log"; do
+    rm -f "$log_guard_file"
+    require_free_port "$HOST" "$MULTIPART_PORT" "log path guard server"
+    "$TARGET_EXEC" -h "$HOST" -p "$MULTIPART_PORT" -l "$log_guard_file" \
+      -d "$log_guard_db" "$(dirname "$0")" > /tmp/tests-logguard.out 2>&1 &
+    log_guard_pid=$!
+    for _ in $(seq 1 20); do
+      kill -0 "$log_guard_pid" 2>/dev/null || break
+      sleep 0.1
+    done
+    if kill -0 "$log_guard_pid" 2>/dev/null; then
+      log_guard_state="started"
+      stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file"
+    else
+      wait "$log_guard_pid" 2>/dev/null
+      log_guard_state="exit:$?"
+    fi
     stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file"
-  else
-    wait "$log_guard_pid" 2>/dev/null
-    log_guard_state="exit:$?"
-  fi
-  stop_matching_servers "$TARGET_EXEC -h $HOST -p $MULTIPART_PORT -l $log_guard_file"
-  rm -f "$log_guard_file" "$log_guard_db" "$log_guard_db"-*
-  if [[ "$log_guard_state" == "exit:11" ]] &&
-     grep -q "log file inside the app root" /tmp/tests-logguard.out; then
+    rm -f "$log_guard_file"
+    if [[ "$log_guard_state" != "exit:11" ]] ||
+       ! grep -q "log file inside the app root" /tmp/tests-logguard.out; then
+      log_guard_ok=0
+      log_guard_seen+="${log_guard_file##*/tests/} -> $log_guard_state: $(head -c 120 /tmp/tests-logguard.out); "
+    fi
+  done
+  rm -f "$log_guard_db" "$log_guard_db"-*
+  if [[ "$log_guard_ok" == 1 ]]; then
     report_result "Log path inside app root      " "$log_guard_line" 0
   else
     report_result "Log path inside app root      " "$log_guard_line" 1 \
-      "Expected exit 11 and a refusal on stderr, got $log_guard_state: $(head -c 120 /tmp/tests-logguard.out)"
+      "Expected exit 11 and a refusal on stderr. Got $log_guard_seen"
   fi
 else
   skip_test "Log path inside app root      " "requires local binary access"
@@ -1663,6 +1674,24 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     fi
     rm -rf "$db_link_root" "$db_link_dir" "$db_link_out"
   fi
+  # .well-known/ is served by the router, so a database there is public. The
+  # guard used to treat its leading '.' as private and start anyway.
+  db_wk_root=$(mktemp -d)
+  mkdir -p "$db_wk_root/.well-known"
+  db_wk_out=$(mktemp)
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d .well-known/app.db "$db_wk_root" \
+    > "$db_wk_out" 2>&1 &
+  db_wk_pid=$!
+  for _ in $(seq 1 30); do kill -0 "$db_wk_pid" 2>/dev/null || break; sleep 0.1; done
+  if kill -0 "$db_wk_pid" 2>/dev/null; then
+    stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -d .well-known/app.db"
+    db_guard_ok=0
+    printf '      .well-known database: server started instead of refusing\n'
+  elif ! grep -q "Database inside the app root" "$db_wk_out"; then
+    db_guard_ok=0
+    printf '      .well-known database: expected a refusal, got: %s\n' "$(head -c 200 "$db_wk_out")"
+  fi
+  rm -rf "$db_wk_root" "$db_wk_out"
   if [[ "$db_guard_ok" == 1 ]]; then
     report_result "Database path guards        " "$db_guard_line" 0
   else

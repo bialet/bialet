@@ -2192,7 +2192,7 @@ static void refuse_public_db_path(const char* real_db, const char* shown) {
   size_t root_len = strlen(bialet_config.full_root_dir);
   if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
      (real_db[root_len] == '/' || real_db[root_len] == '\\') &&
-     !has_private_uri_component(real_db + root_len)) {
+     !has_forbidden_uri_component(real_db + root_len)) {
     message(red("Error"),
             "Database inside the app root must start with '_' or '.' "
             "(like _db.sqlite3), or live outside the app root:",
