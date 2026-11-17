@@ -258,6 +258,24 @@ static void trigger_reload_files(const char* filepath) {
 #define DMON_IMPL
 #include "dmon.h"
 
+#ifdef _WIN32
+// Windows has no fork: requests, cron ticks and migrations all run in this one
+// process, and run_mutex (POSIX only) does not exist. dmon calls back on its
+// own thread, so running migrate()/install_cron() there let it free cron_code
+// while the main loop was interpreting it, and drive the shared SQLite handle,
+// the error-capture buffer and the TZ buffer concurrently with a request. The
+// callback only records what changed; the main loop does the work.
+static volatile LONG pending_cron_reload = 0;
+static volatile LONG pending_migration_reload = 0;
+
+static void run_pending_reloads(void) {
+  if(InterlockedExchange(&pending_cron_reload, 0))
+    trigger_reload_files("_cron" BIALET_EXTENSION);
+  if(InterlockedExchange(&pending_migration_reload, 0))
+    trigger_reload_files("_migration" BIALET_EXTENSION);
+}
+#endif
+
 static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
                           const char* rootdir, const char* filepath,
                           const char* oldfilepath, void* user) {
@@ -270,7 +288,18 @@ static void dmon_callback(dmon_watch_id watch_id, dmon_action action,
     livereload_notify();
     const char* ext = strrchr(filepath, '.');
     if(ext && !strcmp(ext, BIALET_EXTENSION)) {
+#ifdef _WIN32
+      if(!strcmp(filepath, "_cron" BIALET_EXTENSION) ||
+         !strcmp(filepath, "_app/cron" BIALET_EXTENSION) ||
+         !strcmp(filepath, "_app\\cron" BIALET_EXTENSION))
+        InterlockedExchange(&pending_cron_reload, 1);
+      else if(!strcmp(filepath, "_migration" BIALET_EXTENSION) ||
+              !strcmp(filepath, "_app/migration" BIALET_EXTENSION) ||
+              !strcmp(filepath, "_app\\migration" BIALET_EXTENSION))
+        InterlockedExchange(&pending_migration_reload, 1);
+#else
       trigger_reload_files(filepath);
+#endif
     }
   }
 }
@@ -888,6 +917,7 @@ int main(int argc, char* argv[]) {
   time_t last_cron = time(NULL);
   while(keep_running) {
     server_poll(SERVER_POLL_DELAY);
+    run_pending_reloads();
     time_t now = time(NULL);
     if(difftime(now, last_cron) >= 60) {
       cron_run();
