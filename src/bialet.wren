@@ -1029,7 +1029,17 @@ class Db {
     // Run again the initiliziation once we know the table exists
     // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the
     // primitives reject a non-string with a catchable error).
-    Date.init(Config.get("BIALET_TIMEZONE") || "")
+    // A zone the Date primitives now refuse (a path, a POSIX rule string)
+    // would make every Date call in a migration raise. Probe it once and fall
+    // back to the process zone.
+    var zone = Config.get("BIALET_TIMEZONE") || ""
+    var probe = Fiber.new { Date.current_(zone) }
+    probe.try()
+    if (probe.error != null) {
+      System.print("BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it")
+      zone = ""
+    }
+    Date.init(zone)
   }
 
   static clean {
