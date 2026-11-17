@@ -122,7 +122,16 @@ stop_matching_servers() {
         done
         pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
     else
-        pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+        # The supervisor re-forks its HTTP child when the child dies, so a
+        # single kill -9 pass can race it: the parent may fork a fresh child
+        # before it receives its own SIGKILL, and that child keeps the port.
+        # Repeat until nothing matches.
+        local deadline=$(( $(now_ms) + 3000 ))
+        while pgrep -f "$pattern" >/dev/null 2>&1; do
+            pgrep -f "$pattern" 2>/dev/null | xargs -I {} kill -9 {} 2>/dev/null
+            [[ $(now_ms) -lt $deadline ]] || break
+            sleep 0.05
+        done
     fi
 }
 
