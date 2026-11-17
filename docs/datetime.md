@@ -53,6 +53,44 @@ as `"America/Bogota"` or `"Etc/GMT+3"`. Anything else — a path, a string with
 `:` or `.` — raises an error, so a zone taken from a form field cannot make the
 server read a file. Prefer an allow-list of zones your app offers anyway.
 
+> ⚠️ Pitfall: string zones keep POSIX signs, which count hours **west** of UTC:
+> `"UTC+3"` and `"Etc/GMT+3"` are UTC-3, while the **number** `3` is UTC+3.
+> Prefer an `"Area/City"` name; the numeric form has no such ambiguity.
+
+## Application Timezone
+
+`BIALET_TIMEZONE` sets the zone every `Date` uses when the value does not carry
+one of its own. It applies to migrations, cron jobs and every request:
+
+```wren
+Config.set("BIALET_TIMEZONE", "America/Bogota")
+```
+
+```wren
+Date.new()                // now, in America/Bogota
+Date.fromUnix(1700000000) // 2023-11-14 17:13:20
+Date.tz                   // "America/Bogota"
+```
+
+Without the row, dates follow the process zone: the `TZ` of the environment
+that started the server (UTC on most servers).
+
+> ⚠️ Pitfall: the value is read once, when the server starts. Setting it from a
+> request handler, or editing the row while the server runs, has no effect until
+> you restart.
+
+- A value the zone rules refuse (a path, a POSIX rule string) is ignored with a
+  `BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it` line at
+  startup, and the process zone is used instead.
+- A zone name needs the operating system's timezone database. Windows does not
+  ship one, so there use `"UTC"` or a `"UTC<offset>"` string, with the same
+  west-positive sign as above; `"Area/City"` names only work on Linux and macOS.
+- It does **not** change the timestamps SQLite writes for `CURRENT_TIMESTAMP`,
+  `date('now')` or a `DEFAULT CURRENT_TIMESTAMP` column — those are UTC — nor
+  the prefix of Bialet's own log lines, which uses the process zone. Store
+  instants as UTC and convert with `Date.fromUnix()` when you read them.
+- `Date.init(zone)` overrides the default for the current script or request.
+
 ## Displaying Date and Time Components
 
 You can access various components of a `Date` object:

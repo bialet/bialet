@@ -4,6 +4,22 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## Unreleased
+
+### Fixed
+
+- `BIALET_TIMEZONE` applies to cron jobs and every request, not only to
+  migrations. `Db.init` installed the zone in the migration VM; each request and
+  cron pass runs in a fresh VM, so both silently kept the process zone. The
+  runtime reads the row once at startup and the `Date` primitives fall back to
+  it, and an invalid value is logged once at startup instead of once per VM.
+
+### Documentation
+
+- The configuration and date pages document `BIALET_TIMEZONE`: the restart
+  requirement, the POSIX sign of string zones, and the SQLite columns and log
+  lines it does not affect.
+
 ## 1.2.21 — 2026-11-17
 
 ### Added

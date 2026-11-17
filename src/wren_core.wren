@@ -648,7 +648,11 @@ class ClassAttributes {
 
 class Date {
   static init(tz) { __tz = tz }
-  static tz { __tz }
+  // BIALET_TIMEZONE is read once at startup and is the default for every Date,
+  // in every VM. Date.init() overrides it for the current VM. The native getter
+  // always returns a string, so Date.tz is never null (the date primitives
+  // reject a non-string zone).
+  static tz { (__tz == null || __tz == "") ? Date.defaultZone_ : __tz }
 
   static fromString(date) { Date.fromString(date, Date.tz) }
   construct fromString(date, tz) {

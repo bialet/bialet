@@ -162,6 +162,61 @@ else
   skip_test "-r initializes framework tables" "requires local binary access"
 fi
 
+# Tests - BIALET_TIMEZONE applies to every VM
+# The zone used to be installed by Db.init, which only runs in the migration VM;
+# each request starts a fresh VM and cron another, so both kept the process zone.
+# Now the runtime reads the row once at startup and the Date primitives fall back
+# to it. Pacific/Kiritimati is UTC+14: 1700000000 is 2023-11-15 12:13:20 there.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" -eq 0 ]]; then
+  tz_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tz_root=$(mktemp -d)
+  tz_run=$(mktemp -d)
+  cat > "$tz_root/index.wren" <<'WREN'
+return "TZREQUEST|%(Date.tz)|%(Date.fromUnix(1700000000))"
+WREN
+  cat > "$tz_root/_migration.wren" <<'WREN'
+Db.migrate("timezone probe", `CREATE TABLE IF NOT EXISTS tz_probe (x INTEGER)`)
+System.print("TZMIGRATION|%(Date.tz)|%(Date.fromUnix(1700000000))")
+WREN
+  cat > "$tz_root/_cron.wren" <<'WREN'
+System.print("TZCRON|%(Date.tz)|%(Date.fromUnix(1700000000))")
+Cron.every(1) { |d| }
+WREN
+  # Seed the row in a first run: the zone is read at startup, so the server that
+  # serves the request has to be a fresh process.
+  "$TARGET_EXEC" -q -d "$tz_run/tz.sqlite3" \
+    -r 'Config.set("BIALET_TIMEZONE", "Pacific/Kiritimati")' "$tz_root" \
+    > /dev/null 2>&1
+  tz_log="$tz_run/server.log"
+  require_free_port "$HOST" "$CRON_PORT" "timezone server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$tz_run/tz.sqlite3" "$tz_root" \
+    > "$tz_log" 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  tz_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  # The cron thread runs its first pass right after startup; one more second
+  # covers a slow scheduler without waiting for the next minute.
+  sleep 1
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -d $tz_run/tz.sqlite3 $tz_root"
+  tz_expected="|Pacific/Kiritimati|2023-11-15 12:13:20"
+  if [[ "$tz_request" == "TZREQUEST$tz_expected" ]] \
+     && grep -q "TZMIGRATION$tz_expected" "$tz_log" 2>/dev/null \
+     && grep -q "TZCRON$tz_expected" "$tz_log" 2>/dev/null; then
+    report_result "BIALET_TIMEZONE applies everywhere" "$tz_line" 0
+  else
+    report_result "BIALET_TIMEZONE applies everywhere" "$tz_line" 1 \
+      "Expected '${tz_expected#|}' in request, migration and cron. Got request '$tz_request', log: $(grep -E 'TZMIGRATION|TZCRON' "$tz_log" 2>/dev/null | tr '\n' ' ')"
+  fi
+  rm -rf "$tz_root" "$tz_run"
+else
+  if [[ "$IS_WINE" -eq 1 ]]; then
+    skip_test "BIALET_TIMEZONE applies everywhere" "Windows/Wine has no IANA timezone database"
+  else
+    skip_test "BIALET_TIMEZONE applies everywhere" "requires a local binary and an IANA timezone database"
+  fi
+fi
+
 # Tests - Module imports
 # Regression: a relative import ("./x") inside a file that is itself only
 # ever reached transitively (entry.wren -> ./sub/lib -> ./helper) must

@@ -2136,6 +2136,16 @@ static void date_set_tz_env(const char* value) {
 static bool  date_tz_captured = false;
 static char* date_tz_original = NULL; // NULL: TZ was not set
 
+// BIALET_TIMEZONE, read once at startup. It is the zone every Date uses when
+// the Wren value does not name one. It lives in C rather than in the Wren Date
+// class because that class is per-VM: date_defaultZone_ reads this from the new
+// VM each request starts with, while Db.init only ran in the migration VM.
+static char* date_default_zone = NULL;
+
+const char* date_get_default_zone(void) {
+  return date_default_zone;
+}
+
 // A Date's zone belongs to that one value. It used to be applied with setenv()
 // and left there, so one request's Date.new(x, Request.post("tz")) moved the
 // clock for every later request, the stored rows of other clients and the log
@@ -2146,6 +2156,8 @@ static char* date_tz_original = NULL; // NULL: TZ was not set
 // leave: the supervisor's other thread logged with the zone a cron or
 // migration body had installed. Nothing between enter and leave may log.
 static bool date_zone_enter(const char* tz) {
+  if(tz == NULL || tz[0] == '\0')
+    tz = date_default_zone;
   if(tz == NULL || tz[0] == '\0')
     return false;
   tz_lock();
@@ -2171,10 +2183,11 @@ static void date_zone_leave(bool changed) {
 }
 
 // Accepts the Wren-level timezone argument for the date primitives: a string,
-// or null/absent (which means "keep the current zone"). AS_CSTRING on a Wren
-// null yields the bogus pointer 0x21, not a C NULL, so the NULL guard in
-// date_zone_enter() was unreachable from Wren and a null Date.tz (Db.init
-// installs one when BIALET_TIMEZONE is unset) crashed the process.
+// or null/absent (which means the configured default, then the current zone).
+// AS_CSTRING on a Wren null yields the bogus pointer 0x21, not a C NULL, so the
+// NULL guard in date_zone_enter() was unreachable from Wren and a null Date.tz
+// (Db.init used to install one when BIALET_TIMEZONE was unset) crashed the
+// process.
 // The zone goes into TZ, and POSIX reads "TZ=:/some/path" as a time zone
 // *file* to open: Date.new(x, Request.post("tz")) -- the documented date
 // example -- let a client make the worker open any path, and a FIFO there
@@ -2184,7 +2197,7 @@ static void date_zone_leave(bool changed) {
 // '.' anywhere else, no leading '/', no NUL, at most 64 bytes.
 static bool date_zone_name_allowed(const char* tz, uint32_t length) {
   if(length == 0)
-    return true; // "" keeps the current zone
+    return true; // "" means the configured default, then the current zone
   if(length > 64 || strlen(tz) != length)
     return false;
   if(strncmp(tz, "UTC", 3) == 0 && (tz[3] == '+' || tz[3] == '-')) {
@@ -2212,6 +2225,29 @@ static bool date_zone_name_allowed(const char* tz, uint32_t length) {
   return !empty_component;
 }
 
+// Installs the stored default zone. Called once from bialet_init(), before the
+// process forks, so the value is read-only afterwards and needs no lock. A
+// value the allow-list refuses leaves the process zone in place; it is logged
+// here instead of in Db.init so a server start says it once, not once per
+// migration VM.
+void date_set_default_zone(const char* zone) {
+  free(date_default_zone);
+  date_default_zone = NULL;
+  if(zone == NULL || zone[0] == '\0')
+    return;
+  size_t length = strlen(zone);
+  if(!date_zone_name_allowed(zone, (uint32_t)length)) {
+    message(yellow("Warning"),
+            "BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it");
+    return;
+  }
+  char* copy = malloc(length + 1);
+  if(copy == NULL)
+    return;
+  memcpy(copy, zone, length + 1);
+  date_default_zone = copy;
+}
+
 static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
   if(IS_NULL(arg) || IS_UNDEFINED(arg)) {
     *out = NULL;
@@ -2229,6 +2265,13 @@ static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
   }
   *out = zone->value;
   return 1;
+}
+
+// The configured default zone, so Date.tz reports it instead of an empty
+// string. Always a string: "" when no BIALET_TIMEZONE is stored.
+DEF_PRIMITIVE(date_defaultZone) {
+  const char* zone = date_get_default_zone();
+  RETURN_VAL(wrenNewString(vm, zone != NULL ? zone : ""));
 }
 
 DEF_PRIMITIVE(date_current) {
@@ -2976,6 +3019,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(systemClass->obj.classObj, "writeString_(_)", system_writeString);
 
   ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
+  PRIMITIVE(dateClass->obj.classObj, "defaultZone_", date_defaultZone);
   PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
   PRIMITIVE(dateClass->obj.classObj, "fromUnix_(_,_)", date_fromUnix);
   PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);

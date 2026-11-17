@@ -975,7 +975,8 @@ System.log("Current time: %(current)")
 
 ### new()
 
-Creates a new `Date` object representing the current date and time in UTC.
+Creates a new `Date` object representing the current date and time in the
+application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
@@ -1042,7 +1043,9 @@ Sets the timezone offset for the current `Date` object.
 
 ### tz
 
-Returns the timezone offset for the current `Date` object.
+Returns the timezone of the current `Date` object. It is the zone passed to the
+constructor or set with `tz=`, otherwise the application default
+(`BIALET_TIMEZONE`, or `""` for the process zone).
 
 ### format(format)
 

@@ -20,4 +20,14 @@
 
 void wrenInitializeCore(WrenVM* vm);
 
+// The application-wide default zone for Date values, taken from the
+// BIALET_TIMEZONE row in BIALET_CONFIG and installed once at startup. The Date
+// primitives use it when the Wren-level zone is absent or empty, so every VM
+// (migrations, cron, one per request) sees the same zone without consulting the
+// database. A zone the allow-list refuses is ignored with a log line.
+// date_get_default_zone() returns NULL when no zone is configured, meaning "use
+// the process zone".
+void        date_set_default_zone(const char* zone);
+const char* date_get_default_zone(void);
+
 #endif
