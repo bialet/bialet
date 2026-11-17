@@ -429,13 +429,14 @@ secrets under `.well-known` — it is world-readable by definition.
 
 ### Database File Permissions
 
-Bialet creates `_db.sqlite3` with SQLite's default mode, `0666 & ~umask`.
-Under the common `umask 022` that yields a world-readable `0644` file, so
-any local user on a shared host can read the whole database — uploaded
-files, password hashes, and cached remote modules included. The server does
-not tighten the mode after opening the file.
+On Linux and macOS Bialet creates a new `_db.sqlite3` with mode `0600`, so
+only the user running the server can read it; SQLite gives the `-wal` and
+`-shm` files the same mode. A database that already exists keeps its mode: one
+created by an older version under the common `umask 022` is a world-readable
+`0644` file, and any local user on a shared host can read the whole database —
+uploaded files, password hashes, and cached remote modules included.
 
-Run Bialet with a restrictive umask so the file is created `0600`:
+A restrictive umask also covers every other file the server creates:
 
 ```bash
 umask 0077
@@ -466,11 +467,15 @@ The server can enforce memory and CPU ceilings per app with CLI flags, which
 limits the blast radius of a runaway script or a memory-exhaustion attack:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
+bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 /www/myapp
 ```
 
-- `-m` / `-M` — soft / hard memory limit in MB
-- `-c` / `-C` — soft / hard CPU limit in percent
+- `-m` / `-M` — soft / hard memory limit in MB, enforced on **Linux only**
+  (`RLIMIT_AS` on the HTTP child). macOS and Windows builds run with no memory
+  ceiling; put a container or service-manager limit around them instead.
+- `-c` / `-C` — soft / hard CPU time limit in seconds: the soft one sends
+  `SIGXCPU`, the hard one `SIGKILL`, and the supervisor restarts the HTTP child
+  on either (which drops the bytecode cache). `0` disables the limit.
 - `-b` — max request body in KB (default 128 KB)
 
 Request bodies are rejected with `413 Payload Too Large` before parsing when

@@ -47,4 +47,4 @@
 - [Examples](/_sources/examples.rst)
 - [FAQ](/_sources/faq.md)
 - [AI Coding Prompt](/_sources/ai-prompt.md)
-- [About Bialet](/_sources/blog/_about-bialet.md)
+- [About Bialet](/_sources/blog/about-bialet.md)

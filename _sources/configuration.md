@@ -53,7 +53,7 @@ generic 500 page (see [Error Pages](errors.md)).
 > ⚠️ Pitfall: these flags are read once, at startup. Changing them in the
 > database while a server is running (e.g. with `Config.enable()` from a
 > request handler) has no effect until you restart the server. `bialet dev`
-> sets both before the server starts, which is why it "just works".
+> turns both on for its own run without touching the database.
 
 ### Development mode: `bialet dev`
 
@@ -65,14 +65,15 @@ bialet dev
 
 It starts the server from the current directory and:
 
-- Enables `BIALET_LIVE_RELOAD` and `BIALET_SHOW_ERRORS` in the database. This
-  is idempotent — run it once and the flags stay on for later `bialet` runs; if
-  they were disabled, `bialet dev` turns them back on.
+- Turns on live reload and error pages for that run only. Nothing is written to
+  the database, so a later plain `bialet` start on the same (or a copied)
+  `_db.sqlite3` serves no error traces and no `/_livereload` endpoint. To keep
+  either on outside dev mode, set the flag yourself (`Config.enable(...)`).
 - Opens `http://127.0.0.1:7001` (or your `-p` port) in the default browser,
   like `react-scripts start`.
 
-Plain `bialet` starts the server without touching the flags or opening the
-browser.
+Plain `bialet` starts the server with whatever the flags say in the database,
+and does not open the browser.
 
 `enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
 equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.

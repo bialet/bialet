@@ -67,7 +67,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -844,7 +844,9 @@ descriptive name.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_MIGRATIONS</span></code>: The migration history table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_SESSION</span></code>: The session table.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_FILES</span></code>: The file storage table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_LOGS</span></code>: The logging table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIALET_LOGS</span></code>: The logging table. Each <code class="docutils literal notranslate"><span class="pre">System.print</span></code>/<code class="docutils literal notranslate"><span class="pre">System.log</span></code> line is
+stored (cut at 4096 bytes); rows older than 30 days are pruned, and the table
+keeps at most 100,000 rows.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BIALET_REMOTE_MODULES</span></code>: The remote module cache table.</p></li>
 </ul>
 <p>If you delete or alter any of these tables your application will not work

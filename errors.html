@@ -67,7 +67,7 @@
     <link rel="prev" title="Markdown" href="markdown.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -549,9 +549,10 @@ that status rather than recursing into itself.</p>
 <h2>Showing Compile Errors in the Browser<a class="headerlink" href="#showing-compile-errors-in-the-browser" title="Link to this heading">#</a></h2>
 <p>By default a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file that fails to parse or throws returns the generic 500
 page, and the actual error goes to the server log. During development it is
-often faster to see the error in the browser. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code> enables this for you
-(along with live reload and browser opening) — see
-<a class="reference internal" href="getting-started/2-setup.html"><span class="doc std std-doc">Getting Started</span></a>. Or enable it manually:</p>
+often faster to see the error in the browser. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code> enables this for
+that run (along with live reload and browser opening) — see
+<a class="reference internal" href="getting-started/2-setup.html"><span class="doc std std-doc">Getting Started</span></a>. Or store it in the database,
+which keeps it on for every start that uses that database:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'Config.enable("BIALET_SHOW_ERRORS")'</span><span class="w"> </span>.
 </pre></div>
 </div>

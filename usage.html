@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -483,10 +483,10 @@ how it is configured, and a few standalone modes (<code class="docutils literal 
 </pre></div>
 </div>
 <p>Starts the server from the current directory, enables live reload and the
-in-browser error display, and opens the server URL in your browser. The flags
-are stored in the database and persist across restarts, so you only need to
-run <code class="docutils literal notranslate"><span class="pre">dev</span></code> once. Plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> starts the server without touching those flags
-or opening the browser.</p>
+in-browser error display, and opens the server URL in your browser. Both are
+on for that run only: nothing is written to the database, so a plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code>
+start afterwards (or on a copy of the database) has neither. Plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code>
+does not open the browser.</p>
 <blockquote>
 <div><p>On Windows, double-clicking <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> in File Explorer counts as a dev
 launch: the server starts in dev mode with the browser opening automatically.
@@ -557,8 +557,8 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>Disabled</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code>, <code class="docutils literal notranslate"><span class="pre">--ignore</span></code></p></td>
-<td><p>Ignored files: comma-separated list of glob expressions</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml</span></code></p></td>
+<td><p>Ignored files: comma-separated globs; replaces the default list</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code>, <code class="docutils literal notranslate"><span class="pre">--mem-soft</span></code></p></td>
 <td><p>Memory soft limit (MB)</p></td>
@@ -569,12 +569,12 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p><code class="docutils literal notranslate"><span class="pre">256</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code>, <code class="docutils literal notranslate"><span class="pre">--cpu-soft</span></code></p></td>
-<td><p>CPU soft limit (%)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">15</span></code></p></td>
+<td><p>CPU time soft limit (seconds)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code>, <code class="docutils literal notranslate"><span class="pre">--cpu-hard</span></code></p></td>
-<td><p>CPU hard limit (%)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
+<td><p>CPU time hard limit (seconds)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">7200</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-post</span></code></p></td>
 <td><p>Max request body (KB)</p></td>
@@ -610,10 +610,37 @@ usage text instead of being silently ignored.</p>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">-d</span></code> and <code class="docutils literal notranslate"><span class="pre">-l</span></code> may point inside the app root only under a private
 name (starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, like <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>). Everything else below the
 root is served, so a database or a log file with a public name there is
-downloadable by any client. Bialet refuses to start and exits with status 11.</p>
+downloadable by any client. Bialet refuses to start and exits with status 11.
+The public <code class="docutils literal notranslate"><span class="pre">.well-known/</span></code> directory counts as public here too.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: the <code class="docutils literal notranslate"><span class="pre">-l</span></code> file records request targets, query strings included,
+so Bialet creates it readable by its owner only (<code class="docutils literal notranslate"><span class="pre">0600</span></code>). An existing file
+keeps its mode; do not make it group- or world-readable.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: the <code class="docutils literal notranslate"><span class="pre">-l</span></code> file is only ever appended to. Every request adds one
+line (the method and the first 512 bytes of the target), so rotate it with
+the system’s tools, e.g. logrotate with <code class="docutils literal notranslate"><span class="pre">copytruncate</span></code> (Bialet keeps the file
+open in append mode, so truncating it in place is safe). Under systemd or
+Docker, logging to stdout and letting journald or the log driver cap the size
+works too.</p>
 </div></blockquote>
 <p>Size values for <code class="docutils literal notranslate"><span class="pre">-u</span></code> are bytes; a <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code>, or <code class="docutils literal notranslate"><span class="pre">G</span></code> suffix (KiB/MiB/GiB) scales
 them. <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4MB</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4096KB</span></code>, and <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4194304</span></code> are the same limit.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-m</span></code> and <code class="docutils literal notranslate"><span class="pre">-M</span></code> set the address-space limit (<code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code>) of the HTTP process on
+Linux. A soft limit above the hard one is lowered to it, a hard limit above the
+one the process inherited (systemd <code class="docutils literal notranslate"><span class="pre">LimitAS=</span></code>, <code class="docutils literal notranslate"><span class="pre">ulimit</span> <span class="pre">-v</span></code>) is lowered to that,
+and <code class="docutils literal notranslate"><span class="pre">0</span></code> means no limit of its own. macOS and Windows do not enforce them: there
+the values only size the request-body cap below.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-C</span></code> are <strong>seconds of CPU time</strong> for the HTTP process, not a
+percentage. The supervisor runs the server as a parent/child pair: reaching the
+soft limit sends <code class="docutils literal notranslate"><span class="pre">SIGXCPU</span></code>, reaching the hard limit sends <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>, and in
+either case the parent starts a fresh child, which drops the compiled-bytecode
+cache and every open connection. The defaults (one and two hours) are sized so
+that only a runaway process hits them; lower them only to bound a specific
+workload. <code class="docutils literal notranslate"><span class="pre">0</span></code> means no limit, with the shell’s own <code class="docutils literal notranslate"><span class="pre">ulimit</span> <span class="pre">-t</span></code> still applying
+as the ceiling.</p>
 <blockquote>
 <div><p>The upload cap is also bounded by the request-body limit (<code class="docutils literal notranslate"><span class="pre">-b</span></code>). A file must
 fit inside a multipart body smaller than <code class="docutils literal notranslate"><span class="pre">-b</span></code> (default 128 KB), so the
@@ -625,7 +652,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.20</span>
+<span class="c1"># bialet 1.2.21</span>
 </pre></div>
 </div>
 </section>

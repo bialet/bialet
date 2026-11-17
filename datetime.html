@@ -67,7 +67,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -499,6 +499,10 @@ timestamp.</p></li>
 </div>
 <p>This lets you control the UTC offset at the instance level without affecting
 other <code class="docutils literal notranslate"><span class="pre">Date</span></code> objects.</p>
+<p>A zone is either a number (hours from UTC, <code class="docutils literal notranslate"><span class="pre">-3</span></code> is UTC-3) or a zone name such
+as <code class="docutils literal notranslate"><span class="pre">&quot;America/Bogota&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;Etc/GMT+3&quot;</span></code>. Anything else — a path, a string with
+<code class="docutils literal notranslate"><span class="pre">:</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> — raises an error, so a zone taken from a form field cannot make the
+server read a file. Prefer an allow-list of zones your app offers anyway.</p>
 </section>
 <section id="displaying-date-and-time-components">
 <h2>Displaying Date and Time Components<a class="headerlink" href="#displaying-date-and-time-components" title="Link to this heading">#</a></h2>

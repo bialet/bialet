@@ -67,7 +67,7 @@
     <link rel="prev" title="Forms" href="forms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -544,16 +544,20 @@ Render only Markdown you trust, or sanitize the output before serving it.</p>
 </section>
 <section id="pitfalls">
 <h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
-<p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code> when the file is missing</strong>, it does not
-throw. Guard against it:</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code> when the file is missing or not
+readable</strong>, it does not throw. Guard against it:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"about.md"</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">content</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;p&gt;About page not written yet.&lt;/p&gt;"</span>
 </pre></div>
 </div>
 <p><strong>Output is capped at 2 MB.</strong> Larger documents are truncated silently.</p>
-<p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed files are private.</strong> A <code class="docutils literal notranslate"><span class="pre">_about.md</span></code> file renders 403 when fetched
-directly, but <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;_about.md&quot;)</span></code> still reads it from disk — the
-privacy rule applies to HTTP requests, not file reads.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> reads only Markdown inside the app root.</strong> The path must
+end in <code class="docutils literal notranslate"><span class="pre">.md</span></code> or <code class="docutils literal notranslate"><span class="pre">.markdown</span></code>, must stay inside the app root, and no component may
+start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>: <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;_about.md&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;config.json&quot;)</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;page.wren&quot;)</span></code> all return <code class="docutils literal notranslate"><span class="pre">false</span></code>. That keeps
+<code class="docutils literal notranslate"><span class="pre">Markdown.file(Request.get(&quot;page&quot;))</span></code> from handing out private files, config or
+route source, but still prefer an allow-list of page names over a raw request
+value.</p>
 <p><strong>Front matter is skipped, not parsed.</strong> A leading <code class="docutils literal notranslate"><span class="pre">---</span></code> block is dropped from
 the output. Metadata inside it (title, date, tags) is not exposed — you must
 read it yourself if you need it.</p>

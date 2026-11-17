@@ -66,11 +66,13 @@ upstream bialet {
     server 127.0.0.1:7003;
 }
 
-location @bialet {
+# inside the server block from "Reverse Proxy Setups" below
+location / {
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
     proxy_pass http://bialet;
 }
 ```
@@ -79,7 +81,9 @@ Caddy:
 
 ```
 example.com {
-    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003
+    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 {
+        header_up -Forwarded
+    }
 }
 ```
 
@@ -137,12 +141,24 @@ scp -r ./src/* user@your-server:/www/your-app/
 Bialet serves static files (CSS, JS, images, fonts) directly. For better
 performance, configure your reverse proxy to:
 
-- **Cache** static assets (add `Cache-Control` headers)
 - **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
 
-It's also safe to serve static files from the proxy directly instead of
-proxying to Bialet — just add a `location` block pointing to your app
-directory.
+> ⚠️ Pitfall: do not label responses cacheable by URL suffix or by
+> `Content-Type` at the proxy. Bialet routes `/notes/42.css` to `notes.wren`
+> when no such file exists, and serves uploaded images through Wren, so a rule
+> like "`*.css` is public for a week" can store one user's page and replay it
+> to another. Wren responses say `Cache-Control: no-store` by default; set a
+> longer `Cache-Control` in the app (`Response.header(...)`) only on responses
+> you know are public.
+
+> ⚠️ Pitfall: do not let the proxy serve files from the app directory. The
+> app directory holds your `.wren` route files, `_db.sqlite3` and other private
+> files; Bialet runs the first and refuses the rest, but a proxy `root` +
+> `try_files` (or an Apache `DocumentRoot` + `-f` rewrite) pointed at it answers
+> `GET /index.wren` with your source code and `GET /_db.sqlite3` with your
+> database. Proxy every request to Bialet, as the configurations below do. If you
+> want the proxy to serve assets itself, give it a separate directory that holds
+> nothing but those assets.
 
 ## Reverse Proxy Setups
 
@@ -154,25 +170,16 @@ server {
     listen [::]:80;
     server_name example.com;
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Bialet decides the cookie Secure flag from these two headers.
+        # Set the first, drop whatever the client sent in the second.
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Forwarded "";
         proxy_pass http://127.0.0.1:7001;
     }
 }
@@ -205,7 +212,7 @@ server {
 Enable the required modules:
 
 ```bash
-sudo a2enmod proxy proxy_http rewrite headers expires
+sudo a2enmod proxy proxy_http rewrite headers
 ```
 
 Virtual host configuration:
@@ -221,28 +228,15 @@ Virtual host configuration:
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
 
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
-    RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
-
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    # Bialet decides the cookie Secure flag from these two headers.
+    # Set the first, drop whatever the client sent in the second.
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -255,13 +249,11 @@ Caddy is the simplest option — it handles TLS automatically:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
-    }
-    header @static Cache-Control "public, max-age=604800, immutable"
 
-    reverse_proxy 127.0.0.1:7001
+    # Caddy sets X-Forwarded-Proto itself; drop a client-sent Forwarded.
+    reverse_proxy 127.0.0.1:7001 {
+        header_up -Forwarded
+    }
 }
 ```
 
@@ -281,7 +273,8 @@ Key directives, regardless of which proxy you run:
   `-b` limit (default 128 KB) with `413 Payload Too Large` *before* parsing
   them, so a body can never stall the Wren runtime. The effective cap is the
   smaller of `-b` and a memory-safe ceiling (`-m` / 512) so a body can never
-  push the fork()ed child past its `RLIMIT_AS` budget — at the default 128 MB
+  push the fork()ed child past its `RLIMIT_AS` budget (Linux; other platforms
+  have no such budget, see Resource Limits) — at the default 128 MB
   soft limit that ceiling is 256 KB, so the default `-b 128` is fully
   effective. Set the proxy's body limit to the smallest your
   app needs — 1 MB is a sane default for the proxy.
@@ -297,6 +290,10 @@ Key directives, regardless of which proxy you run:
 - **Deny private files at the proxy too.** Bialet already returns 403 for
   `_`/`.`-prefixed files, but blocking them at the proxy adds a second layer
   in case an application or symlink ever serves one (see [Security](security.md)).
+  Keep `/.well-known/` open: ACME challenges and other RFC 8615 files live
+  there, and Bialet serves that one dot-prefixed directory on purpose.
+- **Never serve the app directory from the proxy.** It holds `.wren` source,
+  the database and private files (see the pitfall under Static Files).
 
 ### nginx
 
@@ -310,40 +307,35 @@ server {
     client_max_body_size 1m;
     client_body_timeout 10s;
 
+    proxy_request_buffering on;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
+
+    # RFC 8615 files (ACME challenges, security.txt) stay reachable. `^~`
+    # makes this prefix win over the regex below.
+    location ^~ /.well-known/ {
+        proxy_pass http://127.0.0.1:7001;
+    }
+
     # Deny private files at the proxy (defense in depth).
     location ~ (^|/)[_.] {
         return 403;
     }
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Everything else goes to Bialet. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
-        proxy_request_buffering on;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://127.0.0.1:7001;
     }
 }
 ```
 
 Note: the `location ~ (^|/)[_.]` block matches any path segment that starts
-with `_` or `.`, which covers `_db.sqlite3` and dotfiles such as `.env`. If
-your app legitimately serves files with such names, drop this block — but
-prefer renaming those files.
+with `_` or `.`, which covers `_db.sqlite3`, `_app/` and dotfiles such as
+`.env`. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.
 
 ### Apache
 
@@ -362,31 +354,18 @@ prefer renaming those files.
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
 
-    # Deny private files at the proxy (defense in depth).
-    RewriteRule ^(.*)(^|/)[_.][^/]*$ - [F,L]
-
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
+    # Deny private files at the proxy (defense in depth): any path segment
+    # starting with "_" or ".", except the RFC 8615 /.well-known/ directory.
     RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule (^|/)[_.] - [F,L]
 
+    # Every request goes to Bialet. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -404,19 +383,16 @@ request bodies with a request matcher:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
-    }
-    header @static Cache-Control "public, max-age=604800, immutable"
 
     @private {
         path_regexp private (^|/)[_.]
+        not path /.well-known/*
     }
     respond @private 403
 
     reverse_proxy 127.0.0.1:7001 {
         flush_interval -1
+        header_up -Forwarded
     }
 }
 ```
@@ -639,15 +615,26 @@ Use CLI flags to constrain resources per app:
 |------|------------------------|---------|------------------|
 | `-m` | Soft memory limit (MB) | 128     | `-m 1024`        |
 | `-M` | Hard memory limit (MB) | 256     | `-M 2048`        |
-| `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
-| `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
+| `-c` | Soft CPU time limit (s) | 3600   | `-c 600`         |
+| `-C` | Hard CPU time limit (s) | 7200   | `-C 900`         |
 | `-b` | Max request body (KB)  | 128     | `-b 512`         |
 | `-u` | Max per-file upload    | 4 MB    | `-u 8MB`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
 
+`-m` and `-M` are enforced only on Linux, where the HTTP child runs under
+`RLIMIT_AS`. On macOS and Windows Bialet prints a warning when you set them and
+runs without a memory ceiling; use the container or service manager to cap
+memory there.
+
 The request-body cap is the smaller of `-b` and the memory-safe ceiling
 (`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
+
+`-c` and `-C` are CPU **seconds**, not percentages. The soft limit sends
+`SIGXCPU`, the hard limit sends `SIGKILL`, and the supervising parent restarts
+the HTTP child either way, which drops the bytecode cache and every open
+connection. Keep them well above a normal workload's total CPU use; use `0` for
+no limit (the shell's `ulimit -t` still applies).
 
 Uploads are capped by `-u` and must also fit inside the body cap, so the
 effective per-file limit is the smaller of the two minus ~8 KB of multipart
@@ -659,7 +646,7 @@ binds) together with `-u` to allow large files. See
 Example for a production app:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
+bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 -w -b 1100 -u 1MB \
   -l /var/log/bialet/app.log /www/myapp
 ```
 

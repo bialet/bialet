@@ -67,7 +67,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -548,18 +548,22 @@ bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7003</sp
 <span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">7003</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="k">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
+<span class="c1"># inside the server block from "Reverse Proxy Setups" below</span>
+<span class="k">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Forwarded</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://bialet</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Caddy:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7002</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7003</span>
+<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7002</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7003</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">header_up</span><span class="w"> </span><span class="o">-</span><span class="nc">Forwarded</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -616,12 +620,27 @@ migrations before serving the next request. No manual steps, no downtime.</p>
 <p>Bialet serves static files (CSS, JS, images, fonts) directly. For better
 performance, configure your reverse proxy to:</p>
 <ul class="simple">
-<li><p><strong>Cache</strong> static assets (add <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> headers)</p></li>
 <li><p><strong>Gzip</strong> or <strong>brotli</strong> compress text-based assets (CSS, JS, HTML, SVG)</p></li>
 </ul>
-<p>It’s also safe to serve static files from the proxy directly instead of
-proxying to Bialet — just add a <code class="docutils literal notranslate"><span class="pre">location</span></code> block pointing to your app
-directory.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: do not label responses cacheable by URL suffix or by
+<code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> at the proxy. Bialet routes <code class="docutils literal notranslate"><span class="pre">/notes/42.css</span></code> to <code class="docutils literal notranslate"><span class="pre">notes.wren</span></code>
+when no such file exists, and serves uploaded images through Wren, so a rule
+like “<code class="docutils literal notranslate"><span class="pre">*.css</span></code> is public for a week” can store one user’s page and replay it
+to another. Wren responses say <code class="docutils literal notranslate"><span class="pre">Cache-Control:</span> <span class="pre">no-store</span></code> by default; set a
+longer <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> in the app (<code class="docutils literal notranslate"><span class="pre">Response.header(...)</span></code>) only on responses
+you know are public.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: do not let the proxy serve files from the app directory. The
+app directory holds your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route files, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and other private
+files; Bialet runs the first and refuses the rest, but a proxy <code class="docutils literal notranslate"><span class="pre">root</span></code> +
+<code class="docutils literal notranslate"><span class="pre">try_files</span></code> (or an Apache <code class="docutils literal notranslate"><span class="pre">DocumentRoot</span></code> + <code class="docutils literal notranslate"><span class="pre">-f</span></code> rewrite) pointed at it answers
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/index.wren</span></code> with your source code and <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/_db.sqlite3</span></code> with your
+database. Proxy every request to Bialet, as the configurations below do. If you
+want the proxy to serve assets itself, give it a separate directory that holds
+nothing but those assets.</p>
+</div></blockquote>
 </section>
 <section id="reverse-proxy-setups">
 <h2>Reverse Proxy Setups<a class="headerlink" href="#reverse-proxy-setups" title="Link to this heading">#</a></h2>
@@ -632,25 +651,16 @@ directory.</p>
 <span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="s">[::]:80</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">example.com</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1"># Serve static files directly from disk (optional, faster)</span>
-<span class="w">    </span><span class="kn">root</span><span class="w"> </span><span class="s">/www/example.com</span><span class="p">;</span>
+<span class="w">    </span><span class="c1"># Every request goes to Bialet, static files included: it runs .wren files</span>
+<span class="w">    </span><span class="c1"># and refuses private ones. No `root` pointing at the app directory.</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="c1"># Try static file first, fall back to Bialet</span>
-<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">@bialet</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1"># Gzip static assets</span>
-<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">        </span><span class="c1"># Bialet decides the cookie Secure flag from these two headers.</span>
+<span class="w">        </span><span class="c1"># Set the first, drop whatever the client sent in the second.</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Forwarded</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
@@ -680,7 +690,7 @@ directory.</p>
 <section id="apache">
 <h3>Apache<a class="headerlink" href="#apache" title="Link to this heading">#</a></h3>
 <p>Enable the required modules:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>a2enmod<span class="w"> </span>proxy<span class="w"> </span>proxy_http<span class="w"> </span>rewrite<span class="w"> </span>headers<span class="w"> </span>expires
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>a2enmod<span class="w"> </span>proxy<span class="w"> </span>proxy_http<span class="w"> </span>rewrite<span class="w"> </span>headers
 </pre></div>
 </div>
 <p>Virtual host configuration:</p>
@@ -694,28 +704,15 @@ directory.</p>
 <span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
-<span class="w">    </span><span class="c"># Cache static assets</span>
-<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">"access plus 30 days"</span>
-<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
-<span class="w">    </span><span class="c"># Serve static files directly</span>
-<span class="w">    </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="sx">/www/example.com</span>
-
-<span class="w">    </span><span class="nb">RewriteEngine</span><span class="w"> </span><span class="k">On</span>
-<span class="w">    </span><span class="c"># If the file exists, serve it</span>
-<span class="w">    </span><span class="nb">RewriteCond</span><span class="w"> </span>%{DOCUMENT_ROOT}%{REQUEST_URI}<span class="w"> </span>-f
-<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^<span class="w"> </span>-<span class="w"> </span>[L]
-<span class="w">    </span><span class="c"># Otherwise proxy to Bialet</span>
-<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^/(.*)$<span class="w"> </span>http://127.0.0.1:7001/$1<span class="w"> </span>[P,L]
-
+<span class="w">    </span><span class="c"># Every request goes to Bialet, static files included: it runs .wren files</span>
+<span class="w">    </span><span class="c"># and refuses private ones. No DocumentRoot pointing at the app directory.</span>
 <span class="w">    </span><span class="nb">ProxyPreserveHost</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="c"># Bialet decides the cookie Secure flag from these two headers.</span>
+<span class="w">    </span><span class="c"># Set the first, drop whatever the client sent in the second.</span>
+<span class="w">    </span><span class="nb">RequestHeader</span><span class="w"> </span>set<span class="w"> </span>X-Forwarded-Proto<span class="w"> </span>expr=%{REQUEST_SCHEME}
+<span class="w">    </span><span class="nb">RequestHeader</span><span class="w"> </span>unset<span class="w"> </span>Forwarded
+<span class="w">    </span><span class="nb">ProxyPass</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
 <span class="w">    </span><span class="nb">ProxyPassReverse</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
 <span class="nt">&lt;/VirtualHost&gt;</span>
 </pre></div>
@@ -727,13 +724,11 @@ directory.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">encode</span><span class="w"> </span><span class="n">gzip</span><span class="w"> </span><span class="n">zstd</span>
 
-<span class="w">    </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">file</span>
-<span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">"public, max-age=604800, immutable"</span>
 
-<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span>
+<span class="w">    </span><span class="cs"># Caddy sets X-Forwarded-Proto itself; drop a client-sent Forwarded.</span>
+<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">header_up</span><span class="w"> </span><span class="o">-</span><span class="nc">Forwarded</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -753,7 +748,8 @@ requests before they reach the worker.</p>
 <code class="docutils literal notranslate"><span class="pre">-b</span></code> limit (default 128 KB) with <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Payload</span> <span class="pre">Too</span> <span class="pre">Large</span></code> <em>before</em> parsing
 them, so a body can never stall the Wren runtime. The effective cap is the
 smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> and a memory-safe ceiling (<code class="docutils literal notranslate"><span class="pre">-m</span></code> / 512) so a body can never
-push the fork()ed child past its <code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> budget — at the default 128 MB
+push the fork()ed child past its <code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> budget (Linux; other platforms
+have no such budget, see Resource Limits) — at the default 128 MB
 soft limit that ceiling is 256 KB, so the default <code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">128</span></code> is fully
 effective. Set the proxy’s body limit to the smallest your
 app needs — 1 MB is a sane default for the proxy.</p></li>
@@ -768,7 +764,11 @@ it, so the upstream socket is never held open by a slow client.</p></li>
 <li><p><strong>Bind Bialet to <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code></strong> and only expose the proxy to the internet.</p></li>
 <li><p><strong>Deny private files at the proxy too.</strong> Bialet already returns 403 for
 <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code>-prefixed files, but blocking them at the proxy adds a second layer
-in case an application or symlink ever serves one (see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a>).</p></li>
+in case an application or symlink ever serves one (see <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a>).
+Keep <code class="docutils literal notranslate"><span class="pre">/.well-known/</span></code> open: ACME challenges and other RFC 8615 files live
+there, and Bialet serves that one dot-prefixed directory on purpose.</p></li>
+<li><p><strong>Never serve the app directory from the proxy.</strong> It holds <code class="docutils literal notranslate"><span class="pre">.wren</span></code> source,
+the database and private files (see the pitfall under Static Files).</p></li>
 </ul>
 <section id="id1">
 <h3>nginx<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
@@ -781,40 +781,35 @@ in case an application or symlink ever serves one (see <a class="reference inter
 <span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">1m</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">client_body_timeout</span><span class="w"> </span><span class="s">10s</span><span class="p">;</span>
 
+<span class="w">    </span><span class="kn">proxy_request_buffering</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Forwarded</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># RFC 8615 files (ACME challenges, security.txt) stay reachable. `^~`</span>
+<span class="w">    </span><span class="c1"># makes this prefix win over the regex below.</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">^~</span><span class="w"> </span><span class="s">/.well-known/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
 <span class="w">    </span><span class="c1"># Deny private files at the proxy (defense in depth).</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="w"> </span><span class="sr">(^|/)[_.]</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">return</span><span class="w"> </span><span class="mi">403</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="c1"># Serve static files directly from disk (optional, faster)</span>
-<span class="w">    </span><span class="kn">root</span><span class="w"> </span><span class="s">/www/example.com</span><span class="p">;</span>
+<span class="w">    </span><span class="c1"># Everything else goes to Bialet. No `root` pointing at the app directory.</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="c1"># Try static file first, fall back to Bialet</span>
-<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="s">@bialet</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="c1"># Gzip static assets</span>
-<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)</span>$<span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">7d</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">try_files</span><span class="w"> </span><span class="nv">$uri</span><span class="w"> </span><span class="p">=</span><span class="mi">404</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">@bialet</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="kn">proxy_request_buffering</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
-<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>Note: the <code class="docutils literal notranslate"><span class="pre">location</span> <span class="pre">~</span> <span class="pre">(^|/)[_.]</span></code> block matches any path segment that starts
-with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, which covers <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and dotfiles such as <code class="docutils literal notranslate"><span class="pre">.env</span></code>. If
-your app legitimately serves files with such names, drop this block — but
-prefer renaming those files.</p>
+with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, which covers <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, <code class="docutils literal notranslate"><span class="pre">_app/</span></code> and dotfiles such as
+<code class="docutils literal notranslate"><span class="pre">.env</span></code>. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.</p>
 </section>
 <section id="id2">
 <h3>Apache<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
@@ -832,31 +827,18 @@ prefer renaming those files.</p>
 <span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
-<span class="w">    </span><span class="c"># Cache static assets</span>
-<span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_expires.c</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nb">ExpiresActive</span><span class="w"> </span><span class="k">On</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/css<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>text/javascript<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/png<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/jpeg<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>image/svg+xml<span class="w"> </span><span class="s2">"access plus 7 days"</span>
-<span class="w">        </span><span class="nb">ExpiresByType</span><span class="w"> </span>font/woff2<span class="w"> </span><span class="s2">"access plus 30 days"</span>
-<span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
-<span class="w">    </span><span class="c"># Deny private files at the proxy (defense in depth).</span>
-<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^(.*)(^|/)[_.][^/]*$<span class="w"> </span>-<span class="w"> </span>[F,L]
-
-<span class="w">    </span><span class="c"># Serve static files directly</span>
-<span class="w">    </span><span class="nb">DocumentRoot</span><span class="w"> </span><span class="sx">/www/example.com</span>
-
+<span class="w">    </span><span class="c"># Deny private files at the proxy (defense in depth): any path segment</span>
+<span class="w">    </span><span class="c"># starting with "_" or ".", except the RFC 8615 /.well-known/ directory.</span>
 <span class="w">    </span><span class="nb">RewriteEngine</span><span class="w"> </span><span class="k">On</span>
-<span class="w">    </span><span class="c"># If the file exists, serve it</span>
-<span class="w">    </span><span class="nb">RewriteCond</span><span class="w"> </span>%{DOCUMENT_ROOT}%{REQUEST_URI}<span class="w"> </span>-f
-<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^<span class="w"> </span>-<span class="w"> </span>[L]
-<span class="w">    </span><span class="c"># Otherwise proxy to Bialet</span>
-<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>^/(.*)$<span class="w"> </span>http://127.0.0.1:7001/$1<span class="w"> </span>[P,L]
+<span class="w">    </span><span class="nb">RewriteCond</span><span class="w"> </span>%{REQUEST_URI}<span class="w"> </span>!^/\.well-known/
+<span class="w">    </span><span class="nb">RewriteRule</span><span class="w"> </span>(^|/)[_.]<span class="w"> </span>-<span class="w"> </span>[F,L]
 
+<span class="w">    </span><span class="c"># Every request goes to Bialet. No DocumentRoot pointing at the app directory.</span>
 <span class="w">    </span><span class="nb">ProxyPreserveHost</span><span class="w"> </span><span class="k">On</span>
+<span class="w">    </span><span class="nb">RequestHeader</span><span class="w"> </span>set<span class="w"> </span>X-Forwarded-Proto<span class="w"> </span>expr=%{REQUEST_SCHEME}
+<span class="w">    </span><span class="nb">RequestHeader</span><span class="w"> </span>unset<span class="w"> </span>Forwarded
+<span class="w">    </span><span class="nb">ProxyPass</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
 <span class="w">    </span><span class="nb">ProxyPassReverse</span><span class="w"> </span>/<span class="w"> </span>http://127.0.0.1:7001/
 <span class="nt">&lt;/VirtualHost&gt;</span>
 </pre></div>
@@ -872,21 +854,18 @@ request bodies with a request matcher:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">example</span><span class="o">.</span><span class="n">com</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">encode</span><span class="w"> </span><span class="n">gzip</span><span class="w"> </span><span class="n">zstd</span>
 
-<span class="w">    </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">file</span>
-<span class="w">        </span><span class="n">path</span><span class="w"> </span><span class="o">*.</span><span class="n">css</span><span class="w"> </span><span class="o">*.</span><span class="n">js</span><span class="w"> </span><span class="o">*.</span><span class="n">svg</span><span class="w"> </span><span class="o">*.</span><span class="n">woff2</span><span class="w"> </span><span class="o">*.</span><span class="n">png</span><span class="w"> </span><span class="o">*.</span><span class="n">jpg</span><span class="w"> </span><span class="o">*.</span><span class="n">jpeg</span><span class="w"> </span><span class="o">*.</span><span class="n">gif</span><span class="w"> </span><span class="o">*.</span><span class="n">ico</span><span class="w"> </span><span class="o">*.</span><span class="n">html</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">header</span><span class="w"> </span><span class="err">@</span><span class="k">static</span><span class="w"> </span><span class="nc">Cache</span><span class="o">-</span><span class="nc">Control</span><span class="w"> </span><span class="s2">"public, max-age=604800, immutable"</span>
 
 <span class="w">    </span><span class="err">@</span><span class="n">private</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="n">path_regexp</span><span class="w"> </span><span class="n">private</span><span class="w"> </span><span class="p">(</span><span class="o">^|/</span><span class="p">)[</span><span class="vi">_</span><span class="o">.</span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">respond</span><span class="w"> </span><span class="err">@</span><span class="n">private</span><span class="w"> </span><span class="mf">403</span>
+<span class="w">        </span><span class="n">not</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">/.</span><span class="n">well</span><span class="o">-</span><span class="n">known</span><span class="cm">/*</span>
+<span class="cm">    }</span>
+<span class="cm">    respond @private 403</span>
 
-<span class="w">    </span><span class="n">reverse_proxy</span><span class="w"> </span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span><span class="o">:</span><span class="mf">7001</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">flush_interval</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+<span class="cm">    reverse_proxy 127.0.0.1:7001 {</span>
+<span class="cm">        flush_interval -1</span>
+<span class="cm">        header_up -Forwarded</span>
+<span class="cm">    }</span>
+<span class="cm">}</span>
 </pre></div>
 </div>
 <p>Caddy reads request bodies before proxying by default. For a total body
@@ -1119,14 +1098,14 @@ negligible and the concurrency benefit is immediate.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">-M</span> <span class="pre">2048</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
-<td><p>Soft CPU limit (%)</p></td>
-<td><p>15</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">25</span></code></p></td>
+<td><p>Soft CPU time limit (s)</p></td>
+<td><p>3600</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">600</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code></p></td>
-<td><p>Hard CPU limit (%)</p></td>
-<td><p>30</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">-C</span> <span class="pre">50</span></code></p></td>
+<td><p>Hard CPU time limit (s)</p></td>
+<td><p>7200</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-C</span> <span class="pre">900</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span></code></p></td>
 <td><p>Max request body (KB)</p></td>
@@ -1146,9 +1125,18 @@ negligible and the concurrency benefit is immediate.</p>
 </tbody>
 </table>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">-m</span></code> and <code class="docutils literal notranslate"><span class="pre">-M</span></code> are enforced only on Linux, where the HTTP child runs under
+<code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code>. On macOS and Windows Bialet prints a warning when you set them and
+runs without a memory ceiling; use the container or service manager to cap
+memory there.</p>
 <p>The request-body cap is the smaller of <code class="docutils literal notranslate"><span class="pre">-b</span></code> and the memory-safe ceiling
 (<code class="docutils literal notranslate"><span class="pre">-m</span></code> / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with <code class="docutils literal notranslate"><span class="pre">413</span></code> before parsing; raising <code class="docutils literal notranslate"><span class="pre">-m</span></code> raises the ceiling.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-C</span></code> are CPU <strong>seconds</strong>, not percentages. The soft limit sends
+<code class="docutils literal notranslate"><span class="pre">SIGXCPU</span></code>, the hard limit sends <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>, and the supervising parent restarts
+the HTTP child either way, which drops the bytecode cache and every open
+connection. Keep them well above a normal workload’s total CPU use; use <code class="docutils literal notranslate"><span class="pre">0</span></code> for
+no limit (the shell’s <code class="docutils literal notranslate"><span class="pre">ulimit</span> <span class="pre">-t</span></code> still applies).</p>
 <p>Uploads are capped by <code class="docutils literal notranslate"><span class="pre">-u</span></code> and must also fit inside the body cap, so the
 effective per-file limit is the smaller of the two minus ~8 KB of multipart
 framing — about 120 KB at the defaults. Raise <code class="docutils literal notranslate"><span class="pre">-b</span></code> (and <code class="docutils literal notranslate"><span class="pre">-m</span></code> when the ceiling
@@ -1156,7 +1144,7 @@ binds) together with <code class="docutils literal notranslate"><span class="pre
 <a class="reference internal" href="file.html"><span class="std std-doc">File Size Limits</span></a>. SQLite foreign keys (<code class="docutils literal notranslate"><span class="pre">-f</span></code>) and synchronous mode
 (<code class="docutils literal notranslate"><span class="pre">-s</span></code>) are also startup flags; see <a class="reference internal" href="usage.html"><span class="std std-doc">Upload and SQLite Tuning</span></a>.</p>
 <p>Example for a production app:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>-w<span class="w"> </span>-b<span class="w"> </span><span class="m">1100</span><span class="w"> </span>-u<span class="w"> </span>1MB<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">600</span><span class="w"> </span>-C<span class="w"> </span><span class="m">900</span><span class="w"> </span>-w<span class="w"> </span>-b<span class="w"> </span><span class="m">1100</span><span class="w"> </span>-u<span class="w"> </span>1MB<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-l<span class="w"> </span>/var/log/bialet/app.log<span class="w"> </span>/www/myapp
 </pre></div>
 </div>

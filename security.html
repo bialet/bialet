@@ -67,7 +67,7 @@
     <link rel="prev" title="Live Reload" href="live-reload.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -941,12 +941,13 @@ restrict filesystem access to the user that runs the server.</p>
 </section>
 <section id="database-file-permissions">
 <h3>Database File Permissions<a class="headerlink" href="#database-file-permissions" title="Link to this heading">#</a></h3>
-<p>Bialet creates <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> with SQLite’s default mode, <code class="docutils literal notranslate"><span class="pre">0666</span> <span class="pre">&amp;</span> <span class="pre">~umask</span></code>.
-Under the common <code class="docutils literal notranslate"><span class="pre">umask</span> <span class="pre">022</span></code> that yields a world-readable <code class="docutils literal notranslate"><span class="pre">0644</span></code> file, so
-any local user on a shared host can read the whole database — uploaded
-files, password hashes, and cached remote modules included. The server does
-not tighten the mode after opening the file.</p>
-<p>Run Bialet with a restrictive umask so the file is created <code class="docutils literal notranslate"><span class="pre">0600</span></code>:</p>
+<p>On Linux and macOS Bialet creates a new <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> with mode <code class="docutils literal notranslate"><span class="pre">0600</span></code>, so
+only the user running the server can read it; SQLite gives the <code class="docutils literal notranslate"><span class="pre">-wal</span></code> and
+<code class="docutils literal notranslate"><span class="pre">-shm</span></code> files the same mode. A database that already exists keeps its mode: one
+created by an older version under the common <code class="docutils literal notranslate"><span class="pre">umask</span> <span class="pre">022</span></code> is a world-readable
+<code class="docutils literal notranslate"><span class="pre">0644</span></code> file, and any local user on a shared host can read the whole database —
+uploaded files, password hashes, and cached remote modules included.</p>
+<p>A restrictive umask also covers every other file the server creates:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">umask</span><span class="w"> </span><span class="m">0077</span>
 bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>/www/myapp
 </pre></div>
@@ -971,12 +972,16 @@ the user that runs the server and keep the file out of shared backups.</p>
 <h3>Resource Limits<a class="headerlink" href="#resource-limits" title="Link to this heading">#</a></h3>
 <p>The server can enforce memory and CPU ceilings per app with CLI flags, which
 limits the blast radius of a runaway script or a memory-exhaustion attack:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">25</span><span class="w"> </span>-C<span class="w"> </span><span class="m">50</span><span class="w"> </span>/www/myapp
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-c<span class="w"> </span><span class="m">600</span><span class="w"> </span>-C<span class="w"> </span><span class="m">900</span><span class="w"> </span>/www/myapp
 </pre></div>
 </div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> — soft / hard memory limit in MB</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> — soft / hard CPU limit in percent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-m</span></code> / <code class="docutils literal notranslate"><span class="pre">-M</span></code> — soft / hard memory limit in MB, enforced on <strong>Linux only</strong>
+(<code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> on the HTTP child). macOS and Windows builds run with no memory
+ceiling; put a container or service-manager limit around them instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> / <code class="docutils literal notranslate"><span class="pre">-C</span></code> — soft / hard CPU time limit in seconds: the soft one sends
+<code class="docutils literal notranslate"><span class="pre">SIGXCPU</span></code>, the hard one <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>, and the supervisor restarts the HTTP child
+on either (which drops the bytecode cache). <code class="docutils literal notranslate"><span class="pre">0</span></code> disables the limit.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-b</span></code> — max request body in KB (default 128 KB)</p></li>
 </ul>
 <p>Request bodies are rejected with <code class="docutils literal notranslate"><span class="pre">413</span> <span class="pre">Payload</span> <span class="pre">Too</span> <span class="pre">Large</span></code> before parsing when

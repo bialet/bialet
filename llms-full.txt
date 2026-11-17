@@ -2048,11 +2048,12 @@ bialet dev
 
 `bialet dev` starts the server from the current directory, enables live reload
 and the in-browser error display, and opens
-[127.0.0.1:7001](http://127.0.0.1:7001) in your browser. It only needs to be
-run once — the flags are stored in the database and persist across restarts.
+[127.0.0.1:7001](http://127.0.0.1:7001) in your browser. Use it every time
+you develop: those conveniences last for that run only and are never saved, so
+they cannot leak into production with a copied database.
 
-If you don't need those development conveniences, plain `bialet` starts the
-server the same way without touching the flags or opening the browser.
+If you don't need them, plain `bialet` starts the server the same way without
+live reload, error display or opening the browser.
 
 On Windows, double-clicking `bialet.exe` in the project folder starts it in dev
 mode, just like `bialet dev`.
@@ -2975,7 +2976,9 @@ Bialet tables are prefixed with `BIALET_`.
 - `BIALET_MIGRATIONS`: The migration history table.
 - `BIALET_SESSION`: The session table.
 - `BIALET_FILES`: The file storage table.
-- `BIALET_LOGS`: The logging table.
+- `BIALET_LOGS`: The logging table. Each `System.print`/`System.log` line is
+  stored (cut at 4096 bytes); rows older than 30 days are pruned, and the table
+  keeps at most 100,000 rows.
 - `BIALET_REMOTE_MODULES`: The remote module cache table.
 
 If you delete or alter any of these tables your application will not work
@@ -3239,6 +3242,11 @@ System.print("Date with specific timezone: %(date)")
 
 This lets you control the UTC offset at the instance level without affecting
 other `Date` objects.
+
+A zone is either a number (hours from UTC, `-3` is UTC-3) or a zone name such
+as `"America/Bogota"` or `"Etc/GMT+3"`. Anything else — a path, a string with
+`:` or `.` — raises an error, so a zone taken from a form field cannot make the
+server read a file. Prefer an allow-list of zones your app offers anyway.
 
 ## Displaying Date and Time Components
 
@@ -5086,8 +5094,8 @@ plain escaped text.
 
 ## Pitfalls
 
-**`Markdown.file()` returns `false` when the file is missing**, it does not
-throw. Guard against it:
+**`Markdown.file()` returns `false` when the file is missing or not
+readable**, it does not throw. Guard against it:
 
 ```wren
 var content = Markdown.file("about.md")
@@ -5096,9 +5104,13 @@ if (content == false) content = "<p>About page not written yet.</p>"
 
 **Output is capped at 2 MB.** Larger documents are truncated silently.
 
-**`_`-prefixed files are private.** A `_about.md` file renders 403 when fetched
-directly, but `Markdown.file("_about.md")` still reads it from disk — the
-privacy rule applies to HTTP requests, not file reads.
+**`Markdown.file()` reads only Markdown inside the app root.** The path must
+end in `.md` or `.markdown`, must stay inside the app root, and no component may
+start with `_` or `.`: `Markdown.file("_about.md")`, `Markdown.file("config.json")`
+and `Markdown.file("page.wren")` all return `false`. That keeps
+`Markdown.file(Request.get("page"))` from handing out private files, config or
+route source, but still prefer an allow-list of page names over a raw request
+value.
 
 **Front matter is skipped, not parsed.** A leading `---` block is dropped from
 the output. Metadata inside it (title, date, tags) is not exposed — you must
@@ -5192,9 +5204,10 @@ other handler. Keep it free of per-request logic.
 
 By default a `.wren` file that fails to parse or throws returns the generic 500
 page, and the actual error goes to the server log. During development it is
-often faster to see the error in the browser. `bialet dev` enables this for you
-(along with live reload and browser opening) — see
-[Getting Started](../getting-started/2-setup). Or enable it manually:
+often faster to see the error in the browser. `bialet dev` enables this for
+that run (along with live reload and browser opening) — see
+[Getting Started](../getting-started/2-setup). Or store it in the database,
+which keeps it on for every start that uses that database:
 
 ```bash
 bialet -r 'Config.enable("BIALET_SHOW_ERRORS")' .
@@ -7155,7 +7168,7 @@ generic 500 page (see [Error Pages](errors.md)).
 > ⚠️ Pitfall: these flags are read once, at startup. Changing them in the
 > database while a server is running (e.g. with `Config.enable()` from a
 > request handler) has no effect until you restart the server. `bialet dev`
-> sets both before the server starts, which is why it "just works".
+> turns both on for its own run without touching the database.
 
 ### Development mode: `bialet dev`
 
@@ -7167,14 +7180,15 @@ bialet dev
 
 It starts the server from the current directory and:
 
-- Enables `BIALET_LIVE_RELOAD` and `BIALET_SHOW_ERRORS` in the database. This
-  is idempotent — run it once and the flags stay on for later `bialet` runs; if
-  they were disabled, `bialet dev` turns them back on.
+- Turns on live reload and error pages for that run only. Nothing is written to
+  the database, so a later plain `bialet` start on the same (or a copied)
+  `_db.sqlite3` serves no error traces and no `/_livereload` endpoint. To keep
+  either on outside dev mode, set the flag yourself (`Config.enable(...)`).
 - Opens `http://127.0.0.1:7001` (or your `-p` port) in the default browser,
   like `react-scripts start`.
 
-Plain `bialet` starts the server without touching the flags or opening the
-browser.
+Plain `bialet` starts the server with whatever the flags say in the database,
+and does not open the browser.
 
 `enable` sets the value to `"1"`, `disable` sets it to `"0"`. Both are
 equivalent to `Config.set("key", "1")` and `Config.set("key", "0")`.
@@ -7427,10 +7441,10 @@ bialet dev
 ```
 
 Starts the server from the current directory, enables live reload and the
-in-browser error display, and opens the server URL in your browser. The flags
-are stored in the database and persist across restarts, so you only need to
-run `dev` once. Plain `bialet` starts the server without touching those flags
-or opening the browser.
+in-browser error display, and opens the server URL in your browser. Both are
+on for that run only: nothing is written to the database, so a plain `bialet`
+start afterwards (or on a copy of the database) has neither. Plain `bialet`
+does not open the browser.
 
 > On Windows, double-clicking `bialet.exe` in File Explorer counts as a dev
 > launch: the server starts in dev mode with the browser opening automatically.
@@ -7467,11 +7481,11 @@ bialet --port=8080 /path/to/app
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
 | `-d`, `--db`            | SQLite database file location                                               | `_db.sqlite3`                                |
 | `-w`, `--wal`           | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
-| `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
+| `-i`, `--ignore`        | Ignored files: comma-separated globs; replaces the default list             | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe` |
 | `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `128`                                        |
 | `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `256`                                        |
-| `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
-| `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
+| `-c`, `--cpu-soft`      | CPU time soft limit (seconds)                                               | `3600`                                       |
+| `-C`, `--cpu-hard`      | CPU time hard limit (seconds)                                               | `7200`                                       |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
 | `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
@@ -7487,9 +7501,36 @@ usage text instead of being silently ignored.
 > name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
 > root is served, so a database or a log file with a public name there is
 > downloadable by any client. Bialet refuses to start and exits with status 11.
+> The public `.well-known/` directory counts as public here too.
+
+> ⚠️ Pitfall: the `-l` file records request targets, query strings included,
+> so Bialet creates it readable by its owner only (`0600`). An existing file
+> keeps its mode; do not make it group- or world-readable.
+
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
+> line (the method and the first 512 bytes of the target), so rotate it with
+> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
+> open in append mode, so truncating it in place is safe). Under systemd or
+> Docker, logging to stdout and letting journald or the log driver cap the size
+> works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+`-m` and `-M` set the address-space limit (`RLIMIT_AS`) of the HTTP process on
+Linux. A soft limit above the hard one is lowered to it, a hard limit above the
+one the process inherited (systemd `LimitAS=`, `ulimit -v`) is lowered to that,
+and `0` means no limit of its own. macOS and Windows do not enforce them: there
+the values only size the request-body cap below.
+
+`-c` and `-C` are **seconds of CPU time** for the HTTP process, not a
+percentage. The supervisor runs the server as a parent/child pair: reaching the
+soft limit sends `SIGXCPU`, reaching the hard limit sends `SIGKILL`, and in
+either case the parent starts a fresh child, which drops the compiled-bytecode
+cache and every open connection. The defaults (one and two hours) are sized so
+that only a runaway process hits them; lower them only to bound a specific
+workload. `0` means no limit, with the shell's own `ulimit -t` still applying
+as the ceiling.
 
 > The upload cap is also bounded by the request-body limit (`-b`). A file must
 > fit inside a multipart body smaller than `-b` (default 128 KB), so the
@@ -7622,8 +7663,9 @@ bialet dev
 
 `bialet dev` starts a server from the current directory with live reload
 already on. It also enables the in-browser error display and opens your browser
-(see [Getting Started](../getting-started/2-setup)). The setting is stored in
-the database, so later `bialet` runs keep live reload on until you disable it.
+(see [Getting Started](../getting-started/2-setup)). Both are on for that run
+only: nothing is written to the database, so a later plain `bialet` start does
+not inherit them.
 
 When enabled, Bialet injects a small polling script into every HTML response.
 The script checks for file changes once per second and reloads the page
@@ -7651,9 +7693,9 @@ Disable it:
 bialet -r 'Config.disable("BIALET_LIVE_RELOAD")' .
 ```
 
-Since configuration lives in the SQLite database, enabling it in dev has no
-effect on production — each environment has its own `_db.sqlite3` and its own
-`BIALET_CONFIG` table.
+A flag set with `Config.enable` lives in the SQLite database, so it travels
+with any copy of `_db.sqlite3`. Do not ship a development database with
+`BIALET_LIVE_RELOAD` or `BIALET_SHOW_ERRORS` enabled.
 
 > ⚠️ Pitfall: `BIALET_LIVE_RELOAD` is read when the server starts. Enabling or
 > disabling it while a server is running requires a restart.
@@ -8146,13 +8188,14 @@ secrets under `.well-known` — it is world-readable by definition.
 
 ### Database File Permissions
 
-Bialet creates `_db.sqlite3` with SQLite's default mode, `0666 & ~umask`.
-Under the common `umask 022` that yields a world-readable `0644` file, so
-any local user on a shared host can read the whole database — uploaded
-files, password hashes, and cached remote modules included. The server does
-not tighten the mode after opening the file.
+On Linux and macOS Bialet creates a new `_db.sqlite3` with mode `0600`, so
+only the user running the server can read it; SQLite gives the `-wal` and
+`-shm` files the same mode. A database that already exists keeps its mode: one
+created by an older version under the common `umask 022` is a world-readable
+`0644` file, and any local user on a shared host can read the whole database —
+uploaded files, password hashes, and cached remote modules included.
 
-Run Bialet with a restrictive umask so the file is created `0600`:
+A restrictive umask also covers every other file the server creates:
 
 ```bash
 umask 0077
@@ -8183,11 +8226,15 @@ The server can enforce memory and CPU ceilings per app with CLI flags, which
 limits the blast radius of a runaway script or a memory-exhaustion attack:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 /www/myapp
+bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 /www/myapp
 ```
 
-- `-m` / `-M` — soft / hard memory limit in MB
-- `-c` / `-C` — soft / hard CPU limit in percent
+- `-m` / `-M` — soft / hard memory limit in MB, enforced on **Linux only**
+  (`RLIMIT_AS` on the HTTP child). macOS and Windows builds run with no memory
+  ceiling; put a container or service-manager limit around them instead.
+- `-c` / `-C` — soft / hard CPU time limit in seconds: the soft one sends
+  `SIGXCPU`, the hard one `SIGKILL`, and the supervisor restarts the HTTP child
+  on either (which drops the bytecode cache). `0` disables the limit.
 - `-b` — max request body in KB (default 128 KB)
 
 Request bodies are rejected with `413 Payload Too Large` before parsing when
@@ -8868,11 +8915,13 @@ upstream bialet {
     server 127.0.0.1:7003;
 }
 
-location @bialet {
+# inside the server block from "Reverse Proxy Setups" below
+location / {
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
     proxy_pass http://bialet;
 }
 ```
@@ -8881,7 +8930,9 @@ Caddy:
 
 ```
 example.com {
-    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003
+    reverse_proxy 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 {
+        header_up -Forwarded
+    }
 }
 ```
 
@@ -8939,12 +8990,24 @@ scp -r ./src/* user@your-server:/www/your-app/
 Bialet serves static files (CSS, JS, images, fonts) directly. For better
 performance, configure your reverse proxy to:
 
-- **Cache** static assets (add `Cache-Control` headers)
 - **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
 
-It's also safe to serve static files from the proxy directly instead of
-proxying to Bialet — just add a `location` block pointing to your app
-directory.
+> ⚠️ Pitfall: do not label responses cacheable by URL suffix or by
+> `Content-Type` at the proxy. Bialet routes `/notes/42.css` to `notes.wren`
+> when no such file exists, and serves uploaded images through Wren, so a rule
+> like "`*.css` is public for a week" can store one user's page and replay it
+> to another. Wren responses say `Cache-Control: no-store` by default; set a
+> longer `Cache-Control` in the app (`Response.header(...)`) only on responses
+> you know are public.
+
+> ⚠️ Pitfall: do not let the proxy serve files from the app directory. The
+> app directory holds your `.wren` route files, `_db.sqlite3` and other private
+> files; Bialet runs the first and refuses the rest, but a proxy `root` +
+> `try_files` (or an Apache `DocumentRoot` + `-f` rewrite) pointed at it answers
+> `GET /index.wren` with your source code and `GET /_db.sqlite3` with your
+> database. Proxy every request to Bialet, as the configurations below do. If you
+> want the proxy to serve assets itself, give it a separate directory that holds
+> nothing but those assets.
 
 ## Reverse Proxy Setups
 
@@ -8956,25 +9019,16 @@ server {
     listen [::]:80;
     server_name example.com;
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Bialet decides the cookie Secure flag from these two headers.
+        # Set the first, drop whatever the client sent in the second.
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Forwarded "";
         proxy_pass http://127.0.0.1:7001;
     }
 }
@@ -9007,7 +9061,7 @@ server {
 Enable the required modules:
 
 ```bash
-sudo a2enmod proxy proxy_http rewrite headers expires
+sudo a2enmod proxy proxy_http rewrite headers
 ```
 
 Virtual host configuration:
@@ -9023,28 +9077,14 @@ Virtual host configuration:
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
-
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
-    RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
-
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    # Bialet decides the cookie Secure flag from these two headers.
+    # Set the first, drop whatever the client sent in the second.
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -9057,13 +9097,10 @@ Caddy is the simplest option — it handles TLS automatically:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
+    # Caddy sets X-Forwarded-Proto itself; drop a client-sent Forwarded.
+    reverse_proxy 127.0.0.1:7001 {
+        header_up -Forwarded
     }
-    header @static Cache-Control "public, max-age=604800, immutable"
-
-    reverse_proxy 127.0.0.1:7001
 }
 ```
 
@@ -9083,7 +9120,8 @@ Key directives, regardless of which proxy you run:
   `-b` limit (default 128 KB) with `413 Payload Too Large` *before* parsing
   them, so a body can never stall the Wren runtime. The effective cap is the
   smaller of `-b` and a memory-safe ceiling (`-m` / 512) so a body can never
-  push the fork()ed child past its `RLIMIT_AS` budget — at the default 128 MB
+  push the fork()ed child past its `RLIMIT_AS` budget (Linux; other platforms
+  have no such budget, see Resource Limits) — at the default 128 MB
   soft limit that ceiling is 256 KB, so the default `-b 128` is fully
   effective. Set the proxy's body limit to the smallest your
   app needs — 1 MB is a sane default for the proxy.
@@ -9099,6 +9137,10 @@ Key directives, regardless of which proxy you run:
 - **Deny private files at the proxy too.** Bialet already returns 403 for
   `_`/`.`-prefixed files, but blocking them at the proxy adds a second layer
   in case an application or symlink ever serves one (see [Security](security.md)).
+  Keep `/.well-known/` open: ACME challenges and other RFC 8615 files live
+  there, and Bialet serves that one dot-prefixed directory on purpose.
+- **Never serve the app directory from the proxy.** It holds `.wren` source,
+  the database and private files (see the pitfall under Static Files).
 
 ### nginx
 
@@ -9112,40 +9154,35 @@ server {
     client_max_body_size 1m;
     client_body_timeout 10s;
 
+    proxy_request_buffering on;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
+
+    # RFC 8615 files (ACME challenges, security.txt) stay reachable. `^~`
+    # makes this prefix win over the regex below.
+    location ^~ /.well-known/ {
+        proxy_pass http://127.0.0.1:7001;
+    }
+
     # Deny private files at the proxy (defense in depth).
     location ~ (^|/)[_.] {
         return 403;
     }
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Everything else goes to Bialet. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
-        proxy_request_buffering on;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://127.0.0.1:7001;
     }
 }
 ```
 
 Note: the `location ~ (^|/)[_.]` block matches any path segment that starts
-with `_` or `.`, which covers `_db.sqlite3` and dotfiles such as `.env`. If
-your app legitimately serves files with such names, drop this block — but
-prefer renaming those files.
+with `_` or `.`, which covers `_db.sqlite3`, `_app/` and dotfiles such as
+`.env`. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.
 
 ### Apache
 
@@ -9164,31 +9201,17 @@ prefer renaming those files.
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
-    # Cache static assets
-    <IfModule mod_expires.c>
-        ExpiresActive On
-        ExpiresByType text/css "access plus 7 days"
-        ExpiresByType text/javascript "access plus 7 days"
-        ExpiresByType image/png "access plus 7 days"
-        ExpiresByType image/jpeg "access plus 7 days"
-        ExpiresByType image/svg+xml "access plus 7 days"
-        ExpiresByType font/woff2 "access plus 30 days"
-    </IfModule>
-
-    # Deny private files at the proxy (defense in depth).
-    RewriteRule ^(.*)(^|/)[_.][^/]*$ - [F,L]
-
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
+    # Deny private files at the proxy (defense in depth): any path segment
+    # starting with "_" or ".", except the RFC 8615 /.well-known/ directory.
     RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule (^|/)[_.] - [F,L]
 
+    # Every request goes to Bialet. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+    RequestHeader unset Forwarded
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -9206,19 +9229,15 @@ request bodies with a request matcher:
 example.com {
     encode gzip zstd
 
-    @static {
-        file
-        path *.css *.js *.svg *.woff2 *.png *.jpg *.jpeg *.gif *.ico *.html
-    }
-    header @static Cache-Control "public, max-age=604800, immutable"
-
     @private {
         path_regexp private (^|/)[_.]
+        not path /.well-known/*
     }
     respond @private 403
 
     reverse_proxy 127.0.0.1:7001 {
         flush_interval -1
+        header_up -Forwarded
     }
 }
 ```
@@ -9441,15 +9460,26 @@ Use CLI flags to constrain resources per app:
 |------|------------------------|---------|------------------|
 | `-m` | Soft memory limit (MB) | 128     | `-m 1024`        |
 | `-M` | Hard memory limit (MB) | 256     | `-M 2048`        |
-| `-c` | Soft CPU limit (%)     | 15      | `-c 25`          |
-| `-C` | Hard CPU limit (%)     | 30      | `-C 50`          |
+| `-c` | Soft CPU time limit (s) | 3600   | `-c 600`         |
+| `-C` | Hard CPU time limit (s) | 7200   | `-C 900`         |
 | `-b` | Max request body (KB)  | 128     | `-b 512`         |
 | `-u` | Max per-file upload    | 4 MB    | `-u 8MB`         |
 | `-w` | SQLite WAL mode        | off     | `-w`             |
 
+`-m` and `-M` are enforced only on Linux, where the HTTP child runs under
+`RLIMIT_AS`. On macOS and Windows Bialet prints a warning when you set them and
+runs without a memory ceiling; use the container or service manager to cap
+memory there.
+
 The request-body cap is the smaller of `-b` and the memory-safe ceiling
 (`-m` / 512, about 256 KB at the default 128 MB soft limit). Bodies over the
 cap are rejected with `413` before parsing; raising `-m` raises the ceiling.
+
+`-c` and `-C` are CPU **seconds**, not percentages. The soft limit sends
+`SIGXCPU`, the hard limit sends `SIGKILL`, and the supervising parent restarts
+the HTTP child either way, which drops the bytecode cache and every open
+connection. Keep them well above a normal workload's total CPU use; use `0` for
+no limit (the shell's `ulimit -t` still applies).
 
 Uploads are capped by `-u` and must also fit inside the body cap, so the
 effective per-file limit is the smaller of the two minus ~8 KB of multipart
@@ -9461,7 +9491,7 @@ binds) together with `-u` to allow large files. See
 Example for a production app:
 
 ```bash
-bialet -p 7001 -m 1024 -M 2048 -c 25 -C 50 -w -b 1100 -u 1MB \
+bialet -p 7001 -m 1024 -M 2048 -c 600 -C 900 -w -b 1100 -u 1MB \
   -l /var/log/bialet/app.log /www/myapp
 ```
 
@@ -9876,10 +9906,14 @@ Adds a 'Set-Cookie' header to the response.
 
 ### header(header, value)
 
-Sets a response header.
+Sets a response header. Setting a header that already exists (in any letter
+case) replaces it. The server writes the framing headers itself, so
+`Content-Length`, `Transfer-Encoding`, `Connection`, `Keep-Alive`, `Upgrade`,
+`TE`, `Trailer` and `Proxy-Connection` raise an error, as does a name with a
+space, a colon or a control character.
 
 - `header`: The name of the header.
-- `value`: The value of the header.
+- `value`: The value of the header. Control characters are removed.
 
 ### json(data)
 
@@ -10782,9 +10816,11 @@ var content = Markdown.html("## Hello **World**!")
 
 ### file(path)
 
-Reads a `.md` file from disk and renders its content to HTML.
+Reads a `.md` file from disk and renders its content to HTML. Returns `false`
+when the file is missing, is not a `.md` or `.markdown` file, is outside the app
+root, or has a path component starting with `_` or `.`.
 
-- `path`: The path to the Markdown file to render.
+- `path`: The path to the Markdown file to render, relative to the app root.
 
 ```wren
 var content = Markdown.file("about.md")

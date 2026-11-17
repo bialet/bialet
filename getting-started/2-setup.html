@@ -67,7 +67,7 @@
     <link rel="prev" title="1. Introduction" href="1-introduction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -464,7 +464,7 @@
 <p>For other options (Homebrew, Docker, building from source), see
 <a class="reference internal" href="../installation.html"><span class="std std-doc">Installation</span></a>.</p>
 <p>On Windows, download the latest <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> directly:
-<a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.20/bialet-v1.2.20-windows-x86_64.zip">bialet-v1.2.20-windows-x86_64.zip</a>.</p>
+<a class="reference external" href="https://github.com/bialet/bialet/releases/download/v1.2.21/bialet-v1.2.21-windows-x86_64.zip">bialet-v1.2.21-windows-x86_64.zip</a>.</p>
 </section>
 <section id="create-a-project">
 <h2>Create a project<a class="headerlink" href="#create-a-project" title="Link to this heading">#</a></h2>
@@ -482,10 +482,11 @@
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code> starts the server from the current directory, enables live reload
 and the in-browser error display, and opens
-<a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> in your browser. It only needs to be
-run once — the flags are stored in the database and persist across restarts.</p>
-<p>If you don’t need those development conveniences, plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> starts the
-server the same way without touching the flags or opening the browser.</p>
+<a class="reference external" href="http://127.0.0.1:7001">127.0.0.1:7001</a> in your browser. Use it every time
+you develop: those conveniences last for that run only and are never saved, so
+they cannot leak into production with a copied database.</p>
+<p>If you don’t need them, plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> starts the server the same way without
+live reload, error display or opening the browser.</p>
 <p>On Windows, double-clicking <code class="docutils literal notranslate"><span class="pre">bialet.exe</span></code> in the project folder starts it in dev
 mode, just like <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code>.</p>
 <p>For now you’ll see a directory listing — we haven’t created any <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files

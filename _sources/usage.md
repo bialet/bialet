@@ -20,10 +20,10 @@ bialet dev
 ```
 
 Starts the server from the current directory, enables live reload and the
-in-browser error display, and opens the server URL in your browser. The flags
-are stored in the database and persist across restarts, so you only need to
-run `dev` once. Plain `bialet` starts the server without touching those flags
-or opening the browser.
+in-browser error display, and opens the server URL in your browser. Both are
+on for that run only: nothing is written to the database, so a plain `bialet`
+start afterwards (or on a copy of the database) has neither. Plain `bialet`
+does not open the browser.
 
 > On Windows, double-clicking `bialet.exe` in File Explorer counts as a dev
 > launch: the server starts in dev mode with the browser opening automatically.
@@ -60,11 +60,11 @@ bialet --port=8080 /path/to/app
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
 | `-d`, `--db`            | SQLite database file location                                               | `_db.sqlite3`                                |
 | `-w`, `--wal`           | Enable SQLite [Write-Ahead logging mode](https://www.sqlite.org/wal.html)   | Disabled                                     |
-| `-i`, `--ignore`        | Ignored files: comma-separated list of glob expressions                     | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml` |
+| `-i`, `--ignore`        | Ignored files: comma-separated globs; replaces the default list             | `README*,AGENTS*,LICENSE*,*.json,*.yml,*.yaml,*.exe` |
 | `-m`, `--mem-soft`      | Memory soft limit (MB)                                                      | `128`                                        |
 | `-M`, `--mem-hard`      | Memory hard limit (MB)                                                      | `256`                                        |
-| `-c`, `--cpu-soft`      | CPU soft limit (%)                                                          | `15`                                         |
-| `-C`, `--cpu-hard`      | CPU hard limit (%)                                                          | `30`                                         |
+| `-c`, `--cpu-soft`      | CPU time soft limit (seconds)                                               | `3600`                                       |
+| `-C`, `--cpu-hard`      | CPU time hard limit (seconds)                                               | `7200`                                       |
 | `-b`, `--max-post`      | Max request body (KB)                                                       | `128`                                        |
 | `-u`, `--max-upload-size` | Max per-file upload (bytes; `K`/`M`/`G` suffix scales it, e.g. `4MB`)     | `4 MB` (see note below)                      |
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
@@ -80,9 +80,36 @@ usage text instead of being silently ignored.
 > name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
 > root is served, so a database or a log file with a public name there is
 > downloadable by any client. Bialet refuses to start and exits with status 11.
+> The public `.well-known/` directory counts as public here too.
+
+> ⚠️ Pitfall: the `-l` file records request targets, query strings included,
+> so Bialet creates it readable by its owner only (`0600`). An existing file
+> keeps its mode; do not make it group- or world-readable.
+
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
+> line (the method and the first 512 bytes of the target), so rotate it with
+> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
+> open in append mode, so truncating it in place is safe). Under systemd or
+> Docker, logging to stdout and letting journald or the log driver cap the size
+> works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
+
+`-m` and `-M` set the address-space limit (`RLIMIT_AS`) of the HTTP process on
+Linux. A soft limit above the hard one is lowered to it, a hard limit above the
+one the process inherited (systemd `LimitAS=`, `ulimit -v`) is lowered to that,
+and `0` means no limit of its own. macOS and Windows do not enforce them: there
+the values only size the request-body cap below.
+
+`-c` and `-C` are **seconds of CPU time** for the HTTP process, not a
+percentage. The supervisor runs the server as a parent/child pair: reaching the
+soft limit sends `SIGXCPU`, reaching the hard limit sends `SIGKILL`, and in
+either case the parent starts a fresh child, which drops the compiled-bytecode
+cache and every open connection. The defaults (one and two hours) are sized so
+that only a runaway process hits them; lower them only to bound a specific
+workload. `0` means no limit, with the shell's own `ulimit -t` still applying
+as the ceiling.
 
 > The upload cap is also bounded by the request-body limit (`-b`). A file must
 > fit inside a multipart body smaller than `-b` (default 128 KB), so the

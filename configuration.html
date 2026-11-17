@@ -67,7 +67,7 @@
     <link rel="prev" title="Making HTTP Calls" href="http-calls.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.20" />
+  <meta name="docsearch:version" content="1.2.21" />
   </head>
   
   
@@ -523,7 +523,7 @@ generic 500 page (see <a class="reference internal" href="errors.html"><span cla
 <div><p>⚠️ Pitfall: these flags are read once, at startup. Changing them in the
 database while a server is running (e.g. with <code class="docutils literal notranslate"><span class="pre">Config.enable()</span></code> from a
 request handler) has no effect until you restart the server. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code>
-sets both before the server starts, which is why it “just works”.</p>
+turns both on for its own run without touching the database.</p>
 </div></blockquote>
 </section>
 <section id="development-mode-bialet-dev">
@@ -534,14 +534,15 @@ sets both before the server starts, which is why it “just works”.</p>
 </div>
 <p>It starts the server from the current directory and:</p>
 <ul class="simple">
-<li><p>Enables <code class="docutils literal notranslate"><span class="pre">BIALET_LIVE_RELOAD</span></code> and <code class="docutils literal notranslate"><span class="pre">BIALET_SHOW_ERRORS</span></code> in the database. This
-is idempotent — run it once and the flags stay on for later <code class="docutils literal notranslate"><span class="pre">bialet</span></code> runs; if
-they were disabled, <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">dev</span></code> turns them back on.</p></li>
+<li><p>Turns on live reload and error pages for that run only. Nothing is written to
+the database, so a later plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> start on the same (or a copied)
+<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> serves no error traces and no <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> endpoint. To keep
+either on outside dev mode, set the flag yourself (<code class="docutils literal notranslate"><span class="pre">Config.enable(...)</span></code>).</p></li>
 <li><p>Opens <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:7001</span></code> (or your <code class="docutils literal notranslate"><span class="pre">-p</span></code> port) in the default browser,
 like <code class="docutils literal notranslate"><span class="pre">react-scripts</span> <span class="pre">start</span></code>.</p></li>
 </ul>
-<p>Plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> starts the server without touching the flags or opening the
-browser.</p>
+<p>Plain <code class="docutils literal notranslate"><span class="pre">bialet</span></code> starts the server with whatever the flags say in the database,
+and does not open the browser.</p>
 <p><code class="docutils literal notranslate"><span class="pre">enable</span></code> sets the value to <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">disable</span></code> sets it to <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code>. Both are
 equivalent to <code class="docutils literal notranslate"><span class="pre">Config.set(&quot;key&quot;,</span> <span class="pre">&quot;1&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">Config.set(&quot;key&quot;,</span> <span class="pre">&quot;0&quot;)</span></code>.</p>
 </section>
