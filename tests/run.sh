@@ -1028,8 +1028,9 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   _test_start_ms=$(now_ms)
   curl -s -o /dev/null --max-time 10 \
     "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 1200))"
-  logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | wc -c | tr -d ' ')
-  logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tail -c 4)
+  # tr -d '\r': the Windows build writes CRLF line endings.
+  logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | wc -c | tr -d ' ')
+  logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | tail -c 4)
   if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 && "$logcap_tail" == "..." ]]; then
     report_result "Logged request target capped" "$logcap_line" 0
   else
