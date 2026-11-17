@@ -1490,7 +1490,9 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   : > "$secret_empty"
   secret_big="$secret_dir/big"
   head -c 5000 /dev/zero | tr '\0' 'a' > "$secret_big"
-  secret_nul="$secret_dir/nul"
+  # Not "nul": on Windows that name is the NUL device, so the test would read
+  # \\.\NUL instead of the file it just wrote.
+  secret_nul="$secret_dir/nulbyte"
   printf 'ab\0cd\n' > "$secret_nul"
   secret_inside="$secret_root/key.txt"
   printf '%s\n' "00112233445566778899aabbccddeeff" > "$secret_inside"
