@@ -16,7 +16,7 @@ permissions:
 env:
   # mimalloc v2.5.3, by commit. Linked statically into both Linux binaries.
   MIMALLOC_COMMIT: 9593e865ea9e984d7b19fe216b750cb9bdb35d2d
-  # The pushed tag (v1.2.21). Run steps read this from the environment instead
+  # The pushed tag (v1.2.22). Run steps read this from the environment instead
   # of interpolating ${{ github.ref_name }} into the script, where a crafted tag
   # name would be a shell injection.
   REF_NAME: ${{ github.ref_name }}

@@ -961,12 +961,16 @@ var url = Http.url("https://api.example.com/search", {"q": "hello"})
 ## Date
 
 A class for managing date and time operations, supporting multiple constructors
-and methods for formatting, comparing, and manipulating dates relative to UTC.
+and methods for formatting, comparing, and manipulating dates as wall clocks in
+an explicit zone (UTC only when the zone says UTC).
 
 ### now
 
 Static getter that returns a new `Date` instance representing the current date
-and time in UTC. Equivalent to `Date.new()`.
+and time in the application timezone (`BIALET_TIMEZONE`, or the process zone
+when it is unset), the same value as `Date.new()` and with no UTC offset. Use
+`.unix` when you need an unambiguous instant (see
+[Stored timestamps](datetime.md#stored-timestamps)).
 
 ```wren
 var current = Date.now
@@ -975,7 +979,8 @@ System.log("Current time: %(current)")
 
 ### new()
 
-Creates a new `Date` object representing the current date and time in UTC.
+Creates a new `Date` object representing the current date and time in the
+application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
@@ -1042,7 +1047,9 @@ Sets the timezone offset for the current `Date` object.
 
 ### tz
 
-Returns the timezone offset for the current `Date` object.
+Returns the timezone of the current `Date` object. It is the zone passed to the
+constructor or set with `tz=`, otherwise the application default
+(`BIALET_TIMEZONE`, or `""` for the process zone).
 
 ### format(format)
 

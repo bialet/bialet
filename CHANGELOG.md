@@ -4,6 +4,38 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.22 — 2026-11-17
+
+### Fixed
+
+- `BIALET_TIMEZONE` applies to cron jobs and every request, not only to
+  migrations. `Db.init` installed the zone in the migration VM; each request and
+  cron pass runs in a fresh VM, so both silently kept the process zone. The
+  runtime reads the row once at startup and the `Date` primitives fall back to
+  it, and an invalid value is logged once at startup instead of once per VM.
+- The `YYYY-MM-DD HH:MM:SS` prefix of every log line follows
+  `BIALET_TIMEZONE` instead of the process zone, so a server configured for a
+  zone no longer logs in the OS zone. The stamp is computed with the configured
+  zone applied around the conversion, so it stays right even if the process
+  zone changes after startup.
+
+### Changed
+
+- `BIALET_TIMEZONE` is also installed as the process `TZ`, so SQLite's
+  `localtime` modifier (`datetime(createdAt, 'localtime')`) uses the app zone.
+  What SQLite stores does not change: `CURRENT_TIMESTAMP`, `date('now')` and a
+  `DEFAULT CURRENT_TIMESTAMP` column stay UTC, and so does the retention that
+  compares them.
+
+### Documentation
+
+- The configuration, date and database pages document `BIALET_TIMEZONE`: the
+  restart requirement, the POSIX sign of string zones, the log prefix, SQLite's
+  `localtime` modifier, and why stored timestamps stay UTC.
+- The `Date.now` reference entry no longer claims UTC: `Date.now` is
+  `Date.new()`, which returns the application-zone wall clock with no offset
+  (`.unix` is the unambiguous instant), matching the pitfall page.
+
 ## 1.2.21 — 2026-11-17
 
 ### Added

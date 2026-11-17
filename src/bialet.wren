@@ -1050,20 +1050,11 @@ class Db {
     // both the sweep and Session.destroy scan every row.
     `CREATE INDEX IF NOT EXISTS BIALET_SESSION_UPDATED ON BIALET_SESSION (updatedAt)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_REMOTE_MODULES (module TEXT PRIMARY KEY, content TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
-    // Run again the initiliziation once we know the table exists
-    // Missing BIALET_TIMEZONE yields null; Date.tz must stay a string (the
-    // primitives reject a non-string with a catchable error).
-    // A zone the Date primitives now refuse (a path, a POSIX rule string)
-    // would make every Date call in a migration raise. Probe it once and fall
-    // back to the process zone.
-    var zone = Config.get("BIALET_TIMEZONE") || ""
-    var probe = Fiber.new { Date.current_(zone) }
-    probe.try()
-    if (probe.error != null) {
-      System.print("BIALET_TIMEZONE is not a zone name or UTC offset; ignoring it")
-      zone = ""
-    }
-    Date.init(zone)
+    // Run again the initiliziation once we know the table exists.
+    // BIALET_TIMEZONE is read once at startup by the runtime (see
+    // date_set_default_zone), so Date uses it in every VM: migrations, cron and
+    // each request. An app can still call Date.init(zone) to override it for
+    // the current VM.
   }
 
   static clean {
@@ -1075,9 +1066,9 @@ class Db {
   }
 
   static migrate(version, schemaOrCallback) {
-    // Db.init runs Date.init before this point, so a callback may call
-    // Date.new() and do date arithmetic. Migrations never run before the
-    // date subsystem is initialized.
+    // Date is initialized by the runtime at startup (BIALET_TIMEZONE) and
+    // Date.tz always falls back to a string, so a callback may call Date.new()
+    // and do date arithmetic even before anything touches the database.
     Db.init
     if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
       if (schemaOrCallback is Fn) {

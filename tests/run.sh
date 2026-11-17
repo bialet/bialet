@@ -162,6 +162,122 @@ else
   skip_test "-r initializes framework tables" "requires local binary access"
 fi
 
+# Tests - BIALET_TIMEZONE applies to every VM
+# The zone used to be installed by Db.init, which only runs in the migration VM;
+# each request starts a fresh VM and cron another, so both kept the process zone.
+# Now the runtime reads the row once at startup and the Date primitives fall back
+# to it. Pacific/Kiritimati is UTC+14: 1700000000 is 2023-11-15 12:13:20 there.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" -eq 0 ]]; then
+  tz_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tz_root=$(mktemp -d)
+  tz_run=$(mktemp -d)
+  cat > "$tz_root/index.wren" <<'WREN'
+return "TZREQUEST|%(Date.tz)|%(Date.fromUnix(1700000000))"
+WREN
+  cat > "$tz_root/_migration.wren" <<'WREN'
+Db.migrate("timezone probe", `CREATE TABLE IF NOT EXISTS tz_probe (x INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`)
+System.print("TZMIGRATION|%(Date.tz)|%(Date.fromUnix(1700000000))")
+WREN
+  cat > "$tz_root/tzdb.wren" <<'WREN'
+`INSERT INTO tz_probe (x) VALUES (1)`.query()
+var local = `SELECT datetime('now', 'localtime') AS v`.first()["v"]
+var stored = `SELECT createdAt FROM tz_probe ORDER BY rowid DESC`.first()["createdAt"]
+return "TZDB|%(local)|%(stored)"
+WREN
+  cat > "$tz_root/_cron.wren" <<'WREN'
+System.print("TZCRON|%(Date.tz)|%(Date.fromUnix(1700000000))")
+Cron.every(1) { |d| }
+WREN
+  # Seed the row in a first run: the zone is read at startup, so the server that
+  # serves the request has to be a fresh process.
+  "$TARGET_EXEC" -q -d "$tz_run/tz.sqlite3" \
+    -r 'Config.set("BIALET_TIMEZONE", "Pacific/Kiritimati")' "$tz_root" \
+    > /dev/null 2>&1
+  tz_log="$tz_run/server.log"
+  require_free_port "$HOST" "$CRON_PORT" "timezone server"
+  # TZ=UTC on purpose: the log prefix used to print the process zone, so the
+  # two zones have to be provably different (Pacific/Kiritimati is UTC+14).
+  # The hour is read on both sides of the run so a boundary crossing cannot
+  # make the assertion flaky.
+  tz_zone_hour_before=$(TZ=Pacific/Kiritimati date +'%Y-%m-%d %H')
+  tz_utc_hour_before=$(TZ=UTC date +'%Y-%m-%d %H')
+  TZ=UTC "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$tz_run/tz.sqlite3" \
+    "$tz_root" > "$tz_log" 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  tz_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  tz_db_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/tzdb")
+  # The cron thread runs its first pass right after startup; one more second
+  # covers a slow scheduler without waiting for the next minute.
+  sleep 1
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -d $tz_run/tz.sqlite3 $tz_root"
+  tz_zone_hour_after=$(TZ=Pacific/Kiritimati date +'%Y-%m-%d %H')
+  tz_expected="|Pacific/Kiritimati|2023-11-15 12:13:20"
+  if [[ "$tz_request" == "TZREQUEST$tz_expected" ]] \
+     && grep -q "TZMIGRATION$tz_expected" "$tz_log" 2>/dev/null \
+     && grep -q "TZCRON$tz_expected" "$tz_log" 2>/dev/null; then
+    report_result "BIALET_TIMEZONE applies everywhere" "$tz_line" 0
+  else
+    report_result "BIALET_TIMEZONE applies everywhere" "$tz_line" 1 \
+      "Expected '${tz_expected#|}' in request, migration and cron. Got request '$tz_request', log: $(grep -E 'TZMIGRATION|TZCRON' "$tz_log" 2>/dev/null | tr '\n' ' ')"
+  fi
+  # The "YYYY-MM-DD HH:MM:SS " prefix of a log line follows BIALET_TIMEZONE,
+  # not the process zone. The process ran with TZ=UTC, so the first 13 columns
+  # must match the configured zone's date and hour and can never match UTC's.
+  tz_log_line=$LINENO
+  tz_migration_line=$(grep -m1 "TZMIGRATION" "$tz_log" 2>/dev/null)
+  tz_log_prefix="${tz_migration_line:0:13}"
+  tz_utc_prefix=$(TZ=UTC date +'%Y-%m-%d %H')
+  if [[ -n "$tz_log_prefix" ]] \
+     && [[ "$tz_log_prefix" == "$tz_zone_hour_before" \
+        || "$tz_log_prefix" == "$tz_zone_hour_after" ]] \
+     && [[ "$tz_log_prefix" != "$tz_utc_prefix" ]]; then
+    report_result "BIALET_TIMEZONE sets the log prefix" "$tz_log_line" 0
+  else
+    report_result "BIALET_TIMEZONE sets the log prefix" "$tz_log_line" 1 \
+      "Expected a log prefix in Pacific/Kiritimati ($tz_zone_hour_before or $tz_zone_hour_after), not UTC ($tz_utc_prefix). Got '${tz_log_prefix}' from '$tz_migration_line'"
+  fi
+  # SQLite follows the setting through its explicit "localtime" modifier, while
+  # what it stores (CURRENT_TIMESTAMP, the default) stays UTC. TZ=UTC on the
+  # server makes both halves distinguishable: local must be the zone's date and
+  # hour, stored must be UTC's.
+  tz_db_line=$LINENO
+  tz_db_local=$(printf '%s' "${tz_db_request#TZDB|}")
+  tz_db_stored="${tz_db_local##*|}"
+  tz_db_local="${tz_db_local%|*}"
+  tz_db_local_prefix="${tz_db_local:0:13}"
+  tz_db_stored_prefix="${tz_db_stored:0:13}"
+  tz_db_ok=0
+  if [[ "$tz_db_request" == "TZDB|"* ]]; then
+    tz_db_ok=1
+    # Each value must land on one of the two hours read around the run, so an
+    # hour boundary crossed mid-test cannot make this flaky.
+    [[ "$tz_db_local_prefix" == "$tz_zone_hour_before" \
+       || "$tz_db_local_prefix" == "$tz_zone_hour_after" ]] || tz_db_ok=0
+    [[ "$tz_db_stored_prefix" == "$tz_utc_hour_before" \
+       || "$tz_db_stored_prefix" == "$tz_utc_prefix" ]] || tz_db_ok=0
+    # ...and neither may be the other zone's hour.
+    [[ "$tz_db_local_prefix" != "$tz_utc_hour_before" \
+       && "$tz_db_local_prefix" != "$tz_utc_prefix" ]] || tz_db_ok=0
+    [[ "$tz_db_stored_prefix" != "$tz_zone_hour_before" \
+       && "$tz_db_stored_prefix" != "$tz_zone_hour_after" ]] || tz_db_ok=0
+  fi
+  if [[ "$tz_db_ok" -eq 1 ]]; then
+    report_result "localtime follows the zone, storage stays UTC" "$tz_db_line" 0
+  else
+    report_result "localtime follows the zone, storage stays UTC" "$tz_db_line" 1 \
+      "Expected localtime in Pacific/Kiritimati ($tz_zone_hour_before/$tz_zone_hour_after) and stored UTC ($tz_utc_hour_before/$tz_utc_prefix). Got '$tz_db_request'"
+  fi
+  rm -rf "$tz_root" "$tz_run"
+else
+  if [[ "$IS_WINE" -eq 1 ]]; then
+    skip_test "BIALET_TIMEZONE applies everywhere" "Windows/Wine has no IANA timezone database"
+  else
+    skip_test "BIALET_TIMEZONE applies everywhere" "requires a local binary and an IANA timezone database"
+  fi
+fi
+
 # Tests - Module imports
 # Regression: a relative import ("./x") inside a file that is itself only
 # ever reached transitively (entry.wren -> ./sub/lib -> ./helper) must

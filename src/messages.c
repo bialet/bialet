@@ -1,4 +1,5 @@
 #include "bialet.h"
+#include "wren_core.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,15 +140,11 @@ static const char* message_stamp(void) {
   if(msg_stamp.valid && msg_stamp.second == now)
     return msg_stamp.text;
 
-  struct tm  tmbuf;
-  struct tm* tm;
-#ifdef _WIN32
-  tm = localtime_s(&tmbuf, &now) == 0 ? &tmbuf : NULL;
-#else
-  tz_lock();
-  tm = localtime_r(&now, &tmbuf);
-  tz_unlock();
-#endif
+  struct tm tmbuf;
+  // date_default_localtime() applies BIALET_TIMEZONE for the conversion and
+  // restores the process zone before returning; it also holds tz_lock, which
+  // replaces the lock messages.c used to take around localtime_r itself.
+  struct tm* tm = date_default_localtime(&now, &tmbuf);
   if(tm == NULL) {
     msg_stamp.text[0] = '\0';
     msg_stamp.valid = 0;

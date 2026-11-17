@@ -19,6 +19,7 @@
 #include "show_errors.h"
 #include "utils.h"
 #include "wren.h"
+#include "wren_core.h"
 #include "wren_vm.h"
 #include <ctype.h>
 #include <limits.h>
@@ -2295,6 +2296,24 @@ static void refuse_public_db_path(const char* real_db, const char* shown) {
   }
 }
 
+// Installs the BIALET_TIMEZONE row as the default Date zone. Read once, before
+// the fork loop, so every VM (migrations, cron and one per request) uses it
+// without a database read. On a brand-new database the table does not exist
+// yet; that leaves the process zone in place and the next start picks up a row
+// a migration created.
+static void load_default_date_zone(void) {
+  if(db == NULL)
+    return;
+  sqlite3_stmt* stmt = NULL;
+  const char*   sql = "SELECT val FROM BIALET_CONFIG WHERE key = ?";
+  if(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    return;
+  sqlite3_bind_text(stmt, 1, "BIALET_TIMEZONE", -1, SQLITE_STATIC);
+  if(sqlite3_step(stmt) == SQLITE_ROW)
+    date_set_default_zone((const char*)sqlite3_column_text(stmt, 0));
+  sqlite3_finalize(stmt);
+}
+
 void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
   char db_path[PATH_MAX];
@@ -2423,6 +2442,7 @@ void bialet_init(struct BialetConfig* config) {
 #endif
   }
   apply_sqlite_pragmas();
+  load_default_date_zone();
   purge_temp_uploads();
 
   wrenInitConfiguration(&wren_config);
