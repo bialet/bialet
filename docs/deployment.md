@@ -66,11 +66,13 @@ upstream bialet {
     server 127.0.0.1:7003;
 }
 
-location @bialet {
+# inside the server block from "Reverse Proxy Setups" below
+location / {
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
     proxy_pass http://bialet;
 }
 ```
@@ -140,9 +142,14 @@ performance, configure your reverse proxy to:
 - **Cache** static assets (add `Cache-Control` headers)
 - **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
 
-It's also safe to serve static files from the proxy directly instead of
-proxying to Bialet — just add a `location` block pointing to your app
-directory.
+> ⚠️ Pitfall: do not let the proxy serve files from the app directory. The
+> app directory holds your `.wren` route files, `_db.sqlite3` and other private
+> files; Bialet runs the first and refuses the rest, but a proxy `root` +
+> `try_files` (or an Apache `DocumentRoot` + `-f` rewrite) pointed at it answers
+> `GET /index.wren` with your source code and `GET /_db.sqlite3` with your
+> database. Proxy every request to Bialet, as the configurations below do. If you
+> want the proxy to serve assets itself, give it a separate directory that holds
+> nothing but those assets.
 
 ## Reverse Proxy Setups
 
@@ -154,25 +161,16 @@ server {
     listen [::]:80;
     server_name example.com;
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Bialet decides the cookie Secure flag from these two headers.
+        # Set the first, drop whatever the client sent in the second.
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Forwarded "";
         proxy_pass http://127.0.0.1:7001;
     }
 }
@@ -232,17 +230,10 @@ Virtual host configuration:
         ExpiresByType font/woff2 "access plus 30 days"
     </IfModule>
 
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
-    RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
-
+    # Every request goes to Bialet, static files included: it runs .wren files
+    # and refuses private ones. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -297,6 +288,10 @@ Key directives, regardless of which proxy you run:
 - **Deny private files at the proxy too.** Bialet already returns 403 for
   `_`/`.`-prefixed files, but blocking them at the proxy adds a second layer
   in case an application or symlink ever serves one (see [Security](security.md)).
+  Keep `/.well-known/` open: ACME challenges and other RFC 8615 files live
+  there, and Bialet serves that one dot-prefixed directory on purpose.
+- **Never serve the app directory from the proxy.** It holds `.wren` source,
+  the database and private files (see the pitfall under Static Files).
 
 ### nginx
 
@@ -310,40 +305,35 @@ server {
     client_max_body_size 1m;
     client_body_timeout 10s;
 
+    proxy_request_buffering on;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Forwarded "";
+
+    # RFC 8615 files (ACME challenges, security.txt) stay reachable. `^~`
+    # makes this prefix win over the regex below.
+    location ^~ /.well-known/ {
+        proxy_pass http://127.0.0.1:7001;
+    }
+
     # Deny private files at the proxy (defense in depth).
     location ~ (^|/)[_.] {
         return 403;
     }
 
-    # Serve static files directly from disk (optional, faster)
-    root /www/example.com;
+    # Everything else goes to Bialet. No `root` pointing at the app directory.
     location / {
-        # Try static file first, fall back to Bialet
-        try_files $uri @bialet;
-    }
-
-    # Gzip static assets
-    location ~* \.(css|js|svg|woff2|png|jpg|jpeg|gif|ico|html)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-
-    location @bialet {
-        proxy_request_buffering on;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass http://127.0.0.1:7001;
     }
 }
 ```
 
 Note: the `location ~ (^|/)[_.]` block matches any path segment that starts
-with `_` or `.`, which covers `_db.sqlite3` and dotfiles such as `.env`. If
-your app legitimately serves files with such names, drop this block — but
-prefer renaming those files.
+with `_` or `.`, which covers `_db.sqlite3`, `_app/` and dotfiles such as
+`.env`. If your app legitimately serves files with such names, drop this
+block — but prefer renaming those files.
 
 ### Apache
 
@@ -373,20 +363,15 @@ prefer renaming those files.
         ExpiresByType font/woff2 "access plus 30 days"
     </IfModule>
 
-    # Deny private files at the proxy (defense in depth).
-    RewriteRule ^(.*)(^|/)[_.][^/]*$ - [F,L]
-
-    # Serve static files directly
-    DocumentRoot /www/example.com
-
+    # Deny private files at the proxy (defense in depth): any path segment
+    # starting with "_" or ".", except the RFC 8615 /.well-known/ directory.
     RewriteEngine On
-    # If the file exists, serve it
-    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
-    RewriteRule ^ - [L]
-    # Otherwise proxy to Bialet
-    RewriteRule ^/(.*)$ http://127.0.0.1:7001/$1 [P,L]
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule (^|/)[_.] - [F,L]
 
+    # Every request goes to Bialet. No DocumentRoot pointing at the app directory.
     ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:7001/
     ProxyPassReverse / http://127.0.0.1:7001/
 </VirtualHost>
 ```
@@ -412,6 +397,7 @@ example.com {
 
     @private {
         path_regexp private (^|/)[_.]
+        not path /.well-known/*
     }
     respond @private 403
 
