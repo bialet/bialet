@@ -48,10 +48,13 @@ LDFLAGS := -lm -lpthread -lsqlite3 -lcurl $(EXTRA_LDFLAGS)
 
 # Optional allocator: `make MIMALLOC=1` links mimalloc, which lowers the cost of
 # the allocation-heavy per-request path (strings, query rows, rendered pages).
-# It is opt-in on purpose: the default build depends on nothing beyond libc, and
-# no allocator is vendored. Detection prefers pkg-config and falls back to the
+# It is opt-in on purpose: a plain `make` depends on nothing beyond libc, and no
+# allocator is vendored. Detection prefers pkg-config and falls back to the
 # plain soname, since the Debian package ships the library without a .pc file.
-# `make static` keeps its own curated link line and is not affected.
+# The Linux `static` target takes $(MIMALLOC_LIBS) into its own link line, so
+# `make static MIMALLOC=1` links the static archive; that is what the release
+# workflow builds, and `debian/rules` passes MIMALLOC=1 to the dynamic link.
+# The MinGW branch is left alone: Windows releases stay on the CRT allocator.
 MIMALLOC_CFLAGS :=
 MIMALLOC_LIBS :=
 ifneq (,$(filter 1 yes on,$(MIMALLOC)))
@@ -60,6 +63,12 @@ MIMALLOC_LIBS := $(shell pkg-config --libs libmimalloc 2>/dev/null)
 ifeq ($(strip $(MIMALLOC_LIBS)),)
 MIMALLOC_LIBS := -lmimalloc
 endif
+# Keep the library even on a toolchain that defaults to -Wl,--as-needed.
+# Ubuntu does, and with -flto the linker decided -lmimalloc was unneeded and
+# dropped it, so a `MIMALLOC=1` distro build (debian/rules sets it) linked no
+# allocator at all and looked fine. --as-needed is restored afterwards so the
+# flags that follow keep their default behavior.
+MIMALLOC_LIBS := -Wl,--no-as-needed $(MIMALLOC_LIBS) -Wl,--as-needed
 CFLAGS += $(MIMALLOC_CFLAGS)
 LDFLAGS += $(MIMALLOC_LIBS)
 endif
@@ -277,7 +286,7 @@ CURL_BFLAGS := -Wl,-Bstatic -Wl,-Bdynamic
 CURL_DEPS := $(filter-out -lcurl -llber -lldap $(CURL_BFLAGS),$(CURL_STATIC_LIBS))
 static: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) \
-		-Wl,-Bstatic -lsqlite3 -lcurl -Wl,-Bdynamic $(CURL_DEPS) \
+		-Wl,-Bstatic -lsqlite3 -lcurl $(MIMALLOC_LIBS) -Wl,-Bdynamic $(CURL_DEPS) \
 		-Wl,-Bstatic -llber -lldap -llber -Wl,-Bdynamic -lgnutls -lsasl2 \
 		$(SSL_LIBS) -lm -lpthread -ldl
 else

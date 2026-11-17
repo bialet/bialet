@@ -70,13 +70,43 @@ jobs:
           sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
-            libgnutls28-dev libsasl2-dev sqlite3
+            libgnutls28-dev libsasl2-dev sqlite3 cmake git
 
       - name: Verify embedded Wren sources
         run: make check-wren-inc
 
+      # Ubuntu's libmimalloc-dev ships only libmimalloc.so (no .a and no .pc on
+      # noble), so the release binary would end up dynamically linked to a
+      # library that is not on a stock system. Build the pinned release from
+      # source instead and link the static archive. MI_INSTALL_TOPLEVEL puts
+      # the archive in /usr/local/lib instead of lib/mimalloc-<version>/,
+      # which is the path the make invocation below searches.
+      #
+      # Pinned to the 2.x line on purpose: mimalloc 3.x reserves its arena
+      # eagerly (about 1 GiB of address space), and an HTTP child is confined
+      # by bialet's default RLIMIT_AS of 128 MB, so a 3.x build cannot grow its
+      # stack or heap in a request and dies in the Wren compiler. 2.x sizes the
+      # reservation small enough to fit. Also matches the 2.x that jammy and
+      # noble ship for the Debian package.
+      - name: Build mimalloc (static)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v2.5.3 \
+            https://github.com/microsoft/mimalloc.git /tmp/mimalloc
+          cmake -S /tmp/mimalloc -B /tmp/mimalloc/out \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DMI_BUILD_SHARED=OFF \
+            -DMI_BUILD_STATIC=ON \
+            -DMI_BUILD_TESTS=OFF \
+            -DMI_BUILD_TOOLS=OFF \
+            -DMI_BUILD_OBJECT=OFF \
+            -DMI_INSTALL_TOPLEVEL=ON \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/mimalloc/out --parallel
+          sudo cmake --install /tmp/mimalloc/out
+
       - name: Build (static)
-        run: make clean && make static
+        run: make clean && make static MIMALLOC=1 MIMALLOC_LIBS="-L/usr/local/lib -lmimalloc"
 
       - name: Run test suite
         run: ./tests/run.sh ./build/bialet
@@ -134,15 +164,34 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git \
+          sudo apt-get install -y build-essential libsqlite3-dev libcurl4-openssl-dev libssl-dev git cmake \
             libnghttp2-dev libidn2-dev librtmp-dev libssh-dev libpsl-dev \
             libkrb5-dev libldap2-dev libbrotli-dev libzstd-dev zlib1g-dev \
             libgnutls28-dev libsasl2-dev
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      # Same as the x86_64 job: the distro package has no static archive, so
+      # build the pinned mimalloc 2.x release (3.x reserves too much address
+      # space for bialet's default RLIMIT_AS) and link it statically.
+      - name: Build mimalloc (static)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v2.5.3 \
+            https://github.com/microsoft/mimalloc.git /tmp/mimalloc
+          cmake -S /tmp/mimalloc -B /tmp/mimalloc/out \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DMI_BUILD_SHARED=OFF \
+            -DMI_BUILD_STATIC=ON \
+            -DMI_BUILD_TESTS=OFF \
+            -DMI_BUILD_TOOLS=OFF \
+            -DMI_BUILD_OBJECT=OFF \
+            -DMI_INSTALL_TOPLEVEL=ON \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/mimalloc/out --parallel
+          sudo cmake --install /tmp/mimalloc/out
       - name: Build (static)
-        run: make clean && make static
+        run: make clean && make static MIMALLOC=1 MIMALLOC_LIBS="-L/usr/local/lib -lmimalloc"
       - name: Package
         run: |
           mkdir -p dist

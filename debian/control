@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Rodrigo Arce <rsarce@gmail.com>
 Build-Depends: debhelper-compat (= 13),
                libcurl4-openssl-dev,
+               libmimalloc-dev,
                libsqlite3-dev,
                libssl-dev
 Standards-Version: 4.6.2
@@ -22,5 +23,5 @@ Description: full-stack web framework with embedded Wren and SQLite
  is no separate runtime, package manifest, or build step.
  .
  This package links dynamically against the distribution's SQLite,
- libcurl, and OpenSSL. The self-contained static binary is published in
- the GitHub release archives instead.
+ libcurl, OpenSSL, and mimalloc. The self-contained static binary is
+ published in the GitHub release archives instead.

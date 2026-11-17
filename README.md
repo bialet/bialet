@@ -226,13 +226,19 @@ one of the few dependencies that pays for its weight:
 | `MIMALLOC=1` | 164.1 | 21.7 ms | 106.2 ms |
 
 Numbers are from the project's 2-core reference box, with the load client on
-the same host; treat them as a ratio, not a promise. It needs the mimalloc
-library (`libmimalloc-dev` on Debian/Ubuntu, `mimalloc-devel` on Fedora) and
-is opt-in: the default build pulls in no extra dependency and no allocator is
+the same host; treat them as a ratio, not a promise. The official Linux
+release binaries and the Debian/Ubuntu package already enable it; macOS and
+Windows releases do not. For a source build it needs the mimalloc library
+(`libmimalloc-dev` on Debian/Ubuntu, `mimalloc-devel` on Fedora) and is
+opt-in: a plain `make` pulls in no extra dependency and no allocator is
 vendored. `pkg-config libmimalloc` is used when it exists, with `-lmimalloc`
 as the fallback. `make MIMALLOC=1` relinks an existing build; leave the
-variable out to go back to the default allocator. `make static` keeps its own
-link line and is not affected.
+variable out to go back to the default allocator. `make static MIMALLOC=1`
+links the static archive, which is how the release builds do it.
+
+mimalloc 3.x reserves roughly a gigabyte of address space up front, which does
+not fit the default 128 MB `-m` budget an HTTP child is confined to, so use the
+2.x line (the releases link 2.5.3).
 
 ## Development
 
