@@ -21,6 +21,14 @@ Test.assert(zoned.hours == 15, "Date.tz setter keeps the wall clock")
 Test.assert(zoned.toString == "2024-09-13 15:45:30", "numeric tz keeps toString")
 Test.assert(zoned.format("#F") == "2024-09-13", "numeric tz reaches format")
 
+// A numeric tz is the UTC offset the docs describe (-3 is UTC-3). It used to be
+// handed to TZ unchanged, where "-3" means UTC+3, so every numeric offset was
+// applied with the wrong sign.
+Test.assert(Date.new(2024, 1, 1, 12, 0, 0, -3).unix == 1704121200, "tz -3 is UTC-3")
+Test.assert(Date.new(2024, 1, 1, 12, 0, 0, 3).unix == 1704099600, "tz 3 is UTC+3")
+Test.assert(Date.new(2024, 1, 1, 12, 0, 0, 5.5).unix == 1704090600, "tz 5.5 is UTC+5:30")
+Test.assert(Date.new(2024, 1, 1, 12, 0, 0, 0).unix == 1704110400, "tz 0 is UTC")
+
 // A zone belongs to one Date value. It used to stay in the process environment,
 // so one request's Date.new(x, Request.post("tz")) moved the clock for every
 // later request and an empty zone could not undo it.

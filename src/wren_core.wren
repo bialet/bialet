@@ -672,12 +672,12 @@ class Date {
     _minutes = toNum_(minutes)
     _seconds = toNum_(seconds)
   }
-  static new() { Date.fromString(Date.current_(Date.tz), Date.tz) }
+  static new() { Date.fromString(Date.current_(Date.zoneName_(Date.tz)), Date.tz) }
   static new(date) { Date.new(date, Date.tz) }
   static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
   // `Date.new(1792292400)` is a year, not a timestamp. Use fromUnix for epoch
   // seconds, formatted in Date.tz.
-  static fromUnix(seconds) { Date.fromString(Date.fromUnix_(seconds, Date.tz), Date.tz) }
+  static fromUnix(seconds) { Date.fromString(Date.fromUnix_(seconds, Date.zoneName_(Date.tz)), Date.tz) }
   static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
   static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
   static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }
@@ -695,11 +695,24 @@ class Date {
   // Changing the zone reinterprets the same wall-clock fields in a different
   // zone. The fields themselves are left alone.
   tz=(tz) { _tz = tz }
-  // The native primitives take the zone as a string (a TZ name), but the docs
-  // show numeric offsets such as `date.tz = -5` and Date.new(...,-3). Passing
-  // the number straight through raised "Timezone must be a string." from
-  // mktime/strftime, so numeric values are stringified here.
-  tzName_ { _tz == null ? "" : (_tz is Num ? "%(_tz)" : _tz) }
+  // The native primitives take the zone as a TZ string, but the docs show
+  // numeric UTC offsets such as `date.tz = -5` (UTC-5) and Date.new(...,-3).
+  // POSIX TZ offsets count hours *west* of UTC, so "-3" meant UTC+3: every
+  // numeric offset was applied with the wrong sign. A number becomes
+  // "UTC<sign>h[:mm]" with the sign flipped.
+  tzName_ { Date.zoneName_(_tz) }
+  static zoneName_(tz) {
+    if (tz == null) return ""
+    if (!(tz is Num)) return tz
+    if (tz.isNan || tz.abs >= 24) Fiber.abort("Timezone offset must be between -24 and 24 hours.")
+    var minutes = (tz * 60).round
+    var sign = minutes > 0 ? "-" : "+"
+    minutes = minutes.abs
+    var hours = (minutes / 60).floor
+    minutes = minutes % 60
+    if (minutes == 0) return "UTC%(sign)%(hours)"
+    return "UTC%(sign)%(hours):%(minutes < 10 ? "0" : "")%(minutes)"
+  }
 
   yyyy { _year.toString }
   yy { _year.toString.substring(2, 4) }
