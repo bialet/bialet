@@ -910,7 +910,9 @@ int main(int argc, char* argv[]) {
           message(red("Error"),
                   "The HTTP process failed before it could serve; check the "
                   "-m/-M/-c/-C limits, the database and the log above");
-          sleep(pause);
+          sleep(pause); // a SIGTERM/SIGINT cuts the pause short
+          if(!keep_running)
+            break;
         }
         message(red("Error"), "Restarting");
       }
