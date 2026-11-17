@@ -327,6 +327,14 @@ static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_
 // Applies receive/send timeouts so a half-open or stalling connection is
 // dropped after BIALET_SOCKET_TIMEOUT_MS instead of blocking the
 // single-threaded accept/handle loop forever.
+//
+// Linux lists SO_RCVTIMEO and SO_SNDTIMEO among the socket options that
+// accept() inherits (socket(7)), so there the listener carries them once and
+// each connection gets them without a syscall. macOS does *not* inherit them
+// -- getsockopt() on an accepted socket returns zero -- and Windows has its own
+// inheritance rules, so both keep the per-connection call.
+#define SOCKET_TIMEOUT_INHERITED (IS_LINUX != 0)
+
 static void set_socket_timeout(bialet_socket_t fd) {
 #ifdef _WIN32
   DWORD timeout_ms = BIALET_SOCKET_TIMEOUT_MS;
@@ -434,6 +442,13 @@ int start_server(struct BialetConfig* config) {
     socket_close(server_fd);
     exit(EXIT_FAILURE);
   }
+
+#if SOCKET_TIMEOUT_INHERITED
+  // Inherited by every accepted connection on this platform; see
+  // set_socket_timeout(). Set before bind/listen so no client can be accepted
+  // with an unlimited timeout.
+  set_socket_timeout(server_fd);
+#endif
 
   struct sockaddr_in server_addr = {
       .sin_family = AF_INET,
@@ -1513,7 +1528,11 @@ int server_poll(int delay) {
     perror("Failed to accept connection");
     return -1;
   }
+#if !SOCKET_TIMEOUT_INHERITED
+  // This platform does not pass the listener's receive/send timeouts on to the
+  // accepted socket.
   set_socket_timeout(client_socket);
+#endif
   handle_client(client_socket);
 
   return 0;
