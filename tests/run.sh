@@ -2108,6 +2108,29 @@ else
     "Expected 400 for duplicate Content-Length, Transfer-Encoding and a malformed Content-Length. Got '$framing_dup', '$framing_te' and '$framing_bad'"
 fi
 
+# A HEAD response has the GET head and no content; 204 and 304 have neither
+# content nor a Content-Length. All three used to carry the body.
+nobody_line=$LINENO
+_test_start_ms=$(now_ms)
+nobody_raw() {
+  (
+    exec 3<>"/dev/tcp/$HOST/$PORT" || exit 1
+    printf '%s %s HTTP/1.1\r\nHost: x\r\n\r\n' "$1" "$2" >&3
+    cat <&3 | tr -d '\r'
+  )
+}
+nobody_head=$(nobody_raw HEAD "/get?foo=bar")
+nobody_204=$(nobody_raw GET "/status-body?s=204")
+nobody_304=$(nobody_raw GET "/status-body?s=304")
+if [[ "$nobody_head" == *"Content-Length: 3" && "$nobody_head" != *bar* \
+      && "$nobody_204" == "HTTP/1.1 204 No Content"* && "$nobody_204" != *status-body* \
+      && "$nobody_204" != *Content-Length* && "$nobody_304" != *status-body* ]]; then
+  report_result "HEAD, 204 and 304 no body    " "$nobody_line" 0
+else
+  report_result "HEAD, 204 and 304 no body    " "$nobody_line" 1 \
+    "Got HEAD='${nobody_head//$'\n'/ }' 204='${nobody_204//$'\n'/ }' 304='${nobody_304//$'\n'/ }'"
+fi
+
 # The C router reads the request line with strtok_r(" ") and Request.init
 # splits it on every single space, so extra or leading spaces used to reach the
 # routed handler with an empty Request.uri or Request.method. Any request line

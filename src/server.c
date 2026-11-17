@@ -795,6 +795,11 @@ struct HttpMessage* parse_request(char* request, size_t length) {
   return hm;
 }
 
+// Set by handle_client for the request being answered. A HEAD response
+// carries the GET head (Content-Length included) but no content (RFC 9110
+// 9.3.2); before, it sent the whole body.
+static int answering_head = 0;
+
 void write_response(int client_socket, struct BialetResponse* response) {
   if(!response->status) {
     custom_error(404, response);
@@ -811,6 +816,17 @@ void write_response(int client_socket, struct BialetResponse* response) {
   const char* desc = get_http_status_description(response->status);
   const char* hdr = response->header ? response->header : "";
 
+  // 1xx, 204 and 304 have no content and 1xx/204 may not carry a
+  // Content-Length (RFC 9110 8.6, 15.4.5): a handler that set one of them and
+  // still returned text used to send both, so the head contradicted itself.
+  int no_content =
+      response->status < 200 || response->status == 204 || response->status == 304;
+  char length_line[48] = "";
+  if(!no_content)
+    snprintf(length_line, sizeof(length_line), "Content-Length: %zu\r\n", body_len);
+  if(no_content || answering_head)
+    body_len = 0;
+
   // %zu rather than %lu: unsigned long is 32-bit under Windows LLP64.
   //
   // A response head is a few hundred bytes in the overwhelming majority of
@@ -826,8 +842,8 @@ void write_response(int client_socket, struct BialetResponse* response) {
                            "HTTP/1.1 %d %s\r\n"
                            "%s"
                            "Connection: close\r\n"
-                           "Content-Length: %zu\r\n\r\n",
-                           response->status, desc, hdr, body_len);
+                           "%s\r\n",
+                           response->status, desc, hdr, length_line);
   if(head_len < 0) {
     perror("Failed to format HTTP response");
     socket_close(client_socket); // was leaked on this path
@@ -854,8 +870,8 @@ void write_response(int client_socket, struct BialetResponse* response) {
            "HTTP/1.1 %d %s\r\n"
            "%s"
            "Connection: close\r\n"
-           "Content-Length: %zu\r\n\r\n",
-           response->status, desc, hdr, body_len);
+           "%s\r\n",
+           response->status, desc, hdr, length_line);
 
   if(response->body && body_len > 0)
     (void)send_head_and_body(client_socket, message, (size_t)head_len,
@@ -1156,6 +1172,7 @@ static int uri_is_well_known(const char* uri) {
 }
 
 void handle_client(bialet_socket_t client_socket) {
+  answering_head = 0;
   char   buffer[BUFFER_SIZE];
   size_t total_read = 0;
   size_t hdr_len = 0;
@@ -1350,6 +1367,9 @@ void handle_client(bialet_socket_t client_socket) {
     socket_close(client_socket);
     return;
   }
+  // Case-insensitive, like Request.method (which upper-cases the token).
+  answering_head = hm->method.str != NULL && strlen(hm->method.str) == 4 &&
+                   ci_ncmp(hm->method.str, "HEAD", 4) == 0;
   if(!livereload_is_poll(hm->uri.str)) {
     char* log_method = log_escape_uri(hm->method.str);
     char* log_uri = log_escape_uri(hm->uri.str);
