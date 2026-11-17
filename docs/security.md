@@ -429,13 +429,14 @@ secrets under `.well-known` — it is world-readable by definition.
 
 ### Database File Permissions
 
-Bialet creates `_db.sqlite3` with SQLite's default mode, `0666 & ~umask`.
-Under the common `umask 022` that yields a world-readable `0644` file, so
-any local user on a shared host can read the whole database — uploaded
-files, password hashes, and cached remote modules included. The server does
-not tighten the mode after opening the file.
+On Linux and macOS Bialet creates a new `_db.sqlite3` with mode `0600`, so
+only the user running the server can read it; SQLite gives the `-wal` and
+`-shm` files the same mode. A database that already exists keeps its mode: one
+created by an older version under the common `umask 022` is a world-readable
+`0644` file, and any local user on a shared host can read the whole database —
+uploaded files, password hashes, and cached remote modules included.
 
-Run Bialet with a restrictive umask so the file is created `0600`:
+A restrictive umask also covers every other file the server creates:
 
 ```bash
 umask 0077

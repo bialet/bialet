@@ -2385,6 +2385,18 @@ void bialet_init(struct BialetConfig* config) {
 
   strncpy(resolved_db_path, db_path, sizeof(resolved_db_path) - 1);
   resolved_db_path[sizeof(resolved_db_path) - 1] = '\0';
+#ifndef _WIN32
+  // The database holds sessions, password hashes and uploads. SQLite would
+  // create it 0666 & ~umask (0644 usually), readable by every local user; a new
+  // one is created 0600 here, like the -l log. SQLite gives its -wal/-shm
+  // files the same mode. O_NOFOLLOW: a dangling symlink is not followed into
+  // a create (the location guards above and below still apply).
+  {
+    int fd = open(db_path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+    if(fd >= 0)
+      close(fd);
+  }
+#endif
   if(sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                      NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
