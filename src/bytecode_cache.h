@@ -51,10 +51,14 @@
 void bytecode_cache_set_user_files(bool enabled);
 bool bytecode_cache_user_files_enabled(void);
 
-// Returns a malloc'd canonical key (realpath) for a module source file, or
-// NULL when the file cannot be resolved. Caller frees. Only meaningful while
-// user-file caching is enabled.
-char* bytecode_cache_path_key(const char* path);
+// Returns a malloc'd key for a module source file, or NULL when the path
+// cannot be resolved. Caller frees. Only meaningful while user-file caching is
+// enabled.
+//
+// Pass [already_canonical] when the path is known to be canonical (the caller
+// has verified it is built from the realpath()'d app root): the key then skips
+// realpath_n(). Otherwise the path is canonicalized first.
+char* bytecode_cache_path_key(const char* path, bool already_canonical);
 
 // Fills [out] with the identity of one version of a file. Returns false when
 // the platform cannot be trusted for a stat fast hit (see struct
