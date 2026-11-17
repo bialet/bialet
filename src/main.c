@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifdef _WIN32
@@ -389,6 +390,33 @@ static void compute_cpu_limit(struct rlimit* cpu_limit) {
   cpu_limit->rlim_cur = soft;
   cpu_limit->rlim_max = hard;
 }
+
+/*
+ * Translate -m/-M (MB) into RLIMIT_AS with the same rules as the CPU pair.
+ * The values used to go into setrlimit() unchecked, so -m above -M (EINVAL),
+ * -M above an inherited hard limit (EPERM, e.g. systemd LimitAS= or
+ * `ulimit -v`) made every child exit before serving and the supervisor
+ * restart it forever. 0 means "no limit" (the inherited one still applies).
+ */
+static void compute_mem_limit(struct rlimit* mem_limit) {
+  struct rlimit inherited;
+  if(getrlimit(RLIMIT_AS, &inherited) == -1) {
+    perror("getrlimit");
+    exit(1);
+  }
+  rlim_t hard = bialet_config.mem_hard_limit == 0
+                    ? inherited.rlim_max
+                    : (rlim_t)bialet_config.mem_hard_limit * MEGABYTE;
+  if(hard > inherited.rlim_max)
+    hard = inherited.rlim_max;
+  rlim_t soft = bialet_config.mem_soft_limit == 0
+                    ? hard
+                    : (rlim_t)bialet_config.mem_soft_limit * MEGABYTE;
+  if(soft > hard)
+    soft = hard;
+  mem_limit->rlim_cur = soft;
+  mem_limit->rlim_max = hard;
+}
 #endif
 
 int main(int argc, char* argv[]) {
@@ -539,7 +567,7 @@ int main(int argc, char* argv[]) {
   // this ceiling a body allowed by -b could push the child past the enforced
   // RLIMIT_AS budget. At the default 128MB soft limit the ceiling is 256KB, so
   // the default -b 128 is fully effective.
-  {
+  if(bialet_config.mem_soft_limit > 0) { // -m 0: no memory limit to protect
     size_t mem_safe_post =
         ((size_t)bialet_config.mem_soft_limit * 1024 * 1024) / 512;
     if(bialet_config.max_post_size > mem_safe_post) {
@@ -743,13 +771,15 @@ int main(int argc, char* argv[]) {
   dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
              NULL);
 
-  // Computed in rlim_t. `mem_soft_limit * MEGABYTE` was int * int, so -m 2048
-  // overflowed a 32-bit int -- undefined behavior, and whatever limit survived
-  // bore no relation to what was asked for.
-  mem_limit.rlim_cur = (rlim_t)bialet_config.mem_soft_limit * MEGABYTE;
-  mem_limit.rlim_max = (rlim_t)bialet_config.mem_hard_limit * MEGABYTE;
+  compute_mem_limit(&mem_limit);
   compute_cpu_limit(&cpu_limit);
+  // A child that dies right after it starts (a limit the kernel refuses, a
+  // database it cannot open) dies the same way every time. Restarting it at
+  // full speed only burns CPU and fills the log, so a fast failure waits a
+  // second, and too many in a row stop the server with an error.
+  int fast_failures = 0;
   for(;;) {
+    time_t child_started = time(NULL);
     pid = fork();
     if(pid == 0) {
       // The sqlite connection was opened in the parent before fork() and is
@@ -811,6 +841,18 @@ int main(int argc, char* argv[]) {
       } else if(!keep_running) {
         break; // child stopped because we are shutting down
       } else {
+        if(time(NULL) - child_started < 2) {
+          if(++fast_failures >= 10) {
+            message(red("Error"),
+                    "The HTTP process keeps failing right after it starts; "
+                    "stopping. Check the -m/-M limits and the log above.");
+            dmon_deinit();
+            exit(1);
+          }
+          sleep(1);
+        } else {
+          fast_failures = 0;
+        }
         message(red("Error"), "Restarting");
       }
     } else {

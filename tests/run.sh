@@ -1302,6 +1302,33 @@ else
   skip_test "Log path inside app root      " "requires local binary access"
 fi
 
+# -m above -M (or above an inherited address-space limit) used to make
+# setrlimit() fail in every child, so the supervisor restarted it forever and
+# nothing was ever served. The pair is now clamped like the CPU limits.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  memclamp_line=$LINENO
+  _test_start_ms=$(now_ms)
+  memclamp_db="$(mktemp /tmp/bialet-memclamp.XXXXXX)"
+  require_free_port "$HOST" "$CRON_PORT" "memory clamp server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -m 1024 -M 256 -d "$memclamp_db" \
+    -l /tmp/tests-memclamp.log "$(dirname "$0")" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  memclamp_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    "http://$HOST:$CRON_PORT/get?foo=bar")
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -m 1024 -M 256"
+  memclamp_restarts=$(grep -c "Restarting" /tmp/tests-memclamp.log 2>/dev/null)
+  rm -f "$memclamp_db" "$memclamp_db"-* /tmp/tests-memclamp.log
+  if [[ "$memclamp_code" == "200" && "${memclamp_restarts:-0}" == "0" ]]; then
+    report_result "Memory limits clamped       " "$memclamp_line" 0
+  else
+    report_result "Memory limits clamped       " "$memclamp_line" 1 \
+      "Expected 200 and no restarts with -m 1024 -M 256. Got code:$memclamp_code restarts:$memclamp_restarts"
+  fi
+else
+  skip_test "Memory limits clamped       " "requires local binary access"
+fi
+
 # A complete header block with a declared Content-Length, and no body byte
 # behind it, must not park the only worker for the full 30 s body budget; the
 # 413 drain path must not either. One stalled socket, then a probe from a second

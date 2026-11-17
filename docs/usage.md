@@ -92,6 +92,12 @@ usage text instead of being silently ignored.
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
 
+`-m` and `-M` set the address-space limit (`RLIMIT_AS`) of the HTTP process on
+Linux. A soft limit above the hard one is lowered to it, a hard limit above the
+one the process inherited (systemd `LimitAS=`, `ulimit -v`) is lowered to that,
+and `0` means no limit of its own. macOS and Windows do not enforce them: there
+the values only size the request-body cap below.
+
 `-c` and `-C` are **seconds of CPU time** for the HTTP process, not a
 percentage. The supervisor runs the server as a parent/child pair: reaching the
 soft limit sends `SIGXCPU`, reaching the hard limit sends `SIGKILL`, and in
