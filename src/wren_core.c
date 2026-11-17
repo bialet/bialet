@@ -1860,6 +1860,17 @@ DEF_PRIMITIVE(response_default_page) {
   RETURN_VAL(result);
 }
 
+// A list that native code fills with freshly allocated strings before handing
+// it to Wren. Every slot starts as null (the collector marks them) and the
+// list is pushed as a GC root; the caller pops it right before RETURN_OBJ.
+static ObjList* new_rooted_result_list(WrenVM* vm, uint32_t count) {
+  ObjList* list = wrenNewList(vm, count);
+  for(uint32_t i = 0; i < count; i++)
+    list->elements.data[i] = NULL_VAL;
+  wrenPushRoot(vm, (Obj*)list);
+  return list;
+}
+
 DEF_PRIMITIVE(http_call) {
   // Every argument is read as a C string. AS_CSTRING on a Wren null yields a
   // bogus pointer (0x21), not NULL, so one non-string argument -- reachable
@@ -1889,7 +1900,11 @@ DEF_PRIMITIVE(http_call) {
 
   http_call_perform(&request, &response);
 
-  ObjList* res = wrenNewList(vm, 5);
+  // The list is reachable only from this C local while the strings below are
+  // allocated, and the body can be far larger than the remaining GC budget: a
+  // collection then freed the half-built list and the stores wrote into freed
+  // memory. Null the slots (the collector marks them) and root the list.
+  ObjList* res = new_rooted_result_list(vm, 5);
   res->elements.data[0] = NUM_VAL(response.status);
   res->elements.data[1] =
       wrenNewString(vm, response.headers ? response.headers : "");
@@ -1905,6 +1920,7 @@ DEF_PRIMITIVE(http_call) {
   free(response.body);
   free(response.error_message);
 
+  wrenPopRoot(vm);
   RETURN_OBJ(res);
 }
 
@@ -1976,10 +1992,11 @@ DEF_PRIMITIVE(test_runRequest) {
 
   if(code == NULL) {
     // Return 404 response
-    ObjList* res = wrenNewList(vm, 3);
+    ObjList* res = new_rooted_result_list(vm, 3);
     res->elements.data[0] = NUM_VAL(404);
     res->elements.data[1] = OBJ_VAL(wrenNewString(vm, "Not Found"));
     res->elements.data[2] = OBJ_VAL(wrenNewString(vm, ""));
+    wrenPopRoot(vm);
     RETURN_OBJ(res);
   }
 
@@ -2062,7 +2079,7 @@ DEF_PRIMITIVE(test_runRequest) {
   free(code);
 
   // Return [status, body, headers_string]
-  ObjList* res = wrenNewList(vm, 3);
+  ObjList* res = new_rooted_result_list(vm, 3);
   res->elements.data[0] = NUM_VAL(response.status);
   res->elements.data[1] =
       OBJ_VAL(wrenNewString(vm, response.body ? response.body : ""));
@@ -2076,6 +2093,7 @@ DEF_PRIMITIVE(test_runRequest) {
   if(response.header_owned)
     free(response.header);
 
+  wrenPopRoot(vm);
   RETURN_OBJ(res);
 }
 

@@ -577,6 +577,35 @@ else
   skip_test "Embedded blob replay           " "requires local binary access"
 fi
 
+# Http.get built its result list, then allocated the body string into it. A
+# body past the VM's GC budget (10 MiB) collected the still-unrooted list and
+# the primitive wrote into freed memory: the worker crashed.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
+  httpbig_line=$LINENO
+  _test_start_ms=$(now_ms)
+  httpbig_root=$(mktemp -d)
+  httpbig_run=$(mktemp -d)
+  head -c 12582912 /dev/zero | tr '\0' 'A' > "$httpbig_root/big.txt"
+  require_free_port "$HOST" "$CRON_PORT" "large Http.get server"
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -q -d "$httpbig_run/srv.db" \
+    "$httpbig_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  httpbig_exec=$(realpath "$TARGET_EXEC")
+  httpbig_out=$(cd "$httpbig_run" && "$httpbig_exec" -r \
+    "System.print(\"httpbig:%(Http.get(\"http://$HOST:$CRON_PORT/big.txt\").byteCount_)\")" 2>&1)
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -q -d $httpbig_run"
+  rm -rf "$httpbig_root" "$httpbig_run"
+  if [[ "$httpbig_out" == *"httpbig:12582912"* ]]; then
+    report_result "Large Http.get body          " "$httpbig_line" 0
+  else
+    report_result "Large Http.get body          " "$httpbig_line" 1 \
+      "Expected a 12582912-byte body. Got '${httpbig_out:0:200}'"
+  fi
+else
+  skip_test "Large Http.get body          " "requires local binary access (not run under Wine)"
+fi
+
 # With -x the served-file cache key is the request path. Each run of slashes
 # ("/r", "//r", "///r") used to be a new key that compiled the file again and
 # kept one more full blob for the life of the worker, so a client decided how
