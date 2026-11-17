@@ -60,7 +60,10 @@ class Request {
       }
       __headers[headerName] = headerValue
     }
-    __body = bodyLines.join("")
+    // The message was split on "\n", so the body is joined back with it.
+    // join("") dropped every LF: "a=1\r\nb=2" reached the app as "a=1\rb=2",
+    // breaking signatures over the raw body and multi-line values.
+    __body = bodyLines.join("\n")
     if (__method == "POST") {
       __post = fields != "" ? parseFields_(fields) : parseQuery(__body)
     }

@@ -1955,6 +1955,16 @@ run_test "Markdown keeps raw html     " "md-security"     200 "raw:<p><b>raw</b>
 run_test "Markdown missing file false " "md-missing"      200 "true"
 run_test "Markdown.file reads only .md" "md-file-policy"  200 "true|true|true"
 run_test "Log table retention and cap " "log-retention"   200 "old:0|capped:true"
+# Request.body joined its lines with "", so every LF of the body was lost.
+body_bytes_line=$LINENO
+_test_start_ms=$(now_ms)
+body_bytes=$(printf 'a=1\r\nb=2\r\n' | curl -s --data-binary @- --max-time 5 "http://$HOST:$PORT/body-bytes")
+if [[ "$body_bytes" == "len:10|lf:true|cr:true" ]]; then
+  report_result "Request.body keeps newlines " "$body_bytes_line" 0
+else
+  report_result "Request.body keeps newlines " "$body_bytes_line" 1 \
+    "Expected len:10|lf:true|cr:true. Got '$body_bytes'"
+fi
 
 # Tests - Query binding limits
 run_test "Query four params and paging" "query-pagination" 200 "four:5|page:2|first:3"
