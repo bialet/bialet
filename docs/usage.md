@@ -80,6 +80,14 @@ usage text instead of being silently ignored.
 > name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
 > root is served, so a database or a log file with a public name there is
 > downloadable by any client. Bialet refuses to start and exits with status 11.
+> The public `.well-known/` directory counts as public here too.
+
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
+> line (the method and the first 512 bytes of the target), so rotate it with
+> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
+> open in append mode, so truncating it in place is safe). Under systemd or
+> Docker, logging to stdout and letting journald or the log driver cap the size
+> works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.

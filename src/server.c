@@ -252,6 +252,37 @@ static int parse_content_length(const char* v, size_t max, size_t* out) {
 
 // Returns a pointer to the final component of [path], honoring both POSIX and
 // Windows separators. Never returns a pointer to a separator itself.
+// Longest piece of a request target that goes into one log record. The target
+// is attacker-chosen, it is logged for every request (before the 414 length
+// check), and log_escape() can quadruple it, so without a cap one request line
+// stored up to four times its own size in the -l log.
+#define BIALET_LOG_URI_MAX 512
+
+// log_escape() of at most BIALET_LOG_URI_MAX bytes of [uri], with "..."
+// appended when it was cut. Caller frees; NULL on allocation failure.
+static char* log_escape_uri(const char* uri) {
+  size_t len = strlen(uri);
+  if(len <= BIALET_LOG_URI_MAX)
+    return log_escape(uri);
+  char* head = malloc(BIALET_LOG_URI_MAX + 1);
+  if(head == NULL)
+    return NULL;
+  memcpy(head, uri, BIALET_LOG_URI_MAX);
+  head[BIALET_LOG_URI_MAX] = '\0';
+  char* escaped = log_escape(head);
+  free(head);
+  if(escaped == NULL)
+    return NULL;
+  size_t elen = strlen(escaped);
+  char*  out = realloc(escaped, elen + 4);
+  if(out == NULL) {
+    free(escaped);
+    return NULL;
+  }
+  memcpy(out + elen, "...", 4);
+  return out;
+}
+
 static const char* path_basename(const char* path) {
   const char* last = path;
   for(const char* p = path; *p; p++) {
@@ -1282,10 +1313,10 @@ void handle_client(bialet_socket_t client_socket) {
     return;
   }
   if(!livereload_is_poll(hm->uri.str)) {
-    char* log_method = log_escape(hm->method.str);
-    char* log_uri = log_escape(hm->uri.str);
-    message(magenta("Request"), log_method ? log_method : hm->method.str,
-            log_uri ? log_uri : hm->uri.str);
+    char* log_method = log_escape_uri(hm->method.str);
+    char* log_uri = log_escape_uri(hm->uri.str);
+    message(magenta("Request"), log_method ? log_method : "(unprintable)",
+            log_uri ? log_uri : "(unprintable)");
     free(log_method);
     free(log_uri);
   }
@@ -1419,9 +1450,9 @@ void handle_client(bialet_socket_t client_socket) {
   // Check for directory traversal patterns in the URI before processing
   if(strstr(path, "..") != NULL) {
     {
-      char* log_uri = log_escape(hm->uri.str);
+      char* log_uri = log_escape_uri(hm->uri.str);
       message(red("Security Error"), "Path traversal attempt blocked",
-              log_uri ? log_uri : hm->uri.str);
+              log_uri ? log_uri : "(unprintable)");
       free(log_uri);
     }
     clean_http_message(hm);

@@ -996,6 +996,25 @@ else
   skip_test "App log text escaped         " "requires local binary access and python3"
 fi
 
+# Every request target is logged, before the 414 length check, and the escaping
+# can quadruple it: a long target must not store a record of its own size.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  logcap_line=$LINENO
+  _test_start_ms=$(now_ms)
+  curl -s -o /dev/null --max-time 10 \
+    "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 3000))"
+  logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | wc -c | tr -d ' ')
+  logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tail -c 4)
+  if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 && "$logcap_tail" == "..." ]]; then
+    report_result "Logged request target capped" "$logcap_line" 0
+  else
+    report_result "Logged request target capped" "$logcap_line" 1 \
+      "Expected one record under 700 bytes ending in '...'. Got length:$logcap_len tail:'$logcap_tail'"
+  fi
+else
+  skip_test "Logged request target capped" "requires local binary access"
+fi
+
 # A rejected upload logs the wire-supplied filename: it must be escaped, so a
 # control byte cannot inject terminal sequences or split the record. The
 # filename is sent raw over a socket (no form encoder) with an over-limit part.
