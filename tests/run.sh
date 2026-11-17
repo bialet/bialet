@@ -1619,6 +1619,28 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   db_guard_long="/$(printf 'a%.0s' $(seq 1 5000))"
   db_guard_case "too long" "Database path too long" -d "$db_guard_long"
   unset db_guard_long
+  # A -d whose last component is a dangling symlink into the root: the guard
+  # used to resolve only the parent directory, so the server started and the
+  # open created a public, downloadable database inside the served tree.
+  if [[ "$IS_WINE" == 0 ]]; then
+    db_link_root=$(mktemp -d)
+    db_link_dir=$(mktemp -d)
+    ln -s "$db_link_root/data.sqlite3" "$db_link_dir/link.sqlite3"
+    db_link_out=$(mktemp)
+    "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$db_link_dir/link.sqlite3" \
+      "$db_link_root" > "$db_link_out" 2>&1 &
+    db_link_pid=$!
+    for _ in $(seq 1 30); do kill -0 "$db_link_pid" 2>/dev/null || break; sleep 0.1; done
+    if kill -0 "$db_link_pid" 2>/dev/null; then
+      stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -d $db_link_dir"
+      db_guard_ok=0
+      printf '      dangling symlink: server started instead of refusing\n'
+    elif ! grep -q "Database inside the app root" "$db_link_out"; then
+      db_guard_ok=0
+      printf '      dangling symlink: expected a refusal, got: %s\n' "$(head -c 200 "$db_link_out")"
+    fi
+    rm -rf "$db_link_root" "$db_link_dir" "$db_link_out"
+  fi
   if [[ "$db_guard_ok" == 1 ]]; then
     report_result "Database path guards        " "$db_guard_line" 0
   else

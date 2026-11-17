@@ -2173,6 +2173,21 @@ void bialet_enable_dev_flags() {
   }
 }
 
+// Exits when [real_db] (a resolved path) names a public file inside the app
+// root, which the static handler would serve. [shown] is the path as given.
+static void refuse_public_db_path(const char* real_db, const char* shown) {
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
+     (real_db[root_len] == '/' || real_db[root_len] == '\\') &&
+     !has_private_uri_component(real_db + root_len)) {
+    message(red("Error"),
+            "Database inside the app root must start with '_' or '.' "
+            "(like _db.sqlite3), or live outside the app root:",
+            shown);
+    exit(BIALET_SQLITE_ERROR);
+  }
+}
+
 void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
   char db_path[PATH_MAX];
@@ -2257,18 +2272,8 @@ void bialet_init(struct BialetConfig* config) {
         }
       }
     }
-    if(have_real) {
-      size_t root_len = strlen(bialet_config.full_root_dir);
-      if(strncmp(real_db, bialet_config.full_root_dir, root_len) == 0 &&
-         (real_db[root_len] == '/' || real_db[root_len] == '\\') &&
-         !has_private_uri_component(real_db + root_len)) {
-        message(red("Error"),
-                "Database inside the app root must start with '_' or '.' "
-                "(like _db.sqlite3), or live outside the app root:",
-                db_path);
-        exit(BIALET_SQLITE_ERROR);
-      }
-    }
+    if(have_real)
+      refuse_public_db_path(real_db, db_path);
   }
 
   strncpy(resolved_db_path, db_path, sizeof(resolved_db_path) - 1);
@@ -2277,6 +2282,26 @@ void bialet_init(struct BialetConfig* config) {
                      NULL) != SQLITE_OK) {
     message(red("SQL Error"), "Can't open database in", config->db_path);
     exit(BIALET_SQLITE_ERROR);
+  }
+  // The check above judged a name. When the file did not exist yet it could
+  // only resolve the parent directory, so a -d whose last component is a
+  // dangling symlink passed, and the open then followed the link and created
+  // the database at a public name inside the served tree. The file exists now:
+  // check the place it actually lives.
+  {
+    char real_db[PATH_MAX];
+    if(realpath_n(db_path, real_db, sizeof(real_db)) != NULL)
+      refuse_public_db_path(real_db, db_path);
+#ifndef _WIN32
+    // A hard link has no resolution to check. A second name for the database
+    // inside the served tree would be downloadable, so say so.
+    struct stat db_st;
+    if(stat(db_path, &db_st) == 0 && db_st.st_nlink > 1)
+      message(yellow("Warning"),
+              "The database file has more than one hard link; make sure none of "
+              "them is a public name inside the app root:",
+              db_path);
+#endif
   }
   apply_sqlite_pragmas();
   purge_temp_uploads();
