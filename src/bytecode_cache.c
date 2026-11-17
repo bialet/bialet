@@ -168,9 +168,23 @@ bool bytecode_cache_user_files_enabled(void) {
   return cache_user_files;
 }
 
-char* bytecode_cache_path_key(const char* path) {
+char* bytecode_cache_path_key(const char* path, bool already_canonical) {
   if(!cache_user_files || path == NULL)
     return NULL;
+
+  // The hot caller is a served route file, whose path is built as
+  // full_root_dir + the sanitized URI, and full_root_dir was realpath()'d once
+  // at startup. That path is already canonical, so realpath_n() here only
+  // repeated the same walk -- one readlink() per path component, per .wren
+  // request -- and the caller says so with [already_canonical].
+  //
+  // Everything else (a relative path, -r code) still goes through realpath_n(),
+  // which is what makes the key canonical when the caller cannot promise that.
+  // Two spellings of one file ("//a.wren" vs "/a.wren") get two cache entries
+  // instead of one; the key is only a name, and each entry carries its own file
+  // signature, so the same edit invalidates both.
+  if(already_canonical)
+    return string_safe_copy(path);
 
   char resolved[PATH_MAX];
   if(realpath_n(path, resolved, sizeof(resolved)) == NULL)

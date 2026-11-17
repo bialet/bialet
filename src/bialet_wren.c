@@ -1520,14 +1520,14 @@ struct BialetResponse bialet_run_file(char* module, char* code,
   /* Run user code */
   int file_missing = 0;
   if(!error) {
-    /* With --cache a served .wren file is looked up by its canonical path.
-     * Anything else (migration, cron, -r code) keeps the plain path. */
+    /* With --cache a served .wren file is looked up by its path under the app
+     * root. Anything else (migration, cron, -r code) keeps the plain path. */
     char* cache_key = NULL;
     if(bytecode_cache_user_files_enabled() && module != NULL) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(module, bialet_config.full_root_dir, root_len) == 0 &&
          (module[root_len] == '/' || module[root_len] == '\\'))
-        cache_key = bytecode_cache_path_key(module);
+        cache_key = bytecode_cache_path_key(module, true);
     }
 
     char*               owned = NULL;
