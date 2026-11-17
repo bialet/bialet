@@ -242,13 +242,15 @@ static int is_regular_file_no_follow(const char* path, struct stat* st) {
 #endif
 }
 
-// Same, for directories: a symlinked directory must not be treated as a real
-// directory inside the app root.
-static int is_directory_no_follow(const char* path, struct stat* st) {
+// One lstat (stat on Windows, which is what is_regular_file_no_follow above
+// uses there) for a caller that needs both the "is it a directory?" and the "is
+// it a regular file?" answer. Those used to be two helpers each issuing its own
+// newfstatat on the same name for every static request.
+static int stat_path_no_follow(const char* path, struct stat* st) {
 #ifdef _WIN32
-  return stat(path, st) == 0 && S_ISDIR(st->st_mode);
+  return stat(path, st) == 0;
 #else
-  return lstat(path, st) == 0 && S_ISDIR(st->st_mode);
+  return lstat(path, st) == 0;
 #endif
 }
 
@@ -1248,23 +1250,44 @@ void handle_client(bialet_socket_t client_socket) {
     }
   }
 
-  if(is_directory_no_follow(path, &file_stat)) {
+  // One lstat answers both questions below. They used to be two helpers, so a
+  // static request issued the same newfstatat twice on the same name before it
+  // ever reached the open.
+  int path_is_dir = 0;
+  int path_is_file = 0;
+  if(stat_path_no_follow(path, &file_stat)) {
+    path_is_dir = S_ISDIR(file_stat.st_mode);
+    path_is_file = S_ISREG(file_stat.st_mode);
+  }
+
+  if(path_is_dir) {
     // Serve index.html or index.wren. A directory's index is the route file
     // for its own URL only, so the prefix is set the same way as above.
     free(hm->routes.str);
     const char* route_prefix = path + root_len;
     hm->routes = create_string(route_prefix, strlen(route_prefix));
     strncat(path, "/index.wren", PATH_SIZE - strlen(path) - 1);
-    if(!is_regular_file_no_follow(path, &file_stat)) {
+    path_is_dir = 0;
+    path_is_file = 0;
+    if(stat_path_no_follow(path, &file_stat)) {
+      path_is_dir = S_ISDIR(file_stat.st_mode);
+      path_is_file = S_ISREG(file_stat.st_mode);
+    } else {
       // Replace the ".wren" suffix with ".html"
       size_t L = strlen(path);
       if(L >= 5) {
         strncpy(path + L - 5, ".html", 6);
       }
+      // A different name, so it needs its own stat: this is the one the
+      // shared regular-file test below used to do for the index path.
+      if(stat_path_no_follow(path, &file_stat)) {
+        path_is_dir = S_ISDIR(file_stat.st_mode);
+        path_is_file = S_ISREG(file_stat.st_mode);
+      }
     }
   }
 
-  if(!is_regular_file_no_follow(path, &file_stat)) {
+  if(!path_is_file) {
     // Search for a path-based route handler. For every URL prefix, test the
     // file named after that segment: /blog/my-first-post probes
     // blog/my-first-post.wren, then blog.wren once the path has been
