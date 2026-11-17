@@ -1,0 +1,7 @@
+.git
+**/_db.sqlite3*
+build/
+build-cov/
+*.gcov
+.venv/
+bench/
