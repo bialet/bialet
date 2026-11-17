@@ -2145,6 +2145,43 @@ static void date_zone_leave(bool changed) {
 // null yields the bogus pointer 0x21, not a C NULL, so the NULL guard in
 // date_zone_enter() was unreachable from Wren and a null Date.tz (Db.init
 // installs one when BIALET_TIMEZONE is unset) crashed the process.
+// The zone goes into TZ, and POSIX reads "TZ=:/some/path" as a time zone
+// *file* to open: Date.new(x, Request.post("tz")) -- the documented date
+// example -- let a client make the worker open any path, and a FIFO there
+// blocked the only request thread. Accept the two documented forms only: the
+// "UTC<sign>h[:mm]" offset that Date.zoneName_ builds from a number, and a zone
+// name (letters, digits, '_', '-', '+', separated by single '/'). No ':' or
+// '.' anywhere else, no leading '/', no NUL, at most 64 bytes.
+static bool date_zone_name_allowed(const char* tz, uint32_t length) {
+  if(length == 0)
+    return true; // "" keeps the current zone
+  if(length > 64 || strlen(tz) != length)
+    return false;
+  if(strncmp(tz, "UTC", 3) == 0 && (tz[3] == '+' || tz[3] == '-')) {
+    if(length == 4)
+      return false;
+    for(uint32_t i = 4; i < length; i++) {
+      if(!isdigit((unsigned char)tz[i]) && tz[i] != ':')
+        return false;
+    }
+    return true;
+  }
+  bool empty_component = true;
+  for(uint32_t i = 0; i < length; i++) {
+    unsigned char c = (unsigned char)tz[i];
+    if(c == '/') {
+      if(empty_component)
+        return false;
+      empty_component = true;
+      continue;
+    }
+    if(!isalnum(c) && c != '_' && c != '-' && c != '+')
+      return false;
+    empty_component = false;
+  }
+  return !empty_component;
+}
+
 static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
   if(IS_NULL(arg) || IS_UNDEFINED(arg)) {
     *out = NULL;
@@ -2154,7 +2191,13 @@ static int date_timezone_arg(WrenVM* vm, Value arg, const char** out) {
     vm->fiber->error = wrenStringFormat(vm, "Timezone must be a string.");
     return 0;
   }
-  *out = AS_CSTRING(arg);
+  ObjString* zone = AS_STRING(arg);
+  if(!date_zone_name_allowed(zone->value, zone->length)) {
+    vm->fiber->error = wrenStringFormat(
+        vm, "Timezone must be a UTC offset or a zone name like America/Bogota.");
+    return 0;
+  }
+  *out = zone->value;
   return 1;
 }
 

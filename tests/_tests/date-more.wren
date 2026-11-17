@@ -35,3 +35,13 @@ Test.assert(Date.new(2024, 1, 1, 12, 0, 0, 0).unix == 1704110400, "tz 0 is UTC")
 var beforeZone = Date.fromUnix(0).toString
 Test.assert(Date.new("2024-01-01 12:00:00", "UTC-9").unix == 1704078000, "string zone applies")
 Test.assert(Date.fromUnix(0).toString == beforeZone, "a zone does not leak to later dates")
+
+// A zone string reaches TZ, where ":path" names a zone file to open; only
+// zone names and UTC offsets are accepted.
+var badZone = Fiber.new { Date.new("2024-01-01 12:00:00", ":/etc/passwd").unix }
+badZone.try()
+Test.assert(badZone.error != null, "a ':path' zone is refused")
+var dotZone = Fiber.new { Date.new("2024-01-01 12:00:00", "../../etc/x").unix }
+dotZone.try()
+Test.assert(dotZone.error != null, "a relative path zone is refused")
+Test.assert(Date.new("2024-01-01 12:00:00", "Etc/GMT+3").unix == 1704121200, "zone names still work")

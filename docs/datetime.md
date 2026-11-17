@@ -48,6 +48,11 @@ System.print("Date with specific timezone: %(date)")
 This lets you control the UTC offset at the instance level without affecting
 other `Date` objects.
 
+A zone is either a number (hours from UTC, `-3` is UTC-3) or a zone name such
+as `"America/Bogota"` or `"Etc/GMT+3"`. Anything else — a path, a string with
+`:` or `.` — raises an error, so a zone taken from a form field cannot make the
+server read a file. Prefer an allow-list of zones your app offers anyway.
+
 ## Displaying Date and Time Components
 
 You can access various components of a `Date` object:
