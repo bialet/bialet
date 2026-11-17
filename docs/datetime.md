@@ -86,9 +86,11 @@ that started the server (UTC on most servers).
   ship one, so there use `"UTC"` or a `"UTC<offset>"` string, with the same
   west-positive sign as above; `"Area/City"` names only work on Linux and macOS.
 - It does **not** change the timestamps SQLite writes for `CURRENT_TIMESTAMP`,
-  `date('now')` or a `DEFAULT CURRENT_TIMESTAMP` column — those are UTC — nor
-  the prefix of Bialet's own log lines, which uses the process zone. Store
-  instants as UTC and convert with `Date.fromUnix()` when you read them.
+  `date('now')` or a `DEFAULT CURRENT_TIMESTAMP` column — those are UTC. Store
+  instants as UTC and convert with `Date.fromUnix()` when you read them. It
+  **does** set the zone of the `YYYY-MM-DD HH:MM:SS` prefix of Bialet's own log
+  lines, so a server configured for a zone logs in it even when the process
+  `TZ` says otherwise.
 - `Date.init(zone)` overrides the default for the current script or request.
 
 ## Displaying Date and Time Components

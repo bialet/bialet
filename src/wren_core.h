@@ -2,6 +2,7 @@
 #define wren_core_h
 
 #include "wren_vm.h"
+#include <time.h>
 
 // This module defines the built-in classes and their primitives methods that
 // are implemented directly in C code. Some languages try to implement as much
@@ -29,5 +30,13 @@ void wrenInitializeCore(WrenVM* vm);
 // the process zone".
 void        date_set_default_zone(const char* zone);
 const char* date_get_default_zone(void);
+
+// localtime() with the configured default zone applied for this one call, then
+// the process zone restored. This is what message_stamp() (messages.c) uses, so
+// a log line's "YYYY-MM-DD HH:MM:SS" prefix follows BIALET_TIMEZONE without the
+// zone staying installed for SQLite, cron bodies or other threads. Takes
+// [now] and the buffer to fill, returns NULL when the time cannot be converted.
+// Nothing may log while it runs: it holds tz_lock, so message() would deadlock.
+struct tm* date_default_localtime(const time_t* now, struct tm* out);
 
 #endif

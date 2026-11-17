@@ -13,12 +13,16 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   cron pass runs in a fresh VM, so both silently kept the process zone. The
   runtime reads the row once at startup and the `Date` primitives fall back to
   it, and an invalid value is logged once at startup instead of once per VM.
+- The `YYYY-MM-DD HH:MM:SS` prefix of every log line follows
+  `BIALET_TIMEZONE` instead of the process zone, so a server configured for a
+  zone no longer logs in the OS zone. The process `TZ` is only swapped around
+  the conversion, so SQLite and app code still see the zone they did before.
 
 ### Documentation
 
 - The configuration and date pages document `BIALET_TIMEZONE`: the restart
-  requirement, the POSIX sign of string zones, and the SQLite columns and log
-  lines it does not affect.
+  requirement, the POSIX sign of string zones, and the SQLite columns it does
+  not affect.
 
 ## 1.2.21 — 2026-11-17
 

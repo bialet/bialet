@@ -190,8 +190,13 @@ WREN
     > /dev/null 2>&1
   tz_log="$tz_run/server.log"
   require_free_port "$HOST" "$CRON_PORT" "timezone server"
-  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$tz_run/tz.sqlite3" "$tz_root" \
-    > "$tz_log" 2>&1 &
+  # TZ=UTC on purpose: the log prefix used to print the process zone, so the
+  # two zones have to be provably different (Pacific/Kiritimati is UTC+14).
+  # The hour is read on both sides of the run so a boundary crossing cannot
+  # make the assertion flaky.
+  tz_zone_hour_before=$(TZ=Pacific/Kiritimati date +'%Y-%m-%d %H')
+  TZ=UTC "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -d "$tz_run/tz.sqlite3" \
+    "$tz_root" > "$tz_log" 2>&1 &
   disown
   wait_port "$HOST" "$CRON_PORT" 10
   tz_request=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
@@ -199,6 +204,7 @@ WREN
   # covers a slow scheduler without waiting for the next minute.
   sleep 1
   stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -d $tz_run/tz.sqlite3 $tz_root"
+  tz_zone_hour_after=$(TZ=Pacific/Kiritimati date +'%Y-%m-%d %H')
   tz_expected="|Pacific/Kiritimati|2023-11-15 12:13:20"
   if [[ "$tz_request" == "TZREQUEST$tz_expected" ]] \
      && grep -q "TZMIGRATION$tz_expected" "$tz_log" 2>/dev/null \
@@ -207,6 +213,22 @@ WREN
   else
     report_result "BIALET_TIMEZONE applies everywhere" "$tz_line" 1 \
       "Expected '${tz_expected#|}' in request, migration and cron. Got request '$tz_request', log: $(grep -E 'TZMIGRATION|TZCRON' "$tz_log" 2>/dev/null | tr '\n' ' ')"
+  fi
+  # The "YYYY-MM-DD HH:MM:SS " prefix of a log line follows BIALET_TIMEZONE,
+  # not the process zone. The process ran with TZ=UTC, so the first 13 columns
+  # must match the configured zone's date and hour and can never match UTC's.
+  tz_log_line=$LINENO
+  tz_migration_line=$(grep -m1 "TZMIGRATION" "$tz_log" 2>/dev/null)
+  tz_log_prefix="${tz_migration_line:0:13}"
+  tz_utc_prefix=$(TZ=UTC date +'%Y-%m-%d %H')
+  if [[ -n "$tz_log_prefix" ]] \
+     && [[ "$tz_log_prefix" == "$tz_zone_hour_before" \
+        || "$tz_log_prefix" == "$tz_zone_hour_after" ]] \
+     && [[ "$tz_log_prefix" != "$tz_utc_prefix" ]]; then
+    report_result "BIALET_TIMEZONE sets the log prefix" "$tz_log_line" 0
+  else
+    report_result "BIALET_TIMEZONE sets the log prefix" "$tz_log_line" 1 \
+      "Expected a log prefix in Pacific/Kiritimati ($tz_zone_hour_before or $tz_zone_hour_after), not UTC ($tz_utc_prefix). Got '${tz_log_prefix}' from '$tz_migration_line'"
   fi
   rm -rf "$tz_root" "$tz_run"
 else

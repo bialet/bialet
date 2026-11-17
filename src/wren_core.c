@@ -2182,6 +2182,42 @@ static void date_zone_leave(bool changed) {
   tz_unlock();
 }
 
+// localtime() that honours BIALET_TIMEZONE for the length of one call. The log
+// stamp used to print the process zone, so a server configured for another zone
+// logged in the OS zone while every Date in app code used the configured one.
+// date_zone_enter() cannot be reused here: it takes tz_lock itself and would
+// deadlock under the one this function holds. date_set_tz_env() goes straight
+// to setenv/TZ with no bookkeeping of its own, so the process zone is saved and
+// restored around the conversion. When the saved copy cannot be made the
+// process zone is used rather than leaving TZ moved for good.
+struct tm* date_default_localtime(const time_t* now, struct tm* out) {
+  tz_lock();
+  const char* zone = date_default_zone;
+  if(zone != NULL && zone[0] != '\0') {
+    const char* current = getenv("TZ");
+    char*       saved = current ? strdup(current) : NULL;
+    if(current == NULL || saved != NULL) {
+      date_set_tz_env(zone);
+#ifdef _WIN32
+      struct tm* local = localtime_s(out, now) == 0 ? out : NULL;
+#else
+      struct tm* local = localtime_r(now, out);
+#endif
+      date_set_tz_env(saved);
+      free(saved);
+      tz_unlock();
+      return local;
+    }
+  }
+#ifdef _WIN32
+  struct tm* local = localtime_s(out, now) == 0 ? out : NULL;
+#else
+  struct tm* local = localtime_r(now, out);
+#endif
+  tz_unlock();
+  return local;
+}
+
 // Accepts the Wren-level timezone argument for the date primitives: a string,
 // or null/absent (which means the configured default, then the current zone).
 // AS_CSTRING on a Wren null yields the bogus pointer 0x21, not a C NULL, so the
