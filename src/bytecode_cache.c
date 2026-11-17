@@ -44,6 +44,18 @@
 #define CACHE_MAX_DEBUG_NAME 4096
 #define CACHE_MAX_FN_DEPTH 512
 
+// The debug-line array is written as one little-endian u32 per byte of code, and
+// it is the largest section of a blob. On a little-endian target with 32-bit int
+// that is the same byte layout an int array has, so a replay copies it with one
+// memcpy instead of a bounds-checked read per line. Every other target keeps the
+// per-line loop.
+#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) &&                  \
+    (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) && UINT_MAX == 0xffffffffU
+#define CACHE_LINES_ARE_LE32 1
+#else
+#define CACHE_LINES_ARE_LE32 0
+#endif
+
 // Constant tags for one slot in a function's constant pool. Wren puts these
 // kinds there: literals (number/string), Bialet's backtick SQL literals (an
 // ObjQuery), the singletons an attribute value may hold, and nested functions.
@@ -92,6 +104,25 @@ static size_t      cache_entry_count = 0;
 static size_t      cache_entry_capacity = 0;
 static bool        cache_warned = false;
 
+// Test hooks. Blobs never leave the process, so there is nothing on disk to
+// damage and no way to see a replay from outside. Two environment switches cover
+// that, both read once from bytecode_cache_set_user_files() before any VM or
+// background thread exists:
+//
+//   BIALET_CACHE_TRACE=1  one log line per embedded module saying whether it was
+//                         replayed from its blob or compiled from source. It is
+//                         how tests/run.sh asserts that the second VM in the
+//                         process really replays both embedded entries instead of
+//                         silently recompiling them.
+//   BIALET_CACHE_FAULT=1  store one truncated copy of the framework blob, so the
+//                         next VM has to reject it, warn once and compile from
+//                         source; the following store replaces the damaged entry.
+//
+// Off unless set, and neither touches the hit path.
+static bool cache_trace = false;
+static bool cache_fault = false;
+static bool cache_fault_done = false;
+
 // The cache is reached from the cron and file-watch threads of the parent
 // process as well as from the HTTP child, so every access is serialised. On
 // Windows this build runs no background Wren threads, but the same functions
@@ -120,8 +151,17 @@ static void cache_lock_release(void) {
 }
 #endif
 
+// Reads one of the test hooks above. Only called while [cache_user_files] is
+// being set, before the process has started serving, so there is no race.
+static bool cache_env_flag(const char* name) {
+  const char* value = getenv(name);
+  return value != NULL && *value != '\0' && strcmp(value, "0") != 0;
+}
+
 void bytecode_cache_set_user_files(bool enabled) {
   cache_user_files = enabled;
+  cache_trace = cache_env_flag("BIALET_CACHE_TRACE");
+  cache_fault = cache_env_flag("BIALET_CACHE_FAULT");
 }
 
 bool bytecode_cache_user_files_enabled(void) {
@@ -237,7 +277,13 @@ typedef struct {
   bool           failed;
 } CacheReader;
 
-static const uint8_t* reader_bytes(CacheReader* r, size_t count) {
+// The getters are inline on purpose: the replay reads one field per byte of
+// bytecode (the parallel debug-line array), and a function call per field was
+// the third largest self-time symbol in the profile. Inlining moves the bounds
+// check to the call site, where the compiler keeps [pos] and the remaining
+// length in registers. The check itself is unchanged: a read of [count] bytes
+// fails without touching memory unless all [count] bytes are still there.
+static inline const uint8_t* reader_bytes(CacheReader* r, size_t count) {
   if(r->failed)
     return NULL;
   if(count > r->len - r->pos) {
@@ -249,7 +295,7 @@ static const uint8_t* reader_bytes(CacheReader* r, size_t count) {
   return at;
 }
 
-static bool reader_u8(CacheReader* r, uint8_t* out) {
+static inline bool reader_u8(CacheReader* r, uint8_t* out) {
   const uint8_t* at = reader_bytes(r, 1);
   if(at == NULL)
     return false;
@@ -257,29 +303,33 @@ static bool reader_u8(CacheReader* r, uint8_t* out) {
   return true;
 }
 
-static bool reader_u32(CacheReader* r, uint32_t* out) {
+// Explicit little-endian assembly, the same byte order the writer emits. A
+// compiler that knows the target is little-endian folds it into one load.
+static inline uint32_t reader_le32(const uint8_t* at) {
+  return (uint32_t)at[0] | ((uint32_t)at[1] << 8) | ((uint32_t)at[2] << 16) |
+         ((uint32_t)at[3] << 24);
+}
+
+static inline bool reader_u32(CacheReader* r, uint32_t* out) {
   const uint8_t* at = reader_bytes(r, 4);
   if(at == NULL)
     return false;
-  *out = (uint32_t)at[0] | ((uint32_t)at[1] << 8) | ((uint32_t)at[2] << 16) |
-         ((uint32_t)at[3] << 24);
+  *out = reader_le32(at);
   return true;
 }
 
-static bool reader_double(CacheReader* r, double* out) {
+static inline bool reader_double(CacheReader* r, double* out) {
   const uint8_t* at = reader_bytes(r, 8);
   if(at == NULL)
     return false;
-  uint64_t bits = 0;
-  for(int i = 0; i < 8; i++)
-    bits |= (uint64_t)at[i] << (i * 8);
+  uint64_t bits = (uint64_t)reader_le32(at) | ((uint64_t)reader_le32(at + 4) << 32);
   memcpy(out, &bits, sizeof(*out));
   return true;
 }
 
 // Reads a length-prefixed byte run. The length is bounded by what is left in
 // the blob, so strings and names need no separate ceiling.
-static bool reader_sized(CacheReader* r, const uint8_t** data, size_t* len) {
+static inline bool reader_sized(CacheReader* r, const uint8_t** data, size_t* len) {
   uint32_t size;
   if(!reader_u32(r, &size))
     return false;
@@ -601,106 +651,25 @@ static bool cache_entry_matches(const CacheEntry* entry, const char* source,
 }
 
 /* ------------------------------------------------------------------------- */
-/* Blob validation (read-only)                                              */
+/* Blob decoding                                                            */
 /* ------------------------------------------------------------------------- */
 
+// What one replay attempt ended in. A MISMATCH is a normal miss (the blob was
+// built for a different VM or module state) and costs a compile; a CORRUPT blob
+// is structurally impossible and is reported once.
 typedef enum {
-  CACHE_VALIDATE_OK,
-  CACHE_VALIDATE_MISMATCH, // built for a different VM state: a normal miss
-  CACHE_VALIDATE_CORRUPT,  // structurally impossible: never serve it
-} CacheValidation;
+  CACHE_REPLAY_OK,
+  CACHE_REPLAY_MISMATCH,
+  CACHE_REPLAY_CORRUPT,
+} CacheReplay;
 
-// Checks the structural part of one function node, recursively, without
-// allocating. Mirrors build_fn() exactly: what this accepts, build_fn() can
-// construct.
-static bool validate_fn(CacheReader* r, int depth) {
-  if(depth > CACHE_MAX_FN_DEPTH)
-    return false;
-
-  uint32_t code_len;
-  if(!reader_u32(r, &code_len))
-    return false;
-  if(code_len == 0 || code_len > r->len - r->pos || code_len > INT_MAX)
-    return false;
-  if(reader_bytes(r, (size_t)code_len) == NULL)
-    return false;
-
-  uint32_t max_slots, num_upvalues, arity;
-  if(!reader_u32(r, &max_slots) || !reader_u32(r, &num_upvalues) ||
-     !reader_u32(r, &arity))
-    return false;
-  if(max_slots == 0 || max_slots > CACHE_MAX_SLOTS)
-    return false;
-  if(num_upvalues > CACHE_MAX_UPVALUES || arity > CACHE_MAX_ARITY)
-    return false;
-
-  uint8_t has_name;
-  if(!reader_u8(r, &has_name))
-    return false;
-  if(has_name) {
-    const uint8_t* name;
-    size_t         name_len;
-    if(!reader_sized(r, &name, &name_len))
-      return false;
-    if(name_len > CACHE_MAX_DEBUG_NAME)
-      return false;
-  }
-
-  uint32_t line_count;
-  if(!reader_u32(r, &line_count) || line_count != code_len)
-    return false;
-  for(uint32_t i = 0; i < line_count; i++) {
-    uint32_t line;
-    if(!reader_u32(r, &line))
-      return false;
-  }
-
-  uint32_t constants_count;
-  if(!reader_u32(r, &constants_count))
-    return false;
-  if(constants_count > CACHE_MAX_CONSTANTS)
-    return false;
-
-  for(uint32_t i = 0; i < constants_count; i++) {
-    uint8_t tag;
-    if(!reader_u8(r, &tag))
-      return false;
-    switch(tag) {
-      case CACHE_CONST_NUM: {
-        double value;
-        if(!reader_double(r, &value))
-          return false;
-        break;
-      }
-      case CACHE_CONST_NULL:
-      case CACHE_CONST_TRUE:
-      case CACHE_CONST_FALSE:
-        break;
-      case CACHE_CONST_STRING:
-      case CACHE_CONST_QUERY: {
-        const uint8_t* text;
-        size_t         len;
-        if(!reader_sized(r, &text, &len))
-          return false;
-        break;
-      }
-      case CACHE_CONST_FN:
-        if(!validate_fn(r, depth + 1))
-          return false;
-        break;
-      default:
-        return false;
-    }
-  }
-
-  return true;
-}
-
-// Validates the header and module-state deltas against the VM and module the
-// source is about to be loaded into. On success [r] is positioned at the
-// function tree. Does not touch [module] or the VM.
+// Validates the module-state deltas against the VM and module the source is
+// about to be loaded into. On success [r] is positioned at the function tree and
+// [var_section], when given, holds where the module-variable section starts, so
+// it can be replayed after the function graph exists. Does not touch [module] or
+// the VM.
 static bool validate_module_state(CacheReader* r, WrenVM* vm, ObjModule* module,
-                                  bool is_core) {
+                                  bool is_core, size_t* var_section) {
   uint8_t core_flag;
   if(!reader_u8(r, &core_flag))
     return false;
@@ -730,6 +699,9 @@ static bool validate_module_state(CacheReader* r, WrenVM* vm, ObjModule* module,
     if(wrenSymbolTableFind(&vm->methodNames, (const char*)name, len) != -1)
       return false;
   }
+
+  if(var_section != NULL)
+    *var_section = r->pos;
 
   uint32_t var_base, var_count;
   if(!reader_u32(r, &var_base) || !reader_u32(r, &var_count))
@@ -765,28 +737,20 @@ static bool validate_module_state(CacheReader* r, WrenVM* vm, ObjModule* module,
   return true;
 }
 
-static CacheValidation validate_blob(const uint8_t* blob, size_t blob_len,
-                                     WrenVM* vm, ObjModule* module, bool is_core) {
-  CacheReader r = {blob, blob_len, 0, false};
-
-  uint32_t version, wren_version;
-  if(!reader_u32(&r, &version) || !reader_u32(&r, &wren_version))
-    return CACHE_VALIDATE_CORRUPT;
-  if(version != CACHE_BLOB_VERSION || wren_version != (uint32_t)WREN_VERSION_NUMBER)
-    return CACHE_VALIDATE_CORRUPT;
-
-  if(!validate_module_state(&r, vm, module, is_core))
-    return CACHE_VALIDATE_MISMATCH;
-
-  if(!validate_fn(&r, 0))
-    return CACHE_VALIDATE_CORRUPT;
-
-  // A well-formed blob is consumed exactly: trailing bytes mean the writer and
-  // reader disagree, which is corruption.
-  if(r.failed || r.pos != r.len)
-    return CACHE_VALIDATE_CORRUPT;
-
-  return CACHE_VALIDATE_OK;
+// Allocates room for exactly [count] elements and returns it, or NULL when
+// [count] is zero. Fill() rounds the capacity up to a power of two, zero-fills
+// it, and the replay then overwrote every byte: the debug-line array alone is
+// ~91 KB for the embedded framework, written twice per VM. wrenReallocate may
+// collect, so the owner of the buffer must already be reachable from a root.
+static void* cache_alloc_exact(WrenVM* vm, size_t count, size_t size) {
+  if(count == 0)
+    return NULL;
+  if(count > SIZE_MAX / size) {
+    // Cannot happen: every count is bounded by the blob length. Kept so the
+    // multiplication is provably safe on 32-bit targets.
+    return NULL;
+  }
+  return wrenReallocate(vm, NULL, 0, count * size);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -798,55 +762,78 @@ typedef struct {
   ObjModule* module;
 } CacheBuilder;
 
-// Reads one function node and materialises it. [slot] is where the new ObjFn
-// is published as soon as it exists: either a cell in a rooted parent's
-// constants array, or the caller's temporary root holder for the top-level
-// function. That is what keeps the new object reachable across the allocations
-// that follow -- there is never more than one temporary root, so a deeply
-// nested source cannot exhaust WREN_MAX_TEMP_ROOTS.
+// Every failure inside build_fn() goes through here, so [r->failed] is always
+// set and the callers can test either the return value or the reader.
+static ObjFn* build_fn_failed(CacheReader* r) {
+  r->failed = true;
+  return NULL;
+}
+
+// Reads one function node and materialises it.
+//
+// This is also the validator: every structural check the separate read-only pass
+// made happens here, in the same walk that builds, so a replay decodes the blob
+// once instead of twice. A rejected node leaves the module untouched -- nothing
+// built here is linked from the module, and the only root (the top-level
+// function) is dropped by the caller, so the partial graph is reclaimed by the
+// next collection.
+//
+// [slot] is where the new ObjFn is published as soon as it exists: either a cell
+// in a rooted parent's constants array, or the caller's temporary root holder for
+// the top-level function. That is what keeps the new object reachable across the
+// allocations that follow -- there is never more than one temporary root, so a
+// deeply nested source cannot exhaust WREN_MAX_TEMP_ROOTS.
 static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
                        int depth) {
-  if(depth > CACHE_MAX_FN_DEPTH) {
-    r->failed = true;
-    return NULL;
-  }
+  if(depth > CACHE_MAX_FN_DEPTH)
+    return build_fn_failed(r);
 
   uint32_t code_len;
-  if(!reader_u32(r, &code_len) || code_len == 0 || code_len > r->len - r->pos ||
-     code_len > INT_MAX) {
-    r->failed = true;
-    return NULL;
-  }
+  if(!reader_u32(r, &code_len) || code_len == 0 || code_len > INT_MAX ||
+     code_len > r->len - r->pos)
+    return build_fn_failed(r);
   const uint8_t* code = reader_bytes(r, (size_t)code_len);
   if(code == NULL)
-    return NULL;
+    return build_fn_failed(r);
 
   uint32_t max_slots, num_upvalues, arity;
   if(!reader_u32(r, &max_slots) || !reader_u32(r, &num_upvalues) ||
-     !reader_u32(r, &arity)) {
-    r->failed = true;
-    return NULL;
-  }
+     !reader_u32(r, &arity))
+    return build_fn_failed(r);
+  if(max_slots == 0 || max_slots > CACHE_MAX_SLOTS)
+    return build_fn_failed(r);
+  if(num_upvalues > CACHE_MAX_UPVALUES || arity > CACHE_MAX_ARITY)
+    return build_fn_failed(r);
 
   uint8_t        has_name;
   const uint8_t* name = NULL;
   size_t         name_len = 0;
-  if(!reader_u8(r, &has_name) || (has_name && !reader_sized(r, &name, &name_len))) {
-    r->failed = true;
-    return NULL;
-  }
+  if(!reader_u8(r, &has_name) || (has_name && !reader_sized(r, &name, &name_len)))
+    return build_fn_failed(r);
+  if(name_len > CACHE_MAX_DEBUG_NAME)
+    return build_fn_failed(r);
 
   uint32_t line_count;
-  if(!reader_u32(r, &line_count) || line_count != code_len) {
-    r->failed = true;
-    return NULL;
-  }
+  if(!reader_u32(r, &line_count) || line_count != code_len)
+    return build_fn_failed(r);
+  // One u32 per byte of code, so this is the largest section of the blob. Take
+  // it as one bounds-checked byte run and copy it in bulk where the layout
+  // matches (CACHE_LINES_ARE_LE32).
+  if(line_count > (r->len - r->pos) / sizeof(uint32_t))
+    return build_fn_failed(r);
+  const uint8_t* lines = reader_bytes(r, (size_t)line_count * sizeof(uint32_t));
+  if(lines == NULL)
+    return build_fn_failed(r);
+
+  uint32_t constants_count;
+  if(!reader_u32(r, &constants_count) || constants_count > CACHE_MAX_CONSTANTS)
+    return build_fn_failed(r);
 
   ObjFn* fn = wrenNewFunction(builder->vm, builder->module, (int)max_slots);
   *slot = OBJ_VAL(fn);
 
-  // Only the outermost function needs an explicit root; every nested function
-  // is already reachable through its parent's constants array.
+  // Only the outermost function needs an explicit root; every nested function is
+  // already reachable through its parent's constants array.
   bool rooted = depth == 0;
   if(rooted)
     wrenPushRoot(builder->vm, (Obj*)fn);
@@ -857,29 +844,54 @@ static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
   if(has_name)
     wrenFunctionBindName(builder->vm, fn, (const char*)name, (int)name_len);
 
-  // Bytecode and its parallel debug-line array. Fill() grows the buffer and
-  // can trigger a GC; the function is reachable through [slot].
-  wrenByteBufferFill(builder->vm, &fn->code, 0, (int)code_len);
+  // Bytecode: allocated at its final size and copied once. The function is
+  // reachable through [slot] (and, at depth 0, the root), so the allocation can
+  // collect. Every failure past this point drops the root it just took, which is
+  // why these three returns pop explicitly instead of leaving through the tail.
+  fn->code.data = (uint8_t*)cache_alloc_exact(builder->vm, code_len, 1);
+  if(fn->code.data == NULL) {
+    if(rooted)
+      wrenPopRoot(builder->vm);
+    return build_fn_failed(r);
+  }
   memcpy(fn->code.data, code, (size_t)code_len);
+  fn->code.count = fn->code.capacity = (int)code_len;
 
-  wrenIntBufferFill(builder->vm, &fn->debug->sourceLines, 0, (int)line_count);
-  for(uint32_t i = 0; i < line_count; i++) {
-    uint32_t line;
-    if(!reader_u32(r, &line)) {
-      r->failed = true;
-      break;
-    }
-    fn->debug->sourceLines.data[i] = (int)line;
+  // The parallel debug-line array, same deal.
+  fn->debug->sourceLines.data =
+      (int*)cache_alloc_exact(builder->vm, line_count, sizeof(int));
+  if(fn->debug->sourceLines.data == NULL) {
+    if(rooted)
+      wrenPopRoot(builder->vm);
+    return build_fn_failed(r);
   }
+  fn->debug->sourceLines.count = fn->debug->sourceLines.capacity = (int)line_count;
+#if CACHE_LINES_ARE_LE32
+  // The writer stored line i as (uint32_t)sourceLines.data[i] in little-endian,
+  // which is exactly the byte layout of an int array here.
+  memcpy(fn->debug->sourceLines.data, lines, (size_t)line_count * sizeof(int));
+#else
+  for(uint32_t i = 0; i < line_count; i++)
+    fn->debug->sourceLines.data[i] =
+        (int)reader_le32(lines + (size_t)i * sizeof(uint32_t));
+#endif
 
-  uint32_t constants_count;
-  if(!reader_u32(r, &constants_count) || constants_count > CACHE_MAX_CONSTANTS) {
-    r->failed = true;
+  // Reserve every constant slot before filling any of them, so a nested function
+  // can be published into its cell as soon as it exists, and fill it with
+  // NULL_VAL before the loop can allocate: a collection triggered by a string or
+  // a nested function must not scan an unwritten slot.
+  Value* constants =
+      (Value*)cache_alloc_exact(builder->vm, constants_count, sizeof(Value));
+  if(constants == NULL && constants_count > 0) {
+    if(rooted)
+      wrenPopRoot(builder->vm);
+    return build_fn_failed(r);
   }
+  fn->constants.data = constants;
+  fn->constants.count = fn->constants.capacity = (int)constants_count;
+  for(uint32_t i = 0; i < constants_count; i++)
+    constants[i] = NULL_VAL;
 
-  // Reserve every constant slot before filling any of them, so a nested
-  // function can be published into its cell the moment it is created.
-  wrenValueBufferFill(builder->vm, &fn->constants, NULL_VAL, (int)constants_count);
   for(uint32_t i = 0; i < constants_count && !r->failed; i++) {
     uint8_t tag;
     if(!reader_u8(r, &tag)) {
@@ -894,17 +906,17 @@ static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
           r->failed = true;
           break;
         }
-        fn->constants.data[i] = NUM_VAL(value);
+        constants[i] = NUM_VAL(value);
         break;
       }
       case CACHE_CONST_NULL:
-        fn->constants.data[i] = NULL_VAL;
+        constants[i] = NULL_VAL;
         break;
       case CACHE_CONST_TRUE:
-        fn->constants.data[i] = TRUE_VAL;
+        constants[i] = TRUE_VAL;
         break;
       case CACHE_CONST_FALSE:
-        fn->constants.data[i] = FALSE_VAL;
+        constants[i] = FALSE_VAL;
         break;
       case CACHE_CONST_STRING: {
         const uint8_t* text;
@@ -913,11 +925,10 @@ static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
           r->failed = true;
           break;
         }
-        // wrenNewStringLength() copies the bytes and can GC. The returned
-        // value is stored immediately afterwards, with no allocation in
-        // between, so it cannot be collected before it becomes reachable.
-        fn->constants.data[i] =
-            wrenNewStringLength(builder->vm, (const char*)text, len);
+        // wrenNewStringLength() copies the bytes and can GC. The returned value
+        // is stored immediately afterwards, with no allocation in between, so it
+        // cannot be collected before it becomes reachable.
+        constants[i] = wrenNewStringLength(builder->vm, (const char*)text, len);
         break;
       }
       case CACHE_CONST_QUERY: {
@@ -927,12 +938,11 @@ static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
           r->failed = true;
           break;
         }
-        fn->constants.data[i] =
-            wrenNewQueryLength(builder->vm, (const char*)text, len);
+        constants[i] = wrenNewQueryLength(builder->vm, (const char*)text, len);
         break;
       }
       case CACHE_CONST_FN:
-        if(!build_fn(r, builder, &fn->constants.data[i], depth + 1))
+        if(!build_fn(r, builder, &constants[i], depth + 1))
           r->failed = true;
         break;
       default:
@@ -947,9 +957,13 @@ static ObjFn* build_fn(CacheReader* r, CacheBuilder* builder, Value* slot,
 }
 
 // Declares the module's new variables in the recorded order. The caller has
-// already validated that each name is absent and that the count fits, so this
-// cannot fail; it appends exactly the slots the bytecode's module-variable
-// operands index into.
+// already checked that every name is absent and that the count fits, so this
+// cannot fail for a blob the writer produced; it appends exactly the slots the
+// bytecode's module-variable operands index into. The one a hand-damaged blob
+// could still provoke is a repeated name inside this section, which would leave
+// the earlier slots declared and make the fallback compile reject the
+// redeclaration -- unreachable from write_module_state(), which lists each
+// declared variable once.
 static bool build_module_vars(CacheReader* r, WrenVM* vm, ObjModule* module) {
   uint32_t var_base, var_count;
   if(!reader_u32(r, &var_base) || !reader_u32(r, &var_count))
@@ -997,9 +1011,9 @@ static bool build_symbols(CacheReader* r, WrenVM* vm) {
     if(!reader_sized(r, &name, &len))
       return false;
     int symbol = wrenSymbolTableEnsure(vm, &vm->methodNames, (const char*)name, len);
-    // Extra symbols appended by a rejected earlier attempt keep their
-    // positions, so this only fails when the VM state genuinely differs from
-    // the one the blob was built for. Nothing is served in that case.
+    // Extra symbols appended by a rejected earlier attempt keep their positions,
+    // so this only fails when the VM state genuinely differs from the one the
+    // blob was built for. Nothing is served in that case.
     if(symbol != (int)(symbol_base + i))
       return false;
   }
@@ -1014,53 +1028,50 @@ static bool read_header(CacheReader* r) {
          wren_version == (uint32_t)WREN_VERSION_NUMBER;
 }
 
-// Materialises [blob] into [vm]/[module] and returns the module body closure.
-// [blob] must have passed validate_blob() for this VM and module.
-static ObjClosure* build_blob(const uint8_t* blob, size_t blob_len, WrenVM* vm,
-                              ObjModule* module) {
+// Materialises [blob] into [vm] and [module] and, on success, stores the module
+// body closure in [out].
+//
+// One pass: the header and the module-state deltas are checked first, because
+// they are cheap, allocation-free and compare against the VM (a blob built for a
+// different state is a plain miss), then the function tree is built and
+// validated in the same walk. Nothing in the module is written until that tree
+// is complete, and the symbols and variables are appended only after it, so a
+// rejected blob leaves the module exactly as the caller found it and the compile
+// fallback starts from a clean slate.
+static CacheReplay build_blob(const uint8_t* blob, size_t blob_len, WrenVM* vm,
+                              ObjModule* module, bool is_core, ObjClosure** out) {
   CacheReader r = {blob, blob_len, 0, false};
-  if(!read_header(&r) || !build_symbols(&r, vm))
-    return NULL;
+  if(!read_header(&r))
+    return CACHE_REPLAY_CORRUPT;
 
-  // Remember where the module-variable section starts, then walk it once to
-  // reach the function tree. The variables themselves are appended only after
-  // the function graph exists, so a failed build leaves the module unchanged
-  // and the fallback compile still works.
-  size_t   var_section = r.pos;
-  uint32_t var_base, var_count;
-  if(!reader_u32(&r, &var_base) || !reader_u32(&r, &var_count))
-    return NULL;
-  for(uint32_t i = 0; i < var_count; i++) {
-    const uint8_t* name;
-    size_t         len;
-    uint8_t        kind;
-    if(!reader_sized(&r, &name, &len) || !reader_u8(&r, &kind))
-      return NULL;
-    if(kind == CACHE_VAR_LINE) {
-      uint32_t line;
-      if(!reader_u32(&r, &line))
-        return NULL;
-    } else if(kind != CACHE_VAR_NULL) {
-      return NULL;
-    }
-  }
+  // Both module-state sections sit between the header and the function tree.
+  // Record where the first one starts: both are replayed only after the tree
+  // exists, so a failed build never appends a symbol or a variable either.
+  size_t symbol_section = r.pos;
+  size_t var_section = symbol_section;
+  if(!validate_module_state(&r, vm, module, is_core, &var_section))
+    return CACHE_REPLAY_MISMATCH;
 
   CacheBuilder builder = {vm, module};
   Value        holder = NULL_VAL;
   ObjFn*       fn = build_fn(&r, &builder, &holder, 0);
+  // A well-formed blob is consumed exactly: trailing bytes mean the writer and
+  // the reader disagree, which is corruption.
   if(fn == NULL || r.failed || r.pos != r.len)
-    return NULL;
+    return CACHE_REPLAY_CORRUPT;
 
-  CacheReader vars = {blob, blob_len, var_section, false};
-  if(!build_module_vars(&vars, vm, module))
-    return NULL;
-
-  // Same wrapping the compiler path does: the fn is rooted while the closure
-  // (which the caller then returns) is allocated.
   wrenPushRoot(vm, (Obj*)fn);
-  ObjClosure* closure = wrenNewClosure(vm, fn);
+  CacheReader symbols = {blob, blob_len, symbol_section, false};
+  CacheReader vars = {blob, blob_len, var_section, false};
+  bool ok = build_symbols(&symbols, vm) && build_module_vars(&vars, vm, module);
+  ObjClosure* closure = ok ? wrenNewClosure(vm, fn) : NULL;
   wrenPopRoot(vm);
-  return closure;
+
+  if(!ok)
+    return CACHE_REPLAY_CORRUPT;
+
+  *out = closure;
+  return CACHE_REPLAY_OK;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1091,11 +1102,14 @@ typedef enum {
   CACHE_LOOKUP_HIT,
   CACHE_LOOKUP_MISS,
   CACHE_LOOKUP_CORRUPT,
+  CACHE_LOOKUP_EMBEDDED_MISMATCH, // embedded blob that no longer fits: a miss
+                                  // that must not pass silently
 } CacheLookupResult;
 
 // Looks [key] up and, on a hit, builds the closure. A MISS is a normal cache
 // miss (no entry, source changed, or the blob does not fit this VM's state);
-// CORRUPT means the blob itself is unusable and is reported once.
+// CORRUPT means the blob itself is unusable and is reported once, and an
+// EMBEDDED_MISMATCH is the same report for a blob this binary built itself.
 static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
                                       const char* module_name, const char* key,
                                       const char* source, size_t source_len,
@@ -1108,20 +1122,24 @@ static CacheLookupResult cache_lookup(WrenVM* vm, ObjModule* module,
   if(entry_find_locked(key, &index)) {
     CacheEntry* entry = &cache_entries[index];
     if(cache_entry_matches(entry, source, source_len)) {
-      CacheValidation validation = validate_blob(entry->blob, entry->blob_len, vm,
-                                                 module, module_name == NULL);
-      if(validation == CACHE_VALIDATE_OK) {
-        *out = build_blob(entry->blob, entry->blob_len, vm, module);
-        result = *out != NULL ? CACHE_LOOKUP_HIT : CACHE_LOOKUP_CORRUPT;
+      CacheReplay replay = build_blob(entry->blob, entry->blob_len, vm, module,
+                                      module_name == NULL, out);
+      if(replay == CACHE_REPLAY_OK) {
+        result = CACHE_LOOKUP_HIT;
         // The bytes matched, so this is the same source under a newer
         // signature (a touch or a no-op save): remember it so the next
         // request can stop at stat() and skip the read and hash entirely.
-        if(result == CACHE_LOOKUP_HIT && stat != NULL && stat->valid) {
+        if(stat != NULL && stat->valid) {
           entry->has_stat = true;
           entry->stat = *stat;
         }
-      } else if(validation == CACHE_VALIDATE_CORRUPT) {
+      } else if(replay == CACHE_REPLAY_CORRUPT) {
         result = CACHE_LOOKUP_CORRUPT;
+      } else if(entry->embedded) {
+        // An embedded blob is built by this binary for exactly this VM state, so
+        // a mismatch means the cache is quietly doing nothing for every VM. Say
+        // it once instead of just recompiling in silence.
+        result = CACHE_LOOKUP_EMBEDDED_MISMATCH;
       }
     }
   }
@@ -1205,6 +1223,13 @@ static void cache_store(WrenVM* vm, ObjModule* module, bool is_core, const char*
   entry->has_stat = !is_core && stat != NULL && stat->valid;
   if(entry->has_stat)
     entry->stat = *stat;
+  // Test hook (see the top of this file): damage the one framework blob, so the
+  // next VM has to reject it. The following request stores a fresh copy.
+  if(cache_fault && !cache_fault_done && is_core && entry->blob_len > 1 &&
+     strcmp(key, BYTECODE_CACHE_FRAMEWORK_KEY) == 0) {
+    cache_fault_done = true;
+    entry->blob_len--;
+  }
   cache_lock_release();
 }
 
@@ -1243,6 +1268,8 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
     // The entry is replaced by the store below (same key) and the source is
     // compiled normally. Never serve a half-built module.
     cache_warn("Discarding a corrupt cached module; recompiling");
+  } else if(lookup == CACHE_LOOKUP_EMBEDDED_MISMATCH) {
+    cache_warn("Embedded bytecode blob no longer fits this VM; recompiling");
   }
 
   if(closure == NULL) {
@@ -1268,6 +1295,14 @@ static ObjClosure* cache_compile(WrenVM* vm, const char* module_name,
 
   if(module_name != NULL)
     wrenPopRoot(vm); // name_value
+
+  // Test hook (see the top of this file): the only way to tell a replay from a
+  // silent recompile from outside the process.
+  if(cache_trace && embedded) {
+    message(yellow("Bytecode cache"),
+            strcmp(cache_key, BYTECODE_CACHE_CORE_KEY) == 0 ? "core:" : "framework:",
+            lookup == CACHE_LOOKUP_HIT ? "replayed" : "compiled");
+  }
 
   return closure;
 }
@@ -1330,11 +1365,9 @@ ObjClosure* bytecode_cache_load_by_stat(WrenVM* vm, const char* module_name,
   if(entry_find_locked(cache_key, &index)) {
     CacheEntry* entry = &cache_entries[index];
     if(cache_stat_matches(entry, stat)) {
-      CacheValidation validation = validate_blob(entry->blob, entry->blob_len, vm,
-                                                 module, module_name == NULL);
-      if(validation == CACHE_VALIDATE_OK)
-        closure = build_blob(entry->blob, entry->blob_len, vm, module);
-      else if(validation == CACHE_VALIDATE_CORRUPT)
+      CacheReplay replay = build_blob(entry->blob, entry->blob_len, vm, module,
+                                      module_name == NULL, &closure);
+      if(replay == CACHE_REPLAY_CORRUPT)
         corrupt = true;
     }
   }
