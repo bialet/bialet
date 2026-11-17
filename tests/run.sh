@@ -355,8 +355,13 @@ _test_start_ms=$(now_ms)
 static_txt=$(curl -sI --max-time 5 "http://$HOST:$PORT/test.txt" | tr -d '\r')
 static_long=$(curl -s -o /dev/null -D - --max-time 5 \
   "http://$HOST:$PORT/$(printf 'L%.0s' $(seq 1 2100))" | head -1 | tr -d '\r')
-if [[ "$static_txt" == *"X-Content-Type-Options: nosniff"* \
-      && "$static_long" == "HTTP/1.1 414 URI Too Long" ]]; then
+# The header buffer is BUFSIZ * 4: 32 KiB on glibc but 2 KiB on Windows, where
+# a target that would reach the 414 check overflows the header block first and
+# is refused with 400.
+static_long_ok=0
+[[ "$static_long" == "HTTP/1.1 414 URI Too Long" ]] && static_long_ok=1
+[[ "$IS_WINE" == 1 && "$static_long" == "HTTP/1.1 400 Bad Request" ]] && static_long_ok=1
+if [[ "$static_txt" == *"X-Content-Type-Options: nosniff"* && "$static_long_ok" == 1 ]]; then
   report_result "Static nosniff, 414 phrase   " "$static_hdr_line" 0
 else
   report_result "Static nosniff, 414 phrase   " "$static_hdr_line" 1 \
@@ -1017,11 +1022,12 @@ fi
 
 # Every request target is logged, before the 414 length check, and the escaping
 # can quadruple it: a long target must not store a record of its own size.
+# 1200 bytes stays inside the smallest header buffer (2 KiB on Windows).
 if [[ "$TARGET_EXEC" != "-" ]]; then
   logcap_line=$LINENO
   _test_start_ms=$(now_ms)
   curl -s -o /dev/null --max-time 10 \
-    "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 3000))"
+    "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 1200))"
   logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | wc -c | tr -d ' ')
   logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tail -c 4)
   if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 && "$logcap_tail" == "..." ]]; then
