@@ -368,6 +368,7 @@ else
     "Expected nosniff on /test.txt and 'HTTP/1.1 414 URI Too Long'. Got '${static_txt//$'\n'/ }' and '$static_long'"
 fi
 
+run_test "Private-looking query served" "get?foo=bar&next=/_x/.y" 200 "bar"
 run_test "This URL not exists         " "donotexists"     404
 run_test "Custom 404 error page       " "donotexists"     404 "custom-404-page"
 run_test "Check HTTP method           " "method-check"    200 "GET"

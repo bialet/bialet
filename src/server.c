@@ -1389,7 +1389,22 @@ void handle_client(bialet_socket_t client_socket) {
   // Reject any URI whose decoded path component starts with '_' or '.'
   // (private files such as _db.sqlite3, .env). This runs before
   // any stat/fopen so "/sub/.env" and "//_db.sqlite3" cannot bypass it.
-  int refuse_uri = has_forbidden_uri_component(hm->uri.str);
+  // Only the path: the query is request data, and "?next=/_x" used to be
+  // refused with 403 although it names no file. The router truncates at '?'
+  // before it touches the file system, so the path is all it ever opens.
+  int refuse_uri;
+  {
+    size_t path_len = strcspn(hm->uri.str, "?");
+    char*  path_only = malloc(path_len + 1);
+    if(path_only == NULL) {
+      refuse_uri = 1;
+    } else {
+      memcpy(path_only, hm->uri.str, path_len);
+      path_only[path_len] = '\0';
+      refuse_uri = has_forbidden_uri_component(path_only);
+      free(path_only);
+    }
+  }
 #ifdef _WIN32
   refuse_uri = refuse_uri || has_win32_alias_component(hm->uri.str);
 #endif
