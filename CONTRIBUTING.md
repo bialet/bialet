@@ -110,6 +110,9 @@ The default build uses `-Wall -Wextra -Werror` and links against
 `libsqlite3`, `libcurl`, `libpthread`, and `libm` (plus `libssl`/`libcrypto`
 when OpenSSL is detected).
 
+`make MIMALLOC=1` links mimalloc as the allocator instead. It is never
+required and nothing is vendored; see the README for the measured effect.
+
 #### Make targets
 
 | Target              | Description                                                                             |
@@ -120,6 +123,7 @@ when OpenSSL is detected).
 | `make check`        | Build and run the test suite                                                            |
 | `make installcheck` | Install, then run the tests against the installed binary                                |
 | `make static`       | Linux only — produce a statically linked, self-contained binary                         |
+| `make MIMALLOC=1`   | Link mimalloc as the allocator (needs the mimalloc library)                            |
 | `make wren_files`   | Regenerate `src/*.wren.inc` from `src/*.wren` (run after editing embedded Wren sources) |
 | `make check-wren-inc` | Verify every committed `.inc` matches a fresh regeneration                     |
 | `make html`         | Build the documentation with Sphinx                                                     |

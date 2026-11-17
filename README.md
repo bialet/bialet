@@ -212,6 +212,28 @@ libcurl, and OpenSSL. See [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites) for
 other distributions, cross-compiling (including Windows), the full list of
 `make` targets, and the development workflow.
 
+### Optional: mimalloc
+
+`make MIMALLOC=1` links [mimalloc](https://github.com/microsoft/mimalloc)
+instead of the C library allocator. Bialet allocates heavily on every request
+(compiled strings, query rows, rendered page buffers), and the allocator alone
+showed up as roughly a third of the sampled CPU time on a small VPS, so this is
+one of the few dependencies that pays for its weight:
+
+| `mixed` workload, 1 site, 5×10 s, 4 connections | median rps | p50 | p90 |
+| --- | ---: | ---: | ---: |
+| default (glibc malloc) | 123.5 | 29.6 ms | 105.9 ms |
+| `MIMALLOC=1` | 164.1 | 21.7 ms | 106.2 ms |
+
+Numbers are from the project's 2-core reference box, with the load client on
+the same host; treat them as a ratio, not a promise. It needs the mimalloc
+library (`libmimalloc-dev` on Debian/Ubuntu, `mimalloc-devel` on Fedora) and
+is opt-in: the default build pulls in no extra dependency and no allocator is
+vendored. `pkg-config libmimalloc` is used when it exists, with `-lmimalloc`
+as the fallback. `make MIMALLOC=1` relinks an existing build; leave the
+variable out to go back to the default allocator. `make static` keeps its own
+link line and is not affected.
+
 ## Development
 
 Run the freshly built binary against an app directory (the last positional
