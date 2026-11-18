@@ -11,8 +11,9 @@ arguments).
 
 ## Dates: add days, add months, week start, due dates
 
-`Date` has no `+`/`-` and cannot be built from a Unix timestamp. Keep the civil
-calendar arithmetic in one helper and call it everywhere:
+`Date` shifts instants by seconds with `+`/`-`, subtracts to seconds, and moves
+calendar days with `addDays`. Month arithmetic is the one thing it does not
+have, so keep a small clamping helper for it:
 
 ```wren
 class Dates {
@@ -31,45 +32,28 @@ class Dates {
     var d = date.day
     var last = Dates.daysInMonth(y, m)
     if (d > last) d = last
-    return Date.new(y, m, d, date.hours, date.minutes, date.seconds)
-  }
-
-  // Days -> civil date (Howard Hinnant's civil_from_days, see datetime.md).
-  static fromUnix(secs) {
-    var days = (secs / 86400).floor
-    var z = days + 719468
-    var era = ((z >= 0 ? z : z - 146096) / 146097).floor
-    var doe = z - era * 146097
-    var yoe = ((doe - (doe / 1460).floor + (doe / 36524).floor - (doe / 146096).floor) / 365).floor
-    var y = yoe + era * 400
-    var doy = doe - (365 * yoe + (yoe / 4).floor - (yoe / 100).floor)
-    var mp = ((5 * doy + 2) / 153).floor
-    var d = doy - ((153 * mp + 2) / 5).floor + 1
-    var m = mp < 10 ? mp + 3 : mp - 9
-    y = m <= 2 ? y + 1 : y
-    return [y, m, d]
-  }
-
-  static dateFromUnix(secs) {
-    var ymd = Dates.fromUnix(secs)
-    return Date.new(ymd[0], ymd[1], ymd[2])
+    return Date.new(y, m, d, date.hours, date.minutes, date.seconds, date.tz)
   }
 
   // 0 = Sunday, so shift by six to make Monday the first day.
-  static startOfWeek(date) {
-    var dow = Num.fromString(date.format("#w"))
-    return Dates.dateFromUnix(date.unix - ((dow + 6) % 7) * 86400)
-  }
-
-  static addDays(date, n) { Dates.dateFromUnix(date.unix + n * 86400) }
+  static startOfWeek(date) { date.addDays(-((date.dayOfWeek + 6) % 7)) }
 }
 ```
 
 ```wren
+Date.fromUnix(1700000000)                    // 2023-11-14 22:13:20 in Date.tz
+Date.new(1700000000, "UTC")                  // the same instant, in UTC
+Date.new(2024, 1, 31).addDays(1)             // 2024-02-01 00:00:00
+Date.new(2024, 2, 28).addDays(1)             // 2024-02-29 00:00:00
+Date.new(2024, 9, 13) + 86400                // 2024-09-14: + one day of seconds
+Date.new(2024, 9, 14) - Date.new(2024, 9, 13) // 86400
 Dates.addMonths(Date.new(2024, 1, 31), 1).format("#Y-#m-#d") // 2024-02-29
 Dates.startOfWeek(Date.new(2026, 10, 18)).format("#Y-#m-#d") // 2026-10-12
-Dates.addDays(Date.new(2026, 10, 18), 60).format("#Y-#m-#d") // 2026-12-17
 ```
+
+`addDays` keeps the wall clock and zone, so it is safe across leap days, month
+ends and DST changes; `+`/`-` with a number is an exact number of seconds. For a
+due date, add the days the contract means rather than 30 × 86400 seconds.
 
 Format tokens are strftime-style with `#` instead of `%`: `#Y #m #d #H #M #S`,
 `#w` (0 = Sunday), `#u` (1 = Monday), `#V` (ISO week), `#F` (ISO date). The

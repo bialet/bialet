@@ -8,6 +8,14 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- `Date` arithmetic: `date + n` and `date - n` shift by **seconds**,
+  `date - otherDate` returns the seconds between them (same as `.diff`), and
+  `date + otherDate` is refused with an explanation. `Date.new(seconds)`,
+  `Date.new(seconds, tz)` and `Date.fromUnix(seconds, tz)` read epoch seconds,
+  the same unit as `.unix`.
+- `Date.addDays(n)` shifts the civil date by whole days while keeping the wall
+  clock and zone, so leap days, month ends, year boundaries and DST changes are
+  handled without a 86400-second approximation.
 - `Request.get`, `Request.query`, `Request.post`, `Request.route` and
   `Request.header` take an optional second argument returned when the value is
   missing. Only `null` triggers it (and for `route`, a missing or empty
@@ -19,8 +27,18 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   data and POSTs on the same cookie-jar session. A raw String or multipart body
   aborts, because it has nowhere to add the field.
 
+### Fixed
+
+- `Date` converted a wall clock inside a DST period as if it were standard
+  time: the `struct tm` passed to `mktime()` had `tm_isdst = 0`, so `.unix` (and
+  `format("#s")`) came back one hour early in a zone that observes DST. `-1`
+  now lets the C library decide.
+
 ### Documentation
 
+- The date pages, pitfalls, `Date` reference, prompt guide and dates recipe use
+  the new arithmetic and drop the "no `+`/`-`, no timestamp constructor"
+  instructions.
 - `docs/reference.md` and `docs/prompt-guide.md` show the new `Request`
   default overloads as the recommended form and keep the null pitfall: a
   default replaces only a missing value, never an empty field.

@@ -741,27 +741,27 @@ to instances of a class whose `construct new(data)` accepts a Map.
 ## Dates
 
 ```wren
-var now = Date.new()                              // current UTC date/time
+var now = Date.new()                              // current date/time in Date.tz
 var d = Date.new(2024, 9, 13, 15, 45, 30)          // explicit fields
 var fromDb = Date.new(row["createdAt"])            // "YYYY-MM-DD[ HH:MM:SS]" string
+var instant = Date.new(1700000000, "UTC")          // epoch SECONDS + zone (like Date.fromUnix)
 
 d.year; d.month; d.day                             // singular
 d.hours; d.minutes; d.seconds                      // PLURAL -- d.hour raises an error
 d.unix                                              // Unix timestamp (seconds)
 d.format("#Y-#m-#d")                                // strftime-style tokens, # not %
-d1 < d2; d1 == d2; d1.diff(d2)                      // comparisons work; diff() is seconds
+d1 < d2; d1 == d2; d2 - d1; d1.diff(d2)             // comparisons; subtracting dates gives seconds
+d + 86400                                           // shift the instant by 86400 seconds
+d.addDays(30)                                       // calendar days: keeps the clock and zone
 ```
 
-> **CRITICAL:** `Date` has **no** `+`/`-` operators — `date + 86400` raises
-> `Date does not implement '+(_)'.`. There is also no way to build a `Date`
-> from a Unix timestamp number (`Date.new(1700000000)` raises
-> `Num does not implement 'split(_)'.`) — the constructor only accepts a
-> `"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To
-> compare two instants, use `.diff`/`.unix` (both plain numbers); to add or
-> subtract calendar days, do the arithmetic on `year`/`month`/`day`
-> yourself (see [Date and
-> Time](https://bialet.dev/_sources/datetime.md) for a verified algorithm) —
-> there is no shortcut for either.
+> **Note:** `Date.new(number)` reads **epoch seconds**, not a year, so
+> `Date.new(d.unix)` round-trips. `+`/`-` with a number shift **seconds**;
+> `d2 - d1` returns seconds (same as `.diff`); `d1 + d2` is refused because
+> adding two instants has no meaning. Use `addDays(n)` for calendar days
+> (leap-day, month-end and DST safe — `09:00` stays `09:00`). There is no
+> `addMonths` in core: clamp the day in a helper (see
+> [Recipes](https://bialet.dev/_sources/recipes.md)).
 
 ## Controllers: Logic at the Top, View at the Bottom
 

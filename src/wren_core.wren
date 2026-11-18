@@ -678,10 +678,15 @@ class Date {
   }
   static new() { Date.fromString(Date.current_(Date.zoneName_(Date.tz)), Date.tz) }
   static new(date) { Date.new(date, Date.tz) }
-  static new(date, tz) { date is Date ? date : Date.fromString(date, tz) }
-  // `Date.new(1792292400)` is a year, not a timestamp. Use fromUnix for epoch
-  // seconds, formatted in Date.tz.
-  static fromUnix(seconds) { Date.fromString(Date.fromUnix_(seconds, Date.zoneName_(Date.tz)), Date.tz) }
+  static new(date, tz) {
+    if (date is Date) return date
+    // A number is epoch seconds, the same unit as .unix, so a timestamp can go
+    // straight back into a Date without a trip through fromUnix.
+    if (date is Num) return Date.fromUnix(date, tz)
+    return Date.fromString(date, tz)
+  }
+  static fromUnix(seconds) { Date.fromUnix(seconds, Date.tz) }
+  static fromUnix(seconds, tz) { Date.fromString(Date.fromUnix_(seconds, Date.zoneName_(tz)), tz) }
   static new(year, month, day, hours, minutes, seconds) { Date.new(year, month, day, hours, minutes, seconds, Date.tz) }
   static new(year, month, day) { Date.new(year, month, day, 0, 0, 0, Date.tz) }
   static new(year, month, day, tz) { Date.new(year, month, day, 0, 0, 0, tz) }
@@ -734,6 +739,60 @@ class Date {
   iso { toString }
   toString { "%(year)-%(mo)-%(dd) %(hh):%(mi):%(ss)" }
   diff(otherDate) { unix - otherDate.unix }
+  // Seconds move an instant; days move a calendar date. `+`/`-` with a number
+  // shift by seconds, so a day across a DST change is 23 or 25 hours. Use
+  // addDays to keep the wall clock instead.
+  + (o) {
+    if (o is Date) {
+      Fiber.abort("Date + Date is undefined: an instant plus an instant has no meaning. Subtract them (date - otherDate) for the seconds between them.")
+    }
+    if (!(o is Num) || o.isNan || o.isInfinity) {
+      Fiber.abort("Date + expects a number of seconds.")
+    }
+    return Date.fromUnix(unix + o, _tz)
+  }
+  - (o) {
+    if (o is Date) return unix - o.unix
+    if (!(o is Num) || o.isNan || o.isInfinity) {
+      Fiber.abort("Date - expects a number of seconds or a Date.")
+    }
+    return Date.fromUnix(unix - o, _tz)
+  }
+  // Shifts the civil date by [n] days and keeps the wall clock and zone. The
+  // arithmetic runs on the year/month/day fields, so month ends, leap days,
+  // year boundaries and DST changes come out right: Jan 31 + 1 day is Feb 1,
+  // and 09:00 stays 09:00 even on the day the zone changes offset.
+  addDays(n) {
+    if (!(n is Num) || n.isNan || n.isInfinity || n != n.truncate) {
+      Fiber.abort("Date.addDays expects a whole number of days.")
+    }
+    var civil = Date.fromJdn_(Date.jdn_(year, month, day) + n)
+    return Date.new(civil[0], civil[1], civil[2], hours, minutes, seconds, _tz)
+  }
+  // Howard Hinnant's days_from_civil / civil_from_days
+  // (http://howardhinnant.github.io/date_algorithms.html). The .truncate
+  // divisions reproduce the C integer division the algorithm assumes.
+  static jdn_(y, m, d) {
+    y = m <= 2 ? y - 1 : y
+    var era = ((y >= 0 ? y : y - 399) / 400).truncate
+    var yoe = y - era * 400
+    var doy = ((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5).truncate + d - 1
+    var doe = yoe * 365 + (yoe / 4).truncate - (yoe / 100).truncate + doy
+    return era * 146097 + doe - 719468
+  }
+  static fromJdn_(z) {
+    z = z + 719468
+    var era = ((z >= 0 ? z : z - 146096) / 146097).truncate
+    var doe = z - era * 146097
+    var yoe = ((doe - (doe / 1460).truncate + (doe / 36524).truncate - (doe / 146096).truncate) / 365).truncate
+    var y = yoe + era * 400
+    var doy = doe - (365 * yoe + (yoe / 4).truncate - (yoe / 100).truncate)
+    var mp = ((5 * doy + 2) / 153).truncate
+    var d = doy - ((153 * mp + 2) / 5).truncate + 1
+    var m = mp < 10 ? mp + 3 : mp - 9
+    y = m <= 2 ? y + 1 : y
+    return [y, m, d]
+  }
   cmp_(o) { diff(o) }
   < (o) { cmp_(o) <  0 }
   > (o) { cmp_(o) >  0 }

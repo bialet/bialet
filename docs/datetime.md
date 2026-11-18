@@ -16,6 +16,7 @@ var now = Date.new()
 var specificDate = Date.new(2024, 9, 13, 15, 45, 30)
 var justDate = Date.new(2024, 9, 13)
 var fromEpoch = Date.fromUnix(1700000000)
+var fromEpochNumber = Date.new(1700000000)
 ```
 
 - `Date.new()` creates a new `Date` object representing the current date and time.
@@ -24,9 +25,9 @@ var fromEpoch = Date.fromUnix(1700000000)
   specific date and time.
 - `Date.new(year, month, day)` creates a date object with the specified year,
   month, and day at midnight.
-- `Date.fromUnix(seconds)` creates a date from a Unix timestamp (epoch
-  seconds), formatted in `Date.tz`. `Date.new(1700000000)` is a year, not a
-  timestamp.
+- `Date.new(seconds)` and `Date.fromUnix(seconds)` build the instant
+  `seconds` after 1970, formatted in `Date.tz`. Add a zone as the second
+  argument: `Date.new(1700000000, "UTC")`.
 
 ## Per-Instance Timezone Handling
 
@@ -146,62 +147,43 @@ System.print("Unix Timestamp: %(date.unix)")
 
 ## Adding and Subtracting Time
 
-`Date` does **not** implement `+`/`-` — `date + 86400` raises
-`Date does not implement '+(_)'`. Build a date from epoch seconds with
-`Date.fromUnix(1700000000)`; `Date.new(1700000000)` is a year, not a
-timestamp (the constructor expects a string in `"YYYY-MM-DD"` or
-`"YYYY-MM-DD HH:MM:SS"` format, or another `Date`).
-
-For two **instants** (comparing "how many seconds apart"), use `.unix` and
-`.diff` directly — both already return plain numbers:
+`Date` works in two units. `+` and `-` with a **number** shift the instant by
+**seconds**, the same unit as `.unix`; subtracting one `Date` from another
+returns the seconds between them:
 
 ```wren
 var start = Date.new("2024-09-13 10:00:00")
-var end = Date.new("2024-09-13 12:30:00")
-System.print(end.diff(start))   // 9000 (seconds)
+var end = start + 9000
+System.print(end)               // 2024-09-13 12:30:00
+System.print(end - start)       // 9000
+System.print(end.diff(start))   // 9000
 ```
 
-For adding/subtracting **calendar days** (which `.unix` arithmetic can't do
-safely across month/year boundaries or DST), implement civil-calendar
-arithmetic on the `year`/`month`/`day` fields yourself. This is the
-[Howard Hinnant `days_from_civil`/`civil_from_days` algorithm][hinnant],
-adapted to Wren:
+Seconds are exact: across a DST change a "day" of 86400 seconds can land on a
+different wall clock, which is what you want when you mean an elapsed duration.
+
+`date + otherDate` is refused: adding two instants has no meaning. Subtract
+them instead.
+
+For **calendar days** use `addDays(n)`, which shifts the year/month/day fields
+and keeps the hours, minutes, seconds and zone:
 
 ```wren
-class Civil {
-  static toJdn(y, m, d) {
-    y = m <= 2 ? y - 1 : y
-    var era = ((y >= 0 ? y : y - 399) / 400).floor
-    var yoe = y - era * 400
-    var doy = ((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5).floor + d - 1
-    var doe = yoe * 365 + (yoe / 4).floor - (yoe / 100).floor + doy
-    return era * 146097 + doe - 719468
-  }
-  static fromJdn(z) {
-    z = z + 719468
-    var era = ((z >= 0 ? z : z - 146096) / 146097).floor
-    var doe = z - era * 146097
-    var yoe = ((doe - (doe / 1460).floor + (doe / 36524).floor - (doe / 146096).floor) / 365).floor
-    var y = yoe + era * 400
-    var doy = doe - (365 * yoe + (yoe / 4).floor - (yoe / 100).floor)
-    var mp = ((5 * doy + 2) / 153).floor
-    var d = doy - ((153 * mp + 2) / 5).floor + 1
-    var m = mp < 10 ? mp + 3 : mp - 9
-    y = m <= 2 ? y + 1 : y
-    return [y, m, d]
-  }
-  static addDays(date, n) {
-    var ymd = fromJdn(toJdn(date.year, date.month, date.day) + n)
-    return Date.new(ymd[0], ymd[1], ymd[2], date.hours, date.minutes, date.seconds, date.tz)
-  }
-}
-
-var date = Date.new(2024, 9, 13)
-System.print(Civil.addDays(date, 1).toString)   // 2024-09-14 00:00:00
-System.print(Civil.addDays(date, 30).toString)  // 2024-10-13 00:00:00
+Date.new(2024, 2, 28).addDays(1)              // 2024-02-29 00:00:00
+Date.new(2023, 2, 28).addDays(1)              // 2023-03-01 00:00:00
+Date.new(2024, 1, 31).addDays(1)              // 2024-02-01 00:00:00
+Date.new(2024, 3, 9, 9, 0, 0, "America/New_York").addDays(1).toString
+  // 2024-03-10 09:00:00: 09:00 stays 09:00, and .unix moves 23 hours
 ```
 
-[hinnant]: http://howardhinnant.github.io/date_algorithms.html
+`addDays` requires a whole number (negative is allowed). Because it never
+touches the clock fields it is month-end, leap-year and DST safe: `09:00` stays
+`09:00` even when the day is 23 or 25 hours long. Month arithmetic is not built
+in; clamp the day yourself (see
+[Dates in Recipes](recipes.md#dates-add-days-add-months-week-start-due-dates)).
+
+`Date.new(number)` and `Date.fromUnix(number)` both read **epoch seconds**;
+adding a zone (`Date.new(1700000000, "UTC")`) formats the same instant there.
 
 ## Comparing Dates
 

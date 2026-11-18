@@ -2433,6 +2433,10 @@ DEF_PRIMITIVE(date_format) {
   t.tm_hour = hour;
   t.tm_min = minute;
   t.tm_sec = second;
+  // -1 lets mktime() decide whether the zone is in DST at that wall clock.
+  // Zero-initializing the field said "standard time", so every date inside a
+  // DST period came back one hour early in a zone that observes it.
+  t.tm_isdst = -1;
 
   // mktime fills in tm_wday and tm_yday, which strftime() needs for %w, %j
   // and %V. Without it, those directives always read the zero-initialized
@@ -2537,6 +2541,7 @@ DEF_PRIMITIVE(date_unix) {
   t.tm_hour = hour;
   t.tm_min = minute;
   t.tm_sec = second;
+  t.tm_isdst = -1;
 
   time_t result = mktime(&t);
   date_zone_leave(zoned);

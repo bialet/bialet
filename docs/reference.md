@@ -1048,17 +1048,24 @@ application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
-Creates a new `Date` object from a provided date string.
+Creates a new `Date` object from a provided value.
 
-- `date`: The date string to initialize the `Date` object.
+- `date`: A date string (`"YYYY-MM-DD"` or `"YYYY-MM-DD HH:MM:SS"`), a number of
+  **epoch seconds** (the same unit as `.unix`), or another `Date` (returned
+  as-is).
+
+```wren
+Date.new("2024-09-13 10:30:00")
+Date.new(1700000000)              // 2023-11-14 22:13:20 in Date.tz
+Date.new(Date.now)
+```
 
 ### new(date, tz)
 
-Creates a new `Date` object from a provided date string and a specified timezone
-offset.
+Creates a new `Date` object from a provided value and a specified timezone.
 
-- `date`: The date string to initialize the `Date` object.
-- `tz`: The timezone offset to apply.
+- `date`: A date string, epoch seconds, or another `Date`.
+- `tz`: The timezone offset or zone name to apply.
 
 ### new(year, month, day, hour, minute, second)
 
@@ -1102,6 +1109,23 @@ offset, setting the time to `00:00:00`.
 - `month`: The month component.
 - `day`: The day component.
 - `tz`: The timezone offset to apply.
+
+### fromUnix(seconds)
+
+Creates a `Date` from **epoch seconds**, formatted in `Date.tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+
+```wren
+var posted = Date.fromUnix(row["createdAt"].toNum)
+```
+
+### fromUnix(seconds, tz)
+
+Creates a `Date` from epoch seconds, formatted in `tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+- `tz`: The timezone offset or zone name to apply.
 
 ### tz=(tz)
 
@@ -1172,17 +1196,54 @@ Returns the difference in seconds between the current date and `otherDate`
 
 - `otherDate`: The `Date` object to compare against.
 
+### addDays(n)
+
+Returns a new `Date` shifted by a whole number of **calendar days**, keeping the
+hours, minutes, seconds and timezone. Negative `n` moves backwards. Leap days,
+month ends, year boundaries and DST changes are handled by civil-calendar
+arithmetic, so the wall clock does not move (`09:00` stays `09:00` even when the
+day is 23 or 25 hours long).
+
+- `n`: A whole number of days; a fractional number raises an error.
+
+```wren
+Date.new(2024, 2, 28).addDays(1)    // 2024-02-29 00:00:00
+Date.new(2024, 1, 31).addDays(1)    // 2024-02-01 00:00:00
+Date.new(2024, 3, 1).addDays(-1)    // 2024-02-29 00:00:00
+```
+
+### + (seconds)
+
+Returns a new `Date` shifted forward by a number of **seconds** (the unit of
+`.unix`). Adding another `Date` raises an error: adding two instants has no
+meaning, so subtract them instead.
+
+```wren
+Date.new(2024, 1, 1) + 86400        // 2024-01-02 00:00:00
+```
+
+### - (seconds)
+
+Returns a new `Date` shifted backwards by a number of **seconds**.
+
+### - (otherDate)
+
+Returns the number of **seconds** between the two dates, the same value as
+`.diff(otherDate)`.
+
+```wren
+Date.new(2024, 1, 2) - Date.new(2024, 1, 1)   // 86400
+```
+
 ### Comparison operators
 
 `<`, `>`, `<=`, `>=`, `==`, `!=` all work between two `Date` instances,
 comparing them by their underlying Unix timestamp (via `diff`).
 
-> ⚠️ Pitfall: `Date` does **not** implement `+`/`-`. There is no way to add
-> or subtract a time interval directly on a `Date` instance — attempting
-> `date + 86400` raises `Date does not implement '+(_)'`. To shift an
-> instant, do the arithmetic on `.unix` (seconds) and rebuild a `Date` from
-> the result, or add/subtract calendar days yourself; there is also no
-> `date` / `time` / `inUtc` getter.
+To move an instant by a duration, use `+`/`-` with seconds; to move a calendar
+date, use `addDays`. There is no built-in month arithmetic or `date` / `time` /
+`inUtc` getter; clamp the day in a helper for months (see
+[Recipes](recipes.md#dates-add-days-add-months-week-start-due-dates)).
 
 ## Markdown
 

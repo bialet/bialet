@@ -93,11 +93,24 @@ shared data in a function. `Test` is also preloaded: never
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 8. `Date.new(unixSeconds)` does not exist; use `Date.fromUnix`
+## 8. `Date.new(number)` is epoch **seconds**, not a year
 
-`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. Build a date
-from epoch seconds with `Date.fromUnix(seconds)` (formatted in `Date.tz`), and
-go the other way with `.unix`. For "now" use `Date.new()`.
+`Date.new(1792292400)` builds the instant 1792292400 seconds after 1970,
+formatted in `Date.tz`; pass a zone as the second argument
+(`Date.new(1792292400, "UTC")`). `Date.fromUnix(seconds)` is the same value and
+also takes a zone.
+
+`+` and `-` with a number shift the instant by **seconds**, and subtracting one
+`Date` from another returns the seconds between them (same as `.diff`). Adding
+two dates (`d1 + d2`) is refused. To move **calendar days** without changing the
+wall clock — month ends, leap days, DST — use `addDays(n)`:
+
+```wren
+Date.new(2024, 2, 28).addDays(1)               // 2024-02-29 00:00:00
+Date.new(2024, 1, 1, 9, 0, 0).addDays(-1)      // 2023-12-31 09:00:00
+```
+
+For "now" use `Date.new()`.
 
 ## 9. `Num.fromString` does not understand `1.234,50`
 
@@ -263,3 +276,7 @@ are UTC. `BIALET_TIMEZONE` changes `Date`, the log line prefix and SQLite's
 `Date.fromUnix(Date.new(createdAt, "UTC").unix)`), and do not store `Date.now`
 expecting UTC: it writes the app zone's wall clock with no offset. Store
 `Date.now.unix` when you need an unambiguous instant.
+`Date.new(createdAt, "UTC").unix` is the epoch seconds of a stored string, and
+`Date.new(seconds, "UTC")` reads them back. `+`, `-` and `addDays` return a
+`Date` in the app zone, so storing the result still writes a wall clock with no
+offset — store `.unix` when the value must be an instant.
