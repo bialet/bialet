@@ -414,8 +414,9 @@ static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol) {
 //
 // Only the forward direction exists. `obj.name()` stays strict, because the
 // reverse fallback would answer a call with a getter's Fn instead of running
-// it. A getter still wins when both exist: the plain symbol is looked up first
-// and this helper only runs after it missed.
+// it. The compiler rejects a class that declares both a getter `name` and a
+// zero-argument method `name()`, so the plain lookup cannot be ambiguous.
+// The plain symbol is still looked up first.
 //
 // Returns the symbol of `name()` or -1 when the name cannot be a plain method
 // name or the allocation fails. The bytes are copied before interning because

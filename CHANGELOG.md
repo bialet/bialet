@@ -4,6 +4,17 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## Unreleased
+
+### Changed
+
+- A getter and a zero-argument method can no longer share a name in the same
+  class: `met { ... }` plus `met() { ... }` is now a compile error instead of
+  letting the last declaration win. The no-paren call `obj.met` would be
+  ambiguous. Core members that declared both (the `Query` zero-argument
+  helpers, `List.reverse`, `File.save`/`temp`/`destroy`, `Response.cors`) keep
+  the method, so both spellings continue to work through the fallback.
+
 ## 1.2.23 — 2026-11-18
 
 ### Added

@@ -180,8 +180,9 @@ class Poll {
 
 // `count`, `toString`, `keys` and `bytes` are getters; `trim`, `lower` and
 // `replace` are methods. A zero-argument method can also be called without
-// `()`: `" x ".trim` calls trim() because no getter `trim` exists. A getter
-// still wins when both exist, and the fallback is one-way (`count()` does not
+// `()`: `" x ".trim` calls trim() because no getter `trim` exists. The same
+// class cannot declare a getter and a zero-argument method with the same name
+// (that is a compile error), and the fallback is one-way (`count()` does not
 // read the getter). `Klass.new` and `list.clear` therefore run without parens.
 // There is no `String.fromBytes`: to build
 // text from numbers use `String.fromCodePoint`, and read text as a String.

@@ -289,7 +289,6 @@ class Response {
   }
   static cors(origin) { cors(origin, "GET, POST, PUT, DELETE, OPTIONS", "Content-Type, Authorization") }
   static cors() { cors("*") }
-  static cors { cors("*") }
 
   static page(title, message) { pageHtml(title, Util.htmlEscape(message)) }
   // defaultPage_ is a C native that renders the same page chrome as the
@@ -1051,20 +1050,17 @@ class File {
   size { _size }
   isTemp { _isTemp }
   createdAt { _createdAt }
-  destroy { `DELETE FROM BIALET_FILES WHERE id = ?`.query(_id) }
-  destroy() { destroy }
-  save {
+  destroy() { `DELETE FROM BIALET_FILES WHERE id = ?`.query(_id) }
+  save() {
     _isTemp = false
     `UPDATE BIALET_FILES SET isTemp = 0 WHERE id = ?`.query(_id)
     return this
   }
-  save() { save }
-  temp {
+  temp() {
     _isTemp = true
     `UPDATE BIALET_FILES SET isTemp = 1 WHERE id = ?`.query(_id)
     return this
   }
-  temp() { temp }
 }
 
 class Db {

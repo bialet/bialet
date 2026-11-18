@@ -6,7 +6,6 @@ class Greeter {
   greet() { "hello %(_name)" }
   need(extra) { "hello %(_name) %(extra)" }
   value { "getter" }
-  value() { "method" }
   static total() { 42 }
 }
 
@@ -28,10 +27,9 @@ Test.assert(" x ".trim == "x", "core zero-arg method without parens")
 Test.assert(greeter.greet() == "hello ana", "parenthesized zero-arg method")
 Test.assert(Greeter.total() == 42, "parenthesized static method")
 
-// When a getter and a method share a name, the getter wins without parens and
-// the method is reached with them.
-Test.assert(greeter.value == "getter", "the getter wins without parens")
-Test.assert(greeter.value() == "method", "parens call the method")
+// A getter of the same name wins over the fallback, and the two declarations
+// cannot coexist: sharing a name is a compile error (see the syntax tests).
+Test.assert(greeter.value == "getter", "a getter wins without parens")
 
 // A method that takes arguments is not a getter: without parens the call is
 // still a method-not-found error, not a silent zero-argument call.

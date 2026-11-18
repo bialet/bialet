@@ -79,7 +79,14 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
   test_syntax "get/set as member names pass    " "syntax_ok_get.wren" 0
+  test_syntax "getter + method with args pass " "syntax_ok_member_overload.wren" 0
   test_syntax_msg "get keyword names the getter  " "syntax_err_get_keyword.wren" 1 "Wren has no 'get' declaration. Write the getter as 'isDueToday { ... }' or the method as 'isDueToday() { ... }'."
+  # A getter and a zero-argument method of the same name make the no-paren
+  # spelling ambiguous, so the second declaration is a compile error in either
+  # order, and for statics too.
+  test_syntax_msg "Getter then zero-arg method     " "syntax_err_dupe_member_getter_first.wren" 1 "Class Example already defines a getter 'prop'. A zero-argument method 'prop()' cannot share its name."
+  test_syntax_msg "Zero-arg method then getter     " "syntax_err_dupe_member_method_first.wren" 1 "Class Example already defines a method 'met()'. A getter 'met' cannot share its name."
+  test_syntax_msg "Static getter + method conflict " "syntax_err_dupe_member_static.wren" 1 "Class Example already defines a static getter 'total'. A zero-argument method 'total()' cannot share its name."
   test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0

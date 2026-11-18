@@ -462,12 +462,11 @@ class List is Sequence {
 
   // Non-mutating: returns a new list in reverse order. Both spellings work,
   // matching the other zero-argument helpers on List.
-  reverse {
+  reverse() {
     var out = []
     for (i in 0...count) out.add(this[count - 1 - i])
     return out
   }
-  reverse() { reverse }
 
   sort() { sort {|low, high| low < high } }
 
@@ -850,14 +849,14 @@ class Query {
   // Stringify non-primitive params, then delegate to the native backends.
   query_(string, params) { queryRaw_(string, Query.bindParams_(params)) }
   fetch_(string, params) { fetchRaw_(string, Query.bindParams_(params)) }
-  // Query methods, return last inserted ID
-  query { query_(this, []) }
+  // Query methods, return last inserted ID. Keep only the parenthesized
+  // zero-argument method: the no-paren fallback makes `query` call it, while a
+  // getter alongside it would be a compile error.
   query() { query_(this, []) }
   query(param) { query_(this, param is List ? param : [param]) }
   query(p1, p2) { query_(this, [p1, p2]) }
   query(p1, p2, p3) { query_(this, [p1, p2, p3]) }
   // Fetch methods, return result as List
-  fetch { fetch_(this, []) }
   fetch() { fetch_(this, []) }
   fetch(param) { fetch_(this, param is List ? param : [param]) }
   fetch(p1, p2) { fetch_(this, [p1, p2]) }
@@ -873,12 +872,10 @@ class Query {
     var res = fetch_(sql, params)
     return res is List && res.count > 0 ? res[0] : null
   }
-  first { first_([]) }
   first() { first_([]) }
   first(param) { first_(param is List ? param : [param]) }
   first(p1, p2) { first_([p1, p2]) }
   first(p1, p2, p3) { first_([p1, p2, p3]) }
-  val { val([]) }
   val() { val([]) }
   val(param) {
     var res = first_(param is List ? param : [param])
