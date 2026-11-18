@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -924,6 +924,12 @@ chaining.</p>
 <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Max"</span><span class="w">  </span><span class="c1">// setter</span>
 </pre></div>
 </div>
+<p>Bialet adds one rule for methods: <code class="docutils literal notranslate"><span class="pre">obj.name</span></code> falls back to calling a
+zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code> when the class has no getter <code class="docutils literal notranslate"><span class="pre">name</span></code>. So
+<code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">x</span> <span class="pre">&quot;.trim</span></code> and <code class="docutils literal notranslate"><span class="pre">list.clear</span></code> work as well as their parenthesized forms.
+<code class="docutils literal notranslate"><span class="pre">obj.name()</span></code> always calls the method, and a getter still wins when a class
+declares both. The fallback is one-way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> does not read the <code class="docutils literal notranslate"><span class="pre">count</span></code>
+getter.</p>
 </section>
 <section id="static-methods">
 <h3>Static Methods<a class="headerlink" href="#static-methods" title="Link to this heading">#</a></h3>
@@ -1132,7 +1138,9 @@ It provides a rich set of higher-order methods:</p>
 <h3>Accumulate<a class="headerlink" href="#accumulate" title="Link to this heading">#</a></h3>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">", "</span><span class="p">)</span><span class="w">           </span><span class="c1">// "1, 2, 3"</span>
 <span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="w">                </span><span class="c1">// 3</span>
-<span class="n">items</span><span class="o">.</span><span class="n">isEmpty</span><span class="w">                   </span><span class="c1">// true/false</span>
+<span class="n">items</span><span class="o">.</span><span class="n">isEmpty</span><span class="w">                   </span><span class="c1">// true/false (zero elements)</span>
+<span class="n">name</span><span class="o">.</span><span class="n">isBlank</span><span class="w">                    </span><span class="c1">// true for null, "", "   " and empty sequences</span>
+<span class="n">name</span><span class="o">.</span><span class="n">isFilled</span><span class="w">                   </span><span class="c1">// the exact inverse of isBlank</span>
 </pre></div>
 </div>
 </section>
@@ -1160,8 +1168,16 @@ It provides a rich set of higher-order methods:</p>
 <span class="s2">"42"</span><span class="o">.</span><span class="n">toNum</span><span class="w">                        </span><span class="c1">// 42 (as Number)</span>
 <span class="s2">"1"</span><span class="o">.</span><span class="n">toBool</span><span class="w">                        </span><span class="c1">// true</span>
 <span class="n">list</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">User</span><span class="p">)</span><span class="w">                     </span><span class="c1">// map list of Maps into User instances</span>
+<span class="n">value</span><span class="o">.</span><span class="n">isBlank</span><span class="w">                     </span><span class="c1">// null, "", "   " and empty sequences</span>
+<span class="n">value</span><span class="o">.</span><span class="n">isFilled</span><span class="w">                    </span><span class="c1">// the exact inverse</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">isBlank</span></code> and <code class="docutils literal notranslate"><span class="pre">isFilled</span></code> are getters on every object and follow the form
+semantics: <code class="docutils literal notranslate"><span class="pre">null</span></code>, whitespace-only strings and empty sequences (list, map,
+range) are blank, while <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> are values and are not. <code class="docutils literal notranslate"><span class="pre">isEmpty</span></code> stays
+the zero-elements check: <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isEmpty</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> but <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isBlank</span></code> is
+<code class="docutils literal notranslate"><span class="pre">true</span></code>. Guard a missing <code class="docutils literal notranslate"><span class="pre">Request.post</span></code> result with <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(value.isBlank)</span></code> instead
+of <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!value)</span></code> — the latter also matches <code class="docutils literal notranslate"><span class="pre">false</span></code> and misses <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;</span></code>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">.to(Class)</span></code> method on Sequence and Map is especially useful with database
 results:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM posts`</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Post</span><span class="p">)</span>

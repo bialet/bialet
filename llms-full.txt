@@ -1269,6 +1269,13 @@ d.name          // getter, returns "Rex"
 d.name = "Max"  // setter
 ```
 
+Bialet adds one rule for methods: `obj.name` falls back to calling a
+zero-argument method `name()` when the class has no getter `name`. So
+`" x ".trim` and `list.clear` work as well as their parenthesized forms.
+`obj.name()` always calls the method, and a getter still wins when a class
+declares both. The fallback is one-way: `count()` does not read the `count`
+getter.
+
 ### Static Methods
 
 ```wren
@@ -1491,7 +1498,9 @@ items.contains("target")        // true/false
 ```wren
 [1, 2, 3].join(", ")           // "1, 2, 3"
 [1, 2, 3].count                // 3
-items.isEmpty                   // true/false
+items.isEmpty                   // true/false (zero elements)
+name.isBlank                    // true for null, "", "   " and empty sequences
+name.isFilled                   // the exact inverse of isBlank
 ```
 
 ### Paginate
@@ -1520,7 +1529,16 @@ Bialet adds a few convenience methods:
 "42".toNum                        // 42 (as Number)
 "1".toBool                        // true
 list.to(User)                     // map list of Maps into User instances
+value.isBlank                     // null, "", "   " and empty sequences
+value.isFilled                    // the exact inverse
 ```
+
+`isBlank` and `isFilled` are getters on every object and follow the form
+semantics: `null`, whitespace-only strings and empty sequences (list, map,
+range) are blank, while `false` and `0` are values and are not. `isEmpty` stays
+the zero-elements check: `"   ".isEmpty` is `false` but `"   ".isBlank` is
+`true`. Guard a missing `Request.post` result with `if (value.isBlank)` instead
+of `if (!value)` — the latter also matches `false` and misses `"   "`.
 
 The `.to(Class)` method on Sequence and Map is especially useful with database
 results:
@@ -3216,6 +3234,7 @@ var now = Date.new()
 var specificDate = Date.new(2024, 9, 13, 15, 45, 30)
 var justDate = Date.new(2024, 9, 13)
 var fromEpoch = Date.fromUnix(1700000000)
+var fromEpochNumber = Date.new(1700000000)
 ```
 
 - `Date.new()` creates a new `Date` object representing the current date and time.
@@ -3224,9 +3243,9 @@ var fromEpoch = Date.fromUnix(1700000000)
   specific date and time.
 - `Date.new(year, month, day)` creates a date object with the specified year,
   month, and day at midnight.
-- `Date.fromUnix(seconds)` creates a date from a Unix timestamp (epoch
-  seconds), formatted in `Date.tz`. `Date.new(1700000000)` is a year, not a
-  timestamp.
+- `Date.new(seconds)` and `Date.fromUnix(seconds)` build the instant
+  `seconds` after 1970, formatted in `Date.tz`. Add a zone as the second
+  argument: `Date.new(1700000000, "UTC")`.
 
 ## Per-Instance Timezone Handling
 
@@ -3346,62 +3365,43 @@ System.print("Unix Timestamp: %(date.unix)")
 
 ## Adding and Subtracting Time
 
-`Date` does **not** implement `+`/`-` — `date + 86400` raises
-`Date does not implement '+(_)'`. Build a date from epoch seconds with
-`Date.fromUnix(1700000000)`; `Date.new(1700000000)` is a year, not a
-timestamp (the constructor expects a string in `"YYYY-MM-DD"` or
-`"YYYY-MM-DD HH:MM:SS"` format, or another `Date`).
-
-For two **instants** (comparing "how many seconds apart"), use `.unix` and
-`.diff` directly — both already return plain numbers:
+`Date` works in two units. `+` and `-` with a **number** shift the instant by
+**seconds**, the same unit as `.unix`; subtracting one `Date` from another
+returns the seconds between them:
 
 ```wren
 var start = Date.new("2024-09-13 10:00:00")
-var end = Date.new("2024-09-13 12:30:00")
-System.print(end.diff(start))   // 9000 (seconds)
+var end = start + 9000
+System.print(end)               // 2024-09-13 12:30:00
+System.print(end - start)       // 9000
+System.print(end.diff(start))   // 9000
 ```
 
-For adding/subtracting **calendar days** (which `.unix` arithmetic can't do
-safely across month/year boundaries or DST), implement civil-calendar
-arithmetic on the `year`/`month`/`day` fields yourself. This is the
-[Howard Hinnant `days_from_civil`/`civil_from_days` algorithm][hinnant],
-adapted to Wren:
+Seconds are exact: across a DST change a "day" of 86400 seconds can land on a
+different wall clock, which is what you want when you mean an elapsed duration.
+
+`date + otherDate` is refused: adding two instants has no meaning. Subtract
+them instead.
+
+For **calendar days** use `addDays(n)`, which shifts the year/month/day fields
+and keeps the hours, minutes, seconds and zone:
 
 ```wren
-class Civil {
-  static toJdn(y, m, d) {
-    y = m <= 2 ? y - 1 : y
-    var era = ((y >= 0 ? y : y - 399) / 400).floor
-    var yoe = y - era * 400
-    var doy = ((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5).floor + d - 1
-    var doe = yoe * 365 + (yoe / 4).floor - (yoe / 100).floor + doy
-    return era * 146097 + doe - 719468
-  }
-  static fromJdn(z) {
-    z = z + 719468
-    var era = ((z >= 0 ? z : z - 146096) / 146097).floor
-    var doe = z - era * 146097
-    var yoe = ((doe - (doe / 1460).floor + (doe / 36524).floor - (doe / 146096).floor) / 365).floor
-    var y = yoe + era * 400
-    var doy = doe - (365 * yoe + (yoe / 4).floor - (yoe / 100).floor)
-    var mp = ((5 * doy + 2) / 153).floor
-    var d = doy - ((153 * mp + 2) / 5).floor + 1
-    var m = mp < 10 ? mp + 3 : mp - 9
-    y = m <= 2 ? y + 1 : y
-    return [y, m, d]
-  }
-  static addDays(date, n) {
-    var ymd = fromJdn(toJdn(date.year, date.month, date.day) + n)
-    return Date.new(ymd[0], ymd[1], ymd[2], date.hours, date.minutes, date.seconds, date.tz)
-  }
-}
-
-var date = Date.new(2024, 9, 13)
-System.print(Civil.addDays(date, 1).toString)   // 2024-09-14 00:00:00
-System.print(Civil.addDays(date, 30).toString)  // 2024-10-13 00:00:00
+Date.new(2024, 2, 28).addDays(1)              // 2024-02-29 00:00:00
+Date.new(2023, 2, 28).addDays(1)              // 2023-03-01 00:00:00
+Date.new(2024, 1, 31).addDays(1)              // 2024-02-01 00:00:00
+Date.new(2024, 3, 9, 9, 0, 0, "America/New_York").addDays(1).toString
+  // 2024-03-10 09:00:00: 09:00 stays 09:00, and .unix moves 23 hours
 ```
 
-[hinnant]: http://howardhinnant.github.io/date_algorithms.html
+`addDays` requires a whole number (negative is allowed). Because it never
+touches the clock fields it is month-end, leap-year and DST safe: `09:00` stays
+`09:00` even when the day is 23 or 25 hours long. Month arithmetic is not built
+in; clamp the day yourself (see
+[Dates in Recipes](recipes.md#dates-add-days-add-months-week-start-due-dates)).
+
+`Date.new(number)` and `Date.fromUnix(number)` both read **epoch seconds**;
+adding a zone (`Date.new(1700000000, "UTC")`) formats the same instant there.
 
 ## Comparing Dates
 
@@ -5098,6 +5098,8 @@ guide for the full API.
 ## Next Steps
 
 - [Security](security.md) — CSRF, password hashing, session defaults, XSS
+- [Recipes](recipes.md) — one action route for shared POST buttons, and a
+  multi-step form that carries its answers in the query string
 - [File Handling](file.md) — uploading, serving, and managing files
 - [Database](database.md) — saving form data with parameterized queries
 - [Advanced Routing](advanced-routing.md) — where to place form handlers with query params vs
@@ -7253,6 +7255,32 @@ Config.set("BIALET_TIMEZONE", "America/Bogota")
 > turns live reload and error pages on for its own run without touching the
 > database.
 
+### Public base URL: `BIALET_BASE_URL`
+
+`Request.baseUrl` (and `absoluteUrl`/`fullUrl`) builds links from the request's
+scheme and `Host` header. Behind a proxy, or from cron and email code that has
+no request at all, set the public origin explicitly:
+
+```wren
+Config.set("BIALET_BASE_URL", "https://app.example.com")
+```
+
+The value is trimmed and trailing slashes are removed, so
+`"https://app.example.com/"` works. When the row is absent or empty, the request
+authority is used (`https://` when `X-Forwarded-Proto`/`Forwarded` reports
+TLS). Unlike the startup settings above, this is read on every call, so a change
+takes effect on the next request without a restart.
+
+```wren
+var canonical = Request.absoluteUrl("/articles/%(_id)")  // https://app.example.com/articles/42
+```
+
+> ⚠️ Pitfall: `Host` is client-controlled. Bialet never reads
+> `X-Forwarded-Host`, and a link built from `Host` can point at an attacker's
+> domain if the proxy forwards an arbitrary value. Set `BIALET_BASE_URL` for
+> canonical links and every email; use `Request.baseUrl` only for
+> proxy-controlled, single-origin apps.
+
 ### Development mode: `bialet dev`
 
 The `dev` subcommand is the fastest way to start developing:
@@ -8540,6 +8568,7 @@ Test.get("/api/user")
     .setHeader("Authorization", "Bearer token123")  // Add custom header
     .method("GET")                                     // Explicitly set method
     .postData({"key": "value"})                       // Set POST data
+    .withCsrf()                                        // Add the form's CSRF token
 ```
 
 ### Cookies and Sessions
@@ -8561,6 +8590,51 @@ Test.post("/login", {
 jar. `.csrf()` aborts the test when the response rendered no token. Session
 values set during a `Test.get` are therefore visible to the following
 `Test.post`, and a CSRF-protected form validates without a `test_mode` flag.
+
+### CSRF-Protected Forms
+
+A protected form takes two requests on one session: a GET that renders the
+token the server stored, and a POST that sends it back. The cookie jar already
+shares the session, and `.withCsrf()` folds the two calls into one:
+
+```wren
+// The form is rendered by the route being posted to: GET it for the token.
+Test.post("/login", {"email": "user@example.com"})
+    .withCsrf()
+    .status(302)
+
+// The form lives on another route.
+Test.post("/login", {"email": "user@example.com"})
+    .withCsrf("/login")
+    .status(302)
+
+// The page was already fetched, so reuse it instead of fetching it twice.
+var page = Test.get("/signup").status(200)
+Test.post("/signup", {"email": "user@example.com"})
+    .withCsrf(page)
+    .status(201)
+```
+
+`.withCsrf()` adds `_bialet_csrf` to the form Map just before the request runs,
+so the request is still lazy: nothing is fetched until the first assertion (or
+`.csrf()`) runs. The source may be a route string, which is fetched as a GET
+with the caller's headers copied so an explicit `Cookie` header keeps both
+requests on the same session, or an earlier `Test` / `TestResponse`. With no
+argument the route is the one being posted to.
+
+`.withCsrf()` needs form data (a Map). `Test.apiPost` and `Test.apiPut` send a
+raw JSON string and a multipart body is assembled by the client, so neither has
+a place to add a form field and the call aborts with `withCsrf() needs form data
+(a Map), not a raw body`. Add the token yourself in those flows:
+
+```wren
+var page = Test.get("/form").status(200)
+Test.apiPost("/api/form", {"_bialet_csrf": page.csrf()})
+```
+
+`.csrf()` remains for manual flows: it runs the request if needed and returns
+the hidden `_bialet_csrf` value from the body, aborting when the page rendered
+none.
 
 ### Assertions
 
@@ -9188,6 +9262,35 @@ example.com {
 ```
 
 That's it. Caddy obtains and renews certificates automatically.
+
+### Public URLs behind a proxy
+
+`Request.scheme` follows the first hop of `X-Forwarded-Proto` (or `Forwarded`),
+and `Request.host`/`Request.baseUrl` use the **`Host`** header. The proxy must
+therefore:
+
+- set `X-Forwarded-Proto` to the scheme the client used, and drop a
+  client-supplied `Forwarded` header (the sample nginx and Caddy configs above
+  do both);
+- forward the public `Host`, not the upstream address: nginx's
+  `proxy_set_header Host $host`, Apache's `ProxyPreserveHost On`, or Caddy's
+  default behaviour.
+
+Bialet deliberately never reads `X-Forwarded-Host`: it is just a request header
+and any client can send one. Using it would let an attacker choose the hostname
+in a password-reset link.
+
+> ⚠️ **Host-header injection.** `Host` is still client-controlled. On a proxy
+> that passes an arbitrary `Host` through, `Request.baseUrl` can return the
+> attacker's domain. For canonical links, password-reset URLs, emails and cron
+> jobs (where there is no request at all), set the origin explicitly:
+>
+> ```wren
+> Config.set("BIALET_BASE_URL", "https://app.example.com")
+> ```
+>
+> `Request.absoluteUrl` and `Request.fullUrl` then always use it. See
+> [Configuration](configuration.md#public-base-url-bialet_base_url).
 
 ## Hardening the Proxy
 
@@ -9858,6 +9961,56 @@ content never enters Wren, and the text fields are read with
 [post(name)](#postname). Use `Request.post()` and `Request.file()` instead of
 parsing the body.
 
+### scheme
+
+Returns `"https"` when the request reached the app over TLS, otherwise
+`"http"`. Behind a proxy the decision comes from the first hop of
+`X-Forwarded-Proto` or `Forwarded`, never from the transport itself.
+
+### host
+
+Returns the `Host` header, or `"localhost"` when it is absent. The header is
+client-controlled: see the note under [baseUrl](#baseurl).
+
+### baseUrl
+
+Returns the absolute origin for links, with no trailing slash. It is
+`Config.get("BIALET_BASE_URL")` when that row is set (trimmed, trailing slashes
+removed); otherwise `scheme://host`.
+
+```wren
+Config.set("BIALET_BASE_URL", "https://app.example.com")
+var canonical = Request.absoluteUrl("/articles/42")
+```
+
+Set `BIALET_BASE_URL` for canonical links, emails, feeds and cron jobs. Without
+it a request behind a proxy can carry the wrong `Host`, and there is no request
+at all in cron.
+
+> ⚠️ Pitfall: `Host` is client-controlled, so `baseUrl` can return an
+> attacker's domain if the proxy forwards an arbitrary value. Bialet never reads
+> `X-Forwarded-Host`; use a fixed `BIALET_BASE_URL` when the origin matters.
+
+### absoluteUrl(path)
+
+Returns `path` made absolute against [baseUrl](#baseurl). A path starting with
+`/` is appended as-is; one without a slash gets one. `null` or an empty path
+returns `baseUrl` itself.
+
+```wren
+Request.absoluteUrl("/x")   // https://app.example.com/x
+Request.absoluteUrl("x")    // https://app.example.com/x
+```
+
+### fullUrl
+
+Returns [baseUrl](#baseurl) plus the request path and query string.
+
+```wren
+// On https://app.example.com/search?q=dates
+Request.fullUrl    // https://app.example.com/search?q=dates
+```
+
 ### isPost
 
 Checks if the request method is POST.
@@ -9879,23 +10032,73 @@ if (Request.isJson) {
 }
 ```
 
+### header(name, default)
+
+Returns the value of a specified request header, or `default` when the header is
+absent.
+
+- `name`: The name of the header.
+- `default`: The value to return when the header is missing.
+
+Only a missing header triggers the default. A header sent with an empty value
+returns `""`.
+
 ### header(name)
 
-Returns the value of a specified request header.
+Returns the value of a specified request header, or `null` when it is absent.
 
 - `name`: The name of the header.
 
-### get(name)
+### get(name, default)
 
-Returns the value of a specified query parameter.
+Returns the value of a specified query parameter, or `default` when the
+parameter is absent. This is the recommended form when a fallback is wanted:
+
+```wren
+var page = Request.get("page", "1")
+var search = Request.get("search", "")
+```
 
 - `name`: The name of the query parameter.
+- `default`: The value to return when the parameter is missing.
+
+Only `null` triggers the default. An empty value (`?q=`) returns `""` and a bare
+flag (`?draft`) returns `true`. `Request.get(name) || "1"` still works for
+strings, but it also replaces a `false` value; the default overload replaces
+only `null`.
+
+### get(name)
+
+Returns the value of a specified query parameter, or `null` when it is absent.
+Guard the result before a string operation, or use
+[get(name, default)](#getname-default).
+
+- `name`: The name of the query parameter.
+
+### query(name, default)
+
+Alias for `get(name, default)`.
 
 ### query(name)
 
-Alias for `get(name)`. Returns the value of a specified query parameter.
+Alias for `get(name)`.
 
-- `name`: The name of the query parameter.
+### post(name, default)
+
+Returns the value of a specified POST parameter, or `default` when the key is
+absent. Use this instead of `Request.post(name) || ""` whenever a fallback is
+wanted:
+
+```wren
+var name = Request.post("name", "")
+```
+
+- `name`: The name of the POST parameter.
+- `default`: The value to return when the key is missing.
+
+Only `null` triggers the default. A field submitted empty (`name=`) returns
+`""`, so the fallback cannot hide a blank form submission. This is how
+`isBlank` and a required-field check can tell "not sent" from "sent empty".
 
 ### post(name)
 
@@ -9903,7 +10106,8 @@ Alias for `get(name)`. Returns the value of a specified query parameter.
 > The return type is `String | Null`. You **MUST** handle `null`
 > before calling any string method (`.toString`, `.count`, `.trim`,
 > concatenation, interpolation). This is the #1 production crash cause.
-> **NEVER assume the field exists. ALWAYS provide a default or null check.**
+> **Prefer `Request.post("name", "")` when a default is wanted; otherwise
+> check `if (value != null)` before touching the value.**
 
 Returns the value of a specified POST parameter, or `null` if not found.
 
@@ -9916,9 +10120,22 @@ For a multipart form it returns the text fields only: a file part is read with
 `<textarea>`) are kept, with `\r\n` normalized to `\n`. If a field is repeated,
 the last value wins.
 
+### route(pos, default)
+
+Returns a specific part of the request route, or `default` when the segment is
+missing or empty.
+
+- `pos`: The position of the route segment.
+- `default`: The value to return when there is no segment at `pos`.
+
+```wren
+var id = Request.route(0, "index")
+```
+
 ### route(pos)
 
-Returns a specific part of the request route.
+Returns a specific part of the request route, or `null` when the segment is
+missing or empty.
 
 - `pos`: The position of the route segment.
 
@@ -10751,17 +10968,24 @@ application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
-Creates a new `Date` object from a provided date string.
+Creates a new `Date` object from a provided value.
 
-- `date`: The date string to initialize the `Date` object.
+- `date`: A date string (`"YYYY-MM-DD"` or `"YYYY-MM-DD HH:MM:SS"`), a number of
+  **epoch seconds** (the same unit as `.unix`), or another `Date` (returned
+  as-is).
+
+```wren
+Date.new("2024-09-13 10:30:00")
+Date.new(1700000000)              // 2023-11-14 22:13:20 in Date.tz
+Date.new(Date.now)
+```
 
 ### new(date, tz)
 
-Creates a new `Date` object from a provided date string and a specified timezone
-offset.
+Creates a new `Date` object from a provided value and a specified timezone.
 
-- `date`: The date string to initialize the `Date` object.
-- `tz`: The timezone offset to apply.
+- `date`: A date string, epoch seconds, or another `Date`.
+- `tz`: The timezone offset or zone name to apply.
 
 ### new(year, month, day, hour, minute, second)
 
@@ -10805,6 +11029,23 @@ offset, setting the time to `00:00:00`.
 - `month`: The month component.
 - `day`: The day component.
 - `tz`: The timezone offset to apply.
+
+### fromUnix(seconds)
+
+Creates a `Date` from **epoch seconds**, formatted in `Date.tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+
+```wren
+var posted = Date.fromUnix(row["createdAt"].toNum)
+```
+
+### fromUnix(seconds, tz)
+
+Creates a `Date` from epoch seconds, formatted in `tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+- `tz`: The timezone offset or zone name to apply.
 
 ### tz=(tz)
 
@@ -10875,17 +11116,54 @@ Returns the difference in seconds between the current date and `otherDate`
 
 - `otherDate`: The `Date` object to compare against.
 
+### addDays(n)
+
+Returns a new `Date` shifted by a whole number of **calendar days**, keeping the
+hours, minutes, seconds and timezone. Negative `n` moves backwards. Leap days,
+month ends, year boundaries and DST changes are handled by civil-calendar
+arithmetic, so the wall clock does not move (`09:00` stays `09:00` even when the
+day is 23 or 25 hours long).
+
+- `n`: A whole number of days; a fractional number raises an error.
+
+```wren
+Date.new(2024, 2, 28).addDays(1)    // 2024-02-29 00:00:00
+Date.new(2024, 1, 31).addDays(1)    // 2024-02-01 00:00:00
+Date.new(2024, 3, 1).addDays(-1)    // 2024-02-29 00:00:00
+```
+
+### + (seconds)
+
+Returns a new `Date` shifted forward by a number of **seconds** (the unit of
+`.unix`). Adding another `Date` raises an error: adding two instants has no
+meaning, so subtract them instead.
+
+```wren
+Date.new(2024, 1, 1) + 86400        // 2024-01-02 00:00:00
+```
+
+### - (seconds)
+
+Returns a new `Date` shifted backwards by a number of **seconds**.
+
+### - (otherDate)
+
+Returns the number of **seconds** between the two dates, the same value as
+`.diff(otherDate)`.
+
+```wren
+Date.new(2024, 1, 2) - Date.new(2024, 1, 1)   // 86400
+```
+
 ### Comparison operators
 
 `<`, `>`, `<=`, `>=`, `==`, `!=` all work between two `Date` instances,
 comparing them by their underlying Unix timestamp (via `diff`).
 
-> ⚠️ Pitfall: `Date` does **not** implement `+`/`-`. There is no way to add
-> or subtract a time interval directly on a `Date` instance — attempting
-> `date + 86400` raises `Date does not implement '+(_)'`. To shift an
-> instant, do the arithmetic on `.unix` (seconds) and rebuild a `Date` from
-> the result, or add/subtract calendar days yourself; there is also no
-> `date` / `time` / `inUtc` getter.
+To move an instant by a duration, use `+`/`-` with seconds; to move a calendar
+date, use `addDays`. There is no built-in month arithmetic or `date` / `time` /
+`inUtc` getter; clamp the day in a helper for months (see
+[Recipes](recipes.md#dates-add-days-add-months-week-start-due-dates)).
 
 ## Markdown
 
@@ -11096,6 +11374,31 @@ System.log("User %(name) logged in")
 
 Bialet extends several core Wren classes with additional methods to make development easier.
 
+### Blankness (all objects)
+
+`isBlank` and `isFilled` are getters available on every value, with Laravel-style
+form semantics. They are exact inverses.
+
+| Value | `isBlank` | `isFilled` |
+|-------|-----------|------------|
+| `null` | `true` | `false` |
+| `""`, `"   "`, `"\t\n"` | `true` | `false` |
+| `[]`, `{}`, empty range | `true` | `false` |
+| `false`, `0` | `false` | `true` |
+| any other value or object | `false` | `true` |
+
+```wren
+var name = Request.post("name", "")
+if (name.isBlank) {
+  errors.add("Name is required")
+}
+```
+
+A sequence is blank when it has no elements. A whitespace-only string is blank
+as well. `false` and `0` are values, not absences, so they are filled. Use
+`isEmpty` when you mean exactly "zero elements": `"   ".isEmpty` is `false`
+while `"   ".isBlank` is `true`.
+
 ### String Extensions
 
 #### toBool
@@ -11218,7 +11521,7 @@ var post = `SELECT * FROM posts WHERE id = ?`.first(1).to(Post)
 
 Short, runnable answers to the problems that come up in most apps: dates,
 money, CSV exports, and a few API helpers. Every snippet here was executed with
-`bialet -r` or against a running app.
+`bialet -r`, or validated as an app file with `bialet -t`.
 
 Read [Common Pitfalls](pitfalls.md) as well: it covers the API traps these
 recipes work around (`toString` is a getter, a missing `return` returns null,
@@ -11227,8 +11530,9 @@ arguments).
 
 ## Dates: add days, add months, week start, due dates
 
-`Date` has no `+`/`-` and cannot be built from a Unix timestamp. Keep the civil
-calendar arithmetic in one helper and call it everywhere:
+`Date` shifts instants by seconds with `+`/`-`, subtracts to seconds, and moves
+calendar days with `addDays`. Month arithmetic is the one thing it does not
+have, so keep a small clamping helper for it:
 
 ```wren
 class Dates {
@@ -11247,45 +11551,28 @@ class Dates {
     var d = date.day
     var last = Dates.daysInMonth(y, m)
     if (d > last) d = last
-    return Date.new(y, m, d, date.hours, date.minutes, date.seconds)
-  }
-
-  // Days -> civil date (Howard Hinnant's civil_from_days, see datetime.md).
-  static fromUnix(secs) {
-    var days = (secs / 86400).floor
-    var z = days + 719468
-    var era = ((z >= 0 ? z : z - 146096) / 146097).floor
-    var doe = z - era * 146097
-    var yoe = ((doe - (doe / 1460).floor + (doe / 36524).floor - (doe / 146096).floor) / 365).floor
-    var y = yoe + era * 400
-    var doy = doe - (365 * yoe + (yoe / 4).floor - (yoe / 100).floor)
-    var mp = ((5 * doy + 2) / 153).floor
-    var d = doy - ((153 * mp + 2) / 5).floor + 1
-    var m = mp < 10 ? mp + 3 : mp - 9
-    y = m <= 2 ? y + 1 : y
-    return [y, m, d]
-  }
-
-  static dateFromUnix(secs) {
-    var ymd = Dates.fromUnix(secs)
-    return Date.new(ymd[0], ymd[1], ymd[2])
+    return Date.new(y, m, d, date.hours, date.minutes, date.seconds, date.tz)
   }
 
   // 0 = Sunday, so shift by six to make Monday the first day.
-  static startOfWeek(date) {
-    var dow = Num.fromString(date.format("#w"))
-    return Dates.dateFromUnix(date.unix - ((dow + 6) % 7) * 86400)
-  }
-
-  static addDays(date, n) { Dates.dateFromUnix(date.unix + n * 86400) }
+  static startOfWeek(date) { date.addDays(-((date.dayOfWeek + 6) % 7)) }
 }
 ```
 
 ```wren
+Date.fromUnix(1700000000)                    // 2023-11-14 22:13:20 in Date.tz
+Date.new(1700000000, "UTC")                  // the same instant, in UTC
+Date.new(2024, 1, 31).addDays(1)             // 2024-02-01 00:00:00
+Date.new(2024, 2, 28).addDays(1)             // 2024-02-29 00:00:00
+Date.new(2024, 9, 13) + 86400                // 2024-09-14: + one day of seconds
+Date.new(2024, 9, 14) - Date.new(2024, 9, 13) // 86400
 Dates.addMonths(Date.new(2024, 1, 31), 1).format("#Y-#m-#d") // 2024-02-29
 Dates.startOfWeek(Date.new(2026, 10, 18)).format("#Y-#m-#d") // 2026-10-12
-Dates.addDays(Date.new(2026, 10, 18), 60).format("#Y-#m-#d") // 2026-12-17
 ```
+
+`addDays` keeps the wall clock and zone, so it is safe across leap days, month
+ends and DST changes; `+`/`-` with a number is an exact number of seconds. For a
+due date, add the days the contract means rather than 30 × 86400 seconds.
 
 Format tokens are strftime-style with `#` instead of `%`: `#Y #m #d #H #M #S`,
 `#w` (0 = Sunday), `#u` (1 = Monday), `#V` (ISO week), `#F` (ISO date). The
@@ -11435,6 +11722,151 @@ var rows = `SELECT * FROM items WHERE a = ? AND b = ? AND c = ? AND d = ?`
 The same rule applies to `.first`, `.val`, `.toNum`, `.query`, `.toBool` and
 `.order`: three arguments maximum, then an array. See [Database](database.md).
 
+## Shared POST actions: one route, a hidden `action`
+
+A list page usually has several one-button POST operations — toggle, delete,
+rename — that all return to the same place. Post them to one route and dispatch
+on a hidden `action` field instead of copying the CSRF check into a file per
+operation. The form helper lives in `_app/`, so every template renders the
+token, the row id and the return path the same way.
+
+```wren
+// _app/actions.wren
+class Actions {
+  // The only redirect targets the app accepts: an absolute local path.
+  // "//evil.example" also starts with "/" but names another host, and a value
+  // without the leading slash is not a path at all.
+  static safeBack(value) {
+    var path = "%(value)".trim()
+    if (!path.startsWith("/") || path.startsWith("//")) return "/"
+    return path
+  }
+
+  static form(action, id, back, label) {
+    return <form method="post" action="/actions">
+      {{ Session.csrf }}
+      <input type="hidden" name="action" value="{{ action }}" />
+      <input type="hidden" name="id" value="{{ id }}" />
+      <input type="hidden" name="back" value="{{ back }}" />
+      <button>{{ label }}</button>
+    </form>
+  }
+}
+```
+
+```wren
+// actions.wren — every one-button POST lands here
+import "_app/actions" for Actions
+
+if (!Request.isPost) return Response.redirect("/")
+if (!Session.csrfOk) {
+  Response.status(403)
+  return "Invalid CSRF token"
+}
+
+var action = Request.post("action", "")
+var id = Request.post("id", "")
+var back = Actions.safeBack(Request.post("back", "/"))
+
+if (action == "toggle") `UPDATE tasks SET done = 1 - done WHERE id = ?`.query(id)
+if (action == "delete") `DELETE FROM tasks WHERE id = ?`.query(id)
+return Response.redirect(back)
+```
+
+```wren
+// index.wren — one form per row operation
+return <ul>
+  {{ tasks.map { |task| <li>
+    {{ Actions.form("toggle", task.id, Request.uri, task.done ? "Undo" : "Done") }}
+    {{ Actions.form("delete", task.id, Request.uri, "Delete") }}
+  </li> } }}
+</ul>
+```
+
+- The hidden `action` is an ordinary form field. `Request.post("action", "")`
+  returns `""` when it is missing, so an unknown or empty value falls through
+  the `if`s instead of crashing on null.
+- `safeBack` refuses `//host` as well as anything that is not a local path, so
+  a crafted `back` cannot redirect a logged-in user to another site.
+- One route means one CSRF check and one redirect policy. A new action is a new
+  `if`, not a new file with a copy of the same guard.
+- Do not nest forms: a form inside another form is invalid HTML, so render one
+  form per button.
+
+## Multi-step form state in the query string
+
+A wizard needs neither session state nor JavaScript. Put the answers given so
+far in the URL: each step is a `GET` whose hidden fields carry the earlier
+answers and whose `step` field names the next screen. Reload, Back and a shared
+link all keep working, and there is no server-side draft to expire.
+
+```wren
+// survey.wren — /survey?step=plan&name=Ana
+class Survey {
+  static questions { ["name", "plan", "confirm"] }
+
+  // The step after [step]; unknown input starts over at the first question.
+  static nextQuestion(step) {
+    for (i in 0...Survey.questions.count) {
+      if (Survey.questions[i] == step && i + 1 < Survey.questions.count) {
+        return Survey.questions[i + 1]
+      }
+    }
+    return Survey.questions[0]
+  }
+}
+
+var step = Request.get("step", "name")
+var name = Request.get("name", "")
+var plan = Request.get("plan", "")
+
+if (step == "confirm") {
+  return <main>
+    <h1>Confirm</h1>
+    <p>Name: {{ name }}</p>
+    <p>Plan: {{ plan }}</p>
+    <form method="post" action="/survey">
+      {{ Session.csrf }}
+      <input type="hidden" name="name" value="{{ name }}" />
+      <input type="hidden" name="plan" value="{{ plan }}" />
+      <button>Send</button>
+    </form>
+  </main>
+}
+
+if (step == "plan") {
+  return <main>
+    <h1>Which plan?</h1>
+    <form method="get" action="/survey">
+      <input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" />
+      <input type="hidden" name="name" value="{{ name }}" />
+      <button name="plan" value="basic">Basic</button>
+      <button name="plan" value="pro">Pro</button>
+    </form>
+  </main>
+}
+
+return <main>
+  <h1>Your name?</h1>
+  <form method="get" action="/survey">
+    <input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" />
+    <input name="name" value="{{ name }}" />
+    <button>Continue</button>
+  </form>
+</main>
+```
+
+- Every step is a `GET`, so Back, reload and a pasted URL land on a working
+  page. Nothing is stored server-side, so nothing leaks between visitors.
+- `Request.get(key, "")` gives a missing answer a safe empty value without
+  hiding a real empty answer: `""` is a value the user submitted, `null` is an
+  absent parameter.
+- `<button name="plan" value="pro">` puts the choice in the query string on
+  click: both buttons submit the same form and only `plan` differs. No
+  JavaScript and no per-step route.
+- The final step is an ordinary `POST` with `Session.csrf`; only the answers
+  travel in the URL, while the write itself stays protected.
+
 ## Tests: one database, no noise
 
 - Every file in `_tests/` runs in the same process against **one** temporary
@@ -11472,15 +11904,31 @@ a page that worked on an empty database meets its first row.
 ## 1. `toString` is a getter; `trim` is a method
 
 ```wren
-name=(val) { _name = val.toString.trim() }    // correct
-// name=(val) { _name = val.toString.trim }     // String does not implement 'trim'
+name=(val) { _name = val.toString.trim() }    // canonical
+// name=(val) { _name = val.toString.trim }    // also works: trim() takes no arguments
 ```
 
 `toString`, `count`, `keys` and `values` are getters: no parentheses. `trim` is
-a **method**: it needs `()`. `toString()` is accepted as an alias for the getter
-(the compiler treats the zero-argument call as the getter), so both spellings
-work; `count()`, `keys()` and `values()` still fail. Forgetting the `()` on
-`trim` is the usual source of 500s in setters.
+a **method**, and its canonical spelling keeps the `()`. Bialet also accepts a
+no-paren call when the class has no getter of that name: `obj.name` falls back
+to a zero-argument `name()`, which is why `" x ".trim`, `list.clear` and
+`Klass.new` run without parentheses. `toString()` remains an alias for the
+getter. The fallback only goes one way: `count()` does not return the `count`
+getter, and a getter still wins when a class has a getter and a method with the
+same name. Keep the `()` where the call matters, especially for a side effect
+(`list.clear`) — a reader cannot tell a field from a call otherwise.
+
+A `get name { ... }` declaration (the habit from Java, C# or PHP) is not Wren
+either. The compiler reports:
+
+```
+Wren has no 'get' declaration. Write the getter as 'name { ... }' or the
+method as 'name() { ... }'.
+```
+
+`set name { ... }` gets the matching hint with the setter form
+`name=(value) { ... }`. A member literally named `get` or `set` is fine:
+`get { ... }` and `get(x) { ... }` are an ordinary getter and method.
 
 ## 2. Every method that produces a value needs an explicit `return`
 
@@ -11555,11 +12003,24 @@ shared data in a function. `Test` is also preloaded: never
 `_db.sqlite3`: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).
 
-## 8. `Date.new(unixSeconds)` does not exist; use `Date.fromUnix`
+## 8. `Date.new(number)` is epoch **seconds**, not a year
 
-`Date.new(1792292400)` is a year-1792292400 date, not a timestamp. Build a date
-from epoch seconds with `Date.fromUnix(seconds)` (formatted in `Date.tz`), and
-go the other way with `.unix`. For "now" use `Date.new()`.
+`Date.new(1792292400)` builds the instant 1792292400 seconds after 1970,
+formatted in `Date.tz`; pass a zone as the second argument
+(`Date.new(1792292400, "UTC")`). `Date.fromUnix(seconds)` is the same value and
+also takes a zone.
+
+`+` and `-` with a number shift the instant by **seconds**, and subtracting one
+`Date` from another returns the seconds between them (same as `.diff`). Adding
+two dates (`d1 + d2`) is refused. To move **calendar days** without changing the
+wall clock — month ends, leap days, DST — use `addDays(n)`:
+
+```wren
+Date.new(2024, 2, 28).addDays(1)               // 2024-02-29 00:00:00
+Date.new(2024, 1, 1, 9, 0, 0).addDays(-1)      // 2023-12-31 09:00:00
+```
+
+For "now" use `Date.new()`.
 
 ## 9. `Num.fromString` does not understand `1.234,50`
 
@@ -11611,18 +12072,22 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 13. Zero-argument methods still need `()`
+## 13. Zero-argument methods work with or without `()`
 
 ```wren
 class Klass {
   static total() { 42 }
 }
-Klass.total()   // correct
-// Klass.total  -> the method object, not the number
+Klass.total()   // 42
+Klass.total     // 42: no getter total, so the VM calls total()
 ```
 
-Getters (`count`, `toString`, `keys`) are defined without parentheses and
-called without them. If you wrote `total() { ... }`, call it with `()`.
+A no-paren access first looks for a getter `name`; when the class has none, it
+calls a zero-argument method `name()`. A **getter still wins** when a class has
+both, and the fallback is one-way: `count()` is an error, not the `count`
+getter. Constructor calls like `Klass.new` and side-effecting methods like
+`list.clear` therefore run without parentheses, so keep `()` where the reader
+should see that the access is a call.
 
 ## 14. `_init.wren` runs once; do not collide with UNIQUE keys
 
@@ -11701,13 +12166,17 @@ inside a tag.
 ## 20. `""` is truthy in Wren
 
 ```wren
-var name = Request.post("name") || ""
+var name = Request.post("name", "")
 if (!name) { ... }          // never true for ""
-if (name.trim().count == 0) { ... }   // correct empty check
+if (name.isBlank) { ... }   // true for null, "" and "   "
+if (name.trim().count == 0) { ... }   // the same check without isBlank
 ```
 
-Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
-(or `trim() == ""`), not `!text`.
+Only `null` and `false` are falsy, so `!text` misses `""` and whitespace.
+`text.isBlank` is the form-oriented check: it is true for `null`, a
+whitespace-only string and an empty sequence, and false for `false` and `0`.
+`isFilled` is its exact inverse. `text.isEmpty` only means zero elements:
+`"   ".isEmpty` is `false`.
 
 ## 21. Enforce rules in the domain, not only in the UI
 
@@ -11725,6 +12194,10 @@ are UTC. `BIALET_TIMEZONE` changes `Date`, the log line prefix and SQLite's
 `Date.fromUnix(Date.new(createdAt, "UTC").unix)`), and do not store `Date.now`
 expecting UTC: it writes the app zone's wall clock with no offset. Store
 `Date.now.unix` when you need an unambiguous instant.
+`Date.new(createdAt, "UTC").unix` is the epoch seconds of a stored string, and
+`Date.new(seconds, "UTC")` reads them back. `+`, `-` and `addDays` return a
+`Date` in the app zone, so storing the result still writes a wall clock with no
+offset — store `.unix` when the value must be an instant.
 
 
 Examples

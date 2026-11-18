@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tests';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -450,6 +450,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies-and-sessions">Cookies and Sessions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protected-forms">CSRF-Protected Forms</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>
@@ -596,6 +597,7 @@ still executes – put it first if the rest of the file should not run.</p>
 <span class="w">    </span><span class="o">.</span><span class="n">setHeader</span><span class="p">(</span><span class="s2">"Authorization"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Bearer token123"</span><span class="p">)</span><span class="w">  </span><span class="c1">// Add custom header</span>
 <span class="w">    </span><span class="o">.</span><span class="n">method</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">)</span><span class="w">                                     </span><span class="c1">// Explicitly set method</span>
 <span class="w">    </span><span class="o">.</span><span class="n">postData</span><span class="p">({</span><span class="s2">"key"</span><span class="o">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">})</span><span class="w">                       </span><span class="c1">// Set POST data</span>
+<span class="w">    </span><span class="o">.</span><span class="n">withCsrf</span><span class="p">()</span><span class="w">                                        </span><span class="c1">// Add the form's CSRF token</span>
 </pre></div>
 </div>
 </section>
@@ -616,6 +618,45 @@ a session minted by one call is the session the next call presents:</p>
 jar. <code class="docutils literal notranslate"><span class="pre">.csrf()</span></code> aborts the test when the response rendered no token. Session
 values set during a <code class="docutils literal notranslate"><span class="pre">Test.get</span></code> are therefore visible to the following
 <code class="docutils literal notranslate"><span class="pre">Test.post</span></code>, and a CSRF-protected form validates without a <code class="docutils literal notranslate"><span class="pre">test_mode</span></code> flag.</p>
+</section>
+<section id="csrf-protected-forms">
+<h3>CSRF-Protected Forms<a class="headerlink" href="#csrf-protected-forms" title="Link to this heading">#</a></h3>
+<p>A protected form takes two requests on one session: a GET that renders the
+token the server stored, and a POST that sends it back. The cookie jar already
+shares the session, and <code class="docutils literal notranslate"><span class="pre">.withCsrf()</span></code> folds the two calls into one:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// The form is rendered by the route being posted to: GET it for the token.</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="s2">"user@example.com"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">withCsrf</span><span class="p">()</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+
+<span class="c1">// The form lives on another route.</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="s2">"user@example.com"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">withCsrf</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+
+<span class="c1">// The page was already fetched, so reuse it instead of fetching it twice.</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/signup"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/signup"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"email"</span><span class="o">:</span><span class="w"> </span><span class="s2">"user@example.com"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">withCsrf</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">201</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.withCsrf()</span></code> adds <code class="docutils literal notranslate"><span class="pre">_bialet_csrf</span></code> to the form Map just before the request runs,
+so the request is still lazy: nothing is fetched until the first assertion (or
+<code class="docutils literal notranslate"><span class="pre">.csrf()</span></code>) runs. The source may be a route string, which is fetched as a GET
+with the caller’s headers copied so an explicit <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> header keeps both
+requests on the same session, or an earlier <code class="docutils literal notranslate"><span class="pre">Test</span></code> / <code class="docutils literal notranslate"><span class="pre">TestResponse</span></code>. With no
+argument the route is the one being posted to.</p>
+<p><code class="docutils literal notranslate"><span class="pre">.withCsrf()</span></code> needs form data (a Map). <code class="docutils literal notranslate"><span class="pre">Test.apiPost</span></code> and <code class="docutils literal notranslate"><span class="pre">Test.apiPut</span></code> send a
+raw JSON string and a multipart body is assembled by the client, so neither has
+a place to add a form field and the call aborts with <code class="docutils literal notranslate"><span class="pre">withCsrf()</span> <span class="pre">needs</span> <span class="pre">form</span> <span class="pre">data</span> <span class="pre">(a</span> <span class="pre">Map),</span> <span class="pre">not</span> <span class="pre">a</span> <span class="pre">raw</span> <span class="pre">body</span></code>. Add the token yourself in those flows:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/form"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">apiPost</span><span class="p">(</span><span class="s2">"/api/form"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"_bialet_csrf"</span><span class="o">:</span><span class="w"> </span><span class="n">page</span><span class="o">.</span><span class="n">csrf</span><span class="p">()})</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.csrf()</span></code> remains for manual flows: it runs the request if needed and returns
+the hidden <code class="docutils literal notranslate"><span class="pre">_bialet_csrf</span></code> value from the body, aborting when the page rendered
+none.</p>
 </section>
 <section id="assertions">
 <h3>Assertions<a class="headerlink" href="#assertions" title="Link to this heading">#</a></h3>
@@ -1068,6 +1109,7 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#http-request-methods">HTTP Request Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#request-configuration">Request Configuration</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cookies-and-sessions">Cookies and Sessions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#csrf-protected-forms">CSRF-Protected Forms</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#assertions">Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body-assertions">Body Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-assertions">JSON Assertions</a></li>

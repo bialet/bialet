@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -449,6 +449,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#public-urls-behind-a-proxy">Public URLs behind a proxy</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardening-the-proxy">Hardening the Proxy</a><ul class="nav section-nav flex-column">
@@ -733,6 +734,34 @@ nothing but those assets.</p>
 </pre></div>
 </div>
 <p>That’s it. Caddy obtains and renews certificates automatically.</p>
+</section>
+<section id="public-urls-behind-a-proxy">
+<h3>Public URLs behind a proxy<a class="headerlink" href="#public-urls-behind-a-proxy" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Request.scheme</span></code> follows the first hop of <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> (or <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code>),
+and <code class="docutils literal notranslate"><span class="pre">Request.host</span></code>/<code class="docutils literal notranslate"><span class="pre">Request.baseUrl</span></code> use the <strong><code class="docutils literal notranslate"><span class="pre">Host</span></code></strong> header. The proxy must
+therefore:</p>
+<ul class="simple">
+<li><p>set <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> to the scheme the client used, and drop a
+client-supplied <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code> header (the sample nginx and Caddy configs above
+do both);</p></li>
+<li><p>forward the public <code class="docutils literal notranslate"><span class="pre">Host</span></code>, not the upstream address: nginx’s
+<code class="docutils literal notranslate"><span class="pre">proxy_set_header</span> <span class="pre">Host</span> <span class="pre">$host</span></code>, Apache’s <code class="docutils literal notranslate"><span class="pre">ProxyPreserveHost</span> <span class="pre">On</span></code>, or Caddy’s
+default behaviour.</p></li>
+</ul>
+<p>Bialet deliberately never reads <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Host</span></code>: it is just a request header
+and any client can send one. Using it would let an attacker choose the hostname
+in a password-reset link.</p>
+<blockquote>
+<div><p>⚠️ <strong>Host-header injection.</strong> <code class="docutils literal notranslate"><span class="pre">Host</span></code> is still client-controlled. On a proxy
+that passes an arbitrary <code class="docutils literal notranslate"><span class="pre">Host</span></code> through, <code class="docutils literal notranslate"><span class="pre">Request.baseUrl</span></code> can return the
+attacker’s domain. For canonical links, password-reset URLs, emails and cron
+jobs (where there is no request at all), set the origin explicitly:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"BIALET_BASE_URL"</span><span class="p">,</span><span class="w"> </span><span class="s2">"https://app.example.com"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Request.absoluteUrl</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.fullUrl</span></code> then always use it. See
+<a class="reference internal" href="configuration.html#public-base-url-bialet-base-url"><span class="std std-ref">Configuration</span></a>.</p>
+</div></blockquote>
 </section>
 </section>
 <section id="hardening-the-proxy">
@@ -1269,6 +1298,7 @@ hardening section</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#caddy">Caddy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#public-urls-behind-a-proxy">Public URLs behind a proxy</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hardening-the-proxy">Hardening the Proxy</a><ul class="nav section-nav flex-column">

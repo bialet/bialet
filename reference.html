@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -453,13 +453,23 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scheme">scheme</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#host">host</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#baseurl">baseUrl</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#absoluteurl-path">absoluteUrl(path)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fullurl">fullUrl</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ispost">isPost</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#isjson">isJson</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json">json()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name-default">header(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name">header(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-name-default">query(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-name">query(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name-default">post(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos-default">route(pos, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-name">file(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login-user-pass">login(user, pass)</a></li>
@@ -494,8 +504,8 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value-options">set(name, value, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value">set(name, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-name">delete(name)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">get(name, default)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">get(name)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#session">Session</a><ul class="nav section-nav flex-column">
@@ -511,7 +521,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rotate">rotate()</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Json</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Json</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-string">parse(string)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stringify-object">stringify(object)</a></li>
 </ul>
@@ -540,8 +550,8 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">get(key)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">set(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">get(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">set(key, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-key">enable(key)</a></li>
@@ -560,7 +570,7 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">init()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clean">clean</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
@@ -579,13 +589,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#call-url-options">call(url, options)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postdata">postData</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">status</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">body</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">headers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers-name">headers(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error">error</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#errormessage">errorMessage</a></li>
@@ -596,13 +606,15 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second-tz">new(year, month, day, hour, minute, second, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day">new(year, month, day)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-tz">new(year, month, day, tz)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fromunix-seconds">fromUnix(seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fromunix-seconds-tz">fromUnix(seconds, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tz-tz">tz=(tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tz">tz</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-format">format(format)</a></li>
@@ -616,8 +628,12 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adddays-n">addDays(n)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">+ (seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">- (seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#otherdate">- (otherDate)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-operators">Comparison operators</a></li>
 </ul>
 </li>
@@ -631,13 +647,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -658,10 +674,11 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blankness-all-objects">Blankness (all objects)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -675,7 +692,7 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">to(Class)</a></li>
 </ul>
 </li>
 </ul>
@@ -783,6 +800,53 @@ content never enters Wren, and the text fields are read with
 <a class="reference internal" href="#post-name">post(name)</a>. Use <code class="docutils literal notranslate"><span class="pre">Request.post()</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.file()</span></code> instead of
 parsing the body.</p>
 </section>
+<section id="scheme">
+<h3>scheme<a class="headerlink" href="#scheme" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">&quot;https&quot;</span></code> when the request reached the app over TLS, otherwise
+<code class="docutils literal notranslate"><span class="pre">&quot;http&quot;</span></code>. Behind a proxy the decision comes from the first hop of
+<code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> or <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code>, never from the transport itself.</p>
+</section>
+<section id="host">
+<h3>host<a class="headerlink" href="#host" title="Link to this heading">#</a></h3>
+<p>Returns the <code class="docutils literal notranslate"><span class="pre">Host</span></code> header, or <code class="docutils literal notranslate"><span class="pre">&quot;localhost&quot;</span></code> when it is absent. The header is
+client-controlled: see the note under <a class="reference internal" href="#baseurl">baseUrl</a>.</p>
+</section>
+<section id="baseurl">
+<h3>baseUrl<a class="headerlink" href="#baseurl" title="Link to this heading">#</a></h3>
+<p>Returns the absolute origin for links, with no trailing slash. It is
+<code class="docutils literal notranslate"><span class="pre">Config.get(&quot;BIALET_BASE_URL&quot;)</span></code> when that row is set (trimmed, trailing slashes
+removed); otherwise <code class="docutils literal notranslate"><span class="pre">scheme://host</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"BIALET_BASE_URL"</span><span class="p">,</span><span class="w"> </span><span class="s2">"https://app.example.com"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">absoluteUrl</span><span class="p">(</span><span class="s2">"/articles/42"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Set <code class="docutils literal notranslate"><span class="pre">BIALET_BASE_URL</span></code> for canonical links, emails, feeds and cron jobs. Without
+it a request behind a proxy can carry the wrong <code class="docutils literal notranslate"><span class="pre">Host</span></code>, and there is no request
+at all in cron.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Host</span></code> is client-controlled, so <code class="docutils literal notranslate"><span class="pre">baseUrl</span></code> can return an
+attacker’s domain if the proxy forwards an arbitrary value. Bialet never reads
+<code class="docutils literal notranslate"><span class="pre">X-Forwarded-Host</span></code>; use a fixed <code class="docutils literal notranslate"><span class="pre">BIALET_BASE_URL</span></code> when the origin matters.</p>
+</div></blockquote>
+</section>
+<section id="absoluteurl-path">
+<h3>absoluteUrl(path)<a class="headerlink" href="#absoluteurl-path" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">path</span></code> made absolute against <a class="reference internal" href="#baseurl">baseUrl</a>. A path starting with
+<code class="docutils literal notranslate"><span class="pre">/</span></code> is appended as-is; one without a slash gets one. <code class="docutils literal notranslate"><span class="pre">null</span></code> or an empty path
+returns <code class="docutils literal notranslate"><span class="pre">baseUrl</span></code> itself.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Request</span><span class="o">.</span><span class="n">absoluteUrl</span><span class="p">(</span><span class="s2">"/x"</span><span class="p">)</span><span class="w">   </span><span class="c1">// https://app.example.com/x</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">absoluteUrl</span><span class="p">(</span><span class="s2">"x"</span><span class="p">)</span><span class="w">    </span><span class="c1">// https://app.example.com/x</span>
+</pre></div>
+</div>
+</section>
+<section id="fullurl">
+<h3>fullUrl<a class="headerlink" href="#fullurl" title="Link to this heading">#</a></h3>
+<p>Returns <a class="reference internal" href="#baseurl">baseUrl</a> plus the request path and query string.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// On https://app.example.com/search?q=dates</span>
+<span class="nc">Request</span><span class="o">.</span><span class="n">fullUrl</span><span class="w">    </span><span class="c1">// https://app.example.com/search?q=dates</span>
+</pre></div>
+</div>
+</section>
 <section id="ispost">
 <h3>isPost<a class="headerlink" href="#ispost" title="Link to this heading">#</a></h3>
 <p>Checks if the request method is POST.</p>
@@ -803,26 +867,73 @@ parsing the body.</p>
 </pre></div>
 </div>
 </section>
+<section id="header-name-default">
+<h3>header(name, default)<a class="headerlink" href="#header-name-default" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified request header, or <code class="docutils literal notranslate"><span class="pre">default</span></code> when the header is
+absent.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the header.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The value to return when the header is missing.</p></li>
+</ul>
+<p>Only a missing header triggers the default. A header sent with an empty value
+returns <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>.</p>
+</section>
 <section id="header-name">
 <h3>header(name)<a class="headerlink" href="#header-name" title="Link to this heading">#</a></h3>
-<p>Returns the value of a specified request header.</p>
+<p>Returns the value of a specified request header, or <code class="docutils literal notranslate"><span class="pre">null</span></code> when it is absent.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the header.</p></li>
 </ul>
 </section>
+<section id="get-name-default">
+<h3>get(name, default)<a class="headerlink" href="#get-name-default" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified query parameter, or <code class="docutils literal notranslate"><span class="pre">default</span></code> when the
+parameter is absent. This is the recommended form when a fallback is wanted:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"page"</span><span class="p">,</span><span class="w"> </span><span class="s2">"1"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"search"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the query parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The value to return when the parameter is missing.</p></li>
+</ul>
+<p>Only <code class="docutils literal notranslate"><span class="pre">null</span></code> triggers the default. An empty value (<code class="docutils literal notranslate"><span class="pre">?q=</span></code>) returns <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> and a bare
+flag (<code class="docutils literal notranslate"><span class="pre">?draft</span></code>) returns <code class="docutils literal notranslate"><span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">Request.get(name)</span> <span class="pre">||</span> <span class="pre">&quot;1&quot;</span></code> still works for
+strings, but it also replaces a <code class="docutils literal notranslate"><span class="pre">false</span></code> value; the default overload replaces
+only <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+</section>
 <section id="get-name">
 <h3>get(name)<a class="headerlink" href="#get-name" title="Link to this heading">#</a></h3>
-<p>Returns the value of a specified query parameter.</p>
+<p>Returns the value of a specified query parameter, or <code class="docutils literal notranslate"><span class="pre">null</span></code> when it is absent.
+Guard the result before a string operation, or use
+<a class="reference internal" href="#get-name-default">get(name, default)</a>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the query parameter.</p></li>
 </ul>
 </section>
+<section id="query-name-default">
+<h3>query(name, default)<a class="headerlink" href="#query-name-default" title="Link to this heading">#</a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">get(name,</span> <span class="pre">default)</span></code>.</p>
+</section>
 <section id="query-name">
 <h3>query(name)<a class="headerlink" href="#query-name" title="Link to this heading">#</a></h3>
-<p>Alias for <code class="docutils literal notranslate"><span class="pre">get(name)</span></code>. Returns the value of a specified query parameter.</p>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">get(name)</span></code>.</p>
+</section>
+<section id="post-name-default">
+<h3>post(name, default)<a class="headerlink" href="#post-name-default" title="Link to this heading">#</a></h3>
+<p>Returns the value of a specified POST parameter, or <code class="docutils literal notranslate"><span class="pre">default</span></code> when the key is
+absent. Use this instead of <code class="docutils literal notranslate"><span class="pre">Request.post(name)</span> <span class="pre">||</span> <span class="pre">&quot;&quot;</span></code> whenever a fallback is
+wanted:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+</pre></div>
+</div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the query parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the POST parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The value to return when the key is missing.</p></li>
 </ul>
+<p>Only <code class="docutils literal notranslate"><span class="pre">null</span></code> triggers the default. A field submitted empty (<code class="docutils literal notranslate"><span class="pre">name=</span></code>) returns
+<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, so the fallback cannot hide a blank form submission. This is how
+<code class="docutils literal notranslate"><span class="pre">isBlank</span></code> and a required-field check can tell “not sent” from “sent empty”.</p>
 </section>
 <section id="post-name">
 <h3>post(name)<a class="headerlink" href="#post-name" title="Link to this heading">#</a></h3>
@@ -831,7 +942,8 @@ parsing the body.</p>
 The return type is <code class="docutils literal notranslate"><span class="pre">String</span> <span class="pre">|</span> <span class="pre">Null</span></code>. You <strong>MUST</strong> handle <code class="docutils literal notranslate"><span class="pre">null</span></code>
 before calling any string method (<code class="docutils literal notranslate"><span class="pre">.toString</span></code>, <code class="docutils literal notranslate"><span class="pre">.count</span></code>, <code class="docutils literal notranslate"><span class="pre">.trim</span></code>,
 concatenation, interpolation). This is the #1 production crash cause.
-<strong>NEVER assume the field exists. ALWAYS provide a default or null check.</strong></p>
+<strong>Prefer <code class="docutils literal notranslate"><span class="pre">Request.post(&quot;name&quot;,</span> <span class="pre">&quot;&quot;)</span></code> when a default is wanted; otherwise
+check <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(value</span> <span class="pre">!=</span> <span class="pre">null)</span></code> before touching the value.</strong></p>
 </div></blockquote>
 <p>Returns the value of a specified POST parameter, or <code class="docutils literal notranslate"><span class="pre">null</span></code> if not found.</p>
 <ul class="simple">
@@ -844,9 +956,22 @@ For a multipart form it returns the text fields only: a file part is read with
 <code class="docutils literal notranslate"><span class="pre">&lt;textarea&gt;</span></code>) are kept, with <code class="docutils literal notranslate"><span class="pre">\r\n</span></code> normalized to <code class="docutils literal notranslate"><span class="pre">\n</span></code>. If a field is repeated,
 the last value wins.</p>
 </section>
+<section id="route-pos-default">
+<h3>route(pos, default)<a class="headerlink" href="#route-pos-default" title="Link to this heading">#</a></h3>
+<p>Returns a specific part of the request route, or <code class="docutils literal notranslate"><span class="pre">default</span></code> when the segment is
+missing or empty.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code>: The position of the route segment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The value to return when there is no segment at <code class="docutils literal notranslate"><span class="pre">pos</span></code>.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="s2">"index"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="route-pos">
 <h3>route(pos)<a class="headerlink" href="#route-pos" title="Link to this heading">#</a></h3>
-<p>Returns a specific part of the request route.</p>
+<p>Returns a specific part of the request route, or <code class="docutils literal notranslate"><span class="pre">null</span></code> when the segment is
+missing or empty.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pos</span></code>: The position of the route segment.</p></li>
 </ul>
@@ -1069,8 +1194,8 @@ AVIF, PDF, plain text) are served inline, everything else is sent as
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie to delete.</p></li>
 </ul>
 </section>
-<section id="get-name-default">
-<h3>get(name, default)<a class="headerlink" href="#get-name-default" title="Link to this heading">#</a></h3>
+<section id="id3">
+<h3>get(name, default)<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <p>Returns the value of a specified cookie, or a default value if the cookie is not
 found.</p>
 <ul class="simple">
@@ -1078,8 +1203,8 @@ found.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The default value to return if the cookie is not found.</p></li>
 </ul>
 </section>
-<section id="id3">
-<h3>get(name)<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<section id="id4">
+<h3>get(name)<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p>Returns the value of a specified cookie.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of the cookie.</p></li>
@@ -1144,8 +1269,8 @@ session identifier planted before authentication is worthless afterwards.
 Returns the new id.</p>
 </section>
 </section>
-<section id="id4">
-<h2>Json<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h2>Json<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
 <p>A class for handling JSON data, including parsing and stringifying.</p>
 <section id="parse-string">
 <h3>parse(string)<a class="headerlink" href="#parse-string" title="Link to this heading">#</a></h3>
@@ -1341,15 +1466,15 @@ OIDC flows.</p>
 <h2>Config<a class="headerlink" href="#config" title="Link to this heading">#</a></h2>
 <p>A class for managing configuration settings, with methods to get, set, and
 delete configuration options.</p>
-<section id="id5">
-<h3>get(key)<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<section id="id6">
+<h3>get(key)<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <p>Retrieves a configuration value by its key.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
 </ul>
 </section>
-<section id="id6">
-<h3>set(key, value)<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<section id="id7">
+<h3>set(key, value)<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
 <p>Sets a configuration option to a given value.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: The key of the configuration option.</p></li>
@@ -1462,8 +1587,8 @@ if your app cannot run without one:</p>
 <h2>Db<a class="headerlink" href="#db" title="Link to this heading">#</a></h2>
 <p>A class for database interactions, providing basic methods for migrations and
 data manipulation.</p>
-<section id="id7">
-<h3>init()<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<section id="id8">
+<h3>init()<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <p>Initializes the database connection.</p>
 </section>
 <section id="migrate-version-schema">
@@ -1610,8 +1735,8 @@ see the <a class="reference internal" href="http-calls.html"><span class="std st
 <li><p><code class="docutils literal notranslate"><span class="pre">url</span></code>: The URL to send the request to.</p></li>
 </ul>
 </section>
-<section id="id8">
-<h3>new()<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id9">
+<h3>new()<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
 <p>Creates an <code class="docutils literal notranslate"><span class="pre">Http</span></code> instance for full control over the request and response.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">http</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
 <span class="n">http</span><span class="o">.</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"POST"</span>
@@ -1634,8 +1759,8 @@ includes non-2xx HTTP responses.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">options</span></code>: Additional request options.</p></li>
 </ul>
 </section>
-<section id="id9">
-<h3>method<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<section id="id10">
+<h3>method<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
 <p>Set before <code class="docutils literal notranslate"><span class="pre">call</span></code> to choose the HTTP method. Defaults to <code class="docutils literal notranslate"><span class="pre">GET</span></code> when unset;
 assigning <code class="docutils literal notranslate"><span class="pre">postData</span></code> defaults it to <code class="docutils literal notranslate"><span class="pre">POST</span></code>.</p>
 </section>
@@ -1645,16 +1770,16 @@ assigning <code class="docutils literal notranslate"><span class="pre">postData<
 strings are sent as-is. Any other value falls back to <code class="docutils literal notranslate"><span class="pre">toString</span></code> rather than
 sending an empty body.</p>
 </section>
-<section id="id10">
-<h3>status<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<section id="id11">
+<h3>status<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
 <p>Getter that returns the HTTP status code of the response.</p>
 </section>
-<section id="id11">
-<h3>body<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<section id="id12">
+<h3>body<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
 <p>Getter that returns the raw response body as a string.</p>
 </section>
-<section id="id12">
-<h3>headers<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<section id="id13">
+<h3>headers<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
 <p>Getter that returns a map of all response headers, with lowercased keys and
 values.</p>
 </section>
@@ -1721,25 +1846,31 @@ when it is unset), the same value as <code class="docutils literal notranslate">
 </pre></div>
 </div>
 </section>
-<section id="id13">
-<h3>new()<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
+<section id="id14">
+<h3>new()<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
 <p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object representing the current date and time in the
 application timezone (<code class="docutils literal notranslate"><span class="pre">BIALET_TIMEZONE</span></code>, or the process zone when it is unset).</p>
 </section>
 <section id="new-date">
 <h3>new(date)<a class="headerlink" href="#new-date" title="Link to this heading">#</a></h3>
-<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided date string.</p>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided value.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: The date string to initialize the <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: A date string (<code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;YYYY-MM-DD</span> <span class="pre">HH:MM:SS&quot;</span></code>), a number of
+<strong>epoch seconds</strong> (the same unit as <code class="docutils literal notranslate"><span class="pre">.unix</span></code>), or another <code class="docutils literal notranslate"><span class="pre">Date</span></code> (returned
+as-is).</p></li>
 </ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"2024-09-13 10:30:00"</span><span class="p">)</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">1700000000</span><span class="p">)</span><span class="w">              </span><span class="c1">// 2023-11-14 22:13:20 in Date.tz</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="new-date-tz">
 <h3>new(date, tz)<a class="headerlink" href="#new-date-tz" title="Link to this heading">#</a></h3>
-<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided date string and a specified timezone
-offset.</p>
+<p>Creates a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> object from a provided value and a specified timezone.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: The date string to initialize the <code class="docutils literal notranslate"><span class="pre">Date</span></code> object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tz</span></code>: The timezone offset to apply.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date</span></code>: A date string, epoch seconds, or another <code class="docutils literal notranslate"><span class="pre">Date</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tz</span></code>: The timezone offset or zone name to apply.</p></li>
 </ul>
 </section>
 <section id="new-year-month-day-hour-minute-second">
@@ -1787,6 +1918,24 @@ offset, setting the time to <code class="docutils literal notranslate"><span cla
 <li><p><code class="docutils literal notranslate"><span class="pre">month</span></code>: The month component.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">day</span></code>: The day component.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tz</span></code>: The timezone offset to apply.</p></li>
+</ul>
+</section>
+<section id="fromunix-seconds">
+<h3>fromUnix(seconds)<a class="headerlink" href="#fromunix-seconds" title="Link to this heading">#</a></h3>
+<p>Creates a <code class="docutils literal notranslate"><span class="pre">Date</span></code> from <strong>epoch seconds</strong>, formatted in <code class="docutils literal notranslate"><span class="pre">Date.tz</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code>: Seconds since 1970-01-01 00:00:00 UTC.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">posted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"createdAt"</span><span class="p">]</span><span class="o">.</span><span class="n">toNum</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fromunix-seconds-tz">
+<h3>fromUnix(seconds, tz)<a class="headerlink" href="#fromunix-seconds-tz" title="Link to this heading">#</a></h3>
+<p>Creates a <code class="docutils literal notranslate"><span class="pre">Date</span></code> from epoch seconds, formatted in <code class="docutils literal notranslate"><span class="pre">tz</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code>: Seconds since 1970-01-01 00:00:00 UTC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tz</span></code>: The timezone offset or zone name to apply.</p></li>
 </ul>
 </section>
 <section id="tz-tz">
@@ -1849,8 +1998,8 @@ constructor or set with <code class="docutils literal notranslate"><span class="
 <h3>iso<a class="headerlink" href="#iso" title="Link to this heading">#</a></h3>
 <p>Returns the date as an ISO 8601 formatted string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code>). Alias for <code class="docutils literal notranslate"><span class="pre">toString</span></code>.</p>
 </section>
-<section id="id14">
-<h3>toString<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
+<section id="id15">
+<h3>toString<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
 <p>Returns the date as an ISO 8601 string (<code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span> <span class="pre">HH:MM:SS</span></code>).</p>
 </section>
 <section id="diff-otherdate">
@@ -1861,18 +2010,51 @@ constructor or set with <code class="docutils literal notranslate"><span class="
 <li><p><code class="docutils literal notranslate"><span class="pre">otherDate</span></code>: The <code class="docutils literal notranslate"><span class="pre">Date</span></code> object to compare against.</p></li>
 </ul>
 </section>
+<section id="adddays-n">
+<h3>addDays(n)<a class="headerlink" href="#adddays-n" title="Link to this heading">#</a></h3>
+<p>Returns a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> shifted by a whole number of <strong>calendar days</strong>, keeping the
+hours, minutes, seconds and timezone. Negative <code class="docutils literal notranslate"><span class="pre">n</span></code> moves backwards. Leap days,
+month ends, year boundaries and DST changes are handled by civil-calendar
+arithmetic, so the wall clock does not move (<code class="docutils literal notranslate"><span class="pre">09:00</span></code> stays <code class="docutils literal notranslate"><span class="pre">09:00</span></code> even when the
+day is 23 or 25 hours long).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code>: A whole number of days; a fractional number raises an error.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">28</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">    </span><span class="c1">// 2024-02-29 00:00:00</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">31</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">    </span><span class="c1">// 2024-02-01 00:00:00</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="o">-</span><span class="mf">1</span><span class="p">)</span><span class="w">    </span><span class="c1">// 2024-02-29 00:00:00</span>
+</pre></div>
+</div>
+</section>
+<section id="id16">
+<h3>+ (seconds)<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<p>Returns a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> shifted forward by a number of <strong>seconds</strong> (the unit of
+<code class="docutils literal notranslate"><span class="pre">.unix</span></code>). Adding another <code class="docutils literal notranslate"><span class="pre">Date</span></code> raises an error: adding two instants has no
+meaning, so subtract them instead.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">86400</span><span class="w">        </span><span class="c1">// 2024-01-02 00:00:00</span>
+</pre></div>
+</div>
+</section>
+<section id="id17">
+<h3>- (seconds)<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<p>Returns a new <code class="docutils literal notranslate"><span class="pre">Date</span></code> shifted backwards by a number of <strong>seconds</strong>.</p>
+</section>
+<section id="otherdate">
+<h3>- (otherDate)<a class="headerlink" href="#otherdate" title="Link to this heading">#</a></h3>
+<p>Returns the number of <strong>seconds</strong> between the two dates, the same value as
+<code class="docutils literal notranslate"><span class="pre">.diff(otherDate)</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w">   </span><span class="c1">// 86400</span>
+</pre></div>
+</div>
+</section>
 <section id="comparison-operators">
 <h3>Comparison operators<a class="headerlink" href="#comparison-operators" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">==</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code> all work between two <code class="docutils literal notranslate"><span class="pre">Date</span></code> instances,
 comparing them by their underlying Unix timestamp (via <code class="docutils literal notranslate"><span class="pre">diff</span></code>).</p>
-<blockquote>
-<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Date</span></code> does <strong>not</strong> implement <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code>. There is no way to add
-or subtract a time interval directly on a <code class="docutils literal notranslate"><span class="pre">Date</span></code> instance — attempting
-<code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">+</span> <span class="pre">86400</span></code> raises <code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'+(_)'</span></code>. To shift an
-instant, do the arithmetic on <code class="docutils literal notranslate"><span class="pre">.unix</span></code> (seconds) and rebuild a <code class="docutils literal notranslate"><span class="pre">Date</span></code> from
-the result, or add/subtract calendar days yourself; there is also no
-<code class="docutils literal notranslate"><span class="pre">date</span></code> / <code class="docutils literal notranslate"><span class="pre">time</span></code> / <code class="docutils literal notranslate"><span class="pre">inUtc</span></code> getter.</p>
-</div></blockquote>
+<p>To move an instant by a duration, use <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> with seconds; to move a calendar
+date, use <code class="docutils literal notranslate"><span class="pre">addDays</span></code>. There is no built-in month arithmetic or <code class="docutils literal notranslate"><span class="pre">date</span></code> / <code class="docutils literal notranslate"><span class="pre">time</span></code> /
+<code class="docutils literal notranslate"><span class="pre">inUtc</span></code> getter; clamp the day in a helper for months (see
+<a class="reference internal" href="recipes.html#dates-add-days-add-months-week-start-due-dates"><span class="std std-ref">Recipes</span></a>).</p>
 </section>
 </section>
 <section id="markdown">
@@ -1942,16 +2124,16 @@ size is determined by the content.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
 </ul>
 </section>
-<section id="id15">
-<h3>id<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
+<section id="id18">
+<h3>id<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
 <p>Returns the file’s database ID.</p>
 </section>
 <section id="type">
 <h3>type<a class="headerlink" href="#type" title="Link to this heading">#</a></h3>
 <p>Returns the MIME type of the file.</p>
 </section>
-<section id="id16">
-<h3>name<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<section id="id19">
+<h3>name<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
 <p>Returns the name of the file.</p>
 </section>
 <section id="size">
@@ -1966,8 +2148,8 @@ size is determined by the content.</p>
 <h3>createdAt<a class="headerlink" href="#createdat" title="Link to this heading">#</a></h3>
 <p>Returns the creation date of the file.</p>
 </section>
-<section id="id17">
-<h3>destroy<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<section id="id20">
+<h3>destroy<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
 <p>Deletes the file from the database based on its ID.</p>
 </section>
 <section id="save">
@@ -2088,6 +2270,52 @@ for formatted output.</p>
 <section id="wren-core-extensions">
 <h2>Wren Core Extensions<a class="headerlink" href="#wren-core-extensions" title="Link to this heading">#</a></h2>
 <p>Bialet extends several core Wren classes with additional methods to make development easier.</p>
+<section id="blankness-all-objects">
+<h3>Blankness (all objects)<a class="headerlink" href="#blankness-all-objects" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">isBlank</span></code> and <code class="docutils literal notranslate"><span class="pre">isFilled</span></code> are getters available on every value, with Laravel-style
+form semantics. They are exact inverses.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">isBlank</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">isFilled</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;\t\n&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code>, <code class="docutils literal notranslate"><span class="pre">{}</span></code>, empty range</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>any other value or object</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">isBlank</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">errors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"Name is required"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A sequence is blank when it has no elements. A whitespace-only string is blank
+as well. <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> are values, not absences, so they are filled. Use
+<code class="docutils literal notranslate"><span class="pre">isEmpty</span></code> when you mean exactly “zero elements”: <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isEmpty</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>
+while <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isBlank</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+</section>
 <section id="string-extensions">
 <h3>String Extensions<a class="headerlink" href="#string-extensions" title="Link to this heading">#</a></h3>
 <section id="tobool">
@@ -2111,8 +2339,8 @@ for formatted output.</p>
 building HTML from strings outside of interpolation, or to pre-escape a value
 before storing it.</p>
 </section>
-<section id="id18">
-<h4>raw<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<section id="id21">
+<h4>raw<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <p>Marks a string as already-safe HTML by wrapping it in an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
 interpolation leaves it untouched.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;b&gt;bold&lt;/b&gt;"</span><span class="o">.</span><span class="n">raw</span>
@@ -2177,8 +2405,8 @@ interpolation leaves it untouched.</p>
 </section>
 <section id="map-extensions">
 <h3>Map Extensions<a class="headerlink" href="#map-extensions" title="Link to this heading">#</a></h3>
-<section id="id19">
-<h4>to(Class)<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<section id="id22">
+<h4>to(Class)<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <p>Converts a Map to an instance of the specified class by passing the map to the class constructor.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2263,13 +2491,23 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#method">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uri">uri</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#body">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scheme">scheme</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#host">host</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#baseurl">baseUrl</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#absoluteurl-path">absoluteUrl(path)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fullurl">fullUrl</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ispost">isPost</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#isjson">isJson</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json">json()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name-default">header(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#header-name">header(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-name-default">query(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#query-name">query(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name-default">post(name, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-name">post(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos-default">route(pos, default)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#route-pos">route(pos)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-name">file(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#login-user-pass">login(user, pass)</a></li>
@@ -2304,8 +2542,8 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value-options">set(name, value, options)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-name-value">set(name, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-name">delete(name)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-name-default">get(name, default)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">get(name)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">get(name, default)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">get(name)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#session">Session</a><ul class="nav section-nav flex-column">
@@ -2321,7 +2559,7 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rotate">rotate()</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Json</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Json</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-string">parse(string)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stringify-object">stringify(object)</a></li>
 </ul>
@@ -2350,8 +2588,8 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">get(key)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">set(key, value)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">get(key)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">set(key, value)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bool-key">bool(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#num-key">num(key)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-key">enable(key)</a></li>
@@ -2370,7 +2608,7 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#db">Db</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">init()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">init()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migrate-version-schema">migrate(version, schema)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clean">clean</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-table-values">save(table, values)</a></li>
@@ -2389,13 +2627,13 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-url-data">post(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#put-url-data">put(url, data)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#delete-url">delete(url)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#call-url-options">call(url, options)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">method</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#postdata">postData</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">status</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">body</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">headers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">status</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">body</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">headers</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#headers-name">headers(name)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error">error</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#errormessage">errorMessage</a></li>
@@ -2406,13 +2644,15 @@ interpolation leaves it untouched.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date">Date</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#now">now</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">new()</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date">new(date)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-date-tz">new(date, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second">new(year, month, day, hour, minute, second)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-hour-minute-second-tz">new(year, month, day, hour, minute, second, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day">new(year, month, day)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-year-month-day-tz">new(year, month, day, tz)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fromunix-seconds">fromUnix(seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fromunix-seconds-tz">fromUnix(seconds, tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tz-tz">tz=(tz)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tz">tz</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-format">format(format)</a></li>
@@ -2426,8 +2666,12 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iso">iso</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">toString</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">toString</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-otherdate">diff(otherDate)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adddays-n">addDays(n)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">+ (seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">- (seconds)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#otherdate">- (otherDate)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-operators">Comparison operators</a></li>
 </ul>
 </li>
@@ -2441,13 +2685,13 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -2468,10 +2712,11 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blankness-all-objects">Blankness (all objects)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -2485,7 +2730,7 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">to(Class)</a></li>
 </ul>
 </li>
 </ul>

@@ -224,6 +224,8 @@ guide for the full API.
 ## Next Steps
 
 - [Security](security.md) — CSRF, password hashing, session defaults, XSS
+- [Recipes](recipes.md) — one action route for shared POST buttons, and a
+  multi-step form that carries its answers in the query string
 - [File Handling](file.md) — uploading, serving, and managing files
 - [Database](database.md) — saving form data with parameterized queries
 - [Advanced Routing](advanced-routing.md) — where to place form handlers with query params vs

@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/recipes.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r or against a running app. Read Co..." />
+<meta property="og:description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r, or validated as an app file with..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r or against a running app. Read Co..." />
+<meta name="description" content="Short, runnable answers to the problems that come up in most apps: dates, money, CSV exports, and a few API helpers. Every snippet here was executed with bialet -r, or validated as an app file with..." />
 
     <title>Recipes &#8212; Bialet</title>
   
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'recipes';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Reference" href="reference.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -444,6 +444,8 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request"><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util-and-config">Util and Config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#queries-with-more-than-three-parameters">Queries with more than three parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-post-actions-one-route-a-hidden-action">Shared POST actions: one route, a hidden <code class="docutils literal notranslate"><span class="pre">action</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-step-form-state-in-the-query-string">Multi-step form state in the query string</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-one-database-no-noise">Tests: one database, no noise</a></li>
 </ul>
             </nav>
@@ -460,15 +462,16 @@
 <h1>Recipes<a class="headerlink" href="#recipes" title="Link to this heading">#</a></h1>
 <p>Short, runnable answers to the problems that come up in most apps: dates,
 money, CSV exports, and a few API helpers. Every snippet here was executed with
-<code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> or against a running app.</p>
+<code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code>, or validated as an app file with <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span></code>.</p>
 <p>Read <a class="reference internal" href="pitfalls.html"><span class="std std-doc">Common Pitfalls</span></a> as well: it covers the API traps these
 recipes work around (<code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter, a missing <code class="docutils literal notranslate"><span class="pre">return</span></code> returns null,
 iterating null crashes, a literal <code class="docutils literal notranslate"><span class="pre">%</span></code> is <code class="docutils literal notranslate"><span class="pre">\x25</span></code>, a Query takes at most three
 arguments).</p>
 <section id="dates-add-days-add-months-week-start-due-dates">
 <h2>Dates: add days, add months, week start, due dates<a class="headerlink" href="#dates-add-days-add-months-week-start-due-dates" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Date</span></code> has no <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> and cannot be built from a Unix timestamp. Keep the civil
-calendar arithmetic in one helper and call it everywhere:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Date</span></code> shifts instants by seconds with <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code>, subtracts to seconds, and moves
+calendar days with <code class="docutils literal notranslate"><span class="pre">addDays</span></code>. Month arithmetic is the one thing it does not
+have, so keep a small clamping helper for it:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Dates</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">leap</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">4</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">100</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">400</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 
@@ -485,45 +488,27 @@ calendar arithmetic in one helper and call it everywhere:</p>
 <span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">day</span>
 <span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">daysInMonth</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">last</span><span class="p">)</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">last</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="c1">// Days -&gt; civil date (Howard Hinnant's civil_from_days, see datetime.md).</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">fromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">secs</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">days</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">719468</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">z</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">146096</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">146097</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">doe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">146097</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">doe</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1460</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">36524</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">doe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">146096</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">365</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">era</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">400</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doe</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="mf">365</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">yoe</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">yoe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">4</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">yoe</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">100</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="p">)</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="mf">5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">153</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">((</span><span class="mf">153</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">5</span><span class="p">)</span><span class="o">.</span><span class="n">floor</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">10</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">mp</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">9</span>
-<span class="w">    </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">y</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">[</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">]</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">ymd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">ymd</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="n">ymd</span><span class="p">[</span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="n">ymd</span><span class="p">[</span><span class="mf">2</span><span class="p">])</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">tz</span><span class="p">)</span>
 <span class="w">  </span><span class="p">}</span>
 
 <span class="w">  </span><span class="c1">// 0 = Sunday, so shift by six to make Monday the first day.</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">startOfWeek</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">dow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Num</span><span class="o">.</span><span class="n">fromString</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#w"</span><span class="p">))</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">unix</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">((</span><span class="n">dow</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">6</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">7</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span>
-<span class="w">  </span><span class="p">}</span>
-
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">addDays</span><span class="p">(</span><span class="n">date</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Dates</span><span class="o">.</span><span class="n">dateFromUnix</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">unix</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">86400</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">startOfWeek</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">date</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">date</span><span class="o">.</span><span class="n">dayOfWeek</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">6</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">7</span><span class="p">))</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Dates</span><span class="o">.</span><span class="n">addMonths</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">31</span><span class="p">),</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2024-02-29</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">fromUnix</span><span class="p">(</span><span class="mf">1700000000</span><span class="p">)</span><span class="w">                    </span><span class="c1">// 2023-11-14 22:13:20 in Date.tz</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">1700000000</span><span class="p">,</span><span class="w"> </span><span class="s2">"UTC"</span><span class="p">)</span><span class="w">                  </span><span class="c1">// the same instant, in UTC</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">31</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">             </span><span class="c1">// 2024-02-01 00:00:00</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">28</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">             </span><span class="c1">// 2024-02-29 00:00:00</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">86400</span><span class="w">                </span><span class="c1">// 2024-09-14: + one day of seconds</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">14</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">13</span><span class="p">)</span><span class="w"> </span><span class="c1">// 86400</span>
+<span class="nc">Dates</span><span class="o">.</span><span class="n">addMonths</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">31</span><span class="p">),</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2024-02-29</span>
 <span class="nc">Dates</span><span class="o">.</span><span class="n">startOfWeek</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2026</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span><span class="w"> </span><span class="mf">18</span><span class="p">))</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2026-10-12</span>
-<span class="nc">Dates</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2026</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span><span class="w"> </span><span class="mf">18</span><span class="p">),</span><span class="w"> </span><span class="mf">60</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"#Y-#m-#d"</span><span class="p">)</span><span class="w"> </span><span class="c1">// 2026-12-17</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">addDays</span></code> keeps the wall clock and zone, so it is safe across leap days, month
+ends and DST changes; <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> with a number is an exact number of seconds. For a
+due date, add the days the contract means rather than 30 × 86400 seconds.</p>
 <p>Format tokens are strftime-style with <code class="docutils literal notranslate"><span class="pre">#</span></code> instead of <code class="docutils literal notranslate"><span class="pre">%</span></code>: <code class="docutils literal notranslate"><span class="pre">#Y</span> <span class="pre">#m</span> <span class="pre">#d</span> <span class="pre">#H</span> <span class="pre">#M</span> <span class="pre">#S</span></code>,
 <code class="docutils literal notranslate"><span class="pre">#w</span></code> (0 = Sunday), <code class="docutils literal notranslate"><span class="pre">#u</span></code> (1 = Monday), <code class="docutils literal notranslate"><span class="pre">#V</span></code> (ISO week), <code class="docutils literal notranslate"><span class="pre">#F</span></code> (ISO date). The
 full table is in <a class="reference internal" href="datetime.html"><span class="std std-doc">Date and Time Functions</span></a>.</p>
@@ -686,6 +671,149 @@ five). Pass one array instead:</p>
 <p>The same rule applies to <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code>, <code class="docutils literal notranslate"><span class="pre">.toNum</span></code>, <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.toBool</span></code> and
 <code class="docutils literal notranslate"><span class="pre">.order</span></code>: three arguments maximum, then an array. See <a class="reference internal" href="database.html"><span class="std std-doc">Database</span></a>.</p>
 </section>
+<section id="shared-post-actions-one-route-a-hidden-action">
+<h2>Shared POST actions: one route, a hidden <code class="docutils literal notranslate"><span class="pre">action</span></code><a class="headerlink" href="#shared-post-actions-one-route-a-hidden-action" title="Link to this heading">#</a></h2>
+<p>A list page usually has several one-button POST operations — toggle, delete,
+rename — that all return to the same place. Post them to one route and dispatch
+on a hidden <code class="docutils literal notranslate"><span class="pre">action</span></code> field instead of copying the CSRF check into a file per
+operation. The form helper lives in <code class="docutils literal notranslate"><span class="pre">_app/</span></code>, so every template renders the
+token, the row id and the return path the same way.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/actions.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Actions</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// The only redirect targets the app accepts: an absolute local path.</span>
+<span class="w">  </span><span class="c1">// "//evil.example" also starts with "/" but names another host, and a value</span>
+<span class="w">  </span><span class="c1">// without the leading slash is not a path at all.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">safeBack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="si">%(</span><span class="n">value</span><span class="si">)</span><span class="s2">"</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">path</span><span class="o">.</span><span class="n">startsWith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">path</span><span class="o">.</span><span class="n">startsWith</span><span class="p">(</span><span class="s2">"//"</span><span class="p">))</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"/"</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">path</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">form</span><span class="p">(</span><span class="n">action</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">back</span><span class="p">,</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post" action="/actions"&gt;</span>
+<span class="x">      {{ Session.csrf }}</span>
+<span class="x">      &lt;input type="hidden" name="action" value="{{ action }}" /&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type="hidden" name="id" value="{{ id }}" /&gt;</span>
+<span class="x">      &lt;input type="hidden" name="back" value="{{ back }}" /&gt;</span>
+<span class="w">      </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
+<span class="w">    </span><span class="x">&lt;/form&gt;</span>
+<span class="x">  }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// actions.wren — every one-button POST lands here</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/actions"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Actions</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nc">Session</span><span class="o">.</span><span class="n">csrfOk</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">403</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"Invalid CSRF token"</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">action</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"action"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">back</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Actions</span><span class="o">.</span><span class="n">safeBack</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"back"</span><span class="p">,</span><span class="w"> </span><span class="s2">"/"</span><span class="p">))</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"toggle"</span><span class="p">)</span><span class="w"> </span><span class="sb">`UPDATE tasks SET done = 1 - done WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">action</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"delete"</span><span class="p">)</span><span class="w"> </span><span class="sb">`DELETE FROM tasks WHERE id = ?`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="n">back</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// index.wren — one form per row operation</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;ul&gt;</span>
+<span class="x">  {{ tasks.map { |task| &lt;li&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="nc">Actions</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="s2">"toggle"</span><span class="p">,</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">uri</span><span class="p">,</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"Undo"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"Done"</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="nc">Actions</span><span class="o">.</span><span class="n">form</span><span class="p">(</span><span class="s2">"delete"</span><span class="p">,</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">uri</span><span class="p">,</span><span class="w"> </span><span class="s2">"Delete"</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/li&gt; } }}</span>
+<span class="x">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The hidden <code class="docutils literal notranslate"><span class="pre">action</span></code> is an ordinary form field. <code class="docutils literal notranslate"><span class="pre">Request.post(&quot;action&quot;,</span> <span class="pre">&quot;&quot;)</span></code>
+returns <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> when it is missing, so an unknown or empty value falls through
+the <code class="docutils literal notranslate"><span class="pre">if</span></code>s instead of crashing on null.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">safeBack</span></code> refuses <code class="docutils literal notranslate"><span class="pre">//host</span></code> as well as anything that is not a local path, so
+a crafted <code class="docutils literal notranslate"><span class="pre">back</span></code> cannot redirect a logged-in user to another site.</p></li>
+<li><p>One route means one CSRF check and one redirect policy. A new action is a new
+<code class="docutils literal notranslate"><span class="pre">if</span></code>, not a new file with a copy of the same guard.</p></li>
+<li><p>Do not nest forms: a form inside another form is invalid HTML, so render one
+form per button.</p></li>
+</ul>
+</section>
+<section id="multi-step-form-state-in-the-query-string">
+<h2>Multi-step form state in the query string<a class="headerlink" href="#multi-step-form-state-in-the-query-string" title="Link to this heading">#</a></h2>
+<p>A wizard needs neither session state nor JavaScript. Put the answers given so
+far in the URL: each step is a <code class="docutils literal notranslate"><span class="pre">GET</span></code> whose hidden fields carry the earlier
+answers and whose <code class="docutils literal notranslate"><span class="pre">step</span></code> field names the next screen. Reload, Back and a shared
+link all keep working, and there is no server-side draft to expire.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// survey.wren — /survey?step=plan&amp;name=Ana</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Survey</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">questions</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">"plan"</span><span class="p">,</span><span class="w"> </span><span class="s2">"confirm"</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="c1">// The step after [step]; unknown input starts over at the first question.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">nextQuestion</span><span class="p">(</span><span class="n">step</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0</span><span class="o">...</span><span class="nc">Survey</span><span class="o">.</span><span class="n">questions</span><span class="o">.</span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Survey</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nc">Survey</span><span class="o">.</span><span class="n">questions</span><span class="o">.</span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nc">Survey</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nc">Survey</span><span class="o">.</span><span class="n">questions</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"step"</span><span class="p">,</span><span class="w"> </span><span class="s2">"name"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"plan"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">step</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"confirm"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Confirm</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Name</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;</span><span class="nc">Plan</span><span class="o">:</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">plan</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;form method="post" action="/survey"&gt;</span>
+<span class="w">      </span><span class="si">{{</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">csrf</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">      </span><span class="x">&lt;input type="hidden" name="name" value="{{ name }}" /&gt;</span>
+<span class="x">      &lt;input type="hidden" name="plan" value="{{ plan }}" /&gt;</span>
+<span class="w">      </span><span class="x">&lt;button&gt;Send&lt;/button&gt;</span>
+<span class="w">    </span><span class="x">&lt;/form&gt;</span>
+<span class="x">  &lt;/main&gt;</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">step</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"plan"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Which</span><span class="w"> </span><span class="n">plan</span><span class="o">?&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="x">&lt;form method="get" action="/survey"&gt;</span>
+<span class="x">      &lt;input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" /&gt;</span>
+<span class="w">      </span><span class="x">&lt;input type="hidden" name="name" value="{{ name }}" /&gt;</span>
+<span class="x">      &lt;button name="plan" value="basic"&gt;</span><span class="nc">Basic</span><span class="x">&lt;/button&gt;</span>
+<span class="x">      &lt;button name="plan" value="pro"&gt;</span><span class="nc">Pro</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;/form&gt;</span>
+<span class="w">  </span><span class="x">&lt;/main&gt;</span>
+<span class="x">}</span>
+
+<span class="x">return &lt;main&gt;</span>
+<span class="w">  </span><span class="x">&lt;h1&gt;Your name?&lt;/h1&gt;</span>
+<span class="w">  </span><span class="x">&lt;form method="get" action="/survey"&gt;</span>
+<span class="x">    &lt;input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" /&gt;</span>
+<span class="w">    </span><span class="x">&lt;input name="name" value="{{ name }}" /&gt;</span>
+<span class="x">    &lt;button&gt;</span><span class="nc">Continue</span><span class="x">&lt;/button&gt;</span>
+<span class="x">  &lt;/form&gt;</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Every step is a <code class="docutils literal notranslate"><span class="pre">GET</span></code>, so Back, reload and a pasted URL land on a working
+page. Nothing is stored server-side, so nothing leaks between visitors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Request.get(key,</span> <span class="pre">&quot;&quot;)</span></code> gives a missing answer a safe empty value without
+hiding a real empty answer: <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is a value the user submitted, <code class="docutils literal notranslate"><span class="pre">null</span></code> is an
+absent parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;button</span> <span class="pre">name=&quot;plan&quot;</span> <span class="pre">value=&quot;pro&quot;&gt;</span></code> puts the choice in the query string on
+click: both buttons submit the same form and only <code class="docutils literal notranslate"><span class="pre">plan</span></code> differs. No
+JavaScript and no per-step route.</p></li>
+<li><p>The final step is an ordinary <code class="docutils literal notranslate"><span class="pre">POST</span></code> with <code class="docutils literal notranslate"><span class="pre">Session.csrf</span></code>; only the answers
+travel in the URL, while the write itself stays protected.</p></li>
+</ul>
+</section>
 <section id="tests-one-database-no-noise">
 <h2>Tests: one database, no noise<a class="headerlink" href="#tests-one-database-no-noise" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -765,6 +893,8 @@ stable, or read the stored row instead.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-r-is-not-a-request"><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code> is not a request</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#util-and-config">Util and Config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#queries-with-more-than-three-parameters">Queries with more than three parameters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-post-actions-one-route-a-hidden-action">Shared POST actions: one route, a hidden <code class="docutils literal notranslate"><span class="pre">action</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-step-form-state-in-the-query-string">Multi-step form state in the query string</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-one-database-no-noise">Tests: one database, no noise</a></li>
 </ul>
   </nav></div>

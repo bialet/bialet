@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'pitfalls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8feb819b"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.22" />
+  <meta name="docsearch:version" content="1.2.23" />
   </head>
   
   
@@ -445,12 +445,12 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">5. Every file imports what it uses</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">6. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-number-is-epoch-seconds-not-a-year">8. <code class="docutils literal notranslate"><span class="pre">Date.new(number)</span></code> is epoch <strong>seconds</strong>, not a year</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inner-html-tags-are-not-checked-for-balance">10. Inner HTML tags are not checked for balance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-work-with-or-without">13. Zero-argument methods work with or without <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">15. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">16. Name the columns in every INSERT</a></li>
@@ -480,15 +480,28 @@ the text Bialet actually prints.</p>
 a page that worked on an empty database meets its first row.</p>
 <section id="tostring-is-a-getter-trim-is-a-method">
 <h2>1. <code class="docutils literal notranslate"><span class="pre">toString</span></code> is a getter; <code class="docutils literal notranslate"><span class="pre">trim</span></code> is a method<a class="headerlink" href="#tostring-is-a-getter-trim-is-a-method" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="c1">// correct</span>
-<span class="c1">// name=(val) { _name = val.toString.trim }     // String does not implement 'trim'</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="vi">_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="c1">// canonical</span>
+<span class="c1">// name=(val) { _name = val.toString.trim }    // also works: trim() takes no arguments</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">toString</span></code>, <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code> and <code class="docutils literal notranslate"><span class="pre">values</span></code> are getters: no parentheses. <code class="docutils literal notranslate"><span class="pre">trim</span></code> is
-a <strong>method</strong>: it needs <code class="docutils literal notranslate"><span class="pre">()</span></code>. <code class="docutils literal notranslate"><span class="pre">toString()</span></code> is accepted as an alias for the getter
-(the compiler treats the zero-argument call as the getter), so both spellings
-work; <code class="docutils literal notranslate"><span class="pre">count()</span></code>, <code class="docutils literal notranslate"><span class="pre">keys()</span></code> and <code class="docutils literal notranslate"><span class="pre">values()</span></code> still fail. Forgetting the <code class="docutils literal notranslate"><span class="pre">()</span></code> on
-<code class="docutils literal notranslate"><span class="pre">trim</span></code> is the usual source of 500s in setters.</p>
+a <strong>method</strong>, and its canonical spelling keeps the <code class="docutils literal notranslate"><span class="pre">()</span></code>. Bialet also accepts a
+no-paren call when the class has no getter of that name: <code class="docutils literal notranslate"><span class="pre">obj.name</span></code> falls back
+to a zero-argument <code class="docutils literal notranslate"><span class="pre">name()</span></code>, which is why <code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">x</span> <span class="pre">&quot;.trim</span></code>, <code class="docutils literal notranslate"><span class="pre">list.clear</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Klass.new</span></code> run without parentheses. <code class="docutils literal notranslate"><span class="pre">toString()</span></code> remains an alias for the
+getter. The fallback only goes one way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> does not return the <code class="docutils literal notranslate"><span class="pre">count</span></code>
+getter, and a getter still wins when a class has a getter and a method with the
+same name. Keep the <code class="docutils literal notranslate"><span class="pre">()</span></code> where the call matters, especially for a side effect
+(<code class="docutils literal notranslate"><span class="pre">list.clear</span></code>) — a reader cannot tell a field from a call otherwise.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">get</span> <span class="pre">name</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> declaration (the habit from Java, C# or PHP) is not Wren
+either. The compiler reports:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Wren</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="s1">'get'</span><span class="w"> </span><span class="n">declaration</span><span class="o">.</span><span class="w"> </span><span class="nc">Write</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">getter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s1">'name { ... }'</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="n">the</span>
+<span class="n">method</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s1">'name() { ... }'</span><span class="o">.</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">name</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> gets the matching hint with the setter form
+<code class="docutils literal notranslate"><span class="pre">name=(value)</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>. A member literally named <code class="docutils literal notranslate"><span class="pre">get</span></code> or <code class="docutils literal notranslate"><span class="pre">set</span></code> is fine:
+<code class="docutils literal notranslate"><span class="pre">get</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> and <code class="docutils literal notranslate"><span class="pre">get(x)</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> are an ordinary getter and method.</p>
 </section>
 <section id="every-method-that-produces-a-value-needs-an-explicit-return">
 <h2>2. Every method that produces a value needs an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code><a class="headerlink" href="#every-method-that-produces-a-value-needs-an-explicit-return" title="Link to this heading">#</a></h2>
@@ -556,11 +569,21 @@ shared data in a function. <code class="docutils literal notranslate"><span clas
 <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>: when you verify by hand, delete the rows you inserted (or back up
 and restore the file).</p>
 </section>
-<section id="date-new-unixseconds-does-not-exist-use-date-fromunix">
-<h2>8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code><a class="headerlink" href="#date-new-unixseconds-does-not-exist-use-date-fromunix" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Date.new(1792292400)</span></code> is a year-1792292400 date, not a timestamp. Build a date
-from epoch seconds with <code class="docutils literal notranslate"><span class="pre">Date.fromUnix(seconds)</span></code> (formatted in <code class="docutils literal notranslate"><span class="pre">Date.tz</span></code>), and
-go the other way with <code class="docutils literal notranslate"><span class="pre">.unix</span></code>. For “now” use <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
+<section id="date-new-number-is-epoch-seconds-not-a-year">
+<h2>8. <code class="docutils literal notranslate"><span class="pre">Date.new(number)</span></code> is epoch <strong>seconds</strong>, not a year<a class="headerlink" href="#date-new-number-is-epoch-seconds-not-a-year" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Date.new(1792292400)</span></code> builds the instant 1792292400 seconds after 1970,
+formatted in <code class="docutils literal notranslate"><span class="pre">Date.tz</span></code>; pass a zone as the second argument
+(<code class="docutils literal notranslate"><span class="pre">Date.new(1792292400,</span> <span class="pre">&quot;UTC&quot;)</span></code>). <code class="docutils literal notranslate"><span class="pre">Date.fromUnix(seconds)</span></code> is the same value and
+also takes a zone.</p>
+<p><code class="docutils literal notranslate"><span class="pre">+</span></code> and <code class="docutils literal notranslate"><span class="pre">-</span></code> with a number shift the instant by <strong>seconds</strong>, and subtracting one
+<code class="docutils literal notranslate"><span class="pre">Date</span></code> from another returns the seconds between them (same as <code class="docutils literal notranslate"><span class="pre">.diff</span></code>). Adding
+two dates (<code class="docutils literal notranslate"><span class="pre">d1</span> <span class="pre">+</span> <span class="pre">d2</span></code>) is refused. To move <strong>calendar days</strong> without changing the
+wall clock — month ends, leap days, DST — use <code class="docutils literal notranslate"><span class="pre">addDays(n)</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">28</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w">               </span><span class="c1">// 2024-02-29 00:00:00</span>
+<span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2024</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">9</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="o">.</span><span class="n">addDays</span><span class="p">(</span><span class="o">-</span><span class="mf">1</span><span class="p">)</span><span class="w">      </span><span class="c1">// 2023-12-31 09:00:00</span>
+</pre></div>
+</div>
+<p>For “now” use <code class="docutils literal notranslate"><span class="pre">Date.new()</span></code>.</p>
 </section>
 <section id="num-fromstring-does-not-understand-1-234-50">
 <h2>9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code><a class="headerlink" href="#num-fromstring-does-not-understand-1-234-50" title="Link to this heading">#</a></h2>
@@ -608,17 +631,21 @@ public setter.</p>
 <p>This bites hardest in <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code>, where the whole suite then fails
 before the app is exercised.</p>
 </section>
-<section id="zero-argument-methods-still-need">
-<h2>13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code><a class="headerlink" href="#zero-argument-methods-still-need" title="Link to this heading">#</a></h2>
+<section id="zero-argument-methods-work-with-or-without">
+<h2>13. Zero-argument methods work with or without <code class="docutils literal notranslate"><span class="pre">()</span></code><a class="headerlink" href="#zero-argument-methods-work-with-or-without" title="Link to this heading">#</a></h2>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Klass</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">total</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">42</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
-<span class="nc">Klass</span><span class="o">.</span><span class="n">total</span><span class="p">()</span><span class="w">   </span><span class="c1">// correct</span>
-<span class="c1">// Klass.total  -&gt; the method object, not the number</span>
+<span class="nc">Klass</span><span class="o">.</span><span class="n">total</span><span class="p">()</span><span class="w">   </span><span class="c1">// 42</span>
+<span class="nc">Klass</span><span class="o">.</span><span class="n">total</span><span class="w">     </span><span class="c1">// 42: no getter total, so the VM calls total()</span>
 </pre></div>
 </div>
-<p>Getters (<code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">toString</span></code>, <code class="docutils literal notranslate"><span class="pre">keys</span></code>) are defined without parentheses and
-called without them. If you wrote <code class="docutils literal notranslate"><span class="pre">total()</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>, call it with <code class="docutils literal notranslate"><span class="pre">()</span></code>.</p>
+<p>A no-paren access first looks for a getter <code class="docutils literal notranslate"><span class="pre">name</span></code>; when the class has none, it
+calls a zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code>. A <strong>getter still wins</strong> when a class has
+both, and the fallback is one-way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> is an error, not the <code class="docutils literal notranslate"><span class="pre">count</span></code>
+getter. Constructor calls like <code class="docutils literal notranslate"><span class="pre">Klass.new</span></code> and side-effecting methods like
+<code class="docutils literal notranslate"><span class="pre">list.clear</span></code> therefore run without parentheses, so keep <code class="docutils literal notranslate"><span class="pre">()</span></code> where the reader
+should see that the access is a call.</p>
 </section>
 <section id="init-wren-runs-once-do-not-collide-with-unique-keys">
 <h2>14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys<a class="headerlink" href="#init-wren-runs-once-do-not-collide-with-unique-keys" title="Link to this heading">#</a></h2>
@@ -688,13 +715,17 @@ inside a tag.</p>
 </section>
 <section id="is-truthy-in-wren">
 <h2>20. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is truthy in Wren<a class="headerlink" href="#is-truthy-in-wren" title="Link to this heading">#</a></h2>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">""</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// never true for ""</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// correct empty check</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">isBlank</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// true for null, "" and "   "</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1">// the same check without isBlank</span>
 </pre></div>
 </div>
-<p>Only <code class="docutils literal notranslate"><span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">false</span></code> are falsy. Validate empty text with <code class="docutils literal notranslate"><span class="pre">trim().count</span> <span class="pre">==</span> <span class="pre">0</span></code>
-(or <code class="docutils literal notranslate"><span class="pre">trim()</span> <span class="pre">==</span> <span class="pre">&quot;&quot;</span></code>), not <code class="docutils literal notranslate"><span class="pre">!text</span></code>.</p>
+<p>Only <code class="docutils literal notranslate"><span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">false</span></code> are falsy, so <code class="docutils literal notranslate"><span class="pre">!text</span></code> misses <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> and whitespace.
+<code class="docutils literal notranslate"><span class="pre">text.isBlank</span></code> is the form-oriented check: it is true for <code class="docutils literal notranslate"><span class="pre">null</span></code>, a
+whitespace-only string and an empty sequence, and false for <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+<code class="docutils literal notranslate"><span class="pre">isFilled</span></code> is its exact inverse. <code class="docutils literal notranslate"><span class="pre">text.isEmpty</span></code> only means zero elements:
+<code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isEmpty</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="enforce-rules-in-the-domain-not-only-in-the-ui">
 <h2>21. Enforce rules in the domain, not only in the UI<a class="headerlink" href="#enforce-rules-in-the-domain-not-only-in-the-ui" title="Link to this heading">#</a></h2>
@@ -711,7 +742,11 @@ are UTC. <code class="docutils literal notranslate"><span class="pre">BIALET_TIM
 (<code class="docutils literal notranslate"><span class="pre">datetime(createdAt,</span> <span class="pre">'localtime')</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">Date.fromUnix(Date.new(createdAt,</span> <span class="pre">&quot;UTC&quot;).unix)</span></code>), and do not store <code class="docutils literal notranslate"><span class="pre">Date.now</span></code>
 expecting UTC: it writes the app zone’s wall clock with no offset. Store
-<code class="docutils literal notranslate"><span class="pre">Date.now.unix</span></code> when you need an unambiguous instant.</p>
+<code class="docutils literal notranslate"><span class="pre">Date.now.unix</span></code> when you need an unambiguous instant.
+<code class="docutils literal notranslate"><span class="pre">Date.new(createdAt,</span> <span class="pre">&quot;UTC&quot;).unix</span></code> is the epoch seconds of a stored string, and
+<code class="docutils literal notranslate"><span class="pre">Date.new(seconds,</span> <span class="pre">&quot;UTC&quot;)</span></code> reads them back. <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code> and <code class="docutils literal notranslate"><span class="pre">addDays</span></code> return a
+<code class="docutils literal notranslate"><span class="pre">Date</span></code> in the app zone, so storing the result still writes a wall clock with no
+offset — store <code class="docutils literal notranslate"><span class="pre">.unix</span></code> when the value must be an instant.</p>
 </section>
 </section>
 
@@ -768,12 +803,12 @@ expecting UTC: it writes the app zone’s wall clock with no offset. Store
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-file-imports-what-it-uses">5. Every file imports what it uses</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-variables-are-global-to-every-test-file">6. <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> variables are global to every test file</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-use-a-temporary-database-manual-http-does-not">7. Tests use a temporary database; manual HTTP does not</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-unixseconds-does-not-exist-use-date-fromunix">8. <code class="docutils literal notranslate"><span class="pre">Date.new(unixSeconds)</span></code> does not exist; use <code class="docutils literal notranslate"><span class="pre">Date.fromUnix</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#date-new-number-is-epoch-seconds-not-a-year">8. <code class="docutils literal notranslate"><span class="pre">Date.new(number)</span></code> is epoch <strong>seconds</strong>, not a year</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#num-fromstring-does-not-understand-1-234-50">9. <code class="docutils literal notranslate"><span class="pre">Num.fromString</span></code> does not understand <code class="docutils literal notranslate"><span class="pre">1.234,50</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inner-html-tags-are-not-checked-for-balance">10. Inner HTML tags are not checked for balance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assigning-a-property-needs-an-explicit-setter">11. Assigning a property needs an explicit setter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#do-not-put-a-query-inside-or">12. Do not put a Query inside <code class="docutils literal notranslate"><span class="pre">%(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-still-need">13. Zero-argument methods still need <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-argument-methods-work-with-or-without">13. Zero-argument methods work with or without <code class="docutils literal notranslate"><span class="pre">()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#init-wren-runs-once-do-not-collide-with-unique-keys">14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#html-templates-use-not">15. HTML templates use <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>, not <code class="docutils literal notranslate"><span class="pre">%(...)</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#name-the-columns-in-every-insert">16. Name the columns in every INSERT</a></li>

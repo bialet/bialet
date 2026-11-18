@@ -94,6 +94,7 @@ Test.get("/api/user")
     .setHeader("Authorization", "Bearer token123")  // Add custom header
     .method("GET")                                     // Explicitly set method
     .postData({"key": "value"})                       // Set POST data
+    .withCsrf()                                        // Add the form's CSRF token
 ```
 
 ### Cookies and Sessions
@@ -115,6 +116,51 @@ Test.post("/login", {
 jar. `.csrf()` aborts the test when the response rendered no token. Session
 values set during a `Test.get` are therefore visible to the following
 `Test.post`, and a CSRF-protected form validates without a `test_mode` flag.
+
+### CSRF-Protected Forms
+
+A protected form takes two requests on one session: a GET that renders the
+token the server stored, and a POST that sends it back. The cookie jar already
+shares the session, and `.withCsrf()` folds the two calls into one:
+
+```wren
+// The form is rendered by the route being posted to: GET it for the token.
+Test.post("/login", {"email": "user@example.com"})
+    .withCsrf()
+    .status(302)
+
+// The form lives on another route.
+Test.post("/login", {"email": "user@example.com"})
+    .withCsrf("/login")
+    .status(302)
+
+// The page was already fetched, so reuse it instead of fetching it twice.
+var page = Test.get("/signup").status(200)
+Test.post("/signup", {"email": "user@example.com"})
+    .withCsrf(page)
+    .status(201)
+```
+
+`.withCsrf()` adds `_bialet_csrf` to the form Map just before the request runs,
+so the request is still lazy: nothing is fetched until the first assertion (or
+`.csrf()`) runs. The source may be a route string, which is fetched as a GET
+with the caller's headers copied so an explicit `Cookie` header keeps both
+requests on the same session, or an earlier `Test` / `TestResponse`. With no
+argument the route is the one being posted to.
+
+`.withCsrf()` needs form data (a Map). `Test.apiPost` and `Test.apiPut` send a
+raw JSON string and a multipart body is assembled by the client, so neither has
+a place to add a form field and the call aborts with `withCsrf() needs form data
+(a Map), not a raw body`. Add the token yourself in those flows:
+
+```wren
+var page = Test.get("/form").status(200)
+Test.apiPost("/api/form", {"_bialet_csrf": page.csrf()})
+```
+
+`.csrf()` remains for manual flows: it runs the request if needed and returns
+the hidden `_bialet_csrf` value from the body, aborting when the page rendered
+none.
 
 ### Assertions
 

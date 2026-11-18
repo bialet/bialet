@@ -61,6 +61,33 @@ Config.set("BIALET_TIMEZONE", "America/Bogota")
 > turns live reload and error pages on for its own run without touching the
 > database.
 
+### Public base URL: `BIALET_BASE_URL`
+
+`Request.baseUrl` (and `absoluteUrl`/`fullUrl`) builds links from the request's
+scheme and `Host` header. Behind a proxy, or from cron and email code that has
+no request at all, set the public origin explicitly:
+
+```wren
+Config.set("BIALET_BASE_URL", "https://app.example.com")
+```
+
+The value is trimmed and trailing slashes are removed, so
+`"https://app.example.com/"` works. When the row is absent or empty, the request
+authority is used (`https://` when `X-Forwarded-Proto`/`Forwarded` reports
+TLS). Unlike the startup settings above, this is read on every call, so a change
+takes effect on the next request without a restart.
+
+```wren
+var canonical = Request.absoluteUrl("/articles/%(_id)")  // https://app.example.com/articles/42
+```
+
+> ⚠️ Pitfall: `Host` is client-controlled. Bialet never reads
+> `X-Forwarded-Host`, and a link built from `Host` can point at an attacker's
+> domain if the proxy forwards an arbitrary value. Set `BIALET_BASE_URL` for
+> canonical links and every email; use `Request.baseUrl` only for
+> proxy-controlled, single-origin apps.
+
+
 ### Development mode: `bialet dev`
 
 The `dev` subcommand is the fastest way to start developing:
