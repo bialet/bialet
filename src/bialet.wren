@@ -106,6 +106,32 @@ class Request {
   static uri { __uri }
   static body { __body }
   static isPost { __method == "POST" }
+  // Public URL pieces. Behind a proxy the app sees the proxy's authority and
+  // plain HTTP, so the scheme comes from Util.isHttpsRequest (the first hop of
+  // X-Forwarded-Proto or Forwarded) and the authority is the Host header.
+  // X-Forwarded-Host is deliberately not consulted: any client can set it.
+  static scheme { Util.isHttpsRequest ? "https" : "http" }
+  static host { header("host", "localhost") }
+  // The absolute base for links and emails. BIALET_BASE_URL wins when set,
+  // because a proxied request can still carry the wrong Host and a cron job
+  // carries none. Trailing slashes are stripped so absoluteUrl can add one.
+  static baseUrl {
+    var configured = Config.get("BIALET_BASE_URL")
+    if (configured != null) {
+      var value = "%(configured)".trim().trimEnd("/")
+      if (value.count > 0) return value
+    }
+    return "%(scheme)://%(host)"
+  }
+  static absoluteUrl(path) {
+    if (path == null) return baseUrl
+    var value = "%(path)".trim()
+    if (value.count == 0) return baseUrl
+    if (value.startsWith("/")) return baseUrl + value
+    return "%(baseUrl)/%(value)"
+  }
+  // The URL the client requested, path and query included.
+  static fullUrl { baseUrl + __fullUri }
   static isJson { header("content-type") == "application/json" }
   static json() { Json.parse(__body) }
   static header(name, default) {

@@ -887,6 +887,13 @@ var apiKeyOrEmpty = Request.header("X-Api-Key", "")   // default when absent
 Request.method     // "GET", "POST", "PUT", "DELETE", ...
 Request.isPost      // true for POST
 
+// Public URL (scheme + Host, or the BIALET_BASE_URL config override)
+Request.scheme              // "https" when TLS / X-Forwarded-Proto says so
+Request.host                // Host header, or "localhost"
+Request.baseUrl             // "https://app.example.com" (no trailing slash)
+Request.absoluteUrl("/x")   // "https://app.example.com/x"
+Request.fullUrl             // baseUrl + the requested path and query
+
 // Path segments (only inside a <folder>.wren route handler)
 var id = Request.route(0)
 var idOrDefault = Request.route(0, "index")   // default for a missing segment
@@ -901,6 +908,12 @@ if (Request.login("admin", "secret") != false) return
 > value needs to survive both a GET (rendering a form) and the POST that
 > submits it, read both explicitly:
 > `Request.get("slug", Request.post("slug", ""))`.
+>
+> **Pitfall:** `Request.host`/`baseUrl` come from the client's `Host` header
+> (Bialet ignores `X-Forwarded-Host`). Set
+> `Config.set("BIALET_BASE_URL", "https://app.example.com")` for canonical
+> links, emails and cron jobs; otherwise a proxy that forwards an arbitrary
+> `Host` lets the requester choose the domain in a generated link.
 >
 > **Pitfall:** on failed Basic auth, `Request.login` sets a `401` status and
 > the `WWW-Authenticate` header but does **not** stop the script by itself

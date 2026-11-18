@@ -8,6 +8,11 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- `Request.scheme`, `Request.host`, `Request.baseUrl`,
+  `Request.absoluteUrl(path)` and `Request.fullUrl` build absolute URLs from the
+  request. The scheme follows `X-Forwarded-Proto`/`Forwarded`, the authority is
+  the `Host` header (never `X-Forwarded-Host`), and `BIALET_BASE_URL` in
+  `BIALET_CONFIG` overrides both for canonical links, emails and cron.
 - A zero-argument method can be called without parentheses: `obj.name` looks
   for the getter `name`, and when the class has none, calls `name()`. The
   fallback is one-way (`count()` never reads the `count` getter), a getter
@@ -45,6 +50,9 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- The `Request` reference, configuration, deployment and prompt guide document
+  the public URL helpers, `BIALET_BASE_URL`, the proxy headers they depend on
+  and Host-header injection.
 - The Wren guide, pitfalls and prompt guide describe the no-paren method
   fallback, what it does to getter/method pairs, and why the reverse is not
   supported.

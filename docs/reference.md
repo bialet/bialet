@@ -91,6 +91,56 @@ content never enters Wren, and the text fields are read with
 [post(name)](#postname). Use `Request.post()` and `Request.file()` instead of
 parsing the body.
 
+### scheme
+
+Returns `"https"` when the request reached the app over TLS, otherwise
+`"http"`. Behind a proxy the decision comes from the first hop of
+`X-Forwarded-Proto` or `Forwarded`, never from the transport itself.
+
+### host
+
+Returns the `Host` header, or `"localhost"` when it is absent. The header is
+client-controlled: see the note under [baseUrl](#baseurl).
+
+### baseUrl
+
+Returns the absolute origin for links, with no trailing slash. It is
+`Config.get("BIALET_BASE_URL")` when that row is set (trimmed, trailing slashes
+removed); otherwise `scheme://host`.
+
+```wren
+Config.set("BIALET_BASE_URL", "https://app.example.com")
+var canonical = Request.absoluteUrl("/articles/42")
+```
+
+Set `BIALET_BASE_URL` for canonical links, emails, feeds and cron jobs. Without
+it a request behind a proxy can carry the wrong `Host`, and there is no request
+at all in cron.
+
+> ⚠️ Pitfall: `Host` is client-controlled, so `baseUrl` can return an
+> attacker's domain if the proxy forwards an arbitrary value. Bialet never reads
+> `X-Forwarded-Host`; use a fixed `BIALET_BASE_URL` when the origin matters.
+
+### absoluteUrl(path)
+
+Returns `path` made absolute against [baseUrl](#baseurl). A path starting with
+`/` is appended as-is; one without a slash gets one. `null` or an empty path
+returns `baseUrl` itself.
+
+```wren
+Request.absoluteUrl("/x")   // https://app.example.com/x
+Request.absoluteUrl("x")    // https://app.example.com/x
+```
+
+### fullUrl
+
+Returns [baseUrl](#baseurl) plus the request path and query string.
+
+```wren
+// On https://app.example.com/search?q=dates
+Request.fullUrl    // https://app.example.com/search?q=dates
+```
+
 ### isPost
 
 Checks if the request method is POST.

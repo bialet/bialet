@@ -823,6 +823,18 @@ fi
 # Tests - Request & Response (extended coverage)
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
 run_test "Request defaults apply       " "request-meta?mode=defaults&present=value&flag" 200 "fallback|value|fallback|fallback|fallback|true|fallback|fallback|fallback"
+run_test "Request public URL           " "request-meta?mode=url&x=1" 200 "http|$HOST:$PORT|http://$HOST:$PORT|http://$HOST:$PORT/x|http://$HOST:$PORT/x|http://$HOST:$PORT/request-meta?mode=url&x=1|http://$HOST:$PORT|http://$HOST:$PORT"
+# The Test client always writes Host: localhost, so a custom authority is only
+# reachable through curl. It must be reflected and never replaced by
+# X-Forwarded-Host.
+_test_start_ms=$(now_ms)
+url_host_line=$LINENO
+url_host_body=$(curl -s -H "Host: example.test:8443" "http://$HOST:$PORT/request-meta?mode=url")
+if [[ "$url_host_body" == *"http|example.test:8443|http://example.test:8443|http://example.test:8443/x|"* ]]; then
+  report_result "Request public URL uses Host " "$url_host_line" 0
+else
+  report_result "Request public URL uses Host " "$url_host_line" 1 "Got: $url_host_body"
+fi
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
 
 # Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002) and

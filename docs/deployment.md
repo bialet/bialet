@@ -259,6 +259,35 @@ example.com {
 
 That's it. Caddy obtains and renews certificates automatically.
 
+### Public URLs behind a proxy
+
+`Request.scheme` follows the first hop of `X-Forwarded-Proto` (or `Forwarded`),
+and `Request.host`/`Request.baseUrl` use the **`Host`** header. The proxy must
+therefore:
+
+- set `X-Forwarded-Proto` to the scheme the client used, and drop a
+  client-supplied `Forwarded` header (the sample nginx and Caddy configs above
+  do both);
+- forward the public `Host`, not the upstream address: nginx's
+  `proxy_set_header Host $host`, Apache's `ProxyPreserveHost On`, or Caddy's
+  default behaviour.
+
+Bialet deliberately never reads `X-Forwarded-Host`: it is just a request header
+and any client can send one. Using it would let an attacker choose the hostname
+in a password-reset link.
+
+> ⚠️ **Host-header injection.** `Host` is still client-controlled. On a proxy
+> that passes an arbitrary `Host` through, `Request.baseUrl` can return the
+> attacker's domain. For canonical links, password-reset URLs, emails and cron
+> jobs (where there is no request at all), set the origin explicitly:
+>
+> ```wren
+> Config.set("BIALET_BASE_URL", "https://app.example.com")
+> ```
+>
+> `Request.absoluteUrl` and `Request.fullUrl` then always use it. See
+> [Configuration](configuration.md#public-base-url-bialet_base_url).
+
 ## Hardening the Proxy
 
 The proxy is your first line of defense. A Bialet worker handles one request

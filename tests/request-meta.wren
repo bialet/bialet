@@ -19,6 +19,23 @@ if (Request.get("mode") == "defaults") {
   return values.join("|")
 }
 
+if (Request.get("mode") == "urlbase") {
+  return Request.baseUrl
+}
+
+if (Request.get("mode") == "url") {
+  return [
+    Request.scheme,
+    Request.host,
+    Request.baseUrl,
+    Request.absoluteUrl("/x"),
+    Request.absoluteUrl("x"),
+    Request.fullUrl,
+    Request.absoluteUrl(""),
+    Request.absoluteUrl(null)
+  ].join("|")
+}
+
 if (Request.isPost) {
   if (Request.isJson) {
     return "json|" + Request.uri + "|" + (Request.json()["key"] || "")
