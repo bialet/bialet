@@ -24,6 +24,18 @@ getter, and a getter still wins when a class has a getter and a method with the
 same name. Keep the `()` where the call matters, especially for a side effect
 (`list.clear`) — a reader cannot tell a field from a call otherwise.
 
+A `get name { ... }` declaration (the habit from Java, C# or PHP) is not Wren
+either. The compiler reports:
+
+```
+Wren has no 'get' declaration. Write the getter as 'name { ... }' or the
+method as 'name() { ... }'.
+```
+
+`set name { ... }` gets the matching hint with the setter form
+`name=(value) { ... }`. A member literally named `get` or `set` is fine:
+`get { ... }` and `get(x) { ... }` are an ordinary getter and method.
+
 ## 2. Every method that produces a value needs an explicit `return`
 
 Wren is not expression-oriented: a method returns the value of `return`, not the

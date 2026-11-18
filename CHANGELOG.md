@@ -8,6 +8,10 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- The compiler explains a `get name { ... }` / `set name { ... }` declaration
+  instead of reporting only `Expect '{' to begin method body.`: it names the
+  member and shows the getter, method or setter spelling Wren expects. A valid
+  `get { ... }` or `get(x) { ... }` member is unaffected.
 - `Request.scheme`, `Request.host`, `Request.baseUrl`,
   `Request.absoluteUrl(path)` and `Request.fullUrl` build absolute URLs from the
   request. The scheme follows `X-Forwarded-Proto`/`Forwarded`, the authority is
@@ -50,6 +54,7 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- The `get`/`set` pitfall documents the new compiler hint.
 - The `Request` reference, configuration, deployment and prompt guide document
   the public URL helpers, `BIALET_BASE_URL`, the proxy headers they depend on
   and Host-header injection.

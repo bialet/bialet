@@ -78,6 +78,8 @@ fi
 if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
+  test_syntax "get/set as member names pass    " "syntax_ok_get.wren" 0
+  test_syntax_msg "get keyword names the getter  " "syntax_err_get_keyword.wren" 1 "Wren has no 'get' declaration. Write the getter as 'isDueToday { ... }' or the method as 'isDueToday() { ... }'."
   test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
