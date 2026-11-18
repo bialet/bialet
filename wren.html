@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.23" />
+  <meta name="docsearch:version" content="1.2.24" />
   </head>
   
   
@@ -927,9 +927,10 @@ chaining.</p>
 <p>Bialet adds one rule for methods: <code class="docutils literal notranslate"><span class="pre">obj.name</span></code> falls back to calling a
 zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code> when the class has no getter <code class="docutils literal notranslate"><span class="pre">name</span></code>. So
 <code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">x</span> <span class="pre">&quot;.trim</span></code> and <code class="docutils literal notranslate"><span class="pre">list.clear</span></code> work as well as their parenthesized forms.
-<code class="docutils literal notranslate"><span class="pre">obj.name()</span></code> always calls the method, and a getter still wins when a class
-declares both. The fallback is one-way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> does not read the <code class="docutils literal notranslate"><span class="pre">count</span></code>
-getter.</p>
+<code class="docutils literal notranslate"><span class="pre">obj.name()</span></code> always calls the method. A class cannot declare both a getter
+<code class="docutils literal notranslate"><span class="pre">name</span></code> and a zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code>: the compiler rejects the second
+declaration, because <code class="docutils literal notranslate"><span class="pre">obj.name</span></code> would be ambiguous. The fallback is one-way:
+<code class="docutils literal notranslate"><span class="pre">count()</span></code> does not read the <code class="docutils literal notranslate"><span class="pre">count</span></code> getter.</p>
 </section>
 <section id="static-methods">
 <h3>Static Methods<a class="headerlink" href="#static-methods" title="Link to this heading">#</a></h3>

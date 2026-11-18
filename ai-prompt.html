@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.23" />
+  <meta name="docsearch:version" content="1.2.24" />
   </head>
   
   
@@ -658,8 +658,9 @@ the upstream language). A few things you need to know to write correct code:
 
 <span class="c1">// `count`, `toString`, `keys` and `bytes` are getters; `trim`, `lower` and</span>
 <span class="c1">// `replace` are methods. A zero-argument method can also be called without</span>
-<span class="c1">// `()`: `" x ".trim` calls trim() because no getter `trim` exists. A getter</span>
-<span class="c1">// still wins when both exist, and the fallback is one-way (`count()` does not</span>
+<span class="c1">// `()`: `" x ".trim` calls trim() because no getter `trim` exists. The same</span>
+<span class="c1">// class cannot declare a getter and a zero-argument method with the same name</span>
+<span class="c1">// (that is a compile error), and the fallback is one-way (`count()` does not</span>
 <span class="c1">// read the getter). `Klass.new` and `list.clear` therefore run without parens.</span>
 <span class="c1">// There is no `String.fromBytes`: to build</span>
 <span class="c1">// text from numbers use `String.fromCodePoint`, and read text as a String.</span>

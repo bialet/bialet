@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'pitfalls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.23" />
+  <meta name="docsearch:version" content="1.2.24" />
   </head>
   
   
@@ -490,9 +490,11 @@ no-paren call when the class has no getter of that name: <code class="docutils l
 to a zero-argument <code class="docutils literal notranslate"><span class="pre">name()</span></code>, which is why <code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">x</span> <span class="pre">&quot;.trim</span></code>, <code class="docutils literal notranslate"><span class="pre">list.clear</span></code> and
 <code class="docutils literal notranslate"><span class="pre">Klass.new</span></code> run without parentheses. <code class="docutils literal notranslate"><span class="pre">toString()</span></code> remains an alias for the
 getter. The fallback only goes one way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> does not return the <code class="docutils literal notranslate"><span class="pre">count</span></code>
-getter, and a getter still wins when a class has a getter and a method with the
-same name. Keep the <code class="docutils literal notranslate"><span class="pre">()</span></code> where the call matters, especially for a side effect
-(<code class="docutils literal notranslate"><span class="pre">list.clear</span></code>) — a reader cannot tell a field from a call otherwise.</p>
+getter, and a class cannot declare both a getter and a zero-argument method
+with the same name — the compiler rejects the second declaration, because the
+no-paren spelling would be ambiguous. Keep the <code class="docutils literal notranslate"><span class="pre">()</span></code> where the call matters,
+especially for a side effect (<code class="docutils literal notranslate"><span class="pre">list.clear</span></code>) — a reader cannot tell a field from
+a call otherwise.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">get</span> <span class="pre">name</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> declaration (the habit from Java, C# or PHP) is not Wren
 either. The compiler reports:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Wren</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="s1">'get'</span><span class="w"> </span><span class="n">declaration</span><span class="o">.</span><span class="w"> </span><span class="nc">Write</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">getter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="s1">'name { ... }'</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="n">the</span>
@@ -641,11 +643,12 @@ before the app is exercised.</p>
 </pre></div>
 </div>
 <p>A no-paren access first looks for a getter <code class="docutils literal notranslate"><span class="pre">name</span></code>; when the class has none, it
-calls a zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code>. A <strong>getter still wins</strong> when a class has
-both, and the fallback is one-way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> is an error, not the <code class="docutils literal notranslate"><span class="pre">count</span></code>
-getter. Constructor calls like <code class="docutils literal notranslate"><span class="pre">Klass.new</span></code> and side-effecting methods like
-<code class="docutils literal notranslate"><span class="pre">list.clear</span></code> therefore run without parentheses, so keep <code class="docutils literal notranslate"><span class="pre">()</span></code> where the reader
-should see that the access is a call.</p>
+calls a zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code>. Declaring both a getter <code class="docutils literal notranslate"><span class="pre">name</span></code> and a
+zero-argument method <code class="docutils literal notranslate"><span class="pre">name()</span></code> in the same class is a compile error: the no-paren
+spelling would be ambiguous. The fallback is one-way: <code class="docutils literal notranslate"><span class="pre">count()</span></code> is an error, not
+the <code class="docutils literal notranslate"><span class="pre">count</span></code> getter. Constructor calls like <code class="docutils literal notranslate"><span class="pre">Klass.new</span></code> and side-effecting
+methods like <code class="docutils literal notranslate"><span class="pre">list.clear</span></code> therefore run without parentheses, so keep <code class="docutils literal notranslate"><span class="pre">()</span></code> where
+the reader should see that the access is a call.</p>
 </section>
 <section id="init-wren-runs-once-do-not-collide-with-unique-keys">
 <h2>14. <code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> runs once; do not collide with UNIQUE keys<a class="headerlink" href="#init-wren-runs-once-do-not-collide-with-unique-keys" title="Link to this heading">#</a></h2>

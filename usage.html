@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=be25a965"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.23" />
+  <meta name="docsearch:version" content="1.2.24" />
   </head>
   
   
@@ -607,6 +607,14 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.</p>
 <blockquote>
+<div><p>⚠️ Pitfall: bialet refuses to start when the port already has a listener, even
+when the addresses differ (<code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> vs <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code>). The kernel would accept
+that second bind — <code class="docutils literal notranslate"><span class="pre">SO_REUSEADDR</span></code> allows a wildcard bind to share a port with a
+specific address — and then route loopback traffic to the older server, so the
+new one would never answer on <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>. Stop the other process
+(<code class="docutils literal notranslate"><span class="pre">lsof</span> <span class="pre">-nP</span> <span class="pre">-iTCP:7001</span> <span class="pre">-sTCP:LISTEN</span></code>) or pick another port.</p>
+</div></blockquote>
+<blockquote>
 <div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">-d</span></code> and <code class="docutils literal notranslate"><span class="pre">-l</span></code> may point inside the app root only under a private
 name (starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, like <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>). Everything else below the
 root is served, so a database or a log file with a public name there is
@@ -652,7 +660,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.23</span>
+<span class="c1"># bialet 1.2.24</span>
 </pre></div>
 </div>
 </section>

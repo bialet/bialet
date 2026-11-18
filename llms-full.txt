@@ -1272,9 +1272,10 @@ d.name = "Max"  // setter
 Bialet adds one rule for methods: `obj.name` falls back to calling a
 zero-argument method `name()` when the class has no getter `name`. So
 `" x ".trim` and `list.clear` work as well as their parenthesized forms.
-`obj.name()` always calls the method, and a getter still wins when a class
-declares both. The fallback is one-way: `count()` does not read the `count`
-getter.
+`obj.name()` always calls the method. A class cannot declare both a getter
+`name` and a zero-argument method `name()`: the compiler rejects the second
+declaration, because `obj.name` would be ambiguous. The fallback is one-way:
+`count()` does not read the `count` getter.
 
 ### Static Methods
 
@@ -7608,6 +7609,13 @@ Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
 
+> ⚠️ Pitfall: bialet refuses to start when the port already has a listener, even
+> when the addresses differ (`127.0.0.1` vs `0.0.0.0`). The kernel would accept
+> that second bind — `SO_REUSEADDR` allows a wildcard bind to share a port with a
+> specific address — and then route loopback traffic to the older server, so the
+> new one would never answer on `127.0.0.1`. Stop the other process
+> (`lsof -nP -iTCP:7001 -sTCP:LISTEN`) or pick another port.
+
 > ⚠️ Pitfall: `-d` and `-l` may point inside the app root only under a private
 > name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
 > root is served, so a database or a log file with a public name there is
@@ -11914,9 +11922,11 @@ no-paren call when the class has no getter of that name: `obj.name` falls back
 to a zero-argument `name()`, which is why `" x ".trim`, `list.clear` and
 `Klass.new` run without parentheses. `toString()` remains an alias for the
 getter. The fallback only goes one way: `count()` does not return the `count`
-getter, and a getter still wins when a class has a getter and a method with the
-same name. Keep the `()` where the call matters, especially for a side effect
-(`list.clear`) — a reader cannot tell a field from a call otherwise.
+getter, and a class cannot declare both a getter and a zero-argument method
+with the same name — the compiler rejects the second declaration, because the
+no-paren spelling would be ambiguous. Keep the `()` where the call matters,
+especially for a side effect (`list.clear`) — a reader cannot tell a field from
+a call otherwise.
 
 A `get name { ... }` declaration (the habit from Java, C# or PHP) is not Wren
 either. The compiler reports:
@@ -12083,11 +12093,12 @@ Klass.total     // 42: no getter total, so the VM calls total()
 ```
 
 A no-paren access first looks for a getter `name`; when the class has none, it
-calls a zero-argument method `name()`. A **getter still wins** when a class has
-both, and the fallback is one-way: `count()` is an error, not the `count`
-getter. Constructor calls like `Klass.new` and side-effecting methods like
-`list.clear` therefore run without parentheses, so keep `()` where the reader
-should see that the access is a call.
+calls a zero-argument method `name()`. Declaring both a getter `name` and a
+zero-argument method `name()` in the same class is a compile error: the no-paren
+spelling would be ambiguous. The fallback is one-way: `count()` is an error, not
+the `count` getter. Constructor calls like `Klass.new` and side-effecting
+methods like `list.clear` therefore run without parentheses, so keep `()` where
+the reader should see that the access is a call.
 
 ## 14. `_init.wren` runs once; do not collide with UNIQUE keys
 
