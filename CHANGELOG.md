@@ -8,6 +8,10 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- `isBlank` and `isFilled` getters on every object. `null`, whitespace-only
+  strings and empty sequences are blank; `false` and `0` are values and are
+  not. `isFilled` is the exact inverse. `isEmpty` keeps its zero-elements
+  meaning.
 - `Date` arithmetic: `date + n` and `date - n` shift by **seconds**,
   `date - otherDate` returns the seconds between them (same as `.diff`), and
   `date + otherDate` is refused with an explanation. `Date.new(seconds)`,
@@ -36,6 +40,9 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- The Wren guide, core-extensions reference, pitfalls and prompt guide document
+  `isBlank`/`isFilled`, their `false`/`0` semantics and the difference from
+  `isEmpty`.
 - The date pages, pitfalls, `Date` reference, prompt guide and dates recipe use
   the new arithmetic and drop the "no `+`/`-`, no timestamp constructor"
   instructions.

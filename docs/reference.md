@@ -1454,6 +1454,31 @@ System.log("User %(name) logged in")
 
 Bialet extends several core Wren classes with additional methods to make development easier.
 
+### Blankness (all objects)
+
+`isBlank` and `isFilled` are getters available on every value, with Laravel-style
+form semantics. They are exact inverses.
+
+| Value | `isBlank` | `isFilled` |
+|-------|-----------|------------|
+| `null` | `true` | `false` |
+| `""`, `"   "`, `"\t\n"` | `true` | `false` |
+| `[]`, `{}`, empty range | `true` | `false` |
+| `false`, `0` | `false` | `true` |
+| any other value or object | `false` | `true` |
+
+```wren
+var name = Request.post("name", "")
+if (name.isBlank) {
+  errors.add("Name is required")
+}
+```
+
+A sequence is blank when it has no elements. A whitespace-only string is blank
+as well. `false` and `0` are values, not absences, so they are filled. Use
+`isEmpty` when you mean exactly "zero elements": `"   ".isEmpty` is `false`
+while `"   ".isBlank` is `true`.
+
 ### String Extensions
 
 #### toBool

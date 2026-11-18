@@ -252,13 +252,17 @@ inside a tag.
 ## 20. `""` is truthy in Wren
 
 ```wren
-var name = Request.post("name") || ""
+var name = Request.post("name", "")
 if (!name) { ... }          // never true for ""
-if (name.trim().count == 0) { ... }   // correct empty check
+if (name.isBlank) { ... }   // true for null, "" and "   "
+if (name.trim().count == 0) { ... }   // the same check without isBlank
 ```
 
-Only `null` and `false` are falsy. Validate empty text with `trim().count == 0`
-(or `trim() == ""`), not `!text`.
+Only `null` and `false` are falsy, so `!text` misses `""` and whitespace.
+`text.isBlank` is the form-oriented check: it is true for `null`, a
+whitespace-only string and an empty sequence, and false for `false` and `0`.
+`isFilled` is its exact inverse. `text.isEmpty` only means zero elements:
+`"   ".isEmpty` is `false`.
 
 ## 21. Enforce rules in the domain, not only in the UI
 

@@ -883,6 +883,18 @@ DEF_PRIMITIVE(object_not) {
   RETURN_VAL(FALSE_VAL);
 }
 
+// Laravel-style blankness. Everything that is not null or an empty collection
+// is a value, including false and 0, so the Object default is "not blank".
+// Null, Sequence and String override these in wren_core.wren; the pair is
+// always an exact inverse.
+DEF_PRIMITIVE(object_isBlank) {
+  RETURN_BOOL(false);
+}
+
+DEF_PRIMITIVE(object_isFilled) {
+  RETURN_BOOL(true);
+}
+
 DEF_PRIMITIVE(object_eqeq) {
   RETURN_BOOL(wrenValuesEqual(args[0], args[1]));
 }
@@ -2819,6 +2831,8 @@ void wrenInitializeCore(WrenVM* vm) {
   // because it has no superclass.
   vm->objectClass = defineClass(vm, coreModule, "Object");
   PRIMITIVE(vm->objectClass, "!", object_not);
+  PRIMITIVE(vm->objectClass, "isBlank", object_isBlank);
+  PRIMITIVE(vm->objectClass, "isFilled", object_isFilled);
   PRIMITIVE(vm->objectClass, "==(_)", object_eqeq);
   PRIMITIVE(vm->objectClass, "!=(_)", object_bangeq);
   PRIMITIVE(vm->objectClass, "is(_)", object_is);

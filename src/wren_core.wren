@@ -15,6 +15,9 @@ class Null {
   [key] { null }
   map(f) { List.new() }
   count { 0 }
+  // null is absent, so it is blank. isFilled is the exact inverse everywhere.
+  isBlank { true }
+  isFilled { false }
   to(Class) { this }
   safe { toString.safe }
 }
@@ -68,6 +71,14 @@ class Sequence {
   }
 
   isEmpty { iterate(null) ? false : true }
+
+  // Form-oriented blankness: no elements at all. isBlank(false) must be false
+  // and isBlank([0]) must be false, so the Object default (false/true) covers
+  // scalars and this only refines an empty sequence. isEmpty stays the
+  // zero-elements check; isBlank is the one that treats whitespace strings
+  // (see String) and null as absent.
+  isBlank { count == 0 }
+  isFilled { count > 0 }
 
   map(transformation) { MapSequence.new(this, transformation) }
   to(Class) { map{ |element| Class.new(element) } }
@@ -220,6 +231,11 @@ class WhereSequence is Sequence {
 class String is Sequence {
   bytes { StringByteSequence.new(this) }
   codePoints { StringCodePointSequence.new(this) }
+
+  // A whitespace-only string is blank, so a form field left as spaces counts
+  // as empty; "0" and "false" are text, so they are filled.
+  isBlank { trim().count == 0 }
+  isFilled { trim().count > 0 }
 
   split(delimiter) {
     if (!(delimiter is String) || delimiter.isEmpty) {

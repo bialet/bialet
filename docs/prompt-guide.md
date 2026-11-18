@@ -259,6 +259,20 @@ var itemTotal = items.count       // list size
 if (name.count > 0 && items.count == 0) { ... }
 ```
 
+### Blank Checks: `isBlank` / `isFilled`
+
+Both are **getters** (no parentheses) and available on every object:
+
+```wren
+if (name.isBlank) { ... }        // null, "", "   ", empty list/map/range
+if (email.isFilled) { ... }      // the exact inverse
+```
+
+`isBlank` is the form-oriented check: `null`, a whitespace-only string and an
+empty sequence are blank. `false` and `0` are **values**, so they are not blank
+(`false.isBlank == false`). `isEmpty` remains the zero-elements check:
+`"   ".isEmpty` is `false` while `"   ".isBlank` is `true`.
+
 > **Pitfall:** `return <tag>` on the same physical line is a compile error
 > (`Expected expression` at `return`), regardless of what's inside the tag.
 > Always put the tag on the line after `return`:
