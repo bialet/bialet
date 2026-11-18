@@ -112,23 +112,73 @@ if (Request.isJson) {
 }
 ```
 
+### header(name, default)
+
+Returns the value of a specified request header, or `default` when the header is
+absent.
+
+- `name`: The name of the header.
+- `default`: The value to return when the header is missing.
+
+Only a missing header triggers the default. A header sent with an empty value
+returns `""`.
+
 ### header(name)
 
-Returns the value of a specified request header.
+Returns the value of a specified request header, or `null` when it is absent.
 
 - `name`: The name of the header.
 
-### get(name)
+### get(name, default)
 
-Returns the value of a specified query parameter.
+Returns the value of a specified query parameter, or `default` when the
+parameter is absent. This is the recommended form when a fallback is wanted:
+
+```wren
+var page = Request.get("page", "1")
+var search = Request.get("search", "")
+```
 
 - `name`: The name of the query parameter.
+- `default`: The value to return when the parameter is missing.
+
+Only `null` triggers the default. An empty value (`?q=`) returns `""` and a bare
+flag (`?draft`) returns `true`. `Request.get(name) || "1"` still works for
+strings, but it also replaces a `false` value; the default overload replaces
+only `null`.
+
+### get(name)
+
+Returns the value of a specified query parameter, or `null` when it is absent.
+Guard the result before a string operation, or use
+[get(name, default)](#getname-default).
+
+- `name`: The name of the query parameter.
+
+### query(name, default)
+
+Alias for `get(name, default)`.
 
 ### query(name)
 
-Alias for `get(name)`. Returns the value of a specified query parameter.
+Alias for `get(name)`.
 
-- `name`: The name of the query parameter.
+### post(name, default)
+
+Returns the value of a specified POST parameter, or `default` when the key is
+absent. Use this instead of `Request.post(name) || ""` whenever a fallback is
+wanted:
+
+```wren
+var name = Request.post("name", "")
+```
+
+- `name`: The name of the POST parameter.
+- `default`: The value to return when the key is missing.
+
+Only `null` triggers the default. A field submitted empty (`name=`) returns
+`""`, so the fallback cannot hide a blank form submission. This is how
+`isBlank` and a required-field check can tell "not sent" from "sent empty".
 
 ### post(name)
 
@@ -136,7 +186,8 @@ Alias for `get(name)`. Returns the value of a specified query parameter.
 > The return type is `String | Null`. You **MUST** handle `null`
 > before calling any string method (`.toString`, `.count`, `.trim`,
 > concatenation, interpolation). This is the #1 production crash cause.
-> **NEVER assume the field exists. ALWAYS provide a default or null check.**
+> **Prefer `Request.post("name", "")` when a default is wanted; otherwise
+> check `if (value != null)` before touching the value.**
 
 Returns the value of a specified POST parameter, or `null` if not found.
 
@@ -149,9 +200,22 @@ For a multipart form it returns the text fields only: a file part is read with
 `<textarea>`) are kept, with `\r\n` normalized to `\n`. If a field is repeated,
 the last value wins.
 
+### route(pos, default)
+
+Returns a specific part of the request route, or `default` when the segment is
+missing or empty.
+
+- `pos`: The position of the route segment.
+- `default`: The value to return when there is no segment at `pos`.
+
+```wren
+var id = Request.route(0, "index")
+```
+
 ### route(pos)
 
-Returns a specific part of the request route.
+Returns a specific part of the request route, or `null` when the segment is
+missing or empty.
 
 - `pos`: The position of the route segment.
 

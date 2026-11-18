@@ -822,6 +822,7 @@ fi
 
 # Tests - Request & Response (extended coverage)
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
+run_test "Request defaults apply       " "request-meta?mode=defaults&present=value&flag" 200 "fallback|value|fallback|fallback|fallback|true|fallback|fallback|fallback"
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
 
 # Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002) and

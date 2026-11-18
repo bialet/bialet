@@ -108,14 +108,34 @@ class Request {
   static isPost { __method == "POST" }
   static isJson { header("content-type") == "application/json" }
   static json() { Json.parse(__body) }
+  static header(name, default) {
+    var value = header(name)
+    return value == null ? default : value
+  }
   static header(name) {
     if (name == null) return null
     var key = "%(name)".trim().lower
     return __headers[key] ? __headers[key] : null
   }
+  // The two-argument forms default only on null. An empty string, false and
+  // true are values the request carried, so they come back unchanged: a form
+  // submitted with an empty field must not turn into the fallback.
+  static get(name, default) {
+    var value = get(name)
+    return value == null ? default : value
+  }
   static get(name) { __get[name] ? __get[name]:null }
+  static query(name, default) { get(name, default) }
   static query(name) { get(name) }
+  static post(name, default) {
+    var value = post(name)
+    return value == null ? default : value
+  }
   static post(name) { __post[name] ? __post[name]:null }
+  static route(pos, default) {
+    var value = route(pos)
+    return value == null ? default : value
+  }
   static route(pos) { __segments.count > pos && __segments[pos] != "" ? __segments[pos]:null}
   static file(name) {
     if (!__files || __files.trim() == "") return null

@@ -16,13 +16,18 @@ every page is at <https://bialet.dev/llms.txt>.
 
 > ⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**
 > It returns `null` when the requested key is not present in the POST payload.
-> **NEVER assume the field exists. ALWAYS provide a default with `|| ""` or
-> check `if (value != null)` before any string operation.** Calling `.toString`,
-> `.count`, `.trim`, interpolation, or concatenation on a null value crashes at
-> runtime — this is the #1 production crash cause in Bialet apps.
+> **NEVER assume the field exists. Use the default overload
+> `Request.post("name", "")` when a fallback is wanted, or check
+> `if (value != null)` before any string operation.** The default replaces only
+> `null`, so a field submitted empty (`name=`) still comes back as `""` and a
+> blank submission is not silently turned into the fallback. Calling
+> `.toString`, `.count`, `.trim`, interpolation, or concatenation on a null
+> value crashes at runtime — this is the #1 production crash cause in Bialet
+> apps.
 >
 > *"Every code example using `Request.post()` **must** include a null-handling
-> strategy (`|| fallback` or `if (value != null)`) by default."*
+> strategy: the two-argument default where a fallback is wanted, or
+> `if (value != null)`."*
 
 > ⚠️ **CRITICAL: an inline HTML string may nest its own tag (Bialet 1.2.17+).**
 > `<div><div>...</div></div>` compiles — every tag can contain any other tag,
@@ -588,8 +593,8 @@ var age = Num.fromString(row["age"])              // manual conversion
 
 ```wren
 var allowedSorts = ["id", "name", "email", "createdAt"]
-var sortCol = Request.get("sort") || "id"
-var sortDir = Request.get("order") || "asc"
+var sortCol = Request.get("sort", "id")
+var sortDir = Request.get("order", "asc")
 
 var users = `SELECT * FROM users`
   .order(sortCol, sortDir, allowedSorts)
@@ -608,7 +613,7 @@ fragments. Write one static query and bypass each filter with `OR` instead:
 
 ```wren
 // Empty string bypasses the filter
-var search = Request.get("search") || ""
+var search = Request.get("search", "")
 var users = `SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')`.fetch(search, search)
 
 // Boolean flag bypasses the filter — tri-state "all/active/completed"
@@ -626,8 +631,8 @@ own bypass, to let callers omit any combination of them.
 Always pass `LIMIT`/`OFFSET` as `?` placeholders:
 
 ```wren
-var page = Num.fromString(Request.get("page") || "1")
-var limit = Num.fromString(Request.get("limit") || "20")
+var page = Num.fromString(Request.get("page", "1"))
+var limit = Num.fromString(Request.get("limit", "20"))
 var offset = (page - 1) * limit
 
 var total = `SELECT COUNT(*) FROM users`.toNum
@@ -770,8 +775,8 @@ import "/_app/domain" for User
 // === CONTROLLER ===
 if (Request.isPost) {
   var user = User.new()
-  user.name = Request.post("name") || ""
-  user.email = Request.post("email") || ""
+  user.name = Request.post("name", "")
+  user.email = Request.post("email", "")
   user.save()
   return Response.redirect("/users")
 }
@@ -839,14 +844,16 @@ if (account is Map == false) return account  // Auth.require() returned an error
 ## Request Handling
 
 ```wren
-// Query parameters
+// Query parameters — the second argument is the default for a missing one
 var id = Request.get("id")
-var page = Request.get("page") || "1"
+var page = Request.get("page", "1")
 Request.query("id")   // alias for Request.get("id")
+Request.query("id", "")   // alias with a default
 
-// POST form fields
+// POST form fields. The default applies only when the field is absent: a
+// field posted empty still returns "".
 if (Request.isPost) {
-  var name = Request.post("name") || ""
+  var name = Request.post("name", "")
 }
 
 // JSON body
@@ -857,6 +864,7 @@ if (Request.isJson) {
 
 // Headers
 var apiKey = Request.header("X-Api-Key")
+var apiKeyOrEmpty = Request.header("X-Api-Key", "")   // default when absent
 
 // HTTP method
 Request.method     // "GET", "POST", "PUT", "DELETE", ...
@@ -864,6 +872,7 @@ Request.isPost      // true for POST
 
 // Path segments (only inside a <folder>.wren route handler)
 var id = Request.route(0)
+var idOrDefault = Request.route(0, "index")   // default for a missing segment
 
 // Basic auth
 if (Request.login("admin", "secret") != false) return
@@ -873,7 +882,8 @@ if (Request.login("admin", "secret") != false) return
 > **Pitfall:** `Request.get(name)` never reads the POST body, even when the
 > current request is a POST — it only ever reads the URL query string. If a
 > value needs to survive both a GET (rendering a form) and the POST that
-> submits it, read both explicitly: `Request.get("slug") || Request.post("slug")`.
+> submits it, read both explicitly:
+> `Request.get("slug", Request.post("slug", ""))`.
 >
 > **Pitfall:** on failed Basic auth, `Request.login` sets a `401` status and
 > the `WWW-Authenticate` header but does **not** stop the script by itself
@@ -915,8 +925,8 @@ var session = Session.new()
 
 // Login
 if (Request.isPost) {
-  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email") || "")
-  if (user && Util.verify(Request.post("password") || "", user["password"])) {
+  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email", ""))
+  if (user && Util.verify(Request.post("password", ""), user["password"])) {
     Session.rotate()            // before any authenticated write
     session.set("userId", user["id"])
     return Response.redirect("/dashboard")
@@ -1223,7 +1233,7 @@ import "_app/domain" for Task
 
 if (Request.isPost) {
   var task = Task.new()
-  task.description = Request.post("description") || ""
+  task.description = Request.post("description", "")
   task.save()
   return Response.redirect("/")
 }
@@ -1266,7 +1276,7 @@ return Response.redirect("/")
 // delete.wren
 import "_app/domain" for Task
 
-Task.delete(Request.post("id") || "")
+Task.delete(Request.post("id", ""))
 return Response.redirect("/")
 ```
 

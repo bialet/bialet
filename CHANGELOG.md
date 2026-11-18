@@ -8,6 +8,11 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- `Request.get`, `Request.query`, `Request.post`, `Request.route` and
+  `Request.header` take an optional second argument returned when the value is
+  missing. Only `null` triggers it (and for `route`, a missing or empty
+  segment): an empty POST field stays `""` and a bare query flag stays `true`,
+  which `|| default` could not express safely.
 - `Test.withCsrf()` submits a CSRF-protected form in one call: it GETs the
   route that rendered the form (or one passed as a route string, or an earlier
   `Test` / `TestResponse`), copies the hidden `_bialet_csrf` token into the form
@@ -16,6 +21,9 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- `docs/reference.md` and `docs/prompt-guide.md` show the new `Request`
+  default overloads as the recommended form and keep the null pitfall: a
+  default replaces only a missing value, never an empty field.
 - `docs/tests.md` documents `.withCsrf()` with its three call forms, the
   raw-body limitation and the manual `.csrf()` flow it builds on.
 
