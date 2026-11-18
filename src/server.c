@@ -24,6 +24,7 @@
 #define BIALET_INVALID_SOCKET INVALID_SOCKET
 #define socket_close(s) closesocket(s)
 #define setsockopt_val(v) ((const char*)(v))
+#define getsockopt_val(v) ((char*)(v))
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -39,6 +40,7 @@ typedef int bialet_socket_t;
 #define BIALET_INVALID_SOCKET (-1)
 #define socket_close(s) close(s)
 #define setsockopt_val(v) (v)
+#define getsockopt_val(v) (v)
 #endif
 
 #include <ctype.h>
@@ -495,6 +497,99 @@ static int wait_readable(bialet_socket_t fd, int timeout_ms) {
 #endif
 }
 
+// Turns O_NONBLOCK (or FIONBIO on Windows) on or off for [fd].
+static void set_nonblocking(bialet_socket_t fd, int enabled) {
+#ifdef _WIN32
+  u_long mode = enabled ? 1 : 0;
+  ioctlsocket(fd, FIONBIO, &mode);
+#else
+  int flags = fcntl(fd, F_GETFL, 0);
+  if(flags == -1)
+    return;
+  flags = enabled ? (flags | O_NONBLOCK) : (flags & ~O_NONBLOCK);
+  fcntl(fd, F_SETFL, flags);
+#endif
+}
+
+// Returns 1 when [fd] becomes writable within timeout_ms, 0 on timeout or
+// error. Bounds the non-blocking connect() of the port probe below.
+static int wait_writable(bialet_socket_t fd, int timeout_ms) {
+#ifdef _WIN32
+  fd_set writefds;
+  FD_ZERO(&writefds);
+  FD_SET(fd, &writefds);
+  struct timeval tv;
+  tv.tv_sec = timeout_ms / 1000;
+  tv.tv_usec = (timeout_ms % 1000) * 1000;
+  int ret = select(0, NULL, &writefds, NULL, &tv);
+  return ret > 0 && FD_ISSET(fd, &writefds);
+#else
+  struct pollfd pfd;
+  pfd.fd = fd;
+  pfd.events = POLLOUT;
+  int ret = poll(&pfd, 1, timeout_ms);
+  // A refused connect reports POLLERR, which still means the connect has
+  // finished and SO_ERROR has the verdict.
+  return ret > 0 && (pfd.revents & (POLLOUT | POLLERR | POLLHUP));
+#endif
+}
+
+// Returns 1 when a non-blocking connect() is still in flight (so the caller has
+// to wait), 0 when it failed outright.
+static int connect_in_progress(void) {
+#ifdef _WIN32
+  int err = WSAGetLastError();
+  return err == WSAEWOULDBLOCK || err == WSAEINPROGRESS || err == WSAEINTR;
+#else
+  return errno == EINPROGRESS || errno == EALREADY || errno == EWOULDBLOCK ||
+         errno == EINTR;
+#endif
+}
+
+// Returns 1 when some process already accepts connections on [addr]:[port].
+//
+// SO_REUSEADDR (set in start_server(), needed so a restart is not blocked by
+// sockets left in TIME_WAIT) also lets a wildcard bind (0.0.0.0) coexist with
+// a listener bound to a specific address on the same port, and the other way
+// round. bind() therefore succeeds over a live server and the kernel routes
+// each address to the most specific match: loopback keeps reaching the older
+// server while the new one only serves the remaining interfaces, with no error
+// ever printed. A connect() catches what bind() cannot, so probe the address
+// that is about to be served before binding it.
+#define BIALET_PORT_PROBE_TIMEOUT_MS (300)
+
+static int port_has_listener(const char* addr, int port) {
+  if(port <= 0 || port > 65535)
+    return 0;
+  bialet_socket_t probe = socket(AF_INET, SOCK_STREAM, 0);
+  if(probe == BIALET_INVALID_SOCKET)
+    return 0; // let bind() report the real error
+  struct sockaddr_in sa = {
+      .sin_family = AF_INET,
+      .sin_addr.s_addr = inet_addr(addr),
+      .sin_port = htons((unsigned short)port),
+  };
+  set_nonblocking(probe, 1);
+  int listening = 0;
+  if(connect(probe, (struct sockaddr*)&sa, sizeof(sa)) == 0) {
+    listening = 1;
+  } else if(connect_in_progress() &&
+            wait_writable(probe, BIALET_PORT_PROBE_TIMEOUT_MS)) {
+    int so_error = 0;
+#ifdef _WIN32
+    int err_len = (int)sizeof(so_error);
+#else
+    socklen_t err_len = sizeof(so_error);
+#endif
+    if(getsockopt(probe, SOL_SOCKET, SO_ERROR, getsockopt_val(&so_error),
+                  &err_len) == 0 &&
+       so_error == 0)
+      listening = 1;
+  }
+  socket_close(probe);
+  return listening;
+}
+
 // Consumes the client's request body after an early rejection (e.g. HTTP 413
 // for an oversized body). Closing the socket while unread bytes sit in the
 // receive buffer makes the kernel emit RST, which discards the response we
@@ -576,8 +671,20 @@ int start_server(struct BialetConfig* config) {
   int initial_port = config->port < 0 ? BIALET_DEFAULT_PORT : config->port;
   int max_retries = config->port < 0 ? 10 : 1;
 
+  // Probe the address that is about to be served: the configured one, or
+  // loopback when binding every interface (127.0.0.1 is bialet's own default
+  // host, and the address a wildcard server ends up shadowed on). An in-use
+  // port is treated like a failed bind, so the implicit default range still
+  // walks on to the next free port.
+  const char* probe_addr = config->host;
+  if(inet_addr(config->host) == INADDR_ANY)
+    probe_addr = "127.0.0.1";
+
   for(int retries = 0; retries < max_retries; retries++) {
     port = initial_port + retries;
+    if(port_has_listener(probe_addr, port)) {
+      continue;
+    }
     server_addr.sin_port = htons(port);
     if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
       continue;
