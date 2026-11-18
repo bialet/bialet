@@ -20,9 +20,11 @@ no-paren call when the class has no getter of that name: `obj.name` falls back
 to a zero-argument `name()`, which is why `" x ".trim`, `list.clear` and
 `Klass.new` run without parentheses. `toString()` remains an alias for the
 getter. The fallback only goes one way: `count()` does not return the `count`
-getter, and a getter still wins when a class has a getter and a method with the
-same name. Keep the `()` where the call matters, especially for a side effect
-(`list.clear`) — a reader cannot tell a field from a call otherwise.
+getter, and a class cannot declare both a getter and a zero-argument method
+with the same name — the compiler rejects the second declaration, because the
+no-paren spelling would be ambiguous. Keep the `()` where the call matters,
+especially for a side effect (`list.clear`) — a reader cannot tell a field from
+a call otherwise.
 
 A `get name { ... }` declaration (the habit from Java, C# or PHP) is not Wren
 either. The compiler reports:
@@ -189,11 +191,12 @@ Klass.total     // 42: no getter total, so the VM calls total()
 ```
 
 A no-paren access first looks for a getter `name`; when the class has none, it
-calls a zero-argument method `name()`. A **getter still wins** when a class has
-both, and the fallback is one-way: `count()` is an error, not the `count`
-getter. Constructor calls like `Klass.new` and side-effecting methods like
-`list.clear` therefore run without parentheses, so keep `()` where the reader
-should see that the access is a call.
+calls a zero-argument method `name()`. Declaring both a getter `name` and a
+zero-argument method `name()` in the same class is a compile error: the no-paren
+spelling would be ambiguous. The fallback is one-way: `count()` is an error, not
+the `count` getter. Constructor calls like `Klass.new` and side-effecting
+methods like `list.clear` therefore run without parentheses, so keep `()` where
+the reader should see that the access is a call.
 
 ## 14. `_init.wren` runs once; do not collide with UNIQUE keys
 

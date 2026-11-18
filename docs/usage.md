@@ -76,6 +76,13 @@ Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
 usage text instead of being silently ignored.
 
+> ⚠️ Pitfall: bialet refuses to start when the port already has a listener, even
+> when the addresses differ (`127.0.0.1` vs `0.0.0.0`). The kernel would accept
+> that second bind — `SO_REUSEADDR` allows a wildcard bind to share a port with a
+> specific address — and then route loopback traffic to the older server, so the
+> new one would never answer on `127.0.0.1`. Stop the other process
+> (`lsof -nP -iTCP:7001 -sTCP:LISTEN`) or pick another port.
+
 > ⚠️ Pitfall: `-d` and `-l` may point inside the app root only under a private
 > name (starting with `_` or `.`, like `_db.sqlite3`). Everything else below the
 > root is served, so a database or a log file with a public name there is

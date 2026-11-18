@@ -4,6 +4,27 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.24 — 2026-11-18
+
+### Changed
+
+- A getter and a zero-argument method can no longer share a name in the same
+  class: `met { ... }` plus `met() { ... }` is now a compile error instead of
+  letting the last declaration win. The no-paren call `obj.met` would be
+  ambiguous. Core members that declared both (the `Query` zero-argument
+  helpers, `List.reverse`, `File.save`/`temp`/`destroy`, `Response.cors`) keep
+  the method, so both spellings continue to work through the fallback.
+
+### Fixed
+
+- Starting a server on a port that already has a listener now fails instead of
+  starting silently shadowed. `SO_REUSEADDR` lets a wildcard bind (`-h
+  0.0.0.0`) share a port with a listener bound to a specific address, so
+  `bialet -p 7123 -h 0.0.0.0` used to start "fine" while the kernel kept
+  routing `127.0.0.1:7123` to the server already running there. The port is
+  probed with a `connect()` before binding, and an answer counts as taken (the
+  default 7001–7010 range still moves on to the next free port).
+
 ## 1.2.23 — 2026-11-18
 
 ### Added

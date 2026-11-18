@@ -3863,24 +3863,66 @@ static void defineMethod(Compiler* compiler, Variable classVariable, bool isStat
   emitShortArg(compiler, instruction, methodSymbol);
 }
 
+// Returns the symbol of the declaration that [signature] collides with under
+// the no-paren method fallback, or -1 when it cannot collide.
+//
+// Bialet makes `obj.name` fall back to calling a zero-argument method `name()`
+// when the class has no getter `name`. A class that declares both leaves that
+// spelling ambiguous, so the pair is a compile error instead of letting the
+// last definition silently win.
+static int conflictingMemberSymbol(Compiler* compiler, Signature* signature) {
+  Signature counterpart = *signature;
+
+  if(signature->type == SIG_GETTER) {
+    counterpart.type = SIG_METHOD;
+    counterpart.arity = 0;
+  } else if(signature->type == SIG_METHOD && signature->arity == 0) {
+    counterpart.type = SIG_GETTER;
+  } else {
+    return -1;
+  }
+
+  return signatureSymbol(compiler, &counterpart);
+}
+
 // Declares a method in the enclosing class with [signature].
 //
-// Reports an error if a method with that signature is already declared.
+// Reports an error if a method with that signature is already declared, or if
+// a getter and a zero-argument method would share a name.
 // Returns the symbol for the method.
 static int declareMethod(Compiler* compiler, Signature* signature, const char* name,
                          int length) {
   (void)length;
   int symbol = signatureSymbol(compiler, signature);
+  int conflictSymbol = conflictingMemberSymbol(compiler, signature);
 
   // See if the class has already declared method with this signature.
   ClassInfo* classInfo = compiler->enclosingClass;
   IntBuffer* methods =
       classInfo->inStatic ? &classInfo->staticMethods : &classInfo->methods;
   for(int i = 0; i < methods->count; i++) {
+    const char* staticPrefix = classInfo->inStatic ? "static " : "";
     if(methods->data[i] == symbol) {
-      const char* staticPrefix = classInfo->inStatic ? "static " : "";
       error(compiler, "Class %s already defines a %smethod '%s'.",
             &compiler->enclosingClass->name->value, staticPrefix, name);
+      break;
+    }
+    if(methods->data[i] == conflictSymbol) {
+      if(signature->type == SIG_GETTER) {
+        error(compiler,
+              "Class %s already defines a %smethod '%.*s()'. A getter '%.*s' "
+              "cannot share its name.",
+              &compiler->enclosingClass->name->value, staticPrefix,
+              signature->length, signature->name, signature->length,
+              signature->name);
+      } else {
+        error(compiler,
+              "Class %s already defines a %sgetter '%.*s'. A zero-argument "
+              "method '%.*s()' cannot share its name.",
+              &compiler->enclosingClass->name->value, staticPrefix,
+              signature->length, signature->name, signature->length,
+              signature->name);
+      }
       break;
     }
   }

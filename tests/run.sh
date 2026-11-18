@@ -79,7 +79,14 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
   test_syntax "get/set as member names pass    " "syntax_ok_get.wren" 0
+  test_syntax "getter + method with args pass " "syntax_ok_member_overload.wren" 0
   test_syntax_msg "get keyword names the getter  " "syntax_err_get_keyword.wren" 1 "Wren has no 'get' declaration. Write the getter as 'isDueToday { ... }' or the method as 'isDueToday() { ... }'."
+  # A getter and a zero-argument method of the same name make the no-paren
+  # spelling ambiguous, so the second declaration is a compile error in either
+  # order, and for statics too.
+  test_syntax_msg "Getter then zero-arg method     " "syntax_err_dupe_member_getter_first.wren" 1 "Class Example already defines a getter 'prop'. A zero-argument method 'prop()' cannot share its name."
+  test_syntax_msg "Zero-arg method then getter     " "syntax_err_dupe_member_method_first.wren" 1 "Class Example already defines a method 'met()'. A getter 'met' cannot share its name."
+  test_syntax_msg "Static getter + method conflict " "syntax_err_dupe_member_static.wren" 1 "Class Example already defines a static getter 'total'. A zero-argument method 'total()' cannot share its name."
   test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
@@ -2613,6 +2620,60 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   rm -f "$dev_root/_db.sqlite3"
 else
   skip_test "bialet dev starts" "requires local binary access"
+fi
+
+# Tests - Port binding
+# SO_REUSEADDR (needed so a restart is not blocked by sockets in TIME_WAIT)
+# also lets a wildcard bind share a port with a listener bound to a specific
+# address, and the other way round. The second server used to start "fine" and
+# then serve nothing on 127.0.0.1: the kernel kept routing loopback to the
+# older, more specific listener. Starting on a port that already answers must
+# fail instead of being silently shadowed.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  bind_line=$LINENO
+  _test_start_ms=$(now_ms)
+  bind_port=$((PORT + 97))
+  bind_root=$(mktemp -d)
+  printf 'bind probe\n' > "$bind_root/index.html"
+  require_free_port "127.0.0.1" "$bind_port" "port binding test"
+
+  # Specific first, wildcard second: this is the reported case (`bialet -p N`
+  # running, then `bialet -p N -h 0.0.0.0`).
+  "$TARGET_EXEC" -h 127.0.0.1 -p "$bind_port" "$bind_root" > /dev/null 2>&1 &
+  disown
+  wait_port "127.0.0.1" "$bind_port" 10
+  bind_out=$("$TARGET_EXEC" -h 0.0.0.0 -p "$bind_port" "$bind_root" 2>&1)
+  bind_status=$?
+  if [[ $bind_status -ne 0 && "$bind_out" == *"Could not bind port $bind_port"* ]]; then
+    report_result "Wildcard bind over busy port " "$bind_line" 0
+  else
+    report_result "Wildcard bind over busy port " "$bind_line" 1 \
+      "Expected a non-zero exit and 'Could not bind port $bind_port'. Got $bind_status: $bind_out"
+  fi
+  stop_matching_servers "$TARGET_EXEC -h 127.0.0.1 -p $bind_port"
+  bind_deadline=$(( $(now_ms) + 5000 ))
+  while check_port "127.0.0.1" "$bind_port" 0.2; do
+    [[ $(now_ms) -lt $bind_deadline ]] || break
+    sleep 0.1
+  done
+
+  # Wildcard first, specific second: the same shadowing running the other way.
+  "$TARGET_EXEC" -h 0.0.0.0 -p "$bind_port" "$bind_root" > /dev/null 2>&1 &
+  disown
+  wait_port "127.0.0.1" "$bind_port" 10
+  bind_out=$("$TARGET_EXEC" -h 127.0.0.1 -p "$bind_port" "$bind_root" 2>&1)
+  bind_status=$?
+  if [[ $bind_status -ne 0 && "$bind_out" == *"Could not bind port $bind_port"* ]]; then
+    report_result "Specific bind over busy port " "$bind_line" 0
+  else
+    report_result "Specific bind over busy port " "$bind_line" 1 \
+      "Expected a non-zero exit and 'Could not bind port $bind_port'. Got $bind_status: $bind_out"
+  fi
+  stop_matching_servers "$TARGET_EXEC -h 0.0.0.0 -p $bind_port"
+  rm -rf "$bind_root"
+else
+  skip_test "Wildcard bind over busy port " "requires local binary access"
+  skip_test "Specific bind over busy port " "requires local binary access"
 fi
 
 finish
