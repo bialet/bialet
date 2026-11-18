@@ -106,16 +106,62 @@ class Request {
   static uri { __uri }
   static body { __body }
   static isPost { __method == "POST" }
+  // Public URL pieces. Behind a proxy the app sees the proxy's authority and
+  // plain HTTP, so the scheme comes from Util.isHttpsRequest (the first hop of
+  // X-Forwarded-Proto or Forwarded) and the authority is the Host header.
+  // X-Forwarded-Host is deliberately not consulted: any client can set it.
+  static scheme { Util.isHttpsRequest ? "https" : "http" }
+  static host { header("host", "localhost") }
+  // The absolute base for links and emails. BIALET_BASE_URL wins when set,
+  // because a proxied request can still carry the wrong Host and a cron job
+  // carries none. Trailing slashes are stripped so absoluteUrl can add one.
+  static baseUrl {
+    var configured = Config.get("BIALET_BASE_URL")
+    if (configured != null) {
+      var value = "%(configured)".trim().trimEnd("/")
+      if (value.count > 0) return value
+    }
+    return "%(scheme)://%(host)"
+  }
+  static absoluteUrl(path) {
+    if (path == null) return baseUrl
+    var value = "%(path)".trim()
+    if (value.count == 0) return baseUrl
+    if (value.startsWith("/")) return baseUrl + value
+    return "%(baseUrl)/%(value)"
+  }
+  // The URL the client requested, path and query included.
+  static fullUrl { baseUrl + __fullUri }
   static isJson { header("content-type") == "application/json" }
   static json() { Json.parse(__body) }
+  static header(name, default) {
+    var value = header(name)
+    return value == null ? default : value
+  }
   static header(name) {
     if (name == null) return null
     var key = "%(name)".trim().lower
     return __headers[key] ? __headers[key] : null
   }
+  // The two-argument forms default only on null. An empty string, false and
+  // true are values the request carried, so they come back unchanged: a form
+  // submitted with an empty field must not turn into the fallback.
+  static get(name, default) {
+    var value = get(name)
+    return value == null ? default : value
+  }
   static get(name) { __get[name] ? __get[name]:null }
+  static query(name, default) { get(name, default) }
   static query(name) { get(name) }
+  static post(name, default) {
+    var value = post(name)
+    return value == null ? default : value
+  }
   static post(name) { __post[name] ? __post[name]:null }
+  static route(pos, default) {
+    var value = route(pos)
+    return value == null ? default : value
+  }
   static route(pos) { __segments.count > pos && __segments[pos] != "" ? __segments[pos]:null}
   static file(name) {
     if (!__files || __files.trim() == "") return null

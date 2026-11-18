@@ -4,6 +4,79 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.23 — 2026-11-18
+
+### Added
+
+- The compiler explains a `get name { ... }` / `set name { ... }` declaration
+  instead of reporting only `Expect '{' to begin method body.`: it names the
+  member and shows the getter, method or setter spelling Wren expects. A valid
+  `get { ... }` or `get(x) { ... }` member is unaffected.
+- `Request.scheme`, `Request.host`, `Request.baseUrl`,
+  `Request.absoluteUrl(path)` and `Request.fullUrl` build absolute URLs from the
+  request. The scheme follows `X-Forwarded-Proto`/`Forwarded`, the authority is
+  the `Host` header (never `X-Forwarded-Host`), and `BIALET_BASE_URL` in
+  `BIALET_CONFIG` overrides both for canonical links, emails and cron.
+- A zero-argument method can be called without parentheses: `obj.name` looks
+  for the getter `name`, and when the class has none, calls `name()`. The
+  fallback is one-way (`count()` never reads the `count` getter), a getter
+  still wins when both exist, and `Klass.new` or `list.clear` now run without
+  parens.
+- `isBlank` and `isFilled` getters on every object. `null`, whitespace-only
+  strings and empty sequences are blank; `false` and `0` are values and are
+  not. `isFilled` is the exact inverse. `isEmpty` keeps its zero-elements
+  meaning.
+- `Date` arithmetic: `date + n` and `date - n` shift by **seconds**,
+  `date - otherDate` returns the seconds between them (same as `.diff`), and
+  `date + otherDate` is refused with an explanation. `Date.new(seconds)`,
+  `Date.new(seconds, tz)` and `Date.fromUnix(seconds, tz)` read epoch seconds,
+  the same unit as `.unix`.
+- `Date.addDays(n)` shifts the civil date by whole days while keeping the wall
+  clock and zone, so leap days, month ends, year boundaries and DST changes are
+  handled without a 86400-second approximation.
+- `Request.get`, `Request.query`, `Request.post`, `Request.route` and
+  `Request.header` take an optional second argument returned when the value is
+  missing. Only `null` triggers it (and for `route`, a missing or empty
+  segment): an empty POST field stays `""` and a bare query flag stays `true`,
+  which `|| default` could not express safely.
+- `Test.withCsrf()` submits a CSRF-protected form in one call: it GETs the
+  route that rendered the form (or one passed as a route string, or an earlier
+  `Test` / `TestResponse`), copies the hidden `_bialet_csrf` token into the form
+  data and POSTs on the same cookie-jar session. A raw String or multipart body
+  aborts, because it has nowhere to add the field.
+
+### Fixed
+
+- `Date` converted a wall clock inside a DST period as if it were standard
+  time: the `struct tm` passed to `mktime()` had `tm_isdst = 0`, so `.unix` (and
+  `format("#s")`) came back one hour early in a zone that observes DST. `-1`
+  now lets the C library decide.
+
+### Documentation
+
+- `docs/recipes.md` adds a shared POST action route (hidden `action` field,
+  CSRF-wrapped form helper, local-only `safeBack`) and a multi-step form whose
+  answers travel in the query string; the dates recipe uses the core `Date`
+  API. `docs/forms.md` links to both.
+- The `get`/`set` pitfall documents the new compiler hint.
+- The `Request` reference, configuration, deployment and prompt guide document
+  the public URL helpers, `BIALET_BASE_URL`, the proxy headers they depend on
+  and Host-header injection.
+- The Wren guide, pitfalls and prompt guide describe the no-paren method
+  fallback, what it does to getter/method pairs, and why the reverse is not
+  supported.
+- The Wren guide, core-extensions reference, pitfalls and prompt guide document
+  `isBlank`/`isFilled`, their `false`/`0` semantics and the difference from
+  `isEmpty`.
+- The date pages, pitfalls, `Date` reference, prompt guide and dates recipe use
+  the new arithmetic and drop the "no `+`/`-`, no timestamp constructor"
+  instructions.
+- `docs/reference.md` and `docs/prompt-guide.md` show the new `Request`
+  default overloads as the recommended form and keep the null pitfall: a
+  default replaces only a missing value, never an empty field.
+- `docs/tests.md` documents `.withCsrf()` with its three call forms, the
+  raw-body limitation and the manual `.csrf()` flow it builds on.
+
 ## 1.2.22 — 2026-11-17
 
 ### Fixed

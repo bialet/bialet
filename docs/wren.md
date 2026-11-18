@@ -389,6 +389,13 @@ d.name          // getter, returns "Rex"
 d.name = "Max"  // setter
 ```
 
+Bialet adds one rule for methods: `obj.name` falls back to calling a
+zero-argument method `name()` when the class has no getter `name`. So
+`" x ".trim` and `list.clear` work as well as their parenthesized forms.
+`obj.name()` always calls the method, and a getter still wins when a class
+declares both. The fallback is one-way: `count()` does not read the `count`
+getter.
+
 ### Static Methods
 
 ```wren
@@ -611,7 +618,9 @@ items.contains("target")        // true/false
 ```wren
 [1, 2, 3].join(", ")           // "1, 2, 3"
 [1, 2, 3].count                // 3
-items.isEmpty                   // true/false
+items.isEmpty                   // true/false (zero elements)
+name.isBlank                    // true for null, "", "   " and empty sequences
+name.isFilled                   // the exact inverse of isBlank
 ```
 
 ### Paginate
@@ -640,7 +649,16 @@ Bialet adds a few convenience methods:
 "42".toNum                        // 42 (as Number)
 "1".toBool                        // true
 list.to(User)                     // map list of Maps into User instances
+value.isBlank                     // null, "", "   " and empty sequences
+value.isFilled                    // the exact inverse
 ```
+
+`isBlank` and `isFilled` are getters on every object and follow the form
+semantics: `null`, whitespace-only strings and empty sequences (list, map,
+range) are blank, while `false` and `0` are values and are not. `isEmpty` stays
+the zero-elements check: `"   ".isEmpty` is `false` but `"   ".isBlank` is
+`true`. Guard a missing `Request.post` result with `if (value.isBlank)` instead
+of `if (!value)` — the latter also matches `false` and misses `"   "`.
 
 The `.to(Class)` method on Sequence and Map is especially useful with database
 results:

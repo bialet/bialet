@@ -78,6 +78,8 @@ fi
 if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Syntax validation passes       " "syntax_ok.wren"  0
   test_syntax "Syntax validation fails        " "syntax_err.wren" 1
+  test_syntax "get/set as member names pass    " "syntax_ok_get.wren" 0
+  test_syntax_msg "get keyword names the getter  " "syntax_err_get_keyword.wren" 1 "Wren has no 'get' declaration. Write the getter as 'isDueToday { ... }' or the method as 'isDueToday() { ... }'."
   test_syntax "Syntax import passes w/ root   " "syntax_import_ok.wren"  0 "$(dirname "$0")"
   test_syntax "Syntax import fail w/ root    " "syntax_import_err.wren" 1 "$(dirname "$0")"
   test_syntax "Deep nested tags pass         " "syntax_ok_deepnest.wren" 0
@@ -822,6 +824,19 @@ fi
 
 # Tests - Request & Response (extended coverage)
 run_test "Request uri and query alias " "request-meta?foo=bar" 200 "get|/request-meta|bar"
+run_test "Request defaults apply       " "request-meta?mode=defaults&present=value&flag" 200 "fallback|value|fallback|fallback|fallback|true|fallback|fallback|fallback"
+run_test "Request public URL           " "request-meta?mode=url&x=1" 200 "http|$HOST:$PORT|http://$HOST:$PORT|http://$HOST:$PORT/x|http://$HOST:$PORT/x|http://$HOST:$PORT/request-meta?mode=url&x=1|http://$HOST:$PORT|http://$HOST:$PORT"
+# The Test client always writes Host: localhost, so a custom authority is only
+# reachable through curl. It must be reflected and never replaced by
+# X-Forwarded-Host.
+_test_start_ms=$(now_ms)
+url_host_line=$LINENO
+url_host_body=$(curl -s -H "Host: example.test:8443" "http://$HOST:$PORT/request-meta?mode=url")
+if [[ "$url_host_body" == *"http|example.test:8443|http://example.test:8443|http://example.test:8443/x|"* ]]; then
+  report_result "Request public URL uses Host " "$url_host_line" 0
+else
+  report_result "Request public URL uses Host " "$url_host_line" 1 "Got: $url_host_body"
+fi
 run_test "Request body and header     " "request-meta" "foo=bar" 200 "form|/request-meta|foo=bar|application/x-www-form-urlencoded"
 
 # Regression for the quadratic List.join/urlDecode DoS (DOS-001/DOS-002) and
@@ -1770,7 +1785,7 @@ run_test "Date now and components     " "date-now"        200 "true"
 run_test "Date comparison operators   " "date-compare"    200 "true,true,true,true,true,true,false,true,false,true"
 run_test "Date parse from string      " "date-parse"      200 "2024-12-25 14:30:45,UTC"
 run_test "Date constructors and get   " "date-more"       200 "dow:5|doy:366|woy:37|diff:86400|fmt:2024-09-13"
-run_test "Date from unix timestamp   " "date-unix"       200 "round:2024-09-13 10:30:45|eq:true|zero:true"
+run_test "Date from unix timestamp   " "date-unix"       200 "round:2024-09-13 10:30:45|eq:true|zero:true|num:2024-09-13 10:30:45|numTz:UTC|numEq:true"
 
 # Tests - Util functions
 run_test "Util functions              " "util"            200 "true"

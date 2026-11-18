@@ -16,13 +16,18 @@ every page is at <https://bialet.dev/llms.txt>.
 
 > ⚠️ **CRITICAL: `Request.post(name)` returns `String | Null`.**
 > It returns `null` when the requested key is not present in the POST payload.
-> **NEVER assume the field exists. ALWAYS provide a default with `|| ""` or
-> check `if (value != null)` before any string operation.** Calling `.toString`,
-> `.count`, `.trim`, interpolation, or concatenation on a null value crashes at
-> runtime — this is the #1 production crash cause in Bialet apps.
+> **NEVER assume the field exists. Use the default overload
+> `Request.post("name", "")` when a fallback is wanted, or check
+> `if (value != null)` before any string operation.** The default replaces only
+> `null`, so a field submitted empty (`name=`) still comes back as `""` and a
+> blank submission is not silently turned into the fallback. Calling
+> `.toString`, `.count`, `.trim`, interpolation, or concatenation on a null
+> value crashes at runtime — this is the #1 production crash cause in Bialet
+> apps.
 >
 > *"Every code example using `Request.post()` **must** include a null-handling
-> strategy (`|| fallback` or `if (value != null)`) by default."*
+> strategy: the two-argument default where a fallback is wanted, or
+> `if (value != null)`."*
 
 > ⚠️ **CRITICAL: an inline HTML string may nest its own tag (Bialet 1.2.17+).**
 > `<div><div>...</div></div>` compiles — every tag can contain any other tag,
@@ -124,7 +129,7 @@ the upstream language). A few things you need to know to write correct code:
 var name = "Alice"
 var count = 42
 
-// Classes: construct, getters (no parens), setters, static methods
+// Classes: construct, getters (no parens), setters, zero-arg methods
 class User {
   construct new(data) {
     _name = data["name"]
@@ -174,8 +179,11 @@ class Poll {
 // "a" < "b" raises "String does not implement '<(_)'."
 
 // `count`, `toString`, `keys` and `bytes` are getters; `trim`, `lower` and
-// `replace` are methods. `" x ".trim` fails with "String does not implement
-// 'trim'."; `" x ".trim()` works. There is no `String.fromBytes`: to build
+// `replace` are methods. A zero-argument method can also be called without
+// `()`: `" x ".trim` calls trim() because no getter `trim` exists. A getter
+// still wins when both exist, and the fallback is one-way (`count()` does not
+// read the getter). `Klass.new` and `list.clear` therefore run without parens.
+// There is no `String.fromBytes`: to build
 // text from numbers use `String.fromCodePoint`, and read text as a String.
 ```
 
@@ -253,6 +261,20 @@ var charCount = name.count        // string length
 var itemTotal = items.count       // list size
 if (name.count > 0 && items.count == 0) { ... }
 ```
+
+### Blank Checks: `isBlank` / `isFilled`
+
+Both are **getters** (no parentheses) and available on every object:
+
+```wren
+if (name.isBlank) { ... }        // null, "", "   ", empty list/map/range
+if (email.isFilled) { ... }      // the exact inverse
+```
+
+`isBlank` is the form-oriented check: `null`, a whitespace-only string and an
+empty sequence are blank. `false` and `0` are **values**, so they are not blank
+(`false.isBlank == false`). `isEmpty` remains the zero-elements check:
+`"   ".isEmpty` is `false` while `"   ".isBlank` is `true`.
 
 > **Pitfall:** `return <tag>` on the same physical line is a compile error
 > (`Expected expression` at `return`), regardless of what's inside the tag.
@@ -588,8 +610,8 @@ var age = Num.fromString(row["age"])              // manual conversion
 
 ```wren
 var allowedSorts = ["id", "name", "email", "createdAt"]
-var sortCol = Request.get("sort") || "id"
-var sortDir = Request.get("order") || "asc"
+var sortCol = Request.get("sort", "id")
+var sortDir = Request.get("order", "asc")
 
 var users = `SELECT * FROM users`
   .order(sortCol, sortDir, allowedSorts)
@@ -608,7 +630,7 @@ fragments. Write one static query and bypass each filter with `OR` instead:
 
 ```wren
 // Empty string bypasses the filter
-var search = Request.get("search") || ""
+var search = Request.get("search", "")
 var users = `SELECT * FROM users WHERE (? = '' OR name LIKE '%' || ? || '%')`.fetch(search, search)
 
 // Boolean flag bypasses the filter — tri-state "all/active/completed"
@@ -626,8 +648,8 @@ own bypass, to let callers omit any combination of them.
 Always pass `LIMIT`/`OFFSET` as `?` placeholders:
 
 ```wren
-var page = Num.fromString(Request.get("page") || "1")
-var limit = Num.fromString(Request.get("limit") || "20")
+var page = Num.fromString(Request.get("page", "1"))
+var limit = Num.fromString(Request.get("limit", "20"))
 var offset = (page - 1) * limit
 
 var total = `SELECT COUNT(*) FROM users`.toNum
@@ -736,27 +758,27 @@ to instances of a class whose `construct new(data)` accepts a Map.
 ## Dates
 
 ```wren
-var now = Date.new()                              // current UTC date/time
+var now = Date.new()                              // current date/time in Date.tz
 var d = Date.new(2024, 9, 13, 15, 45, 30)          // explicit fields
 var fromDb = Date.new(row["createdAt"])            // "YYYY-MM-DD[ HH:MM:SS]" string
+var instant = Date.new(1700000000, "UTC")          // epoch SECONDS + zone (like Date.fromUnix)
 
 d.year; d.month; d.day                             // singular
 d.hours; d.minutes; d.seconds                      // PLURAL -- d.hour raises an error
 d.unix                                              // Unix timestamp (seconds)
 d.format("#Y-#m-#d")                                // strftime-style tokens, # not %
-d1 < d2; d1 == d2; d1.diff(d2)                      // comparisons work; diff() is seconds
+d1 < d2; d1 == d2; d2 - d1; d1.diff(d2)             // comparisons; subtracting dates gives seconds
+d + 86400                                           // shift the instant by 86400 seconds
+d.addDays(30)                                       // calendar days: keeps the clock and zone
 ```
 
-> **CRITICAL:** `Date` has **no** `+`/`-` operators — `date + 86400` raises
-> `Date does not implement '+(_)'.`. There is also no way to build a `Date`
-> from a Unix timestamp number (`Date.new(1700000000)` raises
-> `Num does not implement 'split(_)'.`) — the constructor only accepts a
-> `"YYYY-MM-DD"` / `"YYYY-MM-DD HH:MM:SS"` string or another `Date`. To
-> compare two instants, use `.diff`/`.unix` (both plain numbers); to add or
-> subtract calendar days, do the arithmetic on `year`/`month`/`day`
-> yourself (see [Date and
-> Time](https://bialet.dev/_sources/datetime.md) for a verified algorithm) —
-> there is no shortcut for either.
+> **Note:** `Date.new(number)` reads **epoch seconds**, not a year, so
+> `Date.new(d.unix)` round-trips. `+`/`-` with a number shift **seconds**;
+> `d2 - d1` returns seconds (same as `.diff`); `d1 + d2` is refused because
+> adding two instants has no meaning. Use `addDays(n)` for calendar days
+> (leap-day, month-end and DST safe — `09:00` stays `09:00`). There is no
+> `addMonths` in core: clamp the day in a helper (see
+> [Recipes](https://bialet.dev/_sources/recipes.md)).
 
 ## Controllers: Logic at the Top, View at the Bottom
 
@@ -770,8 +792,8 @@ import "/_app/domain" for User
 // === CONTROLLER ===
 if (Request.isPost) {
   var user = User.new()
-  user.name = Request.post("name") || ""
-  user.email = Request.post("email") || ""
+  user.name = Request.post("name", "")
+  user.email = Request.post("email", "")
   user.save()
   return Response.redirect("/users")
 }
@@ -839,14 +861,16 @@ if (account is Map == false) return account  // Auth.require() returned an error
 ## Request Handling
 
 ```wren
-// Query parameters
+// Query parameters — the second argument is the default for a missing one
 var id = Request.get("id")
-var page = Request.get("page") || "1"
+var page = Request.get("page", "1")
 Request.query("id")   // alias for Request.get("id")
+Request.query("id", "")   // alias with a default
 
-// POST form fields
+// POST form fields. The default applies only when the field is absent: a
+// field posted empty still returns "".
 if (Request.isPost) {
-  var name = Request.post("name") || ""
+  var name = Request.post("name", "")
 }
 
 // JSON body
@@ -857,13 +881,22 @@ if (Request.isJson) {
 
 // Headers
 var apiKey = Request.header("X-Api-Key")
+var apiKeyOrEmpty = Request.header("X-Api-Key", "")   // default when absent
 
 // HTTP method
 Request.method     // "GET", "POST", "PUT", "DELETE", ...
 Request.isPost      // true for POST
 
+// Public URL (scheme + Host, or the BIALET_BASE_URL config override)
+Request.scheme              // "https" when TLS / X-Forwarded-Proto says so
+Request.host                // Host header, or "localhost"
+Request.baseUrl             // "https://app.example.com" (no trailing slash)
+Request.absoluteUrl("/x")   // "https://app.example.com/x"
+Request.fullUrl             // baseUrl + the requested path and query
+
 // Path segments (only inside a <folder>.wren route handler)
 var id = Request.route(0)
+var idOrDefault = Request.route(0, "index")   // default for a missing segment
 
 // Basic auth
 if (Request.login("admin", "secret") != false) return
@@ -873,7 +906,14 @@ if (Request.login("admin", "secret") != false) return
 > **Pitfall:** `Request.get(name)` never reads the POST body, even when the
 > current request is a POST — it only ever reads the URL query string. If a
 > value needs to survive both a GET (rendering a form) and the POST that
-> submits it, read both explicitly: `Request.get("slug") || Request.post("slug")`.
+> submits it, read both explicitly:
+> `Request.get("slug", Request.post("slug", ""))`.
+>
+> **Pitfall:** `Request.host`/`baseUrl` come from the client's `Host` header
+> (Bialet ignores `X-Forwarded-Host`). Set
+> `Config.set("BIALET_BASE_URL", "https://app.example.com")` for canonical
+> links, emails and cron jobs; otherwise a proxy that forwards an arbitrary
+> `Host` lets the requester choose the domain in a generated link.
 >
 > **Pitfall:** on failed Basic auth, `Request.login` sets a `401` status and
 > the `WWW-Authenticate` header but does **not** stop the script by itself
@@ -915,8 +955,8 @@ var session = Session.new()
 
 // Login
 if (Request.isPost) {
-  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email") || "")
-  if (user && Util.verify(Request.post("password") || "", user["password"])) {
+  var user = `SELECT * FROM users WHERE email = ?`.first(Request.post("email", ""))
+  if (user && Util.verify(Request.post("password", ""), user["password"])) {
     Session.rotate()            // before any authenticated write
     session.set("userId", user["id"])
     return Response.redirect("/dashboard")
@@ -1223,7 +1263,7 @@ import "_app/domain" for Task
 
 if (Request.isPost) {
   var task = Task.new()
-  task.description = Request.post("description") || ""
+  task.description = Request.post("description", "")
   task.save()
   return Response.redirect("/")
 }
@@ -1266,7 +1306,7 @@ return Response.redirect("/")
 // delete.wren
 import "_app/domain" for Task
 
-Task.delete(Request.post("id") || "")
+Task.delete(Request.post("id", ""))
 return Response.redirect("/")
 ```
 

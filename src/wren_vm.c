@@ -7,6 +7,7 @@
 #include "wren_core.h"
 #include "wren_debug.h"
 #include "wren_primitive.h"
+#include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -405,6 +406,41 @@ static void methodNotFound(WrenVM* vm, ObjClass* classObj, int symbol) {
   vm->fiber->error =
       wrenStringFormat(vm, "@ does not implement '$'.", OBJ_VAL(classObj->name),
                        vm->methodNames.data[symbol]->value);
+}
+
+// Bialet dialect: `obj.name` compiles to a getter call, so a zero-argument
+// method declared as `name()` is invisible to that syntax. When the plain
+// lookup misses, the VM retries once with "()" appended to the symbol.
+//
+// Only the forward direction exists. `obj.name()` stays strict, because the
+// reverse fallback would answer a call with a getter's Fn instead of running
+// it. A getter still wins when both exist: the plain symbol is looked up first
+// and this helper only runs after it missed.
+//
+// Returns the symbol of `name()` or -1 when the name cannot be a plain method
+// name or the allocation fails. The bytes are copied before interning because
+// wrenSymbolTableEnsure() may reallocate the table's storage.
+static int zero_arg_method_symbol(WrenVM* vm, const char* name, uint32_t length) {
+  if(length == 0)
+    return -1;
+  if(!(isalpha((unsigned char)name[0]) || name[0] == '_'))
+    return -1;
+  for(uint32_t i = 0; i < length; i++) {
+    if(name[i] == '(' || name[i] == '[' || name[i] == '<')
+      return -1;
+  }
+
+  char* call_name = malloc((size_t)length + 3);
+  if(call_name == NULL)
+    return -1;
+  memcpy(call_name, name, length);
+  call_name[length] = '(';
+  call_name[length + 1] = ')';
+  call_name[length + 2] = '\0';
+  int symbol =
+      wrenSymbolTableEnsure(vm, &vm->methodNames, call_name, (size_t)length + 2);
+  free(call_name);
+  return symbol;
 }
 
 // Looks up the previously loaded module with [name].
@@ -993,7 +1029,20 @@ static WrenInterpretResult runInterpreter(WrenVM* vm, register ObjFiber* fiber) 
         DISPATCH();
       }
 
-      // If the class's method table doesn't include the symbol, bail.
+      // If the class's method table doesn't include the symbol, try the
+      // no-parens fallback described on zero_arg_method_symbol(), then bail.
+      if(symbol >= classObj->methods.count ||
+         (method = &classObj->methods.data[symbol])->type == METHOD_NONE) {
+        if(numArgs == 1) {
+          ObjString* name = vm->methodNames.data[symbol];
+          int callSymbol = zero_arg_method_symbol(vm, name->value, name->length);
+          if(callSymbol >= 0 && callSymbol < classObj->methods.count &&
+             (method = &classObj->methods.data[callSymbol])->type != METHOD_NONE) {
+            symbol = callSymbol;
+          }
+        }
+      }
+
       if(symbol >= classObj->methods.count ||
          (method = &classObj->methods.data[symbol])->type == METHOD_NONE) {
         methodNotFound(vm, classObj, symbol);

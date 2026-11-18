@@ -4030,7 +4030,38 @@ static bool method(Compiler* compiler, Variable classVariable) {
     // any more.
     methodCompiler.parser->vm->compiler = methodCompiler.parent;
   } else {
-    consume(compiler, TOKEN_LEFT_BRACE, "Expect '{' to begin method body.");
+    // A bare `get`/`set` followed by a member name is not Wren syntax; the
+    // generic body error points at the wrong token and does not say what to
+    // write instead. Report the correct getter/method/setter spelling for the
+    // name that follows. A valid `get { ... }` or `get(x) { ... }` never
+    // reaches this branch because the body brace is present.
+    const char* bodyError = "Expect '{' to begin method body.";
+    char*       hintedError = NULL;
+    if(signature.type == SIG_GETTER && signature.length == 3 &&
+       (memcmp(signature.name, "get", 3) == 0 ||
+        memcmp(signature.name, "set", 3) == 0) &&
+       compiler->parser->current.type == TOKEN_NAME) {
+      Token*      name = &compiler->parser->current;
+      const char* format =
+          signature.name[0] == 'g'
+              ? "Wren has no 'get' declaration. Write the getter as "
+                "'%.*s { ... }' or the method as '%.*s() { ... }'."
+              : "Wren has no 'set' declaration. Write the setter as "
+                "'%.*s=(value) { ... }' or the method as "
+                "'%.*s(value) { ... }'.";
+      int needed = snprintf(NULL, 0, format, name->length, name->start, name->length,
+                            name->start);
+      if(needed >= 0) {
+        hintedError = malloc((size_t)needed + 1);
+        if(hintedError != NULL) {
+          snprintf(hintedError, (size_t)needed + 1, format, name->length,
+                   name->start, name->length, name->start);
+          bodyError = hintedError;
+        }
+      }
+    }
+    consume(compiler, TOKEN_LEFT_BRACE, bodyError);
+    free(hintedError);
     finishBody(&methodCompiler);
     endCompiler(&methodCompiler, fullSignature, length);
   }

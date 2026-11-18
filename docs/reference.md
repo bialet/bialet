@@ -91,6 +91,56 @@ content never enters Wren, and the text fields are read with
 [post(name)](#postname). Use `Request.post()` and `Request.file()` instead of
 parsing the body.
 
+### scheme
+
+Returns `"https"` when the request reached the app over TLS, otherwise
+`"http"`. Behind a proxy the decision comes from the first hop of
+`X-Forwarded-Proto` or `Forwarded`, never from the transport itself.
+
+### host
+
+Returns the `Host` header, or `"localhost"` when it is absent. The header is
+client-controlled: see the note under [baseUrl](#baseurl).
+
+### baseUrl
+
+Returns the absolute origin for links, with no trailing slash. It is
+`Config.get("BIALET_BASE_URL")` when that row is set (trimmed, trailing slashes
+removed); otherwise `scheme://host`.
+
+```wren
+Config.set("BIALET_BASE_URL", "https://app.example.com")
+var canonical = Request.absoluteUrl("/articles/42")
+```
+
+Set `BIALET_BASE_URL` for canonical links, emails, feeds and cron jobs. Without
+it a request behind a proxy can carry the wrong `Host`, and there is no request
+at all in cron.
+
+> ⚠️ Pitfall: `Host` is client-controlled, so `baseUrl` can return an
+> attacker's domain if the proxy forwards an arbitrary value. Bialet never reads
+> `X-Forwarded-Host`; use a fixed `BIALET_BASE_URL` when the origin matters.
+
+### absoluteUrl(path)
+
+Returns `path` made absolute against [baseUrl](#baseurl). A path starting with
+`/` is appended as-is; one without a slash gets one. `null` or an empty path
+returns `baseUrl` itself.
+
+```wren
+Request.absoluteUrl("/x")   // https://app.example.com/x
+Request.absoluteUrl("x")    // https://app.example.com/x
+```
+
+### fullUrl
+
+Returns [baseUrl](#baseurl) plus the request path and query string.
+
+```wren
+// On https://app.example.com/search?q=dates
+Request.fullUrl    // https://app.example.com/search?q=dates
+```
+
 ### isPost
 
 Checks if the request method is POST.
@@ -112,23 +162,73 @@ if (Request.isJson) {
 }
 ```
 
+### header(name, default)
+
+Returns the value of a specified request header, or `default` when the header is
+absent.
+
+- `name`: The name of the header.
+- `default`: The value to return when the header is missing.
+
+Only a missing header triggers the default. A header sent with an empty value
+returns `""`.
+
 ### header(name)
 
-Returns the value of a specified request header.
+Returns the value of a specified request header, or `null` when it is absent.
 
 - `name`: The name of the header.
 
-### get(name)
+### get(name, default)
 
-Returns the value of a specified query parameter.
+Returns the value of a specified query parameter, or `default` when the
+parameter is absent. This is the recommended form when a fallback is wanted:
+
+```wren
+var page = Request.get("page", "1")
+var search = Request.get("search", "")
+```
 
 - `name`: The name of the query parameter.
+- `default`: The value to return when the parameter is missing.
+
+Only `null` triggers the default. An empty value (`?q=`) returns `""` and a bare
+flag (`?draft`) returns `true`. `Request.get(name) || "1"` still works for
+strings, but it also replaces a `false` value; the default overload replaces
+only `null`.
+
+### get(name)
+
+Returns the value of a specified query parameter, or `null` when it is absent.
+Guard the result before a string operation, or use
+[get(name, default)](#getname-default).
+
+- `name`: The name of the query parameter.
+
+### query(name, default)
+
+Alias for `get(name, default)`.
 
 ### query(name)
 
-Alias for `get(name)`. Returns the value of a specified query parameter.
+Alias for `get(name)`.
 
-- `name`: The name of the query parameter.
+### post(name, default)
+
+Returns the value of a specified POST parameter, or `default` when the key is
+absent. Use this instead of `Request.post(name) || ""` whenever a fallback is
+wanted:
+
+```wren
+var name = Request.post("name", "")
+```
+
+- `name`: The name of the POST parameter.
+- `default`: The value to return when the key is missing.
+
+Only `null` triggers the default. A field submitted empty (`name=`) returns
+`""`, so the fallback cannot hide a blank form submission. This is how
+`isBlank` and a required-field check can tell "not sent" from "sent empty".
 
 ### post(name)
 
@@ -136,7 +236,8 @@ Alias for `get(name)`. Returns the value of a specified query parameter.
 > The return type is `String | Null`. You **MUST** handle `null`
 > before calling any string method (`.toString`, `.count`, `.trim`,
 > concatenation, interpolation). This is the #1 production crash cause.
-> **NEVER assume the field exists. ALWAYS provide a default or null check.**
+> **Prefer `Request.post("name", "")` when a default is wanted; otherwise
+> check `if (value != null)` before touching the value.**
 
 Returns the value of a specified POST parameter, or `null` if not found.
 
@@ -149,9 +250,22 @@ For a multipart form it returns the text fields only: a file part is read with
 `<textarea>`) are kept, with `\r\n` normalized to `\n`. If a field is repeated,
 the last value wins.
 
+### route(pos, default)
+
+Returns a specific part of the request route, or `default` when the segment is
+missing or empty.
+
+- `pos`: The position of the route segment.
+- `default`: The value to return when there is no segment at `pos`.
+
+```wren
+var id = Request.route(0, "index")
+```
+
 ### route(pos)
 
-Returns a specific part of the request route.
+Returns a specific part of the request route, or `null` when the segment is
+missing or empty.
 
 - `pos`: The position of the route segment.
 
@@ -984,17 +1098,24 @@ application timezone (`BIALET_TIMEZONE`, or the process zone when it is unset).
 
 ### new(date)
 
-Creates a new `Date` object from a provided date string.
+Creates a new `Date` object from a provided value.
 
-- `date`: The date string to initialize the `Date` object.
+- `date`: A date string (`"YYYY-MM-DD"` or `"YYYY-MM-DD HH:MM:SS"`), a number of
+  **epoch seconds** (the same unit as `.unix`), or another `Date` (returned
+  as-is).
+
+```wren
+Date.new("2024-09-13 10:30:00")
+Date.new(1700000000)              // 2023-11-14 22:13:20 in Date.tz
+Date.new(Date.now)
+```
 
 ### new(date, tz)
 
-Creates a new `Date` object from a provided date string and a specified timezone
-offset.
+Creates a new `Date` object from a provided value and a specified timezone.
 
-- `date`: The date string to initialize the `Date` object.
-- `tz`: The timezone offset to apply.
+- `date`: A date string, epoch seconds, or another `Date`.
+- `tz`: The timezone offset or zone name to apply.
 
 ### new(year, month, day, hour, minute, second)
 
@@ -1038,6 +1159,23 @@ offset, setting the time to `00:00:00`.
 - `month`: The month component.
 - `day`: The day component.
 - `tz`: The timezone offset to apply.
+
+### fromUnix(seconds)
+
+Creates a `Date` from **epoch seconds**, formatted in `Date.tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+
+```wren
+var posted = Date.fromUnix(row["createdAt"].toNum)
+```
+
+### fromUnix(seconds, tz)
+
+Creates a `Date` from epoch seconds, formatted in `tz`.
+
+- `seconds`: Seconds since 1970-01-01 00:00:00 UTC.
+- `tz`: The timezone offset or zone name to apply.
 
 ### tz=(tz)
 
@@ -1108,17 +1246,54 @@ Returns the difference in seconds between the current date and `otherDate`
 
 - `otherDate`: The `Date` object to compare against.
 
+### addDays(n)
+
+Returns a new `Date` shifted by a whole number of **calendar days**, keeping the
+hours, minutes, seconds and timezone. Negative `n` moves backwards. Leap days,
+month ends, year boundaries and DST changes are handled by civil-calendar
+arithmetic, so the wall clock does not move (`09:00` stays `09:00` even when the
+day is 23 or 25 hours long).
+
+- `n`: A whole number of days; a fractional number raises an error.
+
+```wren
+Date.new(2024, 2, 28).addDays(1)    // 2024-02-29 00:00:00
+Date.new(2024, 1, 31).addDays(1)    // 2024-02-01 00:00:00
+Date.new(2024, 3, 1).addDays(-1)    // 2024-02-29 00:00:00
+```
+
+### + (seconds)
+
+Returns a new `Date` shifted forward by a number of **seconds** (the unit of
+`.unix`). Adding another `Date` raises an error: adding two instants has no
+meaning, so subtract them instead.
+
+```wren
+Date.new(2024, 1, 1) + 86400        // 2024-01-02 00:00:00
+```
+
+### - (seconds)
+
+Returns a new `Date` shifted backwards by a number of **seconds**.
+
+### - (otherDate)
+
+Returns the number of **seconds** between the two dates, the same value as
+`.diff(otherDate)`.
+
+```wren
+Date.new(2024, 1, 2) - Date.new(2024, 1, 1)   // 86400
+```
+
 ### Comparison operators
 
 `<`, `>`, `<=`, `>=`, `==`, `!=` all work between two `Date` instances,
 comparing them by their underlying Unix timestamp (via `diff`).
 
-> ⚠️ Pitfall: `Date` does **not** implement `+`/`-`. There is no way to add
-> or subtract a time interval directly on a `Date` instance — attempting
-> `date + 86400` raises `Date does not implement '+(_)'`. To shift an
-> instant, do the arithmetic on `.unix` (seconds) and rebuild a `Date` from
-> the result, or add/subtract calendar days yourself; there is also no
-> `date` / `time` / `inUtc` getter.
+To move an instant by a duration, use `+`/`-` with seconds; to move a calendar
+date, use `addDays`. There is no built-in month arithmetic or `date` / `time` /
+`inUtc` getter; clamp the day in a helper for months (see
+[Recipes](recipes.md#dates-add-days-add-months-week-start-due-dates)).
 
 ## Markdown
 
@@ -1328,6 +1503,31 @@ System.log("User %(name) logged in")
 ## Wren Core Extensions
 
 Bialet extends several core Wren classes with additional methods to make development easier.
+
+### Blankness (all objects)
+
+`isBlank` and `isFilled` are getters available on every value, with Laravel-style
+form semantics. They are exact inverses.
+
+| Value | `isBlank` | `isFilled` |
+|-------|-----------|------------|
+| `null` | `true` | `false` |
+| `""`, `"   "`, `"\t\n"` | `true` | `false` |
+| `[]`, `{}`, empty range | `true` | `false` |
+| `false`, `0` | `false` | `true` |
+| any other value or object | `false` | `true` |
+
+```wren
+var name = Request.post("name", "")
+if (name.isBlank) {
+  errors.add("Name is required")
+}
+```
+
+A sequence is blank when it has no elements. A whitespace-only string is blank
+as well. `false` and `0` are values, not absences, so they are filled. Use
+`isEmpty` when you mean exactly "zero elements": `"   ".isEmpty` is `false`
+while `"   ".isBlank` is `true`.
 
 ### String Extensions
 
