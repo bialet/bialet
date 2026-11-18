@@ -389,6 +389,13 @@ d.name          // getter, returns "Rex"
 d.name = "Max"  // setter
 ```
 
+Bialet adds one rule for methods: `obj.name` falls back to calling a
+zero-argument method `name()` when the class has no getter `name`. So
+`" x ".trim` and `list.clear` work as well as their parenthesized forms.
+`obj.name()` always calls the method, and a getter still wins when a class
+declares both. The fallback is one-way: `count()` does not read the `count`
+getter.
+
 ### Static Methods
 
 ```wren

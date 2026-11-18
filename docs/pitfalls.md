@@ -10,15 +10,19 @@ a page that worked on an empty database meets its first row.
 ## 1. `toString` is a getter; `trim` is a method
 
 ```wren
-name=(val) { _name = val.toString.trim() }    // correct
-// name=(val) { _name = val.toString.trim }     // String does not implement 'trim'
+name=(val) { _name = val.toString.trim() }    // canonical
+// name=(val) { _name = val.toString.trim }    // also works: trim() takes no arguments
 ```
 
 `toString`, `count`, `keys` and `values` are getters: no parentheses. `trim` is
-a **method**: it needs `()`. `toString()` is accepted as an alias for the getter
-(the compiler treats the zero-argument call as the getter), so both spellings
-work; `count()`, `keys()` and `values()` still fail. Forgetting the `()` on
-`trim` is the usual source of 500s in setters.
+a **method**, and its canonical spelling keeps the `()`. Bialet also accepts a
+no-paren call when the class has no getter of that name: `obj.name` falls back
+to a zero-argument `name()`, which is why `" x ".trim`, `list.clear` and
+`Klass.new` run without parentheses. `toString()` remains an alias for the
+getter. The fallback only goes one way: `count()` does not return the `count`
+getter, and a getter still wins when a class has a getter and a method with the
+same name. Keep the `()` where the call matters, especially for a side effect
+(`list.clear`) — a reader cannot tell a field from a call otherwise.
 
 ## 2. Every method that produces a value needs an explicit `return`
 
@@ -162,18 +166,22 @@ System.log("rows: %(count)")
 This bites hardest in `_tests/_init.wren`, where the whole suite then fails
 before the app is exercised.
 
-## 13. Zero-argument methods still need `()`
+## 13. Zero-argument methods work with or without `()`
 
 ```wren
 class Klass {
   static total() { 42 }
 }
-Klass.total()   // correct
-// Klass.total  -> the method object, not the number
+Klass.total()   // 42
+Klass.total     // 42: no getter total, so the VM calls total()
 ```
 
-Getters (`count`, `toString`, `keys`) are defined without parentheses and
-called without them. If you wrote `total() { ... }`, call it with `()`.
+A no-paren access first looks for a getter `name`; when the class has none, it
+calls a zero-argument method `name()`. A **getter still wins** when a class has
+both, and the fallback is one-way: `count()` is an error, not the `count`
+getter. Constructor calls like `Klass.new` and side-effecting methods like
+`list.clear` therefore run without parentheses, so keep `()` where the reader
+should see that the access is a call.
 
 ## 14. `_init.wren` runs once; do not collide with UNIQUE keys
 

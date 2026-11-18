@@ -8,6 +8,11 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Added
 
+- A zero-argument method can be called without parentheses: `obj.name` looks
+  for the getter `name`, and when the class has none, calls `name()`. The
+  fallback is one-way (`count()` never reads the `count` getter), a getter
+  still wins when both exist, and `Klass.new` or `list.clear` now run without
+  parens.
 - `isBlank` and `isFilled` getters on every object. `null`, whitespace-only
   strings and empty sequences are blank; `false` and `0` are values and are
   not. `isFilled` is the exact inverse. `isEmpty` keeps its zero-elements
@@ -40,6 +45,9 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- The Wren guide, pitfalls and prompt guide describe the no-paren method
+  fallback, what it does to getter/method pairs, and why the reverse is not
+  supported.
 - The Wren guide, core-extensions reference, pitfalls and prompt guide document
   `isBlank`/`isFilled`, their `false`/`0` semantics and the difference from
   `isEmpty`.
