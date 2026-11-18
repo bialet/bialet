@@ -4,6 +4,21 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## Unreleased
+
+### Added
+
+- `Test.withCsrf()` submits a CSRF-protected form in one call: it GETs the
+  route that rendered the form (or one passed as a route string, or an earlier
+  `Test` / `TestResponse`), copies the hidden `_bialet_csrf` token into the form
+  data and POSTs on the same cookie-jar session. A raw String or multipart body
+  aborts, because it has nowhere to add the field.
+
+### Documentation
+
+- `docs/tests.md` documents `.withCsrf()` with its three call forms, the
+  raw-body limitation and the manual `.csrf()` flow it builds on.
+
 ## 1.2.22 — 2026-11-17
 
 ### Fixed

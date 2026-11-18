@@ -54,6 +54,8 @@ class Test {
     _postData = {}
     _headers = {}
     _response = null
+    _csrf = false
+    _csrfFrom = null
   }
   // A request runs in a fresh VM, so state a handler stores in a cookie (the
   // session identifier above all) survives only when the client sends it back.
@@ -187,6 +189,39 @@ class Test {
     if (!_response) run_()
     return _response.csrf()
   }
+  // Submits a protected form in one call: just before running, fetch the token
+  // a GET rendered and add it to the form data.
+  //
+  //   Test.post("/login", {"user": "ana"}).withCsrf().status(302)
+  //
+  // With no argument the token comes from a GET of the same route, which is
+  // where a form usually renders it. Pass a route, or an earlier Test /
+  // TestResponse, when the form lives elsewhere or was already fetched.
+  withCsrf() { withCsrf(null) }
+  withCsrf(source) {
+    _csrf = true
+    _csrfFrom = source
+    return this
+  }
+  runCsrf_() {
+    if (_postData is String) {
+      Fiber.abort("withCsrf() needs form data (a Map), not a raw body")
+    }
+    var token
+    if (_csrfFrom == null || _csrfFrom is String) {
+      // Carry the request headers over so an explicit Cookie header keeps the
+      // token and the submission on the same session.
+      var page = Test.new().route(_csrfFrom == null ? _path : _csrfFrom)
+      for (name in _headers.keys) page.setHeader(name, _headers[name])
+      token = page.csrf()
+    } else {
+      token = _csrfFrom.csrf()
+    }
+    var data = {}
+    for (key in _postData.keys) data[key] = _postData[key]
+    data["_bialet_csrf"] = token
+    _postData = data
+  }
   jsonContains(key) {
     if (!_response) run_()
     var data = Json.parse(_response.body)
@@ -236,6 +271,7 @@ class Test {
   }
   
   run_() {
+    if (_csrf) runCsrf_()
     var body = ""
     if (_postData is String) {
       body = _postData
