@@ -2,7 +2,7 @@
 
 Short, runnable answers to the problems that come up in most apps: dates,
 money, CSV exports, and a few API helpers. Every snippet here was executed with
-`bialet -r` or against a running app.
+`bialet -r`, or validated as an app file with `bialet -t`.
 
 Read [Common Pitfalls](pitfalls.md) as well: it covers the API traps these
 recipes work around (`toString` is a getter, a missing `return` returns null,
@@ -202,6 +202,151 @@ var rows = `SELECT * FROM items WHERE a = ? AND b = ? AND c = ? AND d = ?`
 
 The same rule applies to `.first`, `.val`, `.toNum`, `.query`, `.toBool` and
 `.order`: three arguments maximum, then an array. See [Database](database.md).
+
+## Shared POST actions: one route, a hidden `action`
+
+A list page usually has several one-button POST operations — toggle, delete,
+rename — that all return to the same place. Post them to one route and dispatch
+on a hidden `action` field instead of copying the CSRF check into a file per
+operation. The form helper lives in `_app/`, so every template renders the
+token, the row id and the return path the same way.
+
+```wren
+// _app/actions.wren
+class Actions {
+  // The only redirect targets the app accepts: an absolute local path.
+  // "//evil.example" also starts with "/" but names another host, and a value
+  // without the leading slash is not a path at all.
+  static safeBack(value) {
+    var path = "%(value)".trim()
+    if (!path.startsWith("/") || path.startsWith("//")) return "/"
+    return path
+  }
+
+  static form(action, id, back, label) {
+    return <form method="post" action="/actions">
+      {{ Session.csrf }}
+      <input type="hidden" name="action" value="{{ action }}" />
+      <input type="hidden" name="id" value="{{ id }}" />
+      <input type="hidden" name="back" value="{{ back }}" />
+      <button>{{ label }}</button>
+    </form>
+  }
+}
+```
+
+```wren
+// actions.wren — every one-button POST lands here
+import "_app/actions" for Actions
+
+if (!Request.isPost) return Response.redirect("/")
+if (!Session.csrfOk) {
+  Response.status(403)
+  return "Invalid CSRF token"
+}
+
+var action = Request.post("action", "")
+var id = Request.post("id", "")
+var back = Actions.safeBack(Request.post("back", "/"))
+
+if (action == "toggle") `UPDATE tasks SET done = 1 - done WHERE id = ?`.query(id)
+if (action == "delete") `DELETE FROM tasks WHERE id = ?`.query(id)
+return Response.redirect(back)
+```
+
+```wren
+// index.wren — one form per row operation
+return <ul>
+  {{ tasks.map { |task| <li>
+    {{ Actions.form("toggle", task.id, Request.uri, task.done ? "Undo" : "Done") }}
+    {{ Actions.form("delete", task.id, Request.uri, "Delete") }}
+  </li> } }}
+</ul>
+```
+
+- The hidden `action` is an ordinary form field. `Request.post("action", "")`
+  returns `""` when it is missing, so an unknown or empty value falls through
+  the `if`s instead of crashing on null.
+- `safeBack` refuses `//host` as well as anything that is not a local path, so
+  a crafted `back` cannot redirect a logged-in user to another site.
+- One route means one CSRF check and one redirect policy. A new action is a new
+  `if`, not a new file with a copy of the same guard.
+- Do not nest forms: a form inside another form is invalid HTML, so render one
+  form per button.
+
+## Multi-step form state in the query string
+
+A wizard needs neither session state nor JavaScript. Put the answers given so
+far in the URL: each step is a `GET` whose hidden fields carry the earlier
+answers and whose `step` field names the next screen. Reload, Back and a shared
+link all keep working, and there is no server-side draft to expire.
+
+```wren
+// survey.wren — /survey?step=plan&name=Ana
+class Survey {
+  static questions { ["name", "plan", "confirm"] }
+
+  // The step after [step]; unknown input starts over at the first question.
+  static nextQuestion(step) {
+    for (i in 0...Survey.questions.count) {
+      if (Survey.questions[i] == step && i + 1 < Survey.questions.count) {
+        return Survey.questions[i + 1]
+      }
+    }
+    return Survey.questions[0]
+  }
+}
+
+var step = Request.get("step", "name")
+var name = Request.get("name", "")
+var plan = Request.get("plan", "")
+
+if (step == "confirm") {
+  return <main>
+    <h1>Confirm</h1>
+    <p>Name: {{ name }}</p>
+    <p>Plan: {{ plan }}</p>
+    <form method="post" action="/survey">
+      {{ Session.csrf }}
+      <input type="hidden" name="name" value="{{ name }}" />
+      <input type="hidden" name="plan" value="{{ plan }}" />
+      <button>Send</button>
+    </form>
+  </main>
+}
+
+if (step == "plan") {
+  return <main>
+    <h1>Which plan?</h1>
+    <form method="get" action="/survey">
+      <input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" />
+      <input type="hidden" name="name" value="{{ name }}" />
+      <button name="plan" value="basic">Basic</button>
+      <button name="plan" value="pro">Pro</button>
+    </form>
+  </main>
+}
+
+return <main>
+  <h1>Your name?</h1>
+  <form method="get" action="/survey">
+    <input type="hidden" name="step" value="{{ Survey.nextQuestion(step) }}" />
+    <input name="name" value="{{ name }}" />
+    <button>Continue</button>
+  </form>
+</main>
+```
+
+- Every step is a `GET`, so Back, reload and a pasted URL land on a working
+  page. Nothing is stored server-side, so nothing leaks between visitors.
+- `Request.get(key, "")` gives a missing answer a safe empty value without
+  hiding a real empty answer: `""` is a value the user submitted, `null` is an
+  absent parameter.
+- `<button name="plan" value="pro">` puts the choice in the query string on
+  click: both buttons submit the same form and only `plan` differs. No
+  JavaScript and no per-step route.
+- The final step is an ordinary `POST` with `Session.csrf`; only the answers
+  travel in the URL, while the write itself stays protected.
 
 ## Tests: one database, no noise
 

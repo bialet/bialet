@@ -54,6 +54,10 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 
 ### Documentation
 
+- `docs/recipes.md` adds a shared POST action route (hidden `action` field,
+  CSRF-wrapped form helper, local-only `safeBack`) and a multi-step form whose
+  answers travel in the query string; the dates recipe uses the core `Date`
+  API. `docs/forms.md` links to both.
 - The `get`/`set` pitfall documents the new compiler hint.
 - The `Request` reference, configuration, deployment and prompt guide document
   the public URL helpers, `BIALET_BASE_URL`, the proxy headers they depend on
