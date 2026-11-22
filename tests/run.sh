@@ -30,6 +30,7 @@ DEV_PORT="${args[5]:-7102}"
 CRON_PORT="${args[6]:-7103}"
 MULTIPART_PORT="${args[7]:-7104}"
 ROOT_STDERR_PORT="${args[8]:-7105}"
+HEALTH_PORT="${args[9]:-7106}"
 
 # The Windows binary is cross-compiled on Linux and exercised under Wine. Two
 # tests rely on POSIX semantics Wine does not reproduce and fail identically on
@@ -466,6 +467,80 @@ run_test "Route file with segment     " "notes/42"       200 "note:42"
 run_test "Route ignores query string  " "notes?page=2"   200 "notes-list"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
+# /_health is reserved, but only to the loopback peer. A forwarding header must
+# not change that: the server never trusts X-Real-IP / X-Forwarded-For.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  health_line=$LINENO
+  _test_start_ms=$(now_ms)
+  health_body=$(curl -s --max-time 5 "http://$HOST:$PORT/_health")
+  health_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    "http://$HOST:$PORT/_health")
+  # A forwarding header means a proxy (or a forger) is in front: refuse it.
+  health_spoof=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "X-Real-IP: 203.0.113.9" -H "X-Forwarded-For: 203.0.113.9" \
+    "http://$HOST:$PORT/_health")
+  health_fwd=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "X-Forwarded-Proto: https" "http://$HOST:$PORT/_health")
+  health_post=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -X POST "http://$HOST:$PORT/_health")
+  if [[ "$health_code" == "200" && "$health_body" == *'"status":"ok"'* \
+        && "$health_body" == *'"version":'* \
+        && "$health_body" == *'"uptime_seconds":'* \
+        && "$health_body" == *'"database":"ok"'* \
+        && "$health_spoof" == "403" && "$health_fwd" == "403" \
+        && "$health_post" == "405" ]]; then
+    report_result "Health endpoint (loopback)    " "$health_line" 0
+  else
+    report_result "Health endpoint (loopback)    " "$health_line" 1 \
+      "code:$health_code spoof:$health_spoof fwd:$health_fwd post:$health_post body:'$health_body'"
+  fi
+else
+  skip_test "Health endpoint (loopback)    " "requires local binary access"
+fi
+run_test "Health prefix still private " "_healthz"        403
+
+# A wildcard-bound server answers /_health on 127.0.0.1 but refuses it when
+# reached through the host's non-loopback address, whatever headers are sent.
+# Skipped when the host has no discoverable non-loopback IPv4 address.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" -eq 0 ]]; then
+  health_lan_line=$LINENO
+  _test_start_ms=$(now_ms)
+  health_lan_ip=""
+  if command -v ifconfig >/dev/null 2>&1; then
+    health_lan_ip=$(ifconfig 2>/dev/null |
+      awk '/inet / && $2 != "127.0.0.1" {print $2; exit}')
+  fi
+  if [[ -z "$health_lan_ip" ]] && command -v hostname >/dev/null 2>&1; then
+    health_lan_ip=$(hostname -I 2>/dev/null | tr ' ' '\n' |
+      grep -v '^127\.' | head -1)
+  fi
+  if [[ -n "$health_lan_ip" ]]; then
+    health_root=$(mktemp -d)
+    printf 'return "health"\n' > "$health_root/index.wren"
+    require_free_port "127.0.0.1" "$HEALTH_PORT" "health server"
+    "$TARGET_EXEC" -q -h 0.0.0.0 -p "$HEALTH_PORT" \
+      -l /tmp/tests-health.log "$health_root" > /dev/null 2>&1 &
+    disown
+    wait_port "127.0.0.1" "$HEALTH_PORT" 10
+    health_local=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+      "http://127.0.0.1:$HEALTH_PORT/_health")
+    health_remote=$(curl -s -o /dev/null -w "%{http_code}" --noproxy '*' \
+      --max-time 5 "http://$health_lan_ip:$HEALTH_PORT/_health")
+    stop_matching_servers \
+      "$TARGET_EXEC -q -h 0.0.0.0 -p $HEALTH_PORT -l /tmp/tests-health.log"
+    rm -rf "$health_root"
+    if [[ "$health_local" == "200" && "$health_remote" == "403" ]]; then
+      report_result "Health endpoint local only    " "$health_lan_line" 0
+    else
+      report_result "Health endpoint local only    " "$health_lan_line" 1 \
+        "local:$health_local remote($health_lan_ip):$health_remote (expected 200/403)"
+    fi
+  else
+    skip_test "Health endpoint local only    " "no non-loopback IPv4 address"
+  fi
+else
+  skip_test "Health endpoint local only    " "requires local binary access"
+fi
 
 # Framing: the server answers HTTP/1.1 and closes after every response, so the
 # head must say `Connection: close` instead of leaving the client to infer

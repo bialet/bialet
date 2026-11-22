@@ -136,6 +136,47 @@ scp -r ./src/* user@your-server:/www/your-app/
 # Done. Migrations run, code reloads, server keeps running.
 ```
 
+## Health Checks
+
+Every server answers `/_health` on loopback:
+
+```bash
+curl -fsS http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+It returns `200` when a `SELECT 1` succeeds, or `503` with
+`"database":"error"` when the database is unusable. `uptime_seconds` counts
+from process start. `GET` and `HEAD` are supported; other methods get `405`.
+
+The endpoint is deliberately **direct-loopback only**: it checks the socket peer
+and returns the normal `403` to anyone else. A request carrying `X-Real-IP`,
+`Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as proxied and
+refused too, so a remote client cannot reach it by forging a header and a
+same-host proxy cannot publish it by forwarding every path. That makes it
+usable by a local supervisor or a Docker `HEALTHCHECK`, and invisible on a
+public listener.
+
+Docker:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:7001/_health || exit 1
+```
+
+systemd:
+
+```ini
+ExecStartPost=/usr/bin/curl -fsS --retry 5 --retry-connrefused http://127.0.0.1:7001/_health
+```
+
+If the proxy needs to expose a public health URL, give it its own route in the
+app. Do not proxy `/_health` to the internet: the loopback rule is the only
+access control it has.
+
 ## Static Files
 
 Bialet serves static files (CSS, JS, images, fonts) directly. For better

@@ -21,6 +21,7 @@ Three rules cover most real-world damage:
 | CSRF tokens | `Session.csrf` / `Session.csrfOk` | Constant-time comparison |
 | HttpOnly + SameSite cookies | `Cookie.set` defaults | `Secure` added automatically behind TLS |
 | Private file blocking | Server | `_` and `.` prefixed files return 403 |
+| Loopback-only health | Server | `/_health` answers only to the direct `127.0.0.0/8` peer |
 | Salted password hashes | `Util.hash` / `Util.verify` | Never store plaintext |
 | Constant-time compare | `Util.secureEquals` | Used by `csrfOk`, available to you |
 
@@ -411,6 +412,13 @@ Files and directories whose name starts with `_` or `.` are forbidden from
 direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
+
+`/_health` is reserved for the server itself and is answered only to a direct
+loopback request; everyone else gets the normal 403. A request carrying
+`X-Real-IP`, `Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as
+proxied and refused too, so a remote client cannot reach it by claiming to be
+local and a same-host proxy cannot publish it by accident. See
+[Health Endpoint](usage.md#health-endpoint).
 
 The `-i`/`--ignore` list is a **serving** policy, not a Wren read boundary: it
 does not apply to `Markdown.file()`, `Markdown.list()` or `Markdown.meta()`. A

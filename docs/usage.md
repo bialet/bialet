@@ -291,7 +291,34 @@ else
 fi
 ```
 
-## Upload and SQLite Tuning
+## Health Endpoint
+
+Bialet reserves `/_health` for supervisors and watchdogs:
+
+```bash
+curl -s http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+The response is `200` when a trivial database query succeeds and `503` with
+`"database":"error"` when it does not. `uptime_seconds` counts from the start of
+the server process. Local health polls are not written to the `-l` file, so a
+one-second check does not fill it; a remote probe is still logged.
+
+`/_health` is answered **only to a direct loopback request** (`127.0.0.0/8`).
+Every other caller gets the same `403` as any other `_`-prefixed path, so the
+endpoint does not advertise itself. Forwarding headers are deliberately not
+trusted: a request that carries `X-Real-IP`, `Forwarded`, `Via`, or any
+`X-Forwarded-*` header is treated as proxied and refused, so a same-host proxy
+cannot accidentally publish the endpoint by forwarding every path. Do not route
+`/_health` to the internet; give a public liveness URL its own app route.
+
+`GET` and `HEAD` are accepted; any other method answers `405`.
+
+
 
 These limits and SQLite pragmas are startup flags, set per app per launch:
 

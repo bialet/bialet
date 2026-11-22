@@ -53,6 +53,7 @@ typedef int bialet_socket_t;
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 
 #ifndef NAME_MAX
 #define NAME_MAX 255
@@ -86,6 +87,9 @@ static long long monotonic_ms(void);
 
 bialet_socket_t            server_fd = BIALET_INVALID_SOCKET;
 static struct BialetConfig bialet_config;
+// Wall-clock start of the serving process, reported by /_health. Set once in
+// start_server(), before the POSIX fork, so the child inherits it.
+static time_t server_started_at = 0;
 
 // Portable case-insensitive compare of exactly [n] bytes.
 static int ci_ncmp(const char* a, const char* b, size_t n) {
@@ -622,6 +626,127 @@ static void drain_request_body(bialet_socket_t fd, size_t bytes_remaining) {
 
 void handle_client(bialet_socket_t client_socket);
 
+/* `/_health` is reserved (the leading underscore is the private namespace, so
+ * an app cannot define it) and answered only to a direct socket peer on
+ * 127.0.0.0/8. Forwarding headers are deliberately never consulted for routing:
+ * a request arrives from the proxy, not from the client it describes, so
+ * trusting X-Real-IP / X-Forwarded-For here would let any remote client call
+ * the endpoint with a forged header. For the same reason, their presence makes
+ * the request non-local: it means something proxied it. A non-local caller gets
+ * the same 403 as any other `_`-prefixed path, so the route does not advertise
+ * itself. */
+static int health_is_poll(const char* uri) {
+  return uri != NULL && strncmp(uri, "/_health", 8) == 0 &&
+         (uri[8] == '\0' || uri[8] == '?');
+}
+
+static int is_loopback_peer(bialet_socket_t fd) {
+  struct sockaddr_in peer;
+#ifdef _WIN32
+  int peer_len = (int)sizeof(peer);
+#else
+  socklen_t peer_len = sizeof(peer);
+#endif
+  if(getpeername(fd, (struct sockaddr*)&peer, &peer_len) != 0)
+    return 0;
+  if(peer.sin_family != AF_INET)
+    return 0;
+  return (ntohl(peer.sin_addr.s_addr) & 0xff000000u) == 0x7f000000u;
+}
+
+// True when a header line in the block starts with [prefix] (case-insensitive).
+// Used for the whole X-Forwarded-* family, which find_header() cannot match
+// with one name.
+static int header_has_prefix(const char* buf, size_t hdr_len, const char* prefix,
+                             size_t prefix_len) {
+  const char* p = buf;
+  const char* end = buf + hdr_len;
+  while(p + 1 < end && !(p[0] == '\r' && p[1] == '\n'))
+    p++;
+  if(p + 1 >= end)
+    return 0;
+  p += 2;
+  while(p < end) {
+    const char* eol = p;
+    while(eol + 1 < end && !(eol[0] == '\r' && eol[1] == '\n'))
+      eol++;
+    size_t line_len = (size_t)(eol - p);
+    if(line_len > prefix_len && ci_ncmp(p, prefix, prefix_len) == 0)
+      return 1;
+    if(eol + 1 >= end)
+      break;
+    p = eol + 2;
+  }
+  return 0;
+}
+
+// A request that came through a proxy carries one of these, even when the
+// proxy runs on this host. Refusing them keeps /_health from becoming public
+// through a same-host proxy that forwards every path. X-Forwarded-* is matched
+// as a family so X-Forwarded-Proto/Host do not slip through.
+static int has_forwarding_header(const char* block, size_t hdr_len) {
+  static const char* const exact[] = {"X-Real-IP", "Forwarded", "Via"};
+  for(size_t i = 0; i < sizeof(exact) / sizeof(exact[0]); i++) {
+    if(find_header(block, hdr_len, exact[i], strlen(exact[i])) != NULL)
+      return 1;
+  }
+  static const char forwarded[] = "X-Forwarded-";
+  return header_has_prefix(block, hdr_len, forwarded, sizeof(forwarded) - 1);
+}
+
+static int health_try_handle(bialet_socket_t fd, struct HttpMessage* hm,
+                             const char* header_block, size_t hdr_len,
+                             struct BialetResponse* response) {
+  if(!health_is_poll(hm->uri.str))
+    return 0;
+
+  if(!is_loopback_peer(fd) || has_forwarding_header(header_block, hdr_len)) {
+    custom_error(403, response);
+    return 1;
+  }
+
+  int is_get = hm->method.str != NULL && strlen(hm->method.str) == 3 &&
+               ci_ncmp(hm->method.str, "GET", 3) == 0;
+  int is_head = hm->method.str != NULL && strlen(hm->method.str) == 4 &&
+                ci_ncmp(hm->method.str, "HEAD", 4) == 0;
+  if(!is_get && !is_head) {
+    custom_error(405, response);
+    return 1;
+  }
+
+  int       db_ok = bialet_db_healthy();
+  time_t    now = time(NULL);
+  long long uptime = server_started_at != 0 && now >= server_started_at
+                         ? (long long)(now - server_started_at)
+                         : 0;
+  char      body[192];
+  int       body_len = snprintf(body, sizeof(body),
+                                "{\"status\":\"%s\",\"version\":\"%s\","
+                                "\"uptime_seconds\":%lld,\"database\":\"%s\"}\n",
+                                db_ok ? "ok" : "error", BIALET_VERSION, uptime,
+                                db_ok ? "ok" : "error");
+  if(body_len < 0 || (size_t)body_len >= sizeof(body)) {
+    custom_error(500, response);
+    return 1;
+  }
+
+  char* copy = (char*)malloc((size_t)body_len + 1);
+  if(copy == NULL) {
+    custom_error(500, response);
+    return 1;
+  }
+  memcpy(copy, body, (size_t)body_len + 1);
+
+  response->status = db_ok ? 200 : 503;
+  response->header = (char*)"Content-Type: application/json\r\n"
+                            "Cache-Control: no-store\r\n"
+                            "X-Content-Type-Options: nosniff\r\n";
+  response->body = copy;
+  response->body_owned = 1;
+  response->length = (size_t)body_len;
+  return 1;
+}
+
 #ifndef _WIN32
 static int open_app_root(void);
 #endif
@@ -635,6 +760,8 @@ int start_server(struct BialetConfig* config) {
   }
 #endif
   bialet_config = *config;
+  if(server_started_at == 0)
+    server_started_at = time(NULL);
 
 #ifndef _WIN32
   // Open the app root once, before the accept loop: every served file is then
@@ -1477,7 +1604,11 @@ void handle_client(bialet_socket_t client_socket) {
   // Case-insensitive, like Request.method (which upper-cases the token).
   answering_head = hm->method.str != NULL && strlen(hm->method.str) == 4 &&
                    ci_ncmp(hm->method.str, "HEAD", 4) == 0;
-  if(!livereload_is_poll(hm->uri.str)) {
+  // Health polls from a local supervisor are not logged; a remote or proxied
+  // probe still is, so a scan for the endpoint leaves a trace.
+  int health_poll = health_is_poll(hm->uri.str) && is_loopback_peer(client_socket) &&
+                    !has_forwarding_header(buffer, hdr_len);
+  if(!livereload_is_poll(hm->uri.str) && !health_poll) {
     char* log_method = log_escape_uri(hm->method.str);
     char* log_uri = log_escape_uri(hm->uri.str);
     message(magenta("Request"), log_method ? log_method : "(unprintable)",
@@ -1497,6 +1628,18 @@ void handle_client(bialet_socket_t client_socket) {
       free(full_request);
     socket_close(client_socket);
     return;
+  }
+
+  {
+    struct BialetResponse health_response = {0};
+    if(health_try_handle(client_socket, hm, buffer, hdr_len, &health_response)) {
+      write_response(client_socket, &health_response);
+      free_response_owned(&health_response);
+      clean_http_message(hm);
+      if(should_free_request)
+        free(full_request);
+      return;
+    }
   }
 
   {

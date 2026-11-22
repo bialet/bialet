@@ -13,13 +13,20 @@ ideas I may revisit if interest returns, but no promises.
       cap (`-b` / `-m`) can actually deliver, so rejection logs state a
       reachable limit; docs updated to match (default effective upload is ~120
       KB until `-b` and `-m` are raised).
-- [ ] **`bialet check` — whole-tree validation** — `-t` validates a single
-      `.wren` file. A deploy hook needs a command that validates every `.wren`
-      in an app tree and exits `0`/`1`. The docs and manifesto advertise
-      `init`/`check`/`test`, but only `validate`/`tests`/`dev` exist.
-- [ ] **Hidden health endpoint** — a reserved `_`-prefixed route (e.g.
-      `/_health`) returning version, uptime, and DB status so supervisors and
-      watchdogs can health-check an app without relying on an app route.
+- [x] **Whole-tree validation** — `-t` now accepts a directory and compiles
+      every `.wren` under it (`bialet -t .`, `bialet check [dir]`), each in its
+      own VM, exiting `0`/`1`. The walk includes `_` files (`_app/`,
+      `_migration.wren`, `_tests/`), skips dot-directories and symlinks, and
+      names the failing file. A directory target is its own app root, so a
+      deploy hook can run `bialet check /www/app` from any working directory.
+      `init` is still the missing piece of the `init`/`check`/`test` story.
+- [x] **Hidden health endpoint** — `/_health` returns version, uptime, and DB
+      status as JSON (`200`, or `503` when `SELECT 1` fails). It is answered
+      only to a direct loopback request; everyone else gets the normal `403` for
+      a `_`-prefixed path, and a request carrying a forwarding header
+      (`X-Real-IP`, `Forwarded`, `Via`, any `X-Forwarded-*`) is treated as
+      proxied and refused too. Local health polls are not written to the
+      request log.
 
 ## Editors/IDE Support
 
