@@ -223,6 +223,48 @@ else
   skip_test "-r initializes framework tables" "requires local binary access"
 fi
 
+# Tests - -r resolves imports relative to the app root
+# The script used to run as module "bialet_cli", so `import "lib"` looked for a
+# nonexistent bialet_cli/ directory. A synthetic module name under the root
+# fixes that, and the loader's containment check still rejects "../outside".
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  rlib_line=$LINENO
+  rlib_parent=$(mktemp -d)
+  mkdir "$rlib_parent/app"
+  cat > "$rlib_parent/app/lib.wren" <<'WREN'
+class X {
+  static value { "from-lib" }
+}
+WREN
+  cat > "$rlib_parent/outside.wren" <<'WREN'
+class Outside {
+  static value { "LEAKED-CONTENT" }
+}
+WREN
+  rlib_out=$(cd "$rlib_parent/app" && "$r_exec" -q -r \
+    $'import "lib" for X\nSystem.print(X.value)' 2>&1)
+  rlib_status=$?
+  rlib_traversal=$(cd "$rlib_parent/app" && "$r_exec" -q -r \
+    $'import "../outside" for Outside\nSystem.print(Outside.value)' 2>&1)
+  rlib_traversal_status=$?
+  rm -rf "$rlib_parent"
+  if [[ "$rlib_status" -eq 0 && "$rlib_out" == *"from-lib"* ]]; then
+    report_result "-r resolves relative imports" "$rlib_line" 0
+  else
+    report_result "-r resolves relative imports" "$rlib_line" 1 \
+      "Expected 'from-lib', got exit $rlib_status output '$rlib_out'"
+  fi
+  if [[ "$rlib_traversal_status" -ne 0 && "$rlib_traversal" != *"LEAKED-CONTENT"* ]]; then
+    report_result "-r blocks traversal imports " "$rlib_line" 0
+  else
+    report_result "-r blocks traversal imports " "$rlib_line" 1 \
+      "Expected a non-zero exit without the file contents, got exit $rlib_traversal_status output '$rlib_traversal'"
+  fi
+else
+  skip_test "-r resolves relative imports" "requires local binary access"
+  skip_test "-r blocks traversal imports " "requires local binary access"
+fi
+
 # Tests - BIALET_TIMEZONE applies to every VM
 # The zone used to be installed by Db.init, which only runs in the migration VM;
 # each request starts a fresh VM and cron another, so both kept the process zone.

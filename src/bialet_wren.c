@@ -62,7 +62,6 @@
 
 #define MAIN_MODULE_NAME "main"
 #define MAIN_MODULE_SOURCE "Response.init\nDate.init(\"\")"
-#define CLI_MODULE_NAME "bialet_cli"
 
 // Maximum number of file parts accepted per multipart request. Without this
 // cap a 10MB body split into tens of thousands of tiny parts would force that
@@ -1653,9 +1652,13 @@ struct BialetResponse bialet_run_file(char* module, char* code,
   int file_missing = 0;
   if(!error) {
     /* With --cache a served .wren file is looked up by its path under the app
-     * root. Anything else (migration, cron, -r code) keeps the plain path. */
+     * root. The stat-first path needs a request (whose router stat'ed the
+     * file); -r runs under a synthetic module name under the root, and caching
+     * that would store a blob keyed by a file that does not exist. Anything
+     * else (migration, cron, -r code) keeps the plain path. */
     char* cache_key = NULL;
-    if(bytecode_cache_user_files_enabled() && module != NULL) {
+    if(bytecode_cache_user_files_enabled() && module != NULL &&
+       (stat != NULL || hm != NULL)) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(module, bialet_config.full_root_dir, root_len) == 0 &&
          (module[root_len] == '/' || module[root_len] == '\\'))
@@ -1882,22 +1885,37 @@ struct BialetResponse bialet_run_file(char* module, char* code,
 }
 
 int bialet_run_cli(char* code) {
+  // Relative imports resolve against the module name's directory. The old
+  // fixed "bialet_cli" name made `import "lib"` fail: the resolver joined it
+  // under a directory that does not exist and the loader refused it. A
+  // synthetic path under the app root gives the resolver the same base a
+  // served file gets, while the loader's root-containment check still rejects
+  // "../outside". Nothing is written: the name never has to exist on disk.
+  size_t need = strlen(bialet_config.full_root_dir) + sizeof("/_bialet_cli");
+  char*  cli_module = (char*)malloc(need);
+  if(cli_module == NULL)
+    return 1;
+  snprintf(cli_module, need, "%s/_bialet_cli", bialet_config.full_root_dir);
+
   // A bare -r script runs no migration and has no request, so none of the
   // BIALET_* tables existed: Config.get() and Session.new() failed with
   // "no such table". Db.init is idempotent and the SQLite handle is shared by
   // the whole process, so initialize the framework tables in their own VM
   // before running the user's code.
-  struct BialetResponse init = bialet_run(CLI_MODULE_NAME, "Db.init", NULL);
+  struct BialetResponse init = bialet_run(cli_module, "Db.init", NULL);
   int                   init_failed = init.status == HTTP_ERROR;
   if(init.body_owned)
     free(init.body);
   if(init.header_owned)
     free(init.header);
-  if(init_failed)
+  if(init_failed) {
+    free(cli_module);
     return 1;
+  }
 
-  struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
-  int                   status = response.status == HTTP_ERROR ? 1 : 0;
+  struct BialetResponse response = bialet_run(cli_module, code, NULL);
+  free(cli_module);
+  int status = response.status == HTTP_ERROR ? 1 : 0;
   if(status == 0 && response.body != NULL) {
     // fwrite with the known length rather than printf("%s"): the body may be
     // binary (a file served through Response.file) and would be cut at the

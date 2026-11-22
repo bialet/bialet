@@ -163,6 +163,18 @@ The script runs without a request: `Request.method`, `Request.get(...)` and
 `Config` and `Session` work. Your app's own tables exist only if the database
 was already migrated (for example by starting the server or running `bialet -T`).
 
+Relative imports resolve against the app root, so a module next to your pages
+can be imported directly:
+
+```bash
+bialet -r 'import "lib" for X
+System.print(X.value)'
+```
+
+The import still goes through the module loader's containment check: a path that
+escapes the app root (`import "../outside"`) fails and exits non-zero. Wren uses
+newlines, not semicolons, so separate statements with a newline.
+
 ## Running Tests
 
 Bialet includes a built-in testing framework. See [Testing Guide](tests.md)
