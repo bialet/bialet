@@ -83,7 +83,7 @@ static const CliOptSpec cli_opts[] = {
     {"secret-key-file", 'k', 1},
     {"quiet", 'q', 0},
     {"cache", 'x', 0},
-    {"no-watch", 0, 0},
+    {"no-watch", 'W', 0},
 };
 
 /* cli_opts[] is indexed by CliOptId, so the two must stay the same length and

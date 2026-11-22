@@ -71,7 +71,7 @@ bialet --port=8080 /path/to/app
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
-| `--no-watch`            | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
+| `-W`, `--no-watch`      | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the

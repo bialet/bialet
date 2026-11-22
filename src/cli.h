@@ -103,7 +103,7 @@ void cli_print_version(void);
   "files and\n"                                                                     \
   "                        local imports). The framework module is always "         \
   "cached.\n"                                                                       \
-  "      --no-watch        Disable file watching: no live reload, and migrations "  \
+  "  -W, --no-watch        Disable file watching: no live reload, and migrations "  \
   "and\n"                                                                           \
   "                        cron are not re-run when their file is saved\n\n"        \
   "Long options take a value as `--port 8080` or `--port=8080`.\n\n"                \

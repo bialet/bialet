@@ -1951,7 +1951,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   cli_no_port_code=$?
   if [[ "$cli_version_code" == 0 && "$cli_version" == *bialet* \
         && "$cli_help_code" == 0 && "$cli_help" == *sage* \
-        && "$cli_help" == *"--no-watch"* \
+        && "$cli_help" == *"-W, --no-watch"* \
         && "$cli_bad_code" != 0 && "$cli_no_port_code" != 0 ]]; then
     report_result "CLI version and bad options " "$cli_line" 0
   else
@@ -2741,7 +2741,7 @@ NOWATCH_MIG
 return `SELECT value FROM nowatch ORDER BY rowid DESC`.val
 NOWATCH_PAGE
   require_free_port "$HOST" "$CRON_PORT" "no-watch server"
-  "$TARGET_EXEC" --no-watch -q -h "$HOST" -p "$CRON_PORT" \
+  "$TARGET_EXEC" -W -q -h "$HOST" -p "$CRON_PORT" \
     -l "$nowatch_log" -d "$nowatch_root/_db.sqlite3" "$nowatch_root" \
     > /dev/null 2>&1 &
   disown
