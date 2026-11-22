@@ -4,6 +4,16 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.26 — 2026-11-22
+
+### Fixed
+
+- The macOS release binary was built on `macos-latest` (macOS 26) with clang's
+  default deployment target, so it carried `minos 26.0`. macOS 15 and earlier
+  killed it with `SIGKILL`, and the install script reported "Installation
+  verification failed". Darwin builds now set
+  `MACOSX_DEPLOYMENT_TARGET=11.0`, so the release runs on every supported Mac.
+
 ## 1.2.25 — 2026-11-22
 
 ### Added
