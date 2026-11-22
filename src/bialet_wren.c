@@ -2116,6 +2116,84 @@ static void validate_compile_module(WrenVM* vm, const char* path, char* source,
   }
 }
 
+// SQLite error messages that indicate a parse failure. Everything else (a
+// missing table, a missing column, an unknown function) depends on the schema,
+// which -t does not apply: a fresh database has no tables yet, and a migration
+// validates its CREATE before its INSERT has a table to target.
+static int is_sql_syntax_error(const char* message) {
+  static const char* const markers[] = {"syntax error", "incomplete input",
+                                        "unrecognized token", "unterminated"};
+  for(size_t i = 0; i < sizeof(markers) / sizeof(markers[0]); i++) {
+    if(strstr(message, markers[i]) != NULL)
+      return 1;
+  }
+  return 0;
+}
+
+// A backtick literal that is just a table name is a Query receiver, not SQL:
+// `items`.save(...) passes "items" to Query.save, which quotes it into a
+// REPLACE. SQLite would call the bare word a syntax error, so skip it.
+static int is_bare_table_name(const char* query) {
+  size_t start = 0;
+  size_t end = strlen(query);
+  while(start < end && isspace((unsigned char)query[start]))
+    start++;
+  while(end > start && isspace((unsigned char)query[end - 1]))
+    end--;
+  if(start == end)
+    return 0;
+  for(size_t i = start; i < end; i++) {
+    unsigned char c = (unsigned char)query[i];
+    if(!(isalnum(c) || c == '_' || c == '$'))
+      return 0;
+  }
+  return 1;
+}
+
+// The --validate SQL hook. It only prepares each statement, so nothing is
+// executed and no migration is recorded. sqlite3_prepare_v2() parses one
+// statement at a time, so the loop walks the text with tail the way
+// Db.migrate's `;` split does. A schema error still leaves tail past its
+// statement, so a later syntax error in the same literal is still found. -t is
+// single-threaded, so the static message buffer is safe; the server never
+// installs this hook.
+static const char* validate_query_syntax(const char* query) {
+  static char message[1024];
+
+  if(db == NULL || is_bare_table_name(query))
+    return NULL;
+
+  const char* sql = query;
+  while(sql != NULL && *sql != '\0') {
+    sqlite3_stmt* stmt = NULL;
+    const char*   tail = NULL;
+    int           rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &tail);
+
+    if(rc != SQLITE_OK) {
+      const char* error = sqlite3_errmsg(db);
+      int         is_syntax = error != NULL && is_sql_syntax_error(error);
+      if(is_syntax)
+        snprintf(message, sizeof(message), "%s", error);
+      sqlite3_finalize(stmt);
+      if(is_syntax)
+        return message;
+      // Not ours to report, but tail still points at the next statement, so
+      // keep checking the rest of a multi-statement literal.
+      if(tail == NULL || tail <= sql)
+        break;
+      sql = tail;
+      continue;
+    }
+
+    sqlite3_finalize(stmt);
+    if(tail == NULL || tail <= sql)
+      break;
+    sql = tail;
+  }
+
+  return NULL;
+}
+
 int bialet_validate_syntax(const char* filePath) {
   char abs_path[MAX_URL_LEN];
 
@@ -2140,6 +2218,9 @@ int bialet_validate_syntax(const char* filePath) {
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
+  // -t also asks SQLite to parse every backtick literal. It only prepares, so
+  // no statement runs; the hook stays off in the server, which never sets it.
+  vm->validateQueryFn = validate_query_syntax;
   // Compile-only: -t must not run the file or its imports. Top-level code used
   // to execute here, so `bialet -t _migration.wren` applied the migration and a
   // page importing the layout printed a runtime "Stack Error" for Request.

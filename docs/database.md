@@ -424,6 +424,14 @@ see the [Building REST APIs](rest-api.md) guide.
 Db.migrate("Name of the migration", `SOME QUERY`)
 ```
 
+Check a migration before it runs with `bialet -t _migration.wren`. It compiles
+the file and asks SQLite to parse every backtick literal without executing
+anything, so a duplicated `LIMIT` or another syntax error fails the check. It
+ignores missing table and column errors, so a `CREATE TABLE` followed by an
+`INSERT` still passes on a fresh database. While drafting a migration, serve
+with `--no-watch` to stop the save-triggered run, check the file with `-t`, then
+restart the server to apply it.
+
 ### Migration SQL Pitfall
 
 > ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a

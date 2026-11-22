@@ -99,6 +99,12 @@ struct WrenVM {
 
   WrenConfiguration config;
 
+  // Optional host hook (used by `bialet -t`) called at lex time for every
+  // backtick SQL literal. It returns an error message to report as a compile
+  // error, or NULL when the SQL is valid or cannot be checked. wrenNewVM()
+  // zeroes the VM, so it stays NULL (disabled) on the server.
+  const char* (*validateQueryFn)(const char* query);
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap

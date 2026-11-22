@@ -141,6 +141,16 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
+  # -t also parses every backtick SQL literal with SQLite. Only syntax-class
+  # errors fail: a missing table or column depends on the schema, which -t does
+  # not apply, so a fresh database and a CREATE-then-INSERT migration pass.
+  test_syntax_msg "SQL syntax error fails         " "syntax_query_err.wren" 1 "syntax error"
+  test_syntax_msg "Duplicate LIMIT fails          " "syntax_query_dupe_limit.wren" 1 "syntax error"
+  test_syntax     "SQL schema error ignored       " "syntax_query_schema.wren" 0
+  test_syntax     "Incomplete later SQL fails     " "syntax_query_incomplete.wren" 1
+  test_syntax     "SQL migration passes           " "syntax_query_migration_ok.wren" 0
+  # `items`.save(...) passes a table name, not SQL; it still has to pass.
+  test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
 else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
 fi
@@ -2756,7 +2766,7 @@ Db.migrate("no-watch edit", `INSERT INTO nowatch VALUES ('v2')`)
 NOWATCH_MIG
   sleep 3
   nowatch_after=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
-  stop_matching_servers "$TARGET_EXEC --no-watch -q -h $HOST -p $CRON_PORT -l $nowatch_log"
+  stop_matching_servers "$TARGET_EXEC -W -q -h $HOST -p $CRON_PORT -l $nowatch_log"
   rm -rf "$nowatch_root"
   if [[ "$nowatch_before" == "v1" && "$nowatch_after" == "v1" \
         && "$nowatch_notice" -ge 1 ]]; then

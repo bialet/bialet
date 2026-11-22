@@ -54,7 +54,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Compile a Wren file and its local imports, without executing them, then exit | None                                        |
+| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -235,6 +235,16 @@ any of them, so runtime errors are not reported and migrations do not run:
 `bialet -t _migration.wren` leaves the database untouched even when the
 migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
 local import is not a syntax error; it only fails when the page runs.
+
+It also parses every backtick SQL literal it finds, including in imported
+modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
+in a migration is parsed, not run, and no migration is recorded. Only syntax
+errors fail the check — a misspelled keyword, an unbalanced parenthesis, or a
+duplicated `LIMIT`. Errors that depend on the schema (a missing table, column,
+or function) are ignored, because a fresh database has none of the tables yet
+and a migration validates its `CREATE` before its `INSERT` has a table to
+target. SQL built at runtime with `String` formatting and SQL passed as a
+double-quoted string are not checked.
 
 This will exit with code `0` if the syntax is valid, or code `1` if there are
 compilation errors. Useful for CI/CD pipelines and pre-commit hooks.

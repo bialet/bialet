@@ -1431,8 +1431,17 @@ static void readQueryString(Parser* parser) {
     }
   }
 
+  // The buffer is not NUL-terminated, but validateQueryFn() takes a C string.
+  // Append the terminator before building the query so the length excludes it.
+  wrenByteBufferWrite(parser->vm, &string, '\0');
   parser->next.value =
-      wrenNewQueryLength(parser->vm, (char*)string.data, string.count);
+      wrenNewQueryLength(parser->vm, (char*)string.data, string.count - 1);
+
+  if(parser->vm->validateQueryFn != NULL) {
+    const char* error = parser->vm->validateQueryFn((const char*)string.data);
+    if(error != NULL)
+      lexError(parser, "%s", error);
+  }
 
   wrenByteBufferClear(parser->vm, &string);
   makeToken(parser, type);
