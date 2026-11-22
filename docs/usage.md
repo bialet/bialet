@@ -54,7 +54,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Validate the syntax of a Wren file, then exit                               | None                                         |
+| `-t`, `--validate`      | Compile a Wren file and its local imports, without executing them, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -183,22 +183,27 @@ If you start your server from the app directory:
 ```bash
 cd /path/to/app
 bialet               # starts server
-bialet -t index.wren # validates syntax
+bialet -t index.wren # compiles the file
 ```
 
 If you start your server with an explicit root path:
 
 ```bash
 bialet /path/to/app                         # starts server
-bialet -t /path/to/app/index.wren /path/to/app # validates syntax
+bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 ```
 
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
 
-This will validate the syntax and exit with code `0` if the syntax is valid, or
-code `1` if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.
+`-t` compiles the file and every local module it imports. It does not execute
+any of them, so runtime errors are not reported and migrations do not run:
+`bialet -t _migration.wren` leaves the database untouched even when the
+migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
+local import is not a syntax error; it only fails when the page runs.
+
+This will exit with code `0` if the syntax is valid, or code `1` if there are
+compilation errors. Useful for CI/CD pipelines and pre-commit hooks.
 
 ```bash
 # Example: Check syntax before deploying (explicit root path)

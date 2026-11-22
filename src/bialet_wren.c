@@ -1916,6 +1916,188 @@ int bialet_run_cli(char* code) {
   return status;
 }
 
+// Files already compiled during one -t run. A module imported from two places
+// (or imported back through a cycle) is compiled once; compiling a module name
+// twice would redeclare its classes in the same module.
+typedef struct {
+  char** items;
+  size_t count;
+  size_t capacity;
+} ValidateVisited;
+
+static int validate_visited_has(const ValidateVisited* visited, const char* path) {
+  for(size_t i = 0; i < visited->count; i++) {
+    if(strcmp(visited->items[i], path) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+static void validate_visited_add(ValidateVisited* visited, const char* path) {
+  if(visited->count == visited->capacity) {
+    size_t next = visited->capacity == 0 ? 16 : visited->capacity * 2;
+    char** grown = (char**)realloc(visited->items, next * sizeof(char*));
+    if(grown == NULL)
+      return;
+    visited->items = grown;
+    visited->capacity = next;
+  }
+  char* copy = string_safe_copy(path);
+  if(copy != NULL)
+    visited->items[visited->count++] = copy;
+}
+
+static void validate_visited_free(ValidateVisited* visited) {
+  for(size_t i = 0; i < visited->count; i++)
+    free(visited->items[i]);
+  free(visited->items);
+}
+
+// Reads one local module for -t with the module loader's rules: append .wren
+// when missing, resolve, require containment in the app root, and reopen the
+// resolved path without following a symlink. [resolved] receives the canonical
+// path, which is also used as the module name so nested relative imports
+// resolve against the right directory.
+static char* validate_read_module(const char* module, char* resolved,
+                                  size_t resolved_size) {
+  char   with_ext[MAX_URL_LEN];
+  size_t len = strlen(module);
+  if(len >= sizeof(with_ext))
+    return NULL;
+  memcpy(with_ext, module, len + 1);
+  if(len < BIALET_EXTENSION_LEN ||
+     strcmp(with_ext + len - BIALET_EXTENSION_LEN, BIALET_EXTENSION) != 0) {
+    if(len + BIALET_EXTENSION_LEN >= sizeof(with_ext))
+      return NULL;
+    memcpy(with_ext + len, BIALET_EXTENSION, BIALET_EXTENSION_LEN + 1);
+  }
+
+  if(realpath_n(with_ext, resolved, resolved_size) == NULL)
+    return NULL;
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
+      resolved[root_len] != '\0'))
+    return NULL;
+
+#ifndef _WIN32
+  return read_file_fd(open_fd_no_follow(resolved));
+#else
+  return read_file(resolved);
+#endif
+}
+
+// Extracts the next `import "name"` name from [source], skipping line and
+// block comments and plain string literals. Returns 0 at the end.
+static int validate_next_import(const char* source, size_t* cursor, char* name,
+                                size_t name_size) {
+  size_t i = *cursor;
+  size_t n = strlen(source);
+
+  while(i < n) {
+    char c = source[i];
+    if(c == '/' && i + 1 < n && source[i + 1] == '/') {
+      i += 2;
+      while(i < n && source[i] != '\n')
+        i++;
+      continue;
+    }
+    if(c == '/' && i + 1 < n && source[i + 1] == '*') {
+      i += 2;
+      while(i + 1 < n && !(source[i] == '*' && source[i + 1] == '/'))
+        i++;
+      i = i + 2 < n ? i + 2 : n;
+      continue;
+    }
+    if(c == '"') {
+      i++;
+      while(i < n) {
+        if(source[i] == '\\' && i + 1 < n) {
+          i += 2;
+          continue;
+        }
+        if(source[i] == '"') {
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if(isalpha((unsigned char)c) || c == '_') {
+      size_t start = i;
+      while(i < n && (isalnum((unsigned char)source[i]) || source[i] == '_'))
+        i++;
+      if(i - start == 6 && strncmp(source + start, "import", 6) == 0) {
+        size_t j = i;
+        while(j < n && (source[j] == ' ' || source[j] == '\t'))
+          j++;
+        if(j < n && source[j] == '"') {
+          size_t k = 0;
+          j++;
+          while(j < n && source[j] != '"') {
+            if(source[j] == '\\' && j + 1 < n)
+              j++;
+            if(k + 1 < name_size)
+              name[k++] = source[j];
+            j++;
+          }
+          name[k] = '\0';
+          *cursor = j < n ? j + 1 : j;
+          return k > 0;
+        }
+      }
+      continue;
+    }
+    i++;
+  }
+
+  *cursor = i;
+  return 0;
+}
+
+// Compiles [source] as [path], then recursively compiles every local module it
+// imports. Nothing is fetched and nothing is executed. A missing import stays
+// tolerant (it would only fail at runtime), but a syntax error in any module
+// that exists fails the run.
+static void validate_compile_module(WrenVM* vm, const char* path, char* source,
+                                    ValidateVisited* visited, int depth,
+                                    int* failed) {
+  if(*failed)
+    return;
+  if(wrenCompileSource(vm, path, source, false, true) == NULL) {
+    *failed = 1;
+    return;
+  }
+  if(depth >= 32)
+    return;
+
+  size_t cursor = 0;
+  char   name[MAX_URL_LEN];
+  while(!*failed && validate_next_import(source, &cursor, name, sizeof(name))) {
+    // Remote and built-in optional modules have no local file to compile.
+    if(strchr(name, ':') != NULL || strcmp(name, "random") == 0 ||
+       strcmp(name, "meta") == 0)
+      continue;
+
+    char* resolved = (char*)bialet_wren_resolve_module(vm, path, name);
+    if(resolved == NULL)
+      continue;
+
+    char  canonical[PATH_MAX];
+    char* code = validate_read_module(resolved, canonical, sizeof(canonical));
+    free(resolved);
+    if(code == NULL)
+      continue; // missing import: keep the historical tolerant behavior
+    if(!validate_visited_has(visited, canonical)) {
+      validate_visited_add(visited, canonical);
+      validate_compile_module(vm, canonical, code, visited, depth + 1, failed);
+    }
+    free(code);
+  }
+}
+
 int bialet_validate_syntax(const char* filePath) {
   char abs_path[MAX_URL_LEN];
 
@@ -1940,18 +2122,18 @@ int bialet_validate_syntax(const char* filePath) {
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
-  /* Initialize core classes (Date, Response) before validating, so scripts
-   * that touch Date/Response at the top level don't read uninitialized
-   * state and crash. Mirrors bialet_run(). */
-  wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
-  WrenInterpretResult result = wrenInterpret(vm, abs_path, code);
+  // Compile-only: -t must not run the file or its imports. Top-level code used
+  // to execute here, so `bialet -t _migration.wren` applied the migration and a
+  // page importing the layout printed a runtime "Stack Error" for Request.
+  ValidateVisited visited = {0};
+  validate_visited_add(&visited, abs_path);
+  int failed = 0;
+  validate_compile_module(vm, abs_path, code, &visited, 0, &failed);
+  validate_visited_free(&visited);
   wrenFreeVM(vm);
   free(code);
 
-  if(result == WREN_RESULT_COMPILE_ERROR) {
-    return 1;
-  }
-  return 0;
+  return failed ? 1 : 0;
 }
 
 #include <dirent.h>

@@ -145,6 +145,58 @@ else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
 fi
 
+# Tests - -t is compile-only
+# It used to wrenInterpret() the file, so a migration ran just by validating it
+# and a page importing a layout executed Request.uri at top level, printing a
+# runtime "Stack Error" for valid syntax.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  vparse_line=$LINENO
+  vparse_root=$(mktemp -d)
+  if [[ "$TARGET_EXEC" == */* ]]; then
+    vparse_exec="$(cd "$(dirname "$TARGET_EXEC")" && pwd)/$(basename "$TARGET_EXEC")"
+  else
+    vparse_exec="$(command -v "$TARGET_EXEC")"
+  fi
+  cat > "$vparse_root/_migration.wren" <<'WREN'
+Db.migrate("cli_check", "CREATE TABLE IF NOT EXISTS cli_check (id INTEGER)")
+WREN
+  cat > "$vparse_root/layout.wren" <<'WREN'
+var layoutUri = Request.uri
+class Layout {
+  static render() {
+    return <p>{{ layoutUri }}</p>
+  }
+}
+WREN
+  cat > "$vparse_root/page.wren" <<'WREN'
+import "layout" for Layout
+return Layout.render()
+WREN
+  vparse_mig_out=$(cd "$vparse_root" && "$vparse_exec" -t _migration.wren 2>&1)
+  vparse_mig_status=$?
+  vparse_page_out=$(cd "$vparse_root" && "$vparse_exec" -t page.wren 2>&1)
+  vparse_page_status=$?
+  vparse_table=$(cd "$vparse_root" && "$vparse_exec" -q -r \
+    'return `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = ?`.val("cli_check")' \
+    2>/dev/null)
+  rm -rf "$vparse_root"
+  if [[ "$vparse_mig_status" -eq 0 && "$vparse_table" == "0" ]]; then
+    report_result "-t does not run migrations  " "$vparse_line" 0
+  else
+    report_result "-t does not run migrations  " "$vparse_line" 1 \
+      "Expected exit 0 and no cli_check table, got exit $vparse_mig_status table '$vparse_table' output '$vparse_mig_out'"
+  fi
+  if [[ "$vparse_page_status" -eq 0 && "$vparse_page_out" != *"Stack Error"* ]]; then
+    report_result "-t does not execute imports " "$vparse_line" 0
+  else
+    report_result "-t does not execute imports " "$vparse_line" 1 \
+      "Expected exit 0 without a Stack Error, got exit $vparse_page_status output '$vparse_page_out'"
+  fi
+else
+  skip_test "-t does not run migrations  " "requires local binary access (-t flag)"
+  skip_test "-t does not execute imports " "requires local binary access (-t flag)"
+fi
+
 # Tests - bare -r initializes the framework tables
 # A -r script has no migration and no request, so Config/Session used to fail
 # with "no such table: BIALET_CONFIG". Db.init now runs before the script.
