@@ -412,6 +412,12 @@ direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
 
+The `-i`/`--ignore` list is a **serving** policy, not a Wren read boundary: it
+does not apply to `Markdown.file()`, `Markdown.list()` or `Markdown.meta()`. A
+`README.md` or `AGENTS.md` is ignored over HTTP but can still be read from Wren,
+so keep secrets in a `_`/`.`-prefixed file and prefer an allow-list over a raw
+request value. See [Markdown](markdown.md).
+
 The single exception is the RFC 8615 `.well-known` namespace: a URL whose
 first segment is exactly `.well-known` is public, and everything below it is
 served like any other file. That is required by ACME/Let's Encrypt, OAuth 2.0
