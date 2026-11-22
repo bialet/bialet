@@ -424,16 +424,24 @@ see the [Building REST APIs](rest-api.md) guide.
 Db.migrate("Name of the migration", `SOME QUERY`)
 ```
 
-The SQL argument is a backtick query literal, not a double-quoted string. Wren
-double-quoted strings cannot span lines, so real newlines in the SQL must go
-inside the backticks.
+### Migration SQL Pitfall
+
+> ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a
+> double-quoted string. A Wren double-quoted string cannot span lines, so a real
+> newline inside one fails with `Unterminated string.` — and it usually reports
+> a second `Expect ')' after arguments.` at the next line, because the call is
+> left incomplete.
 
 ```wren
 // Wrong: a double-quoted Wren string is single-line.
 Db.migrate("init", "CREATE TABLE t (
   id INTEGER
 )")
+```
 
+Use backticks, which keep the newlines:
+
+```wren
 // Correct: the backtick literal keeps the newlines.
 Db.migrate("init", `
   CREATE TABLE t (
