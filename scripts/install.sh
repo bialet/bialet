@@ -204,8 +204,16 @@ BIN_PATH=$(find "$TMPDIR" -name "$BIN_NAME" -type f | head -1)
 if [ -z "$BIN_PATH" ]; then
   abort "Extraction failed: binary not found in archive."
 fi
-cp "$BIN_PATH" "$INSTALL_DIR/$BIN_NAME"
-chmod +x "$INSTALL_DIR/$BIN_NAME"
+# Write a sibling and rename it into place. On macOS, overwriting a signed
+# binary in place leaves the code-signature cache pointing at the old inode;
+# the next exec of the new file is killed with SIGKILL even though the same
+# bytes run fine under another name. The Makefile install target uses the same
+# atomic swap for the same reason.
+STAGED="$INSTALL_DIR/.$BIN_NAME.$$"
+trap 'rm -rf "$TMPDIR"; rm -f "$STAGED"' EXIT
+cp "$BIN_PATH" "$STAGED"
+chmod 755 "$STAGED"
+mv -f "$STAGED" "$INSTALL_DIR/$BIN_NAME"
 
 # ── PATH hint ──────────────────────────────────────────────────
 case ":$PATH:" in
