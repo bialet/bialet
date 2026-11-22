@@ -1803,6 +1803,7 @@ run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"
 # Tests - Markdown
 run_test "Markdown ordered list       " "markdown-ol"    200 "<ol>"
 run_test "Markdown file rendering     " "md-file"        200 "<h1>Test Heading</h1>"
+run_test "Markdown list and metadata  " "md-list"        200 "alpha.md,beta.markdown,gamma.MD|Alpha|guide|draft|3|0|false|false|0|0"
 
 # Tests - Database
 run_test "Database save and fetch     " "db"              200 "John Doe"

@@ -11,18 +11,21 @@
 #include "markdown.h"
 #include "messages.h"
 #include "secret.h"
+#include "utils.h"
 #include "wren_core.wren.inc"
 #include "wren_math.h"
 #include "wren_primitive.h"
 #include "wren_utils.h"
 #include "wren_value.h"
 #include <ctype.h>
+#include <dirent.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
 #include <sqlite3.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #ifdef __APPLE__
 #include <mach/mach_time.h>
@@ -2586,6 +2589,232 @@ DEF_PRIMITIVE(markdown_file) {
   RETURN_VAL(result);
 };
 
+// True when [name] ends in [suffix], comparing ASCII case-insensitively.
+static int markdown_suffix_ci(const char* name, const char* suffix) {
+  size_t n = strlen(name), k = strlen(suffix);
+  if(n < k)
+    return 0;
+  for(size_t i = 0; i < k; i++) {
+    if(tolower((unsigned char)name[n - k + i]) != tolower((unsigned char)suffix[i]))
+      return 0;
+  }
+  return 1;
+}
+
+// True when the already-resolved [path] is the app root or below it.
+static int markdown_within_root(const char* path, const char* root) {
+  size_t n = strlen(root);
+  if(n == 0 || strncmp(path, root, n) != 0)
+    return 0;
+  if(path[n] == '\0' || path[n] == '/' || path[n] == '\\')
+    return 1;
+  // A root that itself ends in a separator ("/") is a prefix of everything.
+  return n > 0 && (root[n - 1] == '/' || root[n - 1] == '\\') &&
+         (path[n - 1] == '/' || path[n - 1] == '\\');
+}
+
+static int markdown_name_cmp(const void* a, const void* b) {
+  return strcmp(*(const char* const*)a, *(const char* const*)b);
+}
+
+// Returns a sorted List of bare .md/.markdown filenames in [dir], relative to
+// the app root. Private names, symlinks and non-regular files are skipped.
+// Missing or out-of-root directories return an empty list.
+DEF_PRIMITIVE(markdown_list) {
+  extern const char* bialet_get_full_root_dir(void);
+  if(!validateString(vm, args[1], "Markdown directory"))
+    return false;
+
+  const char* dir = AS_CSTRING(args[1]);
+  const char* root = bialet_get_full_root_dir();
+  size_t      root_len = strlen(root);
+  size_t      dir_len = strlen(dir);
+
+  // Absolute and drive-qualified paths are not relative to the app root.
+  if(dir_len > 0 && (dir[0] == '/' || dir[0] == '\\'))
+    RETURN_OBJ(wrenNewList(vm, 0));
+
+  size_t need = root_len + 1 + dir_len + 1;
+  char*  full = (char*)malloc(need);
+  if(full == NULL)
+    RETURN_OBJ(wrenNewList(vm, 0));
+  if(dir_len == 0)
+    snprintf(full, need, "%s", root);
+  else
+    snprintf(full, need, "%s/%s", root, dir);
+
+  // Reject a symlinked directory itself before realpath() follows it.
+  struct stat dir_st;
+  if(lstat(full, &dir_st) != 0 || S_ISLNK(dir_st.st_mode) ||
+     !S_ISDIR(dir_st.st_mode)) {
+    free(full);
+    RETURN_OBJ(wrenNewList(vm, 0));
+  }
+
+  char resolved[PATH_MAX];
+  if(realpath_n(full, resolved, sizeof(resolved)) == NULL) {
+    free(full);
+    RETURN_OBJ(wrenNewList(vm, 0));
+  }
+  free(full);
+
+  if(!markdown_within_root(resolved, root) ||
+     has_forbidden_uri_component(resolved + root_len)) {
+    RETURN_OBJ(wrenNewList(vm, 0));
+  }
+
+  DIR* d = opendir(resolved);
+  if(d == NULL)
+    RETURN_OBJ(wrenNewList(vm, 0));
+
+  char** names = NULL;
+  size_t count = 0;
+  size_t capacity = 0;
+
+  struct dirent* entry;
+  while((entry = readdir(d)) != NULL) {
+    const char* name = entry->d_name;
+    if(name[0] == '_' || name[0] == '.')
+      continue;
+    if(!markdown_suffix_ci(name, ".md") && !markdown_suffix_ci(name, ".markdown"))
+      continue;
+
+    // lstat(), not stat(): a symlink planted in the directory must not be
+    // listed, even when it points at another Markdown file inside the root.
+    size_t child_len = strlen(resolved) + 1 + strlen(name) + 1;
+    char*  child = (char*)malloc(child_len);
+    if(child == NULL)
+      continue;
+    snprintf(child, child_len, "%s/%s", resolved, name);
+    struct stat child_st;
+    if(lstat(child, &child_st) != 0 || S_ISLNK(child_st.st_mode) ||
+       !S_ISREG(child_st.st_mode)) {
+      free(child);
+      continue;
+    }
+    free(child);
+
+    if(count == capacity) {
+      size_t next = capacity == 0 ? 16 : capacity * 2;
+      char** grown = (char**)realloc(names, next * sizeof(char*));
+      if(grown == NULL)
+        break;
+      names = grown;
+      capacity = next;
+    }
+    names[count] = string_safe_copy(name);
+    if(names[count] == NULL)
+      break;
+    count++;
+  }
+  closedir(d);
+
+  qsort(names, count, sizeof(char*), markdown_name_cmp);
+
+  ObjList* list = wrenNewList(vm, 0);
+  wrenPushRoot(vm, (Obj*)list);
+  for(size_t i = 0; i < count; i++) {
+    Value item = wrenNewString(vm, names[i]);
+    wrenPushRoot(vm, AS_OBJ(item));
+    wrenValueBufferWrite(vm, &list->elements, item);
+    wrenPopRoot(vm);
+    free(names[i]);
+  }
+  free(names);
+  wrenPopRoot(vm); // list
+  RETURN_OBJ(list);
+}
+
+// Trims spaces and tabs (plus a trailing CR) in place and returns the start.
+static char* markdown_trim_line(char* line) {
+  char* start = line;
+  while(*start == ' ' || *start == '\t')
+    start++;
+  char* end = start + strlen(start);
+  while(end > start && (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\r'))
+    end--;
+  *end = '\0';
+  return start;
+}
+
+// Parses leading YAML-ish front matter into a flat String -> String map.
+// Returns {} when there is none and false when the file cannot be read.
+DEF_PRIMITIVE(markdown_meta) {
+  if(!validateString(vm, args[1], "Markdown file name"))
+    return false;
+  char* content = bialet_read_file(AS_CSTRING(args[1]));
+  if(content == NULL)
+    RETURN_FALSE;
+
+  // The opener must be the whole first line.
+  if(strncmp(content, "---", 3) != 0 ||
+     (content[3] != '\0' && content[3] != '\n' &&
+      !(content[3] == '\r' && content[4] == '\n'))) {
+    free(content);
+    RETURN_OBJ(wrenNewMap(vm));
+  }
+
+  char* p = content + 3;
+  if(*p == '\r')
+    p++;
+  if(*p == '\n')
+    p++;
+
+  ObjMap* map = wrenNewMap(vm);
+  wrenPushRoot(vm, (Obj*)map);
+  int closed = 0;
+
+  while(*p != '\0') {
+    char* line = p;
+    char* nl = strchr(p, '\n');
+    if(nl != NULL) {
+      *nl = '\0';
+      p = nl + 1;
+    } else {
+      p = line + strlen(line);
+    }
+
+    char* text = markdown_trim_line(line);
+    if(strcmp(text, "---") == 0) {
+      closed = 1;
+      break;
+    }
+    if(*text == '\0' || *text == '#')
+      continue;
+
+    char* colon = strchr(text, ':');
+    if(colon == NULL)
+      continue;
+    *colon = '\0';
+    char* key = markdown_trim_line(text);
+    if(*key == '\0')
+      continue;
+    char*  value = markdown_trim_line(colon + 1);
+    size_t value_len = strlen(value);
+    if(value_len >= 2 && (value[0] == '"' || value[0] == '\'') &&
+       value[value_len - 1] == value[0]) {
+      value[value_len - 1] = '\0';
+      value++;
+    }
+
+    Value key_value = wrenNewString(vm, key);
+    wrenPushRoot(vm, AS_OBJ(key_value));
+    Value map_value = wrenNewString(vm, value);
+    wrenPushRoot(vm, AS_OBJ(map_value));
+    wrenMapSet(vm, map, key_value, map_value);
+    wrenPopRoot(vm); // map_value
+    wrenPopRoot(vm); // key_value
+  }
+
+  free(content);
+  wrenPopRoot(vm); // map
+  if(!closed) {
+    // An opener without a closing line is not front matter.
+    RETURN_OBJ(wrenNewMap(vm));
+  }
+  RETURN_OBJ(map);
+}
+
 // A query argument is either a plain string (Query.fromString, Query.new) or a
 // backtick literal, which is an OBJ_QUERY instance -- an ObjString with a
 // different object kind, so IS_STRING/validateString rejects it.
@@ -3143,6 +3372,8 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* markdownClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Markdown"));
   PRIMITIVE(markdownClass->obj.classObj, "html_(_)", markdown_html);
   PRIMITIVE(markdownClass->obj.classObj, "file_(_)", markdown_file);
+  PRIMITIVE(markdownClass->obj.classObj, "list_(_)", markdown_list);
+  PRIMITIVE(markdownClass->obj.classObj, "meta_(_)", markdown_meta);
 
   ObjClass* jsonClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Json"));
   PRIMITIVE(jsonClass->obj.classObj, "parse_(_)", json_parse_primitive);

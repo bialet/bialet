@@ -17,7 +17,7 @@ The following classes are available by default in all Bialet applications withou
 - **Http** - Perform HTTP requests
 - **Date** - Date and time operations
 - **File** - File operations
-- **Markdown** - Render Markdown content to HTML
+- **Markdown** - Render Markdown content to HTML, list Markdown files and read front matter
 - **System** - Logging and output utilities
 - **HtmlNode** - A string of already-safe HTML that `{{ }}` leaves unescaped
 
@@ -1323,6 +1323,102 @@ root, or has a path component starting with `_` or `.`.
 ```wren
 var content = Markdown.file("about.md")
 // Reads about.md from the app directory and renders its Markdown to HTML
+```
+
+### list(dir)
+
+Returns a sorted `List` of bare filenames in `dir`, relative to the app root.
+Only `.md` and `.markdown` files (case-insensitive) are included. Names starting
+with `_` or `.`, symlinks and non-regular files are skipped. A missing, empty or
+invalid directory returns `[]`. The directory must stay inside the app root and
+no path component may start with `_` or `.`.
+
+- `dir`: Directory relative to the app root. `""` is the root.
+
+```wren
+var names = Markdown.list("cards")
+// ["01.md", "02.md", ...]
+```
+
+### meta(path)
+
+Reads leading YAML-ish front matter and returns a flat `Map` of `String` to
+`String`. The block must start with a line containing only `---` and end with
+another one. Keys and values are trimmed, one matching pair of single or double
+quotes around a value is removed, and blank lines and `#` comments are ignored.
+Returns `{}` when there is no front matter and `false` when the file is missing
+or unreadable. Nested keys and lists are not supported; a later key overwrites
+an earlier one. Applies the same `.md`-only, app-root and private-name rules as
+`file(path)`.
+
+- `path`: The Markdown file to read, relative to the app root.
+
+```wren
+var meta = Markdown.meta("cards/01.md")
+meta["title"]
+```
+
+## Random
+
+The `random` module is built in and must be imported:
+
+```wren
+import "random" for Random
+```
+
+### new()
+
+Creates a generator seeded from the system.
+
+### new(seed)
+
+Creates a reproducible generator. `seed` is a `Num`, or a sequence of up to 16
+numbers. The same seed and calls produce the same values.
+
+### float()
+
+Returns a number in `[0, 1)`.
+
+### float(end)
+
+Returns a number in `[0, end)`.
+
+### float(start, end)
+
+Returns a number in `[start, end)`.
+
+### int()
+
+Returns a non-negative whole number.
+
+### int(end)
+
+Returns a whole number in `[0, end)`.
+
+### int(start, end)
+
+Returns a whole number in `[start, end)`.
+
+### sample(list)
+
+Returns one random element. Aborts on an empty list.
+
+### sample(list, count)
+
+Returns `count` distinct random elements. Aborts when `count` is larger than the
+list.
+
+### shuffle(list)
+
+Shuffles `list` in place. Returns `null`.
+
+```wren
+import "random" for Random
+
+var rng = Random.new(42)
+var dice = rng.int(1, 7)        // 1 to 6
+var hand = rng.sample(deck, 5)
+rng.shuffle(deck)
 ```
 
 ## File

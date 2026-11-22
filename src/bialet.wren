@@ -1708,4 +1708,6 @@ class Markdown {
     var content = file_(name)
     return content is String ? content.raw : content
   }
+  static list(dir) { list_(dir) }
+  static meta(name) { meta_(name) }
 }

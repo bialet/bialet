@@ -5,7 +5,7 @@ no bundler — the renderer ships inside the binary.
 
 ## Rendering Markdown
 
-Two methods on the `Markdown` class:
+Four methods on the `Markdown` class:
 
 ```wren
 // Render a Markdown string
@@ -13,6 +13,12 @@ var content = Markdown.html("## Hello **World**!")
 
 // Read a .md file from the app directory and render it
 var content = Markdown.file("about.md")
+
+// List the public Markdown files in a directory
+var names = Markdown.list("cards")
+
+// Read the front matter of a .md file as a Map
+var meta = Markdown.meta("cards/01.md")
 ```
 
 Use the result anywhere a string works — interpolate it into a page:
@@ -23,8 +29,56 @@ return <main>
 </main>
 ```
 
-The full API reference for both methods lives in the
+The full API reference for every method lives in the
 [Reference](reference.md) under "Markdown".
+
+## Listing and Metadata
+
+`Markdown.list(dir)` returns a sorted `List` of bare filenames in `dir`, relative
+to the app root. `""` means the root itself. Only `.md` and `.markdown` files
+(case-insensitive) are returned, and names starting with `_` or `.` are skipped:
+
+```wren
+for (name in Markdown.list("cards")) {
+  System.print(name)          // "01.md", "02.md", ...
+}
+```
+
+A missing, empty or invalid directory returns `[]`. The directory must stay
+inside the app root, and no path component may start with `_` or `.`.
+`Markdown.list("../")` and `Markdown.list("_private")` both return `[]`.
+Symlinks and non-regular files are not listed and are never followed.
+
+`Markdown.meta(file)` reads leading YAML-ish front matter and returns a
+`Map` of `String` to `String`:
+
+```markdown
+---
+title: The Coral Path
+category: "adventure"
+status: 'draft'
+---
+# The Coral Path
+```
+
+```wren
+var meta = Markdown.meta("cards/01.md")
+meta["title"]      // "The Coral Path"
+meta["category"]   // "adventure" (quotes stripped)
+```
+
+The opener and closer must each be a line containing only `---`. Keys and values
+are trimmed, one matching pair of single or double quotes around a value is
+removed, and blank lines and lines starting with `#` are ignored. Files without
+front matter return `{}`; a missing or unreadable file returns `false`.
+
+Front matter is **flat**: nested keys, lists, and multi-line values are not
+parsed. A line without a `:` is ignored, and a later key overwrites an earlier
+one with the same name. `Markdown.meta` applies the same `.md`-only, app-root and
+private-name rules as `Markdown.file`.
+
+> ⚠️ Pitfall: `Markdown.file` still skips front matter. It is metadata, not
+> content, and `Markdown.meta` is the only way to read it.
 
 ## Supported Syntax
 
@@ -78,11 +132,12 @@ if (content == false) content = "<p>About page not written yet.</p>"
 **`Markdown.file()` reads only Markdown inside the app root.** The path must
 end in `.md` or `.markdown`, must stay inside the app root, and no component may
 start with `_` or `.`: `Markdown.file("_about.md")`, `Markdown.file("config.json")`
-and `Markdown.file("page.wren")` all return `false`. That keeps
+and `Markdown.file("page.wren")` all return `false`. `Markdown.list()` and
+`Markdown.meta()` apply the same rules. That keeps
 `Markdown.file(Request.get("page"))` from handing out private files, config or
 route source, but still prefer an allow-list of page names over a raw request
 value.
 
-**Front matter is skipped, not parsed.** A leading `---` block is dropped from
-the output. Metadata inside it (title, date, tags) is not exposed — you must
-read it yourself if you need it.
+**Front matter is skipped by `Markdown.file()`, not parsed into the output.** A
+leading `---` block is dropped from the rendered HTML. Use `Markdown.meta()` to
+read its keys; the renderer never includes them.
