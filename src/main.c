@@ -464,6 +464,7 @@ int main(int argc, char* argv[]) {
   const char*      test_dir = NULL;
   int              run_tests = 0;
   int              dev_mode = 0;
+  int              validate_is_dir = 0;
   BialetCliOptions cli_opts;
 #ifndef _WIN32
   // A client that resets the connection (RST) right after sending its request
@@ -615,6 +616,19 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  // A directory target makes the whole tree the app context: `bialet -t
+  // /www/app` and `bialet check /www/app` must work from any working
+  // directory, without a separate positional root. An explicit root still
+  // wins, and a file target keeps the historical root rules.
+  if(validate_file != NULL) {
+    struct stat validate_stat;
+    if(stat(validate_file, &validate_stat) == 0 && S_ISDIR(validate_stat.st_mode)) {
+      validate_is_dir = 1;
+      if(!cli_opts.root_explicit)
+        bialet_config.root_dir = (char*)validate_file;
+    }
+  }
+
   char resolved_root[MAX_PATH_LEN];
   if(realpath_n(bialet_config.root_dir, resolved_root, sizeof(resolved_root)) ==
      NULL) {
@@ -743,7 +757,9 @@ int main(int argc, char* argv[]) {
   }
 
   if(validate_file != NULL) {
-    int result = bialet_validate_syntax(validate_file);
+    int checked = 0;
+    int failed = 0;
+    int result = bialet_validate_syntax(validate_file, &checked, &failed);
     if(validate_prev_log != NULL)
       message_set_log_file(validate_prev_log);
     if(validate_capture != NULL) {
@@ -760,10 +776,19 @@ int main(int argc, char* argv[]) {
       fclose(validate_capture);
     }
     if(result == 0) {
-      if(!bialet_config.quiet)
-        printf("✓ Syntax OK: %s\n", validate_file);
+      if(!bialet_config.quiet) {
+        if(validate_is_dir)
+          printf("✓ Syntax OK: %s (%d file%s)\n", validate_file, checked,
+                 checked == 1 ? "" : "s");
+        else
+          printf("✓ Syntax OK: %s\n", validate_file);
+      }
     } else {
-      fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
+      if(validate_is_dir)
+        fprintf(stderr, "✗ Syntax errors found in: %s (%d of %d files failed)\n",
+                validate_file, failed, checked);
+      else
+        fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
     }
     exit(result);
   }

@@ -29,10 +29,12 @@ typedef enum {
 typedef struct {
   BialetCliAction action;
   const char*     run_code;      /* -r / --run */
-  const char*     validate_file; /* -t / --validate */
+  const char*     validate_file; /* -t / --validate, or `check` */
   const char*     test_dir;      /* optional arg of -T / --tests */
   int             run_tests;     /* -T / --tests */
   int             dev_mode;      /* `dev` subcommand */
+  int             check_tree;    /* `check` subcommand */
+  int             root_explicit; /* a root_dir was passed on the command line */
   char            error[256];    /* set when action == BIALET_CLI_INVALID */
 } BialetCliOptions;
 
@@ -44,16 +46,17 @@ void cli_print_version(void);
 #define BIALET_USAGE                                                                \
   BIALET_LOGO                                                                       \
   " bialet\n\n"                                                                     \
-  "Usage: %s [options] [dev] [root_dir]\n\n"                                        \
+  "Usage: %s [options] [dev|check] [root_dir]\n\n"                                  \
   "Starts a server serving the given root_dir (default: the current "               \
   "directory). Add `dev` to enable live reload, in-browser error display, "         \
-  "and auto-open the browser.\n\n"                                                  \
+  "and auto-open the browser, or `check` to validate every .wren file in the "      \
+  "tree and exit.\n\n"                                                              \
   "Examples:\n"                                                                     \
   "  bialet                   Serve the current directory on 127.0.0.1:7001\n"      \
   "  bialet dev               Dev server with live reload and error display\n"      \
-  "  bialet [dev] /path/to/app\n"                                                   \
-  "                           Serve a specific directory, optionally in dev "       \
-  "mode\n\n"                                                                        \
+  "  bialet check             Validate every .wren file in the current app tree\n"  \
+  "  bialet [dev|check] /path/to/app\n"                                             \
+  "                           Serve or check a specific directory\n\n"              \
   "Options:\n"                                                                      \
   "  -p, --port PORT       Port number                            (default: "       \
   "7001)\n"                                                                         \
@@ -61,7 +64,9 @@ void cli_print_version(void);
   "127.0.0.1)\n"                                                                    \
   "  -H, --help            Show this help and exit\n"                               \
   "  -r, --run CODE        Run the code passed as argument, then exit\n"            \
-  "  -t, --validate FILE   Validate the syntax of a Wren file, then exit\n"         \
+  "  -t, --validate FILE   Validate a Wren file, or every .wren file under a "      \
+  "directory,\n"                                                                    \
+  "                        then exit\n"                                             \
   "  -T, --tests [DIR]     Run tests in the _tests/ folder\n"                       \
   "  -v, --version         Print the version and exit\n"                            \
   "  -l, --log FILE        Log file location                      (default: "       \

@@ -345,15 +345,21 @@ static void set_option(CliOptId id, const char* value, struct BialetConfig* conf
   }
 }
 
-/* A bare `dev` or the first positional argument. */
+/* A bare `dev`/`check`, or the first positional argument. `check` validates
+ * the whole tree rooted at the positional directory (or the default root). */
 static void handle_positional(const char* arg, struct BialetConfig* config,
                               BialetCliOptions* opts, int* root_set) {
   if(strcmp(arg, "dev") == 0) {
     opts->dev_mode = 1;
     return;
   }
+  if(strcmp(arg, "check") == 0) {
+    opts->check_tree = 1;
+    return;
+  }
   if(!*root_set) {
     config->root_dir = (char*)arg;
+    opts->root_explicit = 1;
     *root_set = 1;
   }
 }
@@ -417,6 +423,7 @@ static void parse_long_option(int* i, const char* arg, int argc, char* argv[],
     if(path_exists(arg)) {
       if(!*root_set) {
         config->root_dir = (char*)arg;
+        opts->root_explicit = 1;
         *root_set = 1;
       }
       return;
@@ -475,6 +482,12 @@ void cli_parse(int argc, char* argv[], struct BialetConfig* config,
     if(opts->action != BIALET_CLI_SERVE)
       return;
   }
+
+  /* `check` has no value of its own: it validates the tree at the positional
+   * root (default "."), which may appear before or after the subcommand. An
+   * explicit -t FILE wins so the two cannot silently disagree. */
+  if(opts->check_tree && opts->validate_file == NULL)
+    opts->validate_file = config->root_dir;
 }
 
 void cli_print_help(const char* prog, FILE* out) {

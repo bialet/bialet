@@ -54,7 +54,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
+| `-t`, `--validate`      | Compile a Wren file, or every `.wren` file under a directory, and their local imports; parse their backtick SQL without executing anything, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -207,7 +207,7 @@ bialet -T                    # Run all tests in _tests/
 bialet -T docs/examples      # Run tests in a specific directory
 ```
 
-## Validate Syntax of a Wren File
+## Validate Syntax of a Wren File or Tree
 
 To check the syntax of a Wren file without executing it, use `-t`. Run it the
 same way you run the server:
@@ -229,6 +229,38 @@ bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
+
+### Check a whole app tree
+
+Pass a directory instead of a file to validate every `.wren` file below it:
+
+```bash
+bialet -t .
+bialet -t /path/to/app
+```
+
+`bialet check` is the same whole-tree mode with the app root as its default:
+
+```bash
+cd /path/to/app
+bialet check                 # every .wren file in the current tree
+bialet check /path/to/app    # every .wren file in another tree
+```
+
+A directory target is also the app root for that run, so `bialet -t /path/to/app`
+and `bialet check /path/to/app` work from any working directory without a second
+positional argument. Each file is compiled in its own VM, so imports shared by
+two pages do not collide.
+
+The walk includes private files and directories (`_app/`, `_migration.wren`,
+`_cron.wren`, `_tests/`) because they are part of the app. It skips
+dot-directories (`.git`, `.venv`), symbolic links, and anything that is not a
+`.wren` file, so it cannot leave the tree or loop on a link. The check exits
+`0` only when every file compiles; failures name the file that failed.
+
+> ⚠️ Pitfall: a directory check does not run migrations, so a migration that
+> depends on a table created earlier in the same file still passes. Like a
+> single-file check, it validates SQL syntax, not schema correctness.
 
 `-t` compiles the file and every local module it imports. It does not execute
 any of them, so runtime errors are not reported and migrations do not run:

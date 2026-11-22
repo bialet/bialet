@@ -151,8 +151,55 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax     "SQL migration passes           " "syntax_query_migration_ok.wren" 0
   # `items`.save(...) passes a table name, not SQL; it still has to pass.
   test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
+  # A directory target validates the whole tree: private files and subfolders
+  # included, dot-directories and symlinks skipped. `check` is the same mode
+  # rooted at the positional directory, and a directory target implies its own
+  # app root so it works from any working directory.
+  tree_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tree_exec=$(realpath "$TARGET_EXEC" 2>/dev/null || command -v "$TARGET_EXEC")
+  tree_root=$(mktemp -d)
+  mkdir -p "$tree_root/_app" "$tree_root/sub" "$tree_root/.git"
+  printf 'return "ok"\n' > "$tree_root/index.wren"
+  printf 'class Lib { static value { 1 } }\n' > "$tree_root/_app/lib.wren"
+  printf 'Db.migrate("tree", "CREATE TABLE IF NOT EXISTS tree (id INTEGER)")\n' \
+    > "$tree_root/_migration.wren"
+  printf 'class Broken {\n' > "$tree_root/.git/ignored.wren"
+  tree_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_status=$?
+  tree_check_out=$(cd "$tree_root" && "$tree_exec" -q check 2>&1)
+  tree_check_status=$?
+  printf 'class Broken {\n' > "$tree_root/_cron.wren"
+  tree_under_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_under_status=$?
+  rm -f "$tree_root/_cron.wren"
+  printf 'class Broken {\n' > "$tree_root/sub/broken.wren"
+  tree_bad_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_bad_status=$?
+  rm -rf "$tree_root"
+  if [[ "$tree_status" -eq 0 && "$tree_check_status" -eq 0 ]]; then
+    report_result "-t validates a whole tree     " "$tree_line" 0
+  else
+    report_result "-t validates a whole tree     " "$tree_line" 1 \
+      "Expected -t DIR and 'check' to pass. -t:$tree_status '$tree_out' check:$tree_check_status '$tree_check_out'"
+  fi
+  if [[ "$tree_under_status" -ne 0 && "$tree_under_out" == *"_cron.wren"* ]]; then
+    report_result "Tree check includes _ files   " "$tree_line" 0
+  else
+    report_result "Tree check includes _ files   " "$tree_line" 1 \
+      "Expected failure naming _cron.wren. status:$tree_under_status output:'$tree_under_out'"
+  fi
+  if [[ "$tree_bad_status" -ne 0 && "$tree_bad_out" == *"broken.wren"* ]]; then
+    report_result "Tree check names the bad file " "$tree_line" 0
+  else
+    report_result "Tree check names the bad file " "$tree_line" 1 \
+      "Expected failure naming sub/broken.wren. status:$tree_bad_status output:'$tree_bad_out'"
+  fi
 else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
+  skip_test "-t validates a whole tree     " "requires local binary access (-t flag)"
+  skip_test "Tree check includes _ files   " "requires local binary access (-t flag)"
+  skip_test "Tree check names the bad file " "requires local binary access (-t flag)"
 fi
 
 # Tests - -t is compile-only
