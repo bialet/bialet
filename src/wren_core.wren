@@ -712,6 +712,11 @@ class Date {
   seconds { _seconds }
   minutes { _minutes }
   hours { _hours }
+  // Singular aliases: `.hour`, `.minute` and `.second` read the same fields.
+  // The plural names stay for compatibility.
+  second { _seconds }
+  minute { _minutes }
+  hour { _hours }
   day { _day }
   month { _month }
   year { _year }

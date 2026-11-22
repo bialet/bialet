@@ -1211,13 +1211,25 @@ Returns the day component of the date.
 
 Returns the hour component of the date.
 
+### hour
+
+Alias for `hours`.
+
 ### minutes
 
 Returns the minute component of the date.
 
+### minute
+
+Alias for `minutes`.
+
 ### seconds
 
 Returns the second component of the date.
+
+### second
+
+Alias for `seconds`.
 
 ### dayOfWeek
 
