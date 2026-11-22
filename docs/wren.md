@@ -182,8 +182,16 @@ var s = "hello"
 var t = s + " world"   // "hello world"
 ```
 
-Strings are immutable. Index with `s[i]` to get a single-character string at
-byte offset `i`. `.count` is the byte length.
+Strings are immutable. `.count` is the number of **code points**, not bytes:
+`"Arpón".count` is `5`. Indexing, `indexOf`, and ranges use **byte offsets**, so
+`"Arpón"[0..4]` is not the whole string. `.bytes.count` gives the byte length
+(`"Arpón".bytes.count` is `6`), and `.codePoints` gives the code points.
+
+> ⚠️ Pitfall: mixing `.count` with byte offsets truncates accented text.
+> `line[0..line.count - 1]` drops the last byte of every multi-byte character.
+> Split on a delimiter (`line.split(":")`) instead of slicing by index, or use
+> `.codePoints` / `.bytes.count` when you really need character or byte
+> arithmetic.
 
 > ⚠️ Pitfall: strings don't implement `<`, `>`, `<=`, or `>=` —
 > `"a" < "b"` raises `String does not implement '<(_)'.`. Only `==` and
@@ -696,6 +704,37 @@ See [External Modules](external-modules.md) for details on external
 imports, and the [advanced routing guide](advanced-routing.md) for
 file-based module resolution.
 
+### The `random` module
+
+`random` is built into the binary. Import it explicitly:
+
+```wren
+import "random" for Random
+
+var rng = Random.new()          // seeded from the system
+var dice = rng.int(1, 7)        // 1 to 6
+var coin = rng.sample(["heads", "tails"])
+```
+
+`Random.new(seed)` takes a `Num` seed, or a sequence of up to 16 numbers, and is
+reproducible: the same seed and calls give the same values. Use it for tests,
+replays and seeded dice rolls. Methods:
+
+| Method | Result |
+|---|---|
+| `float()` | a number in `[0, 1)` |
+| `float(end)` | a number in `[0, end)` |
+| `float(start, end)` | a number in `[start, end)` |
+| `int()` | a non-negative whole number |
+| `int(end)` | a whole number in `[0, end)` |
+| `int(start, end)` | a whole number in `[start, end)` |
+| `sample(list)` | one random element |
+| `sample(list, count)` | `count` distinct random elements |
+| `shuffle(list)` | shuffles `list` in place |
+
+> ⚠️ Pitfall: `int(end)` excludes `end`. A six-sided die is
+> `rng.int(1, 7)`, not `rng.int(1, 6)`.
+
 ## Bialet vs. Standard Wren
 
 Bialet uses a modified Wren VM with additions for web development. Here's what
@@ -765,7 +804,7 @@ Bialet adds these classes on top of standard Wren:
 | `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md)            |
 | `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md)  |
 | `File`     | File uploads stored in SQLite — see [Reference](reference.md)                             |
-| `Markdown` | Render Markdown to HTML — see [Reference](reference.md)                                   |
+| `Markdown` | Render Markdown, list Markdown files and read front matter — see [Reference](reference.md) |
 | `Json`     | JSON parse and stringify — see [Reference](reference.md)                                  |
 | `Config`   | Key-value configuration store — see [Reference](reference.md)                             |
 | `Cron`     | Scheduled tasks — see [Reference](reference.md)                                           |

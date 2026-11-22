@@ -207,23 +207,48 @@ var good2 = <my-element class="badge">Custom element</my-element>
 **Forgetting `return`.** Without `return`, the response body is empty. The page
 renders as blank.
 
-**`return <tag>` must be on its own line.** `return` and the opening `<tag>`
-on the same physical line is a compilation error — the error message
-(`Expected expression` at `return`) doesn't point at the real cause:
+**`return <tag>` is valid at the top level and inside a multi-line method body.**
+`return` and the opening `<tag>` must share a physical line:
 
 ```wren
-// Wrong — compilation error, no matter what's inside the tag
-list.map { |x| return <div>{{ x }}</div> }
+// Top level
+return <p>Hola</p>
 
-// Correct — put the tag on the line after `return`
-list.map { |x|
-  return <div>{{ x }}</div>
+// Inside a method body
+greeting() {
+  return <p>Hola</p>
 }
 ```
 
+Wren ends an expression at a newline, Python-style. A bare `return` followed by
+a newline returns immediately, and the tag on the next line is a separate
+expression that never reaches the response:
+
+```wren
+// Wrong — returns null, then evaluates the tag as a statement
+return
+  <p>Hola</p>
+```
+
+**`return` is not allowed inside a block callback.** A block body is a single
+expression, and `return` is a statement, so `list.map { |x| return <div>...</div> }`
+fails to compile with `Error at 'return': Expected expression.` Use the
+expression itself, without `return`:
+
+```wren
+// Wrong — return is a statement, not an expression
+list.map { |x| return <div>{{ x }}</div> }
+
+// Correct — the block returns its expression implicitly
+list.map { |x| <div>{{ x }}</div> }
+```
+
+The same rule applies to a method body written entirely on one line (`{ return 1 }`):
+that braced form is parsed as an expression. Put the statement on its own line
+inside a multi-line body.
+
 This happens whether or not the `return` is itself inside a `{{ }}`
-interpolation, and regardless of what's interpolated inside the tag — the
-only trigger is `return` and `<tag` sharing a line.
+interpolation.
 
 **Files starting with `_` or `.` are private** — they return 403 if accessed
 directly. Use them for imports and internal logic only.
@@ -443,8 +468,19 @@ statements or variable declarations inside a `map` callback:
 } }}
 ```
 
-If you need pre-computed values, prepare them before `map` (e.g. add computed
-properties to your model class, or pre-process the list).
+A Wren block body is **one expression**. `{ |x|` followed by a newline is an
+empty body that returns `null`, not a function that continues on the next line.
+In JavaScript terms it is closer to `x => {}` than to
+`x => (/* multi-line expression */)`, which is why the output is silently empty.
+Keep the body on the same line as `{`:
+
+```wren
+{{ tasks.map { |task| <li>{{ task.description }}</li> } }}
+```
+
+`var` is a statement, so it cannot appear in the block body even on one line.
+Pre-compute the value before `map` (a computed property on the model, or a
+pre-processed list).
 
 **Empty lists produce empty output.** Pair `map` with `&&` to show an empty
 state:

@@ -277,18 +277,18 @@ empty sequence are blank. `false` and `0` are **values**, so they are not blank
 (`false.isBlank == false`). `isEmpty` remains the zero-elements check:
 `"   ".isEmpty` is `false` while `"   ".isBlank` is `true`.
 
-> **Pitfall:** `return <tag>` on the same physical line is a compile error
-> (`Expected expression` at `return`), regardless of what's inside the tag.
-> Always put the tag on the line after `return`:
+> **Pitfall:** `return` is a statement and does not belong inside a block
+> callback (`Expected expression` at `return`). Use the block's expression
+> without it:
 > ```wren
 > // WRONG
 > list.map { |x| return <div>{{ x }}</div> }
 > // CORRECT
-> list.map { |x|
->   return <div>{{ x }}</div>
-> }
+> list.map { |x| <div>{{ x }}</div> }
 > ```
-
+> `return <tag>` on one line is fine at the top level and inside a multi-line
+> method body. A newline ends the statement: `return` alone returns
+> immediately, and a tag on the next line is a separate expression.
 **Inline HTML strings** are Wren's template mechanism — no separate template
 language:
 
