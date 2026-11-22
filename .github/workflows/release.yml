@@ -16,7 +16,7 @@ permissions:
 env:
   # mimalloc v2.5.3, by commit. Linked statically into both Linux binaries.
   MIMALLOC_COMMIT: 9593e865ea9e984d7b19fe216b750cb9bdb35d2d
-  # The pushed tag (v1.2.24). Run steps read this from the environment instead
+  # The pushed tag (v1.2.25). Run steps read this from the environment instead
   # of interpolating ${{ github.ref_name }} into the script, where a crafted tag
   # name would be a shell injection.
   REF_NAME: ${{ github.ref_name }}
@@ -309,6 +309,23 @@ jobs:
 
       - name: Build bialet (static)
         run: make clean && CC=x86_64-w64-mingw32-gcc make static
+
+      # The Windows binary is cross-compiled, so this is the only place the
+      # actual PE runs. Register binfmt so tests/run.sh can execute
+      # build/bialet.exe directly; the suite detects the .exe target and skips
+      # the two tests that are known Wine artifacts (documented in AGENTS.md).
+      - name: Install Wine and test dependencies
+        run: |
+          sudo apt-get install -y wine64 lsof
+
+      - name: Run test suite under Wine
+        env:
+          WINEDEBUG: -all
+        run: |
+          set -euo pipefail
+          trap 'sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/WinePE" || true' EXIT
+          sudo sh -c 'echo ":WinePE:M::MZ::/usr/bin/wine64:" > /proc/sys/fs/binfmt_misc/register'
+          ./tests/run.sh ./build/bialet.exe
 
       - name: Package
         run: |
