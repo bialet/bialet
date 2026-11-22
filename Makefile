@@ -7,6 +7,16 @@ INSTALL_DIR := ~/.local/bin
 DB_FILE := _db.sqlite3
 OS := $(shell uname -s)
 
+# macos-latest now builds on macOS 26, and clang defaults the deployment target
+# to the host OS. Without this, the release binary carries minos 26.0 and the
+# kernel kills it on macOS 15 and earlier. Bialet itself uses only APIs that
+# exist on Apple Silicon's first release, so target that and keep the download
+# usable for every supported Mac. Override on the command line if needed.
+ifeq ($(OS),Darwin)
+MACOSX_DEPLOYMENT_TARGET ?= 11.0
+export MACOSX_DEPLOYMENT_TARGET
+endif
+
 # Builds the wren_to_c_string codegen tool that runs during the build itself.
 # Deliberately NOT $(CC): the Windows cross-build invokes `CC=x86_64-w64-mingw32-gcc
 # make static`, and a tool built with that compiler would produce a Windows PE
