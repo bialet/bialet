@@ -141,3 +141,25 @@ value.
 **Front matter is skipped by `Markdown.file()`, not parsed into the output.** A
 leading `---` block is dropped from the rendered HTML. Use `Markdown.meta()` to
 read its keys; the renderer never includes them.
+
+**Converting the rendered HTML to a `String` loses its safe marker.**
+`Markdown.file()` returns an `HtmlNode`, which `{{ }}` inserts verbatim. As soon
+as you turn it into a plain `String` — with `.toString`, `"%(...)"`, or
+`.split(...)` — the value is ordinary text again and `{{ }}` escapes its tags.
+Re-mark the piece you want to render with `.raw`:
+
+```wren
+// Split a post at <!--more--> and render the first part inline
+var chunks = Markdown.file("post.md").toString.split("<!--more-->")
+
+return <article>
+  {{ chunks[0] }}
+  <a href="/post">Read more</a>
+  {{ chunks[1].raw }}
+</article>
+```
+
+Without `.raw`, `chunks[1]` renders as visible `<p>` tags. `.raw` asserts the
+string is already safe HTML, so only do this to markup you produced yourself or
+trust (see [Security](#security)).
+
