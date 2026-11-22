@@ -463,13 +463,22 @@ static void bialet_wren_free_module_source(WrenVM* vm, const char* name,
 // the prefix passed 255 characters that bound wrapped around to a value near
 // SIZE_MAX and strncat's limit stopped limiting anything. Only an unrelated
 // length guard kept it from overflowing.
+// True for the remote forms the loader understands. A bare colon test is not
+// enough: a Windows absolute path (C:\app\lib) also contains ':', so it used
+// to be misclassified as a remote module and -r imports failed with "Import
+// type not supported".
+static int is_remote_module_name(const char* name) {
+  return strncmp(name, "http://", 7) == 0 || strncmp(name, "https://", 8) == 0 ||
+         strncmp(name, BIALET_MODULE_GITHUB_PREFIX, BIALET_EXTERNAL_MODULE_LEN) == 0;
+}
+
 static const char* bialet_wren_resolve_module(WrenVM* vm, const char* importer,
                                               const char* name) {
   (void)vm;
 
   // URLs and "gh:" references are canonical identifiers on their own -- no
   // directory joining applies to them.
-  if(strchr(name, ':') != NULL)
+  if(is_remote_module_name(name))
     return name;
 
   // Wren's built-in optional modules ("random", "meta") are looked up by
@@ -535,7 +544,7 @@ static WrenLoadModuleResult bialet_wren_load_module(WrenVM* vm, const char* name
   char                 module[MAX_URL_LEN];
   WrenLoadModuleResult result = {0};
 
-  if(strchr(name, ':') != NULL) {
+  if(is_remote_module_name(name)) {
     char url[MAX_URL_LEN];
     // If name start with https:// or http://
     if(strncmp(name, "http://", 7) == 0 || strncmp(name, "https://", 8) == 0) {
