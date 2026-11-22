@@ -23,7 +23,7 @@ export QUIET
 # Parameters
 TARGET_EXEC="${args[0]:-./build/bialet}"
 HOST="${args[1]:-127.0.0.1}"
-PORT="${args[2]:-7001}"
+PORT="${args[2]:-7200}"
 ECHO_PORT="${args[3]:-7100}"
 SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
