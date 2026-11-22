@@ -2644,9 +2644,10 @@ DEF_PRIMITIVE(markdown_list) {
     snprintf(full, need, "%s/%s", root, dir);
 
   // Reject a symlinked directory itself before realpath() follows it.
-  struct stat dir_st;
-  if(lstat(full, &dir_st) != 0 || S_ISLNK(dir_st.st_mode) ||
-     !S_ISDIR(dir_st.st_mode)) {
+  // path_kind_no_follow() keeps this portable: MinGW has no lstat/S_ISLNK.
+  int is_link = 0, is_dir = 0, is_regular = 0;
+  if(path_kind_no_follow(full, &is_link, &is_dir, &is_regular) != 0 || is_link ||
+     !is_dir) {
     free(full);
     RETURN_OBJ(wrenNewList(vm, 0));
   }
@@ -2679,16 +2680,18 @@ DEF_PRIMITIVE(markdown_list) {
     if(!markdown_suffix_ci(name, ".md") && !markdown_suffix_ci(name, ".markdown"))
       continue;
 
-    // lstat(), not stat(): a symlink planted in the directory must not be
-    // listed, even when it points at another Markdown file inside the root.
+    // A symlink planted in the directory must not be listed, even when it
+    // points at another Markdown file inside the root. path_kind_no_follow()
+    // is lstat() on POSIX and a reparse-point check on Windows.
     size_t child_len = strlen(resolved) + 1 + strlen(name) + 1;
     char*  child = (char*)malloc(child_len);
     if(child == NULL)
       continue;
     snprintf(child, child_len, "%s/%s", resolved, name);
-    struct stat child_st;
-    if(lstat(child, &child_st) != 0 || S_ISLNK(child_st.st_mode) ||
-       !S_ISREG(child_st.st_mode)) {
+    int child_is_link = 0, child_is_dir = 0, child_is_regular = 0;
+    if(path_kind_no_follow(child, &child_is_link, &child_is_dir,
+                           &child_is_regular) != 0 ||
+       child_is_link || !child_is_regular) {
       free(child);
       continue;
     }
