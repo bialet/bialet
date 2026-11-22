@@ -34,7 +34,10 @@ Additional methods available on Query objects:
 - `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
 - `to(Class)`: Map results to domain class instances. See [Mapping to Domain Classes](#mapping-results-to-domain-classes).
 
-The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
+The `first()`, `val`, `toNum`, and `toBool` methods automatically add a
+`LIMIT 1` clause to a `SELECT` that does not already have one. Do not add your
+own `LIMIT` for them: an existing top-level `LIMIT` is detected and the query is
+left untouched, so `.first()` on `... LIMIT 1` is safe.
 
 You can't concatenate strings or use interpolations with the Query object. When
 you need to add parameters, use placeholders `?` and send the parameters to the
@@ -46,13 +49,13 @@ All methods receive the following parameters:
 - `(params)`: An array of parameters.
 - `(param1)`: Any non array parameter is converted to String.
 - `(param1, param2)`: Convert all parameters to String.
-- `(param1, param2, param3)`: Convert all parameters to String.
+- `(param1, ..., param7)`: Up to seven positional parameters.
+
+Methods accept at most **seven** positional parameters. More than seven must be
+passed as an array (`([param1, ..., param8])`).
 
 They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and
 `.toNum`.
-
-If you need more parameters, use the array syntax
-(`([param1, param2, param3, param4, param5, ...])`).
 
 ```wren
 // This will fail
