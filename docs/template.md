@@ -230,6 +230,10 @@ return
   <p>Hola</p>
 ```
 
+At the top level the code above compiles and returns an empty body. Inside a
+block or a method body it can also fail with a confusing `Expect newline after
+statement` error. Either way, keep `return` and the tag on the same line.
+
 **`return` is not allowed inside a block callback.** A block body is a single
 expression, and `return` is a statement, so `list.map { |x| return <div>...</div> }`
 fails to compile with `Error at 'return': Expected expression.` Use the
@@ -243,12 +247,19 @@ list.map { |x| return <div>{{ x }}</div> }
 list.map { |x| <div>{{ x }}</div> }
 ```
 
-The same rule applies to a method body written entirely on one line (`{ return 1 }`):
-that braced form is parsed as an expression. Put the statement on its own line
-inside a multi-line body.
+A method body written entirely on one line (`{ return 1 }`) is a
+single-expression body, so `return` fails there too. Put the statement on its
+own line inside a multi-line body:
 
-This happens whether or not the `return` is itself inside a `{{ }}`
-interpolation.
+```wren
+// Wrong — the braces are a single-expression body
+greeting() { return "Hola" }
+
+// Correct — a multi-line statement body
+greeting() {
+  return "Hola"
+}
+```
 
 **Files starting with `_` or `.` are private** — they return 403 if accessed
 directly. Use them for imports and internal logic only.
