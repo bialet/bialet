@@ -62,7 +62,6 @@
 
 #define MAIN_MODULE_NAME "main"
 #define MAIN_MODULE_SOURCE "Response.init\nDate.init(\"\")"
-#define CLI_MODULE_NAME "bialet_cli"
 
 // Maximum number of file parts accepted per multipart request. Without this
 // cap a 10MB body split into tens of thousands of tiny parts would force that
@@ -1653,9 +1652,13 @@ struct BialetResponse bialet_run_file(char* module, char* code,
   int file_missing = 0;
   if(!error) {
     /* With --cache a served .wren file is looked up by its path under the app
-     * root. Anything else (migration, cron, -r code) keeps the plain path. */
+     * root. The stat-first path needs a request (whose router stat'ed the
+     * file); -r runs under a synthetic module name under the root, and caching
+     * that would store a blob keyed by a file that does not exist. Anything
+     * else (migration, cron, -r code) keeps the plain path. */
     char* cache_key = NULL;
-    if(bytecode_cache_user_files_enabled() && module != NULL) {
+    if(bytecode_cache_user_files_enabled() && module != NULL &&
+       (stat != NULL || hm != NULL)) {
       size_t root_len = strlen(bialet_config.full_root_dir);
       if(strncmp(module, bialet_config.full_root_dir, root_len) == 0 &&
          (module[root_len] == '/' || module[root_len] == '\\'))
@@ -1882,22 +1885,37 @@ struct BialetResponse bialet_run_file(char* module, char* code,
 }
 
 int bialet_run_cli(char* code) {
+  // Relative imports resolve against the module name's directory. The old
+  // fixed "bialet_cli" name made `import "lib"` fail: the resolver joined it
+  // under a directory that does not exist and the loader refused it. A
+  // synthetic path under the app root gives the resolver the same base a
+  // served file gets, while the loader's root-containment check still rejects
+  // "../outside". Nothing is written: the name never has to exist on disk.
+  size_t need = strlen(bialet_config.full_root_dir) + sizeof("/_bialet_cli");
+  char*  cli_module = (char*)malloc(need);
+  if(cli_module == NULL)
+    return 1;
+  snprintf(cli_module, need, "%s/_bialet_cli", bialet_config.full_root_dir);
+
   // A bare -r script runs no migration and has no request, so none of the
   // BIALET_* tables existed: Config.get() and Session.new() failed with
   // "no such table". Db.init is idempotent and the SQLite handle is shared by
   // the whole process, so initialize the framework tables in their own VM
   // before running the user's code.
-  struct BialetResponse init = bialet_run(CLI_MODULE_NAME, "Db.init", NULL);
+  struct BialetResponse init = bialet_run(cli_module, "Db.init", NULL);
   int                   init_failed = init.status == HTTP_ERROR;
   if(init.body_owned)
     free(init.body);
   if(init.header_owned)
     free(init.header);
-  if(init_failed)
+  if(init_failed) {
+    free(cli_module);
     return 1;
+  }
 
-  struct BialetResponse response = bialet_run(CLI_MODULE_NAME, code, NULL);
-  int                   status = response.status == HTTP_ERROR ? 1 : 0;
+  struct BialetResponse response = bialet_run(cli_module, code, NULL);
+  free(cli_module);
+  int status = response.status == HTTP_ERROR ? 1 : 0;
   if(status == 0 && response.body != NULL) {
     // fwrite with the known length rather than printf("%s"): the body may be
     // binary (a file served through Response.file) and would be cut at the
@@ -1914,6 +1932,266 @@ int bialet_run_cli(char* code) {
   if(response.header_owned)
     free(response.header);
   return status;
+}
+
+// Files already compiled during one -t run. A module imported from two places
+// (or imported back through a cycle) is compiled once; compiling a module name
+// twice would redeclare its classes in the same module.
+typedef struct {
+  char** items;
+  size_t count;
+  size_t capacity;
+} ValidateVisited;
+
+static int validate_visited_has(const ValidateVisited* visited, const char* path) {
+  for(size_t i = 0; i < visited->count; i++) {
+    if(strcmp(visited->items[i], path) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+static void validate_visited_add(ValidateVisited* visited, const char* path) {
+  if(visited->count == visited->capacity) {
+    size_t next = visited->capacity == 0 ? 16 : visited->capacity * 2;
+    char** grown = (char**)realloc(visited->items, next * sizeof(char*));
+    if(grown == NULL)
+      return;
+    visited->items = grown;
+    visited->capacity = next;
+  }
+  char* copy = string_safe_copy(path);
+  if(copy != NULL)
+    visited->items[visited->count++] = copy;
+}
+
+static void validate_visited_free(ValidateVisited* visited) {
+  for(size_t i = 0; i < visited->count; i++)
+    free(visited->items[i]);
+  free(visited->items);
+}
+
+// Reads one local module for -t with the module loader's rules: append .wren
+// when missing, resolve, require containment in the app root, and reopen the
+// resolved path without following a symlink. [resolved] receives the canonical
+// path, which is also used as the module name so nested relative imports
+// resolve against the right directory.
+static char* validate_read_module(const char* module, char* resolved,
+                                  size_t resolved_size) {
+  char   with_ext[MAX_URL_LEN];
+  size_t len = strlen(module);
+  if(len >= sizeof(with_ext))
+    return NULL;
+  memcpy(with_ext, module, len + 1);
+  if(len < BIALET_EXTENSION_LEN ||
+     strcmp(with_ext + len - BIALET_EXTENSION_LEN, BIALET_EXTENSION) != 0) {
+    if(len + BIALET_EXTENSION_LEN >= sizeof(with_ext))
+      return NULL;
+    memcpy(with_ext + len, BIALET_EXTENSION, BIALET_EXTENSION_LEN + 1);
+  }
+
+  if(realpath_n(with_ext, resolved, resolved_size) == NULL)
+    return NULL;
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(resolved, bialet_config.full_root_dir, root_len) != 0 ||
+     (resolved[root_len] != '/' && resolved[root_len] != '\\' &&
+      resolved[root_len] != '\0'))
+    return NULL;
+
+#ifndef _WIN32
+  return read_file_fd(open_fd_no_follow(resolved));
+#else
+  return read_file(resolved);
+#endif
+}
+
+// Extracts the next `import "name"` name from [source], skipping line and
+// block comments and plain string literals. Returns 0 at the end.
+static int validate_next_import(const char* source, size_t* cursor, char* name,
+                                size_t name_size) {
+  size_t i = *cursor;
+  size_t n = strlen(source);
+
+  while(i < n) {
+    char c = source[i];
+    if(c == '/' && i + 1 < n && source[i + 1] == '/') {
+      i += 2;
+      while(i < n && source[i] != '\n')
+        i++;
+      continue;
+    }
+    if(c == '/' && i + 1 < n && source[i + 1] == '*') {
+      i += 2;
+      while(i + 1 < n && !(source[i] == '*' && source[i + 1] == '/'))
+        i++;
+      i = i + 2 < n ? i + 2 : n;
+      continue;
+    }
+    if(c == '"') {
+      i++;
+      while(i < n) {
+        if(source[i] == '\\' && i + 1 < n) {
+          i += 2;
+          continue;
+        }
+        if(source[i] == '"') {
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if(isalpha((unsigned char)c) || c == '_') {
+      size_t start = i;
+      while(i < n && (isalnum((unsigned char)source[i]) || source[i] == '_'))
+        i++;
+      if(i - start == 6 && strncmp(source + start, "import", 6) == 0) {
+        size_t j = i;
+        while(j < n && (source[j] == ' ' || source[j] == '\t'))
+          j++;
+        if(j < n && source[j] == '"') {
+          size_t k = 0;
+          j++;
+          while(j < n && source[j] != '"') {
+            if(source[j] == '\\' && j + 1 < n)
+              j++;
+            if(k + 1 < name_size)
+              name[k++] = source[j];
+            j++;
+          }
+          name[k] = '\0';
+          *cursor = j < n ? j + 1 : j;
+          return k > 0;
+        }
+      }
+      continue;
+    }
+    i++;
+  }
+
+  *cursor = i;
+  return 0;
+}
+
+// Compiles [source] as [path], then recursively compiles every local module it
+// imports. Nothing is fetched and nothing is executed. A missing import stays
+// tolerant (it would only fail at runtime), but a syntax error in any module
+// that exists fails the run.
+static void validate_compile_module(WrenVM* vm, const char* path, char* source,
+                                    ValidateVisited* visited, int depth,
+                                    int* failed) {
+  if(*failed)
+    return;
+  if(wrenCompileSource(vm, path, source, false, true) == NULL) {
+    *failed = 1;
+    return;
+  }
+  if(depth >= 32)
+    return;
+
+  size_t cursor = 0;
+  char   name[MAX_URL_LEN];
+  while(!*failed && validate_next_import(source, &cursor, name, sizeof(name))) {
+    // Remote and built-in optional modules have no local file to compile.
+    if(strchr(name, ':') != NULL || strcmp(name, "random") == 0 ||
+       strcmp(name, "meta") == 0)
+      continue;
+
+    char* resolved = (char*)bialet_wren_resolve_module(vm, path, name);
+    if(resolved == NULL)
+      continue;
+
+    char  canonical[PATH_MAX];
+    char* code = validate_read_module(resolved, canonical, sizeof(canonical));
+    free(resolved);
+    if(code == NULL)
+      continue; // missing import: keep the historical tolerant behavior
+    if(!validate_visited_has(visited, canonical)) {
+      validate_visited_add(visited, canonical);
+      validate_compile_module(vm, canonical, code, visited, depth + 1, failed);
+    }
+    free(code);
+  }
+}
+
+// SQLite error messages that indicate a parse failure. Everything else (a
+// missing table, a missing column, an unknown function) depends on the schema,
+// which -t does not apply: a fresh database has no tables yet, and a migration
+// validates its CREATE before its INSERT has a table to target.
+static int is_sql_syntax_error(const char* message) {
+  static const char* const markers[] = {"syntax error", "incomplete input",
+                                        "unrecognized token", "unterminated"};
+  for(size_t i = 0; i < sizeof(markers) / sizeof(markers[0]); i++) {
+    if(strstr(message, markers[i]) != NULL)
+      return 1;
+  }
+  return 0;
+}
+
+// A backtick literal that is just a table name is a Query receiver, not SQL:
+// `items`.save(...) passes "items" to Query.save, which quotes it into a
+// REPLACE. SQLite would call the bare word a syntax error, so skip it.
+static int is_bare_table_name(const char* query) {
+  size_t start = 0;
+  size_t end = strlen(query);
+  while(start < end && isspace((unsigned char)query[start]))
+    start++;
+  while(end > start && isspace((unsigned char)query[end - 1]))
+    end--;
+  if(start == end)
+    return 0;
+  for(size_t i = start; i < end; i++) {
+    unsigned char c = (unsigned char)query[i];
+    if(!(isalnum(c) || c == '_' || c == '$'))
+      return 0;
+  }
+  return 1;
+}
+
+// The --validate SQL hook. It only prepares each statement, so nothing is
+// executed and no migration is recorded. sqlite3_prepare_v2() parses one
+// statement at a time, so the loop walks the text with tail the way
+// Db.migrate's `;` split does. A schema error still leaves tail past its
+// statement, so a later syntax error in the same literal is still found. -t is
+// single-threaded, so the static message buffer is safe; the server never
+// installs this hook.
+static const char* validate_query_syntax(const char* query) {
+  static char message[1024];
+
+  if(db == NULL || is_bare_table_name(query))
+    return NULL;
+
+  const char* sql = query;
+  while(sql != NULL && *sql != '\0') {
+    sqlite3_stmt* stmt = NULL;
+    const char*   tail = NULL;
+    int           rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &tail);
+
+    if(rc != SQLITE_OK) {
+      const char* error = sqlite3_errmsg(db);
+      int         is_syntax = error != NULL && is_sql_syntax_error(error);
+      if(is_syntax)
+        snprintf(message, sizeof(message), "%s", error);
+      sqlite3_finalize(stmt);
+      if(is_syntax)
+        return message;
+      // Not ours to report, but tail still points at the next statement, so
+      // keep checking the rest of a multi-statement literal.
+      if(tail == NULL || tail <= sql)
+        break;
+      sql = tail;
+      continue;
+    }
+
+    sqlite3_finalize(stmt);
+    if(tail == NULL || tail <= sql)
+      break;
+    sql = tail;
+  }
+
+  return NULL;
 }
 
 int bialet_validate_syntax(const char* filePath) {
@@ -1940,18 +2218,21 @@ int bialet_validate_syntax(const char* filePath) {
   }
 
   WrenVM* vm = wrenNewVM(&wren_config);
-  /* Initialize core classes (Date, Response) before validating, so scripts
-   * that touch Date/Response at the top level don't read uninitialized
-   * state and crash. Mirrors bialet_run(). */
-  wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
-  WrenInterpretResult result = wrenInterpret(vm, abs_path, code);
+  // -t also asks SQLite to parse every backtick literal. It only prepares, so
+  // no statement runs; the hook stays off in the server, which never sets it.
+  vm->validateQueryFn = validate_query_syntax;
+  // Compile-only: -t must not run the file or its imports. Top-level code used
+  // to execute here, so `bialet -t _migration.wren` applied the migration and a
+  // page importing the layout printed a runtime "Stack Error" for Request.
+  ValidateVisited visited = {0};
+  validate_visited_add(&visited, abs_path);
+  int failed = 0;
+  validate_compile_module(vm, abs_path, code, &visited, 0, &failed);
+  validate_visited_free(&visited);
   wrenFreeVM(vm);
   free(code);
 
-  if(result == WREN_RESULT_COMPILE_ERROR) {
-    return 1;
-  }
-  return 0;
+  return failed ? 1 : 0;
 }
 
 #include <dirent.h>

@@ -277,18 +277,18 @@ empty sequence are blank. `false` and `0` are **values**, so they are not blank
 (`false.isBlank == false`). `isEmpty` remains the zero-elements check:
 `"   ".isEmpty` is `false` while `"   ".isBlank` is `true`.
 
-> **Pitfall:** `return <tag>` on the same physical line is a compile error
-> (`Expected expression` at `return`), regardless of what's inside the tag.
-> Always put the tag on the line after `return`:
+> **Pitfall:** `return` is a statement and does not belong inside a block
+> callback (`Expected expression` at `return`). Use the block's expression
+> without it:
 > ```wren
 > // WRONG
 > list.map { |x| return <div>{{ x }}</div> }
 > // CORRECT
-> list.map { |x|
->   return <div>{{ x }}</div>
-> }
+> list.map { |x| <div>{{ x }}</div> }
 > ```
-
+> `return <tag>` on one line is fine at the top level and inside a multi-line
+> method body. A newline ends the statement: `return` alone returns
+> immediately, and a tag on the next line is a separate expression.
 **Inline HTML strings** are Wren's template mechanism — no separate template
 language:
 
@@ -701,6 +701,11 @@ Db.migrate("Seed sample posts", Fn.new{
   descriptive name.
 - `_migration.wren` (root) and `_app/migration.wren` are equivalent — this
   guide uses the `_app/` form.
+- To edit a migration without applying it, serve with `--no-watch` (no
+  save-triggered run), check the file with `bialet -t _migration.wren` (it
+  compiles the Wren and parses every backtick query with SQLite, catching
+  syntax errors such as a duplicated `LIMIT` without running anything), then
+  restart the server without the flag to apply it.
 
 ### `BIALET_*` System Tables
 
@@ -1354,7 +1359,8 @@ Test.get("/").contains("Comprar pan")
 ```bash
 bialet              # runs the current directory on 127.0.0.1:7001
 bialet -p 7001 .    # explicit port and directory
-bialet -t index.wren              # validate a standalone file's syntax
+bialet --no-watch . # no file watcher: no live reload, no migration-on-save
+bialet -t index.wren              # validate syntax and backtick SQL, run nothing
 bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports)
 bialet -T                         # run the test suite in _tests/
 ```

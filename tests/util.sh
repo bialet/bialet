@@ -199,7 +199,7 @@ check_port() {
 # held by another process. Without this the startup probes connect happily to
 # the foreign listener, every request goes to the wrong app, and the run ends
 # with a wall of meaningless 404s (e.g. another project's dev server sitting on
-# the default 7001). Failing loudly with the lsof hint is far clearer.
+# the default 7200). Failing loudly with the lsof hint is far clearer.
 require_free_port() {
     local host=$1 port=$2 what=$3
     if check_port "$host" "$port" 1; then

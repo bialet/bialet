@@ -135,15 +135,15 @@ var date = Date.new()
 System.print("Year: %(date.year)")
 System.print("Month: %(date.month)")
 System.print("Day: %(date.day)")
-System.print("Hours: %(date.hours)")
-System.print("Minutes: %(date.minutes)")
-System.print("Seconds: %(date.seconds)")
+System.print("Hours: %(date.hours)")           // date.hour also works
+System.print("Minutes: %(date.minutes)")       // date.minute also works
+System.print("Seconds: %(date.seconds)")       // date.second also works
 System.print("Unix Timestamp: %(date.unix)")
 ```
 
-> ⚠️ Pitfall: the time-of-day getters are **plural** — `.hours`, `.minutes`,
-> `.seconds` — unlike `.year`, `.month`, and `.day`, which are singular.
-> `date.hour` raises `Date does not implement 'hour'.`.
+> ⚠️ Pitfall: `.year`, `.month` and `.day` are singular, but the time-of-day
+> getters have both spellings: `.hours`/`.hour`, `.minutes`/`.minute` and
+> `.seconds`/`.second` return the same values.
 
 ## Adding and Subtracting Time
 

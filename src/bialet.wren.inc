@@ -1710,4 +1710,6 @@ static const char* bialetModuleSource =
 "    var content = file_(name)\n"
 "    return content is String ? content.raw : content\n"
 "  }\n"
+"  static list(dir) { list_(dir) }\n"
+"  static meta(name) { meta_(name) }\n"
 "}\n";

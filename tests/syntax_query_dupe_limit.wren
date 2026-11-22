@@ -1,0 +1,1 @@
+var q = `SELECT * FROM t LIMIT 1 LIMIT 1`

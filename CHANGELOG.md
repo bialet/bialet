@@ -4,6 +4,68 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.25 — 2026-11-22
+
+### Added
+
+- `Query.query`, `fetch`, `first`, `val`, `toNum` and `toBool` accept up to
+  seven positional parameters. More than seven still has to be a list.
+- `bialet -t` now also parses every backtick query literal with SQLite. It only
+  prepares the statements, so nothing runs and no migration is applied. Only
+  syntax errors are reported; missing tables, columns and functions are ignored
+  so a fresh database and a `CREATE` followed by an `INSERT` still pass.
+- `Markdown.list(dir)` returns the sorted bare filenames of the public
+  `.md`/`.markdown` files in a directory, and `Markdown.meta(file)` reads
+  leading flat front matter as a `String` map. Private names, symlinks and
+  non-regular files are skipped, and both stay inside the app root.
+- `bialet -r` resolves relative imports against the app root through the normal
+  module loader, so `import "lib"` works while `../outside` is still refused.
+- `-W` / `--no-watch` starts a server without the file watcher: live reload is
+  off and saving `_migration.wren` or `_cron.wren` does not re-run it. The
+  startup migration and cron install still happen, so a restart applies a saved
+  migration. `bialet -t` is the recommended way to check the file first.
+- `Date.hour`, `Date.minute` and `Date.second` as singular aliases of the
+  existing plural getters.
+- `Null.toNum` returns `0` and `Null.toBool` returns `false`, so missing values
+  can feed arithmetic and conditionals without a separate null check.
+  `Map.get(key, default)` already provided the map counterpart and is now
+  documented and tested.
+
+### Changed
+
+- `Query.first()` no longer appends a second `LIMIT 1` when the query already
+  has a top-level `LIMIT`. It also ignores the word inside strings, quoted
+  identifiers, comments and subqueries.
+- `bialet -t` compiles the target and its local imports instead of executing
+  them. A page that imports a layout no longer prints a runtime `Stack Error`,
+  and validating `_migration.wren` no longer applies it.
+- The test suite starts on port 7200 by default instead of 7001, which is
+  commonly occupied by a development server.
+
+### Fixed
+
+- `Markdown.list()` rejected symlinks and non-regular files with `lstat` and
+  `S_ISLNK`, which MinGW does not provide, so the Windows cross-build failed.
+  A portable `path_kind_no_follow()` now uses `lstat` on POSIX and
+  `GetFileAttributesW` reparse-point checks on Windows.
+
+### Documentation
+
+- `return <tag>` is documented as valid on the same line and inside a
+  multi-line method body; a newline ends the statement, Python-style, and
+  `return` is not allowed inside a block callback.
+- `{{ }}` is documented as interpolation inside an HTML literal only, and a
+  block body is one expression (closer to `x => {}` than `x => (...)`).
+- `String.count` is documented as code points while indexing, `indexOf` and
+  ranges use byte offsets; `.bytes.count` gives the byte length.
+- The built-in `random` module, its seeding and its full method set are in the
+  Wren guide and reference.
+- Migration SQL is documented as a backtick query literal; double-quoted Wren
+  strings are single-line and fail with `Unterminated string.`
+- `Markdown.file()` still skips front matter, and converting its `HtmlNode` to a
+  `String` loses the safe marker, so interpolation escapes it until `.raw` is
+  used again.
+
 ## 1.2.24 — 2026-11-18
 
 ### Changed

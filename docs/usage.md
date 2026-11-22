@@ -54,7 +54,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Validate the syntax of a Wren file, then exit                               | None                                         |
+| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -71,6 +71,7 @@ bialet --port=8080 /path/to/app
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+| `-W`, `--no-watch`      | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
@@ -142,6 +143,27 @@ Useful in scripts, containers, and CI:
 bialet -q /path/to/app
 ```
 
+### Editing migrations without applying them
+
+A migration runs at startup and again whenever `_migration.wren` is saved. While
+you draft one, that save-triggered run applies half-written SQL to the
+database. Start the server with `--no-watch` to keep only the startup run:
+
+```bash
+bialet --no-watch /path/to/app
+```
+
+Edit and save the file freely, then check that it compiles without running it:
+
+```bash
+bialet -t _migration.wren
+```
+
+Restart the server without `--no-watch` to apply the new migration. The flag
+turns the whole file watcher off, so live reload is off for that run too. The
+server still runs migrations and installs cron once at startup, and prints a
+notice saying watching is disabled.
+
 ## Run Code from the Command Line
 
 Use `-r` to run Wren code once and exit:
@@ -163,6 +185,18 @@ The script runs without a request: `Request.method`, `Request.get(...)` and
 `Config` and `Session` work. Your app's own tables exist only if the database
 was already migrated (for example by starting the server or running `bialet -T`).
 
+Relative imports resolve against the app root, so a module next to your pages
+can be imported directly:
+
+```bash
+bialet -r 'import "lib" for X
+System.print(X.value)'
+```
+
+The import still goes through the module loader's containment check: a path that
+escapes the app root (`import "../outside"`) fails and exits non-zero. Wren uses
+newlines, not semicolons, so separate statements with a newline.
+
 ## Running Tests
 
 Bialet includes a built-in testing framework. See [Testing Guide](tests.md)
@@ -183,22 +217,37 @@ If you start your server from the app directory:
 ```bash
 cd /path/to/app
 bialet               # starts server
-bialet -t index.wren # validates syntax
+bialet -t index.wren # compiles the file
 ```
 
 If you start your server with an explicit root path:
 
 ```bash
 bialet /path/to/app                         # starts server
-bialet -t /path/to/app/index.wren /path/to/app # validates syntax
+bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 ```
 
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
 
-This will validate the syntax and exit with code `0` if the syntax is valid, or
-code `1` if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.
+`-t` compiles the file and every local module it imports. It does not execute
+any of them, so runtime errors are not reported and migrations do not run:
+`bialet -t _migration.wren` leaves the database untouched even when the
+migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
+local import is not a syntax error; it only fails when the page runs.
+
+It also parses every backtick SQL literal it finds, including in imported
+modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
+in a migration is parsed, not run, and no migration is recorded. Only syntax
+errors fail the check — a misspelled keyword, an unbalanced parenthesis, or a
+duplicated `LIMIT`. Errors that depend on the schema (a missing table, column,
+or function) are ignored, because a fresh database has none of the tables yet
+and a migration validates its `CREATE` before its `INSERT` has a table to
+target. SQL built at runtime with `String` formatting and SQL passed as a
+double-quoted string are not checked.
+
+This will exit with code `0` if the syntax is valid, or code `1` if there are
+compilation errors. Useful for CI/CD pipelines and pre-commit hooks.
 
 ```bash
 # Example: Check syntax before deploying (explicit root path)

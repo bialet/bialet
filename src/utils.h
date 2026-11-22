@@ -17,6 +17,12 @@ char* string_safe_copy(const char* zSrc);
 // rejected outright. Returns NULL on failure or when the target is a link.
 FILE* open_file_no_follow(const char* path);
 
+// Classifies [path] without following a final symlink/junction. Returns 0 on
+// success and sets the three flags. On Windows a reparse point counts as a
+// link; on POSIX this is lstat(), so S_ISLNK/S_ISDIR/S_ISREG apply.
+int path_kind_no_follow(const char* path, int* is_link, int* is_dir,
+                        int* is_regular);
+
 // Returns 1 when any path component of [uri] starts with '_' or '.', i.e. when
 // it names a private file (a database, .env, a dotfile). Shared by the HTTP
 // path and the Wren file API so both enforce the same boundary. The single

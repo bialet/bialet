@@ -34,7 +34,10 @@ Additional methods available on Query objects:
 - `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
 - `to(Class)`: Map results to domain class instances. See [Mapping to Domain Classes](#mapping-results-to-domain-classes).
 
-The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
+The `first()`, `val`, `toNum`, and `toBool` methods automatically add a
+`LIMIT 1` clause to a `SELECT` that does not already have one. Do not add your
+own `LIMIT` for them: an existing top-level `LIMIT` is detected and the query is
+left untouched, so `.first()` on `... LIMIT 1` is safe.
 
 You can't concatenate strings or use interpolations with the Query object. When
 you need to add parameters, use placeholders `?` and send the parameters to the
@@ -46,13 +49,13 @@ All methods receive the following parameters:
 - `(params)`: An array of parameters.
 - `(param1)`: Any non array parameter is converted to String.
 - `(param1, param2)`: Convert all parameters to String.
-- `(param1, param2, param3)`: Convert all parameters to String.
+- `(param1, ..., param7)`: Up to seven positional parameters.
+
+Methods accept at most **seven** positional parameters. More than seven must be
+passed as an array (`([param1, ..., param8])`).
 
 They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and
 `.toNum`.
-
-If you need more parameters, use the array syntax
-(`([param1, param2, param3, param4, param5, ...])`).
 
 ```wren
 // This will fail
@@ -410,12 +413,49 @@ The migration file can be in the root and be called `_migration.wren` or be
 inside the `_app` folder, `_app/migration.wren`.
 
 This script will be run every time the application starts and also when a Wren
-file is updated. For a complete migration example in the context of a REST API,
+file is updated. Start the server with `--no-watch` to stop the save-triggered
+run: migrations still run once at startup, but editing the file then needs a
+restart to apply. See [Editing migrations without applying them](usage.md#editing-migrations-without-applying-them).
+For a complete migration example in the context of a REST API,
 see the [Building REST APIs](rest-api.md) guide.
 
 ```wren
 
 Db.migrate("Name of the migration", `SOME QUERY`)
+```
+
+Check a migration before it runs with `bialet -t _migration.wren`. It compiles
+the file and asks SQLite to parse every backtick literal without executing
+anything, so a duplicated `LIMIT` or another syntax error fails the check. It
+ignores missing table and column errors, so a `CREATE TABLE` followed by an
+`INSERT` still passes on a fresh database. While drafting a migration, serve
+with `--no-watch` to stop the save-triggered run, check the file with `-t`, then
+restart the server to apply it.
+
+### Migration SQL Pitfall
+
+> ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a
+> double-quoted string. A Wren double-quoted string cannot span lines, so a real
+> newline inside one fails with `Unterminated string.` — and it usually reports
+> a second `Expect ')' after arguments.` at the next line, because the call is
+> left incomplete.
+
+```wren
+// Wrong: a double-quoted Wren string is single-line.
+Db.migrate("init", "CREATE TABLE t (
+  id INTEGER
+)")
+```
+
+Use backticks, which keep the newlines:
+
+```wren
+// Correct: the backtick literal keeps the newlines.
+Db.migrate("init", `
+  CREATE TABLE t (
+    id INTEGER
+  )
+`)
 ```
 
 The name of the migration is used to avoid repeating migrations. Use a

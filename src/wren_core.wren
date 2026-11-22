@@ -15,6 +15,10 @@ class Null {
   [key] { null }
   map(f) { List.new() }
   count { 0 }
+  // Numeric/boolean conversions of absent data: 0 and false, so arithmetic and
+  // `if (val)` work without a separate null check.
+  toNum { 0 }
+  toBool { false }
   // null is absent, so it is blank. isFilled is the exact inverse everywhere.
   isBlank { true }
   isFilled { false }
@@ -712,6 +716,11 @@ class Date {
   seconds { _seconds }
   minutes { _minutes }
   hours { _hours }
+  // Singular aliases: `.hour`, `.minute` and `.second` read the same fields.
+  // The plural names stay for compatibility.
+  second { _seconds }
+  minute { _minutes }
+  hour { _hours }
   day { _day }
   month { _month }
   year { _year }
@@ -856,19 +865,100 @@ class Query {
   query(param) { query_(this, param is List ? param : [param]) }
   query(p1, p2) { query_(this, [p1, p2]) }
   query(p1, p2, p3) { query_(this, [p1, p2, p3]) }
+  query(p1, p2, p3, p4) { query_(this, [p1, p2, p3, p4]) }
+  query(p1, p2, p3, p4, p5) { query_(this, [p1, p2, p3, p4, p5]) }
+  query(p1, p2, p3, p4, p5, p6) { query_(this, [p1, p2, p3, p4, p5, p6]) }
+  query(p1, p2, p3, p4, p5, p6, p7) { query_(this, [p1, p2, p3, p4, p5, p6, p7]) }
   // Fetch methods, return result as List
   fetch() { fetch_(this, []) }
   fetch(param) { fetch_(this, param is List ? param : [param]) }
   fetch(p1, p2) { fetch_(this, [p1, p2]) }
   fetch(p1, p2, p3) { fetch_(this, [p1, p2, p3]) }
+  fetch(p1, p2, p3, p4) { fetch_(this, [p1, p2, p3, p4]) }
+  fetch(p1, p2, p3, p4, p5) { fetch_(this, [p1, p2, p3, p4, p5]) }
+  fetch(p1, p2, p3, p4, p5, p6) { fetch_(this, [p1, p2, p3, p4, p5, p6]) }
+  fetch(p1, p2, p3, p4, p5, p6, p7) { fetch_(this, [p1, p2, p3, p4, p5, p6, p7]) }
+  // A LIMIT token that starts a clause at the top level. Skips single-quoted
+  // strings, double-quoted identifiers, `--` line comments, `/* */` block
+  // comments and parenthesised subqueries, so "SELECT 'LIMIT'" and
+  // "(SELECT ... LIMIT 1)" do not count.
+  static isNameChar_(char) {
+    var b = char.bytes[0]
+    return (b >= 48 && b <= 57) || (b >= 65 && b <= 90) ||
+           (b >= 97 && b <= 122) || b == 95 || b == 36
+  }
+  static wordAt_(sql, start, word) {
+    var size = sql.byteCount_
+    var len = word.byteCount_
+    if (start + len > size) return false
+    for (j in 0...len) {
+      var a = sql[start + j].bytes[0]
+      var b = word[j].bytes[0]
+      if (a >= 97 && a <= 122) a = a - 32
+      if (b >= 97 && b <= 122) b = b - 32
+      if (a != b) return false
+    }
+    if (start > 0 && Query.isNameChar_(sql[start - 1])) return false
+    if (start + len < size && Query.isNameChar_(sql[start + len])) return false
+    return true
+  }
+  static hasLimit_(sql) {
+    var size = sql.byteCount_
+    var i = 0
+    var depth = 0
+    while (i < size) {
+      var c = sql[i]
+      if (c == "'") {
+        i = i + 1
+        while (i < size) {
+          if (sql[i] == "'") {
+            if (i + 1 < size && sql[i + 1] == "'") {
+              i = i + 2
+            } else {
+              i = i + 1
+              break
+            }
+          } else {
+            i = i + 1
+          }
+        }
+      } else if (c == "\"") {
+        i = i + 1
+        while (i < size && sql[i] != "\"") i = i + 1
+        i = i + 1
+      } else if (c == "-" && i + 1 < size && sql[i + 1] == "-") {
+        i = i + 2
+        while (i < size && sql[i] != "\n") i = i + 1
+      } else if (c == "/" && i + 1 < size && sql[i + 1] == "*") {
+        i = i + 2
+        while (i + 1 < size && !(sql[i] == "*" && sql[i + 1] == "/")) i = i + 1
+        i = i + 2
+      } else {
+        if (c == "(") {
+          depth = depth + 1
+        } else if (c == ")" && depth > 0) {
+          depth = depth - 1
+        } else if (depth == 0 && (c == "L" || c == "l") &&
+                   Query.wordAt_(sql, i, "LIMIT")) {
+          return true
+        }
+        i = i + 1
+      }
+    }
+    return false
+  }
   // First methods, return first result as Object
   first_(params) {
     // Only SELECT statements can take a trailing "LIMIT 1". Appending it to an
     // UPDATE/DELETE/INSERT is a syntax error in SQLite >= 3.46 (UPDATE/DELETE
     // LIMIT support was removed there), and to an "UPDATE ... RETURNING" it
-    // lands after the RETURNING clause, which most versions reject.
+    // lands after the RETURNING clause, which most versions reject. A SELECT
+    // that already has a top-level LIMIT is left untouched, so `.first()` is
+    // idempotent.
     var sql = "%(this)"
-    if (sql.trim().upper.startsWith("SELECT")) sql = sql + " LIMIT 1"
+    if (sql.trim().upper.startsWith("SELECT") && !Query.hasLimit_(sql)) {
+      sql = sql + " LIMIT 1"
+    }
     var res = fetch_(sql, params)
     return res is List && res.count > 0 ? res[0] : null
   }
@@ -876,13 +966,21 @@ class Query {
   first(param) { first_(param is List ? param : [param]) }
   first(p1, p2) { first_([p1, p2]) }
   first(p1, p2, p3) { first_([p1, p2, p3]) }
+  first(p1, p2, p3, p4) { first_([p1, p2, p3, p4]) }
+  first(p1, p2, p3, p4, p5) { first_([p1, p2, p3, p4, p5]) }
+  first(p1, p2, p3, p4, p5, p6) { first_([p1, p2, p3, p4, p5, p6]) }
+  first(p1, p2, p3, p4, p5, p6, p7) { first_([p1, p2, p3, p4, p5, p6, p7]) }
   val() { val([]) }
   val(param) {
     var res = first_(param is List ? param : [param])
     return res is Map ? res.values.join() : null
   }
-  val(p1, p2) { first_([p1, p2]).values.join() }
-  val(p1, p2, p3) { first_([p1, p2, p3]).values.join() }
+  val(p1, p2) { val([p1, p2]) }
+  val(p1, p2, p3) { val([p1, p2, p3]) }
+  val(p1, p2, p3, p4) { val([p1, p2, p3, p4]) }
+  val(p1, p2, p3, p4, p5) { val([p1, p2, p3, p4, p5]) }
+  val(p1, p2, p3, p4, p5, p6) { val([p1, p2, p3, p4, p5, p6]) }
+  val(p1, p2, p3, p4, p5, p6, p7) { val([p1, p2, p3, p4, p5, p6, p7]) }
   // Aggregates (MAX, SUM, ...) are NULL over an empty table, and
   // Num.fromString(null) raises. Treat a missing or non-numeric value as 0 so
   // arithmetic on `SELECT MAX(id) FROM empty`.toNum does not crash.
@@ -891,10 +989,22 @@ class Query {
   toNum(param) { Query.num_(val(param)) }
   toNum(p1, p2) { Query.num_(val(p1, p2)) }
   toNum(p1, p2, p3) { Query.num_(val(p1, p2, p3)) }
+  toNum(p1, p2, p3, p4) { Query.num_(val(p1, p2, p3, p4)) }
+  toNum(p1, p2, p3, p4, p5) { Query.num_(val(p1, p2, p3, p4, p5)) }
+  toNum(p1, p2, p3, p4, p5, p6) { Query.num_(val(p1, p2, p3, p4, p5, p6)) }
+  toNum(p1, p2, p3, p4, p5, p6, p7) {
+    return Query.num_(val(p1, p2, p3, p4, p5, p6, p7))
+  }
   toBool { toNum != 0 }
   toBool(param) { toNum(param) != 0 }
   toBool(p1, p2) { toNum(p1, p2) != 0 }
   toBool(p1, p2, p3) { toNum(p1, p2, p3) != 0 }
+  toBool(p1, p2, p3, p4) { toNum(p1, p2, p3, p4) != 0 }
+  toBool(p1, p2, p3, p4, p5) { toNum(p1, p2, p3, p4, p5) != 0 }
+  toBool(p1, p2, p3, p4, p5, p6) { toNum(p1, p2, p3, p4, p5, p6) != 0 }
+  toBool(p1, p2, p3, p4, p5, p6, p7) {
+    return toNum(p1, p2, p3, p4, p5, p6, p7) != 0
+  }
   order(col,direction, allowwedCols) { order(col, direction, allowwedCols, -1) }
   // The column is interpolated into the query text, so it must be an identifier
   // and nothing else. allowedCols is optional (documented as `.order(col, dir,

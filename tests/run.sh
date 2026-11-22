@@ -23,7 +23,7 @@ export QUIET
 # Parameters
 TARGET_EXEC="${args[0]:-./build/bialet}"
 HOST="${args[1]:-127.0.0.1}"
-PORT="${args[2]:-7001}"
+PORT="${args[2]:-7200}"
 ECHO_PORT="${args[3]:-7100}"
 SHOW_ERRORS_PORT="${args[4]:-7101}"
 DEV_PORT="${args[5]:-7102}"
@@ -141,8 +141,70 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax "Uppercase tag rejected        " "syntax_err_uppercase.wren" 1
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_upper.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
   test_syntax_msg "Invalid tag name clear error   " "syntax_err_invalid_tag_underscore.wren" 1 "Invalid tag name: must be lowercase alphanumeric + hyphens"
+  # -t also parses every backtick SQL literal with SQLite. Only syntax-class
+  # errors fail: a missing table or column depends on the schema, which -t does
+  # not apply, so a fresh database and a CREATE-then-INSERT migration pass.
+  test_syntax_msg "SQL syntax error fails         " "syntax_query_err.wren" 1 "syntax error"
+  test_syntax_msg "Duplicate LIMIT fails          " "syntax_query_dupe_limit.wren" 1 "syntax error"
+  test_syntax     "SQL schema error ignored       " "syntax_query_schema.wren" 0
+  test_syntax     "Incomplete later SQL fails     " "syntax_query_incomplete.wren" 1
+  test_syntax     "SQL migration passes           " "syntax_query_migration_ok.wren" 0
+  # `items`.save(...) passes a table name, not SQL; it still has to pass.
+  test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
 else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
+fi
+
+# Tests - -t is compile-only
+# It used to wrenInterpret() the file, so a migration ran just by validating it
+# and a page importing a layout executed Request.uri at top level, printing a
+# runtime "Stack Error" for valid syntax.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  vparse_line=$LINENO
+  vparse_root=$(mktemp -d)
+  if [[ "$TARGET_EXEC" == */* ]]; then
+    vparse_exec="$(cd "$(dirname "$TARGET_EXEC")" && pwd)/$(basename "$TARGET_EXEC")"
+  else
+    vparse_exec="$(command -v "$TARGET_EXEC")"
+  fi
+  cat > "$vparse_root/_migration.wren" <<'WREN'
+Db.migrate("cli_check", "CREATE TABLE IF NOT EXISTS cli_check (id INTEGER)")
+WREN
+  cat > "$vparse_root/layout.wren" <<'WREN'
+var layoutUri = Request.uri
+class Layout {
+  static render() {
+    return <p>{{ layoutUri }}</p>
+  }
+}
+WREN
+  cat > "$vparse_root/page.wren" <<'WREN'
+import "layout" for Layout
+return Layout.render()
+WREN
+  vparse_mig_out=$(cd "$vparse_root" && "$vparse_exec" -t _migration.wren 2>&1)
+  vparse_mig_status=$?
+  vparse_page_out=$(cd "$vparse_root" && "$vparse_exec" -t page.wren 2>&1)
+  vparse_page_status=$?
+  vparse_table=$(cd "$vparse_root" && "$vparse_exec" -q -r \
+    'return `SELECT COUNT(*) AS n FROM sqlite_master WHERE name = ?`.val("cli_check")' \
+    2>/dev/null)
+  rm -rf "$vparse_root"
+  if [[ "$vparse_mig_status" -eq 0 && "$vparse_table" == "0" ]]; then
+    report_result "-t does not run migrations  " "$vparse_line" 0
+  else
+    report_result "-t does not run migrations  " "$vparse_line" 1 \
+      "Expected exit 0 and no cli_check table, got exit $vparse_mig_status table '$vparse_table' output '$vparse_mig_out'"
+  fi
+  if [[ "$vparse_page_status" -eq 0 && "$vparse_page_out" != *"Stack Error"* ]]; then
+    report_result "-t does not execute imports " "$vparse_line" 0
+  else
+    report_result "-t does not execute imports " "$vparse_line" 1 \
+      "Expected exit 0 without a Stack Error, got exit $vparse_page_status output '$vparse_page_out'"
+  fi
+else
+  skip_test "-t does not run migrations  " "requires local binary access (-t flag)"
+  skip_test "-t does not execute imports " "requires local binary access (-t flag)"
 fi
 
 # Tests - bare -r initializes the framework tables
@@ -169,6 +231,48 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   fi
 else
   skip_test "-r initializes framework tables" "requires local binary access"
+fi
+
+# Tests - -r resolves imports relative to the app root
+# The script used to run as module "bialet_cli", so `import "lib"` looked for a
+# nonexistent bialet_cli/ directory. A synthetic module name under the root
+# fixes that, and the loader's containment check still rejects "../outside".
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  rlib_line=$LINENO
+  rlib_parent=$(mktemp -d)
+  mkdir "$rlib_parent/app"
+  cat > "$rlib_parent/app/lib.wren" <<'WREN'
+class X {
+  static value { "from-lib" }
+}
+WREN
+  cat > "$rlib_parent/outside.wren" <<'WREN'
+class Outside {
+  static value { "LEAKED-CONTENT" }
+}
+WREN
+  rlib_out=$(cd "$rlib_parent/app" && "$r_exec" -q -r \
+    $'import "lib" for X\nSystem.print(X.value)' 2>&1)
+  rlib_status=$?
+  rlib_traversal=$(cd "$rlib_parent/app" && "$r_exec" -q -r \
+    $'import "../outside" for Outside\nSystem.print(Outside.value)' 2>&1)
+  rlib_traversal_status=$?
+  rm -rf "$rlib_parent"
+  if [[ "$rlib_status" -eq 0 && "$rlib_out" == *"from-lib"* ]]; then
+    report_result "-r resolves relative imports" "$rlib_line" 0
+  else
+    report_result "-r resolves relative imports" "$rlib_line" 1 \
+      "Expected 'from-lib', got exit $rlib_status output '$rlib_out'"
+  fi
+  if [[ "$rlib_traversal_status" -ne 0 && "$rlib_traversal" != *"LEAKED-CONTENT"* ]]; then
+    report_result "-r blocks traversal imports " "$rlib_line" 0
+  else
+    report_result "-r blocks traversal imports " "$rlib_line" 1 \
+      "Expected a non-zero exit without the file contents, got exit $rlib_traversal_status output '$rlib_traversal'"
+  fi
+else
+  skip_test "-r resolves relative imports" "requires local binary access"
+  skip_test "-r blocks traversal imports " "requires local binary access"
 fi
 
 # Tests - BIALET_TIMEZONE applies to every VM
@@ -1709,6 +1813,7 @@ run_test "Custom 500 error page       " "parsing-error"   500 "custom-500-page"
 # Tests - Markdown
 run_test "Markdown ordered list       " "markdown-ol"    200 "<ol>"
 run_test "Markdown file rendering     " "md-file"        200 "<h1>Test Heading</h1>"
+run_test "Markdown list and metadata  " "md-list"        200 "alpha.md,beta.markdown,gamma.MD|Alpha|guide|draft|3|0|false|false|0|0"
 
 # Tests - Database
 run_test "Database save and fetch     " "db"              200 "John Doe"
@@ -1717,6 +1822,8 @@ run_test "Query val method            " "query-val"       200 "testvalue"
 run_test "Query toNum method          " "query-tonum"     200 "empty:0|0|missing:0|50"
 run_test "Query save method           " "save"            200 "hello updated 2024-09-13 10:30:00"
 run_test "Query toBool method         " "db-tobool"       200 "true,false,true,true,true"
+run_test "Query arity up to seven     " "query-arity"     200 "1234567|1|1|7|true|true"
+run_test "Query first keeps LIMIT     " "query-limit"     200 "1|false|false|false|false|false|true|LIMIT|1"
 run_test "Query non-primitive params  " "query-param-stringify" 200 "node-name|tail|node-name"
 run_test "Query to(Class) mapping     " "db-to-class"     200 "alpha:10,beta:20"
 run_test "Query RETURNING clause      " "db-returning"    200 "5,5,5"
@@ -1854,6 +1961,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   cli_no_port_code=$?
   if [[ "$cli_version_code" == 0 && "$cli_version" == *bialet* \
         && "$cli_help_code" == 0 && "$cli_help" == *sage* \
+        && "$cli_help" == *"-W, --no-watch"* \
         && "$cli_bad_code" != 0 && "$cli_no_port_code" != 0 ]]; then
     report_result "CLI version and bad options " "$cli_line" 0
   else
@@ -2620,6 +2728,55 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   rm -f "$dev_root/_db.sqlite3"
 else
   skip_test "bialet dev starts" "requires local binary access"
+fi
+
+# Tests - --no-watch
+# The flag turns the file watcher off. Startup still migrates, so the first
+# request sees the seeded row; a later save of _migration.wren must not apply
+# the new migration. The edit happens after WAIT_FOR_RELOAD (3s) so a live
+# watcher would not drop it as a startup-window save: it would run it.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  nowatch_line=$LINENO
+  _test_start_ms=$(now_ms)
+  nowatch_root=$(mktemp -d)
+  nowatch_log=/tmp/tests-no-watch.log
+  rm -f "$nowatch_log"
+  cat > "$nowatch_root/_migration.wren" <<'NOWATCH_MIG'
+Db.migrate("no-watch seed", `
+  CREATE TABLE nowatch (value TEXT);
+  INSERT INTO nowatch VALUES ('v1');
+`)
+NOWATCH_MIG
+  cat > "$nowatch_root/index.wren" <<'NOWATCH_PAGE'
+return `SELECT value FROM nowatch ORDER BY rowid DESC`.val
+NOWATCH_PAGE
+  require_free_port "$HOST" "$CRON_PORT" "no-watch server"
+  "$TARGET_EXEC" -W -q -h "$HOST" -p "$CRON_PORT" \
+    -l "$nowatch_log" -d "$nowatch_root/_db.sqlite3" "$nowatch_root" \
+    > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  nowatch_before=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  nowatch_notice=$(grep -c "File watching disabled" "$nowatch_log" 2>/dev/null)
+  nowatch_notice=${nowatch_notice:-0}
+  # Past the 3s reload debounce, so an active watcher would act on the edit.
+  sleep 4
+  cat > "$nowatch_root/_migration.wren" <<'NOWATCH_MIG'
+Db.migrate("no-watch edit", `INSERT INTO nowatch VALUES ('v2')`)
+NOWATCH_MIG
+  sleep 3
+  nowatch_after=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  stop_matching_servers "$TARGET_EXEC -W -q -h $HOST -p $CRON_PORT -l $nowatch_log"
+  rm -rf "$nowatch_root"
+  if [[ "$nowatch_before" == "v1" && "$nowatch_after" == "v1" \
+        && "$nowatch_notice" -ge 1 ]]; then
+    report_result "--no-watch skips reload      " "$nowatch_line" 0
+  else
+    report_result "--no-watch skips reload      " "$nowatch_line" 1 \
+      "Expected startup migration v1 and no save-triggered run. before:'$nowatch_before' after:'$nowatch_after' notice:$nowatch_notice"
+  fi
+else
+  skip_test "--no-watch skips reload      " "requires local binary access"
 fi
 
 # Tests - Port binding

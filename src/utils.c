@@ -303,3 +303,32 @@ FILE* open_file_no_follow(const char* path) {
   return f;
 #endif
 }
+
+// Classifies [path] without following a final symlink/junction. On POSIX this
+// is lstat(); on Windows GetFileAttributesW reports a reparse point as a link,
+// and MinGW has neither lstat() nor S_ISLNK. Used by Markdown.list so a
+// planted link is never listed, on either platform.
+int path_kind_no_follow(const char* path, int* is_link, int* is_dir,
+                        int* is_regular) {
+  if(path == NULL || is_link == NULL || is_dir == NULL || is_regular == NULL)
+    return -1;
+#ifdef _WIN32
+  wchar_t wide[PATH_MAX];
+  if(MultiByteToWideChar(CP_UTF8, 0, path, -1, wide, PATH_MAX) == 0)
+    return -1;
+  DWORD attrs = GetFileAttributesW(wide);
+  if(attrs == INVALID_FILE_ATTRIBUTES)
+    return -1;
+  *is_link = (attrs & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+  *is_dir = (attrs & FILE_ATTRIBUTE_DIRECTORY) != 0;
+  *is_regular = !*is_link && !*is_dir;
+#else
+  struct stat st;
+  if(lstat(path, &st) != 0)
+    return -1;
+  *is_link = S_ISLNK(st.st_mode) != 0;
+  *is_dir = S_ISDIR(st.st_mode) != 0;
+  *is_regular = S_ISREG(st.st_mode) != 0;
+#endif
+  return 0;
+}
