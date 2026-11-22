@@ -533,6 +533,7 @@ int main(int argc, char* argv[]) {
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
   bialet_config.bytecode_cache = 0;      // OFF unless -x / --cache
+  bialet_config.no_watch = 0;            // OFF unless --no-watch
 
   /* Parse args */
   cli_parse(argc, argv, &bialet_config, &cli_opts);
@@ -792,6 +793,9 @@ int main(int argc, char* argv[]) {
 
   welcome(port);
   trigger_reload_files(NULL);
+  if(bialet_config.no_watch)
+    message(yellow("Watch"), "File watching disabled; live reload and "
+                             "migration-on-change are off");
   // `bialet dev` turns both on for this run only. It used to write them into
   // BIALET_CONFIG, where they stayed on for every later plain `bialet` start
   // on the same database (or a copy of it), and production then served error
@@ -806,9 +810,11 @@ int main(int argc, char* argv[]) {
   pthread_t cron_tid;
   pthread_create(&cron_tid, NULL, cron_thread, NULL);
 
-  dmon_init();
-  dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
-             NULL);
+  if(!bialet_config.no_watch) {
+    dmon_init();
+    dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
+               NULL);
+  }
 
   compute_mem_limit(&mem_limit);
   compute_cpu_limit(&cpu_limit);
@@ -928,7 +934,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  dmon_deinit();
+  if(!bialet_config.no_watch)
+    dmon_deinit();
 #endif
 
 // Windows has no fork(), so it cannot reuse the process-per-cycle
@@ -940,9 +947,11 @@ int main(int argc, char* argv[]) {
   if(bialet_config.mem_soft_limit != 128 || bialet_config.mem_hard_limit != 256)
     message(yellow("Warning"),
             "-m/-M are only enforced on Linux; this process has no memory ceiling");
-  dmon_init();
-  dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
-             NULL);
+  if(!bialet_config.no_watch) {
+    dmon_init();
+    dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
+               NULL);
+  }
 
   // Run the jobs once at startup, like cron_thread() does on POSIX; starting
   // the clock at now delayed the first tick by a full minute on Windows.
@@ -959,7 +968,8 @@ int main(int argc, char* argv[]) {
   }
 
   stop_server();
-  dmon_deinit();
+  if(!bialet_config.no_watch)
+    dmon_deinit();
 #endif
 
   return 0;

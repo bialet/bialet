@@ -95,6 +95,11 @@ struct BialetConfig {
   int   quiet;
   int   output_color;
 
+  /* --no-watch: skip dmon_init()/dmon_watch(), so saving a file does not
+   * re-run migrations or cron installs and live reload stays off. Migrations
+   * and cron still run once at startup. */
+  int no_watch;
+
   /* Memory limits in MB (-m/-M) and CPU-time limits in seconds (-c/-C) of
    * CPU time, not a percentage. The CPU pair feeds RLIMIT_CPU: the soft limit
    * raises SIGXCPU, the hard one SIGKILL, and the supervisor restarts the

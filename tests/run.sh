@@ -1951,6 +1951,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   cli_no_port_code=$?
   if [[ "$cli_version_code" == 0 && "$cli_version" == *bialet* \
         && "$cli_help_code" == 0 && "$cli_help" == *sage* \
+        && "$cli_help" == *"--no-watch"* \
         && "$cli_bad_code" != 0 && "$cli_no_port_code" != 0 ]]; then
     report_result "CLI version and bad options " "$cli_line" 0
   else
@@ -2717,6 +2718,55 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   rm -f "$dev_root/_db.sqlite3"
 else
   skip_test "bialet dev starts" "requires local binary access"
+fi
+
+# Tests - --no-watch
+# The flag turns the file watcher off. Startup still migrates, so the first
+# request sees the seeded row; a later save of _migration.wren must not apply
+# the new migration. The edit happens after WAIT_FOR_RELOAD (3s) so a live
+# watcher would not drop it as a startup-window save: it would run it.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  nowatch_line=$LINENO
+  _test_start_ms=$(now_ms)
+  nowatch_root=$(mktemp -d)
+  nowatch_log=/tmp/tests-no-watch.log
+  rm -f "$nowatch_log"
+  cat > "$nowatch_root/_migration.wren" <<'NOWATCH_MIG'
+Db.migrate("no-watch seed", `
+  CREATE TABLE nowatch (value TEXT);
+  INSERT INTO nowatch VALUES ('v1');
+`)
+NOWATCH_MIG
+  cat > "$nowatch_root/index.wren" <<'NOWATCH_PAGE'
+return `SELECT value FROM nowatch ORDER BY rowid DESC`.val
+NOWATCH_PAGE
+  require_free_port "$HOST" "$CRON_PORT" "no-watch server"
+  "$TARGET_EXEC" --no-watch -q -h "$HOST" -p "$CRON_PORT" \
+    -l "$nowatch_log" -d "$nowatch_root/_db.sqlite3" "$nowatch_root" \
+    > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$CRON_PORT" 10
+  nowatch_before=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  nowatch_notice=$(grep -c "File watching disabled" "$nowatch_log" 2>/dev/null)
+  nowatch_notice=${nowatch_notice:-0}
+  # Past the 3s reload debounce, so an active watcher would act on the edit.
+  sleep 4
+  cat > "$nowatch_root/_migration.wren" <<'NOWATCH_MIG'
+Db.migrate("no-watch edit", `INSERT INTO nowatch VALUES ('v2')`)
+NOWATCH_MIG
+  sleep 3
+  nowatch_after=$(curl -s --max-time 5 "http://$HOST:$CRON_PORT/index")
+  stop_matching_servers "$TARGET_EXEC --no-watch -q -h $HOST -p $CRON_PORT -l $nowatch_log"
+  rm -rf "$nowatch_root"
+  if [[ "$nowatch_before" == "v1" && "$nowatch_after" == "v1" \
+        && "$nowatch_notice" -ge 1 ]]; then
+    report_result "--no-watch skips reload      " "$nowatch_line" 0
+  else
+    report_result "--no-watch skips reload      " "$nowatch_line" 1 \
+      "Expected startup migration v1 and no save-triggered run. before:'$nowatch_before' after:'$nowatch_after' notice:$nowatch_notice"
+  fi
+else
+  skip_test "--no-watch skips reload      " "requires local binary access"
 fi
 
 # Tests - Port binding

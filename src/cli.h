@@ -102,7 +102,10 @@ void cli_print_version(void);
   "  -x, --cache           Cache compiled user .wren files in memory (served "      \
   "files and\n"                                                                     \
   "                        local imports). The framework module is always "         \
-  "cached.\n\n"                                                                     \
+  "cached.\n"                                                                       \
+  "      --no-watch        Disable file watching: no live reload, and migrations "  \
+  "and\n"                                                                           \
+  "                        cron are not re-run when their file is saved\n\n"        \
   "Long options take a value as `--port 8080` or `--port=8080`.\n\n"                \
   "Any other long-form option is rejected as an invalid parameter.\n\n"             \
   "Full documentation: https://bialet.dev/usage.html\n"

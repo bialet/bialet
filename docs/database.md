@@ -413,7 +413,10 @@ The migration file can be in the root and be called `_migration.wren` or be
 inside the `_app` folder, `_app/migration.wren`.
 
 This script will be run every time the application starts and also when a Wren
-file is updated. For a complete migration example in the context of a REST API,
+file is updated. Start the server with `--no-watch` to stop the save-triggered
+run: migrations still run once at startup, but editing the file then needs a
+restart to apply. See [Editing migrations without applying them](usage.md#editing-migrations-without-applying-them).
+For a complete migration example in the context of a REST API,
 see the [Building REST APIs](rest-api.md) guide.
 
 ```wren

@@ -71,6 +71,7 @@ bialet --port=8080 /path/to/app
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+| `--no-watch`            | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
@@ -141,6 +142,27 @@ Useful in scripts, containers, and CI:
 ```bash
 bialet -q /path/to/app
 ```
+
+### Editing migrations without applying them
+
+A migration runs at startup and again whenever `_migration.wren` is saved. While
+you draft one, that save-triggered run applies half-written SQL to the
+database. Start the server with `--no-watch` to keep only the startup run:
+
+```bash
+bialet --no-watch /path/to/app
+```
+
+Edit and save the file freely, then check that it compiles without running it:
+
+```bash
+bialet -t _migration.wren
+```
+
+Restart the server without `--no-watch` to apply the new migration. The flag
+turns the whole file watcher off, so live reload is off for that run too. The
+server still runs migrations and installs cron once at startup, and prints a
+notice saying watching is disabled.
 
 ## Run Code from the Command Line
 

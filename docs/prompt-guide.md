@@ -701,6 +701,9 @@ Db.migrate("Seed sample posts", Fn.new{
   descriptive name.
 - `_migration.wren` (root) and `_app/migration.wren` are equivalent — this
   guide uses the `_app/` form.
+- To edit a migration without applying it, serve with `--no-watch` (no
+  save-triggered run), check the file with `bialet -t _migration.wren`, then
+  restart the server without the flag to apply it.
 
 ### `BIALET_*` System Tables
 
@@ -1354,6 +1357,7 @@ Test.get("/").contains("Comprar pan")
 ```bash
 bialet              # runs the current directory on 127.0.0.1:7001
 bialet -p 7001 .    # explicit port and directory
+bialet --no-watch . # no file watcher: no live reload, no migration-on-save
 bialet -t index.wren              # validate a standalone file's syntax
 bialet -t app/main.wren /my/app   # validate with app context (for _app/ imports)
 bialet -T                         # run the test suite in _tests/
