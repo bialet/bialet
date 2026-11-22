@@ -48,6 +48,10 @@ Releases 1.2.6–1.2.13 were tagged and published on the
   `S_ISLNK`, which MinGW does not provide, so the Windows cross-build failed.
   A portable `path_kind_no_follow()` now uses `lstat` on POSIX and
   `GetFileAttributesW` reparse-point checks on Windows.
+- `bialet -r` treated a Windows absolute module path (`C:\...`) as a remote URL
+  because it contains `:`, so relative imports failed with `Import type not
+  supported.` Remote modules are now recognized by their real prefixes
+  (`http://`, `https://`, `gh:`), and a colon in a local path stays local.
 
 ### Documentation
 
