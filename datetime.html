@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'datetime';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="File Handling" href="file.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -584,16 +584,16 @@ even though the line Bialet prints to the log has a prefix in the app zone.</p>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Year: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Month: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">month</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Day: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">day</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Hours: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">hours</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Minutes: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">minutes</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
-<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Seconds: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">seconds</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Hours: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">hours</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span><span class="w">           </span><span class="c1">// date.hour also works</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Minutes: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">minutes</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span><span class="w">       </span><span class="c1">// date.minute also works</span>
+<span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Seconds: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">seconds</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span><span class="w">       </span><span class="c1">// date.second also works</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">"Unix Timestamp: </span><span class="si">%(</span><span class="n">date</span><span class="o">.</span><span class="n">unix</span><span class="si">)</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 <blockquote>
-<div><p>⚠️ Pitfall: the time-of-day getters are <strong>plural</strong> — <code class="docutils literal notranslate"><span class="pre">.hours</span></code>, <code class="docutils literal notranslate"><span class="pre">.minutes</span></code>,
-<code class="docutils literal notranslate"><span class="pre">.seconds</span></code> — unlike <code class="docutils literal notranslate"><span class="pre">.year</span></code>, <code class="docutils literal notranslate"><span class="pre">.month</span></code>, and <code class="docutils literal notranslate"><span class="pre">.day</span></code>, which are singular.
-<code class="docutils literal notranslate"><span class="pre">date.hour</span></code> raises <code class="docutils literal notranslate"><span class="pre">Date</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'hour'.</span></code>.</p>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">.year</span></code>, <code class="docutils literal notranslate"><span class="pre">.month</span></code> and <code class="docutils literal notranslate"><span class="pre">.day</span></code> are singular, but the time-of-day
+getters have both spellings: <code class="docutils literal notranslate"><span class="pre">.hours</span></code>/<code class="docutils literal notranslate"><span class="pre">.hour</span></code>, <code class="docutils literal notranslate"><span class="pre">.minutes</span></code>/<code class="docutils literal notranslate"><span class="pre">.minute</span></code> and
+<code class="docutils literal notranslate"><span class="pre">.seconds</span></code>/<code class="docutils literal notranslate"><span class="pre">.second</span></code> return the same values.</p>
 </div></blockquote>
 </section>
 <section id="adding-and-subtracting-time">

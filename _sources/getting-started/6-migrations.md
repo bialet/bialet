@@ -27,6 +27,11 @@ Db.migrate("Add initial data", `
 - Migrations run once — the name prevents re-execution
 - They run on every server start, so adding new ones is safe
 
+> ⚠️ Pitfall: the SQL argument must be a backtick query literal. A double-quoted
+> Wren string is single-line, so a newline in it fails with `Unterminated
+> string.` and usually a second `Expect ')' after arguments.` at the next line.
+> Use `` ` `` around the SQL, never `"`.
+
 Migrations are the recommended way to manage your schema. They keep your
 database in sync with your code and make it easy to share your project —
 anyone who runs it gets the same schema automatically.

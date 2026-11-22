@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Performance" href="performance.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -622,8 +622,11 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hours">hours</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minutes">minutes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seconds">seconds</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
@@ -640,6 +643,22 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-string">html(string)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-path">file(path)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#list-dir">list(dir)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-path">meta(path)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random">Random</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-seed">new(seed)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float">float()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float-end">float(end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float-start-end">float(start, end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int">int()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int-end">int(end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int-start-end">int(start, end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-list">sample(list)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-list-count">sample(list, count)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shuffle-list">shuffle(list)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
@@ -647,13 +666,13 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -675,10 +694,11 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blankness-all-objects">Blankness (all objects)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#null-extensions">Null Extensions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -692,7 +712,8 @@
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get">get</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">to(Class)</a></li>
 </ul>
 </li>
 </ul>
@@ -726,7 +747,7 @@
 <li><p><strong>Http</strong> - Perform HTTP requests</p></li>
 <li><p><strong>Date</strong> - Date and time operations</p></li>
 <li><p><strong>File</strong> - File operations</p></li>
-<li><p><strong>Markdown</strong> - Render Markdown content to HTML</p></li>
+<li><p><strong>Markdown</strong> - Render Markdown content to HTML, list Markdown files and read front matter</p></li>
 <li><p><strong>System</strong> - Logging and output utilities</p></li>
 <li><p><strong>HtmlNode</strong> - A string of already-safe HTML that <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> leaves unescaped</p></li>
 </ul>
@@ -1974,13 +1995,25 @@ constructor or set with <code class="docutils literal notranslate"><span class="
 <h3>hours<a class="headerlink" href="#hours" title="Link to this heading">#</a></h3>
 <p>Returns the hour component of the date.</p>
 </section>
+<section id="hour">
+<h3>hour<a class="headerlink" href="#hour" title="Link to this heading">#</a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">hours</span></code>.</p>
+</section>
 <section id="minutes">
 <h3>minutes<a class="headerlink" href="#minutes" title="Link to this heading">#</a></h3>
 <p>Returns the minute component of the date.</p>
 </section>
+<section id="minute">
+<h3>minute<a class="headerlink" href="#minute" title="Link to this heading">#</a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">minutes</span></code>.</p>
+</section>
 <section id="seconds">
 <h3>seconds<a class="headerlink" href="#seconds" title="Link to this heading">#</a></h3>
 <p>Returns the second component of the date.</p>
+</section>
+<section id="second">
+<h3>second<a class="headerlink" href="#second" title="Link to this heading">#</a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">seconds</span></code>.</p>
 </section>
 <section id="dayofweek">
 <h3>dayOfWeek<a class="headerlink" href="#dayofweek" title="Link to this heading">#</a></h3>
@@ -2086,6 +2119,100 @@ root, or has a path component starting with <code class="docutils literal notran
 </pre></div>
 </div>
 </section>
+<section id="list-dir">
+<h3>list(dir)<a class="headerlink" href="#list-dir" title="Link to this heading">#</a></h3>
+<p>Returns a sorted <code class="docutils literal notranslate"><span class="pre">List</span></code> of bare filenames in <code class="docutils literal notranslate"><span class="pre">dir</span></code>, relative to the app root.
+Only <code class="docutils literal notranslate"><span class="pre">.md</span></code> and <code class="docutils literal notranslate"><span class="pre">.markdown</span></code> files (case-insensitive) are included. Names starting
+with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>, symlinks and non-regular files are skipped. A missing, empty or
+invalid directory returns <code class="docutils literal notranslate"><span class="pre">[]</span></code>. The directory must stay inside the app root and
+no path component may start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code>: Directory relative to the app root. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> is the root.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">"cards"</span><span class="p">)</span>
+<span class="c1">// ["01.md", "02.md", ...]</span>
+</pre></div>
+</div>
+</section>
+<section id="meta-path">
+<h3>meta(path)<a class="headerlink" href="#meta-path" title="Link to this heading">#</a></h3>
+<p>Reads leading YAML-ish front matter and returns a flat <code class="docutils literal notranslate"><span class="pre">Map</span></code> of <code class="docutils literal notranslate"><span class="pre">String</span></code> to
+<code class="docutils literal notranslate"><span class="pre">String</span></code>. The block must start with a line containing only <code class="docutils literal notranslate"><span class="pre">---</span></code> and end with
+another one. Keys and values are trimmed, one matching pair of single or double
+quotes around a value is removed, and blank lines and <code class="docutils literal notranslate"><span class="pre">#</span></code> comments are ignored.
+Returns <code class="docutils literal notranslate"><span class="pre">{}</span></code> when there is no front matter and <code class="docutils literal notranslate"><span class="pre">false</span></code> when the file is missing
+or unreadable. Nested keys and lists are not supported; a later key overwrites
+an earlier one. Applies the same <code class="docutils literal notranslate"><span class="pre">.md</span></code>-only, app-root and private-name rules as
+<code class="docutils literal notranslate"><span class="pre">file(path)</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: The Markdown file to read, relative to the app root.</p></li>
+</ul>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">meta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="s2">"cards/01.md"</span><span class="p">)</span>
+<span class="n">meta</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="random">
+<h2>Random<a class="headerlink" href="#random" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">random</span></code> module is built in and must be imported:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"random"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
+</pre></div>
+</div>
+<section id="id18">
+<h3>new()<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<p>Creates a generator seeded from the system.</p>
+</section>
+<section id="new-seed">
+<h3>new(seed)<a class="headerlink" href="#new-seed" title="Link to this heading">#</a></h3>
+<p>Creates a reproducible generator. <code class="docutils literal notranslate"><span class="pre">seed</span></code> is a <code class="docutils literal notranslate"><span class="pre">Num</span></code>, or a sequence of up to 16
+numbers. The same seed and calls produce the same values.</p>
+</section>
+<section id="float">
+<h3>float()<a class="headerlink" href="#float" title="Link to this heading">#</a></h3>
+<p>Returns a number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1)</span></code>.</p>
+</section>
+<section id="float-end">
+<h3>float(end)<a class="headerlink" href="#float-end" title="Link to this heading">#</a></h3>
+<p>Returns a number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">end)</span></code>.</p>
+</section>
+<section id="float-start-end">
+<h3>float(start, end)<a class="headerlink" href="#float-start-end" title="Link to this heading">#</a></h3>
+<p>Returns a number in <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>.</p>
+</section>
+<section id="int">
+<h3>int()<a class="headerlink" href="#int" title="Link to this heading">#</a></h3>
+<p>Returns a non-negative whole number.</p>
+</section>
+<section id="int-end">
+<h3>int(end)<a class="headerlink" href="#int-end" title="Link to this heading">#</a></h3>
+<p>Returns a whole number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">end)</span></code>.</p>
+</section>
+<section id="int-start-end">
+<h3>int(start, end)<a class="headerlink" href="#int-start-end" title="Link to this heading">#</a></h3>
+<p>Returns a whole number in <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>.</p>
+</section>
+<section id="sample-list">
+<h3>sample(list)<a class="headerlink" href="#sample-list" title="Link to this heading">#</a></h3>
+<p>Returns one random element. Aborts on an empty list.</p>
+</section>
+<section id="sample-list-count">
+<h3>sample(list, count)<a class="headerlink" href="#sample-list-count" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">count</span></code> distinct random elements. Aborts when <code class="docutils literal notranslate"><span class="pre">count</span></code> is larger than the
+list.</p>
+</section>
+<section id="shuffle-list">
+<h3>shuffle(list)<a class="headerlink" href="#shuffle-list" title="Link to this heading">#</a></h3>
+<p>Shuffles <code class="docutils literal notranslate"><span class="pre">list</span></code> in place. Returns <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"random"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">rng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Random</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">42</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">dice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rng</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">7</span><span class="p">)</span><span class="w">        </span><span class="c1">// 1 to 6</span>
+<span class="k">var</span><span class="w"> </span><span class="n">hand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rng</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">deck</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="p">)</span>
+<span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">deck</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="file">
 <h2>File<a class="headerlink" href="#file" title="Link to this heading">#</a></h2>
@@ -2124,16 +2251,16 @@ size is determined by the content.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: The file content.</p></li>
 </ul>
 </section>
-<section id="id18">
-<h3>id<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<section id="id19">
+<h3>id<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
 <p>Returns the file’s database ID.</p>
 </section>
 <section id="type">
 <h3>type<a class="headerlink" href="#type" title="Link to this heading">#</a></h3>
 <p>Returns the MIME type of the file.</p>
 </section>
-<section id="id19">
-<h3>name<a class="headerlink" href="#id19" title="Link to this heading">#</a></h3>
+<section id="id20">
+<h3>name<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
 <p>Returns the name of the file.</p>
 </section>
 <section id="size">
@@ -2148,8 +2275,8 @@ size is determined by the content.</p>
 <h3>createdAt<a class="headerlink" href="#createdat" title="Link to this heading">#</a></h3>
 <p>Returns the creation date of the file.</p>
 </section>
-<section id="id20">
-<h3>destroy<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
+<section id="id21">
+<h3>destroy<a class="headerlink" href="#id21" title="Link to this heading">#</a></h3>
 <p>Deletes the file from the database based on its ID.</p>
 </section>
 <section id="save">
@@ -2316,6 +2443,45 @@ as well. <code class="docutils literal notranslate"><span class="pre">false</spa
 <code class="docutils literal notranslate"><span class="pre">isEmpty</span></code> when you mean exactly “zero elements”: <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isEmpty</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>
 while <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160;&#160; <span class="pre">&quot;.isBlank</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
 </section>
+<section id="null-extensions">
+<h3>Null Extensions<a class="headerlink" href="#null-extensions" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">null</span></code> is forgiving so a missing value renders instead of crashing the page.
+These never throw:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Expression</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null[&quot;key&quot;]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">null.count</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null.map</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code></p></td>
+<td><p>empty <code class="docutils literal notranslate"><span class="pre">List</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">null.to(Class)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null.toString</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">null.toNum</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">null.toBool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Any other method on <code class="docutils literal notranslate"><span class="pre">null</span></code> still raises <code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'x'.</span></code>
+<code class="docutils literal notranslate"><span class="pre">null.get(&quot;key&quot;)</span></code> is a runtime error; the default-substituting form is
+<code class="docutils literal notranslate"><span class="pre">Map.get(key,</span> <span class="pre">default)</span></code>.</p>
+</section>
 <section id="string-extensions">
 <h3>String Extensions<a class="headerlink" href="#string-extensions" title="Link to this heading">#</a></h3>
 <section id="tobool">
@@ -2339,8 +2505,8 @@ while <code class="docutils literal notranslate"><span class="pre">&quot;</span>
 building HTML from strings outside of interpolation, or to pre-escape a value
 before storing it.</p>
 </section>
-<section id="id21">
-<h4>raw<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<section id="id22">
+<h4>raw<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <p>Marks a string as already-safe HTML by wrapping it in an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, so <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
 interpolation leaves it untouched.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&lt;b&gt;bold&lt;/b&gt;"</span><span class="o">.</span><span class="n">raw</span>
@@ -2405,8 +2571,20 @@ interpolation leaves it untouched.</p>
 </section>
 <section id="map-extensions">
 <h3>Map Extensions<a class="headerlink" href="#map-extensions" title="Link to this heading">#</a></h3>
-<section id="id22">
-<h4>to(Class)<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<section id="get">
+<h4>get<a class="headerlink" href="#get" title="Link to this heading">#</a></h4>
+<p>Returns the value for <code class="docutils literal notranslate"><span class="pre">key</span></code>. The two-argument form returns <code class="docutils literal notranslate"><span class="pre">default</span></code> when the
+key is absent. Presence is decided by <code class="docutils literal notranslate"><span class="pre">containsKey</span></code>, so a key that holds <code class="docutils literal notranslate"><span class="pre">null</span></code>
+still returns <code class="docutils literal notranslate"><span class="pre">null</span></code>, not the default.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s2">"a"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">}</span>
+<span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span><span class="w">        </span><span class="c1">// 1</span>
+<span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"b"</span><span class="p">)</span><span class="w">        </span><span class="c1">// null</span>
+<span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"b"</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w">     </span><span class="c1">// 0</span>
+</pre></div>
+</div>
+</section>
+<section id="id23">
+<h4>to(Class)<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <p>Converts a Map to an instance of the specified class by passing the map to the class constructor.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Post</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">construct</span><span class="w"> </span><span class="n">new</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2660,8 +2838,11 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#month">month</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#day">day</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hours">hours</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hour">hour</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minutes">minutes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minute">minute</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seconds">seconds</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#second">second</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofweek">dayOfWeek</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dayofyear">dayOfYear</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unix">unix</a></li>
@@ -2678,6 +2859,22 @@ interpolation leaves it untouched.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#markdown">Markdown</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-string">html(string)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-path">file(path)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#list-dir">list(dir)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-path">meta(path)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random">Random</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">new()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#new-seed">new(seed)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float">float()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float-end">float(end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#float-start-end">float(start, end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int">int()</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int-end">int(end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#int-start-end">int(start, end)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-list">sample(list)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-list-count">sample(list, count)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shuffle-list">shuffle(list)</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file">File</a><ul class="nav section-nav flex-column">
@@ -2685,13 +2882,13 @@ interpolation leaves it untouched.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-id">get(id)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file-size">create(name, type, file, size)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-name-type-file">create(name, type, file)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">id</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">id</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type">type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">name</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">name</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">size</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#istemp">isTemp</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#createdat">createdAt</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">destroy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">destroy</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save">save</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#temp">temp</a></li>
 </ul>
@@ -2713,10 +2910,11 @@ interpolation leaves it untouched.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wren-core-extensions">Wren Core Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blankness-all-objects">Blankness (all objects)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#null-extensions">Null Extensions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#string-extensions">String Extensions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tobool">toBool</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#safe">safe</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">raw</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#lower">lower</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#upper">upper</a></li>
 </ul>
@@ -2730,7 +2928,8 @@ interpolation leaves it untouched.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#map-extensions">Map Extensions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">to(Class)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get">get</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">to(Class)</a></li>
 </ul>
 </li>
 </ul>

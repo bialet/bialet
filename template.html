@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -695,21 +695,50 @@ contain only letters, numbers, and hyphens. No underscores or uppercase:</p>
 <p><strong>Interpolation depth</strong> is limited to 9 nested levels.</p>
 <p><strong>Forgetting <code class="docutils literal notranslate"><span class="pre">return</span></code>.</strong> Without <code class="docutils literal notranslate"><span class="pre">return</span></code>, the response body is empty. The page
 renders as blank.</p>
-<p><strong><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">&lt;tag&gt;</span></code> must be on its own line.</strong> <code class="docutils literal notranslate"><span class="pre">return</span></code> and the opening <code class="docutils literal notranslate"><span class="pre">&lt;tag&gt;</span></code>
-on the same physical line is a compilation error — the error message
-(<code class="docutils literal notranslate"><span class="pre">Expected</span> <span class="pre">expression</span></code> at <code class="docutils literal notranslate"><span class="pre">return</span></code>) doesn’t point at the real cause:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — compilation error, no matter what's inside the tag</span>
-<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span><span class="w"> </span><span class="p">}</span>
+<p><strong><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">&lt;tag&gt;</span></code> is valid at the top level and inside a multi-line method body.</strong>
+<code class="docutils literal notranslate"><span class="pre">return</span></code> and the opening <code class="docutils literal notranslate"><span class="pre">&lt;tag&gt;</span></code> must share a physical line:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Top level</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Hola&lt;/p&gt;</span>
 
-<span class="c1">// Correct — put the tag on the line after `return`</span>
-<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="c1">// Inside a method body</span>
+<span class="n">greeting</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Hola&lt;/p&gt;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>This happens whether or not the <code class="docutils literal notranslate"><span class="pre">return</span></code> is itself inside a <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>
-interpolation, and regardless of what’s interpolated inside the tag — the
-only trigger is <code class="docutils literal notranslate"><span class="pre">return</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;tag</span></code> sharing a line.</p>
+<p>Wren ends an expression at a newline, Python-style. A bare <code class="docutils literal notranslate"><span class="pre">return</span></code> followed by
+a newline returns immediately, and the tag on the next line is a separate
+expression that never reaches the response:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — returns null, then evaluates the tag as a statement</span>
+<span class="k">return</span>
+<span class="w">  </span><span class="x">&lt;p&gt;Hola&lt;/p&gt;</span>
+</pre></div>
+</div>
+<p>At the top level the code above compiles and returns an empty body. Inside a
+block or a method body it can also fail with a confusing <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">newline</span> <span class="pre">after</span> <span class="pre">statement</span></code> error. Either way, keep <code class="docutils literal notranslate"><span class="pre">return</span></code> and the tag on the same line.</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">return</span></code> is not allowed inside a block callback.</strong> A block body is a single
+expression, and <code class="docutils literal notranslate"><span class="pre">return</span></code> is a statement, so <code class="docutils literal notranslate"><span class="pre">list.map</span> <span class="pre">{</span> <span class="pre">|x|</span> <span class="pre">return</span> <span class="pre">&lt;div&gt;...&lt;/div&gt;</span> <span class="pre">}</span></code>
+fails to compile with <code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">at</span> <span class="pre">'return':</span> <span class="pre">Expected</span> <span class="pre">expression.</span></code> Use the
+expression itself, without <code class="docutils literal notranslate"><span class="pre">return</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — return is a statement, not an expression</span>
+<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Correct — the block returns its expression implicitly</span>
+<span class="n">list</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>A method body written entirely on one line (<code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">return</span> <span class="pre">1</span> <span class="pre">}</span></code>) is a
+single-expression body, so <code class="docutils literal notranslate"><span class="pre">return</span></code> fails there too. Put the statement on its
+own line inside a multi-line body:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the braces are a single-expression body</span>
+<span class="n">greeting</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s2">"Hola"</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Correct — a multi-line statement body</span>
+<span class="n">greeting</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"Hola"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p><strong>Files starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are private</strong> — they return 403 if accessed
 directly. Use them for imports and internal logic only.</p>
 </section>
@@ -912,8 +941,17 @@ statements or variable declarations inside a <code class="docutils literal notra
 <span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 </pre></div>
 </div>
-<p>If you need pre-computed values, prepare them before <code class="docutils literal notranslate"><span class="pre">map</span></code> (e.g. add computed
-properties to your model class, or pre-process the list).</p>
+<p>A Wren block body is <strong>one expression</strong>. <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">|x|</span></code> followed by a newline is an
+empty body that returns <code class="docutils literal notranslate"><span class="pre">null</span></code>, not a function that continues on the next line.
+In JavaScript terms it is closer to <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=&gt;</span> <span class="pre">{}</span></code> than to
+<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=&gt;</span> <span class="pre">(/*</span> <span class="pre">multi-line</span> <span class="pre">expression</span> <span class="pre">*/)</span></code>, which is why the output is silently empty.
+Keep the body on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">var</span></code> is a statement, so it cannot appear in the block body even on one line.
+Pre-compute the value before <code class="docutils literal notranslate"><span class="pre">map</span></code> (a computed property on the model, or a
+pre-processed list).</p>
 <p><strong>Empty lists produce empty output.</strong> Pair <code class="docutils literal notranslate"><span class="pre">map</span></code> with <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> to show an empty
 state:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;main&gt;</span>

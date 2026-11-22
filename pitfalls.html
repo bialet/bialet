@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'pitfalls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -703,8 +703,9 @@ the handler crashes formatting null. Keep the HTML <code class="docutils literal
 </section>
 <section id="must-sit-inside-an-html-tag">
 <h2>19. <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> must sit inside an HTML tag<a class="headerlink" href="#must-sit-inside-an-html-tag" title="Link to this heading">#</a></h2>
-<p>At the top level of a template, <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">...</span> <span class="pre">}}</span></code> is parsed as a Wren map literal and
-fails with <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">'}'</span> <span class="pre">after</span> <span class="pre">map</span> <span class="pre">entries</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> is interpolation <strong>inside an HTML literal</strong> only. It is not a general
+template delimiter: a standalone <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">aviso</span> <span class="pre">}}</span></code> is Wren map/block syntax, not
+output, and fails with <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">'}'</span> <span class="pre">after</span> <span class="pre">map</span> <span class="pre">entries</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// wrong: no enclosing tag</span>
 <span class="k">return</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;div class="box"&gt;...&lt;/div&gt;</span><span class="w"> </span><span class="si">}}</span>
 

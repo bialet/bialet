@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -496,7 +496,10 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-extensions">Bialet Extensions</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-random-module">The <code class="docutils literal notranslate"><span class="pre">random</span></code> module</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-standard-wren">Bialet vs. Standard Wren</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-concurrency">No Concurrency</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-is-not-tested">Fiber Is Not Tested</a></li>
@@ -732,8 +735,17 @@ database values come back as strings:</p>
 <span class="k">var</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">" world"</span><span class="w">   </span><span class="c1">// "hello world"</span>
 </pre></div>
 </div>
-<p>Strings are immutable. Index with <code class="docutils literal notranslate"><span class="pre">s[i]</span></code> to get a single-character string at
-byte offset <code class="docutils literal notranslate"><span class="pre">i</span></code>. <code class="docutils literal notranslate"><span class="pre">.count</span></code> is the byte length.</p>
+<p>Strings are immutable. <code class="docutils literal notranslate"><span class="pre">.count</span></code> is the number of <strong>code points</strong>, not bytes:
+<code class="docutils literal notranslate"><span class="pre">&quot;Arpón&quot;.count</span></code> is <code class="docutils literal notranslate"><span class="pre">5</span></code>. Indexing, <code class="docutils literal notranslate"><span class="pre">indexOf</span></code>, and ranges use <strong>byte offsets</strong>, so
+<code class="docutils literal notranslate"><span class="pre">&quot;Arpón&quot;[0..4]</span></code> is not the whole string. <code class="docutils literal notranslate"><span class="pre">.bytes.count</span></code> gives the byte length
+(<code class="docutils literal notranslate"><span class="pre">&quot;Arpón&quot;.bytes.count</span></code> is <code class="docutils literal notranslate"><span class="pre">6</span></code>), and <code class="docutils literal notranslate"><span class="pre">.codePoints</span></code> gives the code points.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: mixing <code class="docutils literal notranslate"><span class="pre">.count</span></code> with byte offsets truncates accented text.
+<code class="docutils literal notranslate"><span class="pre">line[0..line.count</span> <span class="pre">-</span> <span class="pre">1]</span></code> drops the last byte of every multi-byte character.
+Split on a delimiter (<code class="docutils literal notranslate"><span class="pre">line.split(&quot;:&quot;)</span></code>) instead of slicing by index, or use
+<code class="docutils literal notranslate"><span class="pre">.codePoints</span></code> / <code class="docutils literal notranslate"><span class="pre">.bytes.count</span></code> when you really need character or byte
+arithmetic.</p>
+</div></blockquote>
 <blockquote>
 <div><p>⚠️ Pitfall: strings don’t implement <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, or <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> —
 <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;b&quot;</span></code> raises <code class="docutils literal notranslate"><span class="pre">String</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'&lt;(_)'.</span></code>. Only <code class="docutils literal notranslate"><span class="pre">==</span></code> and
@@ -758,10 +770,13 @@ so missing data renders as empty output instead of crashing the request. On
 <li><p><code class="docutils literal notranslate"><span class="pre">null.map</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code> returns an empty list</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">null.to(Class)</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">null.toString</span></code> returns <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.toNum</span></code> returns <code class="docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">null.toBool</span></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
 </ul>
 <p>Any other method call on <code class="docutils literal notranslate"><span class="pre">null</span></code> still throws — <code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">implement</span> <span class="pre">'x'.</span></code>
 For example <code class="docutils literal notranslate"><span class="pre">null.get(&quot;key&quot;)</span></code> is a runtime error. Use the safe methods above, or
-a <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">default</span></code> fallback, in templates.</p>
+a <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">default</span></code> fallback, in templates. The default form is on <code class="docutils literal notranslate"><span class="pre">Map</span></code>:
+<code class="docutils literal notranslate"><span class="pre">map.get(&quot;key&quot;,</span> <span class="pre">fallback)</span></code>, not on a null value.</p>
 </section>
 <section id="lists">
 <h3>Lists<a class="headerlink" href="#lists" title="Link to this heading">#</a></h3>
@@ -777,8 +792,13 @@ a <code class="docutils literal notranslate"><span class="pre">||</span> <span c
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Alice"</span><span class="p">,</span><span class="w"> </span><span class="s2">"age"</span><span class="o">:</span><span class="w"> </span><span class="s2">"30"</span><span class="w"> </span><span class="p">}</span>
 <span class="n">map</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w">                     </span><span class="c1">// "Alice"</span>
 <span class="n">map</span><span class="o">.</span><span class="n">containsKey</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w">        </span><span class="c1">// false</span>
+<span class="n">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">)</span><span class="w">                </span><span class="c1">// null</span>
+<span class="n">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"email"</span><span class="p">,</span><span class="w"> </span><span class="s2">"none"</span><span class="p">)</span><span class="w">        </span><span class="c1">// "none"</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">map.get(key)</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">map[key]</span></code>; <code class="docutils literal notranslate"><span class="pre">map.get(key,</span> <span class="pre">default)</span></code> returns the
+default only when the key is missing, so a stored <code class="docutils literal notranslate"><span class="pre">null</span></code> still comes back as
+<code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
 </section>
 <section id="ranges">
 <h3>Ranges<a class="headerlink" href="#ranges" title="Link to this heading">#</a></h3>
@@ -1208,6 +1228,61 @@ from GitHub:</p>
 <p>See <a class="reference internal" href="external-modules.html"><span class="std std-doc">External Modules</span></a> for details on external
 imports, and the <a class="reference internal" href="advanced-routing.html"><span class="std std-doc">advanced routing guide</span></a> for
 file-based module resolution.</p>
+<section id="the-random-module">
+<h3>The <code class="docutils literal notranslate"><span class="pre">random</span></code> module<a class="headerlink" href="#the-random-module" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">random</span></code> is built into the binary. Import it explicitly:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"random"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Random</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">rng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Random</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="w">          </span><span class="c1">// seeded from the system</span>
+<span class="k">var</span><span class="w"> </span><span class="n">dice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rng</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">7</span><span class="p">)</span><span class="w">        </span><span class="c1">// 1 to 6</span>
+<span class="k">var</span><span class="w"> </span><span class="n">coin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rng</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span><span class="s2">"heads"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tails"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Random.new(seed)</span></code> takes a <code class="docutils literal notranslate"><span class="pre">Num</span></code> seed, or a sequence of up to 16 numbers, and is
+reproducible: the same seed and calls give the same values. Use it for tests,
+replays and seeded dice rolls. Methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">float()</span></code></p></td>
+<td><p>a number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">float(end)</span></code></p></td>
+<td><p>a number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">end)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">float(start,</span> <span class="pre">end)</span></code></p></td>
+<td><p>a number in <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">int()</span></code></p></td>
+<td><p>a non-negative whole number</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">int(end)</span></code></p></td>
+<td><p>a whole number in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">end)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">int(start,</span> <span class="pre">end)</span></code></p></td>
+<td><p>a whole number in <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sample(list)</span></code></p></td>
+<td><p>one random element</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sample(list,</span> <span class="pre">count)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">count</span></code> distinct random elements</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shuffle(list)</span></code></p></td>
+<td><p>shuffles <code class="docutils literal notranslate"><span class="pre">list</span></code> in place</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">int(end)</span></code> excludes <code class="docutils literal notranslate"><span class="pre">end</span></code>. A six-sided die is
+<code class="docutils literal notranslate"><span class="pre">rng.int(1,</span> <span class="pre">7)</span></code>, not <code class="docutils literal notranslate"><span class="pre">rng.int(1,</span> <span class="pre">6)</span></code>.</p>
+</div></blockquote>
+</section>
 </section>
 <section id="bialet-vs-standard-wren">
 <h2>Bialet vs. Standard Wren<a class="headerlink" href="#bialet-vs-standard-wren" title="Link to this heading">#</a></h2>
@@ -1296,7 +1371,7 @@ untrusted input, or your own domain logic.</p>
 <td><p>File uploads stored in SQLite — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Markdown</span></code></p></td>
-<td><p>Render Markdown to HTML — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
+<td><p>Render Markdown, list Markdown files and read front matter — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Json</span></code></p></td>
 <td><p>JSON parse and stringify — see <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a></p></td>
@@ -1426,7 +1501,10 @@ untrusted input, or your own domain logic.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-extensions">Bialet Extensions</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-random-module">The <code class="docutils literal notranslate"><span class="pre">random</span></code> module</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-vs-standard-wren">Bialet vs. Standard Wren</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-concurrency">No Concurrency</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fiber-is-not-tested">Fiber Is Not Tested</a></li>

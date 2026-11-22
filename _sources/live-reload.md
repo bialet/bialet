@@ -84,6 +84,20 @@ next poll picks it up.
 The Wren VM also reloads automatically on `.wren` file changes — this is
 independent of live reload and happens regardless of the config setting.
 
+Start the server with `--no-watch` to turn the watcher off entirely:
+
+```bash
+bialet dev --no-watch
+```
+
+With it, no file event fires: the `/_livereload` version never changes, so the
+browser never reloads, and migrations and cron installs are not re-run when
+their file is saved. Pages are still recompiled on the next request (unless
+`-x` caches them), so a page edit shows up when you reload by hand. Migrations
+and cron still run once at startup; editing `_migration.wren` or `_cron.wren`
+then requires a restart to take effect. See
+[Editing migrations without applying them](usage.md#editing-migrations-without-applying-them).
+
 ## Limitations
 
 - **Polling, not push.** There's a 1-second delay between saving a file and

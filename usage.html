@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -445,6 +445,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version">Version</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quiet-mode">Quiet mode</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#editing-migrations-without-applying-them">Editing migrations without applying them</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>
@@ -533,7 +534,7 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>None</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code>, <code class="docutils literal notranslate"><span class="pre">--validate</span></code></p></td>
-<td><p>Validate the syntax of a Wren file, then exit</p></td>
+<td><p>Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit</p></td>
 <td><p>None</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-T</span></code>, <code class="docutils literal notranslate"><span class="pre">--tests</span></code></p></td>
@@ -600,6 +601,10 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>Quiet: suppress the browser auto-open and colored output</p></td>
 <td><p>Disabled</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-W</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code></p></td>
+<td><p>Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved</p></td>
+<td><p>Disabled (watcher on)</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -660,7 +665,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.24</span>
+<span class="c1"># bialet 1.2.25</span>
 </pre></div>
 </div>
 </section>
@@ -671,6 +676,23 @@ Useful in scripts, containers, and CI:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-q<span class="w"> </span>/path/to/app
 </pre></div>
 </div>
+</section>
+<section id="editing-migrations-without-applying-them">
+<h3>Editing migrations without applying them<a class="headerlink" href="#editing-migrations-without-applying-them" title="Link to this heading">#</a></h3>
+<p>A migration runs at startup and again whenever <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> is saved. While
+you draft one, that save-triggered run applies half-written SQL to the
+database. Start the server with <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to keep only the startup run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>--no-watch<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p>Edit and save the file freely, then check that it compiles without running it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-t<span class="w"> </span>_migration.wren
+</pre></div>
+</div>
+<p>Restart the server without <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to apply the new migration. The flag
+turns the whole file watcher off, so live reload is off for that run too. The
+server still runs migrations and installs cron once at startup, and prints a
+notice saying watching is disabled.</p>
 </section>
 </section>
 <section id="run-code-from-the-command-line">
@@ -688,6 +710,15 @@ Useful in scripts, containers, and CI:</p>
 <code class="docutils literal notranslate"><span class="pre">Request.post(...)</span></code> return null. It does initialize the framework tables, so
 <code class="docutils literal notranslate"><span class="pre">Config</span></code> and <code class="docutils literal notranslate"><span class="pre">Session</span></code> work. Your app’s own tables exist only if the database
 was already migrated (for example by starting the server or running <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code>).</p>
+<p>Relative imports resolve against the app root, so a module next to your pages
+can be imported directly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-r<span class="w"> </span><span class="s1">'import "lib" for X</span>
+<span class="s1">System.print(X.value)'</span>
+</pre></div>
+</div>
+<p>The import still goes through the module loader’s containment check: a path that
+escapes the app root (<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">&quot;../outside&quot;</span></code>) fails and exits non-zero. Wren uses
+newlines, not semicolons, so separate statements with a newline.</p>
 </section>
 <section id="running-tests">
 <h2>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h2>
@@ -705,19 +736,32 @@ same way you run the server:</p>
 <p>If you start your server from the app directory:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/app
 bialet<span class="w">               </span><span class="c1"># starts server</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w"> </span><span class="c1"># validates syntax</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w"> </span><span class="c1"># compiles the file</span>
 </pre></div>
 </div>
 <p>If you start your server with an explicit root path:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>/path/to/app<span class="w">                         </span><span class="c1"># starts server</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/index.wren<span class="w"> </span>/path/to/app<span class="w"> </span><span class="c1"># validates syntax</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/index.wren<span class="w"> </span>/path/to/app<span class="w"> </span><span class="c1"># compiles the file</span>
 </pre></div>
 </div>
 <p>The root path is required when your file imports from <code class="docutils literal notranslate"><span class="pre">_app/</span></code> or uses relative
 imports. If you omit it for such files, the validator will exit with an error.</p>
-<p>This will validate the syntax and exit with code <code class="docutils literal notranslate"><span class="pre">0</span></code> if the syntax is valid, or
-code <code class="docutils literal notranslate"><span class="pre">1</span></code> if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-t</span></code> compiles the file and every local module it imports. It does not execute
+any of them, so runtime errors are not reported and migrations do not run:
+<code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span> <span class="pre">_migration.wren</span></code> leaves the database untouched even when the
+migration is valid. Remote imports (<code class="docutils literal notranslate"><span class="pre">http:</span></code>, <code class="docutils literal notranslate"><span class="pre">gh:</span></code>) are not fetched. A missing
+local import is not a syntax error; it only fails when the page runs.</p>
+<p>It also parses every backtick SQL literal it finds, including in imported
+modules, by asking SQLite to prepare it. Nothing is executed: a <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span></code>
+in a migration is parsed, not run, and no migration is recorded. Only syntax
+errors fail the check — a misspelled keyword, an unbalanced parenthesis, or a
+duplicated <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code>. Errors that depend on the schema (a missing table, column,
+or function) are ignored, because a fresh database has none of the tables yet
+and a migration validates its <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> before its <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> has a table to
+target. SQL built at runtime with <code class="docutils literal notranslate"><span class="pre">String</span></code> formatting and SQL passed as a
+double-quoted string are not checked.</p>
+<p>This will exit with code <code class="docutils literal notranslate"><span class="pre">0</span></code> if the syntax is valid, or code <code class="docutils literal notranslate"><span class="pre">1</span></code> if there are
+compilation errors. Useful for CI/CD pipelines and pre-commit hooks.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: Check syntax before deploying (explicit root path)</span>
 <span class="k">if</span><span class="w"> </span>bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/main.wren<span class="w"> </span>/path/to/app<span class="p">;</span><span class="w"> </span><span class="k">then</span>
 <span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Syntax OK, deploying..."</span>
@@ -818,6 +862,7 @@ the server.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#version">Version</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quiet-mode">Quiet mode</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#editing-migrations-without-applying-them">Editing migrations without applying them</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>

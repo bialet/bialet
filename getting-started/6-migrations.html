@@ -58,7 +58,7 @@
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started/6-migrations';</script>
-    <script defer="defer" src="../_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="../_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="../_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="5. Logic &amp; Database" href="5-logic-database.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -467,6 +467,11 @@
 <li><p>Migrations run once — the name prevents re-execution</p></li>
 <li><p>They run on every server start, so adding new ones is safe</p></li>
 </ul>
+<blockquote>
+<div><p>⚠️ Pitfall: the SQL argument must be a backtick query literal. A double-quoted
+Wren string is single-line, so a newline in it fails with <code class="docutils literal notranslate"><span class="pre">Unterminated</span> <span class="pre">string.</span></code> and usually a second <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">')'</span> <span class="pre">after</span> <span class="pre">arguments.</span></code> at the next line.
+Use <code class="docutils literal notranslate"><span class="pre">`</span></code> around the SQL, never <code class="docutils literal notranslate"><span class="pre">&quot;</span></code>.</p>
+</div></blockquote>
 <p>Migrations are the recommended way to manage your schema. They keep your
 database in sync with your code and make it easy to share your project —
 anyone who runs it gets the same schema automatically.</p>

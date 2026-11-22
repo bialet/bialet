@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -447,7 +447,10 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-requirements">Model Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-sql-pitfall">Migration SQL Pitfall</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
 </ul>
             </nav>
@@ -491,7 +494,10 @@ concurrent reads and writes without blocking. See the
 <li><p><code class="docutils literal notranslate"><span class="pre">order(column,</span> <span class="pre">direction,</span> <span class="pre">allowedColumns,</span> <span class="pre">limit)</span></code>: Append a safe ORDER BY clause. See <a class="reference internal" href="#safe-sorting-with-order">Safe Sorting</a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">to(Class)</span></code>: Map results to domain class instances. See <a class="reference internal" href="#mapping-results-to-domain-classes">Mapping to Domain Classes</a>.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a LIMIT clause.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">first()</span></code>, <code class="docutils literal notranslate"><span class="pre">val</span></code>, <code class="docutils literal notranslate"><span class="pre">toNum</span></code>, and <code class="docutils literal notranslate"><span class="pre">toBool</span></code> methods automatically add a
+<code class="docutils literal notranslate"><span class="pre">LIMIT</span> <span class="pre">1</span></code> clause to a <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> that does not already have one. Do not add your
+own <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> for them: an existing top-level <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> is detected and the query is
+left untouched, so <code class="docutils literal notranslate"><span class="pre">.first()</span></code> on <code class="docutils literal notranslate"><span class="pre">...</span> <span class="pre">LIMIT</span> <span class="pre">1</span></code> is safe.</p>
 <p>You can’t concatenate strings or use interpolations with the Query object. When
 you need to add parameters, use placeholders <code class="docutils literal notranslate"><span class="pre">?</span></code> and send the parameters to the
 method.</p>
@@ -501,12 +507,12 @@ method.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">(params)</span></code>: An array of parameters.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1)</span></code>: Any non array parameter is converted to String.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2)</span></code>: Convert all parameters to String.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">param2,</span> <span class="pre">param3)</span></code>: Convert all parameters to String.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(param1,</span> <span class="pre">...,</span> <span class="pre">param7)</span></code>: Up to seven positional parameters.</p></li>
 </ul>
+<p>Methods accept at most <strong>seven</strong> positional parameters. More than seven must be
+passed as an array (<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">...,</span> <span class="pre">param8])</span></code>).</p>
 <p>They can also be used as a property: <code class="docutils literal notranslate"><span class="pre">.query</span></code>, <code class="docutils literal notranslate"><span class="pre">.fetch</span></code>, <code class="docutils literal notranslate"><span class="pre">.first</span></code>, <code class="docutils literal notranslate"><span class="pre">.val</span></code> and
 <code class="docutils literal notranslate"><span class="pre">.toNum</span></code>.</p>
-<p>If you need more parameters, use the array syntax
-(<code class="docutils literal notranslate"><span class="pre">([param1,</span> <span class="pre">param2,</span> <span class="pre">param3,</span> <span class="pre">param4,</span> <span class="pre">param5,</span> <span class="pre">...])</span></code>).</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// This will fail</span>
 <span class="k">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span>
 <span class="sb">`SELECT * FROM users WHERE id = %(id)`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
@@ -822,9 +828,43 @@ consider encoding it as base64 or using another text-based representation.</p>
 <p>The migration file can be in the root and be called <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or be
 inside the <code class="docutils literal notranslate"><span class="pre">_app</span></code> folder, <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>.</p>
 <p>This script will be run every time the application starts and also when a Wren
-file is updated. For a complete migration example in the context of a REST API,
+file is updated. Start the server with <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to stop the save-triggered
+run: migrations still run once at startup, but editing the file then needs a
+restart to apply. See <a class="reference internal" href="usage.html#editing-migrations-without-applying-them"><span class="std std-ref">Editing migrations without applying them</span></a>.
+For a complete migration example in the context of a REST API,
 see the <a class="reference internal" href="rest-api.html"><span class="std std-doc">Building REST APIs</span></a> guide.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Name of the migration"</span><span class="p">,</span><span class="w"> </span><span class="sb">`SOME QUERY`</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check a migration before it runs with <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span> <span class="pre">_migration.wren</span></code>. It compiles
+the file and asks SQLite to parse every backtick literal without executing
+anything, so a duplicated <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> or another syntax error fails the check. It
+ignores missing table and column errors, so a <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span></code> followed by an
+<code class="docutils literal notranslate"><span class="pre">INSERT</span></code> still passes on a fresh database. While drafting a migration, serve
+with <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to stop the save-triggered run, check the file with <code class="docutils literal notranslate"><span class="pre">-t</span></code>, then
+restart the server to apply it.</p>
+<section id="migration-sql-pitfall">
+<h3>Migration SQL Pitfall<a class="headerlink" href="#migration-sql-pitfall" title="Link to this heading">#</a></h3>
+<blockquote>
+<div><p>⚠️ Pitfall: the SQL argument must be a backtick query literal, not a
+double-quoted string. A Wren double-quoted string cannot span lines, so a real
+newline inside one fails with <code class="docutils literal notranslate"><span class="pre">Unterminated</span> <span class="pre">string.</span></code> — and it usually reports
+a second <code class="docutils literal notranslate"><span class="pre">Expect</span> <span class="pre">')'</span> <span class="pre">after</span> <span class="pre">arguments.</span></code> at the next line, because the call is
+left incomplete.</p>
+</div></blockquote>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong: a double-quoted Wren string is single-line.</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"init"</span><span class="p">,</span><span class="w"> </span><span class="s2">"CREATE TABLE t (</span>
+<span class="s2">  id INTEGER</span>
+<span class="s2">)"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use backticks, which keep the newlines:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Correct: the backtick literal keeps the newlines.</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"init"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE t (</span>
+<span class="sb">    id INTEGER</span>
+<span class="sb">  )</span>
+<span class="sb">`</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The name of the migration is used to avoid repeating migrations. Use a
@@ -835,6 +875,7 @@ descriptive name.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add default title"</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES ('title', 'Bialet example page')`</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
 </section>
 <section id="bialet-tables">
 <h2>Bialet tables<a class="headerlink" href="#bialet-tables" title="Link to this heading">#</a></h2>
@@ -914,7 +955,10 @@ modifier. See <a class="reference internal" href="datetime.html#stored-timestamp
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#insert-and-update">Insert and Update</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-requirements">Model Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-sql-pitfall">Migration SQL Pitfall</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
 </ul>
   </nav></div>

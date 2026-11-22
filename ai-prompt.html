@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -755,18 +755,18 @@ empty sequence are blank. <span class="sb">`false`</span> and <span class="sb">`
 (<span class="sb">`false.isBlank == false`</span>). <span class="sb">`isEmpty`</span> remains the zero-elements check:
 <span class="sb">`"   ".isEmpty`</span> is <span class="sb">`false`</span> while <span class="sb">`"   ".isBlank`</span> is <span class="sb">`true`</span>.
 
-<span class="k">&gt; </span><span class="ge">**Pitfall:** `return &lt;tag&gt;` on the same physical line is a compile error</span>
-<span class="k">&gt; </span><span class="ge">(`Expected expression` at `return`), regardless of what's inside the tag.</span>
-<span class="k">&gt; </span><span class="ge">Always put the tag on the line after `return`:</span>
+<span class="k">&gt; </span><span class="ge">**Pitfall:** `return` is a statement and does not belong inside a block</span>
+<span class="k">&gt; </span><span class="ge">callback (`Expected expression` at `return`). Use the block's expression</span>
+<span class="k">&gt; </span><span class="ge">without it:</span>
 <span class="k">&gt; </span><span class="ge">```wren</span>
 <span class="k">&gt; </span><span class="ge">// WRONG</span>
 <span class="k">&gt; </span><span class="ge">list.map { |x| return &lt;div&gt;{{ x }}&lt;/div&gt; }</span>
 <span class="k">&gt; </span><span class="ge">// CORRECT</span>
-<span class="k">&gt; </span><span class="ge">list.map { |x|</span>
-<span class="k">&gt; </span><span class="ge">  return &lt;div&gt;{{ x }}&lt;/div&gt;</span>
-<span class="k">&gt; </span><span class="ge">}</span>
+<span class="k">&gt; </span><span class="ge">list.map { |x| &lt;div&gt;{{ x }}&lt;/div&gt; }</span>
 <span class="k">&gt; </span><span class="ge">```</span>
-
+<span class="k">&gt; </span><span class="ge">`return &lt;tag&gt;` on one line is fine at the top level and inside a multi-line</span>
+<span class="k">&gt; </span><span class="ge">method body. A newline ends the statement: `return` alone returns</span>
+<span class="k">&gt; </span><span class="ge">immediately, and a tag on the next line is a separate expression.</span>
 <span class="gs">**Inline HTML strings**</span> are Wren's template mechanism — no separate template
 language:
 
@@ -1179,6 +1179,11 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
   descriptive name.
 <span class="k">-</span><span class="w"> </span><span class="sb">`_migration.wren`</span> (root) and <span class="sb">`_app/migration.wren`</span> are equivalent — this
   guide uses the <span class="sb">`_app/`</span> form.
+<span class="k">-</span><span class="w"> </span>To edit a migration without applying it, serve with <span class="sb">`--no-watch`</span> (no
+  save-triggered run), check the file with <span class="sb">`bialet -t _migration.wren`</span> (it
+  compiles the Wren and parses every backtick query with SQLite, catching
+  syntax errors such as a duplicated <span class="sb">`LIMIT`</span> without running anything), then
+  restart the server without the flag to apply it.
 
 <span class="gu">### `BIALET_*` System Tables</span>
 
@@ -1832,7 +1837,8 @@ give them unique names and do not collide with <span class="sb">`UNIQUE`</span> 
 <span class="sb">```bash</span>
 bialet<span class="w">              </span><span class="c1"># runs the current directory on 127.0.0.1:7001</span>
 bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>.<span class="w">    </span><span class="c1"># explicit port and directory</span>
-bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w">              </span><span class="c1"># validate a standalone file's syntax</span>
+bialet<span class="w"> </span>--no-watch<span class="w"> </span>.<span class="w"> </span><span class="c1"># no file watcher: no live reload, no migration-on-save</span>
+bialet<span class="w"> </span>-t<span class="w"> </span>index.wren<span class="w">              </span><span class="c1"># validate syntax and backtick SQL, run nothing</span>
 bialet<span class="w"> </span>-t<span class="w"> </span>app/main.wren<span class="w"> </span>/my/app<span class="w">   </span><span class="c1"># validate with app context (for _app/ imports)</span>
 bialet<span class="w"> </span>-T<span class="w">                         </span><span class="c1"># run the test suite in _tests/</span>
 <span class="sb">```</span>

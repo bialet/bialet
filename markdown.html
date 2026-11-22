@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/markdown.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Two methods on the Markdown class: Use the result..." />
+<meta property="og:description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Four methods on the Markdown class: Use the resul..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Two methods on the Markdown class: Use the result..." />
+<meta name="description" content="Bialet renders Markdown to HTML with a built-in parser. No external library, no bundler — the renderer ships inside the binary. Rendering Markdown: Four methods on the Markdown class: Use the resul..." />
 
     <title>Markdown &#8212; Bialet</title>
   
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'markdown';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Forms" href="forms.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -439,6 +439,7 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rendering-markdown">Rendering Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#listing-and-metadata">Listing and Metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-syntax">Supported Syntax</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
@@ -459,12 +460,18 @@
 no bundler — the renderer ships inside the binary.</p>
 <section id="rendering-markdown">
 <h2>Rendering Markdown<a class="headerlink" href="#rendering-markdown" title="Link to this heading">#</a></h2>
-<p>Two methods on the <code class="docutils literal notranslate"><span class="pre">Markdown</span></code> class:</p>
+<p>Four methods on the <code class="docutils literal notranslate"><span class="pre">Markdown</span></code> class:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Render a Markdown string</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">html</span><span class="p">(</span><span class="s2">"## Hello **World**!"</span><span class="p">)</span>
 
 <span class="c1">// Read a .md file from the app directory and render it</span>
 <span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"about.md"</span><span class="p">)</span>
+
+<span class="c1">// List the public Markdown files in a directory</span>
+<span class="k">var</span><span class="w"> </span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">"cards"</span><span class="p">)</span>
+
+<span class="c1">// Read the front matter of a .md file as a Map</span>
+<span class="k">var</span><span class="w"> </span><span class="n">meta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="s2">"cards/01.md"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Use the result anywhere a string works — interpolate it into a page:</p>
@@ -473,8 +480,50 @@ no bundler — the renderer ships inside the binary.</p>
 <span class="x">&lt;/main&gt;</span>
 </pre></div>
 </div>
-<p>The full API reference for both methods lives in the
+<p>The full API reference for every method lives in the
 <a class="reference internal" href="reference.html"><span class="std std-doc">Reference</span></a> under “Markdown”.</p>
+</section>
+<section id="listing-and-metadata">
+<h2>Listing and Metadata<a class="headerlink" href="#listing-and-metadata" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Markdown.list(dir)</span></code> returns a sorted <code class="docutils literal notranslate"><span class="pre">List</span></code> of bare filenames in <code class="docutils literal notranslate"><span class="pre">dir</span></code>, relative
+to the app root. <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> means the root itself. Only <code class="docutils literal notranslate"><span class="pre">.md</span></code> and <code class="docutils literal notranslate"><span class="pre">.markdown</span></code> files
+(case-insensitive) are returned, and names starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> are skipped:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">"cards"</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nc">System</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w">          </span><span class="c1">// "01.md", "02.md", ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A missing, empty or invalid directory returns <code class="docutils literal notranslate"><span class="pre">[]</span></code>. The directory must stay
+inside the app root, and no path component may start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>.
+<code class="docutils literal notranslate"><span class="pre">Markdown.list(&quot;../&quot;)</span></code> and <code class="docutils literal notranslate"><span class="pre">Markdown.list(&quot;_private&quot;)</span></code> both return <code class="docutils literal notranslate"><span class="pre">[]</span></code>.
+Symlinks and non-regular files are not listed and are never followed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Markdown.meta(file)</span></code> reads leading YAML-ish front matter and returns a
+<code class="docutils literal notranslate"><span class="pre">Map</span></code> of <code class="docutils literal notranslate"><span class="pre">String</span></code> to <code class="docutils literal notranslate"><span class="pre">String</span></code>:</p>
+<div class="highlight-markdown notranslate"><div class="highlight"><pre><span></span>---
+title: The Coral Path
+category: "adventure"
+<span class="gu">status: 'draft'</span>
+<span class="gu">---</span>
+<span class="gh"># The Coral Path</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">meta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="s2">"cards/01.md"</span><span class="p">)</span>
+<span class="n">meta</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w">      </span><span class="c1">// "The Coral Path"</span>
+<span class="n">meta</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span><span class="w">   </span><span class="c1">// "adventure" (quotes stripped)</span>
+</pre></div>
+</div>
+<p>The opener and closer must each be a line containing only <code class="docutils literal notranslate"><span class="pre">---</span></code>. Keys and values
+are trimmed, one matching pair of single or double quotes around a value is
+removed, and blank lines and lines starting with <code class="docutils literal notranslate"><span class="pre">#</span></code> are ignored. Files without
+front matter return <code class="docutils literal notranslate"><span class="pre">{}</span></code>; a missing or unreadable file returns <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p>Front matter is <strong>flat</strong>: nested keys, lists, and multi-line values are not
+parsed. A line without a <code class="docutils literal notranslate"><span class="pre">:</span></code> is ignored, and a later key overwrites an earlier
+one with the same name. <code class="docutils literal notranslate"><span class="pre">Markdown.meta</span></code> applies the same <code class="docutils literal notranslate"><span class="pre">.md</span></code>-only, app-root and
+private-name rules as <code class="docutils literal notranslate"><span class="pre">Markdown.file</span></code>.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Markdown.file</span></code> still skips front matter. It is metadata, not
+content, and <code class="docutils literal notranslate"><span class="pre">Markdown.meta</span></code> is the only way to read it.</p>
+</div></blockquote>
 </section>
 <section id="supported-syntax">
 <h2>Supported Syntax<a class="headerlink" href="#supported-syntax" title="Link to this heading">#</a></h2>
@@ -554,13 +603,32 @@ readable</strong>, it does not throw. Guard against it:</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> reads only Markdown inside the app root.</strong> The path must
 end in <code class="docutils literal notranslate"><span class="pre">.md</span></code> or <code class="docutils literal notranslate"><span class="pre">.markdown</span></code>, must stay inside the app root, and no component may
 start with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>: <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;_about.md&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;config.json&quot;)</span></code>
-and <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;page.wren&quot;)</span></code> all return <code class="docutils literal notranslate"><span class="pre">false</span></code>. That keeps
+and <code class="docutils literal notranslate"><span class="pre">Markdown.file(&quot;page.wren&quot;)</span></code> all return <code class="docutils literal notranslate"><span class="pre">false</span></code>. <code class="docutils literal notranslate"><span class="pre">Markdown.list()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Markdown.meta()</span></code> apply the same rules. That keeps
 <code class="docutils literal notranslate"><span class="pre">Markdown.file(Request.get(&quot;page&quot;))</span></code> from handing out private files, config or
 route source, but still prefer an allow-list of page names over a raw request
 value.</p>
-<p><strong>Front matter is skipped, not parsed.</strong> A leading <code class="docutils literal notranslate"><span class="pre">---</span></code> block is dropped from
-the output. Metadata inside it (title, date, tags) is not exposed — you must
-read it yourself if you need it.</p>
+<p><strong>Front matter is skipped by <code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code>, not parsed into the output.</strong> A
+leading <code class="docutils literal notranslate"><span class="pre">---</span></code> block is dropped from the rendered HTML. Use <code class="docutils literal notranslate"><span class="pre">Markdown.meta()</span></code> to
+read its keys; the renderer never includes them.</p>
+<p><strong>Converting the rendered HTML to a <code class="docutils literal notranslate"><span class="pre">String</span></code> loses its safe marker.</strong>
+<code class="docutils literal notranslate"><span class="pre">Markdown.file()</span></code> returns an <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, which <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> inserts verbatim. As soon
+as you turn it into a plain <code class="docutils literal notranslate"><span class="pre">String</span></code> — with <code class="docutils literal notranslate"><span class="pre">.toString</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;%(...)&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">.split(...)</span></code> — the value is ordinary text again and <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> escapes its tags.
+Re-mark the piece you want to render with <code class="docutils literal notranslate"><span class="pre">.raw</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Split a post at &lt;!--more--&gt; and render the first part inline</span>
+<span class="k">var</span><span class="w"> </span><span class="n">chunks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Markdown</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="s2">"post.md"</span><span class="p">)</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"&lt;!--more--&gt;"</span><span class="p">)</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;article&gt;</span>
+<span class="x">  {{ chunks[0] }}</span>
+<span class="x">  &lt;a href="/post"&gt;</span><span class="nc">Read</span><span class="w"> </span><span class="n">more</span><span class="x">&lt;/a&gt;</span>
+<span class="x">  {{ chunks[1].raw }}</span>
+<span class="x">&lt;/article&gt;</span>
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">.raw</span></code>, <code class="docutils literal notranslate"><span class="pre">chunks[1]</span></code> renders as visible <code class="docutils literal notranslate"><span class="pre">&lt;p&gt;</span></code> tags. <code class="docutils literal notranslate"><span class="pre">.raw</span></code> asserts the
+string is already safe HTML, so only do this to markup you produced yourself or
+trust (see <a class="reference internal" href="#security">Security</a>).</p>
 </section>
 </section>
 
@@ -611,6 +679,7 @@ read it yourself if you need it.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rendering-markdown">Rendering Markdown</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#listing-and-metadata">Listing and Metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-syntax">Supported Syntax</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#security">Security</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>

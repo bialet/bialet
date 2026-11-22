@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'live-reload';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=2094be42"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Command Line Usage" href="usage.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.24" />
+  <meta name="docsearch:version" content="1.2.25" />
   </head>
   
   
@@ -528,6 +528,17 @@ any file is created, modified, or deleted, the version number updates and the
 next poll picks it up.</p>
 <p>The Wren VM also reloads automatically on <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file changes — this is
 independent of live reload and happens regardless of the config setting.</p>
+<p>Start the server with <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to turn the watcher off entirely:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>dev<span class="w"> </span>--no-watch
+</pre></div>
+</div>
+<p>With it, no file event fires: the <code class="docutils literal notranslate"><span class="pre">/_livereload</span></code> version never changes, so the
+browser never reloads, and migrations and cron installs are not re-run when
+their file is saved. Pages are still recompiled on the next request (unless
+<code class="docutils literal notranslate"><span class="pre">-x</span></code> caches them), so a page edit shows up when you reload by hand. Migrations
+and cron still run once at startup; editing <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code>
+then requires a restart to take effect. See
+<a class="reference internal" href="usage.html#editing-migrations-without-applying-them"><span class="std std-ref">Editing migrations without applying them</span></a>.</p>
 </section>
 </section>
 <section id="limitations">

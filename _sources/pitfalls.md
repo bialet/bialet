@@ -257,8 +257,9 @@ This is the classic "the list works until the first row exists" 500.
 
 ## 19. `{{ }}` must sit inside an HTML tag
 
-At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
-fails with `Expect '}' after map entries`:
+`{{ }}` is interpolation **inside an HTML literal** only. It is not a general
+template delimiter: a standalone `{{ aviso }}` is Wren map/block syntax, not
+output, and fails with `Expect '}' after map entries`:
 
 ```wren
 // wrong: no enclosing tag

@@ -1062,8 +1062,16 @@ var s = "hello"
 var t = s + " world"   // "hello world"
 ```
 
-Strings are immutable. Index with `s[i]` to get a single-character string at
-byte offset `i`. `.count` is the byte length.
+Strings are immutable. `.count` is the number of **code points**, not bytes:
+`"Arpón".count` is `5`. Indexing, `indexOf`, and ranges use **byte offsets**, so
+`"Arpón"[0..4]` is not the whole string. `.bytes.count` gives the byte length
+(`"Arpón".bytes.count` is `6`), and `.codePoints` gives the code points.
+
+> ⚠️ Pitfall: mixing `.count` with byte offsets truncates accented text.
+> `line[0..line.count - 1]` drops the last byte of every multi-byte character.
+> Split on a delimiter (`line.split(":")`) instead of slicing by index, or use
+> `.codePoints` / `.bytes.count` when you really need character or byte
+> arithmetic.
 
 > ⚠️ Pitfall: strings don't implement `<`, `>`, `<=`, or `>=` —
 > `"a" < "b"` raises `String does not implement '<(_)'.`. Only `==` and
@@ -1088,10 +1096,13 @@ so missing data renders as empty output instead of crashing the request. On
 - `null.map { ... }` returns an empty list
 - `null.to(Class)` returns `null`
 - `null.toString` returns `""`
+- `null.toNum` returns `0`
+- `null.toBool` returns `false`
 
 Any other method call on `null` still throws — `Null does not implement 'x'.`
 For example `null.get("key")` is a runtime error. Use the safe methods above, or
-a `|| default` fallback, in templates.
+a `|| default` fallback, in templates. The default form is on `Map`:
+`map.get("key", fallback)`, not on a null value.
 
 ### Lists
 
@@ -1108,7 +1119,13 @@ list.count    // 5
 var map = { "name": "Alice", "age": "30" }
 map["name"]                     // "Alice"
 map.containsKey("email")        // false
+map.get("email")                // null
+map.get("email", "none")        // "none"
 ```
+
+`map.get(key)` is the same as `map[key]`; `map.get(key, default)` returns the
+default only when the key is missing, so a stored `null` still comes back as
+`null`.
 
 ### Ranges
 
@@ -1576,6 +1593,37 @@ See [External Modules](external-modules.md) for details on external
 imports, and the [advanced routing guide](advanced-routing.md) for
 file-based module resolution.
 
+### The `random` module
+
+`random` is built into the binary. Import it explicitly:
+
+```wren
+import "random" for Random
+
+var rng = Random.new()          // seeded from the system
+var dice = rng.int(1, 7)        // 1 to 6
+var coin = rng.sample(["heads", "tails"])
+```
+
+`Random.new(seed)` takes a `Num` seed, or a sequence of up to 16 numbers, and is
+reproducible: the same seed and calls give the same values. Use it for tests,
+replays and seeded dice rolls. Methods:
+
+| Method | Result |
+|---|---|
+| `float()` | a number in `[0, 1)` |
+| `float(end)` | a number in `[0, end)` |
+| `float(start, end)` | a number in `[start, end)` |
+| `int()` | a non-negative whole number |
+| `int(end)` | a whole number in `[0, end)` |
+| `int(start, end)` | a whole number in `[start, end)` |
+| `sample(list)` | one random element |
+| `sample(list, count)` | `count` distinct random elements |
+| `shuffle(list)` | shuffles `list` in place |
+
+> ⚠️ Pitfall: `int(end)` excludes `end`. A six-sided die is
+> `rng.int(1, 7)`, not `rng.int(1, 6)`.
+
 ## Bialet vs. Standard Wren
 
 Bialet uses a modified Wren VM with additions for web development. Here's what
@@ -1645,7 +1693,7 @@ Bialet adds these classes on top of standard Wren:
 | `Http`     | Outbound HTTP requests (GET/POST/PUT/DELETE) — see [HTTP Calls](http-calls.md)            |
 | `Date`     | Date and time with formatting, arithmetic, and timezones — see [Reference](reference.md)  |
 | `File`     | File uploads stored in SQLite — see [Reference](reference.md)                             |
-| `Markdown` | Render Markdown to HTML — see [Reference](reference.md)                                   |
+| `Markdown` | Render Markdown, list Markdown files and read front matter — see [Reference](reference.md) |
 | `Json`     | JSON parse and stringify — see [Reference](reference.md)                                  |
 | `Config`   | Key-value configuration store — see [Reference](reference.md)                             |
 | `Cron`     | Scheduled tasks — see [Reference](reference.md)                                           |
@@ -2354,6 +2402,11 @@ Db.migrate("Add initial data", `
 - Migrations run once — the name prevents re-execution
 - They run on every server start, so adding new ones is safe
 
+> ⚠️ Pitfall: the SQL argument must be a backtick query literal. A double-quoted
+> Wren string is single-line, so a newline in it fails with `Unterminated
+> string.` and usually a second `Expect ')' after arguments.` at the next line.
+> Use `` ` `` around the SQL, never `"`.
+
 Migrations are the recommended way to manage your schema. They keep your
 database in sync with your code and make it easy to share your project —
 anyone who runs it gets the same schema automatically.
@@ -2591,7 +2644,10 @@ Additional methods available on Query objects:
 - `order(column, direction, allowedColumns, limit)`: Append a safe ORDER BY clause. See [Safe Sorting](#safe-sorting-with-order).
 - `to(Class)`: Map results to domain class instances. See [Mapping to Domain Classes](#mapping-results-to-domain-classes).
 
-The `first()`, `val`, `toNum`, and `toBool` methods automatically add a LIMIT clause.
+The `first()`, `val`, `toNum`, and `toBool` methods automatically add a
+`LIMIT 1` clause to a `SELECT` that does not already have one. Do not add your
+own `LIMIT` for them: an existing top-level `LIMIT` is detected and the query is
+left untouched, so `.first()` on `... LIMIT 1` is safe.
 
 You can't concatenate strings or use interpolations with the Query object. When
 you need to add parameters, use placeholders `?` and send the parameters to the
@@ -2603,13 +2659,13 @@ All methods receive the following parameters:
 - `(params)`: An array of parameters.
 - `(param1)`: Any non array parameter is converted to String.
 - `(param1, param2)`: Convert all parameters to String.
-- `(param1, param2, param3)`: Convert all parameters to String.
+- `(param1, ..., param7)`: Up to seven positional parameters.
+
+Methods accept at most **seven** positional parameters. More than seven must be
+passed as an array (`([param1, ..., param8])`).
 
 They can also be used as a property: `.query`, `.fetch`, `.first`, `.val` and
 `.toNum`.
-
-If you need more parameters, use the array syntax
-(`([param1, param2, param3, param4, param5, ...])`).
 
 ```wren
 // This will fail
@@ -2967,12 +3023,49 @@ The migration file can be in the root and be called `_migration.wren` or be
 inside the `_app` folder, `_app/migration.wren`.
 
 This script will be run every time the application starts and also when a Wren
-file is updated. For a complete migration example in the context of a REST API,
+file is updated. Start the server with `--no-watch` to stop the save-triggered
+run: migrations still run once at startup, but editing the file then needs a
+restart to apply. See [Editing migrations without applying them](usage.md#editing-migrations-without-applying-them).
+For a complete migration example in the context of a REST API,
 see the [Building REST APIs](rest-api.md) guide.
 
 ```wren
 
 Db.migrate("Name of the migration", `SOME QUERY`)
+```
+
+Check a migration before it runs with `bialet -t _migration.wren`. It compiles
+the file and asks SQLite to parse every backtick literal without executing
+anything, so a duplicated `LIMIT` or another syntax error fails the check. It
+ignores missing table and column errors, so a `CREATE TABLE` followed by an
+`INSERT` still passes on a fresh database. While drafting a migration, serve
+with `--no-watch` to stop the save-triggered run, check the file with `-t`, then
+restart the server to apply it.
+
+### Migration SQL Pitfall
+
+> ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a
+> double-quoted string. A Wren double-quoted string cannot span lines, so a real
+> newline inside one fails with `Unterminated string.` — and it usually reports
+> a second `Expect ')' after arguments.` at the next line, because the call is
+> left incomplete.
+
+```wren
+// Wrong: a double-quoted Wren string is single-line.
+Db.migrate("init", "CREATE TABLE t (
+  id INTEGER
+)")
+```
+
+Use backticks, which keep the newlines:
+
+```wren
+// Correct: the backtick literal keeps the newlines.
+Db.migrate("init", `
+  CREATE TABLE t (
+    id INTEGER
+  )
+`)
 ```
 
 The name of the migration is used to avoid repeating migrations. Use a
@@ -3354,15 +3447,15 @@ var date = Date.new()
 System.print("Year: %(date.year)")
 System.print("Month: %(date.month)")
 System.print("Day: %(date.day)")
-System.print("Hours: %(date.hours)")
-System.print("Minutes: %(date.minutes)")
-System.print("Seconds: %(date.seconds)")
+System.print("Hours: %(date.hours)")           // date.hour also works
+System.print("Minutes: %(date.minutes)")       // date.minute also works
+System.print("Seconds: %(date.seconds)")       // date.second also works
 System.print("Unix Timestamp: %(date.unix)")
 ```
 
-> ⚠️ Pitfall: the time-of-day getters are **plural** — `.hours`, `.minutes`,
-> `.seconds` — unlike `.year`, `.month`, and `.day`, which are singular.
-> `date.hour` raises `Date does not implement 'hour'.`.
+> ⚠️ Pitfall: `.year`, `.month` and `.day` are singular, but the time-of-day
+> getters have both spellings: `.hours`/`.hour`, `.minutes`/`.minute` and
+> `.seconds`/`.second` return the same values.
 
 ## Adding and Subtracting Time
 
@@ -3669,23 +3762,59 @@ var good2 = <my-element class="badge">Custom element</my-element>
 **Forgetting `return`.** Without `return`, the response body is empty. The page
 renders as blank.
 
-**`return <tag>` must be on its own line.** `return` and the opening `<tag>`
-on the same physical line is a compilation error — the error message
-(`Expected expression` at `return`) doesn't point at the real cause:
+**`return <tag>` is valid at the top level and inside a multi-line method body.**
+`return` and the opening `<tag>` must share a physical line:
 
 ```wren
-// Wrong — compilation error, no matter what's inside the tag
-list.map { |x| return <div>{{ x }}</div> }
+// Top level
+return <p>Hola</p>
 
-// Correct — put the tag on the line after `return`
-list.map { |x|
-  return <div>{{ x }}</div>
+// Inside a method body
+greeting() {
+  return <p>Hola</p>
 }
 ```
 
-This happens whether or not the `return` is itself inside a `{{ }}`
-interpolation, and regardless of what's interpolated inside the tag — the
-only trigger is `return` and `<tag` sharing a line.
+Wren ends an expression at a newline, Python-style. A bare `return` followed by
+a newline returns immediately, and the tag on the next line is a separate
+expression that never reaches the response:
+
+```wren
+// Wrong — returns null, then evaluates the tag as a statement
+return
+  <p>Hola</p>
+```
+
+At the top level the code above compiles and returns an empty body. Inside a
+block or a method body it can also fail with a confusing `Expect newline after
+statement` error. Either way, keep `return` and the tag on the same line.
+
+**`return` is not allowed inside a block callback.** A block body is a single
+expression, and `return` is a statement, so `list.map { |x| return <div>...</div> }`
+fails to compile with `Error at 'return': Expected expression.` Use the
+expression itself, without `return`:
+
+```wren
+// Wrong — return is a statement, not an expression
+list.map { |x| return <div>{{ x }}</div> }
+
+// Correct — the block returns its expression implicitly
+list.map { |x| <div>{{ x }}</div> }
+```
+
+A method body written entirely on one line (`{ return 1 }`) is a
+single-expression body, so `return` fails there too. Put the statement on its
+own line inside a multi-line body:
+
+```wren
+// Wrong — the braces are a single-expression body
+greeting() { return "Hola" }
+
+// Correct — a multi-line statement body
+greeting() {
+  return "Hola"
+}
+```
 
 **Files starting with `_` or `.` are private** — they return 403 if accessed
 directly. Use them for imports and internal logic only.
@@ -3905,8 +4034,19 @@ statements or variable declarations inside a `map` callback:
 } }}
 ```
 
-If you need pre-computed values, prepare them before `map` (e.g. add computed
-properties to your model class, or pre-process the list).
+A Wren block body is **one expression**. `{ |x|` followed by a newline is an
+empty body that returns `null`, not a function that continues on the next line.
+In JavaScript terms it is closer to `x => {}` than to
+`x => (/* multi-line expression */)`, which is why the output is silently empty.
+Keep the body on the same line as `{`:
+
+```wren
+{{ tasks.map { |task| <li>{{ task.description }}</li> } }}
+```
+
+`var` is a statement, so it cannot appear in the block body even on one line.
+Pre-compute the value before `map` (a computed property on the model, or a
+pre-processed list).
 
 **Empty lists produce empty output.** Pair `map` with `&&` to show an empty
 state:
@@ -5114,7 +5254,7 @@ no bundler — the renderer ships inside the binary.
 
 ## Rendering Markdown
 
-Two methods on the `Markdown` class:
+Four methods on the `Markdown` class:
 
 ```wren
 // Render a Markdown string
@@ -5122,6 +5262,12 @@ var content = Markdown.html("## Hello **World**!")
 
 // Read a .md file from the app directory and render it
 var content = Markdown.file("about.md")
+
+// List the public Markdown files in a directory
+var names = Markdown.list("cards")
+
+// Read the front matter of a .md file as a Map
+var meta = Markdown.meta("cards/01.md")
 ```
 
 Use the result anywhere a string works — interpolate it into a page:
@@ -5132,8 +5278,56 @@ return <main>
 </main>
 ```
 
-The full API reference for both methods lives in the
+The full API reference for every method lives in the
 [Reference](reference.md) under "Markdown".
+
+## Listing and Metadata
+
+`Markdown.list(dir)` returns a sorted `List` of bare filenames in `dir`, relative
+to the app root. `""` means the root itself. Only `.md` and `.markdown` files
+(case-insensitive) are returned, and names starting with `_` or `.` are skipped:
+
+```wren
+for (name in Markdown.list("cards")) {
+  System.print(name)          // "01.md", "02.md", ...
+}
+```
+
+A missing, empty or invalid directory returns `[]`. The directory must stay
+inside the app root, and no path component may start with `_` or `.`.
+`Markdown.list("../")` and `Markdown.list("_private")` both return `[]`.
+Symlinks and non-regular files are not listed and are never followed.
+
+`Markdown.meta(file)` reads leading YAML-ish front matter and returns a
+`Map` of `String` to `String`:
+
+```markdown
+---
+title: The Coral Path
+category: "adventure"
+status: 'draft'
+---
+# The Coral Path
+```
+
+```wren
+var meta = Markdown.meta("cards/01.md")
+meta["title"]      // "The Coral Path"
+meta["category"]   // "adventure" (quotes stripped)
+```
+
+The opener and closer must each be a line containing only `---`. Keys and values
+are trimmed, one matching pair of single or double quotes around a value is
+removed, and blank lines and lines starting with `#` are ignored. Files without
+front matter return `{}`; a missing or unreadable file returns `false`.
+
+Front matter is **flat**: nested keys, lists, and multi-line values are not
+parsed. A line without a `:` is ignored, and a later key overwrites an earlier
+one with the same name. `Markdown.meta` applies the same `.md`-only, app-root and
+private-name rules as `Markdown.file`.
+
+> ⚠️ Pitfall: `Markdown.file` still skips front matter. It is metadata, not
+> content, and `Markdown.meta` is the only way to read it.
 
 ## Supported Syntax
 
@@ -5187,14 +5381,37 @@ if (content == false) content = "<p>About page not written yet.</p>"
 **`Markdown.file()` reads only Markdown inside the app root.** The path must
 end in `.md` or `.markdown`, must stay inside the app root, and no component may
 start with `_` or `.`: `Markdown.file("_about.md")`, `Markdown.file("config.json")`
-and `Markdown.file("page.wren")` all return `false`. That keeps
+and `Markdown.file("page.wren")` all return `false`. `Markdown.list()` and
+`Markdown.meta()` apply the same rules. That keeps
 `Markdown.file(Request.get("page"))` from handing out private files, config or
 route source, but still prefer an allow-list of page names over a raw request
 value.
 
-**Front matter is skipped, not parsed.** A leading `---` block is dropped from
-the output. Metadata inside it (title, date, tags) is not exposed — you must
-read it yourself if you need it.
+**Front matter is skipped by `Markdown.file()`, not parsed into the output.** A
+leading `---` block is dropped from the rendered HTML. Use `Markdown.meta()` to
+read its keys; the renderer never includes them.
+
+**Converting the rendered HTML to a `String` loses its safe marker.**
+`Markdown.file()` returns an `HtmlNode`, which `{{ }}` inserts verbatim. As soon
+as you turn it into a plain `String` — with `.toString`, `"%(...)"`, or
+`.split(...)` — the value is ordinary text again and `{{ }}` escapes its tags.
+Re-mark the piece you want to render with `.raw`:
+
+```wren
+// Split a post at <!--more--> and render the first part inline
+var chunks = Markdown.file("post.md").toString.split("<!--more-->")
+
+return <article>
+  {{ chunks[0] }}
+  <a href="/post">Read more</a>
+  {{ chunks[1].raw }}
+</article>
+```
+
+Without `.raw`, `chunks[1]` renders as visible `<p>` tags. `.raw` asserts the
+string is already safe HTML, so only do this to markup you produced yourself or
+trust (see [Security](#security)).
+
 
 
 # Error Pages
@@ -7587,7 +7804,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Validate the syntax of a Wren file, then exit                               | None                                         |
+| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -7604,6 +7821,7 @@ bialet --port=8080 /path/to/app
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
 | `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+| `-W`, `--no-watch`      | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
 error). Unknown options, short or long, are rejected with an error and the
@@ -7675,6 +7893,27 @@ Useful in scripts, containers, and CI:
 bialet -q /path/to/app
 ```
 
+### Editing migrations without applying them
+
+A migration runs at startup and again whenever `_migration.wren` is saved. While
+you draft one, that save-triggered run applies half-written SQL to the
+database. Start the server with `--no-watch` to keep only the startup run:
+
+```bash
+bialet --no-watch /path/to/app
+```
+
+Edit and save the file freely, then check that it compiles without running it:
+
+```bash
+bialet -t _migration.wren
+```
+
+Restart the server without `--no-watch` to apply the new migration. The flag
+turns the whole file watcher off, so live reload is off for that run too. The
+server still runs migrations and installs cron once at startup, and prints a
+notice saying watching is disabled.
+
 ## Run Code from the Command Line
 
 Use `-r` to run Wren code once and exit:
@@ -7696,6 +7935,18 @@ The script runs without a request: `Request.method`, `Request.get(...)` and
 `Config` and `Session` work. Your app's own tables exist only if the database
 was already migrated (for example by starting the server or running `bialet -T`).
 
+Relative imports resolve against the app root, so a module next to your pages
+can be imported directly:
+
+```bash
+bialet -r 'import "lib" for X
+System.print(X.value)'
+```
+
+The import still goes through the module loader's containment check: a path that
+escapes the app root (`import "../outside"`) fails and exits non-zero. Wren uses
+newlines, not semicolons, so separate statements with a newline.
+
 ## Running Tests
 
 Bialet includes a built-in testing framework. See [Testing Guide](tests.md)
@@ -7716,22 +7967,37 @@ If you start your server from the app directory:
 ```bash
 cd /path/to/app
 bialet               # starts server
-bialet -t index.wren # validates syntax
+bialet -t index.wren # compiles the file
 ```
 
 If you start your server with an explicit root path:
 
 ```bash
 bialet /path/to/app                         # starts server
-bialet -t /path/to/app/index.wren /path/to/app # validates syntax
+bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 ```
 
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
 
-This will validate the syntax and exit with code `0` if the syntax is valid, or
-code `1` if there are compilation errors. Useful for CI/CD pipelines and
-pre-commit hooks.
+`-t` compiles the file and every local module it imports. It does not execute
+any of them, so runtime errors are not reported and migrations do not run:
+`bialet -t _migration.wren` leaves the database untouched even when the
+migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
+local import is not a syntax error; it only fails when the page runs.
+
+It also parses every backtick SQL literal it finds, including in imported
+modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
+in a migration is parsed, not run, and no migration is recorded. Only syntax
+errors fail the check — a misspelled keyword, an unbalanced parenthesis, or a
+duplicated `LIMIT`. Errors that depend on the schema (a missing table, column,
+or function) are ignored, because a fresh database has none of the tables yet
+and a migration validates its `CREATE` before its `INSERT` has a table to
+target. SQL built at runtime with `String` formatting and SQL passed as a
+double-quoted string are not checked.
+
+This will exit with code `0` if the syntax is valid, or code `1` if there are
+compilation errors. Useful for CI/CD pipelines and pre-commit hooks.
 
 ```bash
 # Example: Check syntax before deploying (explicit root path)
@@ -7859,6 +8125,20 @@ next poll picks it up.
 
 The Wren VM also reloads automatically on `.wren` file changes — this is
 independent of live reload and happens regardless of the config setting.
+
+Start the server with `--no-watch` to turn the watcher off entirely:
+
+```bash
+bialet dev --no-watch
+```
+
+With it, no file event fires: the `/_livereload` version never changes, so the
+browser never reloads, and migrations and cron installs are not re-run when
+their file is saved. Pages are still recompiled on the next request (unless
+`-x` caches them), so a page edit shows up when you reload by hand. Migrations
+and cron still run once at startup; editing `_migration.wren` or `_cron.wren`
+then requires a restart to take effect. See
+[Editing migrations without applying them](usage.md#editing-migrations-without-applying-them).
 
 ## Limitations
 
@@ -9895,7 +10175,7 @@ The following classes are available by default in all Bialet applications withou
 - **Http** - Perform HTTP requests
 - **Date** - Date and time operations
 - **File** - File operations
-- **Markdown** - Render Markdown content to HTML
+- **Markdown** - Render Markdown content to HTML, list Markdown files and read front matter
 - **System** - Logging and output utilities
 - **HtmlNode** - A string of already-safe HTML that `{{ }}` leaves unescaped
 
@@ -11089,13 +11369,25 @@ Returns the day component of the date.
 
 Returns the hour component of the date.
 
+### hour
+
+Alias for `hours`.
+
 ### minutes
 
 Returns the minute component of the date.
 
+### minute
+
+Alias for `minutes`.
+
 ### seconds
 
 Returns the second component of the date.
+
+### second
+
+Alias for `seconds`.
 
 ### dayOfWeek
 
@@ -11201,6 +11493,102 @@ root, or has a path component starting with `_` or `.`.
 ```wren
 var content = Markdown.file("about.md")
 // Reads about.md from the app directory and renders its Markdown to HTML
+```
+
+### list(dir)
+
+Returns a sorted `List` of bare filenames in `dir`, relative to the app root.
+Only `.md` and `.markdown` files (case-insensitive) are included. Names starting
+with `_` or `.`, symlinks and non-regular files are skipped. A missing, empty or
+invalid directory returns `[]`. The directory must stay inside the app root and
+no path component may start with `_` or `.`.
+
+- `dir`: Directory relative to the app root. `""` is the root.
+
+```wren
+var names = Markdown.list("cards")
+// ["01.md", "02.md", ...]
+```
+
+### meta(path)
+
+Reads leading YAML-ish front matter and returns a flat `Map` of `String` to
+`String`. The block must start with a line containing only `---` and end with
+another one. Keys and values are trimmed, one matching pair of single or double
+quotes around a value is removed, and blank lines and `#` comments are ignored.
+Returns `{}` when there is no front matter and `false` when the file is missing
+or unreadable. Nested keys and lists are not supported; a later key overwrites
+an earlier one. Applies the same `.md`-only, app-root and private-name rules as
+`file(path)`.
+
+- `path`: The Markdown file to read, relative to the app root.
+
+```wren
+var meta = Markdown.meta("cards/01.md")
+meta["title"]
+```
+
+## Random
+
+The `random` module is built in and must be imported:
+
+```wren
+import "random" for Random
+```
+
+### new()
+
+Creates a generator seeded from the system.
+
+### new(seed)
+
+Creates a reproducible generator. `seed` is a `Num`, or a sequence of up to 16
+numbers. The same seed and calls produce the same values.
+
+### float()
+
+Returns a number in `[0, 1)`.
+
+### float(end)
+
+Returns a number in `[0, end)`.
+
+### float(start, end)
+
+Returns a number in `[start, end)`.
+
+### int()
+
+Returns a non-negative whole number.
+
+### int(end)
+
+Returns a whole number in `[0, end)`.
+
+### int(start, end)
+
+Returns a whole number in `[start, end)`.
+
+### sample(list)
+
+Returns one random element. Aborts on an empty list.
+
+### sample(list, count)
+
+Returns `count` distinct random elements. Aborts when `count` is larger than the
+list.
+
+### shuffle(list)
+
+Shuffles `list` in place. Returns `null`.
+
+```wren
+import "random" for Random
+
+var rng = Random.new(42)
+var dice = rng.int(1, 7)        // 1 to 6
+var hand = rng.sample(deck, 5)
+rng.shuffle(deck)
 ```
 
 ## File
@@ -11407,6 +11795,25 @@ as well. `false` and `0` are values, not absences, so they are filled. Use
 `isEmpty` when you mean exactly "zero elements": `"   ".isEmpty` is `false`
 while `"   ".isBlank` is `true`.
 
+### Null Extensions
+
+`null` is forgiving so a missing value renders instead of crashing the page.
+These never throw:
+
+| Expression | Result |
+|------------|--------|
+| `null["key"]` | `null` |
+| `null.count` | `0` |
+| `null.map { ... }` | empty `List` |
+| `null.to(Class)` | `null` |
+| `null.toString` | `""` |
+| `null.toNum` | `0` |
+| `null.toBool` | `false` |
+
+Any other method on `null` still raises `Null does not implement 'x'.`
+`null.get("key")` is a runtime error; the default-substituting form is
+`Map.get(key, default)`.
+
 ### String Extensions
 
 #### toBool
@@ -11501,6 +11908,19 @@ var posts = `SELECT * FROM posts`.fetch.to(Post)
 ```
 
 ### Map Extensions
+
+#### get
+
+Returns the value for `key`. The two-argument form returns `default` when the
+key is absent. Presence is decided by `containsKey`, so a key that holds `null`
+still returns `null`, not the default.
+
+```wren
+var m = {"a": 1}
+m.get("a")        // 1
+m.get("b")        // null
+m.get("b", 0)     // 0
+```
 
 #### to(Class)
 
@@ -12159,8 +12579,9 @@ This is the classic "the list works until the first row exists" 500.
 
 ## 19. `{{ }}` must sit inside an HTML tag
 
-At the top level of a template, `{{ ... }}` is parsed as a Wren map literal and
-fails with `Expect '}' after map entries`:
+`{{ }}` is interpolation **inside an HTML literal** only. It is not a general
+template delimiter: a standalone `{{ aviso }}` is Wren map/block syntax, not
+output, and fails with `Expect '}' after map entries`:
 
 ```wren
 // wrong: no enclosing tag
