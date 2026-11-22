@@ -1637,6 +1637,25 @@ as well. `false` and `0` are values, not absences, so they are filled. Use
 `isEmpty` when you mean exactly "zero elements": `"   ".isEmpty` is `false`
 while `"   ".isBlank` is `true`.
 
+### Null Extensions
+
+`null` is forgiving so a missing value renders instead of crashing the page.
+These never throw:
+
+| Expression | Result |
+|------------|--------|
+| `null["key"]` | `null` |
+| `null.count` | `0` |
+| `null.map { ... }` | empty `List` |
+| `null.to(Class)` | `null` |
+| `null.toString` | `""` |
+| `null.toNum` | `0` |
+| `null.toBool` | `false` |
+
+Any other method on `null` still raises `Null does not implement 'x'.`
+`null.get("key")` is a runtime error; the default-substituting form is
+`Map.get(key, default)`.
+
 ### String Extensions
 
 #### toBool
@@ -1731,6 +1750,19 @@ var posts = `SELECT * FROM posts`.fetch.to(Post)
 ```
 
 ### Map Extensions
+
+#### get
+
+Returns the value for `key`. The two-argument form returns `default` when the
+key is absent. Presence is decided by `containsKey`, so a key that holds `null`
+still returns `null`, not the default.
+
+```wren
+var m = {"a": 1}
+m.get("a")        // 1
+m.get("b")        // null
+m.get("b", 0)     // 0
+```
 
 #### to(Class)
 

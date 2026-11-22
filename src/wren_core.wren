@@ -15,6 +15,10 @@ class Null {
   [key] { null }
   map(f) { List.new() }
   count { 0 }
+  // Numeric/boolean conversions of absent data: 0 and false, so arithmetic and
+  // `if (val)` work without a separate null check.
+  toNum { 0 }
+  toBool { false }
   // null is absent, so it is blank. isFilled is the exact inverse everywhere.
   isBlank { true }
   isFilled { false }

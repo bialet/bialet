@@ -216,10 +216,13 @@ so missing data renders as empty output instead of crashing the request. On
 - `null.map { ... }` returns an empty list
 - `null.to(Class)` returns `null`
 - `null.toString` returns `""`
+- `null.toNum` returns `0`
+- `null.toBool` returns `false`
 
 Any other method call on `null` still throws — `Null does not implement 'x'.`
 For example `null.get("key")` is a runtime error. Use the safe methods above, or
-a `|| default` fallback, in templates.
+a `|| default` fallback, in templates. The default form is on `Map`:
+`map.get("key", fallback)`, not on a null value.
 
 ### Lists
 
@@ -236,7 +239,13 @@ list.count    // 5
 var map = { "name": "Alice", "age": "30" }
 map["name"]                     // "Alice"
 map.containsKey("email")        // false
+map.get("email")                // null
+map.get("email", "none")        // "none"
 ```
+
+`map.get(key)` is the same as `map[key]`; `map.get(key, default)` returns the
+default only when the key is missing, so a stored `null` still comes back as
+`null`.
 
 ### Ranges
 
