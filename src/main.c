@@ -464,6 +464,7 @@ int main(int argc, char* argv[]) {
   const char*      test_dir = NULL;
   int              run_tests = 0;
   int              dev_mode = 0;
+  int              validate_is_dir = 0;
   BialetCliOptions cli_opts;
 #ifndef _WIN32
   // A client that resets the connection (RST) right after sending its request
@@ -532,6 +533,7 @@ int main(int argc, char* argv[]) {
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
+  bialet_config.validate_only = 0;       // OFF unless -t/check
   bialet_config.bytecode_cache = 0;      // OFF unless -x / --cache
   bialet_config.no_watch = 0;            // OFF unless --no-watch
 
@@ -612,6 +614,19 @@ int main(int argc, char* argv[]) {
         ((size_t)bialet_config.mem_soft_limit * 1024 * 1024) / 512;
     if(bialet_config.max_post_size > mem_safe_post) {
       bialet_config.max_post_size = mem_safe_post;
+    }
+  }
+
+  // A directory target makes the whole tree the app context: `bialet -t
+  // /www/app` and `bialet check /www/app` must work from any working
+  // directory, without a separate positional root. An explicit root still
+  // wins, and a file target keeps the historical root rules.
+  if(validate_file != NULL) {
+    struct stat validate_stat;
+    if(stat(validate_file, &validate_stat) == 0 && S_ISDIR(validate_stat.st_mode)) {
+      validate_is_dir = 1;
+      if(!cli_opts.root_explicit)
+        bialet_config.root_dir = (char*)validate_file;
     }
   }
 
@@ -732,6 +747,12 @@ int main(int argc, char* argv[]) {
     if(validate_capture != NULL)
       validate_prev_log = message_set_log_file(validate_capture);
   }
+  /* A syntax check parses backtick SQL but has no use for the app's data. Keep
+   * it on an in-memory database so it cannot create <root>/_db.sqlite3, purge
+   * old temp uploads from a real one, or follow a tree-controlled symlink to a
+   * database outside the tree. -r still wins over -t when both are given, so
+   * only enter this mode when validation is actually what runs. */
+  bialet_config.validate_only = validate_file != NULL && code == NULL;
   bialet_init(&bialet_config);
   // Registered rather than called at each exit point: main() leaves through a
   // dozen exit() calls plus the forked child's exit(0), and neither the SQLite
@@ -743,7 +764,9 @@ int main(int argc, char* argv[]) {
   }
 
   if(validate_file != NULL) {
-    int result = bialet_validate_syntax(validate_file);
+    int checked = 0;
+    int failed = 0;
+    int result = bialet_validate_syntax(validate_file, &checked, &failed);
     if(validate_prev_log != NULL)
       message_set_log_file(validate_prev_log);
     if(validate_capture != NULL) {
@@ -760,10 +783,19 @@ int main(int argc, char* argv[]) {
       fclose(validate_capture);
     }
     if(result == 0) {
-      if(!bialet_config.quiet)
-        printf("✓ Syntax OK: %s\n", validate_file);
+      if(!bialet_config.quiet) {
+        if(validate_is_dir)
+          printf("✓ Syntax OK: %s (%d file%s)\n", validate_file, checked,
+                 checked == 1 ? "" : "s");
+        else
+          printf("✓ Syntax OK: %s\n", validate_file);
+      }
     } else {
-      fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
+      if(validate_is_dir)
+        fprintf(stderr, "✗ Syntax errors found in: %s (%d of %d files failed)\n",
+                validate_file, failed, checked);
+      else
+        fprintf(stderr, "✗ Syntax errors found in: %s\n", validate_file);
     }
     exit(result);
   }

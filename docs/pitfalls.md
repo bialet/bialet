@@ -308,3 +308,29 @@ expecting UTC: it writes the app zone's wall clock with no offset. Store
 `Date.new(seconds, "UTC")` reads them back. `+`, `-` and `addDays` return a
 `Date` in the app zone, so storing the result still writes a wall clock with no
 offset — store `.unix` when the value must be an instant.
+
+## 23. A code body on the line after `{` returns `null`
+
+A block body that starts with an HTML literal may begin on the next line — HTML
+is never a statement, so it is the value:
+
+```wren
+{{ items.map { |item|
+  <li>{{ item }}</li>
+} }}
+```
+
+A body that starts with code on the next line is a statement list: its value is
+discarded, so the block returns `null` and the list renders empty. Inside
+`{{ }}` the compiler warns once per file; a method body, `Fn.new` and Cron jobs
+stay silent. Keep code on the `{` line:
+
+```wren
+// Wrong — the value of `item.name` is discarded
+{{ items.map { |item|
+  item.name
+} }}
+
+// Right
+{{ items.map { |item| item.name } }}
+```

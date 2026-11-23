@@ -11,7 +11,7 @@
 #ifndef BIALET_CONFIG_H
 #define BIALET_CONFIG_H
 
-#define BIALET_VERSION "1.2.26"
+#define BIALET_VERSION "1.2.27"
 
 /* Core dumps are off (POSIX: RLIMIT_CORE is set to 0 at startup) because the
  * process keeps the deployment key from --secret-key-file in memory for its
@@ -131,6 +131,11 @@ struct BialetConfig {
 
   /* Set to true when running tests with -T flag */
   int enable_tests;
+
+  /* Set by `-t` / `check`: parse SQL against an in-memory database instead of
+   * opening the app's real database. A syntax check must not create, migrate,
+   * or purge anything in the app tree. */
+  int validate_only;
 
   /* Opt-in in-memory bytecode cache (-x / --cache). Off by default: the normal
    * path compiles every module on every request, exactly as before. */

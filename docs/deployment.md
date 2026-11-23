@@ -4,6 +4,11 @@ Bialet is a single binary — copy it to your server alongside your `.wren`
 files and you're deployed. This guide covers setting up a production-ready
 environment with a reverse proxy, systemd, and Docker.
 
+For the whole setup assembled in one place — immutable release directories, an
+external database, and versioned upgrades — see
+[Hosted Deployment](hosted-deployment.md). This page stays the reference for
+each piece.
+
 ## Why a Reverse Proxy?
 
 Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every
@@ -135,6 +140,50 @@ This means your deploy flow is:
 scp -r ./src/* user@your-server:/www/your-app/
 # Done. Migrations run, code reloads, server keeps running.
 ```
+
+## Health Checks
+
+Every server answers `/_health` on loopback:
+
+```bash
+curl -fsS http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+It returns `200` when a `SELECT 1` succeeds, or `503` with
+`"database":"error"` when the database is unusable. `uptime_seconds` counts
+from process start. `GET` and `HEAD` are supported; other methods get `405`.
+
+The endpoint is deliberately **direct-loopback only**: it checks the socket peer
+and the `Host` header, and returns the normal `403` to anyone else. The `Host`
+must be `127.0.0.1`, another `127.0.0.0/8` literal, or `localhost`, optionally
+with a port. A request carrying `X-Real-IP`, `Forwarded`, `Via`, or any
+`X-Forwarded-*` header is treated as proxied and refused too, so a remote client
+cannot reach it by forging a header and a same-host proxy cannot publish it by
+forwarding every path. The `Host` check also blocks a DNS-rebinding page from
+reading the endpoint through a browser on the same machine. That makes it usable
+by a local supervisor or a Docker `HEALTHCHECK`, and invisible on a public
+listener.
+
+Docker:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:7001/_health || exit 1
+```
+
+systemd:
+
+```ini
+ExecStartPost=/usr/bin/curl -fsS --retry 5 --retry-connrefused http://127.0.0.1:7001/_health
+```
+
+If the proxy needs to expose a public health URL, give it its own route in the
+app. Do not proxy `/_health` to the internet: the loopback rule is the only
+access control it has.
 
 ## Static Files
 

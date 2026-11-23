@@ -34,8 +34,13 @@ char* read_file(const char* path);
 char* bialet_read_file(const char* path);
 
 int bialet_run_cli(char* code);
-int bialet_validate_syntax(const char* filePath);
+/* Validates a single .wren file, or every .wren file under a directory, and
+ * their local imports. [checked] and [failed] receive how many files were
+ * compiled and how many failed; either may be NULL. Returns 0 when all pass. */
+int bialet_validate_syntax(const char* path, int* checked, int* failed);
 int bialet_run_tests(const char* testDir, const char* rootDir);
+/* 1 when a trivial query succeeds on the process database, 0 otherwise. */
+int bialet_db_healthy(void);
 
 #define BIALET_INDEX_FILE "/index" BIALET_EXTENSION
 

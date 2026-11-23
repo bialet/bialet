@@ -4,6 +4,28 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.27 — 2026-11-23
+
+### Added
+
+- `-l` records one line per served request with the response status, body bytes
+  actually written and elapsed milliseconds, emitted after the response.
+  Pre-parse 400 and 413 rejections are logged from the request line; local
+  `/_health` and live-reload polls stay unlogged.
+- A block or method body that starts with an HTML literal may begin on the line
+  after `{`, so the natural multi-line `map` renders instead of failing with a
+  cascade of "Expect newline after statement" errors. A code body that starts
+  there still returns `null`; inside `{{ }}` the compiler now warns once per
+  file, while outside a template it stays silent.
+
+### Documentation
+
+- `docs/hosted-deployment.md` assembles the hosted recipe end to end: immutable
+  release root, external database and log, `umask 0077`, a hardened systemd
+  unit, the proxy block, a health-gated swap, backups and rollback.
+- The template, language, prompt and JSX-migration pages document the two
+  block-body rules, and `docs/pitfalls.md` gains the code-body entry.
+
 ## 1.2.26 — 2026-11-22
 
 ### Fixed

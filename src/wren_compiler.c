@@ -233,6 +233,18 @@ typedef struct {
   // Whether compile errors should be printed to stderr or discarded.
   bool printErrors;
 
+  // Whether the "block body starts on the next line" warning has been issued
+  // for this compilation. One per file is enough: the fix is the same.
+  bool warnedDiscardedBody;
+
+  // Depth of the HTML interpolations currently being parsed. A block inside
+  // "{{ }}" can discard its value where the reader expects output, so only
+  // there does the discarded-body warning fire. numHandlebars cannot answer
+  // this: the lexer has already pushed a handlebar for the next lookahead token
+  // when a method body is finished, which report a block that is not in an
+  // interpolation at all.
+  int htmlInterpolationDepth;
+
   // If a syntax or compile error has occurred.
   bool hasError;
 } Parser;
@@ -516,6 +528,35 @@ static void error(Compiler* compiler, const char* format, ...) {
     printError(compiler->parser, token->line, label, format, args);
   }
   va_end(args);
+}
+
+// Warns that a block body starting on the line after "{" is a statement body,
+// so its value is discarded and, inside an HTML interpolation, the {{ }}
+// renders nothing. The shape to catch is
+//
+//     {{ items.map { |x|
+//       x.on && <li>{{ x }}</li>
+//     }}}
+//
+// An HTML body does not warn: finishBlock parses it as an expression. A
+// statement body outside a template is legitimate -- Cron jobs and migrations
+// return null by design -- so nothing outside an interpolation warns. One line
+// per compilation: the fix is the same for every block in the file.
+static void warnDiscardedBlockBody(Compiler* compiler) {
+  Parser* parser = compiler->parser;
+  if(parser->htmlInterpolationDepth == 0 || parser->warnedDiscardedBody)
+    return;
+  if(!parser->printErrors)
+    return;
+  parser->warnedDiscardedBody = true;
+
+  const char* moduleName =
+      parser->module->name ? parser->module->name->value : "<unknown>";
+  fprintf(stderr,
+          "Warning: %s:%d: block body starts on the line after '{', so its "
+          "value is discarded and this interpolation renders nothing; keep the "
+          "body on the same line as '{', or make the body an HTML literal\n",
+          moduleName, parser->next.line);
 }
 
 // Adds [constant] to the constant pool and returns its index.
@@ -2409,6 +2450,30 @@ static bool finishBlock(Compiler* compiler) {
   if(match(compiler, TOKEN_RIGHT_BRACE))
     return false;
 
+  // An HTML literal is an expression, never a statement, so a body that
+  // starts with one is the block's value even when it starts on the line after
+  // "{". The piece before a "{{ }}" is TOKEN_HTML_TEXT and a literal without
+  // interpolation is TOKEN_HTML_NODE; both begin an HTML expression. Without
+  // this, the natural multi-line template body
+  //
+  //     {{ items.map { |x|
+  //       <li>{{ x }}</li>
+  //     }}}
+  //
+  // failed with a cascade of "Expect newline after statement" errors instead
+  // of rendering. No valid program changes meaning: HTML at the start of a
+  // statement body was always a compile error.
+  if(peek(compiler) == TOKEN_HTML_NODE || peek(compiler) == TOKEN_HTML_TEXT) {
+    expression(compiler);
+    consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
+    return true;
+  }
+
+  // From here the body is a statement body, whose value is discarded: the
+  // block returns null. Legitimate for cron jobs and migrations, but inside an
+  // interpolation it can only render nothing, so say so once per compilation.
+  warnDiscardedBlockBody(compiler);
+
   // Compile the definition list.
   do {
     definition(compiler);
@@ -3047,6 +3112,11 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
 
+  // Marks the expression as living inside an interpolation, so finishBlock can
+  // tell a discarded block body here (which renders nothing) from a legitimate
+  // statement block in a method, a Fn or a Cron job.
+  compiler->parser->htmlInterpolationDepth++;
+
   do {
     // The opening literal piece is already-safe HTML.
     htmlNode(compiler, false);
@@ -3059,6 +3129,8 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
 
     ignoreNewlines(compiler);
   } while(match(compiler, TOKEN_HTML_TEXT));
+
+  compiler->parser->htmlInterpolationDepth--;
 
   // The trailing literal piece is already-safe HTML.
   consume(compiler, TOKEN_HTML_NODE, "Expect end of HTML interpolation.");
@@ -4391,6 +4463,8 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
   parser.current = parser.next;
 
   parser.printErrors = printErrors;
+  parser.warnedDiscardedBody = false;
+  parser.htmlInterpolationDepth = 0;
   parser.hasError = false;
 
   // Read the first token into next

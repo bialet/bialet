@@ -13,32 +13,53 @@ ideas I may revisit if interest returns, but no promises.
       cap (`-b` / `-m`) can actually deliver, so rejection logs state a
       reachable limit; docs updated to match (default effective upload is ~120
       KB until `-b` and `-m` are raised).
-- [ ] **`bialet check` — whole-tree validation** — `-t` validates a single
-      `.wren` file. A deploy hook needs a command that validates every `.wren`
-      in an app tree and exits `0`/`1`. The docs and manifesto advertise
-      `init`/`check`/`test`, but only `validate`/`tests`/`dev` exist.
-- [ ] **Hidden health endpoint** — a reserved `_`-prefixed route (e.g.
-      `/_health`) returning version, uptime, and DB status so supervisors and
-      watchdogs can health-check an app without relying on an app route.
+- [x] **Whole-tree validation** — `-t` now accepts a directory and compiles
+      every `.wren` under it (`bialet -t .`, `bialet check [dir]`), each in its
+      own VM, exiting `0`/`1`. The walk includes `_` files (`_app/`,
+      `_migration.wren`, `_tests/`), skips dot-directories and symlinks, and
+      names the failing file. A directory target is its own app root, so a
+      deploy hook can run `bialet check /www/app` from any working directory.
+      SQL parsing uses an in-memory database: a check never opens, creates, or
+      purges the app's `_db.sqlite3`, and cannot follow a tree-controlled
+      `_db.sqlite3` symlink to another database. Validation and tests now both
+      run from the command line (`check`, `-T`); `init` is the only piece of
+      that trio still missing (see below).
+- [x] **Hidden health endpoint** — `/_health` returns version, uptime, and DB
+      status as JSON (`200`, or `503` when `SELECT 1` fails). It is answered
+      only to a direct loopback request whose `Host` is also loopback
+      (`127.0.0.0/8` or `localhost`), so a DNS-rebinding page cannot read it
+      through a local browser. Everyone else gets the normal `403` for a
+      `_`-prefixed path, and a request carrying a forwarding header
+      (`X-Real-IP`, `Forwarded`, `Via`, any `X-Forwarded-*`) is treated as
+      proxied and refused too. Local health polls are not written to the
+      request log.
 
 ## Editors/IDE Support
 
-- [x] VS Code (syntax JSON, language-configuration)
-- [ ] Sublime Text (.sublime-syntax and .tmPreferences)
-- [x] Vim / Neovim (ftdetect, syntax)
-- [ ] JetBrains (IntelliJ) (TextMate bundle or custom plugin)
+The editor plugins live outside this repository, in
+[`bialet/bialet.vim`](https://github.com/bialet/bialet.vim): the VS Code
+extension ships from there to the marketplace (syntax JSON and
+language-configuration), and Vim/Neovim get ftdetect and syntax. Sublime Text
+(`.sublime-syntax`, `.tmPreferences`) and JetBrains are tracked in that repo
+too, so nothing here is blocked on them. The language server those plugins
+would eventually drive is the LSP item below.
+
+See [Editor Support](docs/editor-support.md).
 
 ## On my radar
 
-- [ ] **Per-request access logs** — `-l` should record one line per request
-      (method, path, status, duration, bytes) so a host can meter usage and
-      detect abuse without parsing proxy logs.
+- [x] **Per-request access logs** — `-l` writes one line per served request
+      after the response: method, escaped target, `status=`, `bytes=` (response
+      body bytes actually written, never headers) and `duration_ms=` (accept to
+      final write). Local health and live-reload polls stay unlogged, and the
+      400/413 rejections that happen before a parsed request are logged from the
+      raw request line.
 - [ ] **Optional on-disk file storage** — a flag to store uploads on disk
       (under the app's data dir, outside the code release) instead of only as
       DB blobs. Large files currently inflate the database, backups, and the
       disk quota all at once.
-- [ ] **`bialet init`** — scaffold a new app directory, completing the
-      `init`/`check`/`test` story the docs promise.
+- [ ] **`bialet init`** — scaffold a new app directory, giving `check` and `-T`
+      a starting point the same command creates.
 - [ ] **Admin dashboard** — External lib UI for browsing the database and
       viewing logs
 - [ ] **Data filtering lib** — External lib for query sanitization and type-safe
@@ -46,8 +67,6 @@ ideas I may revisit if interest returns, but no promises.
 - [ ] **i18n / localization** — Translation helpers and locale-aware formatting
 - [ ] **LSP support** — Language Server Protocol implementation with
       autocomplete, go-to-definition, and diagnostics for VS Code
-- [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
-      handling
 - [ ] **HTTP Client - Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
 - [x] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the
@@ -155,14 +174,17 @@ All of the leads below are closed. The notes stay for the record.
 
 ## Someday maybe
 
-- [ ] **Official "hosted" deployment recipe** — a doc page showing the
-      recommended hosted pattern: immutable release root + external DB via
-      `-d` + `umask 0077`. `deployment.md` covers the pieces; this would be
-      the full recipe.
-- [ ] **Warn when a block callback returns null** — a multi-statement `map`
-      callback (or any block whose body is not a single expression) renders
-      empty output with no error. Log a warning so a silent empty `<ul>` is
-      distinguishable from an empty query result.
+- [x] **Official "hosted" deployment recipe** — `docs/hosted-deployment.md`
+      assembles the pattern end to end: immutable release root, external DB via
+      `-d`, `umask 0077`, a hardened systemd unit, the proxy block, a
+      health-gated atomic swap, backups and rollback. `deployment.md` stays the
+      per-piece reference.
+- [x] **Multi-line block bodies in templates** — an HTML body may start on the
+      line after `{`, so the natural multi-line `map` renders instead of
+      failing with a cascade of "Expect newline after statement" errors. A code
+      body that starts there is still a statement body whose value is
+      discarded; inside `{{ }}` the compiler warns once per file, while outside
+      a template it stays silent (Cron and migrations return `null` by design).
 - [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse

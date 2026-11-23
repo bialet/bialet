@@ -140,10 +140,11 @@ Isolated, with no stray file present, it passes.
 
 ## Gotchas
 
-- `bialet -t FILE` (validate) and `bialet -r CODE` open the default DB before
-  running, so from a directory without an app root they create an empty
-  0-byte `_db.sqlite3` in the current directory. `tests/run.sh` runs `-t` from
-  the repo root, so that file reappears mid-suite even after `make clean`.
+- `bialet -r CODE` opens the default DB before running, so from a directory
+  without an app root it creates an empty 0-byte `_db.sqlite3` in the current
+  directory. `-t` / `bialet check` do not: they parse SQL against an in-memory
+  database and never open or create the app's DB. Individual `-r` tests in
+  `tests/run.sh` can still leave a stray file behind.
 - `make clean` deletes **every** `_db.sqlite3*` under the tree
   (`find . -name "_db.sqlite3*" -type f -delete`), not just build artifacts.
   Intentional — do not "fix" it, and do not keep app data under the repo root.

@@ -343,9 +343,25 @@ return <div>{{
 }}</div>
 ```
 
-Block callbacks (`map { |v| ... }`) follow Wren's single-expression rule: the
-body must fit on the line after the `{`, otherwise the block returns `null`
-and the output is empty.
+A block body is one expression, so it returns its value. When the body is an
+HTML literal it may start on the line after `{`: HTML is never a statement, so
+the multi-line form is unambiguous and renders.
+
+```wren
+{{ tasks.map { |task|
+  <li>{{ task.description }}</li>
+} }}
+```
+
+A body that is *code* must still start on the `{` line. A body that starts on
+the next line is a statement list whose value is discarded, so the block
+returns `null`; inside `{{ }}` that renders nothing, and the compiler warns:
+
+```text
+Warning: app/index.wren:12: block body starts on the line after '{', so its
+value is discarded and this interpolation renders nothing; keep the body on the
+same line as '{', or make the body an HTML literal
+```
 
 ---
 
@@ -422,8 +438,9 @@ return <div>{{ task.finished ? <span class="completed">
 ## Iteration with `map`
 
 Wren's `map` function transforms each element of a list into an HTML string.
-The callback body is a single Wren expression — but the inline HTML string
-inside it can span many visual lines.
+The callback body is a single Wren expression — either on the `{` line, or an
+HTML literal starting on the next line. The literal itself can span many visual
+lines.
 
 ### Simple list
 
@@ -436,8 +453,9 @@ var html = <ul>{{ items.map { |item| <li>{{ item }}</li> } }}</ul>
 ### Multiline items
 
 The callback is one expression (`|task| <li>...</li>`), but the `<li>` inline
-HTML string spans multiple lines. The Wren code stays on one line of Wren, but
-the HTML inside the tags has newlines.
+HTML string spans multiple lines. The Wren expression may stay on one line, and
+the HTML literal may equally begin on the line after `|task|`; the HTML inside
+the tags has newlines either way.
 
 ```wren
 <ul class="task-list">
@@ -468,25 +486,31 @@ the HTML inside the tags has newlines.
 
 ### Pitfalls
 
-**The callback must be a single expression.** You cannot have multiple Wren
-statements or variable declarations inside a `map` callback:
+**The callback must yield a single expression.** A `var` turns the body into a
+statement list, and a statement that ends in an HTML literal cannot close the
+block, so this form does not compile (`Expect newline after statement`):
 
 ```wren
-// Wrong — multiple statements inside map
+// Wrong — does not compile
 {{ tasks.map { |task|
   var icon = task.finished ? "✓" : "○"
   <li>{{ icon }} {{ task.description }}</li>
 } }}
 ```
 
-A Wren block body is **one expression**. `{ |x|` followed by a newline is an
-empty body that returns `null`, not a function that continues on the next line.
-In JavaScript terms it is closer to `x => {}` than to
-`x => (/* multi-line expression */)`, which is why the output is silently empty.
-Keep the body on the same line as `{`:
+A Wren block body is **one expression**. An HTML body may start on the line
+after `{`, but a code body must start on the same line: `{ |x|` followed by a
+newline begins a statement list, which returns `null`. In a template the
+compiler warns when that happens, because the interpolation then renders
+nothing. Keep a code body on the same line as `{`, and an HTML body may be
+written either way:
 
 ```wren
 {{ tasks.map { |task| <li>{{ task.description }}</li> } }}
+
+{{ tasks.map { |task|
+  <li>{{ task.description }}</li>
+} }}
 ```
 
 `var` is a statement, so it cannot appear in the block body even on one line.
@@ -510,19 +534,18 @@ return <main>
 **Large lists hurt performance.** Paginate or limit results in the controller —
 `map` iterates everything you give it.
 
-**Newlines outside HTML tags** — same rule:
+**Newlines outside HTML tags** — an expression can start on the next line
+inside `{{ }}`, but `return` still ends at its newline:
 
 ```wren
-// Wrong — Wren code broken across lines outside the HTML string
+// Valid — the interpolation expression starts on the next line
 return <div>{{
-  tasks.map { |task|
-  <li>{{ task.description }}</li>
-} }}</div>
+  tasks.map { |task| <li>{{ task.description }}</li> }
+}}</div>
 
-// Correct — the expression starts on the {{ line
-return <div>{{ tasks.map{ |task| <li>
-  {{ task.description }}
-</li> } }}</div>
+// Wrong — `return` on its own line returns immediately
+return
+  <div>Nothing here is returned</div>
 ```
 
 ---
@@ -1108,8 +1131,9 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
 - **Newlines inside `{{ }}`:** The Wren expression can span lines, but an
   infix operator must end its line — a leading operator is a parse error.
-- **Map callback is a single expression:** The body must fit on the line
-  after the `{`, otherwise the block returns `null` and renders empty.
+- **Map callback is a single expression:** An HTML body may start on the next
+  line; a code body must start on the `{` line, or it becomes a statement body
+  whose value is discarded (warned inside `{{ }}`, silent elsewhere).
 - **Empty lists in `map`:** Produce empty output — pair with `&&` for empty
   states.
 - **`return` terminates immediately:** Code after `return` never executes.

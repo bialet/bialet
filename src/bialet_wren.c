@@ -22,10 +22,12 @@
 #include "wren_core.h"
 #include "wren_vm.h"
 #include <ctype.h>
+#include <dirent.h>
 #include <limits.h>
 #include <sqlite3.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #ifdef _WIN32
@@ -2203,26 +2205,13 @@ static const char* validate_query_syntax(const char* query) {
   return NULL;
 }
 
-int bialet_validate_syntax(const char* filePath) {
-  char abs_path[MAX_URL_LEN];
-
-  if(realpath_n(filePath, abs_path, sizeof(abs_path)) == NULL) {
-    fprintf(stderr, "Error: Cannot resolve file '%s'\n", filePath);
-    return 1;
-  }
-
-  size_t root_len = strlen(bialet_config.full_root_dir);
-  if(strncmp(abs_path, bialet_config.full_root_dir, root_len) != 0 ||
-     (abs_path[root_len] != '/' && abs_path[root_len] != '\\' &&
-      abs_path[root_len] != '\0')) {
-    fprintf(stderr, "Error: File '%s' is outside the application root directory\n",
-            filePath);
-    return 1;
-  }
-
+// Compiles one resolved file and its local imports in a fresh VM. A fresh VM
+// per file keeps each entry point's module graph independent: two pages that
+// both import the same module would otherwise redeclare it in one VM.
+static int validate_one_file(const char* abs_path) {
   char* code = read_file(abs_path);
   if(code == NULL) {
-    fprintf(stderr, "Error: Cannot read file '%s'\n", filePath);
+    fprintf(stderr, "Error: Cannot read file '%s'\n", abs_path);
     return 1;
   }
 
@@ -2244,8 +2233,135 @@ int bialet_validate_syntax(const char* filePath) {
   return failed ? 1 : 0;
 }
 
-#include <dirent.h>
-#include <sys/stat.h>
+// True for a name ending in .wren, matched case-insensitively because a
+// case-insensitive filesystem serves "/page.WREN" from page.wren.
+static int validate_is_wren_name(const char* name) {
+  size_t len = strlen(name);
+  if(len <= BIALET_EXTENSION_LEN)
+    return 0;
+  const char* ext = name + len - BIALET_EXTENSION_LEN;
+  for(size_t i = 0; i < BIALET_EXTENSION_LEN; i++) {
+    if(tolower((unsigned char)ext[i]) != BIALET_EXTENSION[i])
+      return 0;
+  }
+  return 1;
+}
+
+// Walks [dir] and validates every .wren below it. Dot-directories (.git,
+// .venv) are skipped; private app directories (_app, _tests) are not, because
+// they are part of the app. Symlinks are not followed on POSIX (a link can form
+// a cycle or escape the tree) or on Windows (junctions and reparse points).
+#define VALIDATE_MAX_DEPTH 64
+
+static void validate_tree(const char* dir, int depth, int* checked, int* failed) {
+  DIR* listing = opendir(dir);
+  if(listing == NULL) {
+    fprintf(stderr, "Error: Cannot read directory '%s'\n", dir);
+    (*failed)++;
+    return;
+  }
+
+  struct dirent* entry;
+  while((entry = readdir(listing)) != NULL) {
+    const char* name = entry->d_name;
+    if(name[0] == '.') // "." and "..", plus .git and other dot entries
+      continue;
+    if(depth >= VALIDATE_MAX_DEPTH) {
+      fprintf(stderr, "Error: Directory tree too deep at '%s'\n", dir);
+      (*failed)++;
+      continue;
+    }
+
+    size_t dir_len = strlen(dir);
+    size_t name_len = strlen(name);
+    char*  full = (char*)malloc(dir_len + 1 + name_len + 1);
+    if(full == NULL) {
+      fprintf(stderr, "Error: Out of memory while walking '%s'\n", dir);
+      (*failed)++;
+      break;
+    }
+    snprintf(full, dir_len + 1 + name_len + 1, "%s/%s", dir, name);
+
+#ifdef _WIN32
+    // stat() follows junctions; skip them so a link cycle cannot recurse.
+    DWORD attrs = GetFileAttributesA(full);
+    if(attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_REPARSE_POINT)) {
+      free(full);
+      continue;
+    }
+    struct stat st;
+    int         found = stat(full, &st) == 0;
+#else
+    struct stat st;
+    int         found = lstat(full, &st) == 0;
+#endif
+    if(!found) {
+      free(full);
+      continue;
+    }
+
+    if(S_ISDIR(st.st_mode)) {
+      validate_tree(full, depth + 1, checked, failed);
+    } else if(S_ISREG(st.st_mode) && validate_is_wren_name(name)) {
+      (*checked)++;
+      if(validate_one_file(full) != 0)
+        (*failed)++;
+    }
+    free(full);
+  }
+  closedir(listing);
+}
+
+int bialet_validate_syntax(const char* filePath, int* checked, int* failed) {
+  int checked_count = 0;
+  int failed_count = 0;
+  if(checked != NULL)
+    *checked = 0;
+  if(failed != NULL)
+    *failed = 0;
+
+  char abs_path[MAX_URL_LEN];
+
+  if(realpath_n(filePath, abs_path, sizeof(abs_path)) == NULL) {
+    fprintf(stderr, "Error: Cannot resolve file '%s'\n", filePath);
+    if(failed != NULL)
+      *failed = 1;
+    return 1;
+  }
+
+  size_t root_len = strlen(bialet_config.full_root_dir);
+  if(strncmp(abs_path, bialet_config.full_root_dir, root_len) != 0 ||
+     (abs_path[root_len] != '/' && abs_path[root_len] != '\\' &&
+      abs_path[root_len] != '\0')) {
+    fprintf(stderr, "Error: File '%s' is outside the application root directory\n",
+            filePath);
+    if(failed != NULL)
+      *failed = 1;
+    return 1;
+  }
+
+  struct stat target;
+  if(stat(abs_path, &target) != 0) {
+    fprintf(stderr, "Error: Cannot read file '%s'\n", filePath);
+    if(failed != NULL)
+      *failed = 1;
+    return 1;
+  }
+
+  if(S_ISDIR(target.st_mode)) {
+    validate_tree(abs_path, 0, &checked_count, &failed_count);
+  } else {
+    checked_count = 1;
+    if(validate_one_file(abs_path) != 0)
+      failed_count = 1;
+  }
+
+  if(checked != NULL)
+    *checked = checked_count;
+  if(failed != NULL)
+    *failed = failed_count;
+  return failed_count == 0 ? 0 : 1;
+}
 
 #define TESTS_DIR "_tests"
 #define TEST_INIT_FILE "_init.wren"
@@ -2604,8 +2720,39 @@ static void load_default_date_zone(void) {
   sqlite3_finalize(stmt);
 }
 
+// Shared tail of bialet_init(): Wren VM hooks and HTTP client setup. Kept
+// separate so the validation path can open an in-memory database and return
+// without touching the app's database code at all.
+static void bialet_init_runtime(struct BialetConfig* config) {
+  wrenInitConfiguration(&wren_config);
+  wren_config.writeFn = &bialet_wren_write;
+  wren_config.errorFn = &bialet_wren_error;
+  wren_config.queryFn = &query_execute;
+  wren_config.resolveModuleFn = &bialet_wren_resolve_module;
+  wren_config.loadModuleFn = &bialet_wren_load_module;
+  wren_config.enableTests = config->enable_tests;
+
+  http_call_init(&bialet_config);
+}
+
 void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
+
+  if(config->validate_only) {
+    /* -t/check only parses SQL. Keep the app's database out of it: opening the
+     * real file created it, applied pragmas and purged old temp uploads, and a
+     * tree-controlled _db.sqlite3 symlink redirected those writes outside the
+     * tree. An in-memory connection still lets sqlite3_prepare_v2() report
+     * syntax errors; schema errors were already ignored. */
+    if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                       NULL) != SQLITE_OK) {
+      message(red("SQL Error"), "Can't open in-memory database for validation");
+      exit(BIALET_SQLITE_ERROR);
+    }
+    bialet_init_runtime(config);
+    return;
+  }
+
   char db_path[PATH_MAX];
 
   // strlen() - 1 was stored in an int and then indexed unconditionally, so an
@@ -2735,15 +2882,7 @@ void bialet_init(struct BialetConfig* config) {
   load_default_date_zone();
   purge_temp_uploads();
 
-  wrenInitConfiguration(&wren_config);
-  wren_config.writeFn = &bialet_wren_write;
-  wren_config.errorFn = &bialet_wren_error;
-  wren_config.queryFn = &query_execute;
-  wren_config.resolveModuleFn = &bialet_wren_resolve_module;
-  wren_config.loadModuleFn = &bialet_wren_load_module;
-  wren_config.enableTests = config->enable_tests;
-
-  http_call_init(&bialet_config);
+  bialet_init_runtime(config);
 }
 
 void bialet_cleanup() {
@@ -2776,6 +2915,17 @@ void bialet_reopen_db() {
     exit(BIALET_SQLITE_ERROR);
   }
   apply_sqlite_pragmas();
+}
+
+int bialet_db_healthy(void) {
+  if(db == NULL)
+    return 0;
+  sqlite3_stmt* stmt = NULL;
+  if(sqlite3_prepare_v2(db, "SELECT 1", -1, &stmt, NULL) != SQLITE_OK)
+    return 0;
+  int ok = sqlite3_step(stmt) == SQLITE_ROW;
+  sqlite3_finalize(stmt);
+  return ok;
 }
 
 BialetQuery* create_bialet_query() {

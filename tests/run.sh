@@ -30,6 +30,7 @@ DEV_PORT="${args[5]:-7102}"
 CRON_PORT="${args[6]:-7103}"
 MULTIPART_PORT="${args[7]:-7104}"
 ROOT_STDERR_PORT="${args[8]:-7105}"
+HEALTH_PORT="${args[9]:-7106}"
 
 # The Windows binary is cross-compiled on Linux and exercised under Wine. Two
 # tests rely on POSIX semantics Wine does not reproduce and fail identically on
@@ -151,8 +152,98 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax     "SQL migration passes           " "syntax_query_migration_ok.wren" 0
   # `items`.save(...) passes a table name, not SQL; it still has to pass.
   test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
+  # A directory target validates the whole tree: private files and subfolders
+  # included, dot-directories and symlinks skipped. `check` is the same mode
+  # rooted at the positional directory, and a directory target implies its own
+  # app root so it works from any working directory.
+  tree_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tree_exec=$(realpath "$TARGET_EXEC" 2>/dev/null || command -v "$TARGET_EXEC")
+  tree_root=$(mktemp -d)
+  mkdir -p "$tree_root/_app" "$tree_root/sub" "$tree_root/.git"
+  printf 'return "ok"\n' > "$tree_root/index.wren"
+  printf 'class Lib { static value { 1 } }\n' > "$tree_root/_app/lib.wren"
+  printf 'Db.migrate("tree", "CREATE TABLE IF NOT EXISTS tree (id INTEGER)")\n' \
+    > "$tree_root/_migration.wren"
+  printf 'class Broken {\n' > "$tree_root/.git/ignored.wren"
+  tree_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_status=$?
+  tree_check_out=$(cd "$tree_root" && "$tree_exec" -q check 2>&1)
+  tree_check_status=$?
+  printf 'class Broken {\n' > "$tree_root/_cron.wren"
+  tree_under_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_under_status=$?
+  rm -f "$tree_root/_cron.wren"
+  printf 'class Broken {\n' > "$tree_root/sub/broken.wren"
+  tree_bad_out=$("$tree_exec" -q -t "$tree_root" 2>&1)
+  tree_bad_status=$?
+  rm -rf "$tree_root"
+  if [[ "$tree_status" -eq 0 && "$tree_check_status" -eq 0 ]]; then
+    report_result "-t validates a whole tree     " "$tree_line" 0
+  else
+    report_result "-t validates a whole tree     " "$tree_line" 1 \
+      "Expected -t DIR and 'check' to pass. -t:$tree_status '$tree_out' check:$tree_check_status '$tree_check_out'"
+  fi
+  if [[ "$tree_under_status" -ne 0 && "$tree_under_out" == *"_cron.wren"* ]]; then
+    report_result "Tree check includes _ files   " "$tree_line" 0
+  else
+    report_result "Tree check includes _ files   " "$tree_line" 1 \
+      "Expected failure naming _cron.wren. status:$tree_under_status output:'$tree_under_out'"
+  fi
+  if [[ "$tree_bad_status" -ne 0 && "$tree_bad_out" == *"broken.wren"* ]]; then
+    report_result "Tree check names the bad file " "$tree_line" 0
+  else
+    report_result "Tree check names the bad file " "$tree_line" 1 \
+      "Expected failure naming sub/broken.wren. status:$tree_bad_status output:'$tree_bad_out'"
+  fi
+
+  # A syntax check must not open or create the app's database. It used to
+  # create <tree>/_db.sqlite3 and, when that name was a symlink, purge old
+  # temp uploads from whatever SQLite database the link pointed at.
+  side_line=$LINENO
+  _test_start_ms=$(now_ms)
+  side_base=$(mktemp -d)
+  side_root="$side_base/app"
+  side_victim="$side_base/victim.sqlite3"
+  mkdir "$side_root"
+  printf 'return "ok"\n' > "$side_root/index.wren"
+  side_out=$("$tree_exec" -q check "$side_root" 2>&1)
+  side_status=$?
+  side_created=0
+  [[ -e "$side_root/_db.sqlite3" ]] && side_created=1
+  side_symlink_status=0
+  side_rows=1
+  if [[ "$IS_WINE" -eq 0 ]]; then
+    sqlite3 "$side_victim" \
+      "CREATE TABLE BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, isTemp INTEGER, createdAt DATETIME);
+       INSERT INTO BIALET_FILES (name,isTemp,createdAt) VALUES ('old',1,datetime('now','-2 day'));"
+    ln -s "$side_victim" "$side_root/_db.sqlite3"
+    side_symlink_out=$("$tree_exec" -q check "$side_root" 2>&1)
+    side_symlink_status=$?
+    side_rows=$(sqlite3 "$side_victim" "SELECT COUNT(*) FROM BIALET_FILES")
+  fi
+  rm -rf "$side_base"
+  if [[ "$side_status" -eq 0 && "$side_created" -eq 0 ]]; then
+    report_result "Check leaves DB untouched     " "$side_line" 0
+  else
+    report_result "Check leaves DB untouched     " "$side_line" 1 \
+      "Expected no <tree>/_db.sqlite3. status:$side_status created:$side_created output:'$side_out'"
+  fi
+  if [[ "$IS_WINE" -eq 1 ]]; then
+    skip_test "Check ignores DB symlink      " "Wine: symlink fixture"
+  elif [[ "$side_symlink_status" -eq 0 && "$side_rows" == "1" ]]; then
+    report_result "Check ignores DB symlink      " "$side_line" 0
+  else
+    report_result "Check ignores DB symlink      " "$side_line" 1 \
+      "Expected the victim row to survive. status:$side_symlink_status rows:$side_rows output:'$side_symlink_out'"
+  fi
 else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
+  skip_test "-t validates a whole tree     " "requires local binary access (-t flag)"
+  skip_test "Tree check includes _ files   " "requires local binary access (-t flag)"
+  skip_test "Tree check names the bad file " "requires local binary access (-t flag)"
+  skip_test "Check leaves DB untouched     " "requires local binary access (-t flag)"
+  skip_test "Check ignores DB symlink      " "requires local binary access (-t flag)"
 fi
 
 # Tests - -t is compile-only
@@ -273,6 +364,51 @@ WREN
 else
   skip_test "-r resolves relative imports" "requires local binary access"
   skip_test "-r blocks traversal imports " "requires local binary access"
+fi
+
+# Tests - a block body may start with HTML on the line after "{"
+# The natural multi-line map body used to fail with a cascade of "Expect
+# newline after statement" errors. HTML is an expression, never a statement, so
+# it is the block's value wherever it starts.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  mb_line=$LINENO
+  mb_out=$("$r_exec" -q -r \
+    $'return <ul>{{ [1,2].map { |x|\n  <li>{{ x }}</li>\n} }}</ul>' 2>&1)
+  mb_status=$?
+  if [[ "$mb_status" -eq 0 && "$mb_out" == "<ul><li>1</li><li>2</li></ul>" ]]; then
+    report_result "Multiline HTML block body" "$mb_line" 0
+  else
+    report_result "Multiline HTML block body" "$mb_line" 1 \
+      "Expected '<ul><li>1</li><li>2</li></ul>', got exit $mb_status output '$mb_out'"
+  fi
+else
+  skip_test "Multiline HTML block body" "requires local binary access"
+fi
+
+# Tests - a code body on the line after "{" discards its value, and in a
+# template that must be loud instead of a silent empty <ul>. Outside a template
+# it stays silent: Cron and migration callbacks return null by design.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  mw_line=$LINENO
+  mw_out=$("$r_exec" -q -r \
+    $'return <ul>{{ [1,2].map { |x|\n  x\n} }}</ul>' 2>&1)
+  mw_status=$?
+  mw_quiet=$("$r_exec" -q -r \
+    $'var f = Fn.new { |x|\n  x\n}\nreturn "ok"' 2>&1)
+  # A method body that returns HTML with an interpolation is not a discarded
+  # block: the lexer lookahead sees the "{{", but no block is being finished.
+  mw_method=$("$r_exec" -q -r \
+    $'class A {\n  static x {\n    return <p>{{ 1 }}</p>\n  }\n}\nreturn A.x' 2>&1)
+  if [[ "$mw_status" -eq 0 && "$mw_out" == *"Warning:"*"block body starts on the line after"* ]] \
+     && [[ "$mw_quiet" != *"Warning:"* ]] \
+     && [[ "$mw_method" == "<p>1</p>" && "$mw_method" != *"Warning:"* ]]; then
+    report_result "Discarded block body warns" "$mw_line" 0
+  else
+    report_result "Discarded block body warns" "$mw_line" 1 \
+      "Expected a warning in a template and none outside it, got exit $mw_status template '$mw_out' outside '$mw_quiet' method '$mw_method'"
+  fi
+else
+  skip_test "Discarded block body warns" "requires local binary access"
 fi
 
 # Tests - BIALET_TIMEZONE applies to every VM
@@ -419,6 +555,89 @@ run_test "Route file with segment     " "notes/42"       200 "note:42"
 run_test "Route ignores query string  " "notes?page=2"   200 "notes-list"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
+# /_health is reserved, but only to a direct loopback request. Forwarding
+# headers and a non-loopback Host must not change that.
+if [[ "$TARGET_EXEC" != "-" && ( "$HOST" == 127.* || "$HOST" == "localhost" || "$HOST" == "0.0.0.0" ) ]]; then
+  health_line=$LINENO
+  _test_start_ms=$(now_ms)
+  health_probe_host="$HOST"
+  [[ "$HOST" == "0.0.0.0" ]] && health_probe_host=127.0.0.1
+  health_url="http://$health_probe_host:$PORT/_health"
+  health_body=$(curl -s --max-time 5 "$health_url")
+  health_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    "$health_url")
+  # A forwarding header means a proxy (or a forger) is in front: refuse it.
+  health_spoof=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "X-Real-IP: 203.0.113.9" -H "X-Forwarded-For: 203.0.113.9" \
+    "$health_url")
+  health_fwd=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "X-Forwarded-Proto: https" "$health_url")
+  # A browser lured by DNS rebinding reaches loopback but keeps its own Host.
+  health_host_spoof=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "Host: evil.example:$PORT" "$health_url")
+  health_localhost=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "Host: localhost" "$health_url")
+  health_post=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -X POST "$health_url")
+  if [[ "$health_code" == "200" && "$health_body" == *'"status":"ok"'* \
+        && "$health_body" == *'"version":'* \
+        && "$health_body" == *'"uptime_seconds":'* \
+        && "$health_body" == *'"database":"ok"'* \
+        && "$health_spoof" == "403" && "$health_fwd" == "403" \
+        && "$health_host_spoof" == "403" && "$health_localhost" == "200" \
+        && "$health_post" == "405" ]]; then
+    report_result "Health endpoint (loopback)    " "$health_line" 0
+  else
+    report_result "Health endpoint (loopback)    " "$health_line" 1 \
+      "code:$health_code spoof:$health_spoof fwd:$health_fwd host:$health_host_spoof localhost:$health_localhost post:$health_post body:'$health_body'"
+  fi
+else
+  skip_test "Health endpoint (loopback)    " "requires a loopback test server"
+fi
+run_test "Health prefix still private " "_healthz"        403
+
+# A wildcard-bound server answers /_health on 127.0.0.1 but refuses it when
+# reached through the host's non-loopback address, whatever headers are sent.
+# Skipped when the host has no discoverable non-loopback IPv4 address.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" -eq 0 ]]; then
+  health_lan_line=$LINENO
+  _test_start_ms=$(now_ms)
+  health_lan_ip=""
+  if command -v ifconfig >/dev/null 2>&1; then
+    health_lan_ip=$(ifconfig 2>/dev/null |
+      awk '/inet / && $2 != "127.0.0.1" {print $2; exit}')
+  fi
+  if [[ -z "$health_lan_ip" ]] && command -v hostname >/dev/null 2>&1; then
+    health_lan_ip=$(hostname -I 2>/dev/null | tr ' ' '\n' |
+      grep -v '^127\.' | head -1)
+  fi
+  if [[ -n "$health_lan_ip" ]]; then
+    health_root=$(mktemp -d)
+    printf 'return "health"\n' > "$health_root/index.wren"
+    require_free_port "127.0.0.1" "$HEALTH_PORT" "health server"
+    "$TARGET_EXEC" -q -h 0.0.0.0 -p "$HEALTH_PORT" \
+      -l /tmp/tests-health.log "$health_root" > /dev/null 2>&1 &
+    disown
+    wait_port "127.0.0.1" "$HEALTH_PORT" 10
+    health_local=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+      "http://127.0.0.1:$HEALTH_PORT/_health")
+    health_remote=$(curl -s -o /dev/null -w "%{http_code}" --noproxy '*' \
+      --max-time 5 "http://$health_lan_ip:$HEALTH_PORT/_health")
+    stop_matching_servers \
+      "$TARGET_EXEC -q -h 0.0.0.0 -p $HEALTH_PORT -l /tmp/tests-health.log"
+    rm -rf "$health_root"
+    if [[ "$health_local" == "200" && "$health_remote" == "403" ]]; then
+      report_result "Health endpoint local only    " "$health_lan_line" 0
+    else
+      report_result "Health endpoint local only    " "$health_lan_line" 1 \
+        "local:$health_local remote($health_lan_ip):$health_remote (expected 200/403)"
+    fi
+  else
+    skip_test "Health endpoint local only    " "no non-loopback IPv4 address"
+  fi
+else
+  skip_test "Health endpoint local only    " "requires local binary access"
+fi
 
 # Framing: the server answers HTTP/1.1 and closes after every response, so the
 # head must say `Connection: close` instead of leaving the client to infer
@@ -1295,20 +1514,22 @@ fi
 
 # Every request target is logged, before the 414 length check, and the escaping
 # can quadruple it: a long target must not store a record of its own size.
-# 1200 bytes stays inside the smallest header buffer (2 KiB on Windows).
+# 1200 bytes stays inside the smallest header buffer (2 KiB on Windows). The
+# status/bytes/duration fields still follow the truncated target.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   logcap_line=$LINENO
   _test_start_ms=$(now_ms)
   curl -s -o /dev/null --max-time 10 \
     "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 1200))"
   # tr -d '\r': the Windows build writes CRLF line endings.
-  logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | wc -c | tr -d ' ')
-  logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | tail -c 4)
-  if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 && "$logcap_tail" == "..." ]]; then
+  logcap_text=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r')
+  logcap_len=$(printf '%s' "$logcap_text" | wc -c | tr -d ' ')
+  if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 &&
+        "$logcap_text" == *"... status="*" bytes="*" duration_ms="* ]]; then
     report_result "Logged request target capped" "$logcap_line" 0
   else
     report_result "Logged request target capped" "$logcap_line" 1 \
-      "Expected one record under 700 bytes ending in '...'. Got length:$logcap_len tail:'$logcap_tail'"
+      "Expected one record under 700 bytes with a '...' target and status/bytes/duration. Got length:$logcap_len line:'${logcap_text: -60}'"
   fi
 else
   skip_test "Logged request target capped" "requires local binary access"
@@ -1677,6 +1898,44 @@ if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
   fi
 else
   skip_test "New log file is 0600        " "requires local binary access (POSIX modes)"
+fi
+
+# The -l access line records the real outcome, not just the request: status,
+# response body bytes (0 for HEAD) and elapsed milliseconds, one line per
+# request, emitted after dispatch. The format is documented in docs/usage.md.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  accesslog_line=$LINENO
+  _test_start_ms=$(now_ms)
+  accesslog_root=$(mktemp -d)
+  accesslog_file=$(mktemp /tmp/bialet-access.XXXXXX)
+  printf 'return "access log body"\n' > "$accesslog_root/index.wren"
+  require_free_port "$HOST" "$MULTIPART_PORT" "access log server"
+  "$TARGET_EXEC" -q -h "$HOST" -p "$MULTIPART_PORT" -l "$accesslog_file" \
+    "$accesslog_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  curl -s -o /dev/null --max-time 5 "http://$HOST:$MULTIPART_PORT/?probe=1"
+  curl -s -o /dev/null --max-time 5 \
+    "http://$HOST:$MULTIPART_PORT/definitely-missing"
+  curl -s -o /dev/null -I --max-time 5 "http://$HOST:$MULTIPART_PORT/?probe=1"
+  accesslog_hit=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request GET /\?probe=1 status=200 bytes=15 duration_ms=[0-9]+$')
+  accesslog_miss=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request GET /definitely-missing status=404 bytes=[0-9]+ duration_ms=[0-9]+$')
+  accesslog_head=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request HEAD /\?probe=1 status=200 bytes=0 duration_ms=[0-9]+$')
+  stop_matching_servers \
+    "$TARGET_EXEC -q -h $HOST -p $MULTIPART_PORT -l $accesslog_file"
+  rm -rf "$accesslog_root" "$accesslog_file"
+  if [[ "$accesslog_hit" == "1" && "$accesslog_miss" == "1" &&
+        "$accesslog_head" == "1" ]]; then
+    report_result "Access log status/bytes/time" "$accesslog_line" 0
+  else
+    report_result "Access log status/bytes/time" "$accesslog_line" 1 \
+      "Expected one 200/bytes=15, one 404 with numeric bytes, and one HEAD with bytes=0. Got 200:$accesslog_hit 404:$accesslog_miss head:$accesslog_head"
+  fi
+else
+  skip_test "Access log status/bytes/time" "requires local binary access"
 fi
 
 # A complete header block with a declared Content-Length, and no body byte
