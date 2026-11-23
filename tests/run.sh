@@ -115,10 +115,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # swallowed newline is not counted twice for the tokens after it.
   if [[ "$TARGET_EXEC" != "-" ]]; then
     strline_line=$LINENO
-    # The "module line N" prefix is capped at MAX_LINE_ERROR_LEN (100 bytes) in
-    # bialet_wren_error(), so a deep checkout path pushes the line number out
-    # of the printed message. Run the file under its bare name from a short
-    # temp directory instead, so the assertion holds wherever the repo lives.
+    # The "module line N" prefix is capped at MAX_LINE_ERROR_LEN (1 KiB) in
+    # bialet_wren_error(), and a longer module name is shortened from the left
+    # so the line number survives. Run the file from a short temp directory
+    # anyway, so the assertion does not depend on where the repo lives.
     strline_dir=$(mktemp -d /tmp/bialet-strline.XXXXXX)
     strline_exe=$(realpath "$TARGET_EXEC")
     cp "$(dirname "$0")/syntax_err_string_line.wren" "$strline_dir/"
@@ -134,6 +134,12 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   else
     skip_test "Open string reports its line " "requires local binary access (-t flag)"
   fi
+  # A module path over the old 100-byte prefix used to lose the line number,
+  # which is the part that locates the error. The fixture name is long enough
+  # to overflow that budget from any checkout.
+  test_syntax_msg "Long module keeps line number " \
+    "syntax_long_module_path_fixture_with_a_directory_name_long_enough_to_exceed_the_old_hundred_byte_error_prefix/syntax_err_long.wren" \
+    1 "syntax_err_long.wren line 3 Error"
   test_syntax_msg "Raw string unterminated at EOF" "syntax_err_raw_string_unterminated.wren" 1 "Unterminated raw string."
   # One extra close tag used to leave '</div>' for the parser, which then
   # reported two more errors. It must be a single error.

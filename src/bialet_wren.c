@@ -51,7 +51,11 @@
 #define BIALET_SQLITE_MMAP_SIZE "134217728"   // 128 mb
 #define BIALET_SQLITE_CACHE_SIZE "-10000"     // It's in kb, so 10 mb
 #define MAX_URL_LEN 1024
-#define MAX_LINE_ERROR_LEN 100
+// Module names are absolute, canonical paths, so this prefix needs room for a
+// real deploy path plus " line N". 1 KiB fits macOS PATH_MAX (1024) and stays
+// well under the 4 KiB stack rule; anything longer is shortened from the left
+// in bialet_wren_error() so the line number is never the part that gets cut.
+#define MAX_LINE_ERROR_LEN 1024
 #define MAX_COLUMNS 100
 #define MAX_MODULE_LEN 256
 #define HTTP_OK 200
@@ -719,7 +723,22 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
     return;
   }
   char lineMessage[MAX_LINE_ERROR_LEN];
-  snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
+  int  line_len =
+      snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
+  if(line_len < 0) {
+    lineMessage[0] = '\0';
+  } else if((size_t)line_len >= sizeof(lineMessage)) {
+    // Pathological path: keep the end of the module name, which is the part
+    // that identifies the file, and the suffix. Before, a name over the limit
+    // lost the line number instead.
+    char   suffix[32];
+    int    suffix_written = snprintf(suffix, sizeof(suffix), " line %d", line);
+    size_t suffix_len = suffix_written > 0 ? (size_t)suffix_written : 0;
+    size_t keep = sizeof(lineMessage) - 1 - suffix_len - 3; // "..." + NUL
+    size_t module_len = strlen(module);
+    snprintf(lineMessage, sizeof(lineMessage), "...%s%s",
+             module_len > keep ? module + (module_len - keep) : module, suffix);
+  }
   // Wren error text can embed request bytes (Fiber.abort of a request value,
   // or a parse error quoting the input it rejected). Escape it for
   // the log only; show_errors_capture() keeps the raw text for the error page,
