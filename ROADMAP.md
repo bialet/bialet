@@ -19,11 +19,16 @@ ideas I may revisit if interest returns, but no promises.
       `_migration.wren`, `_tests/`), skips dot-directories and symlinks, and
       names the failing file. A directory target is its own app root, so a
       deploy hook can run `bialet check /www/app` from any working directory.
-      `init` is still the missing piece of the `init`/`check`/`test` story.
+      SQL parsing uses an in-memory database: a check never opens, creates, or
+      purges the app's `_db.sqlite3`, and cannot follow a tree-controlled
+      `_db.sqlite3` symlink to another database. `init` is still the missing
+      piece of the `init`/`check`/`test` story.
 - [x] **Hidden health endpoint** — `/_health` returns version, uptime, and DB
       status as JSON (`200`, or `503` when `SELECT 1` fails). It is answered
-      only to a direct loopback request; everyone else gets the normal `403` for
-      a `_`-prefixed path, and a request carrying a forwarding header
+      only to a direct loopback request whose `Host` is also loopback
+      (`127.0.0.0/8` or `localhost`), so a DNS-rebinding page cannot read it
+      through a local browser. Everyone else gets the normal `403` for a
+      `_`-prefixed path, and a request carrying a forwarding header
       (`X-Real-IP`, `Forwarded`, `Via`, any `X-Forwarded-*`) is treated as
       proxied and refused too. Local health polls are not written to the
       request log.

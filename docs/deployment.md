@@ -153,12 +153,15 @@ It returns `200` when a `SELECT 1` succeeds, or `503` with
 from process start. `GET` and `HEAD` are supported; other methods get `405`.
 
 The endpoint is deliberately **direct-loopback only**: it checks the socket peer
-and returns the normal `403` to anyone else. A request carrying `X-Real-IP`,
-`Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as proxied and
-refused too, so a remote client cannot reach it by forging a header and a
-same-host proxy cannot publish it by forwarding every path. That makes it
-usable by a local supervisor or a Docker `HEALTHCHECK`, and invisible on a
-public listener.
+and the `Host` header, and returns the normal `403` to anyone else. The `Host`
+must be `127.0.0.1`, another `127.0.0.0/8` literal, or `localhost`, optionally
+with a port. A request carrying `X-Real-IP`, `Forwarded`, `Via`, or any
+`X-Forwarded-*` header is treated as proxied and refused too, so a remote client
+cannot reach it by forging a header and a same-host proxy cannot publish it by
+forwarding every path. The `Host` check also blocks a DNS-rebinding page from
+reading the endpoint through a browser on the same machine. That makes it usable
+by a local supervisor or a Docker `HEALTHCHECK`, and invisible on a public
+listener.
 
 Docker:
 

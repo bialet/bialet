@@ -314,17 +314,23 @@ The response is `200` when a trivial database query succeeds and `503` with
 the server process. Local health polls are not written to the `-l` file, so a
 one-second check does not fill it; a remote probe is still logged.
 
-`/_health` is answered **only to a direct loopback request** (`127.0.0.0/8`).
-Every other caller gets the same `403` as any other `_`-prefixed path, so the
-endpoint does not advertise itself. Forwarding headers are deliberately not
-trusted: a request that carries `X-Real-IP`, `Forwarded`, `Via`, or any
-`X-Forwarded-*` header is treated as proxied and refused, so a same-host proxy
-cannot accidentally publish the endpoint by forwarding every path. Do not route
-`/_health` to the internet; give a public liveness URL its own app route.
+`/_health` is answered **only to a direct loopback request** (`127.0.0.0/8`)
+whose `Host` is also local: `127.0.0.1`, `127.0.0.2` (any `127.0.0.0/8`
+literal), or `localhost`, optionally with a port. Every other caller gets the
+same `403` as any other `_`-prefixed path, so the endpoint does not advertise
+itself. This also stops a DNS-rebinding page from reading it through a browser
+on the same machine, where the peer is loopback but the `Host` is the attacker's
+name.
+
+Forwarding headers are deliberately not trusted either: a request that carries
+`X-Real-IP`, `Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as
+proxied and refused, so a same-host proxy cannot accidentally publish the
+endpoint by forwarding every path. Do not route `/_health` to the internet;
+give a public liveness URL its own app route.
 
 `GET` and `HEAD` are accepted; any other method answers `405`.
 
-
+## Upload and SQLite Tuning
 
 These limits and SQLite pragmas are startup flags, set per app per launch:
 

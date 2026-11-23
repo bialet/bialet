@@ -694,13 +694,65 @@ static int has_forwarding_header(const char* block, size_t hdr_len) {
   return header_has_prefix(block, hdr_len, forwarded, sizeof(forwarded) - 1);
 }
 
+// /_health must be addressed as 127.0.0.1 or localhost. A browser on the same
+// machine is a loopback peer, so without a Host check a DNS-rebinding page can
+// make the request under its own origin and read the JSON. A proxy that strips
+// forwarding headers is caught here too: its Host is the public name.
+static int health_host_is_local(const char* block, size_t hdr_len) {
+  // HTTP/1.1 requires exactly one Host. Two parsers can disagree about which
+  // one counts, so a duplicate is refused rather than guessed.
+  if(count_header(block, hdr_len, "Host", 4) != 1)
+    return 0;
+  const char* value = find_header(block, hdr_len, "Host", 4);
+  if(value == NULL)
+    return 0;
+
+  const char* end = value;
+  while(*end != '\0' && *end != '\r' && *end != '\n')
+    end++;
+  while(value < end && (*value == ' ' || *value == '\t'))
+    value++;
+  while(end > value && (end[-1] == ' ' || end[-1] == '\t'))
+    end--;
+  if(value == end)
+    return 0;
+  for(const char* p = value; p < end; p++) {
+    if(*p == ' ' || *p == '\t' || *p == ',')
+      return 0;
+  }
+
+  // An IPv4 literal may carry a port. Keep the host part only; the socket's
+  // actual port is authoritative, so a bad port here changes nothing.
+  const char* host_end = end;
+  for(const char* p = value; p < end; p++) {
+    if(*p == ':')
+      host_end = p;
+  }
+  size_t host_len = (size_t)(host_end - value);
+  if(host_len == 0 || host_len >= 64)
+    return 0;
+  if(host_len == 9 && ci_ncmp(value, "localhost", 9) == 0)
+    return 1;
+  if(host_len == 10 && ci_ncmp(value, "localhost.", 10) == 0)
+    return 1;
+
+  char host[64];
+  memcpy(host, value, host_len);
+  host[host_len] = '\0';
+  struct in_addr addr;
+  if(inet_pton(AF_INET, host, &addr) != 1)
+    return 0;
+  return (ntohl(addr.s_addr) & 0xff000000u) == 0x7f000000u;
+}
+
 static int health_try_handle(bialet_socket_t fd, struct HttpMessage* hm,
                              const char* header_block, size_t hdr_len,
                              struct BialetResponse* response) {
   if(!health_is_poll(hm->uri.str))
     return 0;
 
-  if(!is_loopback_peer(fd) || has_forwarding_header(header_block, hdr_len)) {
+  if(!is_loopback_peer(fd) || has_forwarding_header(header_block, hdr_len) ||
+     !health_host_is_local(header_block, hdr_len)) {
     custom_error(403, response);
     return 1;
   }
@@ -1607,7 +1659,8 @@ void handle_client(bialet_socket_t client_socket) {
   // Health polls from a local supervisor are not logged; a remote or proxied
   // probe still is, so a scan for the endpoint leaves a trace.
   int health_poll = health_is_poll(hm->uri.str) && is_loopback_peer(client_socket) &&
-                    !has_forwarding_header(buffer, hdr_len);
+                    !has_forwarding_header(buffer, hdr_len) &&
+                    health_host_is_local(buffer, hdr_len);
   if(!livereload_is_poll(hm->uri.str) && !health_poll) {
     char* log_method = log_escape_uri(hm->method.str);
     char* log_uri = log_escape_uri(hm->uri.str);

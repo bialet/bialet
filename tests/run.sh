@@ -510,35 +510,44 @@ run_test "Route file with segment     " "notes/42"       200 "note:42"
 run_test "Route ignores query string  " "notes?page=2"   200 "notes-list"
 run_test "Redirection                 " "redirect"        302 ""
 run_test "Forbid hidden file          " "_hidden"         403
-# /_health is reserved, but only to the loopback peer. A forwarding header must
-# not change that: the server never trusts X-Real-IP / X-Forwarded-For.
-if [[ "$TARGET_EXEC" != "-" ]]; then
+# /_health is reserved, but only to a direct loopback request. Forwarding
+# headers and a non-loopback Host must not change that.
+if [[ "$TARGET_EXEC" != "-" && ( "$HOST" == 127.* || "$HOST" == "localhost" || "$HOST" == "0.0.0.0" ) ]]; then
   health_line=$LINENO
   _test_start_ms=$(now_ms)
-  health_body=$(curl -s --max-time 5 "http://$HOST:$PORT/_health")
+  health_probe_host="$HOST"
+  [[ "$HOST" == "0.0.0.0" ]] && health_probe_host=127.0.0.1
+  health_url="http://$health_probe_host:$PORT/_health"
+  health_body=$(curl -s --max-time 5 "$health_url")
   health_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
-    "http://$HOST:$PORT/_health")
+    "$health_url")
   # A forwarding header means a proxy (or a forger) is in front: refuse it.
   health_spoof=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
     -H "X-Real-IP: 203.0.113.9" -H "X-Forwarded-For: 203.0.113.9" \
-    "http://$HOST:$PORT/_health")
+    "$health_url")
   health_fwd=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
-    -H "X-Forwarded-Proto: https" "http://$HOST:$PORT/_health")
+    -H "X-Forwarded-Proto: https" "$health_url")
+  # A browser lured by DNS rebinding reaches loopback but keeps its own Host.
+  health_host_spoof=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "Host: evil.example:$PORT" "$health_url")
+  health_localhost=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+    -H "Host: localhost" "$health_url")
   health_post=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
-    -X POST "http://$HOST:$PORT/_health")
+    -X POST "$health_url")
   if [[ "$health_code" == "200" && "$health_body" == *'"status":"ok"'* \
         && "$health_body" == *'"version":'* \
         && "$health_body" == *'"uptime_seconds":'* \
         && "$health_body" == *'"database":"ok"'* \
         && "$health_spoof" == "403" && "$health_fwd" == "403" \
+        && "$health_host_spoof" == "403" && "$health_localhost" == "200" \
         && "$health_post" == "405" ]]; then
     report_result "Health endpoint (loopback)    " "$health_line" 0
   else
     report_result "Health endpoint (loopback)    " "$health_line" 1 \
-      "code:$health_code spoof:$health_spoof fwd:$health_fwd post:$health_post body:'$health_body'"
+      "code:$health_code spoof:$health_spoof fwd:$health_fwd host:$health_host_spoof localhost:$health_localhost post:$health_post body:'$health_body'"
   fi
 else
-  skip_test "Health endpoint (loopback)    " "requires local binary access"
+  skip_test "Health endpoint (loopback)    " "requires a loopback test server"
 fi
 run_test "Health prefix still private " "_healthz"        403
 
