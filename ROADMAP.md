@@ -48,10 +48,12 @@ See [Editor Support](docs/editor-support.md).
 
 ## On my radar
 
-- [ ] **Per-request access logs** — `-l` already writes one line per request
-      with the method and target; extend that line with status, duration, and
-      response bytes so a host can meter usage and detect abuse without parsing
-      proxy logs.
+- [x] **Per-request access logs** — `-l` writes one line per served request
+      after the response: method, escaped target, `status=`, `bytes=` (response
+      body bytes actually written, never headers) and `duration_ms=` (accept to
+      final write). Local health and live-reload polls stay unlogged, and the
+      400/413 rejections that happen before a parsed request are logged from the
+      raw request line.
 - [ ] **Optional on-disk file storage** — a flag to store uploads on disk
       (under the app's data dir, outside the code release) instead of only as
       DB blobs. Large files currently inflate the database, backups, and the

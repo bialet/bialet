@@ -1469,20 +1469,22 @@ fi
 
 # Every request target is logged, before the 414 length check, and the escaping
 # can quadruple it: a long target must not store a record of its own size.
-# 1200 bytes stays inside the smallest header buffer (2 KiB on Windows).
+# 1200 bytes stays inside the smallest header buffer (2 KiB on Windows). The
+# status/bytes/duration fields still follow the truncated target.
 if [[ "$TARGET_EXEC" != "-" ]]; then
   logcap_line=$LINENO
   _test_start_ms=$(now_ms)
   curl -s -o /dev/null --max-time 10 \
     "http://$HOST:$PORT/LOGCAPMARK$(printf 'B%.0s' $(seq 1 1200))"
   # tr -d '\r': the Windows build writes CRLF line endings.
-  logcap_len=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | wc -c | tr -d ' ')
-  logcap_tail=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r' | tail -c 4)
-  if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 && "$logcap_tail" == "..." ]]; then
+  logcap_text=$(grep "LOGCAPMARK" /tmp/tests.log 2>/dev/null | tail -1 | tr -d '\r')
+  logcap_len=$(printf '%s' "$logcap_text" | wc -c | tr -d ' ')
+  if [[ "${logcap_len:-0}" -gt 0 && "$logcap_len" -lt 700 &&
+        "$logcap_text" == *"... status="*" bytes="*" duration_ms="* ]]; then
     report_result "Logged request target capped" "$logcap_line" 0
   else
     report_result "Logged request target capped" "$logcap_line" 1 \
-      "Expected one record under 700 bytes ending in '...'. Got length:$logcap_len tail:'$logcap_tail'"
+      "Expected one record under 700 bytes with a '...' target and status/bytes/duration. Got length:$logcap_len line:'${logcap_text: -60}'"
   fi
 else
   skip_test "Logged request target capped" "requires local binary access"
@@ -1851,6 +1853,44 @@ if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
   fi
 else
   skip_test "New log file is 0600        " "requires local binary access (POSIX modes)"
+fi
+
+# The -l access line records the real outcome, not just the request: status,
+# response body bytes (0 for HEAD) and elapsed milliseconds, one line per
+# request, emitted after dispatch. The format is documented in docs/usage.md.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  accesslog_line=$LINENO
+  _test_start_ms=$(now_ms)
+  accesslog_root=$(mktemp -d)
+  accesslog_file=$(mktemp /tmp/bialet-access.XXXXXX)
+  printf 'return "access log body"\n' > "$accesslog_root/index.wren"
+  require_free_port "$HOST" "$MULTIPART_PORT" "access log server"
+  "$TARGET_EXEC" -q -h "$HOST" -p "$MULTIPART_PORT" -l "$accesslog_file" \
+    "$accesslog_root" > /dev/null 2>&1 &
+  disown
+  wait_port "$HOST" "$MULTIPART_PORT" 10
+  curl -s -o /dev/null --max-time 5 "http://$HOST:$MULTIPART_PORT/?probe=1"
+  curl -s -o /dev/null --max-time 5 \
+    "http://$HOST:$MULTIPART_PORT/definitely-missing"
+  curl -s -o /dev/null -I --max-time 5 "http://$HOST:$MULTIPART_PORT/?probe=1"
+  accesslog_hit=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request GET /\?probe=1 status=200 bytes=15 duration_ms=[0-9]+$')
+  accesslog_miss=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request GET /definitely-missing status=404 bytes=[0-9]+ duration_ms=[0-9]+$')
+  accesslog_head=$(tr -d '\r' < "$accesslog_file" | grep -Ec \
+    'Request HEAD /\?probe=1 status=200 bytes=0 duration_ms=[0-9]+$')
+  stop_matching_servers \
+    "$TARGET_EXEC -q -h $HOST -p $MULTIPART_PORT -l $accesslog_file"
+  rm -rf "$accesslog_root" "$accesslog_file"
+  if [[ "$accesslog_hit" == "1" && "$accesslog_miss" == "1" &&
+        "$accesslog_head" == "1" ]]; then
+    report_result "Access log status/bytes/time" "$accesslog_line" 0
+  else
+    report_result "Access log status/bytes/time" "$accesslog_line" 1 \
+      "Expected one 200/bytes=15, one 404 with numeric bytes, and one HEAD with bytes=0. Got 200:$accesslog_hit 404:$accesslog_miss head:$accesslog_head"
+  fi
+else
+  skip_test "Access log status/bytes/time" "requires local binary access"
 fi
 
 # A complete header block with a declared Content-Length, and no body byte

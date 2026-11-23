@@ -318,6 +318,104 @@ static char* log_escape_uri(const char* uri) {
   return out;
 }
 
+/* -- Access log ------------------------------------------------------------
+ *
+ * One line per served request, written after the response:
+ *
+ *   Request GET /path?query status=200 bytes=512 duration_ms=3
+ *
+ * Fields, in order: method, target (query string included), response status,
+ * response body bytes actually written, and elapsed milliseconds. The method
+ * and target pass through log_escape_uri(), so control bytes are inert and a
+ * target is cut at BIALET_LOG_URI_MAX bytes with "..." appended. Only the body
+ * counts towards bytes -- never the response head -- so a HEAD, or a 204/304,
+ * logs 0. On a partial or failed send it records the body bytes that were
+ * written before the failure (0 when none were), never the size that was only
+ * attempted. The clock origin is the start of handle_client(), after accept()
+ * and before any parsing; duration_ms is never negative (a coarse clock logs
+ * 0).
+ *
+ * The state is per request rather than per call because the request line used
+ * to be logged before dispatch, where the status was still unknown. It is
+ * armed once at the single point that already decided whether this request is
+ * logged at all, and consumed by write_response() (or the favicon shortcut).
+ * The server handles one request at a time, like answering_head below.
+ */
+static struct {
+  int       armed;
+  long long started_ms;
+  char*     method; // escaped, owned
+  char*     uri;    // escaped, owned
+} access_log;
+
+static void access_log_cancel(void) {
+  free(access_log.method);
+  free(access_log.uri);
+  access_log.method = NULL;
+  access_log.uri = NULL;
+  access_log.armed = 0;
+}
+
+static void access_log_begin(const char* method, const char* uri,
+                             long long started_ms) {
+  access_log_cancel();
+  access_log.started_ms = started_ms;
+  access_log.method = method ? log_escape_uri(method) : NULL;
+  access_log.uri = uri ? log_escape_uri(uri) : NULL;
+  access_log.armed = 1;
+}
+
+// Arms the log from the raw request buffer, for the responses written before
+// parse_request() runs (400 and 413 rejections). The first line is
+// `method SP target SP version`; anything shorter or malformed is logged with
+// the fields it does have so the line still says what was answered.
+static void access_log_begin_raw(const char* request, size_t len,
+                                 long long started_ms) {
+  size_t i = 0;
+  while(i < len && request[i] != ' ' && request[i] != '\r' && request[i] != '\n' &&
+        request[i] != '\0')
+    i++;
+  size_t method_len = i;
+  if(method_len > 32)
+    method_len = 32;
+  char method[33];
+  memcpy(method, request, method_len);
+  method[method_len] = '\0';
+
+  while(i < len && request[i] == ' ')
+    i++;
+  size_t target_start = i;
+  while(i < len && request[i] != ' ' && request[i] != '\r' && request[i] != '\n' &&
+        request[i] != '\0')
+    i++;
+  size_t target_len = i - target_start;
+  if(target_len > BIALET_LOG_URI_MAX)
+    target_len = BIALET_LOG_URI_MAX;
+  char target[BIALET_LOG_URI_MAX + 1];
+  memcpy(target, request + target_start, target_len);
+  target[target_len] = '\0';
+
+  access_log_begin(method_len ? method : NULL, target_len ? target : NULL,
+                   started_ms);
+}
+
+// Emits the pending line and clears it, so a second call cannot log the same
+// request twice. write_response() calls this after the final write.
+static void access_log_finish(int status, size_t body_bytes) {
+  if(!access_log.armed)
+    return;
+  long long elapsed = monotonic_ms() - access_log.started_ms;
+  if(elapsed < 0)
+    elapsed = 0;
+  char tail[64];
+  snprintf(tail, sizeof(tail), "status=%d bytes=%zu duration_ms=%lld", status,
+           body_bytes, elapsed);
+  message(magenta("Request"),
+          access_log.method ? access_log.method : "(unprintable)",
+          access_log.uri ? access_log.uri : "(unprintable)", tail);
+  access_log_cancel();
+}
+
 static const char* path_basename(const char* path) {
   const char* last = path;
   for(const char* p = path; *p; p++) {
@@ -378,12 +476,17 @@ static int stat_path_no_follow(const char* path, struct stat* st) {
 // Writes the response head and the body. One writev/WSASend call covers both,
 // which is one syscall fewer per response than sending them separately, and it
 // also means a small page never sits in the socket as two segments.
+// [*body_sent], when non-NULL, receives the body bytes that were actually
+// written -- never the head -- so the access log can report 0 on a failed or
+// head-only send instead of the size it meant to write.
 // Returns 0 on success (including a peer that closed early), -1 on error.
 static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_len,
-                              const char* body, size_t body_len) {
+                              const char* body, size_t body_len, size_t* body_sent) {
   size_t sent = 0;
   if(body == NULL)
     body_len = 0;
+  if(body_sent != NULL)
+    *body_sent = 0;
   size_t    total = head_len + body_len;
   long long deadline = monotonic_ms() + BIALET_WRITE_BASE_DEADLINE_MS +
                        (long long)(total / BIALET_WRITE_MIN_BYTES_PER_SEC) * 1000;
@@ -433,6 +536,10 @@ static int send_head_and_body(bialet_socket_t fd, const char* head, size_t head_
     size_t written = (size_t)n;
 #endif
     sent += written;
+    if(body_sent != NULL) {
+      size_t done = sent > head_len ? sent - head_len : 0;
+      *body_sent = done < body_len ? done : body_len;
+    }
   }
   return 0;
 }
@@ -1123,15 +1230,17 @@ void write_response(int client_socket, struct BialetResponse* response) {
   // `Connection: close` is explicit: Bialet serves one request per connection
   // (no keep-alive, no pipelining, no chunked bodies). Without the header an
   // HTTP/1.1 client is entitled to assume the connection stays open.
-  char head[512];
-  int  head_len = snprintf(head, sizeof(head),
-                           "HTTP/1.1 %d %s\r\n"
-                           "%s"
-                           "Connection: close\r\n"
-                           "%s\r\n",
-                           response->status, desc, hdr, length_line);
+  size_t body_sent = 0;
+  char   head[512];
+  int    head_len = snprintf(head, sizeof(head),
+                             "HTTP/1.1 %d %s\r\n"
+                             "%s"
+                             "Connection: close\r\n"
+                             "%s\r\n",
+                             response->status, desc, hdr, length_line);
   if(head_len < 0) {
     perror("Failed to format HTTP response");
+    access_log_cancel();         // no response, so there is no status to record
     socket_close(client_socket); // was leaked on this path
     return;
   }
@@ -1139,9 +1248,11 @@ void write_response(int client_socket, struct BialetResponse* response) {
   if((size_t)head_len < sizeof(head)) {
     if(response->body && body_len > 0)
       (void)send_head_and_body(client_socket, head, (size_t)head_len, response->body,
-                               body_len);
+                               body_len, &body_sent);
     else
-      (void)send_head_and_body(client_socket, head, (size_t)head_len, NULL, 0);
+      (void)send_head_and_body(client_socket, head, (size_t)head_len, NULL, 0,
+                               &body_sent);
+    access_log_finish(response->status, body_sent);
     socket_close(client_socket);
     return;
   }
@@ -1149,6 +1260,7 @@ void write_response(int client_socket, struct BialetResponse* response) {
   char* message = (char*)malloc((size_t)head_len + 1);
   if(message == NULL) {
     perror("Failed to allocate memory for HTTP response");
+    access_log_cancel();
     socket_close(client_socket);
     return;
   }
@@ -1161,11 +1273,13 @@ void write_response(int client_socket, struct BialetResponse* response) {
 
   if(response->body && body_len > 0)
     (void)send_head_and_body(client_socket, message, (size_t)head_len,
-                             response->body, body_len);
+                             response->body, body_len, &body_sent);
   else
-    (void)send_head_and_body(client_socket, message, (size_t)head_len, NULL, 0);
+    (void)send_head_and_body(client_socket, message, (size_t)head_len, NULL, 0,
+                             &body_sent);
   free(message);
 
+  access_log_finish(response->status, body_sent);
   socket_close(client_socket);
 }
 
@@ -1458,6 +1572,11 @@ static int uri_is_well_known(const char* uri) {
 }
 
 void handle_client(bialet_socket_t client_socket) {
+  // Duration origin for the access log: the connection has been accepted and
+  // nothing has been parsed or read yet. Clears any state left by a request
+  // that was answered without going through write_response().
+  long long request_started = monotonic_ms();
+  access_log_cancel();
   answering_head = 0;
   char   buffer[BUFFER_SIZE];
   size_t total_read = 0;
@@ -1501,6 +1620,7 @@ void handle_client(bialet_socket_t client_socket) {
   // answered an unterminated request as if it were complete and let one peer
   // hold the only worker for the whole body deadline.
   if(hdr_len == 0) {
+    access_log_begin_raw(buffer, total_read, request_started);
     struct BialetResponse bad = {0};
     custom_error(400, &bad);
     write_response(client_socket, &bad);
@@ -1510,6 +1630,7 @@ void handle_client(bialet_socket_t client_socket) {
   // Refuse a header block whose lines are not CRLF-terminated, so the C
   // multipart detector and the Wren header map cannot split it differently.
   if(!header_block_well_formed(buffer, hdr_len)) {
+    access_log_begin_raw(buffer, total_read, request_started);
     struct BialetResponse bad = {0};
     custom_error(400, &bad);
     write_response(client_socket, &bad);
@@ -1529,6 +1650,7 @@ void handle_client(bialet_socket_t client_socket) {
     int te_count = count_header(buffer, hdr_len, kTransferEncoding,
                                 sizeof(kTransferEncoding) - 1);
     if(cl_count > 1 || te_count > 0) {
+      access_log_begin_raw(buffer, total_read, request_started);
       struct BialetResponse bad = {0};
       custom_error(400, &bad);
       write_response(client_socket, &bad);
@@ -1581,6 +1703,7 @@ void handle_client(bialet_socket_t client_socket) {
         }
         // A value that is not a decimal length is a malformed request (400),
         // not an oversized one.
+        access_log_begin_raw(buffer, total_read, request_started);
         struct BialetResponse too_large = {0};
         custom_error(rc > 0 ? 413 : 400, &too_large);
         write_response(client_socket, &too_large);
@@ -1662,20 +1785,23 @@ void handle_client(bialet_socket_t client_socket) {
                     !has_forwarding_header(buffer, hdr_len) &&
                     health_host_is_local(buffer, hdr_len);
   if(!livereload_is_poll(hm->uri.str) && !health_poll) {
-    char* log_method = log_escape_uri(hm->method.str);
-    char* log_uri = log_escape_uri(hm->uri.str);
-    message(magenta("Request"), log_method ? log_method : "(unprintable)",
-            log_uri ? log_uri : "(unprintable)");
-    free(log_method);
-    free(log_uri);
+    // Armed here and emitted by write_response() after the body is sent, so
+    // the same line carries the real status and byte count.
+    access_log_begin(hm->method.str, hm->uri.str, request_started);
   }
 
   if(strcmp("/favicon.ico", hm->uri.str) == 0) {
     // Head and body in one writev, like every other response: two send() calls
-    // put a chunk boundary where the bytes never had one.
-    (void)send_head_and_body(client_socket, FAVICON_RESPONSE,
-                             strlen(FAVICON_RESPONSE), (const char*)favicon_data,
-                             (size_t)FAVICON_SIZE);
+    // put a chunk boundary where the bytes never had one. HEAD still gets the
+    // GET head with no content, so the access log records 0 body bytes.
+    size_t favicon_body_sent = 0;
+    (void)send_head_and_body(
+        client_socket, FAVICON_RESPONSE, strlen(FAVICON_RESPONSE),
+        answering_head ? NULL : (const char*)favicon_data,
+        answering_head ? 0 : (size_t)FAVICON_SIZE, &favicon_body_sent);
+    // Not write_response(): this is a ready-made static head, not a
+    // BialetResponse. The shared helper still emits the one access-log line.
+    access_log_finish(200, favicon_body_sent);
     clean_http_message(hm);
     if(should_free_request)
       free(full_request);
@@ -1930,6 +2056,9 @@ void handle_client(bialet_socket_t client_socket) {
     char* url_copy = strdup(hm->uri.str);
     if(!url_copy) {
       perror("strdup");
+      // No response is written, so there is no status to record. Drop the
+      // pending line rather than leave it for the next request.
+      access_log_cancel();
       clean_http_message(hm);
       if(should_free_request)
         free(full_request);

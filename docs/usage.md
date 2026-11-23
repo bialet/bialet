@@ -94,12 +94,25 @@ usage text instead of being silently ignored.
 > so Bialet creates it readable by its owner only (`0600`). An existing file
 > keeps its mode; do not make it group- or world-readable.
 
-> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
-> line (the method and the first 512 bytes of the target), so rotate it with
-> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
-> open in append mode, so truncating it in place is safe). Under systemd or
-> Docker, logging to stdout and letting journald or the log driver cap the size
-> works too.
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every served request adds
+> exactly one line, written after the response:
+>
+> ```text
+> 2026-11-23 13:20:01 Request GET /search?q=logs status=200 bytes=4821 duration_ms=7
+> 2026-11-23 13:20:02 Request GET /missing status=404 bytes=714 duration_ms=1
+> ```
+>
+> The fields after the method and target are `status=`, `bytes=` and
+> `duration_ms=`. `bytes` counts response body bytes actually written, never
+> headers, so a `HEAD` (or a `204`/`304`) logs `0`; a send that fails partway
+> reports the bytes completed before the failure. `duration_ms` runs from accept
+> to the final write and is never negative. The target keeps its query string,
+> has control bytes escaped, and is cut after 512 bytes with `...`; request
+> bodies are never logged. Local `/_health` and live-reload polls are not
+> logged. Rotate the file with the system's tools, e.g. logrotate with
+> `copytruncate` (Bialet keeps the file open in append mode, so truncating it in
+> place is safe). Under systemd or Docker, logging to stdout and letting
+> journald or the log driver cap the size works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
