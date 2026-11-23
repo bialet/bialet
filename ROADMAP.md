@@ -21,8 +21,9 @@ ideas I may revisit if interest returns, but no promises.
       deploy hook can run `bialet check /www/app` from any working directory.
       SQL parsing uses an in-memory database: a check never opens, creates, or
       purges the app's `_db.sqlite3`, and cannot follow a tree-controlled
-      `_db.sqlite3` symlink to another database. `init` is still the missing
-      piece of the `init`/`check`/`test` story.
+      `_db.sqlite3` symlink to another database. Validation and tests now both
+      run from the command line (`check`, `-T`); `init` is the only piece of
+      that trio still missing (see below).
 - [x] **Hidden health endpoint** — `/_health` returns version, uptime, and DB
       status as JSON (`200`, or `503` when `SELECT 1` fails). It is answered
       only to a direct loopback request whose `Host` is also loopback
@@ -35,22 +36,28 @@ ideas I may revisit if interest returns, but no promises.
 
 ## Editors/IDE Support
 
-- [x] VS Code (syntax JSON, language-configuration)
-- [ ] Sublime Text (.sublime-syntax and .tmPreferences)
-- [x] Vim / Neovim (ftdetect, syntax)
-- [ ] JetBrains (IntelliJ) (TextMate bundle or custom plugin)
+The editor plugins live outside this repository, in
+[`bialet/bialet.vim`](https://github.com/bialet/bialet.vim): the VS Code
+extension ships from there to the marketplace (syntax JSON and
+language-configuration), and Vim/Neovim get ftdetect and syntax. Sublime Text
+(`.sublime-syntax`, `.tmPreferences`) and JetBrains are tracked in that repo
+too, so nothing here is blocked on them. The language server those plugins
+would eventually drive is the LSP item below.
+
+See [Editor Support](docs/editor-support.md).
 
 ## On my radar
 
-- [ ] **Per-request access logs** — `-l` should record one line per request
-      (method, path, status, duration, bytes) so a host can meter usage and
-      detect abuse without parsing proxy logs.
+- [ ] **Per-request access logs** — `-l` already writes one line per request
+      with the method and target; extend that line with status, duration, and
+      response bytes so a host can meter usage and detect abuse without parsing
+      proxy logs.
 - [ ] **Optional on-disk file storage** — a flag to store uploads on disk
       (under the app's data dir, outside the code release) instead of only as
       DB blobs. Large files currently inflate the database, backups, and the
       disk quota all at once.
-- [ ] **`bialet init`** — scaffold a new app directory, completing the
-      `init`/`check`/`test` story the docs promise.
+- [ ] **`bialet init`** — scaffold a new app directory, giving `check` and `-T`
+      a starting point the same command creates.
 - [ ] **Admin dashboard** — External lib UI for browsing the database and
       viewing logs
 - [ ] **Data filtering lib** — External lib for query sanitization and type-safe
@@ -58,8 +65,6 @@ ideas I may revisit if interest returns, but no promises.
 - [ ] **i18n / localization** — Translation helpers and locale-aware formatting
 - [ ] **LSP support** — Language Server Protocol implementation with
       autocomplete, go-to-definition, and diagnostics for VS Code
-- [ ] **Opcode Cache** — Compile scripts to cached bytecode for faster request
-      handling
 - [ ] **HTTP Client - Multipart / file uploads** — no way to send files or
       `multipart/form-data` to an external API.
 - [x] **HTTP Client - Response cookies / cookie jar: per-host scoping** — the
