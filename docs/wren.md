@@ -484,17 +484,18 @@ Wren methods that express the logic directly.
 
 ### Same line vs. next line
 
-The implicit return only applies when the expression starts on the same line as
-the opening `{`. If the body starts on a following line, Wren treats it as a
-statement body — each statement runs, the last value is discarded, and the
-method returns `null`:
+The implicit return applies when the expression starts on the same line as the
+opening `{`, or when the body starts with an HTML literal on the next line:
+HTML is never a statement, so it is the body's value. Any other body that
+starts on a following line is a statement body — each statement runs, the last
+value is discarded, and the method returns `null`:
 
 ```wren
 class Shape {
   // Expression body — starts on the `{` line, the value is returned
   area(w, h) { w * h }
 
-  // Same for HTML — the string starts on the `{` line
+  // Same for HTML — may also start on the next line
   badge(label) { <span class="badge">{{ label }}</span> }
 
   // Expression moved to the next line — computes then discards, returns null
@@ -510,15 +511,16 @@ class Shape {
 ```
 
 `brokenArea(2, 3)` evaluates `2 * 3` and throws the result away, returning
-`null`. In a template this renders as empty output — no error tells you the
-value was dropped. Keep the expression on the same line as `{` when you want the
-implicit return, and use an explicit `return` for any multi-line method that
-must return a value.
+`null`. In a template this renders as empty output; a block doing the same
+inside `{{ }}` now warns at compile time, while a method body stays silent.
+Keep code on the same line as `{` when you want the implicit return, use an
+HTML body on the next line when the body is markup, and use an explicit
+`return` for any multi-line method that must return a value.
 
 > ⚠️ Pitfall: this rule applies to block arguments (`.map { }`, `.where { }`,
-> `Fn.new { }`, ...) exactly the same way, and it's easy to miss there
-> because there's no error — the block just silently returns `null` for
-> every call:
+> `Fn.new { }`, ...) exactly the same way, and it's easy to miss because the
+> block silently returns `null` for every call. Inside `{{ }}` the compiler
+> now warns once per file; `Fn.new`, Cron and migration bodies stay silent:
 > ```wren
 > // Bug: filters out everything. `libre` never gets returned because it's
 > // not on the same line as `{`, so the block's value is null every time.
@@ -536,7 +538,8 @@ must return a value.
 > }.toList  // -> the actual filtered list
 > ```
 > A single-expression block (`{ |x| x * 2 }`) is unaffected — implicit
-> return always works there since the expression is already on the `{` line.
+> return always works there, and equally when the body is an HTML literal on
+> the next line.
 
 ### When You Need `return`
 

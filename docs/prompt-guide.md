@@ -139,8 +139,9 @@ class User {
   static count() { 0 }        // static method
 }
 
-// A method returns only through `return`. The single exception is a body
-// whose whole expression sits on the same line as its `{`.
+// A method returns only through `return`. The exception is a body whose
+// whole expression sits on the same line as its `{`, or a body that starts
+// with an HTML literal on the next line.
 class Math {
   static square(n) { n * n }          // returned: same line as the `{`
   static double(n) {
@@ -217,7 +218,9 @@ Blocks use curly braces and can appear anywhere a statement is allowed
 1. **Statement block** — a newline right after `{`. Contains a series of
    statements and, when used as a method/function body, automatically returns
    `null` after the block completes. Return a different value with an explicit
-   `return`:
+   `return`. The one exception is an HTML literal right after the newline:
+   HTML is never a statement, so that body is a single-expression block that
+   returns its value.
 
 ```wren
 {
@@ -227,8 +230,8 @@ Blocks use curly braces and can appear anywhere a statement is allowed
 ```
 
 2. **Single-expression block** — no newline after `{` (or after the parameter
-   list). It may contain only one expression and automatically returns its
-   result:
+   list), or a newline followed by an HTML literal. It may contain only one
+   expression and automatically returns its result:
 
 ```wren
 { "single expression" } // Exactly like:
@@ -322,15 +325,18 @@ classes, attributes, or whole HTML blocks:
 ```
 
 **Iteration** uses `map`/`where`/etc. A block whose body is a single
-expression on the same line as `{` returns it implicitly:
+expression on the same line as `{` — or an HTML literal starting on the next
+line — returns it implicitly:
 
 ```wren
 {{ tasks.map{ |task| <li>{{ task.description }}</li> } }}
 ```
 
-> **Pitfall:** a multi-line block body is allowed but does **not**
+> **Pitfall:** a multi-line **code** block body is allowed but does **not**
 > implicitly return — without an explicit `return`, the block's value is
-> always `null` for every call, no error raised:
+> `null` for every call. Inside `{{ }}` the compiler now warns once per file;
+> `Fn.new`, Cron and migration bodies stay silent. An HTML literal body on the
+> next line is different: it is the block's value.
 > ```wren
 > // BUG: returns [] every time, "libre" is on its own line so it's discarded
 > list.where { |x|

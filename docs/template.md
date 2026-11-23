@@ -438,8 +438,9 @@ return <div>{{ task.finished ? <span class="completed">
 ## Iteration with `map`
 
 Wren's `map` function transforms each element of a list into an HTML string.
-The callback body is a single Wren expression — but the inline HTML string
-inside it can span many visual lines.
+The callback body is a single Wren expression — either on the `{` line, or an
+HTML literal starting on the next line. The literal itself can span many visual
+lines.
 
 ### Simple list
 
@@ -452,8 +453,9 @@ var html = <ul>{{ items.map { |item| <li>{{ item }}</li> } }}</ul>
 ### Multiline items
 
 The callback is one expression (`|task| <li>...</li>`), but the `<li>` inline
-HTML string spans multiple lines. The Wren code stays on one line of Wren, but
-the HTML inside the tags has newlines.
+HTML string spans multiple lines. The Wren expression may stay on one line, and
+the HTML literal may equally begin on the line after `|task|`; the HTML inside
+the tags has newlines either way.
 
 ```wren
 <ul class="task-list">
@@ -484,11 +486,12 @@ the HTML inside the tags has newlines.
 
 ### Pitfalls
 
-**The callback must be a single expression.** You cannot have multiple Wren
-statements or variable declarations inside a `map` callback:
+**The callback must yield a single expression.** A `var` turns the body into a
+statement list, and a statement that ends in an HTML literal cannot close the
+block, so this form does not compile (`Expect newline after statement`):
 
 ```wren
-// Wrong — multiple statements inside map
+// Wrong — does not compile
 {{ tasks.map { |task|
   var icon = task.finished ? "✓" : "○"
   <li>{{ icon }} {{ task.description }}</li>
@@ -531,19 +534,18 @@ return <main>
 **Large lists hurt performance.** Paginate or limit results in the controller —
 `map` iterates everything you give it.
 
-**Newlines outside HTML tags** — same rule:
+**Newlines outside HTML tags** — an expression can start on the next line
+inside `{{ }}`, but `return` still ends at its newline:
 
 ```wren
-// Wrong — Wren code broken across lines outside the HTML string
+// Valid — the interpolation expression starts on the next line
 return <div>{{
-  tasks.map { |task|
-  <li>{{ task.description }}</li>
-} }}</div>
+  tasks.map { |task| <li>{{ task.description }}</li> }
+}}</div>
 
-// Correct — the expression starts on the {{ line
-return <div>{{ tasks.map{ |task| <li>
-  {{ task.description }}
-</li> } }}</div>
+// Wrong — `return` on its own line returns immediately
+return
+  <div>Nothing here is returned</div>
 ```
 
 ---

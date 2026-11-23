@@ -67,7 +67,9 @@ The two restrictions that will trip you up:
 
 ### No statements inside the callback
 
-You cannot declare a variable or write multiple lines of Wren inside `map`:
+You cannot declare a variable inside `map`. A `var` makes the body a statement
+list, and a statement ending in HTML cannot close the callback, so this does
+not compile:
 
 ```wren
 // WRONG — multiple statements inside the map callback
@@ -323,7 +325,8 @@ var msg = Request.post("msg") || ""
 - [ ] Balance the tags inside every literal: same-tag nesting is fine, an
       unclosed level is a compile error.
 - [ ] Move statements out of `map` callbacks; keep the callback body a single
-      expression starting on the `{` line.
+      expression starting on the `{` line, or an HTML literal starting on the
+      line after it.
 - [ ] Compute strings before interpolating into attributes; no template
       literals.
 - [ ] Turn components into class methods; compose by passing markup, not by
