@@ -237,6 +237,14 @@ typedef struct {
   // for this compilation. One per file is enough: the fix is the same.
   bool warnedDiscardedBody;
 
+  // Depth of the HTML interpolations currently being parsed. A block inside
+  // "{{ }}" can discard its value where the reader expects output, so only
+  // there does the discarded-body warning fire. numHandlebars cannot answer
+  // this: the lexer has already pushed a handlebar for the next lookahead token
+  // when a method body is finished, which report a block that is not in an
+  // interpolation at all.
+  int htmlInterpolationDepth;
+
   // If a syntax or compile error has occurred.
   bool hasError;
 } Parser;
@@ -536,7 +544,7 @@ static void error(Compiler* compiler, const char* format, ...) {
 // per compilation: the fix is the same for every block in the file.
 static void warnDiscardedBlockBody(Compiler* compiler) {
   Parser* parser = compiler->parser;
-  if(parser->numHandlebars == 0 || parser->warnedDiscardedBody)
+  if(parser->htmlInterpolationDepth == 0 || parser->warnedDiscardedBody)
     return;
   if(!parser->printErrors)
     return;
@@ -3104,6 +3112,11 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
   loadCoreVariable(compiler, "List");
   callMethod(compiler, 0, "new()", 5);
 
+  // Marks the expression as living inside an interpolation, so finishBlock can
+  // tell a discarded block body here (which renders nothing) from a legitimate
+  // statement block in a method, a Fn or a Cron job.
+  compiler->parser->htmlInterpolationDepth++;
+
   do {
     // The opening literal piece is already-safe HTML.
     htmlNode(compiler, false);
@@ -3116,6 +3129,8 @@ static void htmlInterpolation(Compiler* compiler, bool canAssign) {
 
     ignoreNewlines(compiler);
   } while(match(compiler, TOKEN_HTML_TEXT));
+
+  compiler->parser->htmlInterpolationDepth--;
 
   // The trailing literal piece is already-safe HTML.
   consume(compiler, TOKEN_HTML_NODE, "Expect end of HTML interpolation.");
@@ -4449,6 +4464,7 @@ ObjFn* wrenCompile(WrenVM* vm, ObjModule* module, const char* source,
 
   parser.printErrors = printErrors;
   parser.warnedDiscardedBody = false;
+  parser.htmlInterpolationDepth = 0;
   parser.hasError = false;
 
   // Read the first token into next

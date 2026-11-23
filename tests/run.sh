@@ -395,12 +395,17 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   mw_status=$?
   mw_quiet=$("$r_exec" -q -r \
     $'var f = Fn.new { |x|\n  x\n}\nreturn "ok"' 2>&1)
+  # A method body that returns HTML with an interpolation is not a discarded
+  # block: the lexer lookahead sees the "{{", but no block is being finished.
+  mw_method=$("$r_exec" -q -r \
+    $'class A {\n  static x {\n    return <p>{{ 1 }}</p>\n  }\n}\nreturn A.x' 2>&1)
   if [[ "$mw_status" -eq 0 && "$mw_out" == *"Warning:"*"block body starts on the line after"* ]] \
-     && [[ "$mw_quiet" != *"Warning:"* ]]; then
+     && [[ "$mw_quiet" != *"Warning:"* ]] \
+     && [[ "$mw_method" == "<p>1</p>" && "$mw_method" != *"Warning:"* ]]; then
     report_result "Discarded block body warns" "$mw_line" 0
   else
     report_result "Discarded block body warns" "$mw_line" 1 \
-      "Expected a warning in a template and none outside it, got exit $mw_status template '$mw_out' outside '$mw_quiet'"
+      "Expected a warning in a template and none outside it, got exit $mw_status template '$mw_out' outside '$mw_quiet' method '$mw_method'"
   fi
 else
   skip_test "Discarded block body warns" "requires local binary access"
