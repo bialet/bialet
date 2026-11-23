@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -617,8 +618,9 @@ the upstream language). A few things you need to know to write correct code:
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}</span><span class="w">        </span><span class="c1">// static method</span>
 <span class="p">}</span>
 
-<span class="c1">// A method returns only through `return`. The single exception is a body</span>
-<span class="c1">// whose whole expression sits on the same line as its `{`.</span>
+<span class="c1">// A method returns only through `return`. The exception is a body whose</span>
+<span class="c1">// whole expression sits on the same line as its `{`, or a body that starts</span>
+<span class="c1">// with an HTML literal on the next line.</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Math</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">square</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">}</span><span class="w">          </span><span class="c1">// returned: same line as the `{`</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">double</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -695,7 +697,9 @@ Blocks use curly braces and can appear anywhere a statement is allowed
 <span class="k">1.</span> <span class="gs">**Statement block**</span> — a newline right after <span class="sb">`{`</span>. Contains a series of
    statements and, when used as a method/function body, automatically returns
    <span class="sb">`null`</span> after the block completes. Return a different value with an explicit
-   <span class="sb">`return`</span>:
+   <span class="sb">`return`</span>. The one exception is an HTML literal right after the newline:
+   HTML is never a statement, so that body is a single-expression block that
+   returns its value.
 
 <span class="sb">```wren</span>
 <span class="p">{</span>
@@ -705,8 +709,8 @@ Blocks use curly braces and can appear anywhere a statement is allowed
 <span class="sb">```</span>
 
 <span class="k">2.</span> <span class="gs">**Single-expression block**</span> — no newline after <span class="sb">`{`</span> (or after the parameter
-   list). It may contain only one expression and automatically returns its
-   result:
+   list), or a newline followed by an HTML literal. It may contain only one
+   expression and automatically returns its result:
 
 <span class="sb">```wren</span>
 <span class="p">{</span><span class="w"> </span><span class="s2">"single expression"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1">// Exactly like:</span>
@@ -800,15 +804,18 @@ classes, attributes, or whole HTML blocks:
 <span class="sb">```</span>
 
 <span class="gs">**Iteration**</span> uses <span class="sb">`map`</span>/<span class="sb">`where`</span>/etc. A block whose body is a single
-expression on the same line as <span class="sb">`{`</span> returns it implicitly:
+expression on the same line as <span class="sb">`{`</span> — or an HTML literal starting on the next
+line — returns it implicitly:
 
 <span class="sb">```wren</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
 <span class="sb">```</span>
 
-<span class="k">&gt; </span><span class="ge">**Pitfall:** a multi-line block body is allowed but does **not**</span>
+<span class="k">&gt; </span><span class="ge">**Pitfall:** a multi-line **code** block body is allowed but does **not**</span>
 <span class="k">&gt; </span><span class="ge">implicitly return — without an explicit `return`, the block's value is</span>
-<span class="k">&gt; </span><span class="ge">always `null` for every call, no error raised:</span>
+<span class="k">&gt; </span><span class="ge">`null` for every call. Inside `{{ }}` the compiler now warns once per file;</span>
+<span class="k">&gt; </span><span class="ge">`Fn.new`, Cron and migration bodies stay silent. An HTML literal body on the</span>
+<span class="k">&gt; </span><span class="ge">next line is different: it is the block's value.</span>
 <span class="k">&gt; </span><span class="ge">```wren</span>
 <span class="k">&gt; </span><span class="ge">// BUG: returns [] every time, "libre" is on its own line so it's discarded</span>
 <span class="k">&gt; </span><span class="ge">list.where { |x|</span>

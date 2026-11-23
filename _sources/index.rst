@@ -313,6 +313,7 @@ responses. :doc:`showcase`
    cron
    tests
    deployment
+   hosted-deployment
    performance
 
 .. toctree::

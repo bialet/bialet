@@ -40,6 +40,7 @@
 - [Cron Tasks](/_sources/cron.md)
 - [Testing in Bialet](/_sources/tests.md)
 - [Deployment](/_sources/deployment.md)
+- [Hosted Deployment](/_sources/hosted-deployment.md)
 - [Performance](/_sources/performance.md)
 - [Reference](/_sources/reference.md)
 - [Recipes](/_sources/recipes.md)

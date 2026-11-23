@@ -1,0 +1,939 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Hosted Deployment" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://bialet.dev/hosted-deployment.html" />
+<meta property="og:site_name" content="Bialet" />
+<meta property="og:description" content="Deployment explains each piece of a production install. This page assembles them into one recipe for a hosted app: one host you control, one unprivileged user, a release directory you replace whole..." />
+<meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
+<meta property="og:image:alt" content="Bialet" />
+<meta name="description" content="Deployment explains each piece of a production install. This page assembles them into one recipe for a hosted app: one host you control, one unprivileged user, a release directory you replace whole..." />
+
+    <title>Hosted Deployment &#8212; Bialet</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=ab80229a" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'hosted-deployment';</script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
+    <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Performance" href="performance.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.2.27" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+    
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">Bialet Documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Before You Start</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Small on purpose.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-bialet.html">Why Bialet?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="html-first.html">HTML-First</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="editor-support.html">Editor Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wren.html">Wren Language Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="showcase.html">Built with Bialet</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">First Steps</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start: a guestbook</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="getting-started/index.html">Getting Started</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/1-introduction.html">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/2-setup.html">2. Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/3-first-page.html">3. Your First Page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/4-templates.html">4. Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/5-logic-database.html">5. Logic &amp; Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/6-migrations.html">6. Migrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/7-forms-voting.html">7. Forms &amp; Voting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started/8-results.html">8. Results</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data &amp; Storage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file.html">File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datetime.html">Date and Time Functions</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Interfaces</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template.html">Template</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsx-migration.html">JSX to Bialet Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forms.html">Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="markdown.html">Markdown</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Error Pages</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Connecting Things</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="advanced-routing.html">Advanced Routing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-modules.html">External Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest-api.html">Building REST APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="http-calls.html">Making HTTP Calls</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running It</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command Line Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="live-reload.html">Live Reload</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Hosted Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipes.html">Recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pitfalls.html">Common Pitfalls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ai-prompt.html">AI Coding Prompt</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/edit/main/docs/hosted-deployment.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/bialet/bialet/issues/new?title=Issue%20on%20page%20%2Fhosted-deployment.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/hosted-deployment.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Hosted Deployment</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-hosted-means-here">What “Hosted” Means Here</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#directory-layout">Directory Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-user-and-the-umask">The User and the Umask</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-a-release">Install a Release</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-runtime-command">The Runtime Command</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-unit">systemd Unit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy">Reverse Proxy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-check-and-deploy-gate">Health Check and Deploy Gate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backups">Backups</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upgrades-and-rollback">Upgrades and Rollback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hosted-deployment">
+<h1>Hosted Deployment<a class="headerlink" href="#hosted-deployment" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="deployment.html"><span class="std std-doc">Deployment</span></a> explains each piece of a production install. This
+page assembles them into one recipe for a <strong>hosted</strong> app: one host you control,
+one unprivileged user, a release directory you replace wholesale, and the state
+kept outside it.</p>
+<section id="what-hosted-means-here">
+<h2>What “Hosted” Means Here<a class="headerlink" href="#what-hosted-means-here" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>One host.</strong> SQLite is a local file, so there is no database server to move
+to. Several workers here are covered in
+<a class="reference internal" href="deployment.html#scaling-multiple-workers-on-one-host"><span class="std std-ref">Deployment</span></a>.</p></li>
+<li><p><strong>Immutable code.</strong> Every deploy is a new <code class="docutils literal notranslate"><span class="pre">/srv/app/releases/&lt;tag&gt;/</span></code>; nothing
+is edited in place. <code class="docutils literal notranslate"><span class="pre">/srv/app/current</span></code> picks the release that should run.</p></li>
+<li><p><strong>State outside the code.</strong> Database, WAL files, log, and key live in
+<code class="docutils literal notranslate"><span class="pre">/srv/app/shared/</span></code> and survive every swap.</p></li>
+<li><p><strong>One unprivileged user.</strong> <code class="docutils literal notranslate"><span class="pre">app</span></code> reads the release and writes only <code class="docutils literal notranslate"><span class="pre">shared/</span></code>.</p></li>
+<li><p><strong>A restart per deploy.</strong> Bialet resolves its app root once at startup, so
+changing <code class="docutils literal notranslate"><span class="pre">current</span></code> does nothing until the restart. That is the deploy
+boundary, the opposite of
+<a class="reference internal" href="deployment.html#no-restart-needed-on-deploy"><span class="std std-ref">No Restart Needed on Deploy</span></a>; no
+watcher is needed (<code class="docutils literal notranslate"><span class="pre">-W</span></code>).</p></li>
+</ul>
+<p>Not covered: native TLS (a proxy terminates it; <a class="reference internal" href="security.html#tls"><span class="std std-ref">Security</span></a>),
+on-disk uploads (they are database rows; planned, not implemented;
+<a class="reference internal" href="file.html"><span class="std std-doc">Files</span></a>), and Windows.</p>
+</section>
+<section id="directory-layout">
+<h2>Directory Layout<a class="headerlink" href="#directory-layout" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/srv/app/
+├── releases/
+│   ├── v1.2.14/                 # previous release (bialet + app/)
+│   └── v1.2.15/                 # current release
+│       ├── bialet               # from the verified release archive
+│       └── app/                 # app root: .wren files, _app/, _migration.wren
+├── shared/
+│   ├── app.sqlite3              # -d
+│   ├── app.sqlite3-wal          # with -w
+│   ├── app.sqlite3-shm
+│   ├── app.log                  # -l
+│   └── secret.key               # -k
+└── current -&gt; releases/v1.2.15
+</pre></div>
+</div>
+<p>The binary sits <strong>beside</strong> <code class="docutils literal notranslate"><span class="pre">app/</span></code>, not inside it: the app root is also the static
+root, so <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/bialet</span></code> would serve the executable. Releases are root-owned and
+read-only to the service; <code class="docutils literal notranslate"><span class="pre">shared/</span></code> is owned by <code class="docutils literal notranslate"><span class="pre">app</span></code>, mode <code class="docutils literal notranslate"><span class="pre">0700</span></code>.</p>
+</section>
+<section id="the-user-and-the-umask">
+<h2>The User and the Umask<a class="headerlink" href="#the-user-and-the-umask" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>useradd<span class="w"> </span>--system<span class="w"> </span>--user-group<span class="w"> </span>--home-dir<span class="w"> </span>/srv/app<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--shell<span class="w"> </span>/usr/sbin/nologin<span class="w"> </span>app
+
+sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>root<span class="w"> </span>-g<span class="w"> </span>root<span class="w"> </span>-m<span class="w"> </span><span class="m">0755</span><span class="w"> </span>/srv/app
+sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>root<span class="w"> </span>-g<span class="w"> </span>root<span class="w"> </span>-m<span class="w"> </span><span class="m">0755</span><span class="w"> </span>/srv/app/releases
+sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>app<span class="w">  </span>-g<span class="w"> </span>app<span class="w">  </span>-m<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/srv/app/shared
+
+sudo<span class="w"> </span>-u<span class="w"> </span>app<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">'umask 0077; openssl rand -hex 32 &gt; /srv/app/shared/secret.key'</span>
+</pre></div>
+</div>
+<p>The key file holds 64 hex characters (the AES-256 key) or a passphrase, must
+resolve outside the app root, and is refused at startup if it is empty, over
+4 KB, or inside the tree (<a class="reference internal" href="security.html#encrypted-values-at-rest"><span class="std std-ref">Encrypted Values at Rest</span></a>).</p>
+<p>Bialet creates a new database and a new <code class="docutils literal notranslate"><span class="pre">-l</span></code> log with mode <code class="docutils literal notranslate"><span class="pre">0600</span></code> itself, and
+SQLite gives <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> the database’s mode, so those do not depend on the
+umask; an existing database keeps its mode. The umask covers everything else:
+the key file above, directories a deploy script makes, and future files. Set it
+in the deploy shell and as <code class="docutils literal notranslate"><span class="pre">UMask=0077</span></code> in the unit.</p>
+</section>
+<section id="install-a-release">
+<h2>Install a Release<a class="headerlink" href="#install-a-release" title="Link to this heading">#</a></h2>
+<p>The archive contains only the <code class="docutils literal notranslate"><span class="pre">bialet</span></code> binary, and <code class="docutils literal notranslate"><span class="pre">get.bialet.dev</span></code> installs it
+into <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code>; here it goes into a release directory with the app tree.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-eu
+<span class="nb">umask</span><span class="w"> </span><span class="m">0077</span>
+<span class="nv">VERSION</span><span class="o">=</span>v1.2.26<span class="w">                  </span><span class="c1"># the tag you are deploying</span>
+<span class="nv">ARCH</span><span class="o">=</span>linux-x86_64<span class="w">                </span><span class="c1"># or linux-arm64</span>
+<span class="nv">RELEASE</span><span class="o">=</span>/srv/app/releases/<span class="nv">$VERSION</span>
+<span class="nv">ARCHIVE</span><span class="o">=</span><span class="s2">"bialet-</span><span class="nv">$VERSION</span><span class="s2">-</span><span class="nv">$ARCH</span><span class="s2">.tar.gz"</span>
+<span class="nv">BASE</span><span class="o">=</span><span class="s2">"https://github.com/bialet/bialet/releases/download/</span><span class="nv">$VERSION</span><span class="s2">"</span>
+<span class="nb">test</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2"> already exists"</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<span class="nv">tmp</span><span class="o">=</span><span class="k">$(</span>mktemp<span class="w"> </span>-d<span class="k">)</span>
+<span class="nb">trap</span><span class="w"> </span><span class="s1">'rm -rf "$tmp"'</span><span class="w"> </span>EXIT
+curl<span class="w"> </span>-fsSL<span class="w"> </span><span class="s2">"</span><span class="nv">$BASE</span><span class="s2">/</span><span class="nv">$ARCHIVE</span><span class="s2">"</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"</span><span class="nv">$tmp</span><span class="s2">/</span><span class="nv">$ARCHIVE</span><span class="s2">"</span>
+curl<span class="w"> </span>-fsSL<span class="w"> </span><span class="s2">"</span><span class="nv">$BASE</span><span class="s2">/SHA256SUMS"</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"</span><span class="nv">$tmp</span><span class="s2">/SHA256SUMS"</span>
+<span class="o">(</span><span class="nb">cd</span><span class="w"> </span><span class="s2">"</span><span class="nv">$tmp</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sha256sum<span class="w"> </span>--check<span class="w"> </span>--ignore-missing<span class="w"> </span>SHA256SUMS<span class="o">)</span>
+sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>root<span class="w"> </span>-g<span class="w"> </span>root<span class="w"> </span>-m<span class="w"> </span><span class="m">0755</span><span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">"</span>
+sudo<span class="w"> </span>tar<span class="w"> </span>xzf<span class="w"> </span><span class="s2">"</span><span class="nv">$tmp</span><span class="s2">/</span><span class="nv">$ARCHIVE</span><span class="s2">"</span><span class="w"> </span>-C<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">"</span>
+sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>root<span class="w"> </span>-g<span class="w"> </span>root<span class="w"> </span>-m<span class="w"> </span><span class="m">0755</span><span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app"</span>
+sudo<span class="w"> </span>rsync<span class="w"> </span>-a<span class="w"> </span>--delete<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--exclude<span class="w"> </span><span class="s1">'_db.sqlite3*'</span><span class="w"> </span>--exclude<span class="w"> </span><span class="s1">'*.log'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/srv/src/app/<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app/"</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">/srv/src/app/</span></code> is wherever the app tree is built or checked out. The excludes
+matter: a database or log copied into a release is a stale copy nothing updates
+and it ends up in backups. See <a class="reference internal" href="#pitfalls">Pitfalls</a>.</p>
+<p><strong>What verification proves.</strong> <code class="docutils literal notranslate"><span class="pre">install.sh</span></code> treats a missing <code class="docutils literal notranslate"><span class="pre">SHA256SUMS</span></code>, a
+missing entry, or a mismatch as fatal. The checksum comes from the same release,
+so it catches corruption, not a compromised publisher. Newer releases also carry
+a build-provenance attestation: <code class="docutils literal notranslate"><span class="pre">install.sh</span></code> verifies it when <code class="docutils literal notranslate"><span class="pre">gh</span></code> is installed
+and otherwise warns; <code class="docutils literal notranslate"><span class="pre">BIALET_REQUIRE_ATTESTATION=1</span></code> makes a missing or
+unverifiable attestation fatal (<a class="reference internal" href="installation.html#releases"><span class="std std-ref">Installation</span></a>).</p>
+<p>Do not start the release yet. It must pass the gate:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compile every .wren file. No database is opened or created.</span>
+<span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/bialet"</span><span class="w"> </span>check<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app"</span>
+
+<span class="c1"># If the release ships _tests/, run them. They use a temporary database.</span>
+<span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/bialet"</span><span class="w"> </span>-T<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app"</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">check</span></code> exits <code class="docutils literal notranslate"><span class="pre">0</span></code> only when every file compiles and every backtick SQL literal
+parses, <code class="docutils literal notranslate"><span class="pre">1</span></code> otherwise. <code class="docutils literal notranslate"><span class="pre">-T</span></code> uses a throwaway database, never the production one,
+so it cannot write to <code class="docutils literal notranslate"><span class="pre">shared/</span></code> (<a class="reference internal" href="usage.html#check-a-whole-app-tree"><span class="std std-ref">Checking a whole app tree</span></a>,
+<a class="reference internal" href="tests.html"><span class="std std-doc">Testing</span></a>).</p>
+</section>
+<section id="the-runtime-command">
+<h2>The Runtime Command<a class="headerlink" href="#the-runtime-command" title="Link to this heading">#</a></h2>
+<p>The unit below runs this line. The flag reference is
+<a class="reference internal" href="usage.html#options"><span class="std std-ref">Command Line Usage</span></a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/srv/app/current/bialet<span class="w"> </span>-p<span class="w"> </span><span class="m">7001</span><span class="w"> </span>-h<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>-w<span class="w"> </span>-W<span class="w"> </span>-x<span class="w"> </span>-m<span class="w"> </span><span class="m">1024</span><span class="w"> </span>-M<span class="w"> </span><span class="m">2048</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-b<span class="w"> </span><span class="m">1100</span><span class="w"> </span>-u<span class="w"> </span>1MB<span class="w"> </span>-f<span class="w"> </span>on<span class="w"> </span>-s<span class="w"> </span>normal<span class="w"> </span>-d<span class="w"> </span>/srv/app/shared/app.sqlite3<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-l<span class="w"> </span>/srv/app/shared/app.log<span class="w"> </span>-k<span class="w"> </span>/srv/app/shared/secret.key<span class="w"> </span>/srv/app/current/app
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Why it is here</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">7001</span> <span class="pre">-h</span> <span class="pre">127.0.0.1</span></code></p></td>
+<td><p>The proxy’s upstream. The host defaults to loopback; spelling it out keeps a copied unit from publishing the port.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code>, <code class="docutils literal notranslate"><span class="pre">-l</span></code>, <code class="docutils literal notranslate"><span class="pre">-k</span></code></p></td>
+<td><p>Absolute paths outside the app root. A relative <code class="docutils literal notranslate"><span class="pre">-d</span></code> is joined onto the root, and a database or log inside the root must have a private name (leading <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code>) or Bialet exits with status 11 (<a class="reference internal" href="usage.html#options"><span class="std std-ref">Usage</span></a>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<td><p>WAL. It creates <code class="docutils literal notranslate"><span class="pre">-wal</span></code> and <code class="docutils literal notranslate"><span class="pre">-shm</span></code> beside the database, so the unit must write all of <code class="docutils literal notranslate"><span class="pre">shared/</span></code> (<a class="reference internal" href="deployment.html#id4"><span class="std std-ref">SQLite WAL Mode</span></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-W</span></code>, <code class="docutils literal notranslate"><span class="pre">-x</span></code></p></td>
+<td><p>No watcher; migrations and cron still run once at startup. In-memory bytecode cache, cleared by a restart and safe because the tree is immutable (<a class="reference internal" href="live-reload.html#file-watching"><span class="std std-ref">Live Reload</span></a>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">1100</span> <span class="pre">-u</span> <span class="pre">1MB</span> <span class="pre">-m</span> <span class="pre">1024</span> <span class="pre">-M</span> <span class="pre">2048</span></code></p></td>
+<td><p>About 1 MB per upload. <code class="docutils literal notranslate"><span class="pre">-b</span></code> binds the body (the <code class="docutils literal notranslate"><span class="pre">-m</span></code>/512 ceiling is 2 MB), so the file cap is the smaller of <code class="docutils literal notranslate"><span class="pre">-u</span></code> and <code class="docutils literal notranslate"><span class="pre">-b</span></code> minus ~8 KB of framing: 1 MB here, versus ~120 KB at the defaults (<a class="reference internal" href="file.html"><span class="std std-doc">File Size Limits</span></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">on</span> <span class="pre">-s</span> <span class="pre">normal</span></code></p></td>
+<td><p>The defaults, written out. <code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">normal</span></code> keeps WAL durable across a process crash but can lose the last transactions on power loss; <code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">full</span></code> narrows that at an fsync per commit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">/srv/app/current/app</span></code></p></td>
+<td><p>The app root, resolved through the symlink once at startup.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-m</span></code>/<code class="docutils literal notranslate"><span class="pre">-M</span></code> are enforced on Linux only (<code class="docutils literal notranslate"><span class="pre">RLIMIT_AS</span></code> on the HTTP child); elsewhere
+they only size the body cap. CPU limits and worker scaling are in
+<a class="reference internal" href="deployment.html#server-resource-limits"><span class="std std-ref">Deployment</span></a>.</p>
+</section>
+<section id="systemd-unit">
+<h2>systemd Unit<a class="headerlink" href="#systemd-unit" title="Link to this heading">#</a></h2>
+<p><strong><code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/bialet-app.service</span></code></strong></p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">app.example.com in Bialet</span>
+<span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">simple</span>
+<span class="na">User</span><span class="o">=</span><span class="s">app</span>
+<span class="na">Group</span><span class="o">=</span><span class="s">app</span>
+<span class="na">WorkingDirectory</span><span class="o">=</span><span class="s">/srv/app/current/app</span>
+<span class="na">UMask</span><span class="o">=</span><span class="s">0077</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/srv/app/current/bialet -p 7001 -h 127.0.0.1 -w -W -x -m 1024 -M 2048 -b 1100 -u 1MB -f on -s normal -d /srv/app/shared/app.sqlite3 -l /srv/app/shared/app.log -k /srv/app/shared/secret.key /srv/app/current/app</span>
+<span class="na">Restart</span><span class="o">=</span><span class="s">on-failure</span>
+
+<span class="na">NoNewPrivileges</span><span class="o">=</span><span class="s">yes</span>
+<span class="na">ProtectSystem</span><span class="o">=</span><span class="s">strict</span>
+<span class="na">ProtectHome</span><span class="o">=</span><span class="s">yes</span>
+<span class="na">PrivateTmp</span><span class="o">=</span><span class="s">yes</span>
+<span class="na">ReadWritePaths</span><span class="o">=</span><span class="s">/srv/app/shared</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</pre></div>
+</div>
+<p>Run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">systemctl</span> <span class="pre">daemon-reload</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">systemctl</span> <span class="pre">enable</span> <span class="pre">--now</span> <span class="pre">bialet-app</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Type=simple</span></code> is right because the supervising parent stays in the foreground;
+the HTTP child is its fork. A restart that never becomes healthy is caught by
+the <code class="docutils literal notranslate"><span class="pre">/_health</span></code> probe in the deploy gate.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ProtectSystem=strict</span></code></strong> makes the filesystem read-only except <code class="docutils literal notranslate"><span class="pre">/dev</span></code>,
+<code class="docutils literal notranslate"><span class="pre">/proc</span></code>, <code class="docutils literal notranslate"><span class="pre">/sys</span></code>; without <code class="docutils literal notranslate"><span class="pre">ReadWritePaths=/srv/app/shared</span></code>, SQLite cannot create
+<code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code>, the database is unwritable, and <code class="docutils literal notranslate"><span class="pre">-l</span></code> cannot be opened: startup
+fails. The release tree needs no write access.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">PrivateTmp=yes</span></code></strong> gives the unit a writable <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>; without it, a query that
+spills to disk fails under <code class="docutils literal notranslate"><span class="pre">ProtectSystem=strict</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ProtectHome=yes</span></code></strong> is safe only while nothing lives under <code class="docutils literal notranslate"><span class="pre">/home</span></code>;
+<strong><code class="docutils literal notranslate"><span class="pre">NoNewPrivileges=yes</span></code></strong> does nothing for Bialet but is worth setting.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">UMask=0077</span></code></strong> covers files the unit creates, such as a new log.</p></li>
+</ul>
+</section>
+<section id="reverse-proxy">
+<h2>Reverse Proxy<a class="headerlink" href="#reverse-proxy" title="Link to this heading">#</a></h2>
+<p>TLS terminates at nginx; Bialet speaks plain HTTP on loopback. The body limit
+matches <code class="docutils literal notranslate"><span class="pre">-b</span> <span class="pre">1100</span></code> (nginx’s <code class="docutils literal notranslate"><span class="pre">k</span></code> is 1024 bytes, so <code class="docutils literal notranslate"><span class="pre">1100k</span></code> is the same number of
+bytes Bialet accepts).</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">443</span><span class="w"> </span><span class="s">ssl</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">app.example.com</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kn">ssl_certificate</span><span class="w">     </span><span class="s">/etc/letsencrypt/live/app.example.com/fullchain.pem</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">ssl_certificate_key</span><span class="w"> </span><span class="s">/etc/letsencrypt/live/app.example.com/privkey.pem</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Same limit as -b 1100. Raise both together.</span>
+<span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">1100k</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">client_body_timeout</span><span class="w"> </span><span class="s">10s</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">        </span><span class="c1"># Bialet decides the cookie Secure flag from these two.</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Forwarded</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:7001</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Bialet already refuses <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code> names, including <code class="docutils literal notranslate"><span class="pre">/_health</span></code>, so this block can
+proxy every path. For defense in depth, add the private-name deny and the
+<code class="docutils literal notranslate"><span class="pre">/.well-known/</span></code> exception from
+<a class="reference internal" href="deployment.html#hardening-the-proxy"><span class="std std-ref">Hardening the Proxy</span></a>, which also has the
+Apache and Caddy equivalents.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Host</span></code> and <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Proto</span></code> also drive <code class="docutils literal notranslate"><span class="pre">Request.baseUrl</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.scheme</span></code>;
+set <code class="docutils literal notranslate"><span class="pre">BIALET_BASE_URL</span></code> if links and emails need a fixed origin
+(<a class="reference internal" href="deployment.html#public-urls-behind-a-proxy"><span class="std std-ref">Public URLs behind a proxy</span></a>). Bialet
+sends <code class="docutils literal notranslate"><span class="pre">Connection:</span> <span class="pre">close</span></code>, so the proxy reconnects per request: no keep-alive and
+no HTTP/2 upstream.</p>
+</section>
+<section id="health-check-and-deploy-gate">
+<h2>Health Check and Deploy Gate<a class="headerlink" href="#health-check-and-deploy-gate" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:7001/_health
+</pre></div>
+</div>
+<p>The reply is <code class="docutils literal notranslate"><span class="pre">200</span></code> with <code class="docutils literal notranslate"><span class="pre">{&quot;status&quot;:&quot;ok&quot;,...,&quot;database&quot;:&quot;ok&quot;}</span></code>, or <code class="docutils literal notranslate"><span class="pre">503</span></code> with
+<code class="docutils literal notranslate"><span class="pre">&quot;database&quot;:&quot;error&quot;</span></code> when <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">1</span></code> fails. <code class="docutils literal notranslate"><span class="pre">curl</span></code> sends <code class="docutils literal notranslate"><span class="pre">Host:</span> <span class="pre">127.0.0.1:7001</span></code>,
+which is accepted. A forwarding header (<code class="docutils literal notranslate"><span class="pre">X-Real-IP</span></code>, <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code>, <code class="docutils literal notranslate"><span class="pre">Via</span></code>, any
+<code class="docutils literal notranslate"><span class="pre">X-Forwarded-*</span></code>) marks the request as proxied and gets <code class="docutils literal notranslate"><span class="pre">403</span></code>, so do not add one.
+<code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-f</span></code> turns that <code class="docutils literal notranslate"><span class="pre">503</span></code> into a non-zero exit
+(<a class="reference internal" href="usage.html#health-endpoint"><span class="std std-ref">Health Endpoint</span></a>).</p>
+<p>A deploy has three gates: <code class="docutils literal notranslate"><span class="pre">check</span></code>/<code class="docutils literal notranslate"><span class="pre">-T</span></code> on the new release, the swap and restart,
+then <code class="docutils literal notranslate"><span class="pre">/_health</span></code>. If the probe fails, roll back. The swap is atomic, so <code class="docutils literal notranslate"><span class="pre">current</span></code>
+never disappears:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">VERSION</span><span class="o">=</span>v1.2.26<span class="w">                  </span><span class="c1"># the release you just installed</span>
+sudo<span class="w"> </span>ln<span class="w"> </span>-sfn<span class="w"> </span><span class="s2">"releases/</span><span class="nv">$VERSION</span><span class="s2">"</span><span class="w"> </span>/srv/app/.current.new
+sudo<span class="w"> </span>mv<span class="w"> </span>-Tf<span class="w"> </span>/srv/app/.current.new<span class="w"> </span>/srv/app/current
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>bialet-app
+curl<span class="w"> </span>-fsS<span class="w"> </span>--retry<span class="w"> </span><span class="m">15</span><span class="w"> </span>--retry-connrefused<span class="w"> </span>--retry-delay<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://127.0.0.1:7001/_health
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">mv</span> <span class="pre">-T</span></code> is GNU coreutils; <code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">-sfn</span></code> alone unlinks and recreates the link, leaving
+a short window with no <code class="docutils literal notranslate"><span class="pre">current</span></code>. The running process keeps serving the real path
+it resolved at startup until the restart.</p>
+</section>
+<section id="backups">
+<h2>Backups<a class="headerlink" href="#backups" title="Link to this heading">#</a></h2>
+<p>The database is the whole state, uploads included. Take a consistent snapshot
+while the service runs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>install<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-m<span class="w"> </span><span class="m">0700</span><span class="w"> </span>/var/backups/app
+sudo<span class="w"> </span>-u<span class="w"> </span>app<span class="w"> </span>sqlite3<span class="w"> </span>/srv/app/shared/app.sqlite3<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s2">".backup '/var/backups/app/app-</span><span class="k">$(</span>date<span class="w"> </span>+%F<span class="k">)</span><span class="s2">.sqlite3'"</span>
+</pre></div>
+</div>
+<p>From cron, escape the <code class="docutils literal notranslate"><span class="pre">%</span></code> characters or cron eats them:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>17 3 * * * app sqlite3 /srv/app/shared/app.sqlite3 ".backup '/var/backups/app/app-$(date +\%F).sqlite3'"
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.backup</span></code> uses SQLite’s online backup API and, in WAL mode, reads a consistent
+snapshot that includes committed frames still in <code class="docutils literal notranslate"><span class="pre">-wal</span></code>, without blocking
+requests. Do not use <code class="docutils literal notranslate"><span class="pre">cp</span></code> while the service runs: a lone <code class="docutils literal notranslate"><span class="pre">app.sqlite3</span></code> can miss
+WAL writes; with the service stopped, <code class="docutils literal notranslate"><span class="pre">cp</span></code> is safe. Keep a week off the host, and
+keep the key in your secret manager, <em>not</em> beside the backups: a key next to the
+ciphertext defeats the encryption. Uploads need no separate step.</p>
+<p>Restore:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span>stop<span class="w"> </span>bialet-app
+sudo<span class="w"> </span>install<span class="w"> </span>-o<span class="w"> </span>app<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-m<span class="w"> </span><span class="m">600</span><span class="w"> </span>/var/backups/app/app-2026-11-23.sqlite3<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>/srv/app/shared/app.sqlite3
+sudo<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span>/srv/app/shared/app.sqlite3-wal<span class="w"> </span>/srv/app/shared/app.sqlite3-shm
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>bialet-app
+</pre></div>
+</div>
+<p>Removing <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> matters: a stale WAL applied to the restored file loses
+data, and the explicit <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">600</span></code> keeps the restored mode private. Test a restore
+into a scratch directory first (<a class="reference internal" href="deployment.html#backups"><span class="std std-ref">Backups</span></a>).</p>
+</section>
+<section id="upgrades-and-rollback">
+<h2>Upgrades and Rollback<a class="headerlink" href="#upgrades-and-rollback" title="Link to this heading">#</a></h2>
+<p>An upgrade repeats the install section with the new tag: download, verify,
+unpack, copy the tree, run <code class="docutils literal notranslate"><span class="pre">check</span></code>/<code class="docutils literal notranslate"><span class="pre">-T</span></code>, swap, restart, probe.</p>
+<p>Back up the database <strong>before</strong> the restart. Migrations run at startup and are
+normally one-way: pointing <code class="docutils literal notranslate"><span class="pre">current</span></code> back does not undo one. Restoring the
+pre-upgrade database is the rollback for a bad migration.</p>
+<p>Rollback is the same swap with the previous tag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ln<span class="w"> </span>-sfn<span class="w"> </span>releases/v1.2.14<span class="w"> </span>/srv/app/.current.new
+sudo<span class="w"> </span>mv<span class="w"> </span>-Tf<span class="w"> </span>/srv/app/.current.new<span class="w"> </span>/srv/app/current
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>bialet-app
+curl<span class="w"> </span>-fsS<span class="w"> </span>--retry<span class="w"> </span><span class="m">15</span><span class="w"> </span>--retry-connrefused<span class="w"> </span>--retry-delay<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>http://127.0.0.1:7001/_health
+</pre></div>
+</div>
+<p>Keep two or three old releases and delete the rest by name, after checking which
+one is live:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>readlink<span class="w"> </span>-f<span class="w"> </span>/srv/app/current<span class="w">          </span><span class="c1"># keep this one</span>
+ls<span class="w"> </span>-1dt<span class="w"> </span>/srv/app/releases/*/<span class="w">          </span><span class="c1"># newest first</span>
+sudo<span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/srv/app/releases/v1.2.11<span class="w"> </span><span class="c1"># explicit, one at a time</span>
+</pre></div>
+</div>
+<p>Do not prune by age: after a rollback the live release can be an older one, and
+deleting it leaves <code class="docutils literal notranslate"><span class="pre">current</span></code> dangling, so the next start fails with <code class="docutils literal notranslate"><span class="pre">app</span> <span class="pre">directory</span> <span class="pre">not</span> <span class="pre">found</span></code>. The binary and tree roll back together; only <code class="docutils literal notranslate"><span class="pre">shared/</span></code>
+spans releases.</p>
+</section>
+<section id="pitfalls">
+<h2>Pitfalls<a class="headerlink" href="#pitfalls" title="Link to this heading">#</a></h2>
+<blockquote>
+<div><p>⚠️ Pitfall: a database or log inside the app root is public unless its name
+starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> or <code class="docutils literal notranslate"><span class="pre">.</span></code> — Bialet exits with status 11 otherwise, and
+<code class="docutils literal notranslate"><span class="pre">.well-known</span></code> counts as public. That is why <code class="docutils literal notranslate"><span class="pre">-d</span></code>, <code class="docutils literal notranslate"><span class="pre">-l</span></code>, and <code class="docutils literal notranslate"><span class="pre">-k</span></code> are absolute
+paths into <code class="docutils literal notranslate"><span class="pre">shared/</span></code>; do not make them relative.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: a <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> in a release is a stale second database: lose <code class="docutils literal notranslate"><span class="pre">-d</span></code>
+and Bialet writes there instead. The <code class="docutils literal notranslate"><span class="pre">rsync</span></code> excludes prevent it. <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-r</span></code>
+from a directory with no app root also creates an empty <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> deletes <strong>every</strong> <code class="docutils literal notranslate"><span class="pre">_db.sqlite3*</span></code> under a source checkout, so never
+keep production data under one.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: the app root is the static root too. <code class="docutils literal notranslate"><span class="pre">.wren</span></code> runs, <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code> names are
+refused, and everything else is served: keep <code class="docutils literal notranslate"><span class="pre">README</span></code>s, SQL dumps, and notes
+outside it or rename them with <code class="docutils literal notranslate"><span class="pre">_</span></code> (<a class="reference internal" href="security.html#private-files"><span class="std std-ref">Private Files</span></a>).</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: uploads cap at ~120 KB until <code class="docutils literal notranslate"><span class="pre">-b</span></code> and <code class="docutils literal notranslate"><span class="pre">-m</span></code> are raised together;
+<code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">8MB</span></code> alone changes nothing because the body gets <code class="docutils literal notranslate"><span class="pre">413</span></code> first. Raise <code class="docutils literal notranslate"><span class="pre">-b</span></code>,
+<code class="docutils literal notranslate"><span class="pre">-m</span></code>/<code class="docutils literal notranslate"><span class="pre">-M</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span></code>, and nginx’s <code class="docutils literal notranslate"><span class="pre">client_max_body_size</span></code> as a set.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">-l</span></code> only appends, so rotate with <code class="docutils literal notranslate"><span class="pre">copytruncate</span></code> (Bialet keeps the
+file open). A line written between the copy and the truncate can be lost; drop
+<code class="docutils literal notranslate"><span class="pre">-l</span></code> and let journald cap the output to avoid the window.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: running <code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> or <code class="docutils literal notranslate"><span class="pre">bialet</span></code> as root leaves a root-owned <code class="docutils literal notranslate"><span class="pre">0600</span></code>
+database or log. The service user then cannot write it, WAL cannot be created,
+and the unit restarts until it gives up. <code class="docutils literal notranslate"><span class="pre">chown</span> <span class="pre">-R</span> <span class="pre">app:app</span> <span class="pre">/srv/app/shared</span></code>
+after any root-level repair, <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> included.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: do not route <code class="docutils literal notranslate"><span class="pre">/_health</span></code> to the internet. Bialet returns <code class="docutils literal notranslate"><span class="pre">403</span></code> to
+any request whose peer or <code class="docutils literal notranslate"><span class="pre">Host</span></code> is not loopback, and that check is its only
+access control; give a public liveness URL its own app route.</p>
+</div></blockquote>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="deployment.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Deployment</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="performance.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Performance</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-hosted-means-here">What “Hosted” Means Here</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#directory-layout">Directory Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-user-and-the-umask">The User and the Umask</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-a-release">Install a Release</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-runtime-command">The Runtime Command</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#systemd-unit">systemd Unit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy">Reverse Proxy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-check-and-deploy-gate">Health Check and Deploy Gate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backups">Backups</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upgrades-and-rollback">Upgrades and Rollback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Rodrigo "Albo" Arce
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

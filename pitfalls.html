@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'pitfalls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Recipes" href="recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -219,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -460,6 +461,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps-are-utc-date-is-not">22. Stored timestamps are UTC, <code class="docutils literal notranslate"><span class="pre">Date</span></code> is not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-code-body-on-the-line-after-returns-null">23. A code body on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -752,6 +754,29 @@ expecting UTC: it writes the app zone’s wall clock with no offset. Store
 <code class="docutils literal notranslate"><span class="pre">Date</span></code> in the app zone, so storing the result still writes a wall clock with no
 offset — store <code class="docutils literal notranslate"><span class="pre">.unix</span></code> when the value must be an instant.</p>
 </section>
+<section id="a-code-body-on-the-line-after-returns-null">
+<h2>23. A code body on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code><a class="headerlink" href="#a-code-body-on-the-line-after-returns-null" title="Link to this heading">#</a></h2>
+<p>A block body that starts with an HTML literal may begin on the next line — HTML
+is never a statement, so it is the value:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+</pre></div>
+</div>
+<p>A body that starts with code on the next line is a statement list: its value is
+discarded, so the block returns <code class="docutils literal notranslate"><span class="pre">null</span></code> and the list renders empty. Inside
+<code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> the compiler warns once per file; a method body, <code class="docutils literal notranslate"><span class="pre">Fn.new</span></code> and Cron jobs
+stay silent. Keep code on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the value of `item.name` is discarded</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<span class="w">  </span><span class="n">item</span><span class="o">.</span><span class="n">name</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+
+<span class="c1">// Right</span>
+<span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -822,6 +847,7 @@ offset — store <code class="docutils literal notranslate"><span class="pre">.u
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#is-truthy-in-wren">20. <code class="docutils literal notranslate"><span class="pre">""</span></code> is truthy in Wren</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enforce-rules-in-the-domain-not-only-in-the-ui">21. Enforce rules in the domain, not only in the UI</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-timestamps-are-utc-date-is-not">22. Stored timestamps are UTC, <code class="docutils literal notranslate"><span class="pre">Date</span></code> is not</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-code-body-on-the-line-after-returns-null">23. A code body on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code> returns <code class="docutils literal notranslate"><span class="pre">null</span></code></a></li>
 </ul>
   </nav></div>
 

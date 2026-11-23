@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'wren';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Editor Support" href="editor-support.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -219,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -1017,15 +1018,16 @@ expression automatically — no <code class="docutils literal notranslate"><span
 Wren methods that express the logic directly.</p>
 <section id="same-line-vs-next-line">
 <h3>Same line vs. next line<a class="headerlink" href="#same-line-vs-next-line" title="Link to this heading">#</a></h3>
-<p>The implicit return only applies when the expression starts on the same line as
-the opening <code class="docutils literal notranslate"><span class="pre">{</span></code>. If the body starts on a following line, Wren treats it as a
-statement body — each statement runs, the last value is discarded, and the
-method returns <code class="docutils literal notranslate"><span class="pre">null</span></code>:</p>
+<p>The implicit return applies when the expression starts on the same line as the
+opening <code class="docutils literal notranslate"><span class="pre">{</span></code>, or when the body starts with an HTML literal on the next line:
+HTML is never a statement, so it is the body’s value. Any other body that
+starts on a following line is a statement body — each statement runs, the last
+value is discarded, and the method returns <code class="docutils literal notranslate"><span class="pre">null</span></code>:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Shape</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// Expression body — starts on the `{` line, the value is returned</span>
 <span class="w">  </span><span class="n">area</span><span class="p">(</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="p">}</span>
 
-<span class="w">  </span><span class="c1">// Same for HTML — the string starts on the `{` line</span>
+<span class="w">  </span><span class="c1">// Same for HTML — may also start on the next line</span>
 <span class="w">  </span><span class="n">badge</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;span class="badge"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="p">}</span>
 
 <span class="w">  </span><span class="c1">// Expression moved to the next line — computes then discards, returns null</span>
@@ -1041,15 +1043,16 @@ method returns <code class="docutils literal notranslate"><span class="pre">null
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">brokenArea(2,</span> <span class="pre">3)</span></code> evaluates <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">3</span></code> and throws the result away, returning
-<code class="docutils literal notranslate"><span class="pre">null</span></code>. In a template this renders as empty output — no error tells you the
-value was dropped. Keep the expression on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code> when you want the
-implicit return, and use an explicit <code class="docutils literal notranslate"><span class="pre">return</span></code> for any multi-line method that
-must return a value.</p>
+<code class="docutils literal notranslate"><span class="pre">null</span></code>. In a template this renders as empty output; a block doing the same
+inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> now warns at compile time, while a method body stays silent.
+Keep code on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code> when you want the implicit return, use an
+HTML body on the next line when the body is markup, and use an explicit
+<code class="docutils literal notranslate"><span class="pre">return</span></code> for any multi-line method that must return a value.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: this rule applies to block arguments (<code class="docutils literal notranslate"><span class="pre">.map</span> <span class="pre">{</span> <span class="pre">}</span></code>, <code class="docutils literal notranslate"><span class="pre">.where</span> <span class="pre">{</span> <span class="pre">}</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Fn.new</span> <span class="pre">{</span> <span class="pre">}</span></code>, …) exactly the same way, and it’s easy to miss there
-because there’s no error — the block just silently returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for
-every call:</p>
+<code class="docutils literal notranslate"><span class="pre">Fn.new</span> <span class="pre">{</span> <span class="pre">}</span></code>, …) exactly the same way, and it’s easy to miss because the
+block silently returns <code class="docutils literal notranslate"><span class="pre">null</span></code> for every call. Inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> the compiler
+now warns once per file; <code class="docutils literal notranslate"><span class="pre">Fn.new</span></code>, Cron and migration bodies stay silent:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Bug: filters out everything. `libre` never gets returned because it's</span>
 <span class="c1">// not on the same line as `{`, so the block's value is null every time.</span>
 <span class="n">list</span><span class="o">.</span><span class="n">where</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span>
@@ -1067,7 +1070,8 @@ every call:</p>
 </pre></div>
 </div>
 <p>A single-expression block (<code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">|x|</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">2</span> <span class="pre">}</span></code>) is unaffected — implicit
-return always works there since the expression is already on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line.</p>
+return always works there, and equally when the body is an HTML literal on
+the next line.</p>
 </div></blockquote>
 </section>
 <section id="when-you-need-return">

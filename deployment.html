@@ -58,16 +58,16 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Performance" href="performance.html" />
+    <link rel="next" title="Hosted Deployment" href="hosted-deployment.html" />
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -219,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -444,6 +445,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-checks">Health Checks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
@@ -496,6 +498,10 @@
 <p>Bialet is a single binary — copy it to your server alongside your <code class="docutils literal notranslate"><span class="pre">.wren</span></code>
 files and you’re deployed. This guide covers setting up a production-ready
 environment with a reverse proxy, systemd, and Docker.</p>
+<p>For the whole setup assembled in one place — immutable release directories, an
+external database, and versioned upgrades — see
+<a class="reference internal" href="hosted-deployment.html"><span class="std std-doc">Hosted Deployment</span></a>. This page stays the reference for
+each piece.</p>
 <section id="why-a-reverse-proxy">
 <h2>Why a Reverse Proxy?<a class="headerlink" href="#why-a-reverse-proxy" title="Link to this heading">#</a></h2>
 <p>Bialet speaks <strong>HTTP/1.1</strong> and does not support HTTPS natively. Every
@@ -615,6 +621,41 @@ migrations before serving the next request. No manual steps, no downtime.</p>
 </pre></div>
 </div>
 </section>
+</section>
+<section id="health-checks">
+<h2>Health Checks<a class="headerlink" href="#health-checks" title="Link to this heading">#</a></h2>
+<p>Every server answers <code class="docutils literal notranslate"><span class="pre">/_health</span></code> on loopback:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:7001/_health
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.27"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>It returns <code class="docutils literal notranslate"><span class="pre">200</span></code> when a <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">1</span></code> succeeds, or <code class="docutils literal notranslate"><span class="pre">503</span></code> with
+<code class="docutils literal notranslate"><span class="pre">&quot;database&quot;:&quot;error&quot;</span></code> when the database is unusable. <code class="docutils literal notranslate"><span class="pre">uptime_seconds</span></code> counts
+from process start. <code class="docutils literal notranslate"><span class="pre">GET</span></code> and <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> are supported; other methods get <code class="docutils literal notranslate"><span class="pre">405</span></code>.</p>
+<p>The endpoint is deliberately <strong>direct-loopback only</strong>: it checks the socket peer
+and the <code class="docutils literal notranslate"><span class="pre">Host</span></code> header, and returns the normal <code class="docutils literal notranslate"><span class="pre">403</span></code> to anyone else. The <code class="docutils literal notranslate"><span class="pre">Host</span></code>
+must be <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, another <code class="docutils literal notranslate"><span class="pre">127.0.0.0/8</span></code> literal, or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>, optionally
+with a port. A request carrying <code class="docutils literal notranslate"><span class="pre">X-Real-IP</span></code>, <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code>, <code class="docutils literal notranslate"><span class="pre">Via</span></code>, or any
+<code class="docutils literal notranslate"><span class="pre">X-Forwarded-*</span></code> header is treated as proxied and refused too, so a remote client
+cannot reach it by forging a header and a same-host proxy cannot publish it by
+forwarding every path. The <code class="docutils literal notranslate"><span class="pre">Host</span></code> check also blocks a DNS-rebinding page from
+reading the endpoint through a browser on the same machine. That makes it usable
+by a local supervisor or a Docker <code class="docutils literal notranslate"><span class="pre">HEALTHCHECK</span></code>, and invisible on a public
+listener.</p>
+<p>Docker:</p>
+<div class="highlight-dockerfile notranslate"><div class="highlight"><pre><span></span><span class="k">HEALTHCHECK</span><span class="w"> </span>--interval<span class="o">=</span>30s<span class="w"> </span>--timeout<span class="o">=</span>3s<span class="w"> </span>--retries<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="k">CMD</span><span class="w"> </span>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:7001/_health<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+<p>systemd:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">ExecStartPost</span><span class="o">=</span><span class="s">/usr/bin/curl -fsS --retry 5 --retry-connrefused http://127.0.0.1:7001/_health</span>
+</pre></div>
+</div>
+<p>If the proxy needs to expose a public health URL, give it its own route in the
+app. Do not proxy <code class="docutils literal notranslate"><span class="pre">/_health</span></code> to the internet: the loopback rule is the only
+access control it has.</p>
 </section>
 <section id="static-files">
 <h2>Static Files<a class="headerlink" href="#static-files" title="Link to this heading">#</a></h2>
@@ -1262,11 +1303,11 @@ hardening section</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="performance.html"
+       href="hosted-deployment.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Performance</p>
+        <p class="prev-next-title">Hosted Deployment</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1293,6 +1334,7 @@ hardening section</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-migration">Auto-Migration</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-checks">Health Checks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>

@@ -138,6 +138,13 @@ and `Markdown.file("page.wren")` all return `false`. `Markdown.list()` and
 route source, but still prefer an allow-list of page names over a raw request
 value.
 
+**`-i`/`--ignore` is a serving policy, not a Wren read boundary.** The ignore
+list only decides which files the HTTP server will serve. It does **not**
+restrict `Markdown.file()`, `Markdown.list()` or `Markdown.meta()`: a
+`README.md` or `AGENTS.md` is ignored over HTTP but still readable and listable
+from Wren. Do not put secrets in a public-named Markdown file. Name it with a
+leading `_` or `.`, or pass only values from an allow-list to the Markdown API.
+
 **Front matter is skipped by `Markdown.file()`, not parsed into the output.** A
 leading `---` block is dropped from the rendered HTML. Use `Markdown.meta()` to
 read its keys; the renderer never includes them.

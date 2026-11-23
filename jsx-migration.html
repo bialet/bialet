@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'jsx-migration';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Template" href="template.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -219,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -441,7 +442,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting">1. Tag Nesting</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-bodies-may-start-on-the-next-line-code-bodies-may-not">HTML bodies may start on the next line; code bodies may not</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#empty-lists-render-empty">Empty lists render empty</a></li>
 </ul>
 </li>
@@ -533,7 +534,9 @@ expression</strong> — the inline HTML string itself:</p>
 <p>The two restrictions that will trip you up:</p>
 <section id="no-statements-inside-the-callback">
 <h3>No statements inside the callback<a class="headerlink" href="#no-statements-inside-the-callback" title="Link to this heading">#</a></h3>
-<p>You cannot declare a variable or write multiple lines of Wren inside <code class="docutils literal notranslate"><span class="pre">map</span></code>:</p>
+<p>You cannot declare a variable inside <code class="docutils literal notranslate"><span class="pre">map</span></code>. A <code class="docutils literal notranslate"><span class="pre">var</span></code> makes the body a statement
+list, and a statement ending in HTML cannot close the callback, so this does
+not compile:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — multiple statements inside the map callback</span>
 <span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">task</span><span class="o">|</span>
 <span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span>
@@ -548,20 +551,25 @@ computed property to your model class:</p>
 </pre></div>
 </div>
 </section>
-<section id="the-body-must-start-on-the-line-after">
-<h3>The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code><a class="headerlink" href="#the-body-must-start-on-the-line-after" title="Link to this heading">#</a></h3>
-<p>A multi-line block whose body is not a single expression on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line
-returns <code class="docutils literal notranslate"><span class="pre">null</span></code> silently — the output is empty and nothing tells you why:</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — the callback body breaks onto its own line, returns null, renders empty</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<section id="html-bodies-may-start-on-the-next-line-code-bodies-may-not">
+<h3>HTML bodies may start on the next line; code bodies may not<a class="headerlink" href="#html-bodies-may-start-on-the-next-line-code-bodies-may-not" title="Link to this heading">#</a></h3>
+<p>An HTML body is an expression, never a statement, so it may start on the line
+after <code class="docutils literal notranslate"><span class="pre">{</span></code> and still be the callback’s value:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
 <span class="w">  </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span>
 <span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>A <strong>code</strong> body on the next line is a statement list whose value is discarded,
+so the callback returns <code class="docutils literal notranslate"><span class="pre">null</span></code>; inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> the compiler warns and the
+output is empty:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG — the body is code on its own line, so its value is discarded</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<span class="w">  </span><span class="n">item</span><span class="o">.</span><span class="n">description</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 
-<span class="c1">// CORRECT — the expression starts on the {{ line; the HTML string</span>
-<span class="c1">// itself may span many lines</span>
-<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="x">&lt;li&gt;</span>
-<span class="x">  {{ item.description }}</span>
-<span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="c1">// CORRECT — put the expression on the {{ line</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;div&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -688,10 +696,10 @@ boundary: each literal is parsed on its own, so a component may return an
 tags inside a single literal have to balance.</p>
 <p><strong>Pitfall:</strong> instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>. <code class="docutils literal notranslate"><span class="pre">Template.layout(...)</span></code> looks for
 a static method and fails. Always instantiate first.</p>
-<p><strong>Pitfall:</strong> a method body is an expression body only when the expression
-starts on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code>. A statement body on the following line
-returns <code class="docutils literal notranslate"><span class="pre">null</span></code> silently — the component renders as empty with no error.
-Keep the opening HTML tag on the method’s first line.</p>
+<p><strong>Pitfall:</strong> an HTML method body may start on the next line, but a code body
+must start on the same line as <code class="docutils literal notranslate"><span class="pre">{</span></code>. A statement body on the following line
+returns <code class="docutils literal notranslate"><span class="pre">null</span></code>; outside a template that is silent, and inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> the
+compiler warns. Keep a code body’s expression on the method’s first line.</p>
 </section>
 <hr class="docutils" />
 <section id="raw-html-security-footguns">
@@ -758,7 +766,8 @@ it crash the request. Guard every read:</p>
 <li><p>[ ] Balance the tags inside every literal: same-tag nesting is fine, an
 unclosed level is a compile error.</p></li>
 <li><p>[ ] Move statements out of <code class="docutils literal notranslate"><span class="pre">map</span></code> callbacks; keep the callback body a single
-expression starting on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line.</p></li>
+expression starting on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line, or an HTML literal starting on the
+line after it.</p></li>
 <li><p>[ ] Compute strings before interpolating into attributes; no template
 literals.</p></li>
 <li><p>[ ] Turn components into class methods; compose by passing markup, not by
@@ -821,7 +830,7 @@ you fully control; never for user input.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tag-nesting">1. Tag Nesting</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#map-callback-restrictions">2. Map Callback Restrictions</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#no-statements-inside-the-callback">No statements inside the callback</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-body-must-start-on-the-line-after">The body must start on the line after <code class="docutils literal notranslate"><span class="pre">{</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#html-bodies-may-start-on-the-next-line-code-bodies-may-not">HTML bodies may start on the next line; code bodies may not</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#empty-lists-render-empty">Empty lists render empty</a></li>
 </ul>
 </li>

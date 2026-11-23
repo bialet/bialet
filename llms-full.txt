@@ -194,6 +194,7 @@ responses. :doc:`showcase`
    cron
    tests
    deployment
+   hosted-deployment
    performance
 
 .. toctree::
@@ -1364,17 +1365,18 @@ Wren methods that express the logic directly.
 
 ### Same line vs. next line
 
-The implicit return only applies when the expression starts on the same line as
-the opening `{`. If the body starts on a following line, Wren treats it as a
-statement body — each statement runs, the last value is discarded, and the
-method returns `null`:
+The implicit return applies when the expression starts on the same line as the
+opening `{`, or when the body starts with an HTML literal on the next line:
+HTML is never a statement, so it is the body's value. Any other body that
+starts on a following line is a statement body — each statement runs, the last
+value is discarded, and the method returns `null`:
 
 ```wren
 class Shape {
   // Expression body — starts on the `{` line, the value is returned
   area(w, h) { w * h }
 
-  // Same for HTML — the string starts on the `{` line
+  // Same for HTML — may also start on the next line
   badge(label) { <span class="badge">{{ label }}</span> }
 
   // Expression moved to the next line — computes then discards, returns null
@@ -1390,15 +1392,16 @@ class Shape {
 ```
 
 `brokenArea(2, 3)` evaluates `2 * 3` and throws the result away, returning
-`null`. In a template this renders as empty output — no error tells you the
-value was dropped. Keep the expression on the same line as `{` when you want the
-implicit return, and use an explicit `return` for any multi-line method that
-must return a value.
+`null`. In a template this renders as empty output; a block doing the same
+inside `{{ }}` now warns at compile time, while a method body stays silent.
+Keep code on the same line as `{` when you want the implicit return, use an
+HTML body on the next line when the body is markup, and use an explicit
+`return` for any multi-line method that must return a value.
 
 > ⚠️ Pitfall: this rule applies to block arguments (`.map { }`, `.where { }`,
-> `Fn.new { }`, ...) exactly the same way, and it's easy to miss there
-> because there's no error — the block just silently returns `null` for
-> every call:
+> `Fn.new { }`, ...) exactly the same way, and it's easy to miss because the
+> block silently returns `null` for every call. Inside `{{ }}` the compiler
+> now warns once per file; `Fn.new`, Cron and migration bodies stay silent:
 > ```wren
 > // Bug: filters out everything. `libre` never gets returned because it's
 > // not on the same line as `{`, so the block's value is null every time.
@@ -1416,7 +1419,8 @@ must return a value.
 > }.toList  // -> the actual filtered list
 > ```
 > A single-expression block (`{ |x| x * 2 }`) is unaffected — implicit
-> return always works there since the expression is already on the `{` line.
+> return always works there, and equally when the body is an HTML literal on
+> the next line.
 
 ### When You Need `return`
 
@@ -3898,9 +3902,25 @@ return <div>{{
 }}</div>
 ```
 
-Block callbacks (`map { |v| ... }`) follow Wren's single-expression rule: the
-body must fit on the line after the `{`, otherwise the block returns `null`
-and the output is empty.
+A block body is one expression, so it returns its value. When the body is an
+HTML literal it may start on the line after `{`: HTML is never a statement, so
+the multi-line form is unambiguous and renders.
+
+```wren
+{{ tasks.map { |task|
+  <li>{{ task.description }}</li>
+} }}
+```
+
+A body that is *code* must still start on the `{` line. A body that starts on
+the next line is a statement list whose value is discarded, so the block
+returns `null`; inside `{{ }}` that renders nothing, and the compiler warns:
+
+```text
+Warning: app/index.wren:12: block body starts on the line after '{', so its
+value is discarded and this interpolation renders nothing; keep the body on the
+same line as '{', or make the body an HTML literal
+```
 
 ---
 
@@ -3977,8 +3997,9 @@ return <div>{{ task.finished ? <span class="completed">
 ## Iteration with `map`
 
 Wren's `map` function transforms each element of a list into an HTML string.
-The callback body is a single Wren expression — but the inline HTML string
-inside it can span many visual lines.
+The callback body is a single Wren expression — either on the `{` line, or an
+HTML literal starting on the next line. The literal itself can span many visual
+lines.
 
 ### Simple list
 
@@ -3991,8 +4012,9 @@ var html = <ul>{{ items.map { |item| <li>{{ item }}</li> } }}</ul>
 ### Multiline items
 
 The callback is one expression (`|task| <li>...</li>`), but the `<li>` inline
-HTML string spans multiple lines. The Wren code stays on one line of Wren, but
-the HTML inside the tags has newlines.
+HTML string spans multiple lines. The Wren expression may stay on one line, and
+the HTML literal may equally begin on the line after `|task|`; the HTML inside
+the tags has newlines either way.
 
 ```wren
 <ul class="task-list">
@@ -4023,25 +4045,31 @@ the HTML inside the tags has newlines.
 
 ### Pitfalls
 
-**The callback must be a single expression.** You cannot have multiple Wren
-statements or variable declarations inside a `map` callback:
+**The callback must yield a single expression.** A `var` turns the body into a
+statement list, and a statement that ends in an HTML literal cannot close the
+block, so this form does not compile (`Expect newline after statement`):
 
 ```wren
-// Wrong — multiple statements inside map
+// Wrong — does not compile
 {{ tasks.map { |task|
   var icon = task.finished ? "✓" : "○"
   <li>{{ icon }} {{ task.description }}</li>
 } }}
 ```
 
-A Wren block body is **one expression**. `{ |x|` followed by a newline is an
-empty body that returns `null`, not a function that continues on the next line.
-In JavaScript terms it is closer to `x => {}` than to
-`x => (/* multi-line expression */)`, which is why the output is silently empty.
-Keep the body on the same line as `{`:
+A Wren block body is **one expression**. An HTML body may start on the line
+after `{`, but a code body must start on the same line: `{ |x|` followed by a
+newline begins a statement list, which returns `null`. In a template the
+compiler warns when that happens, because the interpolation then renders
+nothing. Keep a code body on the same line as `{`, and an HTML body may be
+written either way:
 
 ```wren
 {{ tasks.map { |task| <li>{{ task.description }}</li> } }}
+
+{{ tasks.map { |task|
+  <li>{{ task.description }}</li>
+} }}
 ```
 
 `var` is a statement, so it cannot appear in the block body even on one line.
@@ -4065,19 +4093,18 @@ return <main>
 **Large lists hurt performance.** Paginate or limit results in the controller —
 `map` iterates everything you give it.
 
-**Newlines outside HTML tags** — same rule:
+**Newlines outside HTML tags** — an expression can start on the next line
+inside `{{ }}`, but `return` still ends at its newline:
 
 ```wren
-// Wrong — Wren code broken across lines outside the HTML string
+// Valid — the interpolation expression starts on the next line
 return <div>{{
-  tasks.map { |task|
-  <li>{{ task.description }}</li>
-} }}</div>
+  tasks.map { |task| <li>{{ task.description }}</li> }
+}}</div>
 
-// Correct — the expression starts on the {{ line
-return <div>{{ tasks.map{ |task| <li>
-  {{ task.description }}
-</li> } }}</div>
+// Wrong — `return` on its own line returns immediately
+return
+  <div>Nothing here is returned</div>
 ```
 
 ---
@@ -4663,8 +4690,9 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
 - **`_`/`.`-prefixed files:** Private, return 403 if accessed directly.
 - **Newlines inside `{{ }}`:** The Wren expression can span lines, but an
   infix operator must end its line — a leading operator is a parse error.
-- **Map callback is a single expression:** The body must fit on the line
-  after the `{`, otherwise the block returns `null` and renders empty.
+- **Map callback is a single expression:** An HTML body may start on the next
+  line; a code body must start on the `{` line, or it becomes a statement body
+  whose value is discarded (warned inside `{{ }}`, silent elsewhere).
 - **Empty lists in `map`:** Produce empty output — pair with `&&` for empty
   states.
 - **`return` terminates immediately:** Code after `return` never executes.
@@ -4751,7 +4779,9 @@ The two restrictions that will trip you up:
 
 ### No statements inside the callback
 
-You cannot declare a variable or write multiple lines of Wren inside `map`:
+You cannot declare a variable inside `map`. A `var` makes the body a statement
+list, and a statement ending in HTML cannot close the callback, so this does
+not compile:
 
 ```wren
 // WRONG — multiple statements inside the map callback
@@ -4769,22 +4799,29 @@ var tasks = Tasks.list().map { |t| t.withIcon }   // pre-process the list
 return <ul>{{ tasks.map { |t| <li>{{ t.icon }} {{ t.description }}</li> } }}</ul>
 ```
 
-### The body must start on the line after `{`
+### HTML bodies may start on the next line; code bodies may not
 
-A multi-line block whose body is not a single expression on the `{` line
-returns `null` silently — the output is empty and nothing tells you why:
+An HTML body is an expression, never a statement, so it may start on the line
+after `{` and still be the callback's value:
 
 ```wren
-// WRONG — the callback body breaks onto its own line, returns null, renders empty
 return <div>{{ items.map { |item|
   <li>{{ item }}</li>
 } }}</div>
+```
 
-// CORRECT — the expression starts on the {{ line; the HTML string
-// itself may span many lines
-return <div>{{ items.map { |item| <li>
-  {{ item.description }}
-</li> } }}</div>
+A **code** body on the next line is a statement list whose value is discarded,
+so the callback returns `null`; inside `{{ }}` the compiler warns and the
+output is empty:
+
+```wren
+// WRONG — the body is code on its own line, so its value is discarded
+return <div>{{ items.map { |item|
+  item.description
+} }}</div>
+
+// CORRECT — put the expression on the {{ line
+return <div>{{ items.map { |item| item.description } }}</div>
 ```
 
 ### Empty lists render empty
@@ -4924,10 +4961,10 @@ tags inside a single literal have to balance.
 **Pitfall:** instance methods need `new()`. `Template.layout(...)` looks for
 a static method and fails. Always instantiate first.
 
-**Pitfall:** a method body is an expression body only when the expression
-starts on the same line as `{`. A statement body on the following line
-returns `null` silently — the component renders as empty with no error.
-Keep the opening HTML tag on the method's first line.
+**Pitfall:** an HTML method body may start on the next line, but a code body
+must start on the same line as `{`. A statement body on the following line
+returns `null`; outside a template that is silent, and inside `{{ }}` the
+compiler warns. Keep a code body's expression on the method's first line.
 
 ---
 
@@ -5000,7 +5037,8 @@ var msg = Request.post("msg") || ""
 - [ ] Balance the tags inside every literal: same-tag nesting is fine, an
       unclosed level is a compile error.
 - [ ] Move statements out of `map` callbacks; keep the callback body a single
-      expression starting on the `{` line.
+      expression starting on the `{` line, or an HTML literal starting on the
+      line after it.
 - [ ] Compute strings before interpolating into attributes; no template
       literals.
 - [ ] Turn components into class methods; compose by passing markup, not by
@@ -5386,6 +5424,13 @@ and `Markdown.file("page.wren")` all return `false`. `Markdown.list()` and
 `Markdown.file(Request.get("page"))` from handing out private files, config or
 route source, but still prefer an allow-list of page names over a raw request
 value.
+
+**`-i`/`--ignore` is a serving policy, not a Wren read boundary.** The ignore
+list only decides which files the HTTP server will serve. It does **not**
+restrict `Markdown.file()`, `Markdown.list()` or `Markdown.meta()`: a
+`README.md` or `AGENTS.md` is ignored over HTTP but still readable and listable
+from Wren. Do not put secrets in a public-named Markdown file. Name it with a
+leading `_` or `.`, or pass only values from an allow-list to the Markdown API.
 
 **Front matter is skipped by `Markdown.file()`, not parsed into the output.** A
 leading `---` block is dropped from the rendered HTML. Use `Markdown.meta()` to
@@ -7804,7 +7849,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
+| `-t`, `--validate`      | Compile a Wren file, or every `.wren` file under a directory, and their local imports; parse their backtick SQL without executing anything, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -7844,12 +7889,25 @@ usage text instead of being silently ignored.
 > so Bialet creates it readable by its owner only (`0600`). An existing file
 > keeps its mode; do not make it group- or world-readable.
 
-> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
-> line (the method and the first 512 bytes of the target), so rotate it with
-> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
-> open in append mode, so truncating it in place is safe). Under systemd or
-> Docker, logging to stdout and letting journald or the log driver cap the size
-> works too.
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every served request adds
+> exactly one line, written after the response:
+>
+> ```text
+> 2026-11-23 13:20:01 Request GET /search?q=logs status=200 bytes=4821 duration_ms=7
+> 2026-11-23 13:20:02 Request GET /missing status=404 bytes=714 duration_ms=1
+> ```
+>
+> The fields after the method and target are `status=`, `bytes=` and
+> `duration_ms=`. `bytes` counts response body bytes actually written, never
+> headers, so a `HEAD` (or a `204`/`304`) logs `0`; a send that fails partway
+> reports the bytes completed before the failure. `duration_ms` runs from accept
+> to the final write and is never negative. The target keeps its query string,
+> has control bytes escaped, and is cut after 512 bytes with `...`; request
+> bodies are never logged. Local `/_health` and live-reload polls are not
+> logged. Rotate the file with the system's tools, e.g. logrotate with
+> `copytruncate` (Bialet keeps the file open in append mode, so truncating it in
+> place is safe). Under systemd or Docker, logging to stdout and letting
+> journald or the log driver cap the size works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
@@ -7957,7 +8015,7 @@ bialet -T                    # Run all tests in _tests/
 bialet -T docs/examples      # Run tests in a specific directory
 ```
 
-## Validate Syntax of a Wren File
+## Validate Syntax of a Wren File or Tree
 
 To check the syntax of a Wren file without executing it, use `-t`. Run it the
 same way you run the server:
@@ -7980,11 +8038,49 @@ bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
 
+### Check a whole app tree
+
+Pass a directory instead of a file to validate every `.wren` file below it:
+
+```bash
+bialet -t .
+bialet -t /path/to/app
+```
+
+`bialet check` is the same whole-tree mode with the app root as its default:
+
+```bash
+cd /path/to/app
+bialet check                 # every .wren file in the current tree
+bialet check /path/to/app    # every .wren file in another tree
+```
+
+A directory target is also the app root for that run, so `bialet -t /path/to/app`
+and `bialet check /path/to/app` work from any working directory without a second
+positional argument. Each file is compiled in its own VM, so imports shared by
+two pages do not collide.
+
+The walk includes private files and directories (`_app/`, `_migration.wren`,
+`_cron.wren`, `_tests/`) because they are part of the app. It skips
+dot-directories (`.git`, `.venv`), symbolic links, and anything that is not a
+`.wren` file, so it cannot leave the tree or loop on a link. The check exits
+`0` only when every file compiles; failures name the file that failed.
+
+> ⚠️ Pitfall: a directory check does not run migrations, so a migration that
+> depends on a table created earlier in the same file still passes. Like a
+> single-file check, it validates SQL syntax, not schema correctness.
+
 `-t` compiles the file and every local module it imports. It does not execute
 any of them, so runtime errors are not reported and migrations do not run:
 `bialet -t _migration.wren` leaves the database untouched even when the
 migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
 local import is not a syntax error; it only fails when the page runs.
+
+A syntax check parses backtick SQL against an **in-memory** SQLite database. It
+never opens, creates, or modifies the app's `_db.sqlite3` (or whatever `-d`
+names; `-d` is ignored in validation mode). That is what keeps `bialet check`
+safe on a read-only release and stops a tree-controlled `_db.sqlite3` symlink
+from redirecting the check to a database outside the tree.
 
 It also parses every backtick SQL literal it finds, including in imported
 modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
@@ -8008,6 +8104,39 @@ else
     exit 1
 fi
 ```
+
+## Health Endpoint
+
+Bialet reserves `/_health` for supervisors and watchdogs:
+
+```bash
+curl -s http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+The response is `200` when a trivial database query succeeds and `503` with
+`"database":"error"` when it does not. `uptime_seconds` counts from the start of
+the server process. Local health polls are not written to the `-l` file, so a
+one-second check does not fill it; a remote probe is still logged.
+
+`/_health` is answered **only to a direct loopback request** (`127.0.0.0/8`)
+whose `Host` is also local: `127.0.0.1`, `127.0.0.2` (any `127.0.0.0/8`
+literal), or `localhost`, optionally with a port. Every other caller gets the
+same `403` as any other `_`-prefixed path, so the endpoint does not advertise
+itself. This also stops a DNS-rebinding page from reading it through a browser
+on the same machine, where the peer is loopback but the `Host` is the attacker's
+name.
+
+Forwarding headers are deliberately not trusted either: a request that carries
+`X-Real-IP`, `Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as
+proxied and refused, so a same-host proxy cannot accidentally publish the
+endpoint by forwarding every path. Do not route `/_health` to the internet;
+give a public liveness URL its own app route.
+
+`GET` and `HEAD` are accepted; any other method answers `405`.
 
 ## Upload and SQLite Tuning
 
@@ -8179,6 +8308,7 @@ Three rules cover most real-world damage:
 | CSRF tokens | `Session.csrf` / `Session.csrfOk` | Constant-time comparison |
 | HttpOnly + SameSite cookies | `Cookie.set` defaults | `Secure` added automatically behind TLS |
 | Private file blocking | Server | `_` and `.` prefixed files return 403 |
+| Loopback-only health | Server | `/_health` answers only to a `127.0.0.0/8` peer with a loopback `Host` |
 | Salted password hashes | `Util.hash` / `Util.verify` | Never store plaintext |
 | Constant-time compare | `Util.secureEquals` | Used by `csrfOk`, available to you |
 
@@ -8569,6 +8699,21 @@ Files and directories whose name starts with `_` or `.` are forbidden from
 direct HTTP access — the server returns 403. This is what protects
 `_app.wren`, `_migration.wren`, `_db.sqlite3`, and your configuration from
 being downloaded. Name anything private with a leading `_` or `.`.
+
+`/_health` is reserved for the server itself and is answered only to a direct
+loopback request whose `Host` is also a loopback name (`127.0.0.0/8` or
+`localhost`); everyone else gets the normal 403. The `Host` check blocks a
+DNS-rebinding page from reading the endpoint through a browser on the same
+machine. A request carrying `X-Real-IP`, `Forwarded`, `Via`, or any
+`X-Forwarded-*` header is treated as proxied and refused too, so a remote client
+cannot reach it by claiming to be local and a same-host proxy cannot publish it
+by accident. See [Health Endpoint](usage.md#health-endpoint).
+
+The `-i`/`--ignore` list is a **serving** policy, not a Wren read boundary: it
+does not apply to `Markdown.file()`, `Markdown.list()` or `Markdown.meta()`. A
+`README.md` or `AGENTS.md` is ignored over HTTP but can still be read from Wren,
+so keep secrets in a `_`/`.`-prefixed file and prefer an allow-list over a raw
+request value. See [Markdown](markdown.md).
 
 The single exception is the RFC 8615 `.well-known` namespace: a URL whose
 first segment is exactly `.well-known` is public, and everything below it is
@@ -9298,6 +9443,11 @@ Bialet is a single binary — copy it to your server alongside your `.wren`
 files and you're deployed. This guide covers setting up a production-ready
 environment with a reverse proxy, systemd, and Docker.
 
+For the whole setup assembled in one place — immutable release directories, an
+external database, and versioned upgrades — see
+[Hosted Deployment](hosted-deployment.md). This page stays the reference for
+each piece.
+
 ## Why a Reverse Proxy?
 
 Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every
@@ -9429,6 +9579,50 @@ This means your deploy flow is:
 scp -r ./src/* user@your-server:/www/your-app/
 # Done. Migrations run, code reloads, server keeps running.
 ```
+
+## Health Checks
+
+Every server answers `/_health` on loopback:
+
+```bash
+curl -fsS http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+It returns `200` when a `SELECT 1` succeeds, or `503` with
+`"database":"error"` when the database is unusable. `uptime_seconds` counts
+from process start. `GET` and `HEAD` are supported; other methods get `405`.
+
+The endpoint is deliberately **direct-loopback only**: it checks the socket peer
+and the `Host` header, and returns the normal `403` to anyone else. The `Host`
+must be `127.0.0.1`, another `127.0.0.0/8` literal, or `localhost`, optionally
+with a port. A request carrying `X-Real-IP`, `Forwarded`, `Via`, or any
+`X-Forwarded-*` header is treated as proxied and refused too, so a remote client
+cannot reach it by forging a header and a same-host proxy cannot publish it by
+forwarding every path. The `Host` check also blocks a DNS-rebinding page from
+reading the endpoint through a browser on the same machine. That makes it usable
+by a local supervisor or a Docker `HEALTHCHECK`, and invisible on a public
+listener.
+
+Docker:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:7001/_health || exit 1
+```
+
+systemd:
+
+```ini
+ExecStartPost=/usr/bin/curl -fsS --retry 5 --retry-connrefused http://127.0.0.1:7001/_health
+```
+
+If the proxy needs to expose a public health URL, give it its own route in the
+app. Do not proxy `/_health` to the internet: the loopback rule is the only
+access control it has.
 
 ## Static Files
 
@@ -10033,6 +10227,379 @@ app directory alone is not enough when a migration has run.
 6. **Add TLS** — Let's Encrypt via certbot (nginx/Apache) or Caddy's auto-TLS
 7. **Schedule a backup** — the `.backup` command above, nightly, off the box
 8. **Restore one backup** — before you need it, into a scratch directory
+
+
+# Hosted Deployment
+
+[Deployment](deployment.md) explains each piece of a production install. This
+page assembles them into one recipe for a **hosted** app: one host you control,
+one unprivileged user, a release directory you replace wholesale, and the state
+kept outside it.
+
+## What "Hosted" Means Here
+
+- **One host.** SQLite is a local file, so there is no database server to move
+  to. Several workers here are covered in
+  [Deployment](deployment.md#scaling-multiple-workers-on-one-host).
+- **Immutable code.** Every deploy is a new `/srv/app/releases/<tag>/`; nothing
+  is edited in place. `/srv/app/current` picks the release that should run.
+- **State outside the code.** Database, WAL files, log, and key live in
+  `/srv/app/shared/` and survive every swap.
+- **One unprivileged user.** `app` reads the release and writes only `shared/`.
+- **A restart per deploy.** Bialet resolves its app root once at startup, so
+  changing `current` does nothing until the restart. That is the deploy
+  boundary, the opposite of
+  [No Restart Needed on Deploy](deployment.md#no-restart-needed-on-deploy); no
+  watcher is needed (`-W`).
+
+Not covered: native TLS (a proxy terminates it; [Security](security.md#tls)),
+on-disk uploads (they are database rows; planned, not implemented;
+[Files](file.md)), and Windows.
+
+## Directory Layout
+
+```text
+/srv/app/
+├── releases/
+│   ├── v1.2.14/                 # previous release (bialet + app/)
+│   └── v1.2.15/                 # current release
+│       ├── bialet               # from the verified release archive
+│       └── app/                 # app root: .wren files, _app/, _migration.wren
+├── shared/
+│   ├── app.sqlite3              # -d
+│   ├── app.sqlite3-wal          # with -w
+│   ├── app.sqlite3-shm
+│   ├── app.log                  # -l
+│   └── secret.key               # -k
+└── current -> releases/v1.2.15
+```
+
+The binary sits **beside** `app/`, not inside it: the app root is also the static
+root, so `GET /bialet` would serve the executable. Releases are root-owned and
+read-only to the service; `shared/` is owned by `app`, mode `0700`.
+
+## The User and the Umask
+
+```bash
+sudo useradd --system --user-group --home-dir /srv/app \
+  --shell /usr/sbin/nologin app
+
+sudo install -d -o root -g root -m 0755 /srv/app
+sudo install -d -o root -g root -m 0755 /srv/app/releases
+sudo install -d -o app  -g app  -m 0700 /srv/app/shared
+
+sudo -u app sh -c 'umask 0077; openssl rand -hex 32 > /srv/app/shared/secret.key'
+```
+
+The key file holds 64 hex characters (the AES-256 key) or a passphrase, must
+resolve outside the app root, and is refused at startup if it is empty, over
+4 KB, or inside the tree ([Encrypted Values at Rest](security.md#encrypted-values-at-rest)).
+
+Bialet creates a new database and a new `-l` log with mode `0600` itself, and
+SQLite gives `-wal`/`-shm` the database's mode, so those do not depend on the
+umask; an existing database keeps its mode. The umask covers everything else:
+the key file above, directories a deploy script makes, and future files. Set it
+in the deploy shell and as `UMask=0077` in the unit.
+
+## Install a Release
+
+The archive contains only the `bialet` binary, and `get.bialet.dev` installs it
+into `~/.local/bin`; here it goes into a release directory with the app tree.
+
+```bash
+set -eu
+umask 0077
+VERSION=v1.2.26                  # the tag you are deploying
+ARCH=linux-x86_64                # or linux-arm64
+RELEASE=/srv/app/releases/$VERSION
+ARCHIVE="bialet-$VERSION-$ARCH.tar.gz"
+BASE="https://github.com/bialet/bialet/releases/download/$VERSION"
+test -e "$RELEASE" && { echo "$RELEASE already exists"; exit 1; }
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+curl -fsSL "$BASE/$ARCHIVE" -o "$tmp/$ARCHIVE"
+curl -fsSL "$BASE/SHA256SUMS" -o "$tmp/SHA256SUMS"
+(cd "$tmp" && sha256sum --check --ignore-missing SHA256SUMS)
+sudo install -d -o root -g root -m 0755 "$RELEASE"
+sudo tar xzf "$tmp/$ARCHIVE" -C "$RELEASE"
+sudo install -d -o root -g root -m 0755 "$RELEASE/app"
+sudo rsync -a --delete \
+  --exclude '_db.sqlite3*' --exclude '*.log' \
+  /srv/src/app/ "$RELEASE/app/"
+```
+
+`/srv/src/app/` is wherever the app tree is built or checked out. The excludes
+matter: a database or log copied into a release is a stale copy nothing updates
+and it ends up in backups. See [Pitfalls](#pitfalls).
+
+**What verification proves.** `install.sh` treats a missing `SHA256SUMS`, a
+missing entry, or a mismatch as fatal. The checksum comes from the same release,
+so it catches corruption, not a compromised publisher. Newer releases also carry
+a build-provenance attestation: `install.sh` verifies it when `gh` is installed
+and otherwise warns; `BIALET_REQUIRE_ATTESTATION=1` makes a missing or
+unverifiable attestation fatal ([Installation](installation.md#releases)).
+
+Do not start the release yet. It must pass the gate:
+
+```bash
+# Compile every .wren file. No database is opened or created.
+"$RELEASE/bialet" check "$RELEASE/app"
+
+# If the release ships _tests/, run them. They use a temporary database.
+"$RELEASE/bialet" -T "$RELEASE/app"
+```
+
+`check` exits `0` only when every file compiles and every backtick SQL literal
+parses, `1` otherwise. `-T` uses a throwaway database, never the production one,
+so it cannot write to `shared/` ([Checking a whole app tree](usage.md#check-a-whole-app-tree),
+[Testing](tests.md)).
+
+## The Runtime Command
+
+The unit below runs this line. The flag reference is
+[Command Line Usage](usage.md#options).
+
+```bash
+/srv/app/current/bialet -p 7001 -h 127.0.0.1 -w -W -x -m 1024 -M 2048 \
+  -b 1100 -u 1MB -f on -s normal -d /srv/app/shared/app.sqlite3 \
+  -l /srv/app/shared/app.log -k /srv/app/shared/secret.key /srv/app/current/app
+```
+
+| Flag | Why it is here |
+| --- | --- |
+| `-p 7001 -h 127.0.0.1` | The proxy's upstream. The host defaults to loopback; spelling it out keeps a copied unit from publishing the port. |
+| `-d`, `-l`, `-k` | Absolute paths outside the app root. A relative `-d` is joined onto the root, and a database or log inside the root must have a private name (leading `_` or `.`) or Bialet exits with status 11 ([Usage](usage.md#options)). |
+| `-w` | WAL. It creates `-wal` and `-shm` beside the database, so the unit must write all of `shared/` ([SQLite WAL Mode](deployment.md#sqlite-wal-mode-production)). |
+| `-W`, `-x` | No watcher; migrations and cron still run once at startup. In-memory bytecode cache, cleared by a restart and safe because the tree is immutable ([Live Reload](live-reload.md#file-watching)). |
+| `-b 1100 -u 1MB -m 1024 -M 2048` | About 1 MB per upload. `-b` binds the body (the `-m`/512 ceiling is 2 MB), so the file cap is the smaller of `-u` and `-b` minus ~8 KB of framing: 1 MB here, versus ~120 KB at the defaults ([File Size Limits](file.md)). |
+| `-f on -s normal` | The defaults, written out. `-s normal` keeps WAL durable across a process crash but can lose the last transactions on power loss; `-s full` narrows that at an fsync per commit. |
+| `/srv/app/current/app` | The app root, resolved through the symlink once at startup. |
+
+`-m`/`-M` are enforced on Linux only (`RLIMIT_AS` on the HTTP child); elsewhere
+they only size the body cap. CPU limits and worker scaling are in
+[Deployment](deployment.md#server-resource-limits).
+
+## systemd Unit
+
+**`/etc/systemd/system/bialet-app.service`**
+
+```ini
+[Unit]
+Description=app.example.com in Bialet
+After=network.target
+
+[Service]
+Type=simple
+User=app
+Group=app
+WorkingDirectory=/srv/app/current/app
+UMask=0077
+ExecStart=/srv/app/current/bialet -p 7001 -h 127.0.0.1 -w -W -x -m 1024 -M 2048 -b 1100 -u 1MB -f on -s normal -d /srv/app/shared/app.sqlite3 -l /srv/app/shared/app.log -k /srv/app/shared/secret.key /srv/app/current/app
+Restart=on-failure
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/srv/app/shared
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Run `sudo systemctl daemon-reload`, then
+`sudo systemctl enable --now bialet-app`.
+
+`Type=simple` is right because the supervising parent stays in the foreground;
+the HTTP child is its fork. A restart that never becomes healthy is caught by
+the `/_health` probe in the deploy gate.
+
+- **`ProtectSystem=strict`** makes the filesystem read-only except `/dev`,
+  `/proc`, `/sys`; without `ReadWritePaths=/srv/app/shared`, SQLite cannot create
+  `-wal`/`-shm`, the database is unwritable, and `-l` cannot be opened: startup
+  fails. The release tree needs no write access.
+- **`PrivateTmp=yes`** gives the unit a writable `/tmp`; without it, a query that
+  spills to disk fails under `ProtectSystem=strict`.
+- **`ProtectHome=yes`** is safe only while nothing lives under `/home`;
+  **`NoNewPrivileges=yes`** does nothing for Bialet but is worth setting.
+- **`UMask=0077`** covers files the unit creates, such as a new log.
+
+## Reverse Proxy
+
+TLS terminates at nginx; Bialet speaks plain HTTP on loopback. The body limit
+matches `-b 1100` (nginx's `k` is 1024 bytes, so `1100k` is the same number of
+bytes Bialet accepts).
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name app.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/app.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/app.example.com/privkey.pem;
+
+    # Same limit as -b 1100. Raise both together.
+    client_max_body_size 1100k;
+    client_body_timeout 10s;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Bialet decides the cookie Secure flag from these two.
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Forwarded "";
+        proxy_pass http://127.0.0.1:7001;
+    }
+}
+```
+
+Bialet already refuses `_`/`.` names, including `/_health`, so this block can
+proxy every path. For defense in depth, add the private-name deny and the
+`/.well-known/` exception from
+[Hardening the Proxy](deployment.md#hardening-the-proxy), which also has the
+Apache and Caddy equivalents.
+
+`Host` and `X-Forwarded-Proto` also drive `Request.baseUrl` and `Request.scheme`;
+set `BIALET_BASE_URL` if links and emails need a fixed origin
+([Public URLs behind a proxy](deployment.md#public-urls-behind-a-proxy)). Bialet
+sends `Connection: close`, so the proxy reconnects per request: no keep-alive and
+no HTTP/2 upstream.
+
+## Health Check and Deploy Gate
+
+```bash
+curl -fsS http://127.0.0.1:7001/_health
+```
+
+The reply is `200` with `{"status":"ok",...,"database":"ok"}`, or `503` with
+`"database":"error"` when `SELECT 1` fails. `curl` sends `Host: 127.0.0.1:7001`,
+which is accepted. A forwarding header (`X-Real-IP`, `Forwarded`, `Via`, any
+`X-Forwarded-*`) marks the request as proxied and gets `403`, so do not add one.
+`curl -f` turns that `503` into a non-zero exit
+([Health Endpoint](usage.md#health-endpoint)).
+
+A deploy has three gates: `check`/`-T` on the new release, the swap and restart,
+then `/_health`. If the probe fails, roll back. The swap is atomic, so `current`
+never disappears:
+
+```bash
+VERSION=v1.2.26                  # the release you just installed
+sudo ln -sfn "releases/$VERSION" /srv/app/.current.new
+sudo mv -Tf /srv/app/.current.new /srv/app/current
+sudo systemctl restart bialet-app
+curl -fsS --retry 15 --retry-connrefused --retry-delay 1 \
+  http://127.0.0.1:7001/_health
+```
+
+`mv -T` is GNU coreutils; `ln -sfn` alone unlinks and recreates the link, leaving
+a short window with no `current`. The running process keeps serving the real path
+it resolved at startup until the restart.
+
+## Backups
+
+The database is the whole state, uploads included. Take a consistent snapshot
+while the service runs:
+
+```bash
+sudo install -d -o app -g app -m 0700 /var/backups/app
+sudo -u app sqlite3 /srv/app/shared/app.sqlite3 \
+  ".backup '/var/backups/app/app-$(date +%F).sqlite3'"
+```
+
+From cron, escape the `%` characters or cron eats them:
+
+```text
+17 3 * * * app sqlite3 /srv/app/shared/app.sqlite3 ".backup '/var/backups/app/app-$(date +\%F).sqlite3'"
+```
+
+`.backup` uses SQLite's online backup API and, in WAL mode, reads a consistent
+snapshot that includes committed frames still in `-wal`, without blocking
+requests. Do not use `cp` while the service runs: a lone `app.sqlite3` can miss
+WAL writes; with the service stopped, `cp` is safe. Keep a week off the host, and
+keep the key in your secret manager, *not* beside the backups: a key next to the
+ciphertext defeats the encryption. Uploads need no separate step.
+
+Restore:
+
+```bash
+sudo systemctl stop bialet-app
+sudo install -o app -g app -m 600 /var/backups/app/app-2026-11-23.sqlite3 \
+  /srv/app/shared/app.sqlite3
+sudo rm -f /srv/app/shared/app.sqlite3-wal /srv/app/shared/app.sqlite3-shm
+sudo systemctl start bialet-app
+```
+
+Removing `-wal`/`-shm` matters: a stale WAL applied to the restored file loses
+data, and the explicit `-m 600` keeps the restored mode private. Test a restore
+into a scratch directory first ([Backups](deployment.md#backups)).
+
+## Upgrades and Rollback
+
+An upgrade repeats the install section with the new tag: download, verify,
+unpack, copy the tree, run `check`/`-T`, swap, restart, probe.
+
+Back up the database **before** the restart. Migrations run at startup and are
+normally one-way: pointing `current` back does not undo one. Restoring the
+pre-upgrade database is the rollback for a bad migration.
+
+Rollback is the same swap with the previous tag:
+
+```bash
+sudo ln -sfn releases/v1.2.14 /srv/app/.current.new
+sudo mv -Tf /srv/app/.current.new /srv/app/current
+sudo systemctl restart bialet-app
+curl -fsS --retry 15 --retry-connrefused --retry-delay 1 \
+  http://127.0.0.1:7001/_health
+```
+
+Keep two or three old releases and delete the rest by name, after checking which
+one is live:
+
+```bash
+readlink -f /srv/app/current          # keep this one
+ls -1dt /srv/app/releases/*/          # newest first
+sudo rm -rf /srv/app/releases/v1.2.11 # explicit, one at a time
+```
+
+Do not prune by age: after a rollback the live release can be an older one, and
+deleting it leaves `current` dangling, so the next start fails with `app
+directory not found`. The binary and tree roll back together; only `shared/`
+spans releases.
+
+## Pitfalls
+
+> ⚠️ Pitfall: a database or log inside the app root is public unless its name
+> starts with `_` or `.` — Bialet exits with status 11 otherwise, and
+> `.well-known` counts as public. That is why `-d`, `-l`, and `-k` are absolute
+> paths into `shared/`; do not make them relative.
+
+> ⚠️ Pitfall: a `_db.sqlite3` in a release is a stale second database: lose `-d`
+> and Bialet writes there instead. The `rsync` excludes prevent it. `bialet -r`
+> from a directory with no app root also creates an empty `_db.sqlite3`, and
+> `make clean` deletes **every** `_db.sqlite3*` under a source checkout, so never
+> keep production data under one.
+
+> ⚠️ Pitfall: the app root is the static root too. `.wren` runs, `_`/`.` names are
+> refused, and everything else is served: keep `README`s, SQL dumps, and notes
+> outside it or rename them with `_` ([Private Files](security.md#private-files)).
+
+> ⚠️ Pitfall: uploads cap at ~120 KB until `-b` and `-m` are raised together;
+> `-u 8MB` alone changes nothing because the body gets `413` first. Raise `-b`,
+> `-m`/`-M`, `-u`, and nginx's `client_max_body_size` as a set.
+
+> ⚠️ Pitfall: `-l` only appends, so rotate with `copytruncate` (Bialet keeps the
+> file open). A line written between the copy and the truncate can be lost; drop
+> `-l` and let journald cap the output to avoid the window.
+
+> ⚠️ Pitfall: running `sqlite3` or `bialet` as root leaves a root-owned `0600`
+> database or log. The service user then cannot write it, WAL cannot be created,
+> and the unit restarts until it gives up. `chown -R app:app /srv/app/shared`
+> after any root-level repair, `-wal`/`-shm` included.
+
+> ⚠️ Pitfall: do not route `/_health` to the internet. Bialet returns `403` to
+> any request whose peer or `Host` is not loopback, and that check is its only
+> access control; give a public liveness URL its own app route.
 
 
 # Performance
@@ -12630,6 +13197,32 @@ expecting UTC: it writes the app zone's wall clock with no offset. Store
 `Date.new(seconds, "UTC")` reads them back. `+`, `-` and `addDays` return a
 `Date` in the app zone, so storing the result still writes a wall clock with no
 offset — store `.unix` when the value must be an instant.
+
+## 23. A code body on the line after `{` returns `null`
+
+A block body that starts with an HTML literal may begin on the next line — HTML
+is never a statement, so it is the value:
+
+```wren
+{{ items.map { |item|
+  <li>{{ item }}</li>
+} }}
+```
+
+A body that starts with code on the next line is a statement list: its value is
+discarded, so the block returns `null` and the list renders empty. Inside
+`{{ }}` the compiler warns once per file; a method body, `Fn.new` and Cron jobs
+stay silent. Keep code on the `{` line:
+
+```wren
+// Wrong — the value of `item.name` is discarded
+{{ items.map { |item|
+  item.name
+} }}
+
+// Right
+{{ items.map { |item| item.name } }}
+```
 
 
 Examples

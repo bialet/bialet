@@ -54,7 +54,7 @@ bialet --port=8080 /path/to/app
 | `-h`, `--host`          | Host name                                                                   | `127.0.0.1`                                  |
 | `-H`, `--help`          | Show this help and exit                                                     | None                                         |
 | `-r`, `--run`           | Run the code passed as argument, then exit                                  | None                                         |
-| `-t`, `--validate`      | Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit | None                                        |
+| `-t`, `--validate`      | Compile a Wren file, or every `.wren` file under a directory, and their local imports; parse their backtick SQL without executing anything, then exit | None                                        |
 | `-T`, `--tests`         | Run tests in the `_tests/` folder                                           | None                                         |
 | `-v`, `--version`       | Print the version and exit                                                  | None                                         |
 | `-l`, `--log`           | Log file location                                                           | `stdout`                                     |
@@ -94,12 +94,25 @@ usage text instead of being silently ignored.
 > so Bialet creates it readable by its owner only (`0600`). An existing file
 > keeps its mode; do not make it group- or world-readable.
 
-> ⚠️ Pitfall: the `-l` file is only ever appended to. Every request adds one
-> line (the method and the first 512 bytes of the target), so rotate it with
-> the system's tools, e.g. logrotate with `copytruncate` (Bialet keeps the file
-> open in append mode, so truncating it in place is safe). Under systemd or
-> Docker, logging to stdout and letting journald or the log driver cap the size
-> works too.
+> ⚠️ Pitfall: the `-l` file is only ever appended to. Every served request adds
+> exactly one line, written after the response:
+>
+> ```text
+> 2026-11-23 13:20:01 Request GET /search?q=logs status=200 bytes=4821 duration_ms=7
+> 2026-11-23 13:20:02 Request GET /missing status=404 bytes=714 duration_ms=1
+> ```
+>
+> The fields after the method and target are `status=`, `bytes=` and
+> `duration_ms=`. `bytes` counts response body bytes actually written, never
+> headers, so a `HEAD` (or a `204`/`304`) logs `0`; a send that fails partway
+> reports the bytes completed before the failure. `duration_ms` runs from accept
+> to the final write and is never negative. The target keeps its query string,
+> has control bytes escaped, and is cut after 512 bytes with `...`; request
+> bodies are never logged. Local `/_health` and live-reload polls are not
+> logged. Rotate the file with the system's tools, e.g. logrotate with
+> `copytruncate` (Bialet keeps the file open in append mode, so truncating it in
+> place is safe). Under systemd or Docker, logging to stdout and letting
+> journald or the log driver cap the size works too.
 
 Size values for `-u` are bytes; a `K`, `M`, or `G` suffix (KiB/MiB/GiB) scales
 them. `-u 4MB`, `-u 4096KB`, and `-u 4194304` are the same limit.
@@ -207,7 +220,7 @@ bialet -T                    # Run all tests in _tests/
 bialet -T docs/examples      # Run tests in a specific directory
 ```
 
-## Validate Syntax of a Wren File
+## Validate Syntax of a Wren File or Tree
 
 To check the syntax of a Wren file without executing it, use `-t`. Run it the
 same way you run the server:
@@ -230,11 +243,49 @@ bialet -t /path/to/app/index.wren /path/to/app # compiles the file
 The root path is required when your file imports from `_app/` or uses relative
 imports. If you omit it for such files, the validator will exit with an error.
 
+### Check a whole app tree
+
+Pass a directory instead of a file to validate every `.wren` file below it:
+
+```bash
+bialet -t .
+bialet -t /path/to/app
+```
+
+`bialet check` is the same whole-tree mode with the app root as its default:
+
+```bash
+cd /path/to/app
+bialet check                 # every .wren file in the current tree
+bialet check /path/to/app    # every .wren file in another tree
+```
+
+A directory target is also the app root for that run, so `bialet -t /path/to/app`
+and `bialet check /path/to/app` work from any working directory without a second
+positional argument. Each file is compiled in its own VM, so imports shared by
+two pages do not collide.
+
+The walk includes private files and directories (`_app/`, `_migration.wren`,
+`_cron.wren`, `_tests/`) because they are part of the app. It skips
+dot-directories (`.git`, `.venv`), symbolic links, and anything that is not a
+`.wren` file, so it cannot leave the tree or loop on a link. The check exits
+`0` only when every file compiles; failures name the file that failed.
+
+> ⚠️ Pitfall: a directory check does not run migrations, so a migration that
+> depends on a table created earlier in the same file still passes. Like a
+> single-file check, it validates SQL syntax, not schema correctness.
+
 `-t` compiles the file and every local module it imports. It does not execute
 any of them, so runtime errors are not reported and migrations do not run:
 `bialet -t _migration.wren` leaves the database untouched even when the
 migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
 local import is not a syntax error; it only fails when the page runs.
+
+A syntax check parses backtick SQL against an **in-memory** SQLite database. It
+never opens, creates, or modifies the app's `_db.sqlite3` (or whatever `-d`
+names; `-d` is ignored in validation mode). That is what keeps `bialet check`
+safe on a read-only release and stops a tree-controlled `_db.sqlite3` symlink
+from redirecting the check to a database outside the tree.
 
 It also parses every backtick SQL literal it finds, including in imported
 modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
@@ -258,6 +309,39 @@ else
     exit 1
 fi
 ```
+
+## Health Endpoint
+
+Bialet reserves `/_health` for supervisors and watchdogs:
+
+```bash
+curl -s http://127.0.0.1:7001/_health
+```
+
+```json
+{"status":"ok","version":"{{bialet_version}}","uptime_seconds":42,"database":"ok"}
+```
+
+The response is `200` when a trivial database query succeeds and `503` with
+`"database":"error"` when it does not. `uptime_seconds` counts from the start of
+the server process. Local health polls are not written to the `-l` file, so a
+one-second check does not fill it; a remote probe is still logged.
+
+`/_health` is answered **only to a direct loopback request** (`127.0.0.0/8`)
+whose `Host` is also local: `127.0.0.1`, `127.0.0.2` (any `127.0.0.0/8`
+literal), or `localhost`, optionally with a port. Every other caller gets the
+same `403` as any other `_`-prefixed path, so the endpoint does not advertise
+itself. This also stops a DNS-rebinding page from reading it through a browser
+on the same machine, where the peer is loopback but the `Host` is the attacker's
+name.
+
+Forwarding headers are deliberately not trusted either: a request that carries
+`X-Real-IP`, `Forwarded`, `Via`, or any `X-Forwarded-*` header is treated as
+proxied and refused, so a same-host proxy cannot accidentally publish the
+endpoint by forwarding every path. Do not route `/_health` to the internet;
+give a public liveness URL its own app route.
+
+`GET` and `HEAD` are accepted; any other method answers `405`.
 
 ## Upload and SQLite Tuning
 

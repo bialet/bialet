@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=75c21d4e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.26" />
+  <meta name="docsearch:version" content="1.2.27" />
   </head>
   
   
@@ -219,6 +219,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cron.html">Cron Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">Testing in Bialet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hosted-deployment.html">Hosted Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Help &amp; Reference</span></p>
@@ -450,7 +451,11 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file-or-tree">Validate Syntax of a Wren File or Tree</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#check-a-whole-app-tree">Check a whole app tree</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-endpoint">Health Endpoint</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-and-sqlite-tuning">Upload and SQLite Tuning</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limit">File Upload Limit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
@@ -534,7 +539,7 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>None</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code>, <code class="docutils literal notranslate"><span class="pre">--validate</span></code></p></td>
-<td><p>Compile a Wren file and its local imports and parse their backtick SQL, without executing them, then exit</p></td>
+<td><p>Compile a Wren file, or every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file under a directory, and their local imports; parse their backtick SQL without executing anything, then exit</p></td>
 <td><p>None</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-T</span></code>, <code class="docutils literal notranslate"><span class="pre">--tests</span></code></p></td>
@@ -632,12 +637,23 @@ so Bialet creates it readable by its owner only (<code class="docutils literal n
 keeps its mode; do not make it group- or world-readable.</p>
 </div></blockquote>
 <blockquote>
-<div><p>⚠️ Pitfall: the <code class="docutils literal notranslate"><span class="pre">-l</span></code> file is only ever appended to. Every request adds one
-line (the method and the first 512 bytes of the target), so rotate it with
-the system’s tools, e.g. logrotate with <code class="docutils literal notranslate"><span class="pre">copytruncate</span></code> (Bialet keeps the file
-open in append mode, so truncating it in place is safe). Under systemd or
-Docker, logging to stdout and letting journald or the log driver cap the size
-works too.</p>
+<div><p>⚠️ Pitfall: the <code class="docutils literal notranslate"><span class="pre">-l</span></code> file is only ever appended to. Every served request adds
+exactly one line, written after the response:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2026-11-23 13:20:01 Request GET /search?q=logs status=200 bytes=4821 duration_ms=7
+2026-11-23 13:20:02 Request GET /missing status=404 bytes=714 duration_ms=1
+</pre></div>
+</div>
+<p>The fields after the method and target are <code class="docutils literal notranslate"><span class="pre">status=</span></code>, <code class="docutils literal notranslate"><span class="pre">bytes=</span></code> and
+<code class="docutils literal notranslate"><span class="pre">duration_ms=</span></code>. <code class="docutils literal notranslate"><span class="pre">bytes</span></code> counts response body bytes actually written, never
+headers, so a <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> (or a <code class="docutils literal notranslate"><span class="pre">204</span></code>/<code class="docutils literal notranslate"><span class="pre">304</span></code>) logs <code class="docutils literal notranslate"><span class="pre">0</span></code>; a send that fails partway
+reports the bytes completed before the failure. <code class="docutils literal notranslate"><span class="pre">duration_ms</span></code> runs from accept
+to the final write and is never negative. The target keeps its query string,
+has control bytes escaped, and is cut after 512 bytes with <code class="docutils literal notranslate"><span class="pre">...</span></code>; request
+bodies are never logged. Local <code class="docutils literal notranslate"><span class="pre">/_health</span></code> and live-reload polls are not
+logged. Rotate the file with the system’s tools, e.g. logrotate with
+<code class="docutils literal notranslate"><span class="pre">copytruncate</span></code> (Bialet keeps the file open in append mode, so truncating it in
+place is safe). Under systemd or Docker, logging to stdout and letting
+journald or the log driver cap the size works too.</p>
 </div></blockquote>
 <p>Size values for <code class="docutils literal notranslate"><span class="pre">-u</span></code> are bytes; a <code class="docutils literal notranslate"><span class="pre">K</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code>, or <code class="docutils literal notranslate"><span class="pre">G</span></code> suffix (KiB/MiB/GiB) scales
 them. <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4MB</span></code>, <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4096KB</span></code>, and <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">4194304</span></code> are the same limit.</p>
@@ -665,7 +681,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.26</span>
+<span class="c1"># bialet 1.2.27</span>
 </pre></div>
 </div>
 </section>
@@ -729,8 +745,8 @@ bialet<span class="w"> </span>-T<span class="w"> </span>docs/examples<span class
 </pre></div>
 </div>
 </section>
-<section id="validate-syntax-of-a-wren-file">
-<h2>Validate Syntax of a Wren File<a class="headerlink" href="#validate-syntax-of-a-wren-file" title="Link to this heading">#</a></h2>
+<section id="validate-syntax-of-a-wren-file-or-tree">
+<h2>Validate Syntax of a Wren File or Tree<a class="headerlink" href="#validate-syntax-of-a-wren-file-or-tree" title="Link to this heading">#</a></h2>
 <p>To check the syntax of a Wren file without executing it, use <code class="docutils literal notranslate"><span class="pre">-t</span></code>. Run it the
 same way you run the server:</p>
 <p>If you start your server from the app directory:</p>
@@ -746,11 +762,43 @@ bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app/index.wren<
 </div>
 <p>The root path is required when your file imports from <code class="docutils literal notranslate"><span class="pre">_app/</span></code> or uses relative
 imports. If you omit it for such files, the validator will exit with an error.</p>
+<section id="check-a-whole-app-tree">
+<h3>Check a whole app tree<a class="headerlink" href="#check-a-whole-app-tree" title="Link to this heading">#</a></h3>
+<p>Pass a directory instead of a file to validate every <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file below it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-t<span class="w"> </span>.
+bialet<span class="w"> </span>-t<span class="w"> </span>/path/to/app
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">check</span></code> is the same whole-tree mode with the app root as its default:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/path/to/app
+bialet<span class="w"> </span>check<span class="w">                 </span><span class="c1"># every .wren file in the current tree</span>
+bialet<span class="w"> </span>check<span class="w"> </span>/path/to/app<span class="w">    </span><span class="c1"># every .wren file in another tree</span>
+</pre></div>
+</div>
+<p>A directory target is also the app root for that run, so <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span> <span class="pre">/path/to/app</span></code>
+and <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">check</span> <span class="pre">/path/to/app</span></code> work from any working directory without a second
+positional argument. Each file is compiled in its own VM, so imports shared by
+two pages do not collide.</p>
+<p>The walk includes private files and directories (<code class="docutils literal notranslate"><span class="pre">_app/</span></code>, <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_tests/</span></code>) because they are part of the app. It skips
+dot-directories (<code class="docutils literal notranslate"><span class="pre">.git</span></code>, <code class="docutils literal notranslate"><span class="pre">.venv</span></code>), symbolic links, and anything that is not a
+<code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, so it cannot leave the tree or loop on a link. The check exits
+<code class="docutils literal notranslate"><span class="pre">0</span></code> only when every file compiles; failures name the file that failed.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: a directory check does not run migrations, so a migration that
+depends on a table created earlier in the same file still passes. Like a
+single-file check, it validates SQL syntax, not schema correctness.</p>
+</div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">-t</span></code> compiles the file and every local module it imports. It does not execute
 any of them, so runtime errors are not reported and migrations do not run:
 <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span> <span class="pre">_migration.wren</span></code> leaves the database untouched even when the
 migration is valid. Remote imports (<code class="docutils literal notranslate"><span class="pre">http:</span></code>, <code class="docutils literal notranslate"><span class="pre">gh:</span></code>) are not fetched. A missing
 local import is not a syntax error; it only fails when the page runs.</p>
+<p>A syntax check parses backtick SQL against an <strong>in-memory</strong> SQLite database. It
+never opens, creates, or modifies the app’s <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> (or whatever <code class="docutils literal notranslate"><span class="pre">-d</span></code>
+names; <code class="docutils literal notranslate"><span class="pre">-d</span></code> is ignored in validation mode). That is what keeps <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">check</span></code>
+safe on a read-only release and stops a tree-controlled <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> symlink
+from redirecting the check to a database outside the tree.</p>
 <p>It also parses every backtick SQL literal it finds, including in imported
 modules, by asking SQLite to prepare it. Nothing is executed: a <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span></code>
 in a migration is parsed, not run, and no migration is recorded. Only syntax
@@ -771,6 +819,34 @@ compilation errors. Useful for CI/CD pipelines and pre-commit hooks.</p>
 <span class="k">fi</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="health-endpoint">
+<h2>Health Endpoint<a class="headerlink" href="#health-endpoint" title="Link to this heading">#</a></h2>
+<p>Bialet reserves <code class="docutils literal notranslate"><span class="pre">/_health</span></code> for supervisors and watchdogs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:7001/_health
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.27"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The response is <code class="docutils literal notranslate"><span class="pre">200</span></code> when a trivial database query succeeds and <code class="docutils literal notranslate"><span class="pre">503</span></code> with
+<code class="docutils literal notranslate"><span class="pre">&quot;database&quot;:&quot;error&quot;</span></code> when it does not. <code class="docutils literal notranslate"><span class="pre">uptime_seconds</span></code> counts from the start of
+the server process. Local health polls are not written to the <code class="docutils literal notranslate"><span class="pre">-l</span></code> file, so a
+one-second check does not fill it; a remote probe is still logged.</p>
+<p><code class="docutils literal notranslate"><span class="pre">/_health</span></code> is answered <strong>only to a direct loopback request</strong> (<code class="docutils literal notranslate"><span class="pre">127.0.0.0/8</span></code>)
+whose <code class="docutils literal notranslate"><span class="pre">Host</span></code> is also local: <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, <code class="docutils literal notranslate"><span class="pre">127.0.0.2</span></code> (any <code class="docutils literal notranslate"><span class="pre">127.0.0.0/8</span></code>
+literal), or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>, optionally with a port. Every other caller gets the
+same <code class="docutils literal notranslate"><span class="pre">403</span></code> as any other <code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed path, so the endpoint does not advertise
+itself. This also stops a DNS-rebinding page from reading it through a browser
+on the same machine, where the peer is loopback but the <code class="docutils literal notranslate"><span class="pre">Host</span></code> is the attacker’s
+name.</p>
+<p>Forwarding headers are deliberately not trusted either: a request that carries
+<code class="docutils literal notranslate"><span class="pre">X-Real-IP</span></code>, <code class="docutils literal notranslate"><span class="pre">Forwarded</span></code>, <code class="docutils literal notranslate"><span class="pre">Via</span></code>, or any <code class="docutils literal notranslate"><span class="pre">X-Forwarded-*</span></code> header is treated as
+proxied and refused, so a same-host proxy cannot accidentally publish the
+endpoint by forwarding every path. Do not route <code class="docutils literal notranslate"><span class="pre">/_health</span></code> to the internet;
+give a public liveness URL its own app route.</p>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span></code> and <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> are accepted; any other method answers <code class="docutils literal notranslate"><span class="pre">405</span></code>.</p>
 </section>
 <section id="upload-and-sqlite-tuning">
 <h2>Upload and SQLite Tuning<a class="headerlink" href="#upload-and-sqlite-tuning" title="Link to this heading">#</a></h2>
@@ -867,7 +943,11 @@ the server.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-code-from-the-command-line">Run Code from the Command Line</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file">Validate Syntax of a Wren File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-syntax-of-a-wren-file-or-tree">Validate Syntax of a Wren File or Tree</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#check-a-whole-app-tree">Check a whole app tree</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-endpoint">Health Endpoint</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#upload-and-sqlite-tuning">Upload and SQLite Tuning</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-upload-limit">File Upload Limit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sqlite-pragma-settings">SQLite Pragma Settings</a></li>
