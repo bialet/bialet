@@ -196,11 +196,54 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
     report_result "Tree check names the bad file " "$tree_line" 1 \
       "Expected failure naming sub/broken.wren. status:$tree_bad_status output:'$tree_bad_out'"
   fi
+
+  # A syntax check must not open or create the app's database. It used to
+  # create <tree>/_db.sqlite3 and, when that name was a symlink, purge old
+  # temp uploads from whatever SQLite database the link pointed at.
+  side_line=$LINENO
+  _test_start_ms=$(now_ms)
+  side_base=$(mktemp -d)
+  side_root="$side_base/app"
+  side_victim="$side_base/victim.sqlite3"
+  mkdir "$side_root"
+  printf 'return "ok"\n' > "$side_root/index.wren"
+  side_out=$("$tree_exec" -q check "$side_root" 2>&1)
+  side_status=$?
+  side_created=0
+  [[ -e "$side_root/_db.sqlite3" ]] && side_created=1
+  side_symlink_status=0
+  side_rows=1
+  if [[ "$IS_WINE" -eq 0 ]]; then
+    sqlite3 "$side_victim" \
+      "CREATE TABLE BIALET_FILES (id INTEGER PRIMARY KEY, name TEXT, isTemp INTEGER, createdAt DATETIME);
+       INSERT INTO BIALET_FILES (name,isTemp,createdAt) VALUES ('old',1,datetime('now','-2 day'));"
+    ln -s "$side_victim" "$side_root/_db.sqlite3"
+    side_symlink_out=$("$tree_exec" -q check "$side_root" 2>&1)
+    side_symlink_status=$?
+    side_rows=$(sqlite3 "$side_victim" "SELECT COUNT(*) FROM BIALET_FILES")
+  fi
+  rm -rf "$side_base"
+  if [[ "$side_status" -eq 0 && "$side_created" -eq 0 ]]; then
+    report_result "Check leaves DB untouched     " "$side_line" 0
+  else
+    report_result "Check leaves DB untouched     " "$side_line" 1 \
+      "Expected no <tree>/_db.sqlite3. status:$side_status created:$side_created output:'$side_out'"
+  fi
+  if [[ "$IS_WINE" -eq 1 ]]; then
+    skip_test "Check ignores DB symlink      " "Wine: symlink fixture"
+  elif [[ "$side_symlink_status" -eq 0 && "$side_rows" == "1" ]]; then
+    report_result "Check ignores DB symlink      " "$side_line" 0
+  else
+    report_result "Check ignores DB symlink      " "$side_line" 1 \
+      "Expected the victim row to survive. status:$side_symlink_status rows:$side_rows output:'$side_symlink_out'"
+  fi
 else
   skip_test "Syntax validation             " "requires local binary access (-t flag)"
   skip_test "-t validates a whole tree     " "requires local binary access (-t flag)"
   skip_test "Tree check includes _ files   " "requires local binary access (-t flag)"
   skip_test "Tree check names the bad file " "requires local binary access (-t flag)"
+  skip_test "Check leaves DB untouched     " "requires local binary access (-t flag)"
+  skip_test "Check ignores DB symlink      " "requires local binary access (-t flag)"
 fi
 
 # Tests - -t is compile-only

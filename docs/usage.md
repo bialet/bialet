@@ -268,6 +268,12 @@ any of them, so runtime errors are not reported and migrations do not run:
 migration is valid. Remote imports (`http:`, `gh:`) are not fetched. A missing
 local import is not a syntax error; it only fails when the page runs.
 
+A syntax check parses backtick SQL against an **in-memory** SQLite database. It
+never opens, creates, or modifies the app's `_db.sqlite3` (or whatever `-d`
+names; `-d` is ignored in validation mode). That is what keeps `bialet check`
+safe on a read-only release and stops a tree-controlled `_db.sqlite3` symlink
+from redirecting the check to a database outside the tree.
+
 It also parses every backtick SQL literal it finds, including in imported
 modules, by asking SQLite to prepare it. Nothing is executed: a `CREATE TABLE`
 in a migration is parsed, not run, and no migration is recorded. Only syntax

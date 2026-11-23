@@ -533,6 +533,7 @@ int main(int argc, char* argv[]) {
   /* SQLite pragma defaults */
   bialet_config.sqlite_foreign_keys = 1; // ON
   bialet_config.sqlite_synchronous = 1;  // NORMAL
+  bialet_config.validate_only = 0;       // OFF unless -t/check
   bialet_config.bytecode_cache = 0;      // OFF unless -x / --cache
   bialet_config.no_watch = 0;            // OFF unless --no-watch
 
@@ -746,6 +747,12 @@ int main(int argc, char* argv[]) {
     if(validate_capture != NULL)
       validate_prev_log = message_set_log_file(validate_capture);
   }
+  /* A syntax check parses backtick SQL but has no use for the app's data. Keep
+   * it on an in-memory database so it cannot create <root>/_db.sqlite3, purge
+   * old temp uploads from a real one, or follow a tree-controlled symlink to a
+   * database outside the tree. -r still wins over -t when both are given, so
+   * only enter this mode when validation is actually what runs. */
+  bialet_config.validate_only = validate_file != NULL && code == NULL;
   bialet_init(&bialet_config);
   // Registered rather than called at each exit point: main() leaves through a
   // dozen exit() calls plus the forked child's exit(0), and neither the SQLite

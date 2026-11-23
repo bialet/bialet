@@ -132,6 +132,11 @@ struct BialetConfig {
   /* Set to true when running tests with -T flag */
   int enable_tests;
 
+  /* Set by `-t` / `check`: parse SQL against an in-memory database instead of
+   * opening the app's real database. A syntax check must not create, migrate,
+   * or purge anything in the app tree. */
+  int validate_only;
+
   /* Opt-in in-memory bytecode cache (-x / --cache). Off by default: the normal
    * path compiles every module on every request, exactly as before. */
   int bytecode_cache;

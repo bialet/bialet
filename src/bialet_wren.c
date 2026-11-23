@@ -2720,8 +2720,39 @@ static void load_default_date_zone(void) {
   sqlite3_finalize(stmt);
 }
 
+// Shared tail of bialet_init(): Wren VM hooks and HTTP client setup. Kept
+// separate so the validation path can open an in-memory database and return
+// without touching the app's database code at all.
+static void bialet_init_runtime(struct BialetConfig* config) {
+  wrenInitConfiguration(&wren_config);
+  wren_config.writeFn = &bialet_wren_write;
+  wren_config.errorFn = &bialet_wren_error;
+  wren_config.queryFn = &query_execute;
+  wren_config.resolveModuleFn = &bialet_wren_resolve_module;
+  wren_config.loadModuleFn = &bialet_wren_load_module;
+  wren_config.enableTests = config->enable_tests;
+
+  http_call_init(&bialet_config);
+}
+
 void bialet_init(struct BialetConfig* config) {
   bialet_config = *config;
+
+  if(config->validate_only) {
+    /* -t/check only parses SQL. Keep the app's database out of it: opening the
+     * real file created it, applied pragmas and purged old temp uploads, and a
+     * tree-controlled _db.sqlite3 symlink redirected those writes outside the
+     * tree. An in-memory connection still lets sqlite3_prepare_v2() report
+     * syntax errors; schema errors were already ignored. */
+    if(sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                       NULL) != SQLITE_OK) {
+      message(red("SQL Error"), "Can't open in-memory database for validation");
+      exit(BIALET_SQLITE_ERROR);
+    }
+    bialet_init_runtime(config);
+    return;
+  }
+
   char db_path[PATH_MAX];
 
   // strlen() - 1 was stored in an int and then indexed unconditionally, so an
@@ -2851,15 +2882,7 @@ void bialet_init(struct BialetConfig* config) {
   load_default_date_zone();
   purge_temp_uploads();
 
-  wrenInitConfiguration(&wren_config);
-  wren_config.writeFn = &bialet_wren_write;
-  wren_config.errorFn = &bialet_wren_error;
-  wren_config.queryFn = &query_execute;
-  wren_config.resolveModuleFn = &bialet_wren_resolve_module;
-  wren_config.loadModuleFn = &bialet_wren_load_module;
-  wren_config.enableTests = config->enable_tests;
-
-  http_call_init(&bialet_config);
+  bialet_init_runtime(config);
 }
 
 void bialet_cleanup() {
