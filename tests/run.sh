@@ -3226,9 +3226,41 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   fi
   stop_matching_servers "$TARGET_EXEC -h 0.0.0.0 -p $bind_port"
   rm -rf "$bind_root"
+
+  # An explicit `-p 0` asks the kernel for a free port. The banner and every
+  # caller must see the port actually bound, not 0; it used to print :0 and
+  # leave no way to reach the server.
+  port0_line=$LINENO
+  _test_start_ms=$(now_ms)
+  port0_root=$(mktemp -d /tmp/bialet-port0.XXXXXX)
+  port0_log="$port0_root/server.log"
+  printf 'port0 ok\n' > "$port0_root/index.html"
+  "$TARGET_EXEC" -h 127.0.0.1 -p 0 "$port0_root" > "$port0_log" 2>&1 &
+  disown
+  port0_deadline=$(( $(now_ms) + 10000 ))
+  port0_port=""
+  while [[ $(now_ms) -lt $port0_deadline ]]; do
+    port0_port=$(sed -n 's/.*127\.0\.0\.1:\([0-9][0-9]*\).*/\1/p' "$port0_log" |
+      head -1)
+    [[ -n "$port0_port" ]] && break
+    sleep 0.1
+  done
+  port0_body=""
+  [[ -n "$port0_port" ]] &&
+    port0_body=$(curl -s --max-time 5 "http://127.0.0.1:$port0_port/")
+  stop_matching_servers "$TARGET_EXEC -h 127.0.0.1 -p 0 $port0_root"
+  rm -rf "$port0_root"
+  if [[ -n "$port0_port" && "$port0_port" != "0" &&
+    "$port0_body" == "port0 ok" ]]; then
+    report_result "Ephemeral port in banner    " "$port0_line" 0
+  else
+    report_result "Ephemeral port in banner    " "$port0_line" 1 \
+      "Expected the kernel port in the banner and a reachable app. port:'$port0_port' body:'${port0_body:0:20}'"
+  fi
 else
   skip_test "Wildcard bind over busy port " "requires local binary access"
   skip_test "Specific bind over busy port " "requires local binary access"
+  skip_test "Ephemeral port in banner    " "requires local binary access"
 fi
 
 finish

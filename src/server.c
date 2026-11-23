@@ -987,12 +987,31 @@ int start_server(struct BialetConfig* config) {
     if(port_has_listener(probe_addr, port)) {
       continue;
     }
-    server_addr.sin_port = htons(port);
+    server_addr.sin_port = htons((unsigned short)port);
     if(bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
       continue;
     }
     if(listen(server_fd, 10) == -1) {
       continue;
+    }
+    // Port 0 asks the kernel for an ephemeral port; bind() leaves sin_port
+    // untouched, so read the assignment back. Without this every consumer of
+    // the returned port (the banner, server_url(), the browser) would print 0.
+    // It never reaches the retry range: port_has_listener() skips 0 and an
+    // explicit -p is a single attempt anyway.
+    if(port == 0) {
+      struct sockaddr_in bound_addr;
+      memset(&bound_addr, 0, sizeof(bound_addr));
+#ifdef _WIN32
+      int bound_len = (int)sizeof(bound_addr);
+#else
+      socklen_t bound_len = sizeof(bound_addr);
+#endif
+      if(getsockname(server_fd, (struct sockaddr*)&bound_addr, &bound_len) == -1)
+        continue;
+      port = ntohs(bound_addr.sin_port);
+      if(port == 0)
+        continue;
     }
     return port;
   }
