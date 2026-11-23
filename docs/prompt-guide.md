@@ -1333,10 +1333,10 @@ bialet -T -q         # quiet, CI-friendly
 ```
 
 The runner prepends its own prelude, which defines `Test` and `Tests`. Never
-import them, and never check a `_tests/*.wren` file with `bialet -t`: outside
+import them, and do not check a `_tests/*.wren` file with `bialet -t`: outside
 the runner the prelude does not exist, so the compiler reports
-`Test: Variable is used but not defined`. A test file is checked by running the
-suite.
+`Test: Variable is used but not defined`. The tree walk (`bialet check`) skips
+`_tests/` for that reason; a test file is checked by running the suite.
 
 `_tests/_init.wren`, when present, runs once before every test file: seed rows
 and set configuration there. Its variables are global to every test file, so

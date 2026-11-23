@@ -2267,10 +2267,17 @@ static int validate_is_wren_name(const char* name) {
 }
 
 // Walks [dir] and validates every .wren below it. Dot-directories (.git,
-// .venv) are skipped; private app directories (_app, _tests) are not, because
-// they are part of the app. Symlinks are not followed on POSIX (a link can form
-// a cycle or escape the tree) or on Windows (junctions and reparse points).
+// .venv) are skipped. Private app directories are part of the app and are
+// walked too (_app, _migration.wren, _cron.wren), with one exception: _tests at
+// any depth is left out, because Test and Tests only exist when the -T runner
+// loads its prelude (enable_tests is set by -T alone), so compiling a healthy
+// suite here would report "Variable is used but not defined". A file named
+// explicitly on the command line is still validated, _tests included. Symlinks
+// are not followed on POSIX (a link can form a cycle or escape the tree) or on
+// Windows (junctions and reparse points).
 #define VALIDATE_MAX_DEPTH 64
+// The -T suite's directory name, shared with the runner below.
+#define TESTS_DIR "_tests"
 
 static void validate_tree(const char* dir, int depth, int* checked, int* failed) {
   DIR* listing = opendir(dir);
@@ -2320,7 +2327,9 @@ static void validate_tree(const char* dir, int depth, int* checked, int* failed)
     }
 
     if(S_ISDIR(st.st_mode)) {
-      validate_tree(full, depth + 1, checked, failed);
+      // A test suite is only meaningful under -T, so the walk steps over it.
+      if(strcmp(name, TESTS_DIR) != 0)
+        validate_tree(full, depth + 1, checked, failed);
     } else if(S_ISREG(st.st_mode) && validate_is_wren_name(name)) {
       (*checked)++;
       if(validate_one_file(full) != 0)
@@ -2382,7 +2391,6 @@ int bialet_validate_syntax(const char* filePath, int* checked, int* failed) {
   return failed_count == 0 ? 0 : 1;
 }
 
-#define TESTS_DIR "_tests"
 #define TEST_INIT_FILE "_init.wren"
 #define MAX_TEST_FILES 100
 

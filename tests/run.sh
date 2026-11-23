@@ -203,6 +203,62 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
       "Expected failure naming sub/broken.wren. status:$tree_bad_status output:'$tree_bad_out'"
   fi
 
+  # The tree walk leaves _tests out: Test and Tests only exist when the -T
+  # runner loads its prelude, so a healthy suite used to make `bialet check`
+  # report "Variable is used but not defined". _app is app code and stays in
+  # the walk, and a file named explicitly on the command line is still checked.
+  tdirc_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tdirc_skips="$(dirname "$0")/check-skips-tests"
+  tdirc_errors="$(dirname "$0")/check-still-errors"
+  tdirc_app="$(dirname "$0")/check-walks-app"
+  tdirc_skip_out=$("$TARGET_EXEC" -q check "$tdirc_skips" 2>&1)
+  tdirc_skip_status=$?
+  tdirc_err_out=$("$TARGET_EXEC" -q check "$tdirc_errors" 2>&1)
+  tdirc_err_status=$?
+  tdirc_app_out=$("$TARGET_EXEC" -q check "$tdirc_app" 2>&1)
+  tdirc_app_status=$?
+  tdirc_file_out=$("$TARGET_EXEC" -q -t "$tdirc_skips/_tests/suite.wren" \
+    "$tdirc_skips" 2>&1)
+  tdirc_file_status=$?
+  if [[ "$tdirc_skip_status" -eq 0 && "$tdirc_skip_out" != *"Compilation Error"* ]]; then
+    report_result "Check skips _tests suite      " "$tdirc_line" 0
+  else
+    report_result "Check skips _tests suite      " "$tdirc_line" 1 \
+      "Expected exit 0 without a Compilation Error. status:$tdirc_skip_status output:'$tdirc_skip_out'"
+  fi
+  if [[ "$tdirc_err_status" -ne 0 && "$tdirc_err_out" == *"Compilation Error"* &&
+    "$tdirc_err_out" == *"check-still-errors/page.wren"* &&
+    "$tdirc_err_out" != *"_tests/suite.wren"* ]]; then
+    report_result "Check still fails bad file    " "$tdirc_line" 0
+  else
+    report_result "Check still fails bad file    " "$tdirc_line" 1 \
+      "Expected failure naming page.wren only. status:$tdirc_err_status output:'$tdirc_err_out'"
+  fi
+  # A directory merely starting with _tests is not the suite directory.
+  if [[ "$tdirc_err_out" == *"_tests-notes.wren"* ]]; then
+    report_result "_tests prefix still checked   " "$tdirc_line" 0
+  else
+    report_result "_tests prefix still checked   " "$tdirc_line" 1 \
+      "Expected failure naming _tests-notes.wren. status:$tdirc_err_status output:'$tdirc_err_out'"
+  fi
+  # _app is app code, not the test suite, so its files stay in the walk.
+  if [[ "$tdirc_app_status" -ne 0 && "$tdirc_app_out" == *"_app/broken.wren"* ]]; then
+    report_result "Check still walks _app        " "$tdirc_line" 0
+  else
+    report_result "Check still walks _app        " "$tdirc_line" 1 \
+      "Expected failure naming _app/broken.wren. status:$tdirc_app_status output:'$tdirc_app_out'"
+  fi
+  # Skipping the directory must not hide the documented single-file behavior.
+  if [[ "$tdirc_file_status" -ne 0 &&
+    "$tdirc_file_out" == *"Variable is used but not defined"* &&
+    "$tdirc_file_out" == *"Test"* ]]; then
+    report_result "Explicit _tests file fails    " "$tdirc_line" 0
+  else
+    report_result "Explicit _tests file fails    " "$tdirc_line" 1 \
+      "Expected failure naming Test. status:$tdirc_file_status output:'$tdirc_file_out'"
+  fi
+
   # A syntax check must not open or create the app's database. It used to
   # create <tree>/_db.sqlite3 and, when that name was a symlink, purge old
   # temp uploads from whatever SQLite database the link pointed at.
@@ -248,6 +304,11 @@ else
   skip_test "-t validates a whole tree     " "requires local binary access (-t flag)"
   skip_test "Tree check includes _ files   " "requires local binary access (-t flag)"
   skip_test "Tree check names the bad file " "requires local binary access (-t flag)"
+  skip_test "Check skips _tests suite      " "requires local binary access (check)"
+  skip_test "Check still fails bad file    " "requires local binary access (check)"
+  skip_test "_tests prefix still checked   " "requires local binary access (check)"
+  skip_test "Check still walks _app        " "requires local binary access (check)"
+  skip_test "Explicit _tests file fails    " "requires local binary access (-t flag)"
   skip_test "Check leaves DB untouched     " "requires local binary access (-t flag)"
   skip_test "Check ignores DB symlink      " "requires local binary access (-t flag)"
 fi
