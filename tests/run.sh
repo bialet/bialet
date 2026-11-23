@@ -2465,7 +2465,7 @@ test_method "Static htm content type     " "GET" "static/page.htm" 200 \
 test_method "Static css content type     " "GET" "static/style.css" 200 \
   "Content-Type: text/css" "color:red"
 test_method "Static js content type      " "GET" "static/app.js" 200 \
-  "Content-Type: application/javascript" "var js"
+  "Content-Type: text/javascript" "var js"
 test_method "Static jpg content type     " "GET" "static/photo.jpg" 200 \
   "Content-Type: image/jpeg" ""
 test_method "Static jpeg content type    " "GET" "static/photo.jpeg" 200 \
@@ -2486,11 +2486,83 @@ test_method "Static no extension type    " "GET" "static/blob" 200 \
   "Content-Type: application/octet-stream" "no-extension"
 test_method "Static unknown type         " "GET" "static/blob.unknownext" 200 \
   "Content-Type: application/octet-stream" "mystery"
+# Fonts, media and the other assets a normal page loads: none of them may fall
+# back to application/octet-stream, which browsers refuse to load as a font or
+# a script.
+test_method "Static woff2 content type   " "GET" "static/font.woff2" 200 \
+  "Content-Type: font/woff2" ""
+test_method "Static woff content type    " "GET" "static/font.woff" 200 \
+  "Content-Type: font/woff" ""
+test_method "Static ttf content type     " "GET" "static/font.ttf" 200 \
+  "Content-Type: font/ttf" ""
+test_method "Static otf content type     " "GET" "static/font.otf" 200 \
+  "Content-Type: font/otf" ""
+test_method "Static webp content type    " "GET" "static/icon.webp" 200 \
+  "Content-Type: image/webp" ""
+test_method "Static avif content type    " "GET" "static/icon.avif" 200 \
+  "Content-Type: image/avif" ""
+test_method "Static apng content type    " "GET" "static/image.apng" 200 \
+  "Content-Type: image/apng" ""
+test_method "Static jsonld content type  " "GET" "static/data.jsonld" 200 \
+  "Content-Type: application/ld+json" ""
+test_method "Static ico content type     " "GET" "static/anim.ico" 200 \
+  "Content-Type: image/vnd.microsoft.icon" ""
+test_method "Static mjs content type     " "GET" "static/mod.mjs" 200 \
+  "Content-Type: text/javascript" ""
+test_method "Static map content type     " "GET" "static/data.map" 200 \
+  "Content-Type: application/json" ""
+test_method "Static manifest content type" "GET" "static/site.webmanifest" 200 \
+  "Content-Type: application/manifest+json" ""
+test_method "Static wasm content type    " "GET" "static/app.wasm" 200 \
+  "Content-Type: application/wasm" ""
+test_method "Static mp4 content type     " "GET" "static/clip.mp4" 200 \
+  "Content-Type: video/mp4" ""
+test_method "Static webm content type    " "GET" "static/clip.webm" 200 \
+  "Content-Type: video/webm" ""
+test_method "Static mpeg content type    " "GET" "static/clip.mpeg" 200 \
+  "Content-Type: video/mpeg" ""
+test_method "Static mp3 content type     " "GET" "static/audio.mp3" 200 \
+  "Content-Type: audio/mpeg" ""
+test_method "Static midi content type    " "GET" "static/mid.mid" 200 \
+  "Content-Type: audio/midi" ""
+test_method "Static csv content type     " "GET" "static/data.csv" 200 \
+  "Content-Type: text/csv" ""
+test_method "Static md content type      " "GET" "static/note.md" 200 \
+  "Content-Type: text/markdown" ""
+test_method "Static vtt content type     " "GET" "static/cues.vtt" 200 \
+  "Content-Type: text/vtt" ""
+test_method "Static zip content type     " "GET" "static/archive.zip" 200 \
+  "Content-Type: application/zip" ""
 
-# The favicon is answered from the embedded blob, before routing and the ignore
-# list ever run.
+# A favicon.ico in the app root wins over the embedded blob: the app's own
+# bytes are served, not the bicycle.
+if [[ "$FS_SHARED" == 1 ]]; then
+  app_favicon_line=$LINENO
+  _test_start_ms=$(now_ms)
+  app_favicon_file="$(dirname "$0")/favicon.ico"
+  rm -f "$app_favicon_file"
+  printf 'app-favicon' > "$app_favicon_file"
+  app_favicon_head=$(curl -sI --max-time 5 "http://$HOST:$PORT/favicon.ico" |
+    tr -d '\r')
+  app_favicon_body=$(curl -s --max-time 5 "http://$HOST:$PORT/favicon.ico")
+  rm -f "$app_favicon_file"
+  if [[ "$app_favicon_head" == *" 200 "* &&
+        "$app_favicon_head" == *"Content-Type: image/vnd.microsoft.icon"* &&
+        "$app_favicon_body" == "app-favicon" ]]; then
+    report_result "App favicon beats embedded   " "$app_favicon_line" 0
+  else
+    report_result "App favicon beats embedded   " "$app_favicon_line" 1 \
+      "Expected the app's bytes. Got head:'${app_favicon_head//$'\n'/ }' body:'${app_favicon_body:0:20}'"
+  fi
+else
+  skip_test "App favicon beats embedded   " \
+    "server filesystem is not shared with this script"
+fi
+
+# With no such file in the root, the favicon is answered from the embedded
+# blob, before routing and the ignore list ever run.
 test_method "Favicon served embedded     " "GET" "favicon.ico" 200 \
-  "Content-Type: image/x-icon" ""
+  "Content-Type: image/vnd.microsoft.icon" ""
 
 # "OPTIONS *" (asterisk-form) is legal HTTP but names no path below the app
 # root, so the router must refuse it with 400 instead of building a path from

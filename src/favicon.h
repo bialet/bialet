@@ -1,9 +1,9 @@
 #include <stddef.h>
 #define FAVICON_SIZE 15406
 #define FAVICON_RESPONSE                                                            \
-  "HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nX-Content-Type-Options: "       \
-  "nosniff\r\nContent-Length: "                                                     \
-  "15406\r\nConnection: close\r\n\r\n"
+  "HTTP/1.1 200 OK\r\nContent-Type: image/vnd.microsoft.icon\r\n"                   \
+  "X-Content-Type-Options: nosniff\r\nContent-Length: 15406\r\nConnection: "        \
+  "close\r\n\r\n"
 // array size is 15406
 const unsigned char favicon_data[] = {
     0x00, 0x00, 0x01, 0x00, 0x03, 0x00, 0x10, 0x10, 0x00, 0x00, 0x01, 0x00, 0x20,

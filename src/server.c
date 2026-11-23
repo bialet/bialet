@@ -461,6 +461,22 @@ static int is_regular_file_no_follow(const char* path, struct stat* st) {
 #endif
 }
 
+// The embedded favicon is a fallback, not a fixture: an app that ships its own
+// /favicon.ico gets that file served by the normal static path, so the tab icon
+// can carry the app's brand. lstat, like every other static probe, so a
+// symlinked favicon.ico is not traversed and the embedded blob still answers.
+static int app_has_favicon(void) {
+  if(bialet_config.full_root_dir == NULL)
+    return 0;
+  char path[PATH_SIZE];
+  int  n =
+      snprintf(path, sizeof(path), "%s/favicon.ico", bialet_config.full_root_dir);
+  struct stat st;
+  if(n < 0 || (size_t)n >= sizeof(path))
+    return 0;
+  return is_regular_file_no_follow(path, &st);
+}
+
 // One lstat (stat on Windows, which is what is_regular_file_no_follow above
 // uses there) for a caller that needs both the "is it a directory?" and the "is
 // it a regular file?" answer. Those used to be two helpers each issuing its own
@@ -1120,23 +1136,72 @@ const char* get_http_status_description(int status_code) {
 #define STATIC_TYPE(t)                                                              \
   (char*)("Content-Type: " t "\r\nX-Content-Type-Options: nosniff\r\n")
 char* get_content_type(const char* path) {
+  // Types follow MDN's common MIME types list, except where it points at a
+  // specification: text/javascript for JavaScript (RFC 9239) and
+  // image/vnd.microsoft.icon for .ico (IANA), not their legacy spellings.
+  // Text types name UTF-8 explicitly; the framework writes UTF-8 everywhere.
   static const struct {
     const char* ext;
     char*       header;
   } types[] = {
       {".html", BIALET_HEADERS},
       {".htm", BIALET_HEADERS},
-      {".css", STATIC_TYPE("text/css")},
-      {".js", STATIC_TYPE("application/javascript")},
+      {".css", STATIC_TYPE("text/css; charset=UTF-8")},
+      {".js", STATIC_TYPE("text/javascript")},
+      {".mjs", STATIC_TYPE("text/javascript")},
       {".json", STATIC_TYPE("application/json")},
+      {".jsonld", STATIC_TYPE("application/ld+json")},
+      {".map", STATIC_TYPE("application/json")},
+      {".webmanifest", STATIC_TYPE("application/manifest+json")},
+      {".wasm", STATIC_TYPE("application/wasm")},
       {".jpg", STATIC_TYPE("image/jpeg")},
       {".jpeg", STATIC_TYPE("image/jpeg")},
       {".png", STATIC_TYPE("image/png")},
+      {".apng", STATIC_TYPE("image/apng")},
       {".gif", STATIC_TYPE("image/gif")},
+      {".webp", STATIC_TYPE("image/webp")},
+      {".avif", STATIC_TYPE("image/avif")},
+      {".bmp", STATIC_TYPE("image/bmp")},
+      {".tif", STATIC_TYPE("image/tiff")},
+      {".tiff", STATIC_TYPE("image/tiff")},
+      {".ico", STATIC_TYPE("image/vnd.microsoft.icon")},
       {".svg", STATIC_TYPE("image/svg+xml")},
-      {".txt", STATIC_TYPE("text/plain")},
+      {".woff2", STATIC_TYPE("font/woff2")},
+      {".woff", STATIC_TYPE("font/woff")},
+      {".ttf", STATIC_TYPE("font/ttf")},
+      {".otf", STATIC_TYPE("font/otf")},
+      {".eot", STATIC_TYPE("application/vnd.ms-fontobject")},
+      {".mp4", STATIC_TYPE("video/mp4")},
+      {".m4v", STATIC_TYPE("video/mp4")},
+      {".webm", STATIC_TYPE("video/webm")},
+      {".ogv", STATIC_TYPE("video/ogg")},
+      {".ogx", STATIC_TYPE("application/ogg")},
+      {".mov", STATIC_TYPE("video/quicktime")},
+      {".avi", STATIC_TYPE("video/x-msvideo")},
+      {".mpeg", STATIC_TYPE("video/mpeg")},
+      {".mp3", STATIC_TYPE("audio/mpeg")},
+      {".aac", STATIC_TYPE("audio/aac")},
+      {".wav", STATIC_TYPE("audio/wav")},
+      {".ogg", STATIC_TYPE("audio/ogg")},
+      {".oga", STATIC_TYPE("audio/ogg")},
+      {".opus", STATIC_TYPE("audio/ogg")},
+      {".m4a", STATIC_TYPE("audio/mp4")},
+      {".weba", STATIC_TYPE("audio/webm")},
+      {".flac", STATIC_TYPE("audio/flac")},
+      {".mid", STATIC_TYPE("audio/midi")},
+      {".midi", STATIC_TYPE("audio/midi")},
+      {".txt", STATIC_TYPE("text/plain; charset=UTF-8")},
+      {".csv", STATIC_TYPE("text/csv; charset=UTF-8")},
+      {".md", STATIC_TYPE("text/markdown; charset=UTF-8")},
+      {".vtt", STATIC_TYPE("text/vtt; charset=UTF-8")},
+      {".ics", STATIC_TYPE("text/calendar; charset=UTF-8")},
       {".xml", STATIC_TYPE("application/xml")},
+      {".xhtml", STATIC_TYPE("application/xhtml+xml")},
+      {".rss", STATIC_TYPE("application/rss+xml")},
+      {".atom", STATIC_TYPE("application/atom+xml")},
       {".pdf", STATIC_TYPE("application/pdf")},
+      {".zip", STATIC_TYPE("application/zip")},
+      {".gz", STATIC_TYPE("application/gzip")},
   };
   const char* ext = strrchr(path, '.');
   if(ext != NULL) {
@@ -1790,7 +1855,10 @@ void handle_client(bialet_socket_t client_socket) {
     access_log_begin(hm->method.str, hm->uri.str, request_started);
   }
 
-  if(strcmp("/favicon.ico", hm->uri.str) == 0) {
+  if(strcmp("/favicon.ico", hm->uri.str) == 0 && !app_has_favicon()) {
+    // An app-provided /favicon.ico was handled by letting the request fall
+    // through to the router, which serves it as a static file with its own
+    // bytes. The embedded blob only answers when the root has no such file.
     // Head and body in one writev, like every other response: two send() calls
     // put a chunk boundary where the bytes never had one. HEAD still gets the
     // GET head with no content, so the access log records 0 body bytes.

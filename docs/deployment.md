@@ -187,8 +187,16 @@ access control it has.
 
 ## Static Files
 
-Bialet serves static files (CSS, JS, images, fonts) directly. For better
-performance, configure your reverse proxy to:
+Bialet serves static files (CSS, JS, images, fonts) directly. The
+`Content-Type` comes from the extension, case-insensitively, following MDN's
+common MIME types: fonts as `font/woff2`, `font/woff`, `font/ttf`, `font/otf`,
+JavaScript as `text/javascript`, icons as `image/vnd.microsoft.icon`, plus
+images, audio and video, `application/wasm`, web manifests, source maps, CSV and
+Markdown. Text types name UTF-8 explicitly. Anything else is sent as
+`application/octet-stream`. Every static response also carries
+`X-Content-Type-Options: nosniff`. `/favicon.ico` is served from the app root
+when you ship one there; otherwise Bialet answers with its embedded icon. For
+better performance, configure your reverse proxy to:
 
 - **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
 
@@ -273,7 +281,7 @@ Virtual host configuration:
     # Gzip
     <IfModule mod_deflate.c>
         AddOutputFilterByType DEFLATE text/html text/css text/javascript
-        AddOutputFilterByType DEFLATE application/javascript application/json
+        AddOutputFilterByType DEFLATE application/json
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
@@ -428,7 +436,7 @@ block — but prefer renaming those files.
     # Gzip
     <IfModule mod_deflate.c>
         AddOutputFilterByType DEFLATE text/html text/css text/javascript
-        AddOutputFilterByType DEFLATE application/javascript application/json
+        AddOutputFilterByType DEFLATE application/json
         AddOutputFilterByType DEFLATE image/svg+xml
     </IfModule>
 
