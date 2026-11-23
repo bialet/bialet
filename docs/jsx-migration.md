@@ -85,22 +85,29 @@ var tasks = Tasks.list().map { |t| t.withIcon }   // pre-process the list
 return <ul>{{ tasks.map { |t| <li>{{ t.icon }} {{ t.description }}</li> } }}</ul>
 ```
 
-### The body must start on the line after `{`
+### HTML bodies may start on the next line; code bodies may not
 
-A multi-line block whose body is not a single expression on the `{` line
-returns `null` silently — the output is empty and nothing tells you why:
+An HTML body is an expression, never a statement, so it may start on the line
+after `{` and still be the callback's value:
 
 ```wren
-// WRONG — the callback body breaks onto its own line, returns null, renders empty
 return <div>{{ items.map { |item|
   <li>{{ item }}</li>
 } }}</div>
+```
 
-// CORRECT — the expression starts on the {{ line; the HTML string
-// itself may span many lines
-return <div>{{ items.map { |item| <li>
-  {{ item.description }}
-</li> } }}</div>
+A **code** body on the next line is a statement list whose value is discarded,
+so the callback returns `null`; inside `{{ }}` the compiler warns and the
+output is empty:
+
+```wren
+// WRONG — the body is code on its own line, so its value is discarded
+return <div>{{ items.map { |item|
+  item.description
+} }}</div>
+
+// CORRECT — put the expression on the {{ line
+return <div>{{ items.map { |item| item.description } }}</div>
 ```
 
 ### Empty lists render empty
@@ -240,10 +247,10 @@ tags inside a single literal have to balance.
 **Pitfall:** instance methods need `new()`. `Template.layout(...)` looks for
 a static method and fails. Always instantiate first.
 
-**Pitfall:** a method body is an expression body only when the expression
-starts on the same line as `{`. A statement body on the following line
-returns `null` silently — the component renders as empty with no error.
-Keep the opening HTML tag on the method's first line.
+**Pitfall:** an HTML method body may start on the next line, but a code body
+must start on the same line as `{`. A statement body on the following line
+returns `null`; outside a template that is silent, and inside `{{ }}` the
+compiler warns. Keep a code body's expression on the method's first line.
 
 ---
 

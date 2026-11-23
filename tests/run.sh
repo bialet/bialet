@@ -366,6 +366,46 @@ else
   skip_test "-r blocks traversal imports " "requires local binary access"
 fi
 
+# Tests - a block body may start with HTML on the line after "{"
+# The natural multi-line map body used to fail with a cascade of "Expect
+# newline after statement" errors. HTML is an expression, never a statement, so
+# it is the block's value wherever it starts.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  mb_line=$LINENO
+  mb_out=$("$r_exec" -q -r \
+    $'return <ul>{{ [1,2].map { |x|\n  <li>{{ x }}</li>\n} }}</ul>' 2>&1)
+  mb_status=$?
+  if [[ "$mb_status" -eq 0 && "$mb_out" == "<ul><li>1</li><li>2</li></ul>" ]]; then
+    report_result "Multiline HTML block body" "$mb_line" 0
+  else
+    report_result "Multiline HTML block body" "$mb_line" 1 \
+      "Expected '<ul><li>1</li><li>2</li></ul>', got exit $mb_status output '$mb_out'"
+  fi
+else
+  skip_test "Multiline HTML block body" "requires local binary access"
+fi
+
+# Tests - a code body on the line after "{" discards its value, and in a
+# template that must be loud instead of a silent empty <ul>. Outside a template
+# it stays silent: Cron and migration callbacks return null by design.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  mw_line=$LINENO
+  mw_out=$("$r_exec" -q -r \
+    $'return <ul>{{ [1,2].map { |x|\n  x\n} }}</ul>' 2>&1)
+  mw_status=$?
+  mw_quiet=$("$r_exec" -q -r \
+    $'var f = Fn.new { |x|\n  x\n}\nreturn "ok"' 2>&1)
+  if [[ "$mw_status" -eq 0 && "$mw_out" == *"Warning:"*"block body starts on the line after"* ]] \
+     && [[ "$mw_quiet" != *"Warning:"* ]]; then
+    report_result "Discarded block body warns" "$mw_line" 0
+  else
+    report_result "Discarded block body warns" "$mw_line" 1 \
+      "Expected a warning in a template and none outside it, got exit $mw_status template '$mw_out' outside '$mw_quiet'"
+  fi
+else
+  skip_test "Discarded block body warns" "requires local binary access"
+fi
+
 # Tests - BIALET_TIMEZONE applies to every VM
 # The zone used to be installed by Db.init, which only runs in the migration VM;
 # each request starts a fresh VM and cron another, so both kept the process zone.

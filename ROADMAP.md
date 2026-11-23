@@ -179,14 +179,12 @@ All of the leads below are closed. The notes stay for the record.
       `-d`, `umask 0077`, a hardened systemd unit, the proxy block, a
       health-gated atomic swap, backups and rollback. `deployment.md` stays the
       per-piece reference.
-- [ ] **Warn when a template block callback returns null** — a `map` callback
-      whose body is not a single expression (`{ |x|` then a newline) returns
-      `null` and the interpolation renders empty output with no error. Warn
-      only for blocks evaluated while rendering a template, so a silent empty
-      `<ul>` is distinguishable from an empty query result. Other callbacks
-      must keep returning `null` silently: `Cron.every`/`Cron.at` hand the job
-      result straight to `System.print`, and `Db.migrate`'s callback returns
-      nothing by design.
+- [x] **Multi-line block bodies in templates** — an HTML body may start on the
+      line after `{`, so the natural multi-line `map` renders instead of
+      failing with a cascade of "Expect newline after statement" errors. A code
+      body that starts there is still a statement body whose value is
+      discarded; inside `{{ }}` the compiler warns once per file, while outside
+      a template it stays silent (Cron and migrations return `null` by design).
 - [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
