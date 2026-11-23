@@ -176,10 +176,14 @@ All of the leads below are closed. The notes stay for the record.
       recommended hosted pattern: immutable release root + external DB via
       `-d` + `umask 0077`. `deployment.md` covers the pieces; this would be
       the full recipe.
-- [ ] **Warn when a block callback returns null** — a multi-statement `map`
-      callback (or any block whose body is not a single expression) renders
-      empty output with no error. Log a warning so a silent empty `<ul>` is
-      distinguishable from an empty query result.
+- [ ] **Warn when a template block callback returns null** — a `map` callback
+      whose body is not a single expression (`{ |x|` then a newline) returns
+      `null` and the interpolation renders empty output with no error. Warn
+      only for blocks evaluated while rendering a template, so a silent empty
+      `<ul>` is distinguishable from an empty query result. Other callbacks
+      must keep returning `null` silently: `Cron.every`/`Cron.at` hand the job
+      result straight to `System.print`, and `Db.migrate`'s callback returns
+      nothing by design.
 - [ ] **WebAssembly target** — Compile Bialet apps to Wasm for edge deployment
 - [ ] **MySQL and PostgreSQL support** — Optional alternative database backend
 - [ ] **HTTPS / TLS support** — Native TLS in the server binary (no reverse
