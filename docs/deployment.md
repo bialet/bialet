@@ -4,6 +4,11 @@ Bialet is a single binary — copy it to your server alongside your `.wren`
 files and you're deployed. This guide covers setting up a production-ready
 environment with a reverse proxy, systemd, and Docker.
 
+For the whole setup assembled in one place — immutable release directories, an
+external database, and versioned upgrades — see
+[Hosted Deployment](hosted-deployment.md). This page stays the reference for
+each piece.
+
 ## Why a Reverse Proxy?
 
 Bialet speaks **HTTP/1.1** and does not support HTTPS natively. Every

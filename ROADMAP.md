@@ -172,10 +172,11 @@ All of the leads below are closed. The notes stay for the record.
 
 ## Someday maybe
 
-- [ ] **Official "hosted" deployment recipe** — a doc page showing the
-      recommended hosted pattern: immutable release root + external DB via
-      `-d` + `umask 0077`. `deployment.md` covers the pieces; this would be
-      the full recipe.
+- [x] **Official "hosted" deployment recipe** — `docs/hosted-deployment.md`
+      assembles the pattern end to end: immutable release root, external DB via
+      `-d`, `umask 0077`, a hardened systemd unit, the proxy block, a
+      health-gated atomic swap, backups and rollback. `deployment.md` stays the
+      per-piece reference.
 - [ ] **Warn when a template block callback returns null** — a `map` callback
       whose body is not a single expression (`{ |x|` then a newline) returns
       `null` and the interpolation renders empty output with no error. Warn
