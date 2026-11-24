@@ -41,4 +41,9 @@ const char* date_get_default_zone(void);
 // message() would deadlock.
 struct tm* date_default_localtime(const time_t* now, struct tm* out);
 
+// Clears the -T determinism hooks: the frozen clock (Test.freezeTime) and the
+// seeded PRNG (Test.randomSeed). The runner calls it before every test file so
+// one file cannot leak its frozen clock or random stream into the next.
+void bialet_test_reset_hooks(void);
+
 #endif

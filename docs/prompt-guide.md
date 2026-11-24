@@ -382,7 +382,11 @@ this guide uses the **`_app/` folder**, which keeps the project root clean:
 ```
 my-app/
 ├── _app/                    # Protected folder (never served directly)
-│   ├── template.wren        # Site-wide layout (header, footer, nav)
+│   ├── template.wren        # Page shell: Layout.page(title, user, content)
+│   ├── components/          # Reusable markup, one class per file
+│   │   ├── cards.wren       # Cards.tool(item), Cards.mission(row)
+│   │   ├── hud.wren         # Hud.state(game)
+│   │   └── nav.wren         # Nav.bar(user)
 │   ├── migration.wren       # Database schema migrations
 │   ├── domain.wren          # Domain classes (models)
 │   └── cron.wren            # Scheduled tasks (optional)
@@ -402,10 +406,38 @@ my-app/
     └── style.css            # Static CSS files
 ```
 
+A route file is thin: read the input, call the domain, render a component. Markup
+that two routes share belongs in `_app/components/`, not in both files.
+
 > **Note:** Bialet also allows flat root-level files instead —
 > `_template.wren`, `_migration.wren`, `_domain.wren`, `_cron.wren`. Both
 > conventions work identically; pick one and stay consistent within a
 > project. This guide uses `_app/` throughout.
+
+### Structuring Larger Apps
+
+Split by concern, not by size:
+
+- **Route files are controllers.** One `.wren` file per URL: read input, call
+  the domain, `return` a component. If a route owns a `<li>` or a card that
+  another route also needs, that markup is in the wrong place.
+- **Components render.** One class per region of the page — `Layout` in
+  `template.wren`, `Nav`, `Hud` and `Cards` in `_app/components/`, one file
+  each. A component takes its data as parameters and returns an inline HTML
+  block.
+- **Domain classes decide.** Rules and derived values (`game.fuelLow`,
+  `Mission.upcoming(limit)`) live in `_app/domain.wren`. A page's query can run
+  in the route or behind a `static` domain method; it never runs inside a
+  component.
+- **Shared helpers:** presentation used by two components is a component
+  method; a rule used by two routes is a domain method; a permission check is a
+  small class such as `Auth` under `_app/`.
+- **Naming:** the class names the region (`Cards`), the method names the item
+  (`Cards.tool`, `Cards.mission`). Split a growing layout class into `Cards`,
+  `Hud`, `Nav` and `Layout` instead of adding methods to one god class.
+- **Repeated markup is app debt.** If the same card, status bar or navigation
+  appears in two pages, extract a method and call it from both — the framework
+  will not do it for you.
 
 ### What Bialet Does NOT Have
 
@@ -414,6 +446,8 @@ Bialet is intentionally simple. These concepts **do not exist**:
 - **No `main.wren` entry point** — each `.wren` file is executed based on the URL
 - **No `routes/` folder** — files ARE the routes (file-based routing)
 - **No middleware system** — put shared logic in `_app/` helper classes
+- **No component framework** — a component is a plain Wren class whose method
+  returns inline HTML. There is no registry, no props system and no JSX.
 - **No `validators/` folder** — validation goes in domain classes or inline
 - **No `static/` folder convention** — static files (css, js, images) go anywhere, as long as they don't start with `_` or `.`
 - **No `db/schema.sql`** — schema is defined in `_app/migration.wren`
@@ -469,10 +503,12 @@ if (!article) {
   return "<h1>Not found</h1>"
 }
 
-return Layout.render(<article>
-  <h1>{{ article["title"] }}</h1>
-  {{ article["body"] }}
-</article>)
+return Layout.page(article["title"], null,
+  <article>
+    <h1>{{ article["title"] }}</h1>
+    {{ article["body"] }}
+  </article>
+)
 ```
 
 One file serves every article — `/article?id=1`, `/article?id=2`, etc. — with
@@ -496,7 +532,8 @@ if (userId == null) {
 var user = User.find(userId)
 if (!user) {
   Response.status(404)
-  return Layout.render(<main><h1>User not found</h1></main>)
+  return Layout.page("Not found", null,
+    <p>User not found</p>)
 }
 ```
 
@@ -508,29 +545,26 @@ the folder; the deepest match wins.
 
 ## Views: Templates in `_app/template.wren`
 
+A layout is a component: a class with a method that returns the page shell and
+takes the body as a parameter.
+
 ```wren
 // _app/template.wren
-class Layout {
-  static render(content) { Layout.render(content, "My App") }
+import "/_app/components/nav" for Nav
 
-  static render(content, title) { <!doctype html>
+class Layout {
+  static page(title, user, content) { <!doctype html>
     <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{{ title }}</title>
+        <title>{{ title }} · My App</title>
       </head>
       <body>
-        <header>
-          <nav>
-            <ul><li><strong>My App</strong></li></ul>
-            <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/about">About</a></li>
-            </ul>
-          </nav>
-        </header>
-        {{ content }}
+        {{ Nav.bar(user) }}
+        <main>
+          {{ content }}
+        </main>
         <footer>
           <small>&copy; My App</small>
         </footer>
@@ -543,16 +577,16 @@ class Layout {
 // index.wren
 import "_app/template" for Layout
 
-return Layout.render(
-  <main>
-    <h1>Welcome</h1>
-  </main>
+var user = `SELECT id, name FROM users WHERE id = ?`.first(Session.new().get("userId"))
+
+return Layout.page("Welcome", user,
+  <h1>Welcome</h1>
 )
 ```
 
 > **Pitfall:** if `Layout`'s methods are `static` (as above), call
-> `Layout.render(...)` directly. If you instead define instance methods, you
-> must instantiate first: `Layout.new().render(...)`.
+> `Layout.page(...)` directly. If you instead define instance methods, you
+> must instantiate first: `Layout.new().page(...)`.
 
 **Markup is not a string.** Write the tags raw inside the method body, as in the
 example: don't concatenate fragments (`"<div>" + value + "</div>"`) and don't
@@ -560,6 +594,83 @@ open a quoted string to hold markup for `{{ }}` (inside a string it renders
 literally, and a real newline there is a syntax error). Tags are balanced at
 compile time: a missing or an extra close tag is an error, and any tag may nest
 any other, including its own name.
+
+### Components
+
+A component is a class whose method returns an inline HTML block. There is no
+registry and no props object: pass the data as parameters and compose by calling
+one method from another inside `{{ }}`.
+
+```wren
+// _app/components/cards.wren
+class Cards {
+  static tool(item) { <article class="card tool">
+    <h3>{{ item["name"] }}</h3>
+    <p class="meta">Wear {{ item["wear"] }} of 100</p>
+  </article> }
+
+  static mission(row) { <li class="mission">
+    <a href="/mission?id={{ row["id"] }}">{{ row["title"] }}</a>
+    <span class="reward">{{ row["reward"] }} gold</span>
+  </li> }
+}
+```
+
+```wren
+// _app/components/hud.wren
+class Hud {
+  static state(game) { <aside class="hud">
+    <span>Day {{ game["day"] }}</span>
+    <span>Fuel {{ game["fuel"] }}</span>
+    <span>Credits {{ game["credits"] }}</span>
+  </aside> }
+}
+```
+
+```wren
+// _app/components/nav.wren
+class Nav {
+  static bar(user) { <nav>
+    <a href="/">Dashboard</a>
+    <a href="/missions">Missions</a>
+    {{ user && <span class="who">{{ user["name"] }}</span> }}
+  </nav> }
+}
+```
+
+```wren
+// dashboard.wren
+import "_app/template" for Layout
+import "_app/components/cards" for Cards
+import "_app/components/hud" for Hud
+
+var userId = Session.new().get("userId")
+var user = `SELECT id, name FROM users WHERE id = ?`.first(userId)
+if (!user) return Response.redirect("/login")
+
+var game = `SELECT day, fuel, credits FROM games WHERE user_id = ?`.first(userId)
+var tools = `SELECT id, name, wear FROM tools WHERE user_id = ?`.fetch(userId)
+
+return Layout.page("Dashboard", user,
+  <section class="dashboard">
+    {{ Hud.state(game) }}
+    <div class="grid">{{ tools.map { |t| Cards.tool(t) } }}</div>
+  </section>
+)
+```
+
+- **Pass data in.** A component takes a row, Map or string as a parameter. It
+  does not read `Request`, `Session` or the database: the route fetches and
+  decides, the component renders.
+- **Compose through `{{ }}`.** `{{ Nav.bar(user) }}` and
+  `{{ tools.map { |t| Cards.tool(t) } }}` are the whole composition mechanism.
+- **A component returns `HtmlNode`.** Its markup is inserted as-is; plain values
+  interpolated inside it are still escaped.
+- **Reuse, do not copy.** A card, status bar or nav rendered by two pages is one
+  method called twice. `Layout` is a component too.
+- **Start an HTML argument on a new line.** `Layout.page("X", null, <main>...)`
+  is a parse error: after a comma the lexer reads `<` as less-than. Put the
+  literal on the next line.
 
 ## Database
 
@@ -813,8 +924,8 @@ if (Request.isPost) {
 var users = User.all()
 
 // === VIEW ===
-return Layout.render(
-  <main>
+return Layout.page("Users", null,
+  <section>
     <h1>Users</h1>
     <table>
       <thead><tr><th>Name</th><th>Email</th></tr></thead>
@@ -827,7 +938,7 @@ return Layout.render(
       <input type="email" name="email" required />
       <button type="submit">Create User</button>
     </form>
-  </main>
+  </section>
 )
 ```
 
@@ -1255,11 +1366,11 @@ class Task {
 ```wren
 // _app/template.wren
 class Layout {
-  static render(content) { <!doctype html>
+  static page(title, content) { <!doctype html>
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title>Todo</title>
+        <title>{{ title }}</title>
       </head>
       <body>
         <main>{{ content }}</main>
@@ -1282,27 +1393,28 @@ if (Request.isPost) {
 
 var tasks = Task.list()
 
-return Layout.render(<main>
-  <h1>Todo List</h1>
-  <form method="post">
-    <input name="description" placeholder="What needs to be done?" required />
-    <button type="submit">Add</button>
-  </form>
-  <ul>
-    {{ tasks.map{|task| <li>
-      <form method="post" action="/toggle" style="display:inline">
-        <input type="hidden" name="id" value="{{ task.id }}" />
-        <button>{{ task.finished ? "✓" : "○" }}</button>
-      </form>
-      <span class="{{ task.finished ? "done" : "" }}">{{ task.description }}</span>
-      <form method="post" action="/delete" style="display:inline">
-        <input type="hidden" name="id" value="{{ task.id }}" />
-        <button>✕</button>
-      </form>
-    </li>} }}
-  </ul>
-  {{ tasks.isEmpty && <p>No tasks yet. Add your first one above.</p> }}
-</main>)
+return Layout.page("Todo List",
+  <section>
+    <h1>Todo List</h1>
+    <form method="post">
+      <input name="description" placeholder="What needs to be done?" required />
+      <button type="submit">Add</button>
+    </form>
+    <ul>
+      {{ tasks.map{|task| <li>
+        <form method="post" action="/toggle" style="display:inline">
+          <input type="hidden" name="id" value="{{ task.id }}" />
+          <button>{{ task.finished ? "✓" : "○" }}</button>
+        </form>
+        <span class="{{ task.finished ? "done" : "" }}">{{ task.description }}</span>
+        <form method="post" action="/delete" style="display:inline">
+          <input type="hidden" name="id" value="{{ task.id }}" />
+          <button>✕</button>
+        </form>
+      </li>} }}
+    </ul>
+    {{ tasks.isEmpty && <p>No tasks yet. Add your first one above.</p> }}
+  </section>)
 ```
 
 ```wren
@@ -1332,15 +1444,30 @@ bialet -T            # the whole suite
 bialet -T -q         # quiet, CI-friendly
 ```
 
-The runner prepends its own prelude, which defines `Test` and `Tests`. Never
-import them, and do not check a `_tests/*.wren` file with `bialet -t`: outside
-the runner the prelude does not exist, so the compiler reports
-`Test: Variable is used but not defined`. The tree walk (`bialet check`) skips
-`_tests/` for that reason; a test file is checked by running the suite.
+The runner prepends its own prelude, which defines `Test`, `Tests` and
+`Fixture`. Never import them, and do not check a `_tests/*.wren` file with
+`bialet -t`: outside the runner the prelude does not exist, so the compiler
+reports `Test: Variable is used but not defined`. The tree walk (`bialet check`)
+skips `_tests/` for that reason; a test file is checked by running the suite.
 
-`_tests/_init.wren`, when present, runs once before every test file: seed rows
-and set configuration there. Its variables are global to every test file, so
-give them unique names and do not collide with `UNIQUE` keys.
+Each test file is its own module: relative imports resolve from `_tests/`, and
+the variables `_init.wren` declares stay visible in the file.
+
+```wren
+// _tests/cards.wren
+import "../_app/components/cards" for Cards
+
+var html = Cards.tool({"name": "Hammer", "wear": "40"}).toString
+Test.assert(html.contains("Hammer"), "the card renders its name")
+```
+
+A component returns `HtmlNode`; call `.toString` before asserting on the markup.
+
+`_tests/_init.wren`, when present, runs before every test file, inside that
+file's database savepoint: seed rows and set configuration there, and keep its
+top-level `var` names unique. Each file starts from the migrated database plus
+what `_init.wren` seeds, and everything it writes is rolled back when the file
+ends — file order does not matter.
 
 ```wren
 // _tests/tasks.wren
@@ -1349,14 +1476,33 @@ Test.post("/", {"title": "Comprar pan"}).status(302)
 Test.get("/").contains("Comprar pan")
 ```
 
+`Fixture` builds a request without the router, for code that reads `Request` or
+`Session`. Call `apply()`, then assert on `status`, `body` or `headers`:
+
+```wren
+var fixture = Fixture.post("/tasks", {"title": "Buy bread"}).apply()
+
+Tasks.create()   // imported code reads Request.post(...)
+
+Test.assert(fixture.status == 302, "the POST redirects")
+Test.assert(fixture.header("location") == "/tasks", "it redirects to the list")
+```
+
+- **Stub outbound HTTP.** `Test.stubHttp(url, {...})` replaces the response for
+  a matching URL; stubs are process-wide, so routes see them. Read
+  `Test.httpCalls` and clear them with `Test.clearHttpStubs()`. An unmatched URL
+  hits the real network.
+- **Freeze time, seed randomness.** `Test.freezeTime(epoch)` (or a `Date`, or
+  `"YYYY-MM-DD HH:MM:SS"`), `Test.unfreezeTime()`, `Test.randomSeed(n)`,
+  `Test.randomSeed()`. Both reset before every file. `freezeTime` does not
+  affect SQLite `datetime('now')`.
 - Assert the flow the user asked for: a POST that writes, then a GET that reads
   the same value back. A page that renders is not a flow that works.
 - Add a boundary case (empty table, today against a future date, the first and
   last day of a month) instead of one mid-month date.
 - `Test.headers` does not exist: drop the header and assert the rest, or gate
   the check on `Config.get("test_mode")` set in `_init.wren`.
-- Every file shares one temporary database per run: do not assume isolation,
-  and never weaken an assertion to make a red test go green.
+- Never weaken an assertion to make a red test go green.
 - Keep the suite quiet: no `System.print` of whole tables and no leftover
   `debug*.wren` files.
 
@@ -1374,7 +1520,8 @@ bialet -T                         # run the test suite in _tests/
 ## Summary
 
 1. **Code Style**: 2-space indentation, single-line methods when possible
-2. **Structure**: `_app/` folder for template, migrations, and domain classes
+2. **Structure**: `_app/` folder for the template, components, migrations and
+   domain classes; route files stay thin
 3. **No extra folders**: no `routes/`, `validators/`, `middleware/`, `static/`
 4. **Routing**: query parameters by default (`Request.get`); `<folder>.wren` +
    `Request.route(n)` only for path-based URLs, as an exception
@@ -1392,5 +1539,6 @@ bialet -T                         # run the test suite in _tests/
     CSS file (or a classless framework such as µCSS or Beak CSS) only when the
     page needs presentation
 13. **Tests**: `_tests/` with the fluent `Test.get/post` API, run with
-    `bialet -T`; `Test` comes from the runner, so never import it or validate a
-    test file with `bialet -t`
+    `bialet -T`; each file is its own module with its own database savepoint,
+    and `Test`, `Tests` and `Fixture` come from the runner, so never import
+    them or validate a test file with `bialet -t`

@@ -79,6 +79,12 @@ WrenConfiguration          wren_config;
 static struct BialetConfig bialet_config;
 sqlite3*                   db;
 
+// Set by bialet_run_tests() around each run_test_file() call. The per-test-file
+// savepoint is the runner's transaction, and Test.get handlers run inside it;
+// the end-of-run cleanup in bialet_run_file() must not roll it back, or the
+// rollback that gives each file a clean start disappears.
+static int test_savepoint_active = 0;
+
 // Aggregate ceilings for unprocessed uploads stored in BIALET_FILES. The
 // per-request caps only bound one request; without an aggregate bound an
 // unauthenticated client could keep posting 100-part bodies and grow the shared
@@ -714,10 +720,10 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
       case WREN_ERROR_STACK_TRACE:
         // wrenDebugPrintStackTrace() never reports frames from the anonymous
         // core module (where the Test DSL itself lives), only named modules.
-        // The test file runs as module "main", so the last (outermost)
-        // frame reported here is always its own top-level line -- the exact
-        // call site of the failing assertion, not internals of Test.status()
-        // and friends.
+        // The test file runs as a module named by its own path, so the last
+        // (outermost) frame reported here is always its own top-level line --
+        // the exact call site of the failing assertion, not internals of
+        // Test.status() and friends.
         test_fail_line = line;
         break;
     }
@@ -2801,18 +2807,23 @@ static TestResult run_test_file(const char* testPath, const char* initPath,
   // Initialize Response and Date in main module
   wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
 
-  // Run init file if provided
+  // A test file is its own module, named by its path. Relative imports in the
+  // file then resolve against _tests/ ("../_app/components"), while absolute
+  // imports ("/_app/components") still resolve against the app root. _init.wren
+  // is interpreted under the SAME module name so the top-level vars it declares
+  // stay visible to the file: this is a second chunk of code for one module,
+  // not a separate import.
   if(initPath != NULL) {
     char* initCode = read_file(initPath);
     if(initCode != NULL) {
-      wrenInterpret(vm, MAIN_MODULE_NAME, initCode);
+      wrenInterpret(vm, testPath, initCode);
       free(initCode);
     }
   }
 
-  // Run test code in main module
+  // Run test code in the test file's module
   test_capture_begin();
-  WrenInterpretResult result = wrenInterpret(vm, MAIN_MODULE_NAME, code);
+  WrenInterpretResult result = wrenInterpret(vm, testPath, code);
   int                 skipped = test_skip_requested;
   int                 failLine = test_fail_line;
   char                failMsg[TEST_FAIL_MSG_LEN];
@@ -2830,6 +2841,46 @@ static TestResult run_test_file(const char* testPath, const char* initPath,
     return TEST_RESULT_FAIL;
   }
   return TEST_RESULT_PASS;
+}
+
+// Per-test-file database isolation. The suite shares one connection (and one
+// temp database), and the files are collected in readdir order -- not sorted --
+// so without a boundary a row one file inserts is visible to whichever file
+// happens to run next. Each file therefore runs inside a SQLite savepoint on
+// the shared handle; _init.wren and every Test.get handler use that same
+// connection, so they are covered too.
+//
+// Limitation: a savepoint opens a transaction, so a test file cannot VACUUM or
+// change PRAGMA journal_mode/WAL inside it, and leaving a transaction open in a
+// test file makes the ROLLBACK TO/RELEASE fail. That failure is reported and
+// fails the run rather than being swallowed.
+static int test_savepoint_begin(void) {
+  if(db == NULL)
+    return 1;
+  char* errmsg = NULL;
+  if(sqlite3_exec(db, "SAVEPOINT bialet_test_file", NULL, NULL, &errmsg) !=
+     SQLITE_OK) {
+    fprintf(stderr, "Error: cannot start the per-test-file database savepoint: %s\n",
+            errmsg ? errmsg : sqlite3_errmsg(db));
+    sqlite3_free(errmsg);
+    return 0;
+  }
+  return 1;
+}
+
+static int test_savepoint_rollback(void) {
+  if(db == NULL)
+    return 1;
+  char* errmsg = NULL;
+  if(sqlite3_exec(db, "ROLLBACK TO bialet_test_file; RELEASE bialet_test_file", NULL,
+                  NULL, &errmsg) != SQLITE_OK) {
+    fprintf(stderr,
+            "Error: cannot roll back the per-test-file database savepoint: %s\n",
+            errmsg ? errmsg : sqlite3_errmsg(db));
+    sqlite3_free(errmsg);
+    return 0;
+  }
+  return 1;
 }
 
 int bialet_run_tests(const char* testDir, const char* rootDir) {
@@ -2907,6 +2958,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   int         passed = 0;
   int         failed = 0;
   int         skipped = 0;
+  int         isolation_failed = 0;
   TestFailure failures[MAX_TEST_FILES];
 
   // The message() sink for -q is installed by the caller (main.c) before
@@ -2918,11 +2970,36 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     char testPath[MAX_MODULE_LEN * 2];
     snprintf(testPath, sizeof(testPath), "%s/%s", testsPath, testFiles[i]);
 
-    int        line = 0;
-    char       msg[TEST_FAIL_MSG_LEN];
-    long long  testStartMs = test_monotonic_ms();
+    int       line = 0;
+    char      msg[TEST_FAIL_MSG_LEN];
+    long long testStartMs = test_monotonic_ms();
+
+    // No clock or PRNG seed survives from a previous file; _init.wren runs
+    // inside the savepoint below and opts back in if it wants to.
+    bialet_test_reset_hooks();
+    int savepoint_ok = test_savepoint_begin();
+    if(!savepoint_ok)
+      isolation_failed = 1;
+
+    int previous_savepoint_active = test_savepoint_active;
+    test_savepoint_active = 1;
     TestResult result =
         run_test_file(testPath, initPathPtr, &line, msg, sizeof(msg));
+    test_savepoint_active = previous_savepoint_active;
+
+    if(savepoint_ok && !test_savepoint_rollback()) {
+      isolation_failed = 1;
+      savepoint_ok = 0;
+    }
+    // Running the file outside the promised boundary must not read as a clean
+    // pass in the summary, even though the file's own assertions may hold. A
+    // real assertion failure keeps its message; PASS/SKIP become a failure.
+    if(!savepoint_ok && result != TEST_RESULT_FAIL) {
+      result = TEST_RESULT_FAIL;
+      line = 0;
+      snprintf(msg, sizeof(msg), "database isolation failed (see stderr)");
+    }
+
     long long testElapsedMs = test_monotonic_ms() - testStartMs;
 
     switch(result) {
@@ -2990,7 +3067,7 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     printf("Elapsed Time: %lldms\n", elapsedMs);
   }
 
-  return (failed > 0) ? 1 : 0;
+  return (failed > 0 || isolation_failed) ? 1 : 0;
 }
 static char resolved_db_path[PATH_MAX];
 

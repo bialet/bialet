@@ -701,8 +701,23 @@ return Template.new().layout(...)
 
 ## Template Classes / Components
 
+A component is a Wren class with a method that returns an inline HTML block.
+You compose markup by calling one method from another inside `{{ }}`. That is
+the entire mechanism: no registry, no props object, no separate template file.
+
+```wren
+class Badge {
+  static rule(text) { <span class="badge">{{ text }}</span> }
+}
+
+return <p>Status: {{ Badge.rule("ready") }}</p>
+```
+
 Extract shared HTML into Wren classes. Each method returns an inline HTML
-string, turning your class into a library of reusable components.
+string, turning your class into a library of reusable components. A layout is
+the first component of every page, not a special mechanism: `layout(content)`
+returns a page and takes the body as a parameter. Every smaller piece follows
+the same shape.
 
 ### Layout template
 
@@ -749,12 +764,351 @@ import "_template" for Template
 
 return Template.new().layout(<main>
   <h1>Welcome</h1>
-  <p>This content goes into {{ content }}.</p>
+  <p>This body is passed to layout() and inserted into the page.</p>
 </main>)
 ```
 
 A Wren block that contains a single expression implicitly returns that
 expression — no `return` keyword needed in the method body.
+
+### A component set
+
+Split the page by region: one class per region, one file per class. The
+`_app/components/` folder is a convention, not a framework requirement —
+anything behind a `_` path segment is importable and is never served.
+
+```text
+my-app/
+├── _app/
+│   ├── components/
+│   │   ├── cards.wren      # Cards.tool, Cards.mission
+│   │   ├── hud.wren        # Hud.state
+│   │   ├── nav.wren        # Nav.bar
+│   │   └── layout.wren     # Layout.page
+│   ├── domain.wren
+│   └── migration.wren
+├── dashboard.wren          # /
+└── missions.wren           # /missions
+```
+
+```wren
+// _app/components/cards.wren
+class Cards {
+  // One tool in the grid: name, wear, and a warning when it is broken.
+  static tool(item) { <article class="card tool">
+    <h3>{{ item["name"] }}</h3>
+    <p class="meta">Wear {{ item["wear"] }} of 100</p>
+    {{ item["broken"] == "1" && <p class="warn">Broken. Repair it before the next run.</p> }}
+  </article> }
+
+  // One mission row: link and reward.
+  static mission(row) { <li class="mission">
+    <a href="/mission?id={{ row["id"] }}">{{ row["title"] }}</a>
+    <span class="reward">{{ row["reward"] }} gold</span>
+  </li> }
+}
+```
+
+```wren
+// _app/components/hud.wren
+class Hud {
+  static state(game) { <aside class="hud">
+    <dl class="hud-facts">
+      <dt>Day</dt><dd>{{ game["day"] }}</dd>
+      <dt>Fuel</dt><dd>{{ game["fuel"] }} of 100</dd>
+      <dt>Credits</dt><dd>{{ game["credits"] }}</dd>
+    </dl>
+    {{ Num.fromString(game["fuel"]) < 20 && <p class="warn">Fuel is low.</p> }}
+  </aside> }
+}
+```
+
+```wren
+// _app/components/nav.wren
+class Nav {
+  static bar(user) { <nav class="bar" aria-label="Main">
+    <a class="brand" href="/">Salvage</a>
+    <a href="/">Dashboard</a>
+    <a href="/missions">Missions</a>
+    {{ user && <span class="who">{{ user["name"] }}</span> }}
+  </nav> }
+}
+```
+
+```wren
+// _app/components/layout.wren
+import "/_app/components/nav" for Nav
+
+class Layout {
+  static page(title, user, content) { <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{ title }} · Salvage</title>
+        <link rel="stylesheet" href="/style.css" />
+      </head>
+      <body>
+        {{ Nav.bar(user) }}
+        <main>
+          {{ content }}
+        </main>
+      </body>
+    </html> }
+}
+```
+
+`Layout.page` is a component like any other. It calls `Nav.bar` from inside its
+own markup, and that is how nesting works: a method call inside `{{ }}`.
+
+### The route that renders them
+
+The route reads input, fetches the rows, and passes them in. It holds no markup
+beyond the sections the page itself is made of.
+
+```wren
+// dashboard.wren — GET /
+import "_app/components/layout" for Layout
+import "_app/components/hud" for Hud
+import "_app/components/cards" for Cards
+
+var userId = Session.new().get("user_id")
+var user = `SELECT id, name FROM users WHERE id = ?`.first(userId)
+if (!user) return Response.redirect("/login")
+
+var game = `SELECT day, fuel, credits FROM games WHERE user_id = ?`.first(user["id"])
+if (!game) return Response.notFound()
+
+var tools = `SELECT id, name, wear, broken FROM tools WHERE user_id = ?`.fetch(user["id"])
+var missions = `SELECT id, title, reward FROM missions ORDER BY reward DESC LIMIT 3`.fetch
+
+return Layout.page("Dashboard", user,
+  <section class="dashboard">
+    {{ Hud.state(game) }}
+    <h2>Tools</h2>
+    <div class="grid">{{ tools.map { |t| Cards.tool(t) } }}</div>
+    <h2>Next missions</h2>
+    <ul class="missions">{{ missions.map { |m| Cards.mission(m) } }}</ul>
+  </section>
+)
+```
+
+### The same markup in a second page
+
+`missions.wren` renders the same mission rows. It calls the same method instead
+of repeating the `<li>`:
+
+```wren
+// missions.wren — GET /missions
+import "_app/components/layout" for Layout
+import "_app/components/cards" for Cards
+
+var userId = Session.new().get("user_id")
+var user = `SELECT id, name FROM users WHERE id = ?`.first(userId)
+if (!user) return Response.redirect("/login")
+
+var missions = `SELECT id, title, reward FROM missions ORDER BY reward DESC`.fetch
+
+return Layout.page("Missions", user,
+  <ul class="missions">{{ missions.map { |m| Cards.mission(m) } }}</ul>
+)
+```
+
+A third page that needs the row is a third call. The `<li>` exists once.
+
+### Pass data in, do not fetch it inside
+
+Components take what they render as parameters — a row, a Map, a string, a
+number. The route decides which row that is.
+
+```wren
+<main>{{ Cards.tool(item) }}</main>   // the row arrives as a parameter
+```
+
+```wren
+// Wrong — the component owns a session lookup, a query and an id
+class Cards {
+  static tool(id) {
+    var userId = Session.new().get("user_id")
+    var item = `SELECT * FROM tools WHERE id = ? AND user_id = ?`.first(id, userId)
+    return <article class="card tool">
+      <h3>{{ item["name"] }}</h3>
+    </article>
+  }
+}
+```
+
+The second version cannot be reused on a page that already has the row, runs a
+query in the middle of rendering, and fails when there is no request behind it —
+in a unit test or a cron job, for example. See [Testing](tests.md) for the
+white-box pattern.
+
+### Keep components pure
+
+A component renders its parameters and may call other components. It does not:
+
+- read `Request`, `Session`, `Cookie` or `Config`
+- run SQL or write to the database
+- set `Response.status`, redirect, or return a response object
+
+The route does the rest: read input, fetch, decide (404, redirect, empty
+state), then render. A pure component can be called with a plain Map in a test
+and reused by any route that has the same data.
+
+### Static or instance methods
+
+Use `static` when the component carries no state: `Cards.tool(item)`,
+`Hud.state(game)`, `Nav.bar(user)`.
+
+Use instance methods when the class is configured once and read by several
+methods — the `Template` example above stores `_title` and `_subtitle` in the
+constructor. Then instantiate it in the route and call the methods on the
+instance.
+
+Both styles are fine. Do not mix them in one class for no reason.
+
+### Looping over rows
+
+`map` turns a list of rows into a list of components. Interpolation flattens
+the list into markup:
+
+```wren
+<div class="grid">{{ tools.map { |t| Cards.tool(t) } }}</div>
+```
+
+The block body is a single expression. `Cards.tool(t)` is code, not an HTML
+literal, so it must stay on the `{` line. A body that starts on the next line is
+a statement list: it returns `null`, the interpolation renders nothing, and the
+compiler warns.
+
+```wren
+// Wrong — the call starts on the next line
+<div class="grid">{{ tools.map { |t|
+  Cards.tool(t)
+} }}</div>
+
+// Correct
+<div class="grid">{{ tools.map { |t| Cards.tool(t) } }}</div>
+```
+
+The same rule keeps `var` out of the block: format the value in the domain
+class or before the template.
+
+An empty list renders nothing. Pair it with an empty state:
+
+```wren
+<main>
+  {{ tools.isEmpty && <p class="empty">No tools yet. Craft one first.</p> }}
+</main>
+```
+
+### Escaping
+
+Interpolation escapes plain values. A component returns `HtmlNode` — the type
+of every inline HTML literal — so interpolation inserts it as markup:
+
+```wren
+<main>{{ Cards.tool(item) }}</main>   // the component's markup, rendered
+<p>{{ item["name"] }}</p>             // a value, escaped
+```
+
+Inside the component, every database value still goes through `{{ }}` and is
+escaped once. The only raw part is the tags you wrote yourself.
+
+> ⚠️ Pitfall: never assemble markup as a string and mark it safe. The
+> concatenation loses the compile-time tag checks, and `.raw` turns the user
+> data embedded in it into markup:
+
+```wren
+// Wrong — XSS in one line
+static tool(item) { ("<article>" + item["name"] + "</article>").raw }
+```
+
+`HtmlNode` and `.raw` assert that a string is already safe; they do not sanitize
+it. See [Security](security.md) for the full rules.
+
+### Where component files live
+
+A component file lives behind a `_` path segment: it is importable, and
+requesting it over HTTP returns 403. `_app/components/cards.wren` and
+`_cards.wren` both qualify; that is all a component file needs.
+
+- `_app/components/cards.wren` — one class per file, one file per region of the
+  page. The folder name is yours; this is a convention.
+- `_components/cards.wren` or `_cards.wren` at the app root — the same thing,
+  flatter.
+- `_template.wren` or `_app/template.wren` — one file with the layout and a few
+  helpers, for a small app.
+
+Import paths are relative to the importing file:
+
+```wren
+// dashboard.wren (app root)
+import "_app/components/cards" for Cards
+
+// admin/index.wren (one level down)
+import "/_app/components/cards" for Cards
+
+// _app/components/layout.wren (inside the folder)
+import "/_app/components/nav" for Nav
+```
+
+The leading `/` form resolves from the app root from any directory. Use it
+inside `_app/` and in other subfolders. Without the slash, the path starts at
+the importing file's directory and works only from the root.
+
+### Structuring a larger app
+
+```text
+my-app/
+├── _app/                    # never served: template, domain, data
+│   ├── components/          # UI: one class per concern
+│   │   ├── layout.wren
+│   │   ├── nav.wren
+│   │   ├── hud.wren
+│   │   └── cards.wren
+│   ├── domain.wren          # data and rules
+│   ├── migration.wren
+│   └── cron.wren
+├── dashboard.wren           # routes: read input -> call domain -> render
+└── missions.wren
+```
+
+- **`_app/` holds everything that is not served.** Template and components,
+  domain classes, migration, cron. Route files stay at the root, or in the
+  folder that matches their URL.
+- **One class per UI concern.** `Cards`, `Hud`, `Nav`, `Layout`. When a template
+  class grows a second region's markup, split it by concern — do not keep adding
+  methods to one god `Template`.
+- **A route file is a controller.** Read input, call the domain, render a
+  component. If a route contains a `<li>` that another route also needs, the
+  `<li>` is in the wrong place.
+- **A rule belongs to the domain, a tag belongs to the component.**
+  `game.fuelLow`, `Mission.upcoming(limit)` and `Tool.wearLabel` are domain
+  members; `Hud.state` and `Cards.tool` only render them.
+- **A presentation helper used by two components is a component method.** A rule
+  used by two routes is a domain method.
+
+| The helper... | Goes in |
+|---|---|
+| formats or decides a value (`fuelLow`, `rewardLabel`) | the domain class |
+| emits tags (a badge, an avatar, a formatted row) | a component method |
+| fetches rows for a page | the route, or a `static` domain method |
+| checks a permission | a domain or `Auth`-style class, called by the route |
+
+### Does Bialet have components?
+
+Yes. A component is a class whose method returns an inline HTML block.
+
+There is no component registry, no props system, no slots, no JSX, no lifecycle
+and no client-side runtime. That is intentional: Wren already has classes and
+methods, and an inline HTML literal already returns markup. Composition is a
+method call inside `{{ }}`; props are method parameters; the body is the
+`content` parameter `Layout.page` already takes.
+
+Nothing in the framework extracts repeated markup for you. If two pages repeat
+the same card, status bar or navigation, that is app debt: move the markup into
+a method and call it from both.
 
 ### Pitfalls
 
@@ -773,6 +1127,49 @@ return Template.new().layout(...)
 `head`, `footer`, plus one or two component helpers) covers most needs.
 Nested class hierarchies and deep abstraction layers work against Bialet's
 simplicity.
+
+Extract on the second or third repetition, and only when the markup carries a
+decision — a loop, a condition, a class toggled by data. A method per `<span>`
+is worse than the markup it replaces.
+
+**String-concatenated markup.** HTML is a literal, not a string to assemble:
+
+```wren
+// Wrong — no tag checks, and the value is now markup
+static mission(row) { ("<li>" + row["title"] + "</li>").raw }
+
+// Correct — the literal is checked at compile time, the value is escaped
+static mission(row) { <li>{{ row["title"] }}</li> }
+```
+
+**An HTML argument starts on a new line.** The lexer opens an inline HTML
+string after `=`, `return`, `(`, `[`, `{`, `|`, `:`, `&&`, `?` or a newline —
+not after a comma. A literal written straight after a comma is read as a
+less-than comparison:
+
+```wren
+// Wrong — "<section>" is parsed as a comparison
+return Layout.page("Dashboard", user, <section class="dashboard"></section>)
+
+// Correct — the newline opens the literal
+return Layout.page("Dashboard", user,
+  <section class="dashboard"></section>)
+```
+
+**Components that silently depend on globals.** A component that reads
+`Session` or `Request` looks pure and is not: the same call returns different
+markup depending on who is asking, it cannot run in a cron job or a unit test,
+and the query it hides is invisible to the route that thought it owned the
+data. Pass the values in.
+
+**Escaping mistakes.** Three shapes recur: concatenating a user value into
+markup and marking it `.raw`; adding `.safe` inside `{{ }}` (which double
+escapes); and building a URL from an unvalidated parameter. The first is XSS,
+the second mangles text. Interpolate plain values and let `{{ }}` escape them.
+
+**Giant methods.** A method that renders a whole page with five nested loops is
+a template class in disguise. Split it by region, one method per block, and let
+each method fit on a screen.
 
 ---
 
@@ -1143,6 +1540,15 @@ result of a nested `{{ }}` block, `HtmlNode` values, and `String.raw`. See
   an unexpected body. Always `return Response.redirect(...)`.
 - **Instance vs static methods:** Instance methods need `new()`; static methods
   don't.
+- **Repeated markup:** Components are classes with methods that return HTML.
+  A card, status bar or navigation block repeated in two pages belongs in one
+  method, not in both files.
+- **Components reading the request:** Pass data as parameters. A component that
+  reads `Request` or `Session` cannot be reused or unit-tested.
+- **HTML as a call argument:** Start the literal on a new line. After a comma
+  the lexer reads `<` as less-than, so `Layout.page("X", null, <main>...)` does
+  not compile; `Layout.page("X", null,` followed by the literal on the next line
+  does.
 - **`_`-prefixed CSS is not served:** Name stylesheets without leading `_`.
 - **CSS preprocessors not built in:** Write vanilla CSS or use a build step.
 - **Framework CDNs in production:** Self-host CSS files for reliability.

@@ -432,6 +432,11 @@ ignores missing table and column errors, so a `CREATE TABLE` followed by an
 with `--no-watch` to stop the save-triggered run, check the file with `-t`, then
 restart the server to apply it.
 
+Under `bialet -T`, the runner applies the migrations once before any test file,
+then runs each file inside a savepoint that is rolled back when the file
+finishes. Nothing a test writes survives the run, so a test is free to change
+rows. See [Testing in Bialet](tests.md#database-isolation).
+
 ### Migration SQL Pitfall
 
 > ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a

@@ -23,16 +23,39 @@
 #include <float.h>
 #include <math.h>
 #include <sqlite3.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
+
+// Defined in bialet_wren.c; the SQLite handle is shared by every VM. Only the
+// transaction primitives below and the migration cleanup touch it directly.
+extern sqlite3* db;
 #ifdef __APPLE__
 #include <mach/mach_time.h>
 #endif
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+/*
+ * Test-only determinism hooks (-T), process-global because each request runs in
+ * a fresh VM while Test.freezeTime / Test.randomSeed are called from the test
+ * VM. The primitives below refuse to run unless vm->config.enableTests, so a
+ * production process can never freeze its clock or seed its PRNG.
+ */
+static bool     test_clock_set = false;
+static time_t   test_clock_value = 0;
+static bool     test_random_seeded = false;
+static uint64_t test_random_state = 0;
+
+void bialet_test_reset_hooks(void) {
+  test_clock_set = false;
+  test_clock_value = 0;
+  test_random_seeded = false;
+  test_random_state = 0;
+}
 
 DEF_PRIMITIVE(bool_not) {
   RETURN_BOOL(!AS_BOOL(args[0]));
@@ -1596,23 +1619,62 @@ DEF_PRIMITIVE(util_randomString) {
   // documented non-cryptographic PRNG: session IDs and CSRF tokens built on
   // Util.randomString must not be guessable. Bytes are batched into a small
   // pool and the same rejection sampling as before removes modulo bias.
-  unsigned char pool[256];
-  size_t        pool_used = sizeof(pool);
-  while(written < len) {
-    if(pool_used >= sizeof(pool)) {
-      random_bytes_fill(pool, sizeof(pool));
-      pool_used = 0;
+  //
+  // Under -T a seeded run draws from the same rejection sampling over a
+  // process-global LCG instead. The state lives in C so a route handler's
+  // fresh VM continues the sequence the test VM started: successive requests
+  // differ, and Test.randomSeed(n) replays the whole stream.
+  if(test_random_seeded && vm->config.enableTests) {
+    while(written < len) {
+      test_random_state =
+          test_random_state * 6364136223846793005ULL + 1442695040888963407ULL;
+      unsigned char random_byte = (unsigned char)(test_random_state >> 56);
+      if(random_byte >= (unsigned char)(charset_len * 4)) {
+        continue;
+      }
+      random_str[written++] = charset[random_byte % charset_len];
     }
-    unsigned char random_byte = pool[pool_used++];
-    if(random_byte >= (unsigned char)(charset_len * 4)) {
-      continue;
+  } else {
+    unsigned char pool[256];
+    size_t        pool_used = sizeof(pool);
+    while(written < len) {
+      if(pool_used >= sizeof(pool)) {
+        random_bytes_fill(pool, sizeof(pool));
+        pool_used = 0;
+      }
+      unsigned char random_byte = pool[pool_used++];
+      if(random_byte >= (unsigned char)(charset_len * 4)) {
+        continue;
+      }
+      random_str[written++] = charset[random_byte % charset_len];
     }
-    random_str[written++] = charset[random_byte % charset_len];
   }
   random_str[len] = '\0';
   Value result = wrenNewString(vm, random_str);
   free(random_str);
   RETURN_VAL(result);
+}
+
+// Test-only: Test.randomSeed(seed) / Test.randomSeed(). A Num replaces the
+// process-global LCG state with the number's bit pattern, null restores the OS
+// CSPRNG. Registered everywhere but refuses to act unless -T enabled the tests.
+DEF_PRIMITIVE(util_testRandom) {
+  if(!vm->config.enableTests)
+    RETURN_ERROR("Util.testRandom_ is only available in test mode (-T).");
+  if(IS_NULL(args[1])) {
+    test_random_seeded = false;
+    RETURN_NULL;
+  }
+  if(!validateNum(vm, args[1], "Seed"))
+    return false;
+  double seed = AS_NUM(args[1]);
+  if(!isfinite(seed))
+    RETURN_ERROR("Seed must be a finite number.");
+  uint64_t bits = 0;
+  memcpy(&bits, &seed, sizeof(bits));
+  test_random_state = bits;
+  test_random_seeded = true;
+  RETURN_NULL;
 }
 
 // Config.encrypt / Config.decrypt. The deployment key from --secret-key-file is
@@ -2119,6 +2181,54 @@ DEF_PRIMITIVE(tests_skip) {
   RETURN_NULL;
 }
 
+// Test.stubHttp(pattern, response): the Wren side has already validated the
+// Map and serialized the headers to "Name: value\n" lines. The registry itself
+// is in C, so a route handler's fresh VM sees these rules too.
+DEF_PRIMITIVE(test_stubHttp) {
+  if(!validateString(vm, args[1], "Stub pattern") ||
+     !validateNum(vm, args[2], "Stub status") ||
+     !validateString(vm, args[3], "Stub headers") ||
+     !validateString(vm, args[4], "Stub body") ||
+     !validateNum(vm, args[5], "Stub error") ||
+     !validateString(vm, args[6], "Stub error message"))
+    return false;
+
+  double status = AS_NUM(args[2]);
+  double error = AS_NUM(args[5]);
+  if(!isfinite(status) || !isfinite(error) || status < -2147483648.0 ||
+     status > 2147483647.0 || error < -2147483648.0 || error > 2147483647.0)
+    RETURN_ERROR("Stub status and error must be finite 32-bit numbers.");
+
+  if(http_stub_add(AS_CSTRING(args[1]), (int)status, AS_CSTRING(args[3]),
+                   AS_CSTRING(args[4]), (int)error, AS_CSTRING(args[6])) != 0)
+    RETURN_ERROR_FMT("$", http_stub_last_error());
+  RETURN_NULL;
+}
+
+DEF_PRIMITIVE(test_clearHttpStubs) {
+  http_stub_clear();
+  RETURN_NULL;
+}
+
+// Test.httpCalls: a List of [url, method, headers, body] lists, in call order.
+// Every inner list is rooted while its strings are allocated; the outer list
+// keeps it alive once the inner root is popped.
+DEF_PRIMITIVE(test_httpCalls) {
+  int      count = http_stub_calls_count();
+  ObjList* calls = new_rooted_result_list(vm, (uint32_t)count);
+  for(int i = 0; i < count; i++) {
+    ObjList* call = new_rooted_result_list(vm, 4);
+    call->elements.data[0] = wrenNewString(vm, http_stub_call_url(i));
+    call->elements.data[1] = wrenNewString(vm, http_stub_call_method(i));
+    call->elements.data[2] = wrenNewString(vm, http_stub_call_headers(i));
+    call->elements.data[3] = wrenNewString(vm, http_stub_call_body(i));
+    calls->elements.data[i] = OBJ_VAL(call);
+    wrenPopRoot(vm);
+  }
+  wrenPopRoot(vm);
+  RETURN_OBJ(calls);
+}
+
 // Writes TZ into the environment, or removes it when [value] is NULL, and
 // re-reads it with tzset().
 static void date_set_tz_env(const char* value) {
@@ -2336,9 +2446,12 @@ DEF_PRIMITIVE(date_current) {
   const char* tz;
   if(!date_timezone_arg(vm, args[1], &tz))
     return false;
-  bool       zoned = date_zone_enter(tz);
-  char       fullDate[20];
-  time_t     now = time(NULL);
+  bool zoned = date_zone_enter(tz);
+  char fullDate[20];
+  // Test.freezeTime pins the instant; the requested zone is still honored, so
+  // the rendered wall clock follows the same rules as an unfrozen call.
+  time_t now =
+      (test_clock_set && vm->config.enableTests) ? test_clock_value : time(NULL);
   struct tm* local = localtime(&now);
   size_t     written =
       local ? strftime(fullDate, sizeof(fullDate), "%Y-%m-%d %H:%M:%S", local) : 0;
@@ -2346,6 +2459,27 @@ DEF_PRIMITIVE(date_current) {
   if(written == 0)
     RETURN_ERROR("Current time is out of range.");
   RETURN_VAL(wrenNewString(vm, fullDate));
+}
+
+// Test-only: Test.freezeTime(when) / Test.unfreezeTime pin Date.now (and Cron,
+// which reads Date.now) to a fixed epoch. A Num is epoch seconds, null
+// unfreezes. SQLite's datetime('now') is untouched: this only covers Wren's
+// Date, so a query that asks the database for the time still moves.
+DEF_PRIMITIVE(date_testNow) {
+  if(!vm->config.enableTests)
+    RETURN_ERROR("Date.testNow_ is only available in test mode (-T).");
+  if(IS_NULL(args[1])) {
+    test_clock_set = false;
+    RETURN_NULL;
+  }
+  if(!validateNum(vm, args[1], "Epoch seconds"))
+    return false;
+  double seconds = AS_NUM(args[1]);
+  if(!isfinite(seconds) || seconds < -62135596800.0 || seconds > 253402300799.0)
+    RETURN_ERROR("Epoch seconds is out of range.");
+  test_clock_value = (time_t)seconds;
+  test_clock_set = true;
+  RETURN_NULL;
 }
 
 // Formats an epoch value as a local date string. Date.new(number) is a year,
@@ -3315,6 +3449,7 @@ void wrenInitializeCore(WrenVM* vm) {
   ObjClass* dateClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Date"));
   PRIMITIVE(dateClass->obj.classObj, "defaultZone_", date_defaultZone);
   PRIMITIVE(dateClass->obj.classObj, "current_(_)", date_current);
+  PRIMITIVE(dateClass->obj.classObj, "testNow_(_)", date_testNow);
   PRIMITIVE(dateClass->obj.classObj, "fromUnix_(_,_)", date_fromUnix);
   PRIMITIVE(dateClass->obj.classObj, "unix_(_,_,_,_,_,_,_)", date_unix);
   PRIMITIVE(dateClass->obj.classObj, "format_(_,_,_,_,_,_,_,_)", date_format);
@@ -3348,6 +3483,7 @@ void wrenInitializeCore(WrenVM* vm) {
   PRIMITIVE(utilClass->obj.classObj, "decrypt_(_,_)", util_decrypt);
   PRIMITIVE(utilClass->obj.classObj, "secureEquals_(_,_)", util_secureEquals);
   PRIMITIVE(utilClass->obj.classObj, "randomString_(_)", util_randomString);
+  PRIMITIVE(utilClass->obj.classObj, "testRandom_(_)", util_testRandom);
   PRIMITIVE(utilClass->obj.classObj, "urlDecode_(_)", util_urlDecode);
   PRIMITIVE(utilClass->obj.classObj, "monotonicMs_()", util_monotonicMs);
   PRIMITIVE(utilClass->obj.classObj, "sha256_(_)", util_sha256);
@@ -3391,6 +3527,9 @@ void wrenInitializeCore(WrenVM* vm) {
 
     ObjClass* testClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Test"));
     PRIMITIVE(testClass, "runTestRequest_(_,_)", test_runRequest);
+    PRIMITIVE(testClass->obj.classObj, "stubHttp_(_,_,_,_,_,_)", test_stubHttp);
+    PRIMITIVE(testClass->obj.classObj, "clearHttpStubs_()", test_clearHttpStubs);
+    PRIMITIVE(testClass->obj.classObj, "httpCalls_()", test_httpCalls);
 
     ObjClass* testsClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Tests"));
     PRIMITIVE(testsClass->obj.classObj, "skip_()", tests_skip);

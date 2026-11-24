@@ -332,13 +332,230 @@ class Test {
   static apiPost(route, params) { Test.post(route, Json.stringify(params)).apiHeader() }
   static apiPut(route, params) { Test.new().route(route).method("PUT").postData(Json.stringify(params)).apiHeader() }
   static apiDelete(route) { Test.new().route(route).method("DELETE").apiHeader() }
-  
+
+  // ---- Deterministic time and random (-T only) ----------------------------
+  // freezeTime pins Date.now (and Cron, which reads Date.now) to the given
+  // instant: a Num epoch, a Date, or "YYYY-MM-DD HH:MM:SS". SQLite's
+  // datetime('now') is not affected, so a query that asks the database for the
+  // time still moves.
+  static freezeTime(when) {
+    if (when == null) return Date.testNow_(null)
+    if (when is Num) return Date.testNow_(when)
+    if (when is Date) return Date.testNow_(when.unix)
+    return Date.testNow_(Date.fromString("%(when)").unix)
+  }
+  static unfreezeTime { Date.testNow_(null) }
+  // randomSeed(seed) makes Util.randomString deterministic; randomSeed() with
+  // no argument restores the OS CSPRNG. Process-global, so a route handler's
+  // fresh VM continues the same stream.
+  static randomSeed() { Util.testRandom_(null) }
+  static randomSeed(seed) { Util.testRandom_(seed) }
+
+  // ---- Outbound HTTP stubs ------------------------------------------------
+  // Register a canned response for calls to [pattern] (the full URL, '*' is a
+  // glob). The registry lives in C so it also applies to the fresh VM every
+  // Test.get request uses. First registered rule wins; unmatched calls still go
+  // to the network. The registry is process-wide, so call clearHttpStubs() when
+  // a file must not leak its stubs into the next one.
+  //
+  //   Test.stubHttp("https://api.example/*", {"status": 200,
+  //     "headers": {"Content-Type": "application/json"}, "body": "{}"})
+  static stubHttp(pattern, response) {
+    if (!(response is Map)) Fiber.abort("Test.stubHttp: response must be a Map")
+    var known = ["status", "headers", "body", "error", "errorMessage"]
+    for (key in response.keys) {
+      if (!known.contains(key)) {
+        Fiber.abort("Test.stubHttp: unknown response key \"%(key)\"")
+      }
+    }
+    var status = response.containsKey("status") ? response["status"] : 200
+    var headers = response.containsKey("headers") ? response["headers"] : {}
+    var body = response.containsKey("body") ? response["body"] : ""
+    var error = response.containsKey("error") ? response["error"] : 0
+    var errorMessage = response.containsKey("errorMessage") ? response["errorMessage"] : ""
+    if (!(status is Num)) Fiber.abort("Test.stubHttp: status must be a number")
+    if (!(headers is Map)) Fiber.abort("Test.stubHttp: headers must be a Map")
+    if (!(error is Num)) Fiber.abort("Test.stubHttp: error must be a number")
+
+    // setHeader_ validates the name (and rejects CRLF injection); headerValue
+    // strips control characters from the value, like every other header.
+    var normalized = {}
+    for (name in headers.keys) {
+      Util.setHeader_(normalized, name, Util.headerValue(headers[name]))
+    }
+    var lines = []
+    for (name in normalized.keys) lines.add("%(name): %(normalized[name])")
+    stubHttp_("%(pattern)", status, lines.join("\n"), body == null ? "" : "%(body)",
+              error, errorMessage == null ? "" : "%(errorMessage)")
+  }
+  static clearHttpStubs() { clearHttpStubs_() }
+  // Every matched call, in order: [{url, method, headers (lowercased), body}].
+  // basicAuth is never recorded.
+  static httpCalls {
+    var calls = []
+    for (row in httpCalls_()) {
+      var headers = {}
+      for (line in row[2].split("\n")) {
+        var colon = line.indexOf(":")
+        if (colon <= 0) continue
+        Util.setHeader_(headers, line[0...colon].trim().lower, line[colon + 1..-1].trim())
+      }
+      calls.add({"url": row[0], "method": row[1], "headers": headers, "body": row[3]})
+    }
+    return calls
+  }
+
   static assert(condition, message) {
     if (!condition) {
       Fiber.abort(message)
     }
   }
 }
+
+// Builds a Request from a raw HTTP message and runs module/component code
+// against it without starting a server, then reads the Response it produced:
+//
+//   import "../_app/components" for Greeter
+//   var f = Fixture.get("/notes/42").route("/notes").query("name", "ana").apply()
+//   Response.out(Greeter.render())   // the code under test writes the response
+//   Test.assert(f.status == 200, "status")
+//   Test.assert(f.body == "hello ana", "body")
+//   Test.assert(f.header("content-type").contains("text/html"), "header")
+//
+// Response.init always runs first, so one Fixture cannot inherit the previous
+// one's status, headers, cookies or body. Request.init parses a form body only
+// for POST, exactly as it does over HTTP; PUT/PATCH keep the raw body.
+class Fixture {
+  construct new(method, path) {
+    _method = method
+    _path = path
+    _route = ""
+    _query = {}
+    _post = {}
+    _rawBody = null
+    _headers = {}
+    _cookies = {}
+    _files = ""
+    _fields = ""
+    _applied = false
+    _headerMap = null
+  }
+
+  static get(path) { Fixture.new("GET", path) }
+  static post(path, form) { Fixture.new("POST", path).form_(form) }
+  static put(path, form) { Fixture.new("PUT", path).form_(form) }
+  static patch(path, form) { Fixture.new("PATCH", path).form_(form) }
+  static delete(path) { Fixture.new("DELETE", path) }
+  static request(method, path) { Fixture.new("%(method)", path) }
+
+  // Bulk form data, used by the static factories. The public one-field builder
+  // is post(name, value).
+  form_(form) {
+    if (!(form is Map)) Fiber.abort("Fixture form data must be a Map")
+    for (key in form.keys) _post[key] = form[key]
+    return this
+  }
+
+  route(prefix) {
+    _route = prefix
+    return this
+  }
+  query(name, value) {
+    _query[name] = value
+    return this
+  }
+  post(name, value) {
+    _post[name] = value
+    return this
+  }
+  // A raw body overrides the form data built with post(name, value).
+  body(raw) {
+    _rawBody = raw
+    return this
+  }
+  header(name, value) {
+    Util.setHeader_(_headers, name, value)
+    return this
+  }
+  cookie(name, value) {
+    _cookies[Util.cookieToken(name, "Cookie name")] = Util.cookieValue(value, "Cookie value")
+    return this
+  }
+  files(encoded) {
+    _files = encoded
+    return this
+  }
+  fields(encoded) {
+    _fields = encoded
+    return this
+  }
+
+  apply() {
+    Response.init
+    _headerMap = null
+
+    var body = _rawBody
+    if (body == null) {
+      body = _post.count > 0 ? Util.params(_post) : ""
+    } else {
+      body = "%(body)"
+    }
+    var target = _path
+    if (_query.count > 0) target = target + "?" + Util.params(_query)
+
+    var message = "%(_method) %(target) HTTP/1.1\r\n"
+    if (Util.getHeader_(_headers, "Host") == null) {
+      message = message + "Host: localhost\r\n"
+    }
+    if (_cookies.count > 0 && Util.getHeader_(_headers, "Cookie") == null) {
+      var stored = []
+      for (name in _cookies.keys) stored.add("%(name)=%(_cookies[name])")
+      message = message + "Cookie: %(stored.join("; "))\r\n"
+    }
+    if (body.count > 0 && Util.getHeader_(_headers, "Content-Type") == null) {
+      message = message + "Content-Type: application/x-www-form-urlencoded\r\n"
+    }
+    for (name in _headers.keys) {
+      message = message + "%(name): %(_headers[name])\r\n"
+    }
+    if (body.count > 0) message = message + "Content-Length: %(body.count)\r\n"
+    message = message + "\r\n"
+    if (body.count > 0) message = message + body
+
+    Request.init(message, _route, _files, _fields)
+    _applied = true
+    return this
+  }
+
+  status {
+    if (!_applied) apply()
+    return Response.status
+  }
+  body {
+    if (!_applied) apply()
+    return Response.out
+  }
+  // Response header names lowercased for case-insensitive lookups; the last
+  // Set-Cookie wins, like any other repeated header.
+  headers {
+    if (!_applied) apply()
+    if (_headerMap == null) {
+      var map = {}
+      for (line in Response.headers.split("\r\n")) {
+        var colon = line.indexOf(":")
+        if (colon <= 0) continue
+        map[line[0...colon].trim().lower] = line[colon + 1..-1].trim()
+      }
+      _headerMap = map
+    }
+    return _headerMap
+  }
+  header(name) {
+    if (!_applied) apply()
+    return headers["%(name)".trim().lower]
+  }
+}
+
 
 // Marks the current test file as skipped instead of run. Call it as the
 // file's only (or first) statement -- it does not abort the fiber, so any

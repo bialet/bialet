@@ -29,6 +29,234 @@
 // loader path, amplify disk usage) through an unbounded response.
 #define MAX_HTTP_RESPONSE_SIZE (50 * 1024 * 1024)
 
+/*
+ * Test-only outbound HTTP stubs. See http_call.h for why the registry lives in
+ * C. The arrays are process-global and fixed-size; the -T runner is single
+ * threaded and only the Test primitive writes here, so no lock is used.
+ *
+ * "First registered rule wins" is intentional: a test can put an exact URL
+ * before a catch-all '*' rule and the exact one shadows it. Patterns are
+ * matched case-sensitively against the whole URL with a simple '*' glob (no
+ * regex).
+ */
+#define HTTP_STUB_MAX_RULES 128
+#define HTTP_STUB_MAX_CALLS 512
+#define HTTP_STUB_MAX_TEXT (1024 * 1024)
+
+typedef struct {
+  char* pattern;
+  char* headers;
+  char* body;
+  char* error_message;
+  int   status;
+  int   error;
+} HttpStubRule;
+
+typedef struct {
+  char* url;
+  char* method;
+  char* headers;
+  char* body;
+} HttpStubCall;
+
+static HttpStubRule http_stub_rules[HTTP_STUB_MAX_RULES];
+static int          http_stub_rule_count = 0;
+static HttpStubCall http_stub_calls[HTTP_STUB_MAX_CALLS];
+static int          http_stub_call_count = 0;
+static const char*  http_stub_error_text = "";
+
+/* Copies [src] into a fresh heap buffer. When [reject_long] is set a value
+ * over the ceiling is an error; otherwise it is truncated to the ceiling. */
+static char* http_stub_copy(const char* src, int reject_long) {
+  if(src == NULL)
+    src = "";
+  size_t len = strlen(src);
+  if(len > HTTP_STUB_MAX_TEXT) {
+    if(reject_long) {
+      http_stub_error_text = "HTTP stub string exceeds 1 MB";
+      return NULL;
+    }
+    len = HTTP_STUB_MAX_TEXT;
+  }
+  char* copy = malloc(len + 1);
+  if(copy == NULL) {
+    http_stub_error_text = "Out of memory in HTTP stub registry";
+    return NULL;
+  }
+  memcpy(copy, src, len);
+  copy[len] = '\0';
+  return copy;
+}
+
+const char* http_stub_last_error(void) {
+  return http_stub_error_text;
+}
+
+int http_stub_add(const char* pattern, int status, const char* headers,
+                  const char* body, int error, const char* error_message) {
+  http_stub_error_text = "";
+  if(pattern == NULL || pattern[0] == '\0') {
+    http_stub_error_text = "HTTP stub pattern cannot be empty";
+    return -1;
+  }
+  if(http_stub_rule_count >= HTTP_STUB_MAX_RULES) {
+    http_stub_error_text = "Too many HTTP stubs (max 128)";
+    return -1;
+  }
+
+  char* stored_pattern = http_stub_copy(pattern, 1);
+  char* stored_headers = http_stub_copy(headers, 1);
+  char* stored_body = http_stub_copy(body, 1);
+  char* stored_message = http_stub_copy(error_message, 1);
+  if(stored_pattern == NULL || stored_headers == NULL || stored_body == NULL ||
+     stored_message == NULL) {
+    free(stored_pattern);
+    free(stored_headers);
+    free(stored_body);
+    free(stored_message);
+    return -1;
+  }
+
+  HttpStubRule* rule = &http_stub_rules[http_stub_rule_count++];
+  rule->pattern = stored_pattern;
+  rule->headers = stored_headers;
+  rule->body = stored_body;
+  rule->error_message = stored_message;
+  rule->status = status;
+  rule->error = error;
+  return 0;
+}
+
+void http_stub_clear(void) {
+  for(int i = 0; i < http_stub_rule_count; i++) {
+    free(http_stub_rules[i].pattern);
+    free(http_stub_rules[i].headers);
+    free(http_stub_rules[i].body);
+    free(http_stub_rules[i].error_message);
+  }
+  http_stub_rule_count = 0;
+  for(int i = 0; i < http_stub_call_count; i++) {
+    free(http_stub_calls[i].url);
+    free(http_stub_calls[i].method);
+    free(http_stub_calls[i].headers);
+    free(http_stub_calls[i].body);
+  }
+  http_stub_call_count = 0;
+  http_stub_error_text = "";
+}
+
+int http_stub_calls_count(void) {
+  return http_stub_call_count;
+}
+
+static const char* http_stub_call_field(int index, int which) {
+  if(index < 0 || index >= http_stub_call_count)
+    return "";
+  HttpStubCall* call = &http_stub_calls[index];
+  switch(which) {
+    case 0:
+      return call->url ? call->url : "";
+    case 1:
+      return call->method ? call->method : "";
+    case 2:
+      return call->headers ? call->headers : "";
+    default:
+      return call->body ? call->body : "";
+  }
+}
+
+const char* http_stub_call_url(int index) {
+  return http_stub_call_field(index, 0);
+}
+
+const char* http_stub_call_method(int index) {
+  return http_stub_call_field(index, 1);
+}
+
+const char* http_stub_call_headers(int index) {
+  return http_stub_call_field(index, 2);
+}
+
+const char* http_stub_call_body(int index) {
+  return http_stub_call_field(index, 3);
+}
+
+/* Whole-string glob: '*' matches zero or more characters, everything else is
+ * literal and case-sensitive. Iterative with one backtrack point, so a pattern
+ * with many stars cannot recurse or blow the stack. */
+static int http_stub_match(const char* pattern, const char* text) {
+  const char* p = pattern;
+  const char* t = text;
+  const char* star = NULL;
+  const char* resume = NULL;
+
+  while(*t != '\0') {
+    if(*p == '*') {
+      star = p++;
+      resume = t;
+    } else if(*p == *t) {
+      p++;
+      t++;
+    } else if(star != NULL) {
+      p = star + 1;
+      t = ++resume;
+    } else {
+      return 0;
+    }
+  }
+  while(*p == '*')
+    p++;
+  return *p == '\0';
+}
+
+/* Records a matched call. When the log is full the call is dropped rather than
+ * growing without bound. basicAuth is deliberately never copied: it is a
+ * credential and the log is only meant to prove which URL/method ran. */
+static void http_stub_record_call(const struct HttpRequest* request) {
+  if(http_stub_call_count >= HTTP_STUB_MAX_CALLS)
+    return;
+  char* url = http_stub_copy(request->url ? request->url : "", 0);
+  char* method = http_stub_copy(request->method ? request->method : "GET", 0);
+  char* headers =
+      http_stub_copy(request->raw_headers ? request->raw_headers : "", 0);
+  char* body = http_stub_copy(request->postData ? request->postData : "", 0);
+  if(url == NULL || method == NULL || headers == NULL || body == NULL) {
+    free(url);
+    free(method);
+    free(headers);
+    free(body);
+    return;
+  }
+  HttpStubCall* call = &http_stub_calls[http_stub_call_count++];
+  call->url = url;
+  call->method = method;
+  call->headers = headers;
+  call->body = body;
+}
+
+/* Answers [request] from the registry when a rule matches. Returns 1 when the
+ * stub handled the call (the caller must not touch the network), 0 otherwise.
+ * The strings are duplicated because callers free resp.headers/body/
+ * error_message with free(). */
+static int http_stub_respond(const struct HttpRequest* request,
+                             struct HttpResponse*      response) {
+  if(request == NULL || response == NULL || request->url == NULL)
+    return 0;
+  for(int i = 0; i < http_stub_rule_count; i++) {
+    HttpStubRule* rule = &http_stub_rules[i];
+    if(!http_stub_match(rule->pattern, request->url))
+      continue;
+    response->status = rule->status;
+    response->error = rule->error;
+    response->headers = string_safe_copy(rule->headers);
+    response->body = string_safe_copy(rule->body);
+    response->error_message = string_safe_copy(rule->error_message);
+    http_stub_record_call(request);
+    return 1;
+  }
+  return 0;
+}
+
 struct memory {
   char*  response;
   size_t size;
@@ -801,6 +1029,12 @@ static int response_complete(const char* raw, size_t len, int closed) {
 #endif
 
 void http_call_perform(struct HttpRequest* request, struct HttpResponse* response) {
+  /* Test-only: a registered stub answers before the network is touched. The
+   * registry is empty in production (only the -T Test primitive fills it), so
+   * this is a no-op there. */
+  if(http_stub_respond(request, response))
+    return;
+
 #ifndef _WIN32
   struct memory      chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};
   struct memory      header_chunk = {0, 0, MAX_HTTP_RESPONSE_SIZE};

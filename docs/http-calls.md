@@ -376,6 +376,29 @@ if (!http.call("https://api.example.com/health",
 - **Response bodies are not size-capped** — a malicious endpoint could return
   an unbounded body. Only call APIs you trust.
 
+## Stubbing Calls in Tests
+
+`bialet -T` runs in-process, so a call to a real API would leave the machine and
+make the suite depend on a third party. Pin the response with `Test.stubHttp`:
+
+```wren
+// _tests/checkout.wren
+Test.stubHttp("https://api.example.com/charge", {
+  "status": 200,
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"ok\":true}"
+})
+
+Test.post("/checkout", {"amount": "1999"}).status(302)
+Test.assert(Test.httpCalls.count == 1, "the handler called the API once")
+```
+
+The pattern is the full URL with `*` wildcards. The first match wins, and a URL
+that matches no stub still goes to the real network with the real timeout.
+`Test.httpCalls` lists the matched calls; `Test.clearHttpStubs()` removes the
+stubs. See [Testing § Stubbing Outbound HTTP Calls](tests.md#stubbing-outbound-http-calls)
+for the response keys and the full API.
+
 ## Missing Features
 
 Not every HTTP client feature is implemented yet. Multipart/file uploads are
