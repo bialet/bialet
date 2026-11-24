@@ -4,6 +4,47 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.29 — 2026-11-24
+
+### Added
+
+- The test runner gained a module-level API. Each `_tests/*.wren` file is now
+  its own Wren module: relative imports (`import "../_app/components"`) and
+  the top-level variables of `_tests/_init.wren` work as expected. Every file
+  runs inside a savepoint that is rolled back afterwards, so one test cannot
+  see another file's rows and the order files are collected in stops
+  mattering.
+- `Fixture` installs a `Request`/`Response` without the router, for testing
+  components and domain classes that read `Request`, `Cookie` or `Session`.
+  `Test.stubHttp` replaces outbound `Http` responses process-wide (including
+  calls made from a route handler) and `Test.httpCalls` lists the matched
+  calls. `Test.freezeTime` pins `Date`/`Cron`, and `Test.randomSeed` makes
+  `Util.randomString` deterministic; the runner resets both before each test
+  file. See [Testing in Bialet](docs/tests.md).
+- `Db.migrate` is atomic: its statements and the row in `BIALET_MIGRATIONS`
+  commit or roll back together. `BEGIN IMMEDIATE` serializes concurrent
+  workers, and a migration that fails leaves no partial schema. The optional
+  third argument (`false`) is the documented escape hatch for `VACUUM`,
+  `PRAGMA journal_mode` and `PRAGMA foreign_keys = OFF` rebuilds.
+- A migration string is split on the semicolons that really end a statement:
+  `;` inside strings, quoted identifiers, comments and `CREATE TRIGGER ...
+  END;` bodies no longer tears the migration apart. `BIALET_MIGRATIONS` stores
+  a SHA-256 of the SQL; editing an already-applied migration logs a warning
+  instead of silently doing nothing. Older rows are backfilled and the version
+  column gets a unique index.
+- Documentation: a from-scratch testing guide (`tests.md`), reusable
+  components and large-app structure in `template.md` and the AI prompt, and
+  the migration/deployment pages updated for the new behavior.
+
+### Fixed
+
+- `bialet -t` no longer reports a bogus syntax error for an `ALTER TABLE ...
+  ADD COLUMN` whose table the validation database has not created, and it no
+  longer skips a real syntax error in the rest of the statement: a `SELEC` in
+  a trigger body, an incomplete `ALTER`, or garbage after a failed statement
+  now fails the check. Semicolons inside quoted defaults and comments are part
+  of the statement.
+
 ## 1.2.28 — 2026-11-23
 
 ### Added
