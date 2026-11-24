@@ -4,6 +4,60 @@ Releases 1.2.6–1.2.13 were tagged and published on the
 [releases page](https://github.com/bialet/bialet/releases); this file resumes at
 1.2.14.
 
+## 1.2.28 — 2026-11-23
+
+### Added
+
+- Static files are typed by extension following MDN's common MIME types: fonts
+  (`font/woff2`, `font/woff`, `font/ttf`, `font/otf`,
+  `application/vnd.ms-fontobject`), `image/webp`, `image/avif`, `image/apng`,
+  `image/bmp`, `image/tiff`, the common audio and video containers,
+  `application/wasm`, web manifests, source maps, feeds, CSV and Markdown.
+  JavaScript is `text/javascript` (RFC 9239) and `.ico` is
+  `image/vnd.microsoft.icon` (IANA); text types name UTF-8. Anything else is
+  still `application/octet-stream`, and every static response keeps `nosniff`.
+- A `favicon.ico` in the app root is now served instead of the embedded icon.
+  The embedded blob remains the fallback when the root has no such regular
+  file.
+
+### Fixed
+
+- `bialet check` (and `-t` on a directory) skips `_tests/`: those files only
+  compile under `-T`, which loads the `Test`/`Tests` prelude, so a healthy
+  suite made a tree check fail with "Variable is used but not defined". An
+  explicitly named file is still checked.
+- `bialet -T -q` silences the whole run, and a migration that fails to compile
+  or apply now fails the run and replays its diagnostics to stderr instead of
+  disappearing into the discarded sink. An empty suite prints
+  "No tests found." even under `-q`, so a CI gate cannot pass silently.
+- `bialet -p 0` reports the kernel-assigned port in the banner and to callers
+  instead of `:0`. An explicit busy port still fails with exit 1.
+- The compile-error prefix keeps the line number for long module paths: the
+  1 KiB buffer is left-truncated with `...` instead of dropping ` line N`, and
+  a null module name is no longer formatted with `%s`.
+- A bare HTML literal used as a statement is reported once, at its line, as
+  "HTML literal used as a statement is discarded; add 'return' or assign it."
+  It no longer surfaces as "Expect method definition" at the end of the file,
+  and a statement body that keeps its newline no longer consumes the next
+  statement.
+- A failed import no longer prints a `Stack Error` frame that names the
+  importer's `import` line. The compilation errors and the "Could not compile
+  module" message remain, every other runtime error keeps its trace, and the
+  test runner still learns the failure line.
+
+### Documentation
+
+- `docs/deployment.md` and `docs/hosted-deployment.md` state that caching,
+  revalidation and compression belong to the reverse proxy. They document two
+  safe cache shapes (a proxy-served public asset directory, or `proxy_cache`
+  that honours Bialet's `no-store`), the `proxy_ignore_headers` trap, the
+  `/notes/42.css` deceptive-URL case, the BREACH caveat for secret-bearing
+  dynamic pages, and gzip/brotli type lists that skip already-compressed
+  formats. The recommended asset location sets `nosniff` itself.
+- The check and quiet-mode pages match the new behaviour (`_tests/` is skipped
+  by the tree walk; `-T -q` also hides migration and `System.log` output, and
+  migration failures are replayed).
+
 ## 1.2.27 — 2026-11-23
 
 ### Added
