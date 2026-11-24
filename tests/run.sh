@@ -2838,6 +2838,271 @@ else
   skip_test "Import failure fails the run " "requires local binary access"
 fi
 
+# Db.migrate is atomic. The statements and the BIALET_MIGRATIONS row commit
+# together, so a failed migration leaves no partial schema; a boolean opt-out
+# runs without that transaction; the ";" split follows SQL syntax (quotes,
+# comments, trigger bodies); and the stored hash flags an edited migration.
+if [[ "$TARGET_EXEC" != "-" ]] && command -v sqlite3 >/dev/null 2>&1; then
+  migatom_line=$LINENO
+  _test_start_ms=$(now_ms)
+  migatom_dir=$(mktemp -d)
+
+  # 1) ";" form, transactional: the second statement fails, so the first
+  #    statement's table and the version row must both be absent.
+  migatom_db="$migatom_dir/atomic.sqlite3"
+  cat > "$migatom_dir/atomic.wren" <<'WREN'
+Db.migrate("atomic-semi", `
+  CREATE TABLE atomic_first (id INTEGER);
+  INSERT INTO atomic_missing (id) VALUES (1);
+`)
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_db" -r "$(cat "$migatom_dir/atomic.wren")" \
+    > "$migatom_dir/atomic.out" 2>&1
+  migatom_atomic_code=$?
+  migatom_atomic_table=$(sqlite3 "$migatom_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'atomic_first'")
+  migatom_atomic_row=$(sqlite3 "$migatom_db" \
+    "SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 'atomic-semi'")
+
+  # 2) Same shape with transaction=false: the first statement survives, the
+  #    version row does not.
+  cat > "$migatom_dir/escape.wren" <<'WREN'
+Db.migrate("escape-semi", `
+  CREATE TABLE escape_first (id INTEGER);
+  INSERT INTO escape_missing (id) VALUES (1);
+`, false)
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_db" -r "$(cat "$migatom_dir/escape.wren")" \
+    > "$migatom_dir/escape.out" 2>&1
+  migatom_escape_code=$?
+  migatom_escape_table=$(sqlite3 "$migatom_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'escape_first'")
+  migatom_escape_row=$(sqlite3 "$migatom_db" \
+    "SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 'escape-semi'")
+
+  # 3) List form: both items apply; a later list whose second item fails rolls
+  #    its first item back.
+  migatom_list_db="$migatom_dir/list.sqlite3"
+  cat > "$migatom_dir/list.wren" <<'WREN'
+Db.migrate("list-ok", [
+  `CREATE TABLE list_one (id INTEGER)`,
+  `CREATE TABLE list_two (id INTEGER)`
+])
+Db.migrate("list-fail", [
+  `CREATE TABLE list_three (id INTEGER)`,
+  `INSERT INTO list_missing (id) VALUES (1)`
+])
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_list_db" -r "$(cat "$migatom_dir/list.wren")" \
+    > "$migatom_dir/list.out" 2>&1
+  migatom_list_code=$?
+  migatom_list_one=$(sqlite3 "$migatom_list_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'list_one'")
+  migatom_list_two=$(sqlite3 "$migatom_list_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'list_two'")
+  migatom_list_three=$(sqlite3 "$migatom_list_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'list_three'")
+  migatom_list_ok_row=$(sqlite3 "$migatom_list_db" \
+    "SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 'list-ok'")
+  migatom_list_fail_row=$(sqlite3 "$migatom_list_db" \
+    "SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 'list-fail'")
+
+  # 4) Splitter: a ";" inside a string default and inside a trigger body must
+  #    not cut the statement. split(";") broke both.
+  migatom_split_db="$migatom_dir/split.sqlite3"
+  cat > "$migatom_dir/split.wren" <<'WREN'
+Db.migrate("splitter", `
+  CREATE TABLE split_def (x TEXT DEFAULT 'a;b');
+  CREATE TABLE split_log (y TEXT);
+  CREATE TRIGGER split_trg AFTER INSERT ON split_def BEGIN
+    INSERT INTO split_log (y) VALUES ('x;y');
+    UPDATE split_log SET y = 'done';
+  END;
+  INSERT INTO split_def DEFAULT VALUES;
+`)
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_split_db" -r "$(cat "$migatom_dir/split.wren")" \
+    > "$migatom_dir/split.out" 2>&1
+  migatom_split_code=$?
+  migatom_split_row=$(sqlite3 "$migatom_split_db" \
+    "SELECT COUNT(*) FROM BIALET_MIGRATIONS WHERE version = 'splitter'")
+  migatom_split_trigger=$(sqlite3 "$migatom_split_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger' AND name = 'split_trg'")
+  migatom_split_default=$(sqlite3 "$migatom_split_db" \
+    "SELECT x FROM split_def LIMIT 1")
+  migatom_split_log=$(sqlite3 "$migatom_split_db" \
+    "SELECT y FROM split_log LIMIT 1")
+
+  # 5) Editing an applied migration logs a warning and does not run the new
+  #    SQL; the stored hash stays in place.
+  migatom_hash_db="$migatom_dir/hash.sqlite3"
+  cat > "$migatom_dir/hash_a.wren" <<'WREN'
+Db.migrate("hashed", `CREATE TABLE hashed_one (id INTEGER)`)
+WREN
+  cat > "$migatom_dir/hash_b.wren" <<'WREN'
+Db.migrate("hashed", `
+  CREATE TABLE hashed_one (id INTEGER);
+  CREATE TABLE hashed_two (id INTEGER);
+`)
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_hash_db" -r "$(cat "$migatom_dir/hash_a.wren")" \
+    > /dev/null 2>&1
+  migatom_hash_code_a=$?
+  migatom_hash_len_a=$(sqlite3 "$migatom_hash_db" \
+    "SELECT length(hash) FROM BIALET_MIGRATIONS WHERE version = 'hashed'")
+  "$TARGET_EXEC" -q -d "$migatom_hash_db" -r "$(cat "$migatom_dir/hash_b.wren")" \
+    > "$migatom_dir/hash_b.out" 2>&1
+  migatom_hash_code_b=$?
+  migatom_hash_len_b=$(sqlite3 "$migatom_hash_db" \
+    "SELECT length(hash) FROM BIALET_MIGRATIONS WHERE version = 'hashed'")
+  migatom_hash_two=$(sqlite3 "$migatom_hash_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'hashed_two'")
+
+  # 6) A row from an older binary has no hash. Backfill it silently: no
+  #    "changed after" warning and the hash is repopulated.
+  sqlite3 "$migatom_hash_db" "UPDATE BIALET_MIGRATIONS SET hash = NULL"
+  "$TARGET_EXEC" -q -d "$migatom_hash_db" -r "$(cat "$migatom_dir/hash_b.wren")" \
+    > "$migatom_dir/hash_backfill.out" 2>&1
+  migatom_backfill_code=$?
+  migatom_backfill_len=$(sqlite3 "$migatom_hash_db" \
+    "SELECT length(hash) FROM BIALET_MIGRATIONS WHERE version = 'hashed'")
+
+  # 7) A Fn migration still runs and stores a NULL hash (no SQL text to hash).
+  migatom_fn_db="$migatom_dir/fn.sqlite3"
+  cat > "$migatom_dir/fn.wren" <<'WREN'
+Db.migrate("fn-migration", Fn.new {
+  `CREATE TABLE fn_one (id INTEGER)`.query
+})
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_fn_db" -r "$(cat "$migatom_dir/fn.wren")" \
+    > /dev/null 2>&1
+  migatom_fn_code=$?
+  migatom_fn_table=$(sqlite3 "$migatom_fn_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE name = 'fn_one'")
+  migatom_fn_hash=$(sqlite3 "$migatom_fn_db" \
+    "SELECT hash IS NULL FROM BIALET_MIGRATIONS WHERE version = 'fn-migration'")
+
+  # 8) Inside `bialet -T`, every test file runs in a savepoint. A Db.migrate
+  #    there must nest a savepoint instead of failing with "cannot start a
+  #    transaction within a transaction", and the per-file rollback must still
+  #    hide the migration's table from the next file.
+  migatom_exe=$(realpath "$TARGET_EXEC")
+  migatom_parent=$(mktemp -d)
+  mkdir -p "$migatom_parent/nested/_tests"
+  printf '<p>ok' > "$migatom_parent/nested/index.html"
+  cat > "$migatom_parent/nested/_tests/nest_a.wren" <<'WREN'
+Test.assert(`SELECT COUNT(*) FROM sqlite_master WHERE name = 'nested_mig'`.toNum == 0, "no table before")
+Db.migrate("nested-migration", `CREATE TABLE nested_mig (id INTEGER)`, true)
+Test.assert(`SELECT COUNT(*) FROM sqlite_master WHERE name = 'nested_mig'`.toNum == 1, "migration applied")
+WREN
+  cat > "$migatom_parent/nested/_tests/nest_b.wren" <<'WREN'
+Test.assert(`SELECT COUNT(*) FROM sqlite_master WHERE name = 'nested_mig'`.toNum == 0, "other file cannot see it")
+WREN
+  migatom_nested_out=$(cd "$migatom_parent" && "$migatom_exe" -T nested 2>&1)
+  migatom_nested_code=$?
+
+  # 9) The unique index exists, so a duplicate version row is rejected.
+  migatom_index=$(sqlite3 "$migatom_hash_db" \
+    "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'BIALET_MIGRATIONS_VERSION'")
+  cat > "$migatom_dir/dup.wren" <<'WREN'
+`INSERT INTO BIALET_MIGRATIONS (version) VALUES ('hashed')`.query
+WREN
+  "$TARGET_EXEC" -q -d "$migatom_hash_db" -r "$(cat "$migatom_dir/dup.wren")" \
+    > "$migatom_dir/dup.out" 2>&1
+  migatom_dup_code=$?
+  # Read the captured output before the scratch tree goes away.
+  migatom_atomic_out=$(head -c 200 "$migatom_dir/atomic.out" 2>/dev/null)
+  migatom_dup_out=$(head -c 200 "$migatom_dir/dup.out" 2>/dev/null)
+  migatom_hash_warn=0
+  grep -q "changed after it was applied" "$migatom_dir/hash_b.out" \
+    2>/dev/null && migatom_hash_warn=1
+  migatom_backfill_warn=0
+  grep -q "changed after it was applied" "$migatom_dir/hash_backfill.out" \
+    2>/dev/null && migatom_backfill_warn=1
+  migatom_dup_unique=0
+  grep -q "UNIQUE constraint failed" "$migatom_dir/dup.out" \
+    2>/dev/null && migatom_dup_unique=1
+  rm -rf "$migatom_dir" "$migatom_parent"
+
+  if [[ "$migatom_atomic_code" != 0 && "$migatom_atomic_table" == "0" \
+        && "$migatom_atomic_row" == "0" ]]; then
+    report_result "Transactional migration     " "$migatom_line" 0
+  else
+    report_result "Transactional migration     " "$migatom_line" 1 \
+      "code($migatom_atomic_code) table($migatom_atomic_table) row($migatom_atomic_row) out:'$migatom_atomic_out'"
+  fi
+  if [[ "$migatom_escape_code" != 0 && "$migatom_escape_table" == "1" \
+        && "$migatom_escape_row" == "0" ]]; then
+    report_result "Migration escape hatch      " "$migatom_line" 0
+  else
+    report_result "Migration escape hatch      " "$migatom_line" 1 \
+      "code($migatom_escape_code) table($migatom_escape_table) row($migatom_escape_row)"
+  fi
+  if [[ "$migatom_list_code" != 0 && "$migatom_list_one" == "1" \
+        && "$migatom_list_two" == "1" && "$migatom_list_three" == "0" \
+        && "$migatom_list_ok_row" == "1" && "$migatom_list_fail_row" == "0" ]]; then
+    report_result "Migration list form         " "$migatom_line" 0
+  else
+    report_result "Migration list form         " "$migatom_line" 1 \
+      "code($migatom_list_code) one($migatom_list_one) two($migatom_list_two) three($migatom_list_three) rows($migatom_list_ok_row/$migatom_list_fail_row)"
+  fi
+  if [[ "$migatom_split_code" == 0 && "$migatom_split_row" == "1" \
+        && "$migatom_split_trigger" == "1" && "$migatom_split_default" == "a;b" \
+        && "$migatom_split_log" == "done" ]]; then
+    report_result "Migration splitter quotes   " "$migatom_line" 0
+  else
+    report_result "Migration splitter quotes   " "$migatom_line" 1 \
+      "code($migatom_split_code) row($migatom_split_row) trigger($migatom_split_trigger) default:'$migatom_split_default' log:'$migatom_split_log'"
+  fi
+  if [[ "$migatom_hash_code_a" == 0 && "$migatom_hash_len_a" == "64" \
+        && "$migatom_hash_code_b" == 0 && "$migatom_hash_len_b" == "64" \
+        && "$migatom_hash_two" == "0" && "$migatom_hash_warn" == "1" ]]; then
+    report_result "Migration hash warning      " "$migatom_line" 0
+  else
+    report_result "Migration hash warning      " "$migatom_line" 1 \
+      "a($migatom_hash_code_a/$migatom_hash_len_a) b($migatom_hash_code_b/$migatom_hash_len_b) two($migatom_hash_two) warn($migatom_hash_warn)"
+  fi
+  if [[ "$migatom_backfill_code" == 0 && "$migatom_backfill_len" == "64" \
+        && "$migatom_backfill_warn" == "0" ]]; then
+    report_result "Migration hash backfill     " "$migatom_line" 0
+  else
+    report_result "Migration hash backfill     " "$migatom_line" 1 \
+      "code($migatom_backfill_code) len($migatom_backfill_len) warn($migatom_backfill_warn)"
+  fi
+  if [[ "$migatom_fn_code" == 0 && "$migatom_fn_table" == "1" \
+        && "$migatom_fn_hash" == "1" ]]; then
+    report_result "Fn migration has no hash    " "$migatom_line" 0
+  else
+    report_result "Fn migration has no hash    " "$migatom_line" 1 \
+      "code($migatom_fn_code) table($migatom_fn_table) nullHash($migatom_fn_hash)"
+  fi
+  if [[ "$migatom_nested_code" == 0 && "$migatom_nested_out" == *"Passed Tests: 2"* \
+        && "$migatom_nested_out" == *"Failed Tests: 0"* \
+        && "$migatom_nested_out" != *"cannot start a transaction"* ]]; then
+    report_result "Nested migration in -T      " "$migatom_line" 0
+  else
+    report_result "Nested migration in -T      " "$migatom_line" 1 \
+      "code($migatom_nested_code):'${migatom_nested_out:0:240}'"
+  fi
+  if [[ "$migatom_index" == "1" && "$migatom_dup_code" != 0 \
+        && "$migatom_dup_unique" == "1" ]]; then
+    report_result "Migration unique version    " "$migatom_line" 0
+  else
+    report_result "Migration unique version    " "$migatom_line" 1 \
+      "index($migatom_index) code($migatom_dup_code) out:'$migatom_dup_out'"
+  fi
+else
+  skip_test "Transactional migration     " "requires local binary access and sqlite3"
+  skip_test "Migration escape hatch      " "requires local binary access and sqlite3"
+  skip_test "Migration list form         " "requires local binary access and sqlite3"
+  skip_test "Migration splitter quotes   " "requires local binary access and sqlite3"
+  skip_test "Migration hash warning      " "requires local binary access and sqlite3"
+  skip_test "Migration hash backfill     " "requires local binary access and sqlite3"
+  skip_test "Fn migration has no hash    " "requires local binary access and sqlite3"
+  skip_test "Nested migration in -T      " "requires local binary access and sqlite3"
+  skip_test "Migration unique version    " "requires local binary access and sqlite3"
+fi
+
 # -t (validate) must refuse a file it cannot resolve, and a file outside the
 # application root, instead of validating something else.
 if [[ "$TARGET_EXEC" != "-" ]]; then

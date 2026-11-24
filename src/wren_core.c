@@ -1753,6 +1753,14 @@ DEF_PRIMITIVE(secret_available) {
   RETURN_BOOL(secret_key_available());
 }
 
+// True while the shared handle has a transaction (or savepoint) open. Db.migrate
+// uses it to choose BEGIN IMMEDIATE over SAVEPOINT: under `bialet -T` each test
+// file already runs inside a savepoint, and a bare BEGIN there fails with
+// "cannot start a transaction within a transaction".
+DEF_PRIMITIVE(db_inTransaction) {
+  RETURN_BOOL(db != NULL && sqlite3_get_autocommit(db) == 0);
+}
+
 // Returns the hex value of [c], or -1 if it is not a hex digit.
 static int urlHexDigit(char c) {
   if(c >= '0' && c <= '9')
@@ -3172,6 +3180,172 @@ DEF_PRIMITIVE(query_new) {
   RETURN_VAL(wrenNewQuery(vm, queryString));
 }
 
+// Single-character whitespace test used to trim statements and skip comments
+// when deciding whether a piece carries any SQL at all.
+static int is_sql_space(char c) {
+  return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' || c == '\v';
+}
+
+// True when [start, end) holds something other than whitespace, semicolons and
+// comments. A trailing comment after the last ";" is not a statement, and
+// executing it would prepare an empty statement (sqlite3_prepare_v2 returns
+// SQLITE_OK with a NULL stmt), which query_execute cannot step.
+static int range_has_code(const char* sql, size_t start, size_t end) {
+  size_t i = start;
+  while(i < end) {
+    char c = sql[i];
+    if(is_sql_space(c) || c == ';') {
+      i++;
+      continue;
+    }
+    if(c == '-' && i + 1 < end && sql[i + 1] == '-') {
+      i += 2;
+      while(i < end && sql[i] != '\n')
+        i++;
+      continue;
+    }
+    if(c == '/' && i + 1 < end && sql[i + 1] == '*') {
+      i += 2;
+      while(i + 1 < end && !(sql[i] == '*' && sql[i + 1] == '/'))
+        i++;
+      i = i + 1 < end ? i + 2 : end;
+      continue;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+static void add_migration_statement(WrenVM* vm, ObjList* statements, const char* sql,
+                                    size_t start, size_t end) {
+  while(start < end && is_sql_space(sql[start]))
+    start++;
+  while(end > start && is_sql_space(sql[end - 1]))
+    end--;
+  if(start >= end || !range_has_code(sql, start, end))
+    return;
+  wrenValueBufferWrite(vm, &statements->elements,
+                       wrenNewStringLength(vm, sql + start, end - start));
+}
+
+// Upper bound on the statements one migration may contain. A migration is a
+// deploy-time file, but a runaway generator must fail with a clear message
+// instead of building an unbounded list.
+#define MAX_MIGRATION_STATEMENTS 256
+
+// Splits migration SQL at the semicolons that really end a statement.
+// `split(";")` cut inside 'strings', "identifiers", `backticks`, [brackets],
+// -- comments, /* block comments */ and trigger bodies, so a DEFAULT 'a;b' or
+// a CREATE TRIGGER with two statements was torn in half and the migration
+// failed. sqlite3_complete() settles the trigger-body case: a ";" inside
+// "BEGIN ...; ... END;" does not complete the statement, so it is kept.
+DEF_PRIMITIVE(query_split) {
+  if(!is_query_text(args[1])) {
+    vm->fiber->error = wrenStringFormat(vm, "Query must be a string.");
+    return false;
+  }
+  if(has_embedded_nul(args[1])) {
+    vm->fiber->error =
+        wrenStringFormat(vm, "Query text must not contain NUL bytes.");
+    return false;
+  }
+  const char* sql = AS_CSTRING(args[1]);
+  size_t      len = strlen(sql);
+
+  // sqlite3_complete() needs a NUL-terminated statement. Probe into this one
+  // buffer, reused for every candidate semicolon.
+  char* probe = malloc(len + 1);
+  if(probe == NULL)
+    RETURN_ERROR("Out of memory splitting migration SQL");
+
+  // The list and the statement strings below are reachable only from C locals
+  // until the finished list is returned; pause collection while building it,
+  // as query_fetch does for the same reason.
+  size_t saved_next_gc = vm->nextGC;
+  vm->nextGC = SIZE_MAX;
+
+  ObjList* statements = wrenNewList(vm, 0);
+  wrenPushRoot(vm, (Obj*)statements);
+
+  size_t start = 0;
+  size_t i = 0;
+  int    too_many = 0;
+  while(i < len) {
+    char c = sql[i];
+    if(c == '\'' || c == '"' || c == '`') {
+      // A doubled quote is an escaped quote, not the end of the token.
+      char quote = c;
+      i++;
+      while(i < len) {
+        if(sql[i] == quote) {
+          if(i + 1 < len && sql[i + 1] == quote) {
+            i += 2;
+            continue;
+          }
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if(c == '[') {
+      i++;
+      while(i < len && sql[i] != ']')
+        i++;
+      if(i < len)
+        i++;
+      continue;
+    }
+    if(c == '-' && i + 1 < len && sql[i + 1] == '-') {
+      i += 2;
+      while(i < len && sql[i] != '\n')
+        i++;
+      continue;
+    }
+    if(c == '/' && i + 1 < len && sql[i + 1] == '*') {
+      i += 2;
+      while(i + 1 < len && !(sql[i] == '*' && sql[i + 1] == '/'))
+        i++;
+      i = i + 1 < len ? i + 2 : len;
+      continue;
+    }
+    if(c == ';') {
+      size_t statement_end = i + 1;
+      size_t statement_len = statement_end - start;
+      memcpy(probe, sql + start, statement_len);
+      probe[statement_len] = '\0';
+      if(sqlite3_complete(probe)) {
+        if(statements->elements.count >= MAX_MIGRATION_STATEMENTS) {
+          too_many = 1;
+          break;
+        }
+        add_migration_statement(vm, statements, sql, start, statement_end);
+        start = statement_end;
+      }
+      i++;
+      continue;
+    }
+    i++;
+  }
+  if(!too_many && start < len &&
+     statements->elements.count < MAX_MIGRATION_STATEMENTS)
+    add_migration_statement(vm, statements, sql, start, len);
+
+  free(probe);
+  vm->nextGC = saved_next_gc;
+  wrenPopRoot(vm); // statements
+  if(too_many) {
+    vm->fiber->error =
+        wrenStringFormat(vm,
+                         "Migration has more than %d statements; split it into "
+                         "several Db.migrate calls.",
+                         MAX_MIGRATION_STATEMENTS);
+    return false;
+  }
+  RETURN_OBJ(statements);
+}
+
 // Creates either the Object or Class class in the core module with [name].
 static ObjClass* defineClass(WrenVM* vm, ObjModule* module, const char* name) {
   ObjString* nameString = AS_STRING(wrenNewString(vm, name));
@@ -3396,6 +3570,7 @@ void wrenInitializeCore(WrenVM* vm) {
 
   vm->queryClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Query"));
   PRIMITIVE(vm->queryClass->obj.classObj, "new(_)", query_new);
+  PRIMITIVE(vm->queryClass->obj.classObj, "split_(_)", query_split);
   PRIMITIVE(vm->queryClass, "toString", query_toString);
   PRIMITIVE(vm->queryClass, "queryRaw_(_,_)", query_execute);
   PRIMITIVE(vm->queryClass, "fetchRaw_(_,_)", query_fetch);
@@ -3504,6 +3679,9 @@ void wrenInitializeCore(WrenVM* vm) {
 
   ObjClass* secretClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Secret"));
   PRIMITIVE(secretClass->obj.classObj, "available_()", secret_available);
+
+  ObjClass* dbClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Db"));
+  PRIMITIVE(dbClass->obj.classObj, "inTransaction_()", db_inTransaction);
 
   ObjClass* httpClass = AS_CLASS(wrenFindVariable(vm, coreModule, "Http"));
   PRIMITIVE(httpClass, "call_(_,_,_,_,_,_,_)", http_call);
