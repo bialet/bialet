@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'hosted-deployment';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Deployment" href="deployment.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.27" />
+  <meta name="docsearch:version" content="1.2.28" />
   </head>
   
   
@@ -565,16 +565,19 @@ a build-provenance attestation: <code class="docutils literal notranslate"><span
 and otherwise warns; <code class="docutils literal notranslate"><span class="pre">BIALET_REQUIRE_ATTESTATION=1</span></code> makes a missing or
 unverifiable attestation fatal (<a class="reference internal" href="installation.html#releases"><span class="std std-ref">Installation</span></a>).</p>
 <p>Do not start the release yet. It must pass the gate:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compile every .wren file. No database is opened or created.</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compile every .wren file the walk visits (a top-level _tests/ suite is</span>
+<span class="c1"># checked by -T). No database is opened or created.</span>
 <span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/bialet"</span><span class="w"> </span>check<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app"</span>
 
 <span class="c1"># If the release ships _tests/, run them. They use a temporary database.</span>
 <span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/bialet"</span><span class="w"> </span>-T<span class="w"> </span><span class="s2">"</span><span class="nv">$RELEASE</span><span class="s2">/app"</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">check</span></code> exits <code class="docutils literal notranslate"><span class="pre">0</span></code> only when every file compiles and every backtick SQL literal
-parses, <code class="docutils literal notranslate"><span class="pre">1</span></code> otherwise. <code class="docutils literal notranslate"><span class="pre">-T</span></code> uses a throwaway database, never the production one,
-so it cannot write to <code class="docutils literal notranslate"><span class="pre">shared/</span></code> (<a class="reference internal" href="usage.html#check-a-whole-app-tree"><span class="std std-ref">Checking a whole app tree</span></a>,
+<p><code class="docutils literal notranslate"><span class="pre">check</span></code> exits <code class="docutils literal notranslate"><span class="pre">0</span></code> only when every visited file compiles and every backtick SQL
+literal parses, <code class="docutils literal notranslate"><span class="pre">1</span></code> otherwise. The walk skips a <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> directory at any
+depth, because those files only compile under <code class="docutils literal notranslate"><span class="pre">-T</span></code>; an explicitly named file is
+still checked. <code class="docutils literal notranslate"><span class="pre">-T</span></code> uses a throwaway database, never the production one, so it
+cannot write to <code class="docutils literal notranslate"><span class="pre">shared/</span></code> (<a class="reference internal" href="usage.html#check-a-whole-app-tree"><span class="std std-ref">Checking a whole app tree</span></a>,
 <a class="reference internal" href="tests.html"><span class="std std-doc">Testing</span></a>).</p>
 </section>
 <section id="the-runtime-command">
@@ -680,6 +683,15 @@ bytes Bialet accepts).</p>
 <span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">1100k</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">client_body_timeout</span><span class="w"> </span><span class="s">10s</span><span class="p">;</span>
 
+<span class="w">    </span><span class="c1"># Compression is the proxy's job: Bialet never compresses.</span>
+<span class="w">    </span><span class="kn">gzip</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">gzip_vary</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">gzip_min_length</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">gzip_comp_level</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">gzip_types</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">text/plain</span><span class="w"> </span><span class="s">text/xml</span><span class="w"> </span><span class="s">application/json</span>
+<span class="w">               </span><span class="s">text/javascript</span><span class="w"> </span><span class="s">application/javascript</span><span class="w"> </span><span class="s">application/wasm</span>
+<span class="w">               </span><span class="s">image/svg+xml</span><span class="p">;</span>
+
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
@@ -692,6 +704,17 @@ bytes Bialet accepts).</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>Bialet sends no <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code>, <code class="docutils literal notranslate"><span class="pre">ETag</span></code> or <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> on static files and
+never compresses a body: both are the proxy’s job, which is why the block above
+sets <code class="docutils literal notranslate"><span class="pre">gzip</span></code>. Do not compress a page that renders a secret next to reflected
+input (see the compression pitfall in
+<a class="reference internal" href="deployment.html#static-files"><span class="std std-ref">Static Files</span></a>). To cache too, either serve a public
+asset directory from nginx — releases are immutable, so hashed asset filenames
+can take a long <code class="docutils literal notranslate"><span class="pre">max-age</span></code> — or enable <code class="docutils literal notranslate"><span class="pre">proxy_cache</span></code>;
+<a class="reference internal" href="deployment.html#static-files"><span class="std std-ref">Static Files</span></a> has the two shapes and the
+configuration that is wrong. Do not add
+<code class="docutils literal notranslate"><span class="pre">proxy_ignore_headers</span> <span class="pre">Cache-Control</span></code>: Bialet marks every Wren response
+<code class="docutils literal notranslate"><span class="pre">no-store</span></code>, and overriding that caches sessions and error pages.</p>
 <p>Bialet already refuses <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">.</span></code> names, including <code class="docutils literal notranslate"><span class="pre">/_health</span></code>, so this block can
 proxy every path. For defense in depth, add the private-name deny and the
 <code class="docutils literal notranslate"><span class="pre">/.well-known/</span></code> exception from

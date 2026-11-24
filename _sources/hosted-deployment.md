@@ -111,16 +111,19 @@ unverifiable attestation fatal ([Installation](installation.md#releases)).
 Do not start the release yet. It must pass the gate:
 
 ```bash
-# Compile every .wren file. No database is opened or created.
+# Compile every .wren file the walk visits (a top-level _tests/ suite is
+# checked by -T). No database is opened or created.
 "$RELEASE/bialet" check "$RELEASE/app"
 
 # If the release ships _tests/, run them. They use a temporary database.
 "$RELEASE/bialet" -T "$RELEASE/app"
 ```
 
-`check` exits `0` only when every file compiles and every backtick SQL literal
-parses, `1` otherwise. `-T` uses a throwaway database, never the production one,
-so it cannot write to `shared/` ([Checking a whole app tree](usage.md#check-a-whole-app-tree),
+`check` exits `0` only when every visited file compiles and every backtick SQL
+literal parses, `1` otherwise. The walk skips a `_tests/` directory at any
+depth, because those files only compile under `-T`; an explicitly named file is
+still checked. `-T` uses a throwaway database, never the production one, so it
+cannot write to `shared/` ([Checking a whole app tree](usage.md#check-a-whole-app-tree),
 [Testing](tests.md)).
 
 ## The Runtime Command
@@ -211,6 +214,15 @@ server {
     client_max_body_size 1100k;
     client_body_timeout 10s;
 
+    # Compression is the proxy's job: Bialet never compresses.
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_comp_level 5;
+    gzip_types text/css text/plain text/xml application/json
+               text/javascript application/javascript application/wasm
+               image/svg+xml;
+
     location / {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -222,6 +234,18 @@ server {
     }
 }
 ```
+
+Bialet sends no `Cache-Control`, `ETag` or `Last-Modified` on static files and
+never compresses a body: both are the proxy's job, which is why the block above
+sets `gzip`. Do not compress a page that renders a secret next to reflected
+input (see the compression pitfall in
+[Static Files](deployment.md#static-files)). To cache too, either serve a public
+asset directory from nginx — releases are immutable, so hashed asset filenames
+can take a long `max-age` — or enable `proxy_cache`;
+[Static Files](deployment.md#static-files) has the two shapes and the
+configuration that is wrong. Do not add
+`proxy_ignore_headers Cache-Control`: Bialet marks every Wren response
+`no-store`, and overriding that caches sessions and error pages.
 
 Bialet already refuses `_`/`.` names, including `/_health`, so this block can
 proxy every path. For defense in depth, add the private-name deny and the

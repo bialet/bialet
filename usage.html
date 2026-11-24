@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Configuration" href="configuration.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.27" />
+  <meta name="docsearch:version" content="1.2.28" />
   </head>
   
   
@@ -603,7 +603,7 @@ bialet<span class="w"> </span>--port<span class="o">=</span><span class="m">8080
 <td><p>None</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code>, <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
-<td><p>Quiet: suppress the browser auto-open and colored output</p></td>
+<td><p>Quiet: no browser auto-open, no colored output; with <code class="docutils literal notranslate"><span class="pre">-T</span></code>, no migration or log output</p></td>
 <td><p>Disabled</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-W</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code></p></td>
@@ -681,7 +681,7 @@ of multipart framing. With defaults that is about <strong>120 KB</strong>, not 4
 <h3>Version<a class="headerlink" href="#version" title="Link to this heading">#</a></h3>
 <p>Print the installed version and exit:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-v
-<span class="c1"># bialet 1.2.27</span>
+<span class="c1"># bialet 1.2.28</span>
 </pre></div>
 </div>
 </section>
@@ -692,6 +692,14 @@ Useful in scripts, containers, and CI:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bialet<span class="w"> </span>-q<span class="w"> </span>/path/to/app
 </pre></div>
 </div>
+<p>In server mode that is all it does: log lines still print, just without color.
+Combined with the test runner, <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span> <span class="pre">-q</span></code> goes further and silences the
+run’s log: the migrations and the tests’ <code class="docutils literal notranslate"><span class="pre">System.print</span></code>/<code class="docutils literal notranslate"><span class="pre">System.log</span></code> output.
+What remains is the one-line summary plus a <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">FAIL</span></code> block per failure. A
+migration that fails to compile or apply is replayed to stderr and makes the
+run exit non-zero; notices emitted while Bialet is still starting can still
+appear, and with <code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">FILE</span></code> the silenced records are not written to that file.
+See <a class="reference internal" href="tests.html"><span class="std std-doc">Testing</span></a>.</p>
 </section>
 <section id="editing-migrations-without-applying-them">
 <h3>Editing migrations without applying them<a class="headerlink" href="#editing-migrations-without-applying-them" title="Link to this heading">#</a></h3>
@@ -780,10 +788,15 @@ and <code class="docutils literal notranslate"><span class="pre">bialet</span> <
 positional argument. Each file is compiled in its own VM, so imports shared by
 two pages do not collide.</p>
 <p>The walk includes private files and directories (<code class="docutils literal notranslate"><span class="pre">_app/</span></code>, <code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code>,
-<code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code>, <code class="docutils literal notranslate"><span class="pre">_tests/</span></code>) because they are part of the app. It skips
-dot-directories (<code class="docutils literal notranslate"><span class="pre">.git</span></code>, <code class="docutils literal notranslate"><span class="pre">.venv</span></code>), symbolic links, and anything that is not a
-<code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, so it cannot leave the tree or loop on a link. The check exits
-<code class="docutils literal notranslate"><span class="pre">0</span></code> only when every file compiles; failures name the file that failed.</p>
+<code class="docutils literal notranslate"><span class="pre">_cron.wren</span></code>) because they are part of the app. It skips <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> at any depth:
+those files only compile under <code class="docutils literal notranslate"><span class="pre">-T</span></code>, which loads the prelude that defines <code class="docutils literal notranslate"><span class="pre">Test</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Tests</span></code>, so a tree check of a healthy suite would fail with “Variable is
+used but not defined”. It also skips dot-directories (<code class="docutils literal notranslate"><span class="pre">.git</span></code>, <code class="docutils literal notranslate"><span class="pre">.venv</span></code>),
+symbolic links, and anything that is not a <code class="docutils literal notranslate"><span class="pre">.wren</span></code> file, so it cannot leave the
+tree or loop on a link. The check exits <code class="docutils literal notranslate"><span class="pre">0</span></code> only when every file compiles;
+failures name the file that failed.</p>
+<p>Only the directory walk skips <code class="docutils literal notranslate"><span class="pre">_tests/</span></code>. A file named explicitly is still
+checked: <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-t</span> <span class="pre">_tests/api.wren</span></code> reports the missing <code class="docutils literal notranslate"><span class="pre">Test</span></code>.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: a directory check does not run migrations, so a migration that
 depends on a table created earlier in the same file still passes. Like a
@@ -827,7 +840,7 @@ compilation errors. Useful for CI/CD pipelines and pre-commit hooks.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-s<span class="w"> </span>http://127.0.0.1:7001/_health
 </pre></div>
 </div>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.27"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.28"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>The response is <code class="docutils literal notranslate"><span class="pre">200</span></code> when a trivial database query succeeds and <code class="docutils literal notranslate"><span class="pre">503</span></code> with

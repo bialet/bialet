@@ -70,7 +70,7 @@ bialet --port=8080 /path/to/app
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
-| `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+| `-q`, `--quiet`         | Quiet: no browser auto-open, no colored output; with `-T`, no migration or log output | Disabled                            |
 | `-W`, `--no-watch`      | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
@@ -155,6 +155,15 @@ Useful in scripts, containers, and CI:
 ```bash
 bialet -q /path/to/app
 ```
+
+In server mode that is all it does: log lines still print, just without color.
+Combined with the test runner, `bialet -T -q` goes further and silences the
+run's log: the migrations and the tests' `System.print`/`System.log` output.
+What remains is the one-line summary plus a `### FAIL` block per failure. A
+migration that fails to compile or apply is replayed to stderr and makes the
+run exit non-zero; notices emitted while Bialet is still starting can still
+appear, and with `-l FILE` the silenced records are not written to that file.
+See [Testing](tests.md).
 
 ### Editing migrations without applying them
 
@@ -266,10 +275,16 @@ positional argument. Each file is compiled in its own VM, so imports shared by
 two pages do not collide.
 
 The walk includes private files and directories (`_app/`, `_migration.wren`,
-`_cron.wren`, `_tests/`) because they are part of the app. It skips
-dot-directories (`.git`, `.venv`), symbolic links, and anything that is not a
-`.wren` file, so it cannot leave the tree or loop on a link. The check exits
-`0` only when every file compiles; failures name the file that failed.
+`_cron.wren`) because they are part of the app. It skips `_tests/` at any depth:
+those files only compile under `-T`, which loads the prelude that defines `Test`
+and `Tests`, so a tree check of a healthy suite would fail with "Variable is
+used but not defined". It also skips dot-directories (`.git`, `.venv`),
+symbolic links, and anything that is not a `.wren` file, so it cannot leave the
+tree or loop on a link. The check exits `0` only when every file compiles;
+failures name the file that failed.
+
+Only the directory walk skips `_tests/`. A file named explicitly is still
+checked: `bialet -t _tests/api.wren` reports the missing `Test`.
 
 > ⚠️ Pitfall: a directory check does not run migrations, so a migration that
 > depends on a table created earlier in the same file still passes. Like a

@@ -18,7 +18,8 @@ proxy (nginx, Apache, or Caddy) gives you:
 
 - **TLS termination** — HTTPS for your users
 - **HTTP/1.1 or HTTP/2** between the client and the proxy
-- **Static file caching and gzip** — the proxy can compress and cache assets
+- **Static file caching and gzip** — the proxy compresses and caches assets;
+  Bialet does neither (see [Static Files](#static-files))
 - **Security** — Bialet only needs to listen on `127.0.0.1`, not the public
   internet
 
@@ -187,10 +188,103 @@ access control it has.
 
 ## Static Files
 
-Bialet serves static files (CSS, JS, images, fonts) directly. For better
-performance, configure your reverse proxy to:
+Bialet serves static files (CSS, JS, images, fonts) directly. The
+`Content-Type` comes from the extension, case-insensitively, following MDN's
+common MIME types: fonts as `font/woff2`, `font/woff`, `font/ttf`, `font/otf`,
+JavaScript as `text/javascript`, icons as `image/vnd.microsoft.icon`, plus
+images, audio and video, `application/wasm`, web manifests, source maps, CSV and
+Markdown. Text types name UTF-8 explicitly. Anything else is sent as
+`application/octet-stream`. Every static response also carries
+`X-Content-Type-Options: nosniff`. `/favicon.ico` is served from the app root
+when you ship one there; otherwise Bialet answers with its embedded icon.
 
-- **Gzip** or **brotli** compress text-based assets (CSS, JS, HTML, SVG)
+That is all Bialet does for a static file: no `Cache-Control`, `ETag`,
+`Last-Modified` or `Content-Encoding`, and no conditional-request path — an
+`If-None-Match` or `If-Modified-Since` request gets the full file back with
+`200`. Bialet never compresses a body either. Caching, revalidation and
+compression belong to the reverse proxy. Pick one of the two cache strategies
+below and turn compression on.
+
+Wren responses start with `Cache-Control: no-store`
+([Security](security.md#other-defaults)), which keeps them out of a shared
+cache. An explicit static file is public by design; anything served through
+Wren is a dynamic response until the app says otherwise.
+
+### Serve public assets from the proxy (recommended)
+
+A dedicated directory that holds only public assets — no `.wren` files, no
+`_db.sqlite3`, nothing private — answered by nginx instead of proxied:
+
+```nginx
+location /assets/ {
+    alias /srv/example/public/;
+    add_header Cache-Control "public, max-age=2592000, immutable";
+    add_header X-Content-Type-Options nosniff;
+    access_log off;
+}
+```
+
+A location-level `add_header` replaces the server-level ones nginx would
+otherwise inherit, so this block sets `nosniff` itself: copy any other security
+header you rely on into it. `expires` plus an explicit `Cache-Control` would
+emit two headers for one policy; use one.
+
+nginx opens the file itself, so it generates the `ETag` and `Last-Modified` and
+answers `If-None-Match`/`If-Modified-Since` with `304` on its own. Bialet never
+sees the request. Because the browser will not revalidate for a month, the URL
+must change when the file changes: add a version or a content hash
+(`/assets/app.css?v=42`, `app.9f3c1a.css`) and update the reference on every
+deploy. A fixed URL plus `max-age` is a trap — the old file stays in every
+browser that saw it, with no way to revoke it. A missing asset is now nginx's
+`404`, not Bialet's page: the directory has to be complete.
+
+> ⚠️ Pitfall: do not point `alias`/`root` at the app directory. It holds your
+> `.wren` route files, `_db.sqlite3` and other private files; Bialet runs the
+> first and refuses the rest, but a proxy serving from it answers
+> `GET /index.wren` with your source code and `GET /_db.sqlite3` with your
+> database. Serve a directory that holds nothing but public assets.
+
+### Cache Bialet responses with `proxy_cache` (alternative)
+
+If the assets cannot move — they live in the app directory, or Wren generates
+them — put nginx's cache in front. The only safe shape caches on the response
+headers Bialet sends and nothing else:
+
+```nginx
+# http context
+proxy_cache_path /var/cache/nginx/bialet levels=1:2 keys_zone=bialet:10m
+                 inactive=1h max_size=1g;
+
+server {
+    # ...
+    location / {
+        # ... the proxy_set_header lines and proxy_pass from below ...
+        proxy_cache bialet;
+        proxy_cache_key "$scheme$host$request_uri";
+        proxy_cache_valid 200 1h;
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+}
+```
+
+- **Do not set `proxy_ignore_headers Cache-Control` or
+  `proxy_ignore_headers Set-Cookie`.** With them, nginx caches Wren 200s and
+  any 200 that carries `Set-Cookie`. Without them, Bialet's `no-store` keeps
+  every dynamic response out, and only static files — which send no
+  `Cache-Control` at all — are stored, plus any Wren response the app marked
+  cacheable itself.
+- **Never derive the decision from the URL suffix or `Content-Type`.** See the
+  pitfall below: `/notes/42.css` can be a page served by Wren.
+- **There is no revalidation upstream.** Bialet sends no `ETag` or
+  `Last-Modified`, so when `proxy_cache_valid` expires nginx refetches the
+  whole file. Keep the TTL short (`1h`) and version asset URLs, as above.
+- **A deploy can serve stale files** until the cached entry expires. Purge the
+  cache as part of the release: `proxy_cache_purge` on a commercial build, or
+  emptying the directory.
+
+This caches at the proxy, not in the browser: unless the app sets its own
+`Cache-Control`, clients still fetch from nginx on every page view.
+`X-Cache-Status` reports `MISS`/`HIT`/`BYPASS` and makes the behaviour visible.
 
 > ⚠️ Pitfall: do not label responses cacheable by URL suffix or by
 > `Content-Type` at the proxy. Bialet routes `/notes/42.css` to `notes.wren`
@@ -200,14 +294,45 @@ performance, configure your reverse proxy to:
 > longer `Cache-Control` in the app (`Response.header(...)`) only on responses
 > you know are public.
 
-> ⚠️ Pitfall: do not let the proxy serve files from the app directory. The
-> app directory holds your `.wren` route files, `_db.sqlite3` and other private
-> files; Bialet runs the first and refuses the rest, but a proxy `root` +
-> `try_files` (or an Apache `DocumentRoot` + `-f` rewrite) pointed at it answers
-> `GET /index.wren` with your source code and `GET /_db.sqlite3` with your
-> database. Proxy every request to Bialet, as the configurations below do. If you
-> want the proxy to serve assets itself, give it a separate directory that holds
-> nothing but those assets.
+### Compression
+
+nginx:
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_min_length 1024;
+gzip_comp_level 5;
+gzip_types text/css text/plain text/xml application/json
+           text/javascript application/javascript application/wasm
+           image/svg+xml;
+```
+
+`gzip on` already covers `text/html`; listing it again does nothing. Do not add
+fonts (`woff2`, `woff`), images (`png`, `jpg`, `webp`, `avif`) or video: they
+are compressed already, so gzipping them costs CPU and saves nothing.
+`gzip_vary on` sends `Vary: Accept-Encoding`, so a shared cache never replays a
+compressed body to a client that cannot decode it.
+
+> ⚠️ Pitfall: do not compress a page that renders a secret (a session or CSRF
+> token) next to input the attacker can control, such as a reflected query
+> parameter. Comparing compressed sizes across guesses leaks the secret
+> (BREACH). Keep those routes identity-encoded, or turn compression off for
+> them; caching headers do not help.
+
+Brotli is a separate module, packaged by most distributions:
+
+```nginx
+brotli on;
+brotli_min_length 1024;
+brotli_types text/css text/plain text/xml application/json
+             text/javascript application/javascript application/wasm
+             image/svg+xml;
+```
+
+Keep the same type list as `gzip_types`. The Apache blocks below pass the same
+MIME list to `AddOutputFilterByType DEFLATE`; Caddy's `encode gzip zstd`
+compresses text types by default and needs no list.
 
 ## Reverse Proxy Setups
 
@@ -270,11 +395,12 @@ Virtual host configuration:
 <VirtualHost *:80>
     ServerName example.com
 
-    # Gzip
+    # Gzip text types. Fonts, images and video are compressed already.
     <IfModule mod_deflate.c>
-        AddOutputFilterByType DEFLATE text/html text/css text/javascript
-        AddOutputFilterByType DEFLATE application/javascript application/json
-        AddOutputFilterByType DEFLATE image/svg+xml
+        AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+        AddOutputFilterByType DEFLATE application/json
+        AddOutputFilterByType DEFLATE text/javascript application/javascript
+        AddOutputFilterByType DEFLATE application/wasm image/svg+xml
     </IfModule>
 
 
@@ -425,11 +551,12 @@ block — but prefer renaming those files.
     LimitRequestBody 1048576
     RequestReadTimeout header=20-40,MinRate=500 body=30,MinRate=500
 
-    # Gzip
+    # Gzip text types. Fonts, images and video are compressed already.
     <IfModule mod_deflate.c>
-        AddOutputFilterByType DEFLATE text/html text/css text/javascript
-        AddOutputFilterByType DEFLATE application/javascript application/json
-        AddOutputFilterByType DEFLATE image/svg+xml
+        AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+        AddOutputFilterByType DEFLATE application/json
+        AddOutputFilterByType DEFLATE text/javascript application/javascript
+        AddOutputFilterByType DEFLATE application/wasm image/svg+xml
     </IfModule>
 
 

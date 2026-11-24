@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tests';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.27" />
+  <meta name="docsearch:version" content="1.2.28" />
   </head>
   
   
@@ -1025,7 +1025,14 @@ Elapsed<span class="w"> </span>Time:<span class="w"> </span>20ms
 </ul>
 <p>This makes it easy to integrate with CI/CD pipelines. <code class="docutils literal notranslate"><span class="pre">-q</span></code> drops the colors
 and per-test lines down to a single summary line plus a <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">FAIL</span></code> block per
-failure – friendlier for CI logs:</p>
+failure – friendlier for CI logs. It also silences the run’s log: the
+migrations it runs and the tests’ <code class="docutils literal notranslate"><span class="pre">System.print</span></code>/<code class="docutils literal notranslate"><span class="pre">System.log</span></code> output go to a
+discard stream. The summary and <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">FAIL</span></code> blocks still print, because they go
+straight to stdout. A migration that fails to compile or apply is replayed to
+stderr and makes the run exit non-zero, so a deploy gate cannot pass silently.
+Notices emitted while Bialet is still starting (an upload-cap adjustment, for
+example) still appear, and with <code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">FILE</span></code> the silenced records are not appended
+to that file either:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T<span class="w"> </span>-q
 <span class="m">1</span><span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>tests<span class="w"> </span>failed<span class="w"> </span><span class="k">in</span><span class="w"> </span>20ms
 
@@ -1033,6 +1040,7 @@ failure – friendlier for CI logs:</p>
 Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>
 </pre></div>
 </div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">-q</span></code>, migration and log output are printed as usual.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># GitHub Actions example</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run tests</span>
 <span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bialet -T -q</span>

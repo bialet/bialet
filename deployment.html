@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=8687071e"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.27" />
+  <meta name="docsearch:version" content="1.2.28" />
   </head>
   
   
@@ -446,7 +446,12 @@
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-checks">Health Checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve-public-assets-from-the-proxy-recommended">Serve public assets from the proxy (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-bialet-responses-with-proxy-cache-alternative">Cache Bialet responses with <code class="docutils literal notranslate"><span class="pre">proxy_cache</span></code> (alternative)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compression">Compression</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
@@ -511,7 +516,8 @@ proxy (nginx, Apache, or Caddy) gives you:</p>
 <ul class="simple">
 <li><p><strong>TLS termination</strong> — HTTPS for your users</p></li>
 <li><p><strong>HTTP/1.1 or HTTP/2</strong> between the client and the proxy</p></li>
-<li><p><strong>Static file caching and gzip</strong> — the proxy can compress and cache assets</p></li>
+<li><p><strong>Static file caching and gzip</strong> — the proxy compresses and caches assets;
+Bialet does neither (see <a class="reference internal" href="#static-files">Static Files</a>)</p></li>
 <li><p><strong>Security</strong> — Bialet only needs to listen on <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code>, not the public
 internet</p></li>
 </ul>
@@ -628,7 +634,7 @@ migrations before serving the next request. No manual steps, no downtime.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:7001/_health
 </pre></div>
 </div>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.27"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.28"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>It returns <code class="docutils literal notranslate"><span class="pre">200</span></code> when a <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">1</span></code> succeeds, or <code class="docutils literal notranslate"><span class="pre">503</span></code> with
@@ -659,11 +665,97 @@ access control it has.</p>
 </section>
 <section id="static-files">
 <h2>Static Files<a class="headerlink" href="#static-files" title="Link to this heading">#</a></h2>
-<p>Bialet serves static files (CSS, JS, images, fonts) directly. For better
-performance, configure your reverse proxy to:</p>
+<p>Bialet serves static files (CSS, JS, images, fonts) directly. The
+<code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> comes from the extension, case-insensitively, following MDN’s
+common MIME types: fonts as <code class="docutils literal notranslate"><span class="pre">font/woff2</span></code>, <code class="docutils literal notranslate"><span class="pre">font/woff</span></code>, <code class="docutils literal notranslate"><span class="pre">font/ttf</span></code>, <code class="docutils literal notranslate"><span class="pre">font/otf</span></code>,
+JavaScript as <code class="docutils literal notranslate"><span class="pre">text/javascript</span></code>, icons as <code class="docutils literal notranslate"><span class="pre">image/vnd.microsoft.icon</span></code>, plus
+images, audio and video, <code class="docutils literal notranslate"><span class="pre">application/wasm</span></code>, web manifests, source maps, CSV and
+Markdown. Text types name UTF-8 explicitly. Anything else is sent as
+<code class="docutils literal notranslate"><span class="pre">application/octet-stream</span></code>. Every static response also carries
+<code class="docutils literal notranslate"><span class="pre">X-Content-Type-Options:</span> <span class="pre">nosniff</span></code>. <code class="docutils literal notranslate"><span class="pre">/favicon.ico</span></code> is served from the app root
+when you ship one there; otherwise Bialet answers with its embedded icon.</p>
+<p>That is all Bialet does for a static file: no <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code>, <code class="docutils literal notranslate"><span class="pre">ETag</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> or <code class="docutils literal notranslate"><span class="pre">Content-Encoding</span></code>, and no conditional-request path — an
+<code class="docutils literal notranslate"><span class="pre">If-None-Match</span></code> or <code class="docutils literal notranslate"><span class="pre">If-Modified-Since</span></code> request gets the full file back with
+<code class="docutils literal notranslate"><span class="pre">200</span></code>. Bialet never compresses a body either. Caching, revalidation and
+compression belong to the reverse proxy. Pick one of the two cache strategies
+below and turn compression on.</p>
+<p>Wren responses start with <code class="docutils literal notranslate"><span class="pre">Cache-Control:</span> <span class="pre">no-store</span></code>
+(<a class="reference internal" href="security.html#other-defaults"><span class="std std-ref">Security</span></a>), which keeps them out of a shared
+cache. An explicit static file is public by design; anything served through
+Wren is a dynamic response until the app says otherwise.</p>
+<section id="serve-public-assets-from-the-proxy-recommended">
+<h3>Serve public assets from the proxy (recommended)<a class="headerlink" href="#serve-public-assets-from-the-proxy-recommended" title="Link to this heading">#</a></h3>
+<p>A dedicated directory that holds only public assets — no <code class="docutils literal notranslate"><span class="pre">.wren</span></code> files, no
+<code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code>, nothing private — answered by nginx instead of proxied:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">location</span><span class="w"> </span><span class="s">/assets/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">alias</span><span class="w"> </span><span class="s">/srv/example/public/</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">max-age=2592000,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">add_header</span><span class="w"> </span><span class="s">X-Content-Type-Options</span><span class="w"> </span><span class="s">nosniff</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">access_log</span><span class="w"> </span><span class="no">off</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A location-level <code class="docutils literal notranslate"><span class="pre">add_header</span></code> replaces the server-level ones nginx would
+otherwise inherit, so this block sets <code class="docutils literal notranslate"><span class="pre">nosniff</span></code> itself: copy any other security
+header you rely on into it. <code class="docutils literal notranslate"><span class="pre">expires</span></code> plus an explicit <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> would
+emit two headers for one policy; use one.</p>
+<p>nginx opens the file itself, so it generates the <code class="docutils literal notranslate"><span class="pre">ETag</span></code> and <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> and
+answers <code class="docutils literal notranslate"><span class="pre">If-None-Match</span></code>/<code class="docutils literal notranslate"><span class="pre">If-Modified-Since</span></code> with <code class="docutils literal notranslate"><span class="pre">304</span></code> on its own. Bialet never
+sees the request. Because the browser will not revalidate for a month, the URL
+must change when the file changes: add a version or a content hash
+(<code class="docutils literal notranslate"><span class="pre">/assets/app.css?v=42</span></code>, <code class="docutils literal notranslate"><span class="pre">app.9f3c1a.css</span></code>) and update the reference on every
+deploy. A fixed URL plus <code class="docutils literal notranslate"><span class="pre">max-age</span></code> is a trap — the old file stays in every
+browser that saw it, with no way to revoke it. A missing asset is now nginx’s
+<code class="docutils literal notranslate"><span class="pre">404</span></code>, not Bialet’s page: the directory has to be complete.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: do not point <code class="docutils literal notranslate"><span class="pre">alias</span></code>/<code class="docutils literal notranslate"><span class="pre">root</span></code> at the app directory. It holds your
+<code class="docutils literal notranslate"><span class="pre">.wren</span></code> route files, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and other private files; Bialet runs the
+first and refuses the rest, but a proxy serving from it answers
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/index.wren</span></code> with your source code and <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/_db.sqlite3</span></code> with your
+database. Serve a directory that holds nothing but public assets.</p>
+</div></blockquote>
+</section>
+<section id="cache-bialet-responses-with-proxy-cache-alternative">
+<h3>Cache Bialet responses with <code class="docutils literal notranslate"><span class="pre">proxy_cache</span></code> (alternative)<a class="headerlink" href="#cache-bialet-responses-with-proxy-cache-alternative" title="Link to this heading">#</a></h3>
+<p>If the assets cannot move — they live in the app directory, or Wren generates
+them — put nginx’s cache in front. The only safe shape caches on the response
+headers Bialet sends and nothing else:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="c1"># http context</span>
+<span class="k">proxy_cache_path</span><span class="w"> </span><span class="s">/var/cache/nginx/bialet</span><span class="w"> </span><span class="s">levels=1:2</span><span class="w"> </span><span class="s">keys_zone=bialet:10m</span>
+<span class="w">                 </span><span class="s">inactive=1h</span><span class="w"> </span><span class="s">max_size=1g</span><span class="p">;</span>
+
+<span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1"># ...</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1"># ... the proxy_set_header lines and proxy_pass from below ...</span>
+<span class="w">        </span><span class="kn">proxy_cache</span><span class="w"> </span><span class="s">bialet</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_cache_key</span><span class="w"> </span><span class="s">"</span><span class="nv">$scheme$host$request_uri"</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_cache_valid</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="s">1h</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">X-Cache-Status</span><span class="w"> </span><span class="nv">$upstream_cache_status</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <ul class="simple">
-<li><p><strong>Gzip</strong> or <strong>brotli</strong> compress text-based assets (CSS, JS, HTML, SVG)</p></li>
+<li><p><strong>Do not set <code class="docutils literal notranslate"><span class="pre">proxy_ignore_headers</span> <span class="pre">Cache-Control</span></code> or
+<code class="docutils literal notranslate"><span class="pre">proxy_ignore_headers</span> <span class="pre">Set-Cookie</span></code>.</strong> With them, nginx caches Wren 200s and
+any 200 that carries <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code>. Without them, Bialet’s <code class="docutils literal notranslate"><span class="pre">no-store</span></code> keeps
+every dynamic response out, and only static files — which send no
+<code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> at all — are stored, plus any Wren response the app marked
+cacheable itself.</p></li>
+<li><p><strong>Never derive the decision from the URL suffix or <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code>.</strong> See the
+pitfall below: <code class="docutils literal notranslate"><span class="pre">/notes/42.css</span></code> can be a page served by Wren.</p></li>
+<li><p><strong>There is no revalidation upstream.</strong> Bialet sends no <code class="docutils literal notranslate"><span class="pre">ETag</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code>, so when <code class="docutils literal notranslate"><span class="pre">proxy_cache_valid</span></code> expires nginx refetches the
+whole file. Keep the TTL short (<code class="docutils literal notranslate"><span class="pre">1h</span></code>) and version asset URLs, as above.</p></li>
+<li><p><strong>A deploy can serve stale files</strong> until the cached entry expires. Purge the
+cache as part of the release: <code class="docutils literal notranslate"><span class="pre">proxy_cache_purge</span></code> on a commercial build, or
+emptying the directory.</p></li>
 </ul>
+<p>This caches at the proxy, not in the browser: unless the app sets its own
+<code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code>, clients still fetch from nginx on every page view.
+<code class="docutils literal notranslate"><span class="pre">X-Cache-Status</span></code> reports <code class="docutils literal notranslate"><span class="pre">MISS</span></code>/<code class="docutils literal notranslate"><span class="pre">HIT</span></code>/<code class="docutils literal notranslate"><span class="pre">BYPASS</span></code> and makes the behaviour visible.</p>
 <blockquote>
 <div><p>⚠️ Pitfall: do not label responses cacheable by URL suffix or by
 <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> at the proxy. Bialet routes <code class="docutils literal notranslate"><span class="pre">/notes/42.css</span></code> to <code class="docutils literal notranslate"><span class="pre">notes.wren</span></code>
@@ -673,16 +765,43 @@ to another. Wren responses say <code class="docutils literal notranslate"><span 
 longer <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> in the app (<code class="docutils literal notranslate"><span class="pre">Response.header(...)</span></code>) only on responses
 you know are public.</p>
 </div></blockquote>
+</section>
+<section id="compression">
+<h3>Compression<a class="headerlink" href="#compression" title="Link to this heading">#</a></h3>
+<p>nginx:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">gzip</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="k">gzip_vary</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="k">gzip_min_length</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span>
+<span class="k">gzip_comp_level</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="k">gzip_types</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">text/plain</span><span class="w"> </span><span class="s">text/xml</span><span class="w"> </span><span class="s">application/json</span>
+<span class="w">           </span><span class="s">text/javascript</span><span class="w"> </span><span class="s">application/javascript</span><span class="w"> </span><span class="s">application/wasm</span>
+<span class="w">           </span><span class="s">image/svg+xml</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">gzip</span> <span class="pre">on</span></code> already covers <code class="docutils literal notranslate"><span class="pre">text/html</span></code>; listing it again does nothing. Do not add
+fonts (<code class="docutils literal notranslate"><span class="pre">woff2</span></code>, <code class="docutils literal notranslate"><span class="pre">woff</span></code>), images (<code class="docutils literal notranslate"><span class="pre">png</span></code>, <code class="docutils literal notranslate"><span class="pre">jpg</span></code>, <code class="docutils literal notranslate"><span class="pre">webp</span></code>, <code class="docutils literal notranslate"><span class="pre">avif</span></code>) or video: they
+are compressed already, so gzipping them costs CPU and saves nothing.
+<code class="docutils literal notranslate"><span class="pre">gzip_vary</span> <span class="pre">on</span></code> sends <code class="docutils literal notranslate"><span class="pre">Vary:</span> <span class="pre">Accept-Encoding</span></code>, so a shared cache never replays a
+compressed body to a client that cannot decode it.</p>
 <blockquote>
-<div><p>⚠️ Pitfall: do not let the proxy serve files from the app directory. The
-app directory holds your <code class="docutils literal notranslate"><span class="pre">.wren</span></code> route files, <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> and other private
-files; Bialet runs the first and refuses the rest, but a proxy <code class="docutils literal notranslate"><span class="pre">root</span></code> +
-<code class="docutils literal notranslate"><span class="pre">try_files</span></code> (or an Apache <code class="docutils literal notranslate"><span class="pre">DocumentRoot</span></code> + <code class="docutils literal notranslate"><span class="pre">-f</span></code> rewrite) pointed at it answers
-<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/index.wren</span></code> with your source code and <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/_db.sqlite3</span></code> with your
-database. Proxy every request to Bialet, as the configurations below do. If you
-want the proxy to serve assets itself, give it a separate directory that holds
-nothing but those assets.</p>
+<div><p>⚠️ Pitfall: do not compress a page that renders a secret (a session or CSRF
+token) next to input the attacker can control, such as a reflected query
+parameter. Comparing compressed sizes across guesses leaks the secret
+(BREACH). Keep those routes identity-encoded, or turn compression off for
+them; caching headers do not help.</p>
 </div></blockquote>
+<p>Brotli is a separate module, packaged by most distributions:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">brotli</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="k">brotli_min_length</span><span class="w"> </span><span class="mi">1024</span><span class="p">;</span>
+<span class="k">brotli_types</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">text/plain</span><span class="w"> </span><span class="s">text/xml</span><span class="w"> </span><span class="s">application/json</span>
+<span class="w">             </span><span class="s">text/javascript</span><span class="w"> </span><span class="s">application/javascript</span><span class="w"> </span><span class="s">application/wasm</span>
+<span class="w">             </span><span class="s">image/svg+xml</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Keep the same type list as <code class="docutils literal notranslate"><span class="pre">gzip_types</span></code>. The Apache blocks below pass the same
+MIME list to <code class="docutils literal notranslate"><span class="pre">AddOutputFilterByType</span> <span class="pre">DEFLATE</span></code>; Caddy’s <code class="docutils literal notranslate"><span class="pre">encode</span> <span class="pre">gzip</span> <span class="pre">zstd</span></code>
+compresses text types by default and needs no list.</p>
+</section>
 </section>
 <section id="reverse-proxy-setups">
 <h2>Reverse Proxy Setups<a class="headerlink" href="#reverse-proxy-setups" title="Link to this heading">#</a></h2>
@@ -739,11 +858,12 @@ nothing but those assets.</p>
 <div class="highlight-apache notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="s">*:80</span><span class="nt">&gt;</span>
 <span class="w">    </span><span class="nb">ServerName</span><span class="w"> </span>example.com
 
-<span class="w">    </span><span class="c"># Gzip</span>
+<span class="w">    </span><span class="c"># Gzip text types. Fonts, images and video are compressed already.</span>
 <span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_deflate.c</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/javascript
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/javascript<span class="w"> </span>application/json
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/plain<span class="w"> </span>text/xml
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/json
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/javascript<span class="w"> </span>application/javascript
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/wasm<span class="w"> </span>image/svg+xml
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
 
@@ -890,11 +1010,12 @@ block — but prefer renaming those files.</p>
 <span class="w">    </span><span class="nb">LimitRequestBody</span><span class="w"> </span><span class="m">1048576</span>
 <span class="w">    </span><span class="nb">RequestReadTimeout</span><span class="w"> </span>header=20-40,MinRate=500<span class="w"> </span>body=30,MinRate=500
 
-<span class="w">    </span><span class="c"># Gzip</span>
+<span class="w">    </span><span class="c"># Gzip text types. Fonts, images and video are compressed already.</span>
 <span class="w">    </span><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="s">mod_deflate.c</span><span class="nt">&gt;</span>
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/javascript
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/javascript<span class="w"> </span>application/json
-<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>image/svg+xml
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/html<span class="w"> </span>text/css<span class="w"> </span>text/plain<span class="w"> </span>text/xml
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/json
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>text/javascript<span class="w"> </span>application/javascript
+<span class="w">        </span><span class="nb">AddOutputFilterByType</span><span class="w"> </span>DEFLATE<span class="w"> </span>application/wasm<span class="w"> </span>image/svg+xml
 <span class="w">    </span><span class="nt">&lt;/IfModule&gt;</span>
 
 
@@ -1335,7 +1456,12 @@ hardening section</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#health-checks">Health Checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#static-files">Static Files</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#serve-public-assets-from-the-proxy-recommended">Serve public assets from the proxy (recommended)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cache-bialet-responses-with-proxy-cache-alternative">Cache Bialet responses with <code class="docutils literal notranslate"><span class="pre">proxy_cache</span></code> (alternative)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compression">Compression</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reverse-proxy-setups">Reverse Proxy Setups</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nginx">nginx</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apache">Apache</a></li>
