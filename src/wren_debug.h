@@ -4,10 +4,13 @@
 #include "wren_value.h"
 #include "wren_vm.h"
 
-// Prints the stack trace for the current fiber.
+// Prints the runtime error for the current fiber, then its stack trace unless
+// [frames] is false.
 //
-// Used when a fiber throws a runtime error which is not caught.
-void wrenDebugPrintStackTrace(WrenVM* vm);
+// Used when a fiber throws a runtime error which is not caught. A failed import
+// passes false: the compile errors already name the broken file, and the only
+// frame left would blame the importer's `import` line.
+void wrenDebugPrintStackTrace(WrenVM* vm, bool frames);
 
 // The "dump" functions are used for debugging Wren itself. Normal code paths
 // will not call them unless one of the various DEBUG_ flags is enabled.

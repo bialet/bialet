@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-void wrenDebugPrintStackTrace(WrenVM* vm) {
+void wrenDebugPrintStackTrace(WrenVM* vm, bool frames) {
   // Bail if the host doesn't enable printing errors.
   if(vm->config.errorFn == NULL)
     return;
@@ -15,6 +15,9 @@ void wrenDebugPrintStackTrace(WrenVM* vm) {
     // class?
     vm->config.errorFn(vm, WREN_ERROR_RUNTIME, NULL, -1, "[error object]");
   }
+
+  if(!frames)
+    return;
 
   for(int i = fiber->numFrames - 1; i >= 0; i--) {
     CallFrame* frame = &fiber->frames[i];

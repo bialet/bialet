@@ -373,6 +373,13 @@ static void callForeign(WrenVM* vm, ObjFiber* fiber, WrenForeignMethodFn foreign
 static void runtimeError(WrenVM* vm) {
   ASSERT(wrenHasError(vm->fiber), "Should only call this after an error.");
 
+  // A failed import is reported where it happened: the compile errors name the
+  // broken file, so the trace (one frame for the importer's `import` line) is
+  // dropped. Take the flag now so a caught error cannot leak it into the next
+  // runtime error.
+  bool showStackTrace = !vm->suppressStackTrace;
+  vm->suppressStackTrace = false;
+
   ObjFiber* current = vm->fiber;
   Value     error = current->error;
 
@@ -395,7 +402,7 @@ static void runtimeError(WrenVM* vm) {
   }
 
   // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm);
+  wrenDebugPrintStackTrace(vm, showStackTrace);
   vm->fiber = NULL;
   vm->apiStack = NULL;
 }
@@ -769,6 +776,9 @@ static Value importModule(WrenVM* vm, Value name) {
 
   if(moduleClosure == NULL) {
     vm->fiber->error = wrenStringFormat(vm, "Could not compile module '@'.", name);
+    // The compiler errors above name the real file and line; a trace here
+    // would only point at the importer's `import` line. See runtimeError().
+    vm->suppressStackTrace = true;
     wrenPopRoot(vm); // name.
     return NULL_VAL;
   }

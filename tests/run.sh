@@ -435,6 +435,56 @@ else
   skip_test "-r blocks traversal imports " "requires local binary access"
 fi
 
+# Tests - a failed import reports the compile error, not a bogus trace
+# The synthetic "Could not compile module" runtime error used to print a stack
+# frame for the importer's `import` line: the wrong file, and nothing the
+# compile error above did not already say. Drop that frame -- and only that
+# one, so the companion check keeps the trace for a module that compiles and
+# then throws.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  imp_line=$LINENO
+  imp_dir=$(mktemp -d)
+  if [[ "$TARGET_EXEC" == */* ]]; then
+    imp_exec="$(cd "$(dirname "$TARGET_EXEC")" && pwd)/$(basename "$TARGET_EXEC")"
+  else
+    imp_exec="$(command -v "$TARGET_EXEC")"
+  fi
+  cat > "$imp_dir/lib.wren" <<'WREN'
+class Lib {
+  static hello { "hi" } }
+}
+WREN
+  cat > "$imp_dir/good.wren" <<'WREN'
+class Good {
+  static go() { Fiber.abort("boom") }
+}
+WREN
+  imp_out=$(cd "$imp_dir" && "$imp_exec" -q -r \
+    $'import "lib" for Lib\nSystem.print(Lib.hello)' 2>&1)
+  imp_status=$?
+  imp_trace_out=$(cd "$imp_dir" && "$imp_exec" -q -r \
+    $'import "good" for Good\nGood.go()' 2>&1)
+  imp_trace_status=$?
+  rm -rf "$imp_dir"
+  if [[ "$imp_status" -ne 0 && "$imp_out" == *"Compilation Error"* &&
+        "$imp_out" == *"Could not compile module"* &&
+        "$imp_out" != *"Stack Error"* ]]; then
+    report_result "Failed import has no trace     " "$imp_line" 0
+  else
+    report_result "Failed import has no trace     " "$imp_line" 1 \
+      "Expected the compile error and no 'Stack Error', got exit $imp_status output '$imp_out'"
+  fi
+  if [[ "$imp_trace_status" -ne 0 && "$imp_trace_out" == *"Stack Error"* ]]; then
+    report_result "Runtime error keeps its trace  " "$imp_line" 0
+  else
+    report_result "Runtime error keeps its trace  " "$imp_line" 1 \
+      "Expected a 'Stack Error' frame from the imported module, got exit $imp_trace_status output '$imp_trace_out'"
+  fi
+else
+  skip_test "Failed import has no trace     " "requires local binary access"
+  skip_test "Runtime error keeps its trace  " "requires local binary access"
+fi
+
 # Tests - a block body may start with HTML on the line after "{"
 # The natural multi-line map body used to fail with a cascade of "Expect
 # newline after statement" errors. HTML is an expression, never a statement, so

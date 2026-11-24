@@ -105,6 +105,12 @@ struct WrenVM {
   // zeroes the VM, so it stays NULL (disabled) on the server.
   const char* (*validateQueryFn)(const char* query);
 
+  // Set by importModule() when an imported module fails to compile. The
+  // compiler already reported what is broken, so the only frame a trace could
+  // add is the importer's `import` line -- the wrong file. runtimeError()
+  // clears it as soon as it consumes it.
+  bool suppressStackTrace;
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap
