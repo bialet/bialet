@@ -70,7 +70,7 @@ bialet --port=8080 /path/to/app
 | `-f`, `--foreign-keys`  | SQLite foreign keys: `on` or `off`                                          | `on`                                         |
 | `-s`, `--synchronous`   | SQLite synchronous: `off`, `normal`, `full`, or `extra`                     | `normal`                                     |
 | `-k`, `--secret-key-file` | AES-256 key for `Config.encrypt` / `Config.decrypt`: 64 hex chars or a passphrase, outside the app root | None |
-| `-q`, `--quiet`         | Quiet: suppress the browser auto-open and colored output                    | Disabled                                     |
+| `-q`, `--quiet`         | Quiet: no browser auto-open, no colored output; with `-T`, no migration or log output | Disabled                            |
 | `-W`, `--no-watch`      | Disable file watching: no live reload, and migrations/cron are not re-run when their file is saved | Disabled (watcher on) |
 
 Long options that require a value reject an empty one (`--port` alone is an
@@ -155,6 +155,13 @@ Useful in scripts, containers, and CI:
 ```bash
 bialet -q /path/to/app
 ```
+
+In server mode that is all it does: log lines still print, just without color.
+Combined with the test runner, `bialet -T -q` goes further and silences
+everything that prints through the log, including the startup migration run
+(`Migration start`, `Migration applied - ...`) and `System.print`/`System.log`
+from the tests. What remains is the one-line summary plus a `### FAIL` block per
+failure. See [Testing](tests.md).
 
 ### Editing migrations without applying them
 

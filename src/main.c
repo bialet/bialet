@@ -801,6 +801,20 @@ int main(int argc, char* argv[]) {
   }
 
   if(run_tests) {
+    // -q promises one summary line plus the ### FAIL blocks, but migrations
+    // (and the Db.migrate notes they print) run before the suite, outside the
+    // sink bialet_run_tests() used to install, so they landed ahead of that
+    // summary. Silence message() for the whole run instead: the migrations
+    // here, then every test. The summary and failure blocks printf straight to
+    // stdout, so they still print.
+    FILE* quiet_sink = NULL;
+    FILE* quiet_prev_log = NULL;
+    if(bialet_config.quiet) {
+      quiet_sink = tmpfile();
+      if(quiet_sink != NULL)
+        quiet_prev_log = message_set_log_file(quiet_sink);
+    }
+
     // Run migrations on temp database
     migrate();
 
@@ -809,6 +823,11 @@ int main(int argc, char* argv[]) {
       test_dir = bialet_config.root_dir;
     }
     int result = bialet_run_tests(test_dir, bialet_config.root_dir);
+
+    if(quiet_sink != NULL) {
+      message_set_log_file(quiet_prev_log);
+      fclose(quiet_sink);
+    }
 
     // Clean up temp database
     bialet_cleanup();

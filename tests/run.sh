@@ -2474,6 +2474,43 @@ else
   skip_test "Test runner output paths    " "requires local binary access"
 fi
 
+# -T -q is documented as one summary line plus a ### FAIL block per failure.
+# Migrations run before the suite and log through message(), so their output
+# used to land above that summary. -q must drop it; plain -T must keep it.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  qmig_line=$LINENO
+  _test_start_ms=$(now_ms)
+  qmig_dir="$(dirname "$0")/quiet-migrations"
+  qmig_quiet=$("$TARGET_EXEC" -T "$qmig_dir" -q 2>&1)
+  qmig_quiet_code=$?
+  qmig_plain=$("$TARGET_EXEC" -T "$qmig_dir" 2>&1)
+  qmig_plain_code=$?
+  if [[ "$qmig_quiet_code" == 0 && "$qmig_quiet" == *"0 of 1 tests failed"* \
+        && "$qmig_quiet" != *"Migration applied"* \
+        && "$qmig_quiet" != *"Migration start"* \
+        && "$qmig_quiet" != *"quiet-migration-log"* \
+        && "$qmig_quiet" != *"quiet-test-log"* \
+        && "$qmig_quiet" != *"Log "* ]]; then
+    report_result "-T -q silences migrations    " "$qmig_line" 0
+  else
+    report_result "-T -q silences migrations    " "$qmig_line" 1 \
+      "quiet($qmig_quiet_code):'${qmig_quiet:0:200}'"
+  fi
+  if [[ "$qmig_plain_code" == 0 \
+        && "$qmig_plain" == *"Migration applied - quiet-migrations"* \
+        && "$qmig_plain" == *"quiet-migration-log"* \
+        && "$qmig_plain" == *"quiet-test-log"* \
+        && "$qmig_plain" == *"Passed Tests: 1"* ]]; then
+    report_result "-T keeps migration output    " "$qmig_line" 0
+  else
+    report_result "-T keeps migration output    " "$qmig_line" 1 \
+      "plain($qmig_plain_code):'${qmig_plain:0:200}'"
+  fi
+else
+  skip_test "-T -q silences migrations    " "requires local binary access"
+  skip_test "-T keeps migration output    " "requires local binary access"
+fi
+
 # -t (validate) must refuse a file it cannot resolve, and a file outside the
 # application root, instead of validating something else.
 if [[ "$TARGET_EXEC" != "-" ]]; then

@@ -502,7 +502,11 @@ Elapsed Time: 20ms
 
 This makes it easy to integrate with CI/CD pipelines. `-q` drops the colors
 and per-test lines down to a single summary line plus a `### FAIL` block per
-failure -- friendlier for CI logs:
+failure -- friendlier for CI logs. It also silences everything that logs
+through `message()`: the startup migration run (`Migration start`, `Migration
+applied - ...`) and `System.print`/`System.log` output from the tests
+themselves. The summary and `### FAIL` blocks still print, because they go
+straight to stdout:
 
 ```bash
 $ bialet -T -q
@@ -511,6 +515,8 @@ $ bialet -T -q
 ### FAIL _tests/hi.wren:2 - hi
 Expected code to be 200 but was 500
 ```
+
+Without `-q`, migration and log output are printed as usual.
 
 ```yaml
 # GitHub Actions example

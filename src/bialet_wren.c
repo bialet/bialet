@@ -2570,22 +2570,9 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   int         skipped = 0;
   TestFailure failures[MAX_TEST_FILES];
 
-  // In -q, test-triggered System.log/migration output (via message()) would
-  // otherwise interleave with the crux-style summary below. Redirect it to
-  // the null device for the duration of the run and restore it afterward.
-  FILE* quietSink = NULL;
-  FILE* prevLogFile = NULL;
-  if(quiet) {
-    quietSink = fopen(
-#ifdef _WIN32
-        "NUL",
-#else
-        "/dev/null",
-#endif
-        "w");
-    if(quietSink != NULL)
-      prevLogFile = message_set_log_file(quietSink);
-  }
+  // The message() sink for -q is installed by the caller (main.c) before
+  // migrate(), so it already covers this run; the summary below goes straight
+  // to stdout and is unaffected.
 
   // Run each test file
   for(int i = 0; i < testCount; i++) {
@@ -2631,11 +2618,6 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
     }
 
     free(testFiles[i]);
-  }
-
-  if(quietSink != NULL) {
-    message_set_log_file(prevLogFile);
-    fclose(quietSink);
   }
 
   long long elapsedMs = test_monotonic_ms() - startMs;
