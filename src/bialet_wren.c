@@ -1928,6 +1928,25 @@ struct BialetResponse bialet_run_file(char* module, char* code,
     r.header_owned = 0;
   }
 
+  // Wren has no try/catch: an aborted Db.migrate leaves its BEGIN IMMEDIATE (or
+  // SAVEPOINT) open on the shared handle. Unwound silently, the next statement
+  // -- here, in the next request, or in another worker -- would run inside that
+  // unit, and a later COMMIT would publish a half-applied schema. This is the
+  // single exit every route, -r, cron and migration run passes through, so roll
+  // back whatever is still open. The -T runner's per-file savepoint is not ours
+  // to roll back, so skip it while that boundary is active.
+  if(db != NULL && sqlite3_get_autocommit(db) == 0 && !test_savepoint_active) {
+    char* errmsg = NULL;
+    if(sqlite3_exec(db, "ROLLBACK", NULL, NULL, &errmsg) != SQLITE_OK) {
+      message(red("SQL Error"), "Cannot roll back an open transaction: ",
+              errmsg ? errmsg : sqlite3_errmsg(db));
+    } else {
+      message(yellow("Warning"),
+              "Rolled back an open database transaction left by Wren code");
+    }
+    sqlite3_free(errmsg);
+  }
+
   return r;
 }
 

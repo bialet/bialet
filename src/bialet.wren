@@ -1065,7 +1065,17 @@ class File {
 
 class Db {
   static init {
-    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    `CREATE TABLE IF NOT EXISTS BIALET_MIGRATIONS (version TEXT, hash TEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`.query()
+    // A database created by an older binary has no hash column. Add it in place
+    // instead of rebuilding the table, so the recorded history survives.
+    if (`SELECT COUNT(*) FROM pragma_table_info('BIALET_MIGRATIONS') WHERE name = 'hash'`.toNum == 0) {
+      `ALTER TABLE BIALET_MIGRATIONS ADD COLUMN hash TEXT`.query()
+    }
+    // Older binaries had no unique key on version, and two workers starting at
+    // once could each record the same migration. Keep the first row and make
+    // the column unique so a later race cannot insert the version twice.
+    `DELETE FROM BIALET_MIGRATIONS WHERE rowid NOT IN (SELECT MIN(rowid) FROM BIALET_MIGRATIONS GROUP BY version)`.query()
+    `CREATE UNIQUE INDEX IF NOT EXISTS BIALET_MIGRATIONS_VERSION ON BIALET_MIGRATIONS (version)`.query()
     `CREATE TABLE IF NOT EXISTS BIALET_SESSION (id TEXT, key TEXT, val TEXT, updatedAt DATETIME, PRIMARY KEY (id, key))`.query()
     // Older versions created BIALET_SESSION without a primary key, so REPLACE
     // inserted duplicate rows and reads were nondeterministic. Rebuild the table
@@ -1107,33 +1117,119 @@ class Db {
     `DELETE FROM BIALET_LOGS WHERE createdAt < datetime('now', '-30 days')`.query()
   }
 
-  static migrate(version, schemaOrCallback) {
+  static migrate(version, schemaOrCallback) { migrate(version, schemaOrCallback, true) }
+
+  // [transaction] is the documented escape hatch: false runs the statements and
+  // the history insert without the wrapping transaction, for migrations that
+  // cannot run inside one (VACUUM, PRAGMA journal_mode, the
+  // "PRAGMA foreign_keys = OFF" table rebuild). A failure then leaves the
+  // earlier statements applied and no version row.
+  static migrate(version, schemaOrCallback, transaction) {
+    if (!(transaction is Bool)) {
+      Fiber.abort("Db.migrate: the third argument must be a Bool (true to run the migration inside a transaction)")
+    }
     // Date is initialized by the runtime at startup (BIALET_TIMEZONE) and
     // Date.tz always falls back to a string, so a callback may call Date.new()
     // and do date arithmetic even before anything touches the database.
     Db.init
-    if (!`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
-      if (schemaOrCallback is Fn) {
-        schemaOrCallback.call()
-      } else if (schemaOrCallback is List) {
-        // Documented form: a list of queries (backtick templates or SQL
-        // strings) applied in order. A List used to fall into the string
-        // branch, where `toString` produced "[instance of Query, ...]" and
-        // SQLite rejected the whole migration.
-        for (q in schemaOrCallback) {
-          if (q is String) {
-            Query.fromString(q, [])
-          } else {
-            q.query
-          }
-        }
-      } else {
-        schemaOrCallback.toString.split(";").each{|q| Query.fromString(q, []) }
-      }
-      `INSERT INTO BIALET_MIGRATIONS (version) VALUES (?)`.query([version])
-      System.print("Migration applied - %(version)")
+    var currentHash = Db.migrationHash_(schemaOrCallback)
+    // Cheap pre-check before taking the write lock: the common case is a
+    // migration that already ran, and the re-check below is what settles a
+    // concurrent apply.
+    var applied = `SELECT version, hash FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])
+    if (applied) {
+      Db.checkApplied_(version, applied["hash"], currentHash)
+      Db.clean
+      return
     }
+    var statements = Db.migrationStatements_(schemaOrCallback)
+    var savepoint = false
+    if (transaction) {
+      if (Db.inTransaction_()) {
+        // A nested Db.migrate, or the per-test-file savepoint under `bialet -T`:
+        // a BEGIN here fails with "cannot start a transaction within a
+        // transaction", so nest a savepoint in the open unit instead.
+        `SAVEPOINT bialet_migrate`.query()
+        savepoint = true
+      } else {
+        // Take the write lock up front so two workers serialize here, and the
+        // second one sees the row the first committed.
+        `BEGIN IMMEDIATE`.query()
+      }
+      // Another process may have applied this version while we waited for the
+      // lock. Re-check inside the unit, before running anything.
+      if (`SELECT version FROM BIALET_MIGRATIONS WHERE version = ?`.first([version])) {
+        if (savepoint) {
+          `RELEASE bialet_migrate`.query()
+        } else {
+          `COMMIT`.query()
+        }
+        Db.clean
+        return
+      }
+    }
+    if (schemaOrCallback is Fn) {
+      // No SQL text to hash: editing a callback is not detected.
+      schemaOrCallback.call()
+    } else if (schemaOrCallback is List) {
+      // Documented form: a list of queries (backtick templates or SQL
+      // strings) applied in order, each item one statement.
+      for (q in statements) {
+        if (q is String) {
+          Query.fromString(q, [])
+        } else {
+          q.query
+        }
+      }
+    } else {
+      for (statement in statements) {
+        Query.fromString(statement, [])
+      }
+    }
+    `INSERT INTO BIALET_MIGRATIONS (version, hash) VALUES (?, ?)`.query([version, currentHash])
+    if (transaction) {
+      if (savepoint) {
+        `RELEASE bialet_migrate`.query()
+      } else {
+        `COMMIT`.query()
+      }
+    }
+    System.print("Migration applied - %(version)")
     Db.clean
+  }
+
+  // The hash covers the migration SQL exactly as written, comments and
+  // whitespace included, so editing an already-applied migration is detected.
+  // A Fn callback has no stored SQL text, so it cannot be hashed.
+  static migrationHash_(schemaOrCallback) {
+    if (schemaOrCallback is Fn) return null
+    if (schemaOrCallback is List) {
+      var parts = []
+      for (q in schemaOrCallback) parts.add("%(q)")
+      return Util.sha256(parts.join("\n;\n"))
+    }
+    return Util.sha256("%(schemaOrCallback)")
+  }
+
+  // The statements a migration runs. A List keeps its items (each one is a
+  // single statement); a String or backtick Query is split on the semicolons
+  // that really end a statement.
+  static migrationStatements_(schemaOrCallback) {
+    if (schemaOrCallback is Fn || schemaOrCallback is List) return schemaOrCallback
+    return Query.split_("%(schemaOrCallback)")
+  }
+
+  // A row recorded by an older binary has no hash. Backfill it silently. Warn
+  // only when both hashes exist and differ: the SQL being booted no longer
+  // matches what ran, and the new SQL will not run.
+  static checkApplied_(version, storedHash, currentHash) {
+    if (currentHash == null) return
+    var hash = storedHash == null ? "" : "%(storedHash)"
+    if (hash == "") {
+      `UPDATE BIALET_MIGRATIONS SET hash = ? WHERE version = ? AND (hash IS NULL OR hash = '')`.query([currentHash, version])
+    } else if (hash != currentHash) {
+      System.log("Warning: migration '%(version)' changed after it was applied; the new SQL will not run.")
+    }
   }
   static save(table, values) { Query.new(table).save(values) }
   static delete(table, id) {

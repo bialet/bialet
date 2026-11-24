@@ -811,8 +811,25 @@ Db.migrate("Seed sample posts", Fn.new{
   `posts`.save({"title": "First post", "content": "Hello world", "userId": 1})
   `posts`.save({"title": "Second post", "content": "More content", "userId": 1})
 })
+
+// Or pass a list: each item is exactly one statement (no `;` split)
+Db.migrate("Index posts", [
+  `CREATE INDEX posts_title ON posts (title)`,
+  `CREATE INDEX posts_user ON posts (userId)`
+])
 ```
 
+- Each call is **atomic**: the statements and the version row commit together,
+  so a failed migration leaves no partial schema. Need `VACUUM`,
+  `PRAGMA journal_mode` or a `PRAGMA foreign_keys = OFF` rebuild? Pass `false`
+  as the third argument (`Db.migrate(name, sql, false)`). The statements then
+  run without the wrapping transaction, and a failure leaves the earlier ones
+  applied with no version row.
+- A backtick migration is split only on statement-ending `;`: semicolons inside
+  quotes, comments and `CREATE TRIGGER ... BEGIN ...; ... END;` stay put.
+- The version row stores a SHA-256 of the SQL. Editing an applied migration
+  logs a warning and does not run the new SQL; write a new migration instead.
+  A `Fn` migration stores no hash, so editing a callback is not detected.
 - Runs on every app start and every file update.
 - The migration **name** is the dedup key — it only runs once. Use a
   descriptive name.
