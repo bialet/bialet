@@ -218,11 +218,16 @@ A dedicated directory that holds only public assets — no `.wren` files, no
 ```nginx
 location /assets/ {
     alias /srv/example/public/;
-    expires 30d;
     add_header Cache-Control "public, max-age=2592000, immutable";
+    add_header X-Content-Type-Options nosniff;
     access_log off;
 }
 ```
+
+A location-level `add_header` replaces the server-level ones nginx would
+otherwise inherit, so this block sets `nosniff` itself: copy any other security
+header you rely on into it. `expires` plus an explicit `Cache-Control` would
+emit two headers for one policy; use one.
 
 nginx opens the file itself, so it generates the `ETag` and `Last-Modified` and
 answers `If-None-Match`/`If-Modified-Since` with `304` on its own. Bialet never
@@ -263,10 +268,11 @@ server {
 ```
 
 - **Do not set `proxy_ignore_headers Cache-Control` or
-  `proxy_ignore_headers Set-Cookie`.** With them, nginx caches Wren responses,
-  sessions and error pages. Without them, Bialet's `no-store` keeps every
-  dynamic response out, and only static files — which send no `Cache-Control`
-  at all — are stored, plus any Wren response the app marked cacheable itself.
+  `proxy_ignore_headers Set-Cookie`.** With them, nginx caches Wren 200s and
+  any 200 that carries `Set-Cookie`. Without them, Bialet's `no-store` keeps
+  every dynamic response out, and only static files — which send no
+  `Cache-Control` at all — are stored, plus any Wren response the app marked
+  cacheable itself.
 - **Never derive the decision from the URL suffix or `Content-Type`.** See the
   pitfall below: `/notes/42.css` can be a page served by Wren.
 - **There is no revalidation upstream.** Bialet sends no `ETag` or
@@ -308,10 +314,17 @@ are compressed already, so gzipping them costs CPU and saves nothing.
 `gzip_vary on` sends `Vary: Accept-Encoding`, so a shared cache never replays a
 compressed body to a client that cannot decode it.
 
+> ⚠️ Pitfall: do not compress a page that renders a secret (a session or CSRF
+> token) next to input the attacker can control, such as a reflected query
+> parameter. Comparing compressed sizes across guesses leaks the secret
+> (BREACH). Keep those routes identity-encoded, or turn compression off for
+> them; caching headers do not help.
+
 Brotli is a separate module, packaged by most distributions:
 
 ```nginx
 brotli on;
+brotli_min_length 1024;
 brotli_types text/css text/plain text/xml application/json
              text/javascript application/javascript application/wasm
              image/svg+xml;

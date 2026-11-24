@@ -111,16 +111,19 @@ unverifiable attestation fatal ([Installation](installation.md#releases)).
 Do not start the release yet. It must pass the gate:
 
 ```bash
-# Compile every .wren file. No database is opened or created.
+# Compile every .wren file the walk visits (a top-level _tests/ suite is
+# checked by -T). No database is opened or created.
 "$RELEASE/bialet" check "$RELEASE/app"
 
 # If the release ships _tests/, run them. They use a temporary database.
 "$RELEASE/bialet" -T "$RELEASE/app"
 ```
 
-`check` exits `0` only when every file compiles and every backtick SQL literal
-parses, `1` otherwise. `-T` uses a throwaway database, never the production one,
-so it cannot write to `shared/` ([Checking a whole app tree](usage.md#check-a-whole-app-tree),
+`check` exits `0` only when every visited file compiles and every backtick SQL
+literal parses, `1` otherwise. The walk skips a `_tests/` directory at any
+depth, because those files only compile under `-T`; an explicitly named file is
+still checked. `-T` uses a throwaway database, never the production one, so it
+cannot write to `shared/` ([Checking a whole app tree](usage.md#check-a-whole-app-tree),
 [Testing](tests.md)).
 
 ## The Runtime Command
@@ -234,10 +237,13 @@ server {
 
 Bialet sends no `Cache-Control`, `ETag` or `Last-Modified` on static files and
 never compresses a body: both are the proxy's job, which is why the block above
-sets `gzip`. To cache too, either serve a public asset directory from nginx —
-releases are immutable, so hashed asset filenames can take a long `max-age` — or
-enable `proxy_cache`; [Static Files](deployment.md#static-files) has the two
-shapes and the configuration that is wrong. Do not add
+sets `gzip`. Do not compress a page that renders a secret next to reflected
+input (see the compression pitfall in
+[Static Files](deployment.md#static-files)). To cache too, either serve a public
+asset directory from nginx — releases are immutable, so hashed asset filenames
+can take a long `max-age` — or enable `proxy_cache`;
+[Static Files](deployment.md#static-files) has the two shapes and the
+configuration that is wrong. Do not add
 `proxy_ignore_headers Cache-Control`: Bialet marks every Wren response
 `no-store`, and overriding that caches sessions and error pages.
 

@@ -157,11 +157,13 @@ bialet -q /path/to/app
 ```
 
 In server mode that is all it does: log lines still print, just without color.
-Combined with the test runner, `bialet -T -q` goes further and silences
-everything that prints through the log, including the startup migration run
-(`Migration start`, `Migration applied - ...`) and `System.print`/`System.log`
-from the tests. What remains is the one-line summary plus a `### FAIL` block per
-failure. See [Testing](tests.md).
+Combined with the test runner, `bialet -T -q` goes further and silences the
+run's log: the migrations and the tests' `System.print`/`System.log` output.
+What remains is the one-line summary plus a `### FAIL` block per failure. A
+migration that fails to compile or apply is replayed to stderr and makes the
+run exit non-zero; notices emitted while Bialet is still starting can still
+appear, and with `-l FILE` the silenced records are not written to that file.
+See [Testing](tests.md).
 
 ### Editing migrations without applying them
 

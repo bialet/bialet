@@ -502,11 +502,14 @@ Elapsed Time: 20ms
 
 This makes it easy to integrate with CI/CD pipelines. `-q` drops the colors
 and per-test lines down to a single summary line plus a `### FAIL` block per
-failure -- friendlier for CI logs. It also silences everything that logs
-through `message()`: the startup migration run (`Migration start`, `Migration
-applied - ...`) and `System.print`/`System.log` output from the tests
-themselves. The summary and `### FAIL` blocks still print, because they go
-straight to stdout:
+failure -- friendlier for CI logs. It also silences the run's log: the
+migrations it runs and the tests' `System.print`/`System.log` output go to a
+discard stream. The summary and `### FAIL` blocks still print, because they go
+straight to stdout. A migration that fails to compile or apply is replayed to
+stderr and makes the run exit non-zero, so a deploy gate cannot pass silently.
+Notices emitted while Bialet is still starting (an upload-cap adjustment, for
+example) still appear, and with `-l FILE` the silenced records are not appended
+to that file either:
 
 ```bash
 $ bialet -T -q
