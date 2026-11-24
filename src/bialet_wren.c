@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <sqlite3.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -2190,11 +2191,313 @@ static int is_bare_table_name(const char* query) {
   return 1;
 }
 
-// The --validate SQL hook. It only prepares each statement, so nothing is
-// executed and no migration is recorded. sqlite3_prepare_v2() parses one
-// statement at a time, so the loop walks the text with tail the way
-// Db.migrate's `;` split does. A schema error still leaves tail past its
-// statement, so a later syntax error in the same literal is still found. -t is
+// -t never executes SQL, but sqlite3_prepare_v2() still resolves names. A
+// migration that ALTERs a table created by an earlier migration fails with
+// "no such table" *before* the parser reaches the end of the statement, so a
+// syntax error later in that same statement hides behind the schema error.
+// Re-preparing the statement against throwaway objects (a dummy table and
+// column, a no-op function or collation) lets SQLite reach the syntax. The
+// validation connection is an in-memory database; none of this can touch the
+// app's schema.
+#define VALIDATE_SQL_MAX_FIXES 32
+#define VALIDATE_SQL_MAX_NAME 512
+
+static void validate_sql_dummy_func(sqlite3_context* ctx, int argc,
+                                    sqlite3_value** argv) {
+  (void)argc;
+  (void)argv;
+  sqlite3_result_null(ctx);
+}
+
+static int validate_sql_dummy_collate(void* unused, int left_len, const void* left,
+                                      int right_len, const void* right) {
+  (void)unused;
+  (void)left;
+  (void)right;
+  if(left_len == right_len)
+    return 0;
+  return left_len < right_len ? -1 : 1;
+}
+
+// A double-quoted copy of [name], or NULL when it is empty or too long. The
+// name comes from a SQLite error message, so it is quoted rather than trusted.
+static char* validate_sql_quote(const char* name) {
+  size_t len = strlen(name);
+  if(len == 0 || len > VALIDATE_SQL_MAX_NAME)
+    return NULL;
+  size_t quotes = 0;
+  for(size_t i = 0; i < len; i++) {
+    if(name[i] == '"')
+      quotes++;
+  }
+  char* out = malloc(len + quotes + 3);
+  if(out == NULL)
+    return NULL;
+  char* p = out;
+  *p++ = '"';
+  for(size_t i = 0; i < len; i++) {
+    if(name[i] == '"')
+      *p++ = '"';
+    *p++ = name[i];
+  }
+  *p++ = '"';
+  *p = '\0';
+  return out;
+}
+
+static char* validate_sql_format(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  va_list measure;
+  va_copy(measure, args);
+  int needed = vsnprintf(NULL, 0, format, measure);
+  va_end(measure);
+  if(needed < 0) {
+    va_end(args);
+    return NULL;
+  }
+  char* sql = malloc((size_t)needed + 1);
+  if(sql == NULL) {
+    va_end(args);
+    return NULL;
+  }
+  vsnprintf(sql, (size_t)needed + 1, format, args);
+  va_end(args);
+  return sql;
+}
+
+// Creates a dummy table called [name] and records it so the caller can drop
+// it. Returns 1 when the table exists (created now or already present) and 0
+// when it could not be made usable.
+static int validate_sql_dummy_table(const char* name, char** created,
+                                    int* created_count) {
+  if(*created_count >= VALIDATE_SQL_MAX_FIXES)
+    return 0;
+  char* ident = validate_sql_quote(name);
+  if(ident == NULL)
+    return 0;
+  char* sql = validate_sql_format("CREATE TABLE %s (dummy INTEGER)", ident);
+  free(ident);
+  if(sql == NULL)
+    return 0;
+  int rc = sqlite3_exec(db, sql, NULL, NULL, NULL);
+  free(sql);
+  if(rc == SQLITE_OK) {
+    char* copy = strdup(name);
+    if(copy == NULL)
+      return 0;
+    created[(*created_count)++] = copy;
+    return 1;
+  }
+  const char* error = sqlite3_errmsg(db);
+  return error != NULL && strstr(error, "already exists") != NULL;
+}
+
+static int validate_sql_dummy_column(const char* table, const char* column,
+                                     char** created, int* created_count) {
+  if(!validate_sql_dummy_table(table, created, created_count))
+    return 0;
+  char* table_ident = validate_sql_quote(table);
+  char* column_ident = validate_sql_quote(column);
+  if(table_ident == NULL || column_ident == NULL) {
+    free(table_ident);
+    free(column_ident);
+    return 0;
+  }
+  char* sql =
+      validate_sql_format("ALTER TABLE %s ADD COLUMN %s", table_ident, column_ident);
+  free(table_ident);
+  free(column_ident);
+  if(sql == NULL)
+    return 0;
+  int rc = sqlite3_exec(db, sql, NULL, NULL, NULL);
+  free(sql);
+  if(rc == SQLITE_OK)
+    return 1;
+  const char* error = sqlite3_errmsg(db);
+  return error != NULL && strstr(error, "duplicate column name") != NULL;
+}
+
+static void validate_sql_drop_dummies(char** created, int created_count) {
+  for(int i = created_count - 1; i >= 0; i--) {
+    char* ident = validate_sql_quote(created[i]);
+    if(ident != NULL) {
+      char* sql = validate_sql_format("DROP TABLE IF EXISTS %s", ident);
+      if(sql != NULL) {
+        sqlite3_exec(db, sql, NULL, NULL, NULL);
+        free(sql);
+      }
+      free(ident);
+    }
+    free(created[i]);
+  }
+}
+
+static const char* validate_sql_error_name(const char* error, const char* prefix) {
+  size_t len = strlen(prefix);
+  if(strncmp(error, prefix, len) != 0)
+    return NULL;
+  const char* name = error + len;
+  while(*name == ' ' || *name == '\t')
+    name++;
+  return *name == '\0' ? NULL : name;
+}
+
+// SQLite qualifies the name in some errors ("main.users", "temp.users"). The
+// dummy has to be created in the main schema under the bare name.
+static void validate_sql_strip_schema(char* name) {
+  if(strncmp(name, "main.", 5) == 0)
+    memmove(name, name + 5, strlen(name + 5) + 1);
+  else if(strncmp(name, "temp.", 5) == 0)
+    memmove(name, name + 5, strlen(name + 5) + 1);
+}
+
+// Adds the object a schema error is missing to the scratch schema. Returns 1
+// when a retry may get further, 0 when the error cannot be repaired here.
+static int validate_sql_repair(const char* error, char** created,
+                               int* created_count) {
+  const char* name = validate_sql_error_name(error, "no such table: ");
+  if(name != NULL) {
+    if(strlen(name) > VALIDATE_SQL_MAX_NAME)
+      return 0;
+    char table[VALIDATE_SQL_MAX_NAME + 1];
+    snprintf(table, sizeof(table), "%s", name);
+    validate_sql_strip_schema(table);
+    return validate_sql_dummy_table(table, created, created_count);
+  }
+
+  name = validate_sql_error_name(error, "no such column: ");
+  if(name != NULL) {
+    char        table[VALIDATE_SQL_MAX_NAME + 1];
+    const char* dot = strrchr(name, '.');
+    if(dot == NULL || dot == name || dot[1] == '\0') {
+      // An unqualified column in a trigger body: the only table that can
+      // satisfy it is the one the trigger is on, which is the last dummy.
+      if(*created_count == 0)
+        return 0;
+      snprintf(table, sizeof(table), "%s", created[*created_count - 1]);
+    } else {
+      size_t len = (size_t)(dot - name);
+      if(len > VALIDATE_SQL_MAX_NAME)
+        return 0;
+      memcpy(table, name, len);
+      table[len] = '\0';
+      validate_sql_strip_schema(table);
+      // NEW/OLD name trigger-row pseudo-tables. Their columns belong to the
+      // table the trigger is on, which is the last dummy created.
+      if((strcmp(table, "NEW") == 0 || strcmp(table, "OLD") == 0) &&
+         *created_count > 0)
+        snprintf(table, sizeof(table), "%s", created[*created_count - 1]);
+    }
+    return validate_sql_dummy_column(table, name + (dot ? (dot - name) + 1 : 0),
+                                     created, created_count);
+  }
+
+  // INSERT names a missing column differently: "table t has no column named x".
+  if(strncmp(error, "table ", 6) == 0) {
+    const char* marker = strstr(error, " has no column named ");
+    if(marker != NULL) {
+      size_t len = (size_t)(marker - (error + 6));
+      if(len == 0 || len > VALIDATE_SQL_MAX_NAME)
+        return 0;
+      char table[VALIDATE_SQL_MAX_NAME + 1];
+      memcpy(table, error + 6, len);
+      table[len] = '\0';
+      validate_sql_strip_schema(table);
+      const char* column = marker + strlen(" has no column named ");
+      if(*column == '\0')
+        return 0;
+      return validate_sql_dummy_column(table, column, created, created_count);
+    }
+  }
+
+  name = validate_sql_error_name(error, "no such function: ");
+  if(name != NULL) {
+    if(strlen(name) > VALIDATE_SQL_MAX_NAME)
+      return 0;
+    return sqlite3_create_function(db, name, -1, SQLITE_UTF8, NULL,
+                                   validate_sql_dummy_func, NULL, NULL) == SQLITE_OK;
+  }
+
+  name = validate_sql_error_name(error, "no such collation sequence: ");
+  if(name != NULL) {
+    if(strlen(name) > VALIDATE_SQL_MAX_NAME)
+      return 0;
+    return sqlite3_create_collation(db, name, SQLITE_UTF8, NULL,
+                                    validate_sql_dummy_collate) == SQLITE_OK;
+  }
+
+  return 0;
+}
+
+// The ';' that terminates the first statement in [sql], or NULL. Skips quoted
+// strings/identifiers and comments; sqlite3_complete() settles the one case the
+// scanner cannot: the internal ';' of a trigger body.
+static const char* validate_sql_statement_end(const char* sql) {
+  const char* p = sql;
+  while(*p != '\0') {
+    char c = *p;
+    if(c == '\'' || c == '"' || c == '`') {
+      char quote = c;
+      p++;
+      while(*p != '\0') {
+        if(*p == quote) {
+          if(p[1] == quote) {
+            p += 2;
+            continue;
+          }
+          p++;
+          break;
+        }
+        p++;
+      }
+      continue;
+    }
+    if(c == '[') {
+      p++;
+      while(*p != '\0' && *p != ']')
+        p++;
+      if(*p == ']')
+        p++;
+      continue;
+    }
+    if(c == '-' && p[1] == '-') {
+      p += 2;
+      while(*p != '\0' && *p != '\n')
+        p++;
+      continue;
+    }
+    if(c == '/' && p[1] == '*') {
+      p += 2;
+      while(*p != '\0' && !(*p == '*' && p[1] == '/'))
+        p++;
+      if(*p != '\0')
+        p += 2;
+      continue;
+    }
+    if(c == ';') {
+      size_t len = (size_t)(p - sql) + 1;
+      char*  prefix = malloc(len + 1);
+      if(prefix == NULL)
+        return NULL;
+      memcpy(prefix, sql, len);
+      prefix[len] = '\0';
+      int complete = sqlite3_complete(prefix);
+      free(prefix);
+      if(complete)
+        return p;
+    }
+    p++;
+  }
+  return NULL;
+}
+
+// The --validate SQL hook. It only prepares each statement, so nothing of the
+// user's SQL is executed and no migration is recorded. sqlite3_prepare_v2()
+// parses one statement at a time, so the loop walks the text with tail the way
+// Db.migrate's split does. A schema error that stops the parser mid-statement
+// is retried against throwaway objects; a real syntax error after it then
+// surfaces, and a valid statement is not reported as one. -t is
 // single-threaded, so the static message buffer is safe; the server never
 // installs this hook.
 static const char* validate_query_syntax(const char* query) {
@@ -2208,41 +2511,52 @@ static const char* validate_query_syntax(const char* query) {
     sqlite3_stmt* stmt = NULL;
     const char*   tail = NULL;
     int           rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &tail);
-
-    if(rc != SQLITE_OK) {
-      const char* error = sqlite3_errmsg(db);
-      int         is_syntax = error != NULL && is_sql_syntax_error(error);
-      const char* semi;
-      const char* next;
+    if(rc == SQLITE_OK) {
       sqlite3_finalize(stmt);
-      if(is_syntax) {
-        snprintf(message, sizeof(message), "%s", error);
-        return message;
-      }
-      // Not ours to report: it depends on the schema, and -t never applies a
-      // migration. Resuming from tail alone is wrong, though: on a
-      // prepare-time schema error SQLite may stop *inside* the statement
-      // (`ALTER TABLE nope ADD COLUMN x` leaves tail before COLUMN), and the
-      // rest would be parsed as a new statement and reported as a bogus syntax
-      // error. Db.migrate splits the literal on ';', so the next statement
-      // starts after the first ';' of this one -- or at tail, if that already
-      // moved past it.
-      semi = strchr(sql, ';');
-      next = tail;
-      if(semi != NULL && (next == NULL || semi + 1 > next))
-        next = semi + 1;
-      // No ';' means this was the last statement of the literal: tail points
-      // inside it, so there is nothing left to check.
-      if(semi == NULL || next == NULL || next <= sql)
+      if(tail == NULL || tail <= sql)
         break;
-      sql = next;
+      sql = tail;
       continue;
     }
 
+    char* created[VALIDATE_SQL_MAX_FIXES];
+    int   created_count = 0;
+    int   prepared = 0;
+    for(int attempt = 0; attempt < VALIDATE_SQL_MAX_FIXES; attempt++) {
+      const char* error = sqlite3_errmsg(db);
+      if(error != NULL && is_sql_syntax_error(error)) {
+        snprintf(message, sizeof(message), "%s", error);
+        sqlite3_finalize(stmt);
+        validate_sql_drop_dummies(created, created_count);
+        return message;
+      }
+      sqlite3_finalize(stmt);
+      stmt = NULL;
+      if(error == NULL || !validate_sql_repair(error, created, &created_count))
+        break;
+      rc = sqlite3_prepare_v2(db, sql, -1, &stmt, &tail);
+      if(rc == SQLITE_OK) {
+        prepared = 1;
+        break;
+      }
+    }
     sqlite3_finalize(stmt);
-    if(tail == NULL || tail <= sql)
+    validate_sql_drop_dummies(created, created_count);
+
+    if(prepared) {
+      if(tail == NULL || tail <= sql)
+        break;
+      sql = tail;
+      continue;
+    }
+
+    // A schema error that no dummy can satisfy (a missing module or index, an
+    // alias column): skip to the statement's real terminator, not to tail,
+    // which may stop inside it. No terminator means this was the last one.
+    const char* end = validate_sql_statement_end(sql);
+    if(end == NULL)
       break;
-    sql = tail;
+    sql = end + 1;
   }
 
   return NULL;

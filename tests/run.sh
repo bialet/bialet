@@ -163,6 +163,12 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   # is not a new statement and must not be reported as a syntax error.
   test_syntax     "ALTER on a missing table passes" "syntax_query_alter.wren" 0
   test_syntax_msg "Typo after a schema error fails" "syntax_query_alter_then_err.wren" 1 "syntax error"
+  # A ';' in a quoted default or a comment is not a statement boundary, and a
+  # schema error before a trigger body must not hide a syntax error in it.
+  test_syntax     "ALTER quoted ';' passes      " "syntax_query_alter_quoted.wren" 0
+  test_syntax     "Trigger on missing table passes" "syntax_query_alter_trigger.wren" 0
+  test_syntax_msg "Trigger body typo still fails  " "syntax_query_alter_trigger_err.wren" 1 "syntax error"
+  test_syntax_msg "Incomplete ALTER still fails   " "syntax_query_alter_incomplete.wren" 1 "syntax error"
   # `items`.save(...) passes a table name, not SQL; it still has to pass.
   test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
   # A directory target validates the whole tree: private files and subfolders
